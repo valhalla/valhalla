@@ -504,8 +504,9 @@ TEST(StandAlone, CostMatrixShapes) {
   /*
   EXPECT_EQ(result.matrix().shapes(0), encoded);
   EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["shape"],
-  encoded); res.erase();
+  encoded);
   */
+  res.erase();
 
   // trivial route reverse
   // has a bug: https://github.com/valhalla/valhalla/issues/4433, but it's band-aided for now
@@ -517,8 +518,9 @@ TEST(StandAlone, CostMatrixShapes) {
   /*
   EXPECT_EQ(result.matrix().shapes(0), encoded);
   EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["shape"],
-  encoded); res.erase();
+  encoded);
   */
+  res.erase();
 
   // timedistancematrix
 
@@ -766,11 +768,124 @@ TEST(StandAlone, MatrixSecondPass) {
     EXPECT_FALSE(api.matrix().second_pass(1));
     EXPECT_GT(api.matrix().times(2), 0.f);
     EXPECT_TRUE(api.matrix().second_pass(2));
+    EXPECT_GT(api.matrix().distances(2), api.matrix().distances(1));
     EXPECT_GT(api.matrix().times(2), api.matrix().times(1));
 
     // I -> I & K -> K shouldn't be processed a second time either
     EXPECT_FALSE(api.matrix().second_pass(0));
     EXPECT_FALSE(api.matrix().second_pass(3));
     EXPECT_TRUE(api.info().warnings(0).description().find('2') != std::string::npos);
+  }
+}
+
+TEST(StandAlone, CostMatrixTrivialRoutes) {
+  const std::string ascii_map = R"(
+    A---B--2->-1--C---D
+        |         |
+        |         |
+        E--3---4--F
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}, {"oneway", "yes"}}},
+      {"CD", {{"highway", "residential"}}}, {"BE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}}, {"FC", {{"highway", "residential"}}},
+  };
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_trivial");
+
+  std::unordered_map<std::string, std::string> options = {{"/shape_format", "polyline6"}};
+
+  // test the against-oneway case
+  {
+    auto matrix =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 2200);
+
+    std::vector<PointLL> oneway_vertices;
+    for (auto& node : {"1", "C", "F", "E", "B", "2"}) {
+      oneway_vertices.push_back(layout[node]);
+    }
+    auto encoded = encode<std::vector<PointLL>>(oneway_vertices, 1e6);
+    EXPECT_EQ(matrix.matrix().shapes(0), encoded);
+  }
+
+  // test the normal trivial case
+  {
+    auto matrix =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"3"}, {"4"}, "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 400);
+
+    auto encoded = encode<std::vector<PointLL>>({layout["3"], layout["4"]}, 1e6);
+    EXPECT_EQ(matrix.matrix().shapes(0), encoded);
+  }
+}
+
+TEST(StandAlone, HGVNoAccessPenalty) {
+  // if hgv_no_penalty is on we should still respect the maxweight restriction on CD
+  // so we should take the next-best hgv=no edge with JK
+  const std::string ascii_map = R"(
+    A-1-------B----C----D----E--2-------F
+                   |    |
+                   J----K
+                   |    |             
+                   |    |
+                   L----M
+           )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}, {"hgv", "no"}, {"maxweight", "3.5"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"CJ", {{"highway", "residential"}}},
+      {"JK", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"JLMK", {{"highway", "residential"}}},
+      {"KD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hgv_no_access_penalty",
+                                     {{"service_limits.max_timedep_distance_matrix", "50000"}});
+
+  std::unordered_map<std::string, std::string> cost_matrix =
+      {{"/costing_options/truck/hgv_no_access_penalty", "2000"},
+       {"/sources/0/date_time", "2024-03-20T09:00"},
+       {"/prioritize_bidirectional", "1"}};
+  std::unordered_map<std::string, std::string> td_matrix =
+      {{"/costing_options/truck/hgv_no_access_penalty", "2000"},
+       {"/sources/0/date_time", "2024-03-20T09:00"}};
+
+  // do both costmatrix & timedistancematrix
+  std::vector<std::unordered_map<std::string, std::string>> options = {cost_matrix, td_matrix};
+  for (auto& truck_options : options) {
+
+    // by default, take the detour via LM
+    // NOTE, we're not snapping to the hgv=no edges either
+    {
+      auto matrix =
+          gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "truck");
+      EXPECT_EQ(matrix.matrix().distances(0), 2500);
+    }
+
+    // with a high hgv_no_penalty also take the detour via LM, but do snap to the hgv=no edges
+    {
+      auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"},
+                                     "truck", truck_options);
+      // TODO(nils): timedistancematrix seems to have a tiny bug where time options result in slightly
+      // less distances
+      EXPECT_NEAR(matrix.matrix().distances(0), 3600, 2);
+    }
+
+    // with a low hgv_no_penalty take the JK edge
+    {
+      truck_options["/costing_options/truck/hgv_no_access_penalty"] = "10";
+      auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"},
+                                     "truck", truck_options);
+      // TODO(nils): timedistancematrix seems to have a tiny bug where time options result in slightly
+      // less distances
+      EXPECT_NEAR(matrix.matrix().distances(0), 3000, 2);
+    }
   }
 }

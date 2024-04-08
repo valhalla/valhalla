@@ -115,18 +115,6 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-std::string output_shape(const valhalla::Api& api) {
-  std::stringstream shape;
-  for (const auto& r : api.directions().routes()) {
-    shape << "new route" << std::endl;
-    for (const auto& l : r.legs()) {
-      shape << std::fixed << std::setprecision(3) << "Time : " << l.summary().time()
-            << ", length : " << l.summary().length() << ", shape : " << l.shape() << std::endl;
-    }
-  }
-  return shape.str();
-}
-
 void compare_results(const valhalla::Api& expected, const valhalla::Api& result) {
   // check the number of routes match
   ASSERT_EQ(result.trip().routes_size(), expected.trip().routes_size())
@@ -1090,7 +1078,7 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto result = tester.match(test_cases[i]);
     EXPECT_EQ(result.trip().routes_size(), test_ans_num_routes[i]);
-    int j = 0, k = 0;
+    int j = 0;
     for (const auto& route : result.trip().routes()) {
       ASSERT_EQ(route.legs_size(), test_ans_num_legs[i][j++])
           << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +

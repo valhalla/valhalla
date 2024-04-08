@@ -262,8 +262,9 @@ uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_ed
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (is_valid(kmh) && compare_with_previous_edge)
+    if (is_valid(kmh) && compare_with_previous_edge) {
       EXPECT_EQ(kmh, new_kmh);
+    }
     kmh = new_kmh;
   }
   return kmh;

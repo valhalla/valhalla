@@ -8,6 +8,7 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <random>
 #include <sstream>
@@ -23,7 +24,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "filesystem.h"
 #include "microtar.h"
 
 namespace {
@@ -442,8 +442,8 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
   std::string traffic_extract = config.get<std::string>("mjolnir.traffic_extract");
 
-  filesystem::path parent_dir = filesystem::path(traffic_extract).parent_path();
-  if (!filesystem::exists(parent_dir)) {
+  std::filesystem::path parent_dir = std::filesystem::path(traffic_extract).parent_path();
+  if (!std::filesystem::exists(parent_dir)) {
     std::stringstream ss;
     ss << "Traffic extract directory " << parent_dir.string() << " does not exist";
     throw std::runtime_error(ss.str());

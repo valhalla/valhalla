@@ -20,10 +20,6 @@
 #include "tyr/serializers.h"
 #include "worker.h"
 
-#ifdef ENABLE_GDAL
-#include <gdal_priv.h>
-#endif
-
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -84,11 +80,6 @@ int main(int argc, char* argv[]) {
   Api request;
   ParseApi(json_str, valhalla::Options::isochrone, request);
 
-#ifdef ENABLE_GDAL
-  if (request.options().format() == Options_Format_geotiff) {
-    GDALRegister_GTiff();
-  }
-#endif
   auto& options = *request.mutable_options();
 
   // Get the denoise parameter

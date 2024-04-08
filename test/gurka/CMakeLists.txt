@@ -11,13 +11,9 @@ if(ENABLE_DATA_TOOLS)
   # "-Werror" flag
   # Avoid adding a filename to this list
   set(TESTS_WITH_WARNINGS
-    test_elevation.cc
     test_gtfs.cc
-    test_instructions_roundabout.cc
-    test_landmarks.cc
     test_languages.cc
     test_locate.cc
-    test_match.cc
     test_multi_level_loki.cc
     test_osrm_serializer.cc
     test_pbf_api.cc
@@ -25,8 +21,6 @@ if(ENABLE_DATA_TOOLS)
     test_phonemes_w_langs.cc
     test_recost.cc
     test_time_tracking.cc
-    test_traffic.cc
-    test_traffic_smoothing.cc
     )
 
   ## Add executable targets

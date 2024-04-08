@@ -121,6 +121,10 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `fixed_speed` | Fixed speed the vehicle can go. Used to override the calculated speed. Can be useful if speed of vehicle is known. `fixed_speed` must be between 1 and 252 KPH. The default value is 0 KPH which disables fixed speed and falls back to the standard calculated speed based on the road attribution. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
 | `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. |
+| `ignore_restrictions` | If set to `true`, ignores any restrictions (e.g. turn/dimensional/conditional restrictions). Especially useful for matching GPS traces to the road network regardless of restrictions. Default is `false`. |
+| `ignore_non_vehicular_restrictions` | Similar to `ignore_restrictions`, but will respect restrictions that impact vehicle safety, such as weight and size restrictions. |
+| `ignore_access` | Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions. Default is `false`. |
+| `ignore_closures` | Will ignore traffic closures. Default is `false`. |
 
 ###### Other costing options
 The following options are available for `auto`, `bus`, `taxi`, and `truck` costing methods.
@@ -144,6 +148,7 @@ The following options are available for `truck` costing.
 | `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
 | `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
+| `hgv_no_access_penalty` | A penalty applied to roads with no HGV/truck access. If set to a value less than 43200 seconds, HGV will be allowed on these roads and the penalty applies. Default 43200, i.e. trucks are not allowed. |
 
 ##### Bicycle costing options
 The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.
@@ -166,7 +171,7 @@ These additional options are available for bicycle costing methods.
 | `use_ferry` | This value indicates the willingness to take ferries. This is a range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. The default value is 0.5. |
 | `use_living_streets` | This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values from 0.5 to 1 will currently have no effect on route selection. The default value is 0.5. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely. |
 | `avoid_bad_surfaces` | This value is meant to represent how much a cyclist wants to avoid roads with poor surfaces relative to the bicycle type being used. This is a range of values between 0 and 1. When the value is 0, there is no penalization of roads with different surface types; only bicycle speed on each surface is taken into account. As the value approaches 1, roads with poor surfaces for the bike are penalized heavier so that they are only taken if they significantly improve travel time. When the value is equal to 1, all bad surfaces are completely disallowed from routing, including start and end points. The default value is 0.25. |
-|`bss_return_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to return a rental bike. This value will be displayed in the final directions and used to calculate the whole duation. The default value is 120 seconds.|
+|`bss_return_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to return a rental bike. This value will be displayed in the final directions and used to calculate the whole duration. The default value is 120 seconds.|
 |`bss_return_penalty`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to return a rental bike. This value won't be displayed and used only inside of the algorithm.|
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 
@@ -178,8 +183,8 @@ All of the options described above for autos also apply to motor_scooter costing
 | Motor_scooter options | Description |
 | :-------------------------- | :----------- |
 | `top_speed` | Top speed the motorized scooter can go. Used to avoid roads with higher speeds than this value. For `motor_scooter` this value must be between 20 and 120 KPH. The default value is 45 KPH (~28 MPH) |
-| `use_primary` | A riders's propensity to use primary roads. This is a range of values from 0 to 1, where 0 attempts to avoid primary roads, and 1 indicates the rider is more comfortable riding on primary roads. Based on the `use_primary` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path. The default value is 0.5. |
-| `use_hills` | A riders's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
+| `use_primary` | A rider's propensity to use primary roads. This is a range of values from 0 to 1, where 0 attempts to avoid primary roads, and 1 indicates the rider is more comfortable riding on primary roads. Based on the `use_primary` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path. The default value is 0.5. |
+| `use_hills` | A rider's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
 
@@ -216,12 +221,12 @@ These options are available for pedestrian costing methods.
 | `service_penalty` | A penalty applied for transition to generic service road. The default penalty is 0. |
 | `service_factor` | A factor that modifies (multiplies) the cost when generic service roads are encountered. The default `service_factor` is 1. |
 | `max_hiking_difficulty` | This value indicates the maximum difficulty of hiking trails that is allowed. Values between 0 and 6 are allowed. The values correspond to *sac_scale* values within OpenStreetMap, see reference [here](https://wiki.openstreetmap.org/wiki/Key:sac_scale). The default value is 1 which means that well cleared trails that are mostly flat or slightly sloped are allowed. Higher difficulty trails can be allowed by specifying a higher value for max_hiking_difficulty.
-|`bss_rent_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to rent a bike from a bike share station. This value will be displayed in the final directions and used to calculate the whole duation. The default value is 120 seconds.|
+|`bss_rent_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to rent a bike from a bike share station. This value will be displayed in the final directions and used to calculate the whole duration. The default value is 120 seconds.|
 |`bss_rent_penalty`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to rent a bike from a bike share station. This value won't be displayed and used only inside of the algorithm.|
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `transit_start_end_max_distance` | A pedestrian option that can be added to the request to extend the defaults (2145 meters or approximately 1.5 miles). This is the maximum walking distance at the beginning or end of a route.|
 | `transit_transfer_max_distance` | A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.|
-| `type` | If set to `blind`, enables additional route instructions, especially usefull for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. Default `foot` |
+| `type` | If set to `blind`, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. Default `foot` |
 
 ##### Transit costing options
 
@@ -353,9 +358,9 @@ The summary JSON object includes:
 | :---- | :----------- |
 | `time` | Estimated elapsed time to complete the trip. |
 | `length` | Distance traveled for the entire trip. Units are either miles or kilometers based on the input units specified. |
-| `has_toll`| Flag indicating if the the path uses one or more toll segments. |
-| `has_highway`| Flag indicating if the the path uses one or more highway segments. |
-| `has_ferry`| Flag indicating if the the path uses one or more ferry segments. |
+| `has_toll`| Flag indicating if the path uses one or more toll segments. |
+| `has_highway`| Flag indicating if the path uses one or more highway segments. |
+| `has_ferry`| Flag indicating if the path uses one or more ferry segments. |
 | `min_lat` | Minimum latitude of a bounding box containing the route. |
 | `min_lon` | Minimum longitude of a bounding box containing the route. |
 | `max_lat` | Maximum latitude of a bounding box containing the route. |
@@ -444,6 +449,11 @@ kTransitConnectionDestination = 35;
 kPostTransitConnectionDestination = 36;
 kMergeRight = 37;
 kMergeLeft = 38;
+kElevatorEnter = 39;
+kStepsEnter = 40;
+kEscalatorEnter = 41;
+kBuildingEnter = 42;
+kBuildingExit = 43;
 ```
 
 The maneuver `sign` may contain four lists of interchange sign elements as follows:
@@ -470,7 +480,7 @@ A maneuver `transit_info` includes:
 | `headsign` | The sign on a public transport vehicle that identifies the route destination to passengers. For example "ASTORIA - DITMARS BLVD". |
 | `color` | The numeric color value associated with a transit route. The value for yellow would be "16567306". |
 | `text_color` | The numeric text color value associated with a transit route. The value for black would be "0". |
-| `description` | The description of the the transit route. For example "Trains operate from Ditmars Boulevard, Queens, to Stillwell Avenue, Brooklyn, at all times. N trains in Manhattan operate along Broadway and across the Manhattan Bridge to and from Brooklyn. Trains in Brooklyn operate along 4th Avenue, then through Borough Park to Gravesend. Trains typically operate local in Queens, and either express or local in Manhattan and Brooklyn, depending on the time. Late night trains operate via Whitehall Street, Manhattan. Late night service is local". |
+| `description` | The description of the transit route. For example "Trains operate from Ditmars Boulevard, Queens, to Stillwell Avenue, Brooklyn, at all times. N trains in Manhattan operate along Broadway and across the Manhattan Bridge to and from Brooklyn. Trains in Brooklyn operate along 4th Avenue, then through Borough Park to Gravesend. Trains typically operate local in Queens, and either express or local in Manhattan and Brooklyn, depending on the time. Late night trains operate via Whitehall Street, Manhattan. Late night service is local". |
 | `operator_onestop_id` | Global operator/agency identifier. |
 | `operator_name` | Operator/agency name. For example, "BART", "King County Marine Division", and so on.  Short name is used over long name. |
 | `operator_url` | Operator/agency URL. For example, "http://web.mta.info/". |
