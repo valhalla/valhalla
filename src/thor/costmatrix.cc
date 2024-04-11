@@ -452,7 +452,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
     // edge superseded by a shortcut.
-    if (hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1].StopExpanding(pred.distance())) {
+    if (hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1].StopExpanding()) {
       shortcuts |= meta.edge->shortcut();
     } else {
       return false;
@@ -542,24 +542,17 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // We allow settling not_thru edges so we can connect both trees on them.
   bool not_thru_pruning =
       not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
-
-  float dist = 0.0f;
-  auto newsortcost =
-      newcost.cost +
-      GetAstarHeuristic<expansion_direction>(index, t2->get_node_ll(meta.edge->endnode()), dist);
+  
+  // TODO(nils): we could use the distance to the source/target to disable hierarchy limits
+  // , just as bidir a* /route does; that would make for more optimal paths in some edge cases but
+  // we'd pay a severe performance penalty, e.g. a request with distance checks (i.e. more expansion
+  // on lower levels) takes 100 secs, while without it takes 60 secs.
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   if (FORWARD) {
-    if (hierarchy_limits_[MATRIX_FORW][index][meta.edge_id.level()].max_up_transitions !=
-        kUnlimitedTransitions) {
-      // Override distance to the destination with a distance from the origin.
-      // It will be used by hierarchy limits
-      dist = astar_heuristics_[MATRIX_REV][index].GetDistance(t2->get_node_ll(meta.edge->endnode()));
-    }
-    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, newsortcost,
-                            dist, mode_, tc, not_thru_pruning,
+    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc, pred_dist, not_thru_pruning,
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
@@ -568,14 +561,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                                 (costing_->is_hgv() && meta.edge->destonly_hgv()),
                             meta.edge->forwardaccess() & kTruckAccess);
   } else {
-    if (hierarchy_limits_[MATRIX_REV][index][meta.edge_id.level()].max_up_transitions !=
-        kUnlimitedTransitions) {
-      // Override distance to the origin with a distance from the destination.
-      // It will be used by hierarchy limits
-      dist = astar_heuristics_[MATRIX_FORW][index].GetDistance(t2->get_node_ll(meta.edge->endnode()));
-    }
-    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, newsortcost,
-                            dist, mode_, tc, not_thru_pruning,
+    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
+                            pred_dist, not_thru_pruning,
                             (pred.closure_pruning() || !costing_->IsClosed(opp_edge, t2)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
@@ -584,11 +571,9 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                             opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv()),
                             opp_edge->forwardaccess() & kTruckAccess);
   }
-  // BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at
-  // the same time - so we need to update immediately after to set path_distance
-  // TODO(nils): either do one EdgeLabel per algo or _always_ recost the path so we don't need the
-  // path distance at all. but this is a waste
-  edgelabels.back().Update(pred_idx, newcost, newsortcost, tc, pred_dist, restriction_idx);
+  auto newsortcost =
+      GetAstarHeuristic<expansion_direction>(index, t2->get_node_ll(meta.edge->endnode()));
+  edgelabels.back().SetSortCost(newcost.cost + newsortcost);
   adj.add(idx);
 
   // mark the edge as settled for the connection check
@@ -659,7 +644,7 @@ bool CostMatrix::Expand(const uint32_t index,
   // number of upward transitions has been exceeded on this hierarchy level.
   if ((pred.not_thru() && pred.not_thru_pruning()) ||
       (!ignore_hierarchy_limits_ &&
-       hierarchy_limits_[FORWARD][index][node.level()].StopExpanding(pred.distance()))) {
+       hierarchy_limits_[FORWARD][index][node.level()].StopExpanding())) {
     return false;
   }
 
@@ -737,7 +722,7 @@ bool CostMatrix::Expand(const uint32_t index,
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() && !ignore_hierarchy_limits_ &&
-           hierarchy_limits[trans->endnode().level()].StopExpanding(pred.distance())) ||
+           hierarchy_limits[trans->endnode().level()].StopExpanding()) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
@@ -1071,32 +1056,23 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
       cost.cost += edge.distance();
 
-      float dist = 0.f;
-      auto sortcost =
-          cost.cost + GetAstarHeuristic<MatrixExpansionType::forward>(index,
-                                                                      opp_tile->get_node_ll(
-                                                                          directededge->endnode()),
-                                                                      dist);
-
       // 2 adjustments related only to properly handle trivial routes:
       //   - "transition_cost" is used to store the traversed secs & length
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, sortcost, dist,
-                             mode_, ec, !directededge->not_thru(),
-                             !(costing_->IsClosed(directededge, tile)),
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_, ec, d,
+                             !directededge->not_thru(), !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()),
                              directededge->forwardaccess() & kTruckAccess);
+      auto newsortcost =
+          GetAstarHeuristic<MatrixExpansionType::forward>(index, opp_tile->get_node_ll(
+                                                                     directededge->endnode()));
+      edge_label.SetSortCost(cost.cost + newsortcost);
 
-      // BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at
-      // the same time - so we need to update immediately after to set path_distance
-      // TODO(nils): either do one EdgeLabel per algo or _always_ recost the path so we don't need the
-      // path distance at all. but this is a waste
-      edge_label.Update(kInvalidLabel, cost, sortcost, ec, d, kInvalidRestriction);
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       edge_label.set_not_thru(false);
@@ -1170,20 +1146,12 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
       cost.cost += edge.distance();
 
-      float dist = 0.f;
-      auto sortcost =
-          cost.cost +
-          GetAstarHeuristic<MatrixExpansionType::reverse>(index,
-                                                          tile->get_node_ll(opp_dir_edge->endnode()),
-                                                          dist);
-
       // 2 adjustments related only to properly handle trivial routes:
       //   - "transition_cost" is used to store the traversed secs & length
       //   - "path_id" is used to store whether the opp edge is even allowed (e.g. no oneway)
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
-      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost, dist,
-                             mode_, ec, !opp_dir_edge->not_thru(),
-                             !(costing_->IsClosed(directededge, tile)),
+      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
+                             !opp_dir_edge->not_thru(), !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(opp_dir_edge, opp_tile)),
@@ -1191,11 +1159,10 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                                  (costing_->is_hgv() && directededge->destonly_hgv()),
                              directededge->forwardaccess() & kTruckAccess);
 
-      // BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at
-      // the same time - so we need to update immediately after to set path_distance
-      // TODO(nils): either do one EdgeLabel per algo or _always_ recost the path so we don't need the
-      // path distance at all. but this is a waste
-      edge_label.Update(kInvalidLabel, cost, sortcost, ec, d, kInvalidRestriction);
+      auto newsortcost =
+          GetAstarHeuristic<MatrixExpansionType::reverse>(index,
+                                                          tile->get_node_ll(opp_dir_edge->endnode()));
+      edge_label.SetSortCost(cost.cost + newsortcost);
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
       edge_label.set_not_thru(false);
@@ -1365,14 +1332,14 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 }
 
 template <const MatrixExpansionType expansion_direction, const bool FORWARD>
-float CostMatrix::GetAstarHeuristic(const uint32_t loc_idx, const PointLL& ll, float& dist) const {
+float CostMatrix::GetAstarHeuristic(const uint32_t loc_idx, const PointLL& ll) const {
   if (locs_status_[FORWARD][loc_idx].unfound_connections.empty()) {
     return 0.f;
   }
 
   auto min_cost = std::numeric_limits<float>::max();
   for (const auto other_idx : locs_status_[FORWARD][loc_idx].unfound_connections) {
-    const auto cost = astar_heuristics_[FORWARD][other_idx].Get(ll, dist);
+    const auto cost = astar_heuristics_[FORWARD][other_idx].Get(ll);
     min_cost = std::min(cost, min_cost);
   }
 
