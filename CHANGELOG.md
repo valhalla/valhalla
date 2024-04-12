@@ -110,6 +110,7 @@
    * CHANGED: Significantly improve performance of graphbuilder [#4669](https://github.com/valhalla/valhalla/pull/4669)
    * UPDATED: Improved turn by turn api reference documentation [#4675](https://github.com/valhalla/valhalla/pull/4675)
    * CHANGED: contract nodes if connecting edges have different names or speed or non-conditional access restrictions [#4613](https://github.com/valhalla/valhalla/pull/4613)
+   * CHANGED: CostMatrix switched from Dijkstra to A* [#4650](https://github.com/valhalla/valhalla/pull/4650)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
