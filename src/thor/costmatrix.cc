@@ -542,7 +542,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // We allow settling not_thru edges so we can connect both trees on them.
   bool not_thru_pruning =
       not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
-  
+
   // TODO(nils): we could use the distance to the source/target to disable hierarchy limits
   // , just as bidir a* /route does; that would make for more optimal paths in some edge cases but
   // we'd pay a severe performance penalty, e.g. a request with distance checks (i.e. more expansion
@@ -552,7 +552,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   if (FORWARD) {
-    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc, pred_dist, not_thru_pruning,
+    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
+                            pred_dist, not_thru_pruning,
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
