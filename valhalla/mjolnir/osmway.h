@@ -124,6 +124,34 @@ struct OSMWay {
   }
 
   /**
+   * Sets the forward truck speed
+   * @param  truck_speed_forward Forward truck speed in KPH.
+   */
+  void set_truck_speed_forward(const float truck_speed_forward);
+
+  /**
+   * Gets the forward truck speed in KPH.
+   * @return  Returns forward truck speed.
+   */
+  uint8_t truck_speed_forward() const {
+    return truck_speed_forward_;
+  }
+
+  /**
+   * Sets the backward truck speed
+   * @param  truck_speed_backward Backward truck speed in KPH.
+   */
+  void set_truck_speed_backward(const float truck_speed_backward);
+
+  /**
+   * Gets the backward truck speed in KPH.
+   * @return  Returns backward truck speed.
+   */
+  uint8_t truck_speed_backward() const {
+    return truck_speed_backward_;
+  }
+
+  /**
    * Sets the index for the ref
    * @param  idx  Index for the reference.
    */
@@ -2700,6 +2728,8 @@ struct OSMWay {
 
   // Truck speed in kilometers per hour
   uint8_t truck_speed_;
+  uint8_t truck_speed_forward_;
+  uint8_t truck_speed_backward_;
 
   // layer index(Z-level) of the way relatively to other levels
   int8_t layer_;

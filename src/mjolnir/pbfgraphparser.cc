@@ -934,6 +934,20 @@ public:
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
+    tag_handlers_["maxspeed:hgv:forward"] = [this]() {
+      try {
+        way_.set_truck_speed_forward(std::stof(tag_.second));
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["maxspeed:hgv:backward"] = [this]() {
+      try {
+        way_.set_truck_speed_backward(std::stof(tag_.second));
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
     tag_handlers_["truck_route"] = [this]() {
       way_.set_truck_route(tag_.second == "true" ? true : false);
     };
@@ -953,11 +967,47 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["maxheight_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxHeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxheight_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxHeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["maxwidth"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWidth);
       restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxwidth_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWidth);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxwidth_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWidth);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -969,11 +1019,47 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["maxlength_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxLength);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxlength_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxLength);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["maxweight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
       restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxweight_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxweight_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };

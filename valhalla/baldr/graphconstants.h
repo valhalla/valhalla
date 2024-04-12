@@ -742,6 +742,9 @@ enum class AccessType : uint8_t {
   kMaxAxles = 9
 };
 
+// Used for access restrictions. Conveys the direction in which the access restriction applies
+enum class AccessRestrictionDirection : uint8_t { kBoth = 0, kForward = 1, kBackward = 2 };
+
 // Minimum meters offset from start/end of shape for finding heading
 constexpr float kMinMetersOffsetForHeading = 15.0f;
 inline float GetOffsetForHeading(RoadClass road_class, Use use) {

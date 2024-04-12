@@ -55,6 +55,16 @@ public:
    */
   void set_modes(uint16_t modes);
 
+  /**
+   * Get the direction the access restriction applies to.
+   */
+  baldr::AccessRestrictionDirection direction() const;
+
+  /**
+   * Set the direction the access restriction applies to.
+   */
+  void set_direction(baldr::AccessRestrictionDirection direction);
+
 protected:
   uint64_t value_;
 
@@ -63,7 +73,8 @@ protected:
     uint16_t modes_ : 12;
   };
   Attributes attributes_;
-  uint16_t spare_[3];
+  baldr::AccessRestrictionDirection direction_;
+  uint16_t spare_[2];
 };
 
 } // namespace mjolnir

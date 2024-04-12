@@ -1827,15 +1827,26 @@ function filter_tags_generic(kv)
   kv["maxheight"] = normalize_measurement(kv["maxheight"]) or normalize_measurement(kv["maxheight:physical"])
   kv["maxwidth"] = normalize_measurement(kv["maxwidth"]) or normalize_measurement(kv["maxwidth:physical"])
   kv["maxlength"] = normalize_measurement(kv["maxlength"])
-
   kv["maxweight"] = normalize_weight(kv["maxweight"])
   kv["maxaxleload"] = normalize_weight(kv["maxaxleload"])
   kv["maxaxles"] = tonumber(kv["maxaxles"])
+
+  --forward/backward only tags
+  kv["maxheight_forward"] = normalize_measurement(kv["maxheight:forward"])
+  kv["maxheight_backward"] = normalize_measurement(kv["maxheight:backward"])
+  kv["maxlength_forward"] = normalize_measurement(kv["maxlength:forward"])
+  kv["maxlength_backward"] = normalize_measurement(kv["maxlength:backward"])
+  kv["maxweight_forward"] = normalize_weight(kv["maxweight:forward"])
+  kv["maxweight_backward"] = normalize_weight(kv["maxweight:backward"])
+  kv["maxwidth_forward"] = normalize_measurement(kv["maxwidth:forward"])
+  kv["maxwidth_backward"] = normalize_measurement(kv["maxwidth:backward"])
 
   --TODO: hazmat really should have subcategories
   kv["hazmat"] = hazmat[kv["hazmat"]] or hazmat[kv["hazmat:water"]] or hazmat[kv["hazmat:A"]] or hazmat[kv["hazmat:B"]] or
                  hazmat[kv["hazmat:C"]] or hazmat[kv["hazmat:D"]] or hazmat[kv["hazmat:E"]]
   kv["maxspeed:hgv"] = normalize_speed(kv["maxspeed:hgv"])
+  kv["maxspeed:hgv:forward"] = normalize_speed(kv["maxspeed:hgv:forward"])
+  kv["maxspeed:hgv:backward"] = normalize_speed(kv["maxspeed:hgv:backward"])
 
   if (kv["hgv:national_network"] or kv["hgv:state_network"] or kv["hgv"] == "local" or kv["hgv"] == "designated") then
     kv["truck_route"] = "true"

@@ -44,5 +44,13 @@ uint16_t OSMAccessRestriction::modes() const {
   return attributes_.modes_;
 }
 
+baldr::AccessRestrictionDirection OSMAccessRestriction::direction() const {
+  return static_cast<baldr::AccessRestrictionDirection>(direction_);
+}
+
+void OSMAccessRestriction::set_direction(baldr::AccessRestrictionDirection direction) {
+  direction_ = direction;
+};
+
 } // namespace mjolnir
 } // namespace valhalla

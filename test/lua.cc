@@ -103,6 +103,34 @@ TEST(Lua, NumberDoublePeriod) {
   // ... but that the results aren't completely empty
   ASSERT_TRUE(results.size() > 0);
 }
+
+TEST(Lua, TestForwardBackward) {
+  // Way 25494427 version 14 has a "maxheight" tag value of 3..35 with the two
+  // dots. This probably shouldn't be parsed?
+  mjolnir::LuaTagTransform lua(std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len));
+
+  mjolnir::Tags tags;
+  tags.insert({"highway", "tertiary"});
+  tags.insert({"maxheight:forward", "1"});
+  tags.insert({"maxheight:backward", "1"});
+  tags.insert({"maxlength:forward", "1"});
+  tags.insert({"maxlength:backward", "1"});
+  tags.insert({"maxwidth:forward", "1"});
+  tags.insert({"maxwidth:backward", "1"});
+  tags.insert({"maxweight:forward", "1"});
+  tags.insert({"maxweight:backward", "1"});
+  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags);
+
+  // check that the maxheight is present...
+  ASSERT_TRUE(results.count("maxheight_forward") == 1);
+  ASSERT_TRUE(results.count("maxheight_backward") == 1);
+  ASSERT_TRUE(results.count("maxlength_forward") == 1);
+  ASSERT_TRUE(results.count("maxlength_backward") == 1);
+  ASSERT_TRUE(results.count("maxwidth_forward") == 1);
+  ASSERT_TRUE(results.count("maxwidth_backward") == 1);
+  ASSERT_TRUE(results.count("maxweight_forward") == 1);
+  ASSERT_TRUE(results.count("maxweight_backward") == 1);
+}
 } // namespace
 
 // TODO: sweet jesus add more tests of this class!
