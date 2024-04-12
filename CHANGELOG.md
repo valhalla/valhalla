@@ -109,6 +109,7 @@
    * ADDED: `hgv_no_penalty` costing option to allow penalized truck access to `hgv=no` edges [#4650](https://github.com/valhalla/valhalla/pull/4650)
    * CHANGED: Significantly improve performance of graphbuilder [#4669](https://github.com/valhalla/valhalla/pull/4669)
    * UPDATED: Improved turn by turn api reference documentation [#4675](https://github.com/valhalla/valhalla/pull/4675)
+   * ADDED: Consider more forward/backward tags for access restrictions and speeds [#4686](https://github.com/valhalla/valhalla/pull/4686)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

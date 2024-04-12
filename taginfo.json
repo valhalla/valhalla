@@ -3796,6 +3796,20 @@
       "description": "Maxheight for hgv."
     },
     {
+      "key": "maxheight:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight for hgv in forward direction."
+    },
+    {
+      "key": "maxheight:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight for hgv in backward direction."
+    },
+    {
       "key": "maxheight:physical",
       "object_types": [
         "way"
@@ -3808,6 +3822,20 @@
         "way"
       ],
       "description": "Maxlength for hgv."
+    },
+    {
+      "key": "maxlength:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxlength for hgv in forward direction."
+    },
+    {
+      "key": "maxlength:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxlength for hgv in backward direction."
     },
     {
       "key": "maxspeed",
@@ -3845,6 +3873,20 @@
       "description": "Maxspeed for hgv."
     },
     {
+      "key": "maxspeed:hgv:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxspeed for hgv in forward direction."
+    },
+    {
+      "key": "maxspeed:hgv:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxspeed for hgv in backward direction."
+    },
+    {
       "key": "maxspeed:practical",
       "description": "Considered the average speed on a road (assume kph except where mph given)",
       "object_types": [
@@ -3859,11 +3901,39 @@
       "description": "Maxweight for hgv."
     },
     {
+      "key": "maxweight:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxweight for hgv in forward direction."
+    },
+    {
+      "key": "maxweight:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxweight for hgv in backward direction."
+    },
+    {
       "key": "maxwidth",
       "object_types": [
         "way"
       ],
       "description": "Maxwidth for hgv."
+    },
+    {
+      "key": "maxwidth:forward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxwidth for hgv in forward direction."
+    },
+    {
+      "key": "maxwidth:backward",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxwidth for hgv in backward direction."
     },
     {
       "key": "maxwidth:physical",
