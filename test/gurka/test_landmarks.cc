@@ -143,6 +143,9 @@ void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
 
   auto tile = reader.GetGraphTile(graphid);
   for (const auto& e : tile->GetDirectedEdges()) {
+    if (e.is_shortcut()) {
+      continue;
+    }
     auto ei = tile->edgeinfo(&e);
     auto tagged_values = ei.GetTags();
 
@@ -248,8 +251,8 @@ TEST(LandmarkTest, TestBuildDatabase) {
 }
 
 TEST(LandmarkTest, TestParseLandmarks) {
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -393,8 +396,8 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
 }
 
 TEST(LandmarkTest, TestAddLandmarksToTiles) {
-  if (!filesystem::exists(workdir_tiles)) {
-    bool created = filesystem::create_directories(workdir_tiles);
+  if (!std::filesystem::exists(workdir_tiles)) {
+    bool created = std::filesystem::create_directories(workdir_tiles);
     EXPECT_TRUE(created);
   }
 
@@ -429,8 +432,8 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
 // hierarchy max level", and "Could not compute FileSuffix for GraphId with invalid tile
 // id:0/245760/0". We need to fix it in the future.
 TEST(LandmarkTest, DISABLED_ErrorTest) {
-  if (!filesystem::exists(workdir_tiles)) {
-    bool created = filesystem::create_directories(workdir_tiles);
+  if (!std::filesystem::exists(workdir_tiles)) {
+    bool created = std::filesystem::create_directories(workdir_tiles);
     EXPECT_TRUE(created);
   }
 
@@ -508,8 +511,8 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
   const std::string db_path = workdir + "/landmarks.sqlite";
   const std::string pbf = workdir + "/map.pbf";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 

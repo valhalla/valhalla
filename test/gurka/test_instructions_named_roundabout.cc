@@ -71,11 +71,14 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutEnterOnly) {
 
   // TODO: known issue - future update to end on a roundabout
   // Verify the enter_roundabout instructions
-  //  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-  //                                                            "Enter the roundabout.",
-  //                                                            "Enter Dupont Circle.",
-  //                                                            "Enter Dupont Circle.",
-  //                                                            "Enter Dupont Circle.", "");
+#if 0
+  int maneuver_index = 1;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                              "Enter the roundabout.",
+                                                              "Enter Dupont Circle.",
+                                                              "Enter Dupont Circle.",
+                                                              "Enter Dupont Circle.", "");
+#endif
 }
 
 // enter_roundabout_verbal

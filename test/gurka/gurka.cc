@@ -2,7 +2,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "loki/worker.h"
 #include "midgard/constants.h"
 #include "midgard/encoded.h"
@@ -29,6 +28,7 @@
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/osm/object_comparisons.hpp>
 
+#include <filesystem>
 #include <regex>
 #include <string>
 #include <tuple>
@@ -461,9 +461,9 @@ map buildtiles(const nodelayout& layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (filesystem::exists(workdir))
-    filesystem::remove_all(workdir);
-  filesystem::create_directories(workdir);
+  if (std::filesystem::exists(workdir))
+    std::filesystem::remove_all(workdir);
+  std::filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
   std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
@@ -488,6 +488,7 @@ map buildtiles(const nodelayout& layout,
  * @param end_node the node that should be the target of the directed edge you want
  * @param tile_id optional tile_id to limit the search to
  * @param way_id optional way_id to limit the search to
+ * @param is_shortcut whether we want a shortcut returned
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,

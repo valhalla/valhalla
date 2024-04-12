@@ -1,5 +1,7 @@
 #include "loki/node_search.h"
+
 #include <cstdint>
+#include <filesystem>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
@@ -17,7 +19,6 @@
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 
-#include "filesystem.h"
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/graphvalidator.h"
@@ -41,7 +42,7 @@ struct graph_writer {
   void write_tiles();
 
 private:
-  const uint8_t m_level;
+  [[maybe_unused]] const uint8_t m_level;
   std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder>> m_builders;
 };
 
@@ -272,8 +273,8 @@ void graph_builder::write_tiles(uint8_t level) const {
 
 void make_tile() {
   // make sure that all the old tiles are gone before trying to make new ones.
-  if (filesystem::is_directory(test_tile_dir)) {
-    filesystem::remove_all(test_tile_dir);
+  if (std::filesystem::is_directory(test_tile_dir)) {
+    std::filesystem::remove_all(test_tile_dir);
   }
 
   graph_builder builder;

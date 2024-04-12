@@ -105,12 +105,12 @@ struct test_graph_reader : public vb::GraphReader {
 TEST(EdgeCollapser, TestCollapseEdgeSimple) {
   vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
-  // simplest graph with a collapsible node:
-  //
-  //          /---(edge 0)-->\       /---(edge 1)-->\
-  //  (node 0)                (node 1)              (node 2)
-  //          \<--(edge 2)---/       \<--(edge 3)---/
-  //
+  /* simplest graph with a collapsible node:
+
+              /---(edge 0)-->\       /---(edge 1)-->\
+      (node 0)                (node 1)              (node 2)
+              \<--(edge 2)---/       \<--(edge 3)---/
+  */
   valhalla::midgard::PointLL base_ll(0.0f, 0.0f);
   graph_tile_builder builder;
   builder.append_node(base_ll, 0.00f, 0.0f, 1, 0);
@@ -154,16 +154,17 @@ TEST(EdgeCollapser, TestCollapseEdgeSimple) {
 TEST(EdgeCollapser, TestCollapseEdgeJunction) {
   vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
-  // simplest graph with a non-collapsible node:
-  //
-  //          /---(edge 0)-->\       /---(edge 1)-->\
-  //  (node 0)                (node 1)              (node 2)
-  //          \<--(edge 2)---/  /  \ \<--(edge 4)---/
-  //                           |   |
-  //                  (edge 5) ^   v (edge 3)
-  //                           |   |
-  //                            \  /
-  //                          (node 3)
+  /* simplest graph with a non-collapsible node:
+
+              /---(edge 0)-->\       /---(edge 1)-->\
+      (node 0)                (node 1)              (node 2)
+              \<--(edge 2)---/  /  \ \<--(edge 4)---/
+                               |   |
+                      (edge 5) ^   v (edge 3)
+                               |   |
+                                \  /
+                              (node 3)
+  */
   valhalla::midgard::PointLL base_ll(0.0f, 0.0f);
   graph_tile_builder builder;
   builder.append_node(base_ll, 0.00f, 0.00f, 1, 0);
@@ -210,13 +211,13 @@ TEST(EdgeCollapser, TestCollapseEdgeJunction) {
 TEST(EdgeCollapser, TestCollapseEdgeChain) {
   vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
-  // graph with 3 collapsible edges, all chained together. (e.g: think of the
-  // middle segment as a bridge).
-  //
-  //      /---(e0)-->\    /---(e1)-->\    /---(e3)-->\
-  //  (n0)            (n1)            (n2)            (n3)
-  //      \<--(e2)---/    \<--(e4)---/    \<--(e5)---/
-  //
+  /* graph with 3 collapsible edges, all chained together. (e.g: think of the
+     middle segment as a bridge).
+
+          /---(e0)-->\    /---(e1)-->\    /---(e3)-->\
+      (n0)            (n1)            (n2)            (n3)
+          \<--(e2)---/    \<--(e4)---/    \<--(e5)---/
+  */
   valhalla::midgard::PointLL base_ll(0.0f, 0.0f);
   graph_tile_builder builder;
   builder.append_node(base_ll, 0.00f, 0.0f, 1, 0);

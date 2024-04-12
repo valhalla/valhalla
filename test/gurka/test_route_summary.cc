@@ -1,4 +1,5 @@
 #include <cmath>
+#include <filesystem>
 #include <sstream>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -112,7 +113,7 @@ TEST(TestRouteSummary, GetSummary) {
   gurka::assert::osrm::expect_summaries(result, {expected_route_summary0, expected_route_summary1,
                                                  expected_route_summary2});
 
-  filesystem::remove_all(workdir);
+  std::filesystem::remove_all(workdir);
 }
 
 TEST(TestRouteSummary, DupSummaryFix) {
@@ -202,5 +203,5 @@ TEST(TestRouteSummary, DupSummaryFix) {
   const std::string expected_route_summary1 = "RT 1, RT 2, RT 4";
   gurka::assert::osrm::expect_summaries(result, {expected_route_summary0, expected_route_summary1});
 
-  filesystem::remove_all(workdir);
+  std::filesystem::remove_all(workdir);
 }
