@@ -1844,6 +1844,11 @@ function filter_tags_generic(kv)
   --TODO: hazmat really should have subcategories
   kv["hazmat"] = hazmat[kv["hazmat"]] or hazmat[kv["hazmat:water"]] or hazmat[kv["hazmat:A"]] or hazmat[kv["hazmat:B"]] or
                  hazmat[kv["hazmat:C"]] or hazmat[kv["hazmat:D"]] or hazmat[kv["hazmat:E"]]
+  kv["hazmat_forward"] = hazmat[kv["hazmat:forward"]] or hazmat[kv["hazmat:water:forward"]] or hazmat[kv["hazmat:A:forward"]] or hazmat[kv["hazmat:B:forward"]] or
+                 hazmat[kv["hazmat:C:forward"]] or hazmat[kv["hazmat:D:forward"]] or hazmat[kv["hazmat:E:forward"]]
+  kv["hazmat_backward"] = hazmat[kv["hazmat:backward"]] or hazmat[kv["hazmat:water:backward"]] or hazmat[kv["hazmat:A:backward"]] or hazmat[kv["hazmat:B:backward"]] or
+                 hazmat[kv["hazmat:C:backward"]] or hazmat[kv["hazmat:D:backward"]] or hazmat[kv["hazmat:E:backward"]]
+
   kv["maxspeed:hgv"] = normalize_speed(kv["maxspeed:hgv"])
   kv["maxspeed:hgv:forward"] = normalize_speed(kv["maxspeed:hgv:forward"])
   kv["maxspeed:hgv:backward"] = normalize_speed(kv["maxspeed:hgv:backward"])

@@ -959,6 +959,24 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["hazmat_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kHazmat);
+      restriction.set_value(tag_.second == "true" ? true : false);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["hazmat_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kHazmat);
+      restriction.set_value(tag_.second == "true" ? true : false);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["maxheight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxHeight);
