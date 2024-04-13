@@ -488,6 +488,7 @@ map buildtiles(const nodelayout& layout,
  * @param end_node the node that should be the target of the directed edge you want
  * @param tile_id optional tile_id to limit the search to
  * @param way_id optional way_id to limit the search to
+ * @param is_shortcut whether we want a shortcut returned
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,

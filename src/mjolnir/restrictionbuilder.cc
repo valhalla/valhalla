@@ -270,8 +270,8 @@ ComplexRestrictionBuilder CreateComplexRestriction(const OSMRestriction& restric
 };
 
 struct Result {
-  uint32_t forward_restrictions_count;
-  uint32_t reverse_restrictions_count;
+  uint32_t forward_restrictions_count = 0;
+  uint32_t reverse_restrictions_count = 0;
   std::vector<ComplexRestrictionBuilder> restrictions;
   std::unordered_set<GraphId> part_of_restriction;
 };
