@@ -93,6 +93,12 @@ A special costing option is `shortest`, which, when `true`, will solely use dist
 
 Another special case is `disable_hierarchy_pruning` costing option. As the name indicates, `disable_hierarchy_pruning = true` will disable hierarchies in routing algorithms, which allows us to find the actual optimal route even in edge cases. For example, together with `shortest = true` they can find the actual shortest route. When `disable_hierarchy_pruning` is `true` and arc distances between source and target are not above the max limit, the actual optimal route will be calculated at the expense of performance. Note that if arc distances between locations exceed the max limit, `disable_hierarchy_pruning` is `true` will not be applied. This costing option is available for all motorized costing models, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. For `bicycle` and `pedestrian` hierarchies are always disabled by default.
 
+Additionally to the main costing option, the `recostings` option can be used to calculate the travelling time of the found route based on different costing options. By e.g. adding
+```json
+"recostings":[{"costing":"auto","fixed_speed":20,"name":"auto_20","costing":"auto","fixed_speed":50,"name":"auto_50"}]
+```
+to the route request, the values `time_auto_20` and `time_auto_50` will be added to summaries to show how much time the route would cost with these given costing options. Passing a recosting which make the route impossible to follow (e.g. the main rout is by car over a motorway and recosting with pedestrian costing) leads to a `none` result of this recosting.
+
 ##### Automobile and bus costing options
 
 These options are available for `auto`, `bus`, and `truck` costing methods.
