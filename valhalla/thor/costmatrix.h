@@ -15,6 +15,7 @@
 #include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+#include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
@@ -150,6 +151,9 @@ protected:
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
+
+  // A* heuristics for both trees and each location
+  std::array<std::vector<AStarHeuristic>, 2> astar_heuristics_;
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
@@ -344,6 +348,19 @@ protected:
         hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
     }
   };
+
+  /**
+   * Get the minimum AStar heuristic for a given source/target, i.e. for a source we get
+   * the minimum heuristic of all targets for the forward expansion, so that we direct
+   * the search towards the closest target/source.
+   *
+   * @param loc_idx  either the source or target index
+   * @param node_ll  the current edge's end node's lat/lon
+   * @returns The heuristic for the closest target/source of the passed node
+   */
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
+  float GetAstarHeuristic(const uint32_t loc_idx, const PointLL& node_ll) const;
 
 private:
   class ReachedMap;
