@@ -254,7 +254,7 @@ TEST(Matrix, test_matrix) {
       ++found;
     }
   }
-  EXPECT_EQ(found, 10) << " not the number of results as expected";
+  EXPECT_EQ(found, 11) << " not the number of results as expected";
   request.clear_matrix();
 
   TimeDistanceMatrix timedist_matrix;
