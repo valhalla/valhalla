@@ -44,11 +44,11 @@ uint16_t OSMAccessRestriction::modes() const {
   return attributes_.modes_;
 }
 
-baldr::AccessRestrictionDirection OSMAccessRestriction::direction() const {
-  return static_cast<baldr::AccessRestrictionDirection>(direction_);
+AccessRestrictionDirection OSMAccessRestriction::direction() const {
+  return static_cast<AccessRestrictionDirection>(direction_);
 }
 
-void OSMAccessRestriction::set_direction(baldr::AccessRestrictionDirection direction) {
+void OSMAccessRestriction::set_direction(AccessRestrictionDirection direction) {
   direction_ = direction;
 };
 
