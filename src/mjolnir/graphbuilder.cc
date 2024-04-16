@@ -374,6 +374,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
 uint32_t AddAccessRestrictions(const uint32_t edgeid,
                                const uint64_t wayid,
                                const OSMData& osmdata,
+                               const bool forward,
                                GraphTileBuilder& graphtile) {
   auto res = osmdata.access_restrictions.equal_range(wayid);
   if (res.first == osmdata.access_restrictions.end()) {
@@ -382,10 +383,16 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
 
   uint32_t modes = 0;
   for (auto r = res.first; r != res.second; ++r) {
-    AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(),
-                                         r->second.value());
-    graphtile.AddAccessRestriction(access_restriction);
-    modes |= r->second.modes();
+    auto direction = r->second.direction();
+
+    if ((direction == AccessRestrictionDirection::kBoth) ||
+        (forward && direction == AccessRestrictionDirection::kForward) ||
+        (!forward && direction == AccessRestrictionDirection::kBackward)) {
+      AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(),
+                                           r->second.value());
+      graphtile.AddAccessRestriction(access_restriction);
+      modes |= r->second.modes();
+    }
   }
   return modes;
 }
@@ -608,7 +615,15 @@ void BuildTileSet(const std::string& ways_file,
             speed_limit = kMaxAssumedSpeed;
           }
 
-          uint32_t truck_speed = w.truck_speed();
+          const uint8_t directed_truck_speed =
+              forward ? w.truck_speed_forward() : w.truck_speed_backward();
+
+          // if there's a general truck speed AND a directed one, apply the stricter one
+          // otherwise just pick whichever is set
+          uint32_t truck_speed = w.truck_speed() && directed_truck_speed
+                                     ? std::min(w.truck_speed(), directed_truck_speed)
+                                     : std::max(w.truck_speed(), directed_truck_speed);
+
           if (truck_speed > kMaxAssumedSpeed) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
                      " wayId= " + std::to_string(w.way_id()));
@@ -1008,7 +1023,8 @@ void BuildTileSet(const std::string& ways_file,
           // Add restrictions..For now only storing access restrictions for trucks
           // TODO - support more than one mode
           if (directededge.forwardaccess()) {
-            uint32_t ar_modes = AddAccessRestrictions(idx, w.way_id(), osmdata, graphtile);
+            uint32_t ar_modes =
+                AddAccessRestrictions(idx, w.way_id(), osmdata, directededge.forward(), graphtile);
             if (ar_modes) {
               directededge.set_access_restriction(ar_modes);
             }

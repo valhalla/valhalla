@@ -140,7 +140,7 @@ protected:
   std::array<uint32_t, 2> locs_count_;
   std::array<uint32_t, 2> locs_remaining_;
 
-  // The ptth distance threshold being used for the currently executing query
+  // The path distance threshold being used for the currently executing query
   float current_pathdist_threshold_;
 
   // Status
