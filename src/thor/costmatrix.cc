@@ -63,26 +63,6 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
 CostMatrix::~CostMatrix() {
 }
 
-float CostMatrix::GetBucketRange(const float max_matrix_distance) {
-  float cost_threshold;
-  switch (mode_) {
-    case travel_mode_t::kBicycle:
-      cost_threshold = max_matrix_distance / kCostThresholdBicycleDivisor;
-      break;
-    case travel_mode_t::kPedestrian:
-    case travel_mode_t::kPublicTransit:
-      cost_threshold = max_matrix_distance / kCostThresholdPedestrianDivisor;
-      break;
-    case travel_mode_t::kDrive:
-    default:
-      cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
-  }
-
-  // Increase the cost threshold to make sure requests near the max distance succeed.
-  // Some costing models and locations require higher thresholds to succeed.
-  return cost_threshold * 2.0f;
-}
-
 // Clear the temporary information generated during time + distance matrix
 // construction.
 void CostMatrix::Clear() {
@@ -364,6 +344,9 @@ void CostMatrix::Initialize(
         auto heuristic = astar_heuristics_[!is_fwd][i].Get({other_ll.lng(), other_ll.lat()});
         min_heuristic = std::min(min_heuristic, heuristic);
       }
+      // TODO(nils): previously we'd estimate the bucket range by the max matrix distance,
+      // which would lead to tons of RAM if a high value was chosen in the config; ideally
+      // this would be chosen based on the request (e.g. some factor to the A* distance)
       adjacency_[is_fwd][i].reuse(min_heuristic, range, bucketsize, &edgelabel_[is_fwd][i]);
     }
   }

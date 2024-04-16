@@ -108,11 +108,11 @@
    * UPDATED: tz database to 2024a [#4643](https://github.com/valhalla/valhalla/pull/4643)
    * ADDED: `hgv_no_penalty` costing option to allow penalized truck access to `hgv=no` edges [#4650](https://github.com/valhalla/valhalla/pull/4650)
    * CHANGED: Significantly improve performance of graphbuilder [#4669](https://github.com/valhalla/valhalla/pull/4669)
-   * CHANGED: change costmatrix max_distance threshold to a distance threshold instead of duration [#4672](https://github.com/valhalla/valhalla/pull/4672)
    * UPDATED: Improved turn by turn api reference documentation [#4675](https://github.com/valhalla/valhalla/pull/4675)
    * CHANGED: contract nodes if connecting edges have different names or speed or non-conditional access restrictions [#4613](https://github.com/valhalla/valhalla/pull/4613)
    * CHANGED: CostMatrix switched from Dijkstra to A* [#4650](https://github.com/valhalla/valhalla/pull/4650)
    * ADDED: some missing documentation about request parameters [#4687](https://github.com/valhalla/valhalla/pull/4687)
+   * CHANGED: change costmatrix max_distance threshold to a distance threshold instead of duration [#4672](https://github.com/valhalla/valhalla/pull/4672)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
