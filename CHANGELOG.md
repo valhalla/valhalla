@@ -111,6 +111,7 @@
    * UPDATED: Improved turn by turn api reference documentation [#4675](https://github.com/valhalla/valhalla/pull/4675)
    * CHANGED: contract nodes if connecting edges have different names or speed or non-conditional access restrictions [#4613](https://github.com/valhalla/valhalla/pull/4613)
    * CHANGED: CostMatrix switched from Dijkstra to A* [#4650](https://github.com/valhalla/valhalla/pull/4650)
+   * ADDED: some missing documentation about request parameters [#4687](https://github.com/valhalla/valhalla/pull/4687)
    * ADDED: Consider more forward/backward tags for access restrictions and speeds [#4686](https://github.com/valhalla/valhalla/pull/4686)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0

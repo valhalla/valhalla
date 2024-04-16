@@ -93,6 +93,12 @@ A special costing option is `shortest`, which, when `true`, will solely use dist
 
 Another special case is `disable_hierarchy_pruning` costing option. As the name indicates, `disable_hierarchy_pruning = true` will disable hierarchies in routing algorithms, which allows us to find the actual optimal route even in edge cases. For example, together with `shortest = true` they can find the actual shortest route. When `disable_hierarchy_pruning` is `true` and arc distances between source and target are not above the max limit, the actual optimal route will be calculated at the expense of performance. Note that if arc distances between locations exceed the max limit, `disable_hierarchy_pruning` is `true` will not be applied. This costing option is available for all motorized costing models, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. For `bicycle` and `pedestrian` hierarchies are always disabled by default.
 
+Additionally to the main costing option, the `recostings` option can be used to calculate the travelling time of the found route based on different costing options. By e.g. adding
+```json
+"recostings":[{"costing":"auto","fixed_speed":20,"name":"auto_20","costing":"auto","fixed_speed":50,"name":"auto_50"}]
+```
+to the route request, the values `time_auto_20` and `time_auto_50` will be added to summaries to show how much time the route would cost with these given costing options. Passing a recosting which make the route impossible to follow (e.g. the main rout is by car over a motorway and recosting with pedestrian costing) leads to a `none` result of this recosting.
+
 ##### Automobile and bus costing options
 
 These options are available for `auto`, `bus`, and `truck` costing methods.
@@ -103,6 +109,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `gate_cost` | A cost applied when a [gate](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with undefined or private access is encountered. This cost is added to the estimated time / elapsed time. The default gate cost is 30 seconds. |
 | `gate_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with no access information is on the road. The default gate penalty is 300 seconds. |
 | `private_access_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) or [bollard](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dbollard) with `access=private` is encountered. The default private access penalty is 450 seconds. |
+| `destination_only_penalty` | A penalty applied when entering an road which is only allowed to enter if necessary to reach the [destination](https://wiki.openstreetmap.org/wiki/Tag:vehicle%3Ddestination). |
 | `toll_booth_cost` | A cost applied when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This cost is added to the estimated and elapsed times. The default cost is 15 seconds. |
 | `toll_booth_penalty` | A penalty applied to the cost when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This penalty can be used to create paths that avoid toll roads. The default toll booth penalty is 0. |
 | `ferry_cost` | A cost applied when entering a ferry. This cost is added to the estimated and elapsed times. The default cost is 300 seconds (5 minutes). |
@@ -116,6 +123,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `country_crossing_cost` | A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. The default cost is 600 seconds. |
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
+| `use_distance` | A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account (default) and 1 only distance. A factor of 0.5 will weight them roughly equally. **Note:** this costing is currently only available for auto costing. |
 | `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 90 KPH for `truck` and 140 KPH for `auto` and `bus`. |
 | `fixed_speed` | Fixed speed the vehicle can go. Used to override the calculated speed. Can be useful if speed of vehicle is known. `fixed_speed` must be between 1 and 252 KPH. The default value is 0 KPH which disables fixed speed and falls back to the standard calculated speed based on the road attribution. |
@@ -149,6 +157,8 @@ The following options are available for `truck` costing.
 | `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
 | `hgv_no_access_penalty` | A penalty applied to roads with no HGV/truck access. If set to a value less than 43200 seconds, HGV will be allowed on these roads and the penalty applies. Default 43200, i.e. trucks are not allowed. |
+| `low_class_penalty` | A penalty (in seconds) which is applied when going to residential or service roads. Default is 30 seconds. |
+
 
 ##### Bicycle costing options
 The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.
@@ -158,7 +168,7 @@ The default bicycle costing is tuned toward road bicycles with a slight preferen
 * Bicyclists vary in their tolerance for riding on roads. Most novice bicyclists, and even other bicyclists, prefer cycleways and dedicated cycling paths and would rather avoid all but the quietest neighborhood roads. Other cyclists may be experienced riding on roads and prefer to take roadways because they often provide the fastest way to get between two places. The bicycle costing model accounts for this with a `use_roads` factor to indicate a cyclist's tolerance for riding on roads.
 * Bicyclists vary in their fitness level and experience level, and many want to avoid hilly roads, and especially roads with very steep uphill or even downhill sections. Even if the fastest path is over a mountain, many cyclists prefer a flatter path that avoids the climb and descent up and over the mountain.
 
-The following options described above for autos also apply to bicycle costing methods: `maneuver_penalty`, `gate_cost`, `gate_penalty`, `country_crossing_cost`, `country_costing_penalty`, and `service_penalty`.
+The following options described above for autos also apply to bicycle costing methods: `maneuver_penalty`, `gate_cost`, `gate_penalty`,  `destination_only_penalty` , `country_crossing_cost`, `country_costing_penalty`, and `service_penalty`.
 
 These additional options are available for bicycle costing methods.
 
@@ -220,10 +230,12 @@ These options are available for pedestrian costing methods.
 | `use_lit` | This value is a range of values from 0 to 1, where 0 indicates indifference towards lit streets, and 1 indicates that unlit streets should be avoided. Note that even with values near 1, there is no guarantee the returned route will include lit segments. The default value is 0. | 
 | `service_penalty` | A penalty applied for transition to generic service road. The default penalty is 0. |
 | `service_factor` | A factor that modifies (multiplies) the cost when generic service roads are encountered. The default `service_factor` is 1. |
+| `destination_only_penalty` | A penalty applied when entering an road which is only allowed to enter if necessary to reach the [destination](https://wiki.openstreetmap.org/wiki/Tag:vehicle%3Ddestination) |
 | `max_hiking_difficulty` | This value indicates the maximum difficulty of hiking trails that is allowed. Values between 0 and 6 are allowed. The values correspond to *sac_scale* values within OpenStreetMap, see reference [here](https://wiki.openstreetmap.org/wiki/Key:sac_scale). The default value is 1 which means that well cleared trails that are mostly flat or slightly sloped are allowed. Higher difficulty trails can be allowed by specifying a higher value for max_hiking_difficulty.
 |`bss_rent_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to rent a bike from a bike share station. This value will be displayed in the final directions and used to calculate the whole duration. The default value is 120 seconds.|
 |`bss_rent_penalty`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to rent a bike from a bike share station. This value won't be displayed and used only inside of the algorithm.|
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
+| `max_distance` | Sets the maximum total walking distance of a route. Default is 100 km (~62 miles). |
 | `transit_start_end_max_distance` | A pedestrian option that can be added to the request to extend the defaults (2145 meters or approximately 1.5 miles). This is the maximum walking distance at the beginning or end of a route.|
 | `transit_transfer_max_distance` | A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.|
 | `type` | If set to `blind`, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. Default `foot` |
@@ -276,6 +288,7 @@ Directions options should be specified at the top level of the JSON object.
 | `language` | The language of the narration instructions based on the [IETF BCP 47](https://tools.ietf.org/html/bcp47) language tag string. If no language is specified or the specified language is unsupported, United States-based English (en-US) is used. [Currently supported language list](#supported-language-tags) |
 | `directions_type` |  An enum with 3 values. <ul><li>`none` indicating no maneuvers or instructions should be returned.</li><li>`maneuvers` indicating that only maneuvers be returned.</li><li>`instructions` indicating that maneuvers with instructions should be returned (this is the default if not specified).</li></ul> |
 | `format` | Four options are available: <ul><li>`json` is default valhalla routing directions JSON format</li><li>`gpx` returns the route as a GPX (GPS exchange format) XML track</li><li>`osrm` creates a OSRM compatible route directions JSON</li><li>`pbf` formats the result using protocol buffers</li></ul> |
+| `shape_format` | If `"format" : "osrm"` is set: Specifies the optional format for the path shape of each connection. One of `polyline6` (default), `polyline5`, `geojson` or `no_shape`. |
 | `banner_instructions` | If the format is `osrm`, this boolean indicates if each step should have the additional `bannerInstructions` attribute, which can be displayed in some navigation system SDKs. |
 | `voice_instructions` | If the format is `osrm`, this boolean indicates if each step should have the additional `voiceInstructions` attribute, which can be heard in some navigation system SDKs. |
 | `alternates` |  A number denoting how many alternate routes should be provided. There may be no alternates or less alternates than the user specifies. Alternates are not yet supported on multipoint routes (that is, routes with more than 2 locations). They are also not supported on time dependent routes. |
