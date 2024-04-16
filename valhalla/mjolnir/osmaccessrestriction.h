@@ -78,6 +78,7 @@ protected:
   Attributes attributes_;
   AccessRestrictionDirection direction_;
   uint16_t spare_[2];
+  uint8_t spare2_;
 };
 
 } // namespace mjolnir
