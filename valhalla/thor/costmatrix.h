@@ -164,13 +164,6 @@ protected:
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
   /**
-   * Get the cost range for the doublebucket queue based on the current mode and the max arc-length
-   * distance for that mode.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   */
-  float GetBucketRange(const float max_matrix_distance);
-
-  /**
    * Form the initial time distance matrix given the sources
    * and destinations.
    * @param  source_location_list   List of source/origin locations.
