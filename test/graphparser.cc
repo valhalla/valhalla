@@ -1,7 +1,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/sequence.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/graphbuilder.h"
@@ -11,6 +10,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 
 #include "baldr/directededge.h"
@@ -75,32 +75,32 @@ void DoConfig() {
 // must do clean up here vs TearDown() as we are building data
 // in the same directory multiple times
 void CleanUp() {
-  if (filesystem::exists(ways_file))
-    filesystem::remove(ways_file);
+  if (std::filesystem::exists(ways_file))
+    std::filesystem::remove(ways_file);
 
-  if (filesystem::exists(way_nodes_file))
-    filesystem::remove(way_nodes_file);
+  if (std::filesystem::exists(way_nodes_file))
+    std::filesystem::remove(way_nodes_file);
 
-  if (filesystem::exists(nodes_file))
-    filesystem::remove(nodes_file);
+  if (std::filesystem::exists(nodes_file))
+    std::filesystem::remove(nodes_file);
 
-  if (filesystem::exists(edges_file))
-    filesystem::remove(edges_file);
+  if (std::filesystem::exists(edges_file))
+    std::filesystem::remove(edges_file);
 
-  if (filesystem::exists(access_file))
-    filesystem::remove(access_file);
+  if (std::filesystem::exists(access_file))
+    std::filesystem::remove(access_file);
 
-  if (filesystem::exists(from_restriction_file))
-    filesystem::remove(from_restriction_file);
+  if (std::filesystem::exists(from_restriction_file))
+    std::filesystem::remove(from_restriction_file);
 
-  if (filesystem::exists(to_restriction_file))
-    filesystem::remove(to_restriction_file);
+  if (std::filesystem::exists(to_restriction_file))
+    std::filesystem::remove(to_restriction_file);
 
-  if (filesystem::exists(bss_nodes_file))
-    filesystem::remove(bss_nodes_file);
+  if (std::filesystem::exists(bss_nodes_file))
+    std::filesystem::remove(bss_nodes_file);
 
-  if (filesystem::exists(linguistic_node_file))
-    filesystem::remove(linguistic_node_file);
+  if (std::filesystem::exists(linguistic_node_file))
+    std::filesystem::remove(linguistic_node_file);
 }
 
 void BollardsGatesAndAccess(const std::string& config_file) {
