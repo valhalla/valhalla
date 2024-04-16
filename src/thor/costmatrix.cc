@@ -147,7 +147,7 @@ bool CostMatrix::SourceToTarget(Api& request,
   auto& source_location_list = *request.mutable_options()->mutable_sources();
   auto& target_location_list = *request.mutable_options()->mutable_targets();
 
-  current_pathdist_threshold_ = max_matrix_distance;
+  current_pathdist_threshold_ = max_matrix_distance / 2;
 
   auto time_infos = SetOriginTimes(source_location_list, graphreader);
 
