@@ -140,8 +140,8 @@ protected:
   std::array<uint32_t, 2> locs_count_;
   std::array<uint32_t, 2> locs_remaining_;
 
-  // The cost threshold being used for the currently executing query
-  float current_cost_threshold_;
+  // The path distance threshold being used for the currently executing query
+  float current_pathdist_threshold_;
 
   // Status
   std::array<std::vector<LocationStatus>, 2> locs_status_;
@@ -162,13 +162,6 @@ protected:
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
-
-  /**
-   * Get the cost threshold based on the current mode and the max arc-length distance
-   * for that mode.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   */
-  float GetCostThreshold(const float max_matrix_distance);
 
   /**
    * Form the initial time distance matrix given the sources
