@@ -57,12 +57,12 @@ TEST(Logging, FileLoggerTest) {
     results.emplace_back(std::async(std::launch::async, work));
   }
 
-  // dont really care about the results but we can pretend
-  int exit_code = 0;
   for (auto& result : results) {
     try {
       result.get();
-    } catch (std::exception& e) { exit_code++; }
+    } catch (std::exception& e) {
+      LOG_TRACE("exception while getting result");
+    }
   }
 
   // wait for logger to close and reopen the file
