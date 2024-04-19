@@ -57,30 +57,10 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_cost_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
-}
-
-float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
-  float cost_threshold;
-  switch (mode_) {
-    case travel_mode_t::kBicycle:
-      cost_threshold = max_matrix_distance / kCostThresholdBicycleDivisor;
-      break;
-    case travel_mode_t::kPedestrian:
-    case travel_mode_t::kPublicTransit:
-      cost_threshold = max_matrix_distance / kCostThresholdPedestrianDivisor;
-      break;
-    case travel_mode_t::kDrive:
-    default:
-      cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
-  }
-
-  // Increase the cost threshold to make sure requests near the max distance succeed.
-  // Some costing models and locations require higher thresholds to succeed.
-  return cost_threshold * 2.0f;
 }
 
 // Clear the temporary information generated during time + distance matrix
@@ -147,7 +127,7 @@ bool CostMatrix::SourceToTarget(Api& request,
   auto& source_location_list = *request.mutable_options()->mutable_sources();
   auto& target_location_list = *request.mutable_options()->mutable_targets();
 
-  current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
+  current_pathdist_threshold_ = max_matrix_distance / 2;
 
   auto time_infos = SetOriginTimes(source_location_list, graphreader);
 
@@ -364,6 +344,9 @@ void CostMatrix::Initialize(
         auto heuristic = astar_heuristics_[!is_fwd][i].Get({other_ll.lng(), other_ll.lat()});
         min_heuristic = std::min(min_heuristic, heuristic);
       }
+      // TODO(nils): previously we'd estimate the bucket range by the max matrix distance,
+      // which would lead to tons of RAM if a high value was chosen in the config; ideally
+      // this would be chosen based on the request (e.g. some factor to the A* distance)
       adjacency_[is_fwd][i].reuse(min_heuristic, range, bucketsize, &edgelabel_[is_fwd][i]);
     }
   }
@@ -619,7 +602,7 @@ bool CostMatrix::Expand(const uint32_t index,
 
   // Get edge label and check cost threshold
   auto pred = edgelabels[pred_idx];
-  if (pred.cost().secs > current_cost_threshold_) {
+  if (pred.path_distance() > current_pathdist_threshold_) {
     locs_status_[FORWARD][index].threshold = 0;
     return false;
   }
