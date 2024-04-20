@@ -15,12 +15,12 @@ add_library(valhalla_test
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
   )
-target_include_directories(valhalla_test 
+target_include_directories(valhalla_test
   PUBLIC
-    valhalla
     ${VALHALLA_SOURCE_DIR}/test
     ${VALHALLA_SOURCE_DIR}/test/gurka
   SYSTEM
+    ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
     ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
     ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
     ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
