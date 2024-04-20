@@ -17,6 +17,7 @@ add_library(valhalla_test
   )
 target_include_directories(valhalla_test 
   PUBLIC
+    valhalla
     ${VALHALLA_SOURCE_DIR}/test
     ${VALHALLA_SOURCE_DIR}/test/gurka
   SYSTEM
