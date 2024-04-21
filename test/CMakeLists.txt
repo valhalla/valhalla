@@ -15,15 +15,15 @@ add_library(valhalla_test
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
   )
-target_include_directories(valhalla_test
-  PUBLIC
-    ${VALHALLA_SOURCE_DIR}/test
-    ${VALHALLA_SOURCE_DIR}/test/gurka
-  SYSTEM
-    ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
-    ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-    ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-    ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+target_include_directories(valhalla_test PUBLIC
+  ${VALHALLA_SOURCE_DIR}/test
+  ${VALHALLA_SOURCE_DIR}/test/gurka)
+target_include_directories(valhalla_test PUBLIC SYSTEM
+  ${robinhoodhashing_include_dir}
+  ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+  ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
 target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread PkgConfig::LZ4)
 
 if(ENABLE_DATA_TOOLS)
