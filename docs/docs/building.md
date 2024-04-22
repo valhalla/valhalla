@@ -116,7 +116,7 @@ git -C C:\path\to\vcpkg checkout f330a32
 # only build release versions for vcpkg packages
 echo.set(VCPKG_BUILD_TYPE release)>> path\to\vcpkg\triplets\x64-windows.cmake
 cd C:\path\to\valhalla
-C:\path\to\vcpkg.exe install --triple x64-windows
+C:\path\to\vcpkg.exe install --triplet x64-windows
 ```
 2. Let CMake configure the build with the required modules enabled. The final command for `x64` could look like
 ```
