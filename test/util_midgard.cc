@@ -28,7 +28,6 @@ TEST(UtilMidgard, TestRangedDefaultT) {
   for (unsigned i = 0; i < 100; ++i) {
     ranged_default_t<float> testRange{lower, defaultDistributor(generator), upper};
     bool clamped = false;
-    float defaultVal = testRange.def;
     float testVal = testDistributor(generator);
 
     float finalVal = testRange(testVal, clamped);
