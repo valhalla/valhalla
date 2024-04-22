@@ -39,7 +39,7 @@ public:
 
   /**
    * Get the modes impacted by access restriction.
-   * @return  Returns a bit field of affected modes.
+   * @return  Returns a bit mask of affected modes.
    */
   uint32_t modes() const;
 
