@@ -40,6 +40,11 @@ struct TimeInfo {
   // a timezone offset cache because doing the offset math is expensive
   baldr::DateTime::tz_sys_info_cache_t* tz_cache;
 
+  // A constructor
+  TimeInfo() {
+    *this = invalid();
+  }
+
   /**
    * Create TimeInfo object with default parameters.
    * @return    TimeInfo structure
@@ -275,6 +280,19 @@ struct TimeInfo {
               << ", seconds_from_now: " << ti.seconds_from_now
               << ", negative_seconds_from_now: " << ti.negative_seconds_from_now
               << ", tz_cache: " << ti.tz_cache << "}";
+  }
+
+  // for unit tests
+  TimeInfo(uint64_t _valid = false,
+           uint64_t _timezone_index = 0,
+           uint64_t _local_time = 0,
+           uint64_t _second_of_week = 0,
+           uint64_t _seconds_from_now = 0,
+           uint64_t _negative_seconds_from_now = false,
+           baldr::DateTime::tz_sys_info_cache_t* _tz_cache = nullptr)
+      : valid(_valid), timezone_index(_timezone_index), local_time(_local_time),
+        second_of_week(_second_of_week), seconds_from_now(_seconds_from_now),
+        negative_seconds_from_now(_negative_seconds_from_now), tz_cache(_tz_cache) {
   }
 };
 
