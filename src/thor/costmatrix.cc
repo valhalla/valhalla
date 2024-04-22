@@ -569,8 +569,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
 
   // setting this edge as reached
   if (expansion_callback_) {
-    expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix", "r", newcost.secs,
-                        pred_dist, newcost.cost);
+    expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix",
+                        Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost);
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -613,8 +613,9 @@ bool CostMatrix::Expand(const uint32_t index,
   if (expansion_callback_) {
     auto prev_pred =
         pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
-    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix", "s", pred.cost().secs,
-                        pred.path_distance(), pred.cost().cost);
+    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
+                        Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
+                        pred.cost().cost);
   }
 
   if (FORWARD) {
@@ -847,8 +848,9 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       auto prev_pred = fwd_pred.predecessor() == kInvalidLabel
                            ? GraphId{}
                            : edgelabel_[MATRIX_FORW][source][fwd_pred.predecessor()].edgeid();
-      expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "costmatrix", "c",
-                          fwd_pred.cost().secs, fwd_pred.path_distance(), fwd_pred.cost().cost);
+      expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "costmatrix",
+                          Expansion_EdgeStatus_connected, fwd_pred.cost().secs,
+                          fwd_pred.path_distance(), fwd_pred.cost().cost);
     }
   }
 
@@ -954,8 +956,9 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
         auto prev_pred = rev_pred.predecessor() == kInvalidLabel
                              ? GraphId{}
                              : edgelabel_[MATRIX_REV][source][rev_pred.predecessor()].edgeid();
-        expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrix", "c",
-                            rev_pred.cost().secs, rev_pred.path_distance(), rev_pred.cost().cost);
+        expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrix",
+                            Expansion_EdgeStatus_connected, rev_pred.cost().secs,
+                            rev_pred.path_distance(), rev_pred.cost().cost);
       }
     }
   }

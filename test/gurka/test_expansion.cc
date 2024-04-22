@@ -31,15 +31,16 @@ protected:
     expansion_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/expansion");
   }
 
-  void check_result(const std::string& action,
-                    const std::vector<std::string>& waypoints,
-                    bool skip_opps,
-                    unsigned exp_feats,
-                    const std::vector<std::string>& props = {}) {
-
+  valhalla::Api do_expansion_action(std::string* res,
+                                    bool skip_opps,
+                                    std::string action,
+                                    const std::vector<std::string>& props,
+                                    const std::vector<std::string>& waypoints,
+                                    const bool pbf) {
     std::unordered_map<std::string, std::string> options = {{"/skip_opposites",
                                                              skip_opps ? "1" : "0"},
-                                                            {"/action", action}};
+                                                            {"/action", action},
+                                                            {"/format", pbf ? "pbf" : "json"}};
     for (uint8_t i = 0; i < props.size(); i++) {
       options.insert({{"/expansion_properties/" + std::to_string(i), props[i]}});
     }
@@ -48,16 +49,82 @@ protected:
     }
 
     // get the response
-    std::string res;
     valhalla::Api api;
 
     if (action == "sources_to_targets") {
       api = gurka::do_action(Options::expansion, expansion_map, {waypoints[0]}, {waypoints[1]},
-                             "auto", options, {}, &res);
+                             "auto", options, {}, res);
     } else {
-      api = gurka::do_action(Options::expansion, expansion_map, waypoints, "auto", options, {}, &res);
+      api = gurka::do_action(Options::expansion, expansion_map, waypoints, "auto", options, {}, res);
     }
 
+    return api;
+  }
+  void check_results(const std::string& action,
+                     const std::vector<std::string>& waypoints,
+                     bool skip_opps,
+                     unsigned exp_feats,
+                     const std::vector<std::string>& props = {}) {
+    check_result_json(action, waypoints, skip_opps, exp_feats, props);
+    check_result_pbf(action, waypoints, skip_opps, exp_feats, props);
+  }
+  void check_result_pbf(const std::string& action,
+                        const std::vector<std::string>& waypoints,
+                        bool skip_opps,
+                        unsigned exp_feats,
+                        const std::vector<std::string>& props) {
+    std::string res;
+    auto api = do_expansion_action(&res, skip_opps, action, props, waypoints, true);
+
+    Api parsed_api;
+    parsed_api.ParseFromString(res);
+
+    ASSERT_EQ(parsed_api.expansion().geometries_size(), exp_feats);
+
+    bool edge_status = false;
+    bool distance = false;
+    bool duration = false;
+    bool pred_edge_id = false;
+    bool edge_id = false;
+    bool cost = false;
+
+    const std::unordered_map<std::string, int> prop_count;
+    for (const auto& prop : props) {
+      if (prop == "edge_status") {
+        edge_status = true;
+      }
+      if (prop == "distance") {
+        distance = true;
+      }
+      if (prop == "duration") {
+        duration = true;
+      }
+      if (prop == "pred_edge_id") {
+        pred_edge_id = true;
+      }
+      if (prop == "edge_id") {
+        edge_id = true;
+      }
+      if (prop == "cost") {
+        cost = true;
+      }
+    }
+    ASSERT_EQ(parsed_api.expansion().geometries_size(), exp_feats);
+    ASSERT_EQ(parsed_api.expansion().edge_status_size(), edge_status ? exp_feats : 0);
+    ASSERT_EQ(parsed_api.expansion().distances_size(), distance ? exp_feats : 0);
+    ASSERT_EQ(parsed_api.expansion().durations_size(), duration ? exp_feats : 0);
+    ASSERT_EQ(parsed_api.expansion().pred_edge_id_size(), pred_edge_id ? exp_feats : 0);
+    ASSERT_EQ(parsed_api.expansion().edge_id_size(), edge_id ? exp_feats : 0);
+    ASSERT_EQ(parsed_api.expansion().costs_size(), cost ? exp_feats : 0);
+  }
+  void check_result_json(const std::string& action,
+                         const std::vector<std::string>& waypoints,
+                         bool skip_opps,
+                         unsigned exp_feats,
+                         const std::vector<std::string>& props) {
+
+    std::string res;
+    auto api = do_expansion_action(&res, skip_opps, action, props, waypoints, false);
     // get the MultiLineString feature
     rapidjson::Document res_doc;
     res_doc.Parse(res.c_str());
@@ -80,35 +147,35 @@ gurka::map ExpansionTest::expansion_map = {};
 TEST_P(ExpansionTest, Isochrone) {
   // test Dijkstra expansion
   // 11 because there's a one-way
-  check_result("isochrone", {"A"}, false, 11, GetParam());
+  check_results("isochrone", {"A"}, false, 11, GetParam());
 }
 
 TEST_P(ExpansionTest, IsochroneNoOpposites) {
   // test Dijkstra expansion and skip collecting more expensive opposite edges
-  check_result("isochrone", {"A"}, true, 6, GetParam());
+  check_results("isochrone", {"A"}, true, 6, GetParam());
 }
 
 TEST_P(ExpansionTest, Routing) {
   // test AStar expansion
-  check_result("route", {"E", "H"}, false, 23, GetParam());
+  check_results("route", {"E", "H"}, false, 23, GetParam());
 }
 
 TEST_P(ExpansionTest, RoutingNoOpposites) {
   // test AStar expansion and no opposite edges
-  check_result("route", {"E", "H"}, true, 16, GetParam());
+  check_results("route", {"E", "H"}, true, 16, GetParam());
 }
 
 TEST_P(ExpansionTest, Matrix) {
-  check_result("sources_to_targets", {"E", "H"}, false, 48, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, false, 48, GetParam());
 }
 
 TEST_P(ExpansionTest, MatrixNoOpposites) {
-  check_result("sources_to_targets", {"E", "H"}, true, 23, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, true, 23, GetParam());
 }
 
 TEST_F(ExpansionTest, UnsupportedAction) {
   try {
-    check_result("status", {"E", "H"}, true, 16);
+    check_results("status", {"E", "H"}, true, 16);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 144); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
@@ -116,7 +183,7 @@ TEST_F(ExpansionTest, UnsupportedAction) {
 
 TEST_F(ExpansionTest, UnsupportedPropType) {
   try {
-    check_result("route", {"E", "H"}, true, 16, {"foo", "bar"});
+    check_results("route", {"E", "H"}, true, 16, {"foo", "bar"});
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 168); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };

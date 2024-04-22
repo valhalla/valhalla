@@ -6,9 +6,53 @@
 #include "midgard/logging.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
+#include "tyr/serializers.h"
 
 using namespace rapidjson;
 using namespace valhalla::midgard;
+using namespace valhalla::tyr;
+
+namespace {
+
+using namespace valhalla;
+
+void writeExpansionProgress(Expansion* expansion,
+                            const baldr::GraphId& edgeid,
+                            const baldr::GraphId& prev_edgeid,
+                            const std::vector<midgard::PointLL>& shape,
+                            const std::unordered_set<Options::ExpansionProperties>& exp_props,
+                            const Expansion_EdgeStatus& status,
+                            const float& duration,
+                            const uint32_t& distance,
+                            const float& cost) {
+
+  auto* geom = expansion->add_geometries();
+  // make the geom
+  for (const auto& p : shape) {
+    geom->add_coords(round(p.lng() * 1e6));
+    geom->add_coords(round(p.lat() * 1e6));
+  }
+
+  // no properties asked for, don't collect any
+  if (!exp_props.size()) {
+    return;
+  }
+
+  // make the properties
+  if (exp_props.count(Options_ExpansionProperties_duration))
+    expansion->add_durations(static_cast<uint32_t>(duration));
+  if (exp_props.count(Options_ExpansionProperties_distance))
+    expansion->add_distances(static_cast<uint32_t>(distance));
+  if (exp_props.count(Options_ExpansionProperties_cost))
+    expansion->add_costs(static_cast<uint32_t>(cost));
+  if (exp_props.count(Options_ExpansionProperties_edge_status))
+    expansion->add_edge_status(status);
+  if (exp_props.count(Options_ExpansionProperties_edge_id))
+    expansion->add_edge_id(static_cast<uint32_t>(edgeid));
+  if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
+    expansion->add_pred_edge_id(static_cast<uint32_t>(prev_edgeid));
+}
+} // namespace
 
 namespace valhalla {
 namespace thor {
@@ -30,21 +74,16 @@ std::string thor_worker_t::expansion(Api& request) {
     exp_props.insert(static_cast<Options_ExpansionProperties>(prop));
   }
 
-  // default the expansion geojson so its easy to add to as we go
-  writer_wrapper_t writer(1024 * 1024);
-  writer.start_object();
-  writer("type", "FeatureCollection");
-  writer.start_array("features");
-  writer.set_precision(6);
-
+  auto* expansion = request.mutable_expansion();
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
   std::string algo = "";
-  auto track_expansion = [&writer, &opp_edges, &gen_factor, &skip_opps, &exp_props,
+  auto track_expansion = [&expansion, &opp_edges, &gen_factor, &skip_opps, &exp_props,
                           &algo](baldr::GraphReader& reader, baldr::GraphId edgeid,
                                  baldr::GraphId prev_edgeid, const char* algorithm = nullptr,
-                                 std::string status = nullptr, const float duration = 0.f,
-                                 const uint32_t distance = 0, const float cost = 0.f) {
+                                 const Expansion_EdgeStatus status = Expansion_EdgeStatus_reached,
+                                 const float duration = 0.f, const uint32_t distance = 0,
+                                 const float cost = 0.f) {
     algo = algorithm;
 
     auto tile = reader.GetGraphTile(edgeid);
@@ -73,51 +112,8 @@ std::string thor_worker_t::expansion(Api& request) {
       std::reverse(shape.begin(), shape.end());
     Polyline2<PointLL>::Generalize(shape, gen_factor, {}, false);
 
-    writer.start_object(); // feature object
-    writer("type", "Feature");
-
-    writer.start_object("geometry");
-    writer("type", "LineString");
-    writer.start_array("coordinates");
-
-    // make the geom
-    for (const auto& p : shape) {
-      writer.start_array();
-      writer(p.lng());
-      writer(p.lat());
-      writer.end_array();
-    }
-
-    writer.end_array();  // coordinates
-    writer.end_object(); // geometry
-
-    writer.start_object("properties");
-    // no properties asked for, don't collect any
-    if (!exp_props.size()) {
-      writer.end_object(); // properties
-      writer.end_object(); // feature
-      return;
-    }
-
-    // make the properties
-    if (exp_props.count(Options_ExpansionProperties_duration)) {
-      writer("duration", static_cast<uint64_t>(duration));
-    }
-    if (exp_props.count(Options_ExpansionProperties_distance)) {
-      writer("distance", static_cast<uint64_t>(distance));
-    }
-    if (exp_props.count(Options_ExpansionProperties_cost)) {
-      writer("cost", static_cast<uint64_t>(cost));
-    }
-    if (exp_props.count(Options_ExpansionProperties_edge_status))
-      writer("edge_status", status);
-    if (exp_props.count(Options_ExpansionProperties_edge_id))
-      writer("edge_id", static_cast<uint64_t>(edgeid));
-    if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
-      writer("pred_edge_id", static_cast<uint64_t>(prev_edgeid));
-
-    writer.end_object(); // properties
-    writer.end_object(); // feature
+    writeExpansionProgress(expansion, edgeid, prev_edgeid, shape, exp_props, status, duration,
+                           distance, cost);
   };
 
   // tell all the algorithms how to track expansion
@@ -150,13 +146,6 @@ std::string thor_worker_t::expansion(Api& request) {
     // anyway
   }
 
-  // close the GeoJSON
-  writer.end_array(); // features
-  writer.start_object("properties");
-  writer("algorithm", algo);
-  writer.end_object();
-  writer.end_object(); // object
-
   // tell all the algorithms to stop tracking the expansion
   for (auto* alg : std::vector<PathAlgorithm*>{&multi_modal_astar, &timedep_forward, &timedep_reverse,
                                                &bidir_astar, &bss_astar}) {
@@ -166,7 +155,7 @@ std::string thor_worker_t::expansion(Api& request) {
   isochrone_gen.SetInnerExpansionCallback(nullptr);
 
   // serialize it
-  return writer.get_buffer();
+  return tyr::serializeExpansion(request, algo);
 }
 
 } // namespace thor
