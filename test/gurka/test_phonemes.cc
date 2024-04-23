@@ -1130,7 +1130,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
   {
     GraphId node_id = BD_edge->endnode();
     auto tile = graph_reader.GetGraphTile(node_id);
-    [[maybe_unused]] const NodeInfo* node_info = tile->node(node_id);
+    tile->node(node_id);
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> index_linguistic_map;
 
@@ -1181,7 +1181,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     node_id = DB_edge->endnode();
     tile = graph_reader.GetGraphTile(node_id);
-    node_info = tile->node(node_id);
+    tile->node(node_id);
 
     index_linguistic_map.clear();
     signs.clear();
@@ -1233,7 +1233,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     // more signs.  jeita wins.
     node_id = BC_edge->endnode();
     tile = graph_reader.GetGraphTile(node_id);
-    node_info = tile->node(node_id);
+    tile->node(node_id);
 
     index_linguistic_map.clear();
     signs.clear();
@@ -1340,7 +1340,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     // more signs.  should all be ipa
     node_id = DE_edge->endnode();
     graph_reader.GetGraphTile(node_id);
-    node_info = tile->node(node_id);
+    tile->node(node_id);
 
     index_linguistic_map.clear();
     signs.clear();
@@ -1418,7 +1418,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     // more signs.  should all be ipa
     node_id = ED_edge->endnode();
     graph_reader.GetGraphTile(node_id);
-    node_info = tile->node(node_id);
+    tile->node(node_id);
 
     index_linguistic_map.clear();
     signs.clear();
