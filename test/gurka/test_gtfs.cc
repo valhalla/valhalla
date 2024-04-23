@@ -13,12 +13,6 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
-/*
-   The following file has warning:
-   third_party/just_gtfs/include/just_gtfs/just_gtfs.h
-   Therefore this file has warnings
-   TODO third_party header shuold be treated a system headers??
-*/
 using point_type = boost::geometry::model::d2::point_xy<double>;
 using polygon_type = boost::geometry::model::polygon<point_type>;
 using boost::geometry::within;
