@@ -58,11 +58,7 @@ TEST(Logging, FileLoggerTest) {
   }
 
   for (auto& result : results) {
-    try {
-      result.get();
-    } catch (std::exception& e) {
-      LOG_TRACE("exception while getting result");
-    }
+    ASSERT_NO_THROW(result.get());
   }
 
   // wait for logger to close and reopen the file
