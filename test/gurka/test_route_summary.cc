@@ -218,13 +218,25 @@ TEST(Standalone, TripLegSummary) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   const std::string workdir = "test/data/gurka_test_route_summary";
 
+  std::string result_json;
+  rapidjson::Document result;
+
   valhalla::gurka::map map = gurka::buildtiles(layout, ways, {}, {}, workdir);
 
   valhalla::Api result0 = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto",
-                                           {{"/directions_type", "none"}});
+                                           {{"/directions_type", "none"}}, {}, &result_json);
   EXPECT_TRUE(result0.trip().routes(0).legs(0).summary().has_highway());
   EXPECT_FALSE(result0.trip().routes(0).legs(0).summary().has_toll());
   EXPECT_FALSE(result0.trip().routes(0).legs(0).summary().has_ferry());
+
+  result.Parse(result_json.c_str());
+  auto trip = result["trip"].GetObject();
+  auto summary = trip["summary"].GetObject();
+
+  EXPECT_TRUE(summary["has_highway"].GetBool());
+  EXPECT_FALSE(summary["has_toll"].GetBool());
+  EXPECT_FALSE(summary["has_ferry"].GetBool());
+  result_json.erase();
 
   valhalla::Api result1 = gurka::do_action(valhalla::Options::route, map, {"B", "C"}, "auto",
                                            {{"/directions_type", "none"}});
@@ -242,16 +254,34 @@ TEST(Standalone, TripLegSummary) {
   // and does not depend on the `directions_type` value
 
   valhalla::Api result3 = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
-                                           {{"/directions_type", "none"}});
+                                           {{"/directions_type", "none"}}, {}, &result_json);
+
   EXPECT_TRUE(result3.trip().routes(0).legs(0).summary().has_highway());
   EXPECT_TRUE(result3.trip().routes(0).legs(0).summary().has_toll());
   EXPECT_TRUE(result3.trip().routes(0).legs(0).summary().has_ferry());
 
+  result.Parse(result_json.c_str());
+  trip = result["trip"].GetObject();
+  summary = trip["summary"].GetObject();
+
+  EXPECT_TRUE(summary["has_highway"].GetBool());
+  EXPECT_TRUE(summary["has_toll"].GetBool());
+  EXPECT_TRUE(summary["has_ferry"].GetBool());
+  result_json.erase();
+
   valhalla::Api result4 = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
-                                           {{"/directions_type", "maneuvers"}});
+                                           {{"/directions_type", "maneuvers"}}, {}, &result_json);
   EXPECT_TRUE(result4.trip().routes(0).legs(0).summary().has_highway());
   EXPECT_TRUE(result4.trip().routes(0).legs(0).summary().has_toll());
   EXPECT_TRUE(result4.trip().routes(0).legs(0).summary().has_ferry());
+
+  result.Parse(result_json.c_str());
+  trip = result["trip"].GetObject();
+  summary = trip["summary"].GetObject();
+
+  EXPECT_TRUE(summary["has_highway"].GetBool());
+  EXPECT_TRUE(summary["has_toll"].GetBool());
+  EXPECT_TRUE(summary["has_ferry"].GetBool());
 
   std::filesystem::remove_all(workdir);
 }
