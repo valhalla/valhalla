@@ -2090,7 +2090,7 @@ void TripLegBuilder::Build(
     trip_path.set_osm_changeset(osmchangeset);
   }
 
-  TripLeg_Summary *summary = trip_path.mutable_summary();
+  TripLeg_Summary* summary = trip_path.mutable_summary();
   summary->set_has_toll(has_toll);
   summary->set_has_ferry(has_ferry);
   summary->set_has_highway(has_highway);

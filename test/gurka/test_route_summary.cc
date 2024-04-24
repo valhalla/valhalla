@@ -220,17 +220,20 @@ TEST(Standalone, TripLegSummary) {
 
   valhalla::gurka::map map = gurka::buildtiles(layout, ways, {}, {}, workdir);
 
-  valhalla::Api result0 = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto", {{"/directions_type", "none"}});
+  valhalla::Api result0 = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto",
+                                           {{"/directions_type", "none"}});
   EXPECT_TRUE(result0.trip().routes(0).legs(0).summary().has_highway());
   EXPECT_FALSE(result0.trip().routes(0).legs(0).summary().has_toll());
   EXPECT_FALSE(result0.trip().routes(0).legs(0).summary().has_ferry());
 
-  valhalla::Api result1 = gurka::do_action(valhalla::Options::route, map, {"B", "C"}, "auto", {{"/directions_type", "none"}});
+  valhalla::Api result1 = gurka::do_action(valhalla::Options::route, map, {"B", "C"}, "auto",
+                                           {{"/directions_type", "none"}});
   EXPECT_TRUE(result1.trip().routes(0).legs(0).summary().has_highway());
   EXPECT_TRUE(result1.trip().routes(0).legs(0).summary().has_toll());
   EXPECT_FALSE(result1.trip().routes(0).legs(0).summary().has_ferry());
 
-  valhalla::Api result2 = gurka::do_action(valhalla::Options::route, map, {"C", "D"}, "auto", {{"/directions_type", "none"}});
+  valhalla::Api result2 = gurka::do_action(valhalla::Options::route, map, {"C", "D"}, "auto",
+                                           {{"/directions_type", "none"}});
   EXPECT_FALSE(result2.trip().routes(0).legs(0).summary().has_highway());
   EXPECT_FALSE(result2.trip().routes(0).legs(0).summary().has_toll());
   EXPECT_TRUE(result2.trip().routes(0).legs(0).summary().has_ferry());
@@ -238,12 +241,14 @@ TEST(Standalone, TripLegSummary) {
   // Validate that the presence of highway, toll, and ferry tags in route summaries is consistent
   // and does not depend on the `directions_type` value
 
-  valhalla::Api result3 = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto", {{"/directions_type", "none"}});
+  valhalla::Api result3 = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
+                                           {{"/directions_type", "none"}});
   EXPECT_TRUE(result3.trip().routes(0).legs(0).summary().has_highway());
   EXPECT_TRUE(result3.trip().routes(0).legs(0).summary().has_toll());
   EXPECT_TRUE(result3.trip().routes(0).legs(0).summary().has_ferry());
 
-  valhalla::Api result4 = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto", {{"/directions_type", "maneuvers"}});
+  valhalla::Api result4 = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
+                                           {{"/directions_type", "maneuvers"}});
   EXPECT_TRUE(result4.trip().routes(0).legs(0).summary().has_highway());
   EXPECT_TRUE(result4.trip().routes(0).legs(0).summary().has_toll());
   EXPECT_TRUE(result4.trip().routes(0).legs(0).summary().has_ferry());
