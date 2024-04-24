@@ -88,7 +88,7 @@ public:
     return trip_path_.bbox();
   }
 
-  const ::valhalla::TripLeg_Summary& summary() const {
+  const ::valhalla::Summary& summary() const {
     return trip_path_.summary();
   }
 

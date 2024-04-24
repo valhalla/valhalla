@@ -272,11 +272,6 @@ message TripLeg {
       uint32 end_shape_index = 2;
     }
   };
-  message Summary {
-    bool has_toll = 1;
-    bool has_highway = 2;
-    bool has_ferry = 3;
-  }
 
   uint64 osm_changeset = 1;
   uint64 trip_id = 2;
