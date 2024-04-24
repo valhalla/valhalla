@@ -180,11 +180,9 @@ void DisplayLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
     LOG_INFO("edge endnode: " + std::to_string(e.endnode().id()) +
              ", length: " + std::to_string(e.length()));
 
-    int count_landmarks = 0;
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
-      count_landmarks++;
       DisplayLandmark(Landmark(value.second));
     }
   }
