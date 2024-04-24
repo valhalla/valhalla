@@ -8,12 +8,9 @@
 #include <filesystem>
 
 #include <gtest/gtest.h>
-#include <prime_server/http_protocol.hpp>
-#include <prime_server/prime_server.hpp>
 
 using namespace valhalla;
 using namespace valhalla::gurka;
-using namespace prime_server;
 
 const std::string workdir = "test/data/gurka_elevation";
 
