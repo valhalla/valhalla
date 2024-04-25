@@ -436,4 +436,14 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
       throw std::logic_error("Unknown travel mode");
   }
 }
+
+const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus status) {
+  static const std::unordered_map<int, std::string> statuses{
+      {Expansion_EdgeStatus_reached, "r"},
+      {Expansion_EdgeStatus_settled, "s"},
+      {Expansion_EdgeStatus_connected, "c"},
+  };
+  auto i = statuses.find(status);
+  return i == statuses.cend() ? empty_str : i->second;
+}
 } // namespace valhalla
