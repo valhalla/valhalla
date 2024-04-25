@@ -20,7 +20,8 @@ namespace sif {
  */
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          Costing* pbf_costing);
+                          Costing* pbf_costing,
+                          google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Create an auto route cost method. This is generally shortest time but uses
@@ -38,7 +39,8 @@ cost_ptr_t CreateAutoCost(const Costing& costing);
  */
 void ParseBusCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
-                         Costing* pbf_costing);
+                         Costing* pbf_costing,
+                         google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Create a bus cost method. This is derived from auto costing and
@@ -57,7 +59,8 @@ cost_ptr_t CreateBusCost(const Costing& costing);
  */
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          Costing* pbf_costing);
+                          Costing* pbf_costing,
+                          google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Create a taxi cost method. This is derived from auto costing and

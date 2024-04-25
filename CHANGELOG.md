@@ -116,6 +116,7 @@
    * ADDED: Consider more forward/backward tags for access restrictions and speeds [#4686](https://github.com/valhalla/valhalla/pull/4686)
    * CHANGED: change costmatrix max_distance threshold to a distance threshold instead of duration [#4672](https://github.com/valhalla/valhalla/pull/4672)
    * ADDED: PBF support for expansion [#4614](https://github.com/valhalla/valhalla/pull/4614/) 
+   * ADDED: more warnings for clamped costing options, second pass, bidir fallback and matrix_locations for CostMatrix [#3833](https://github.com/valhalla/valhalla/pull/3833)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

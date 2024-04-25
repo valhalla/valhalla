@@ -142,8 +142,8 @@ TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
                                  options, nullptr, &res);
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
+  EXPECT_EQ(result.info().warnings().size(), 0);
   check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, Matrix::TimeDistanceMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 0);
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
   options = {{"/sources/0/date_time", "current"},
@@ -155,7 +155,7 @@ TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
   res_doc.Parse(res.c_str());
   // the second origin can't respect time (no historical data)
   check_matrix(res_doc, {0.0f, 2.8f, 3.2f, 0.0f}, false, Matrix::TimeDistanceMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
 
   // TODO: there's still a bug in CostMatrix which chooses the wrong correlated edges:
   // https://github.com/valhalla/valhalla/issues/3803
@@ -165,8 +165,8 @@ TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {2.8f, 0.0f}, false, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings(0).code(), 201);
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 201);
 
   // forward tree, source & target within a single edge
   options = {{"/sources/0/date_time", "current"}, {"/costing_options/auto/speed_types/0", "current"}};
@@ -175,7 +175,7 @@ TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 0.2f}, true, Matrix::TimeDistanceMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
 }
 
 TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
@@ -191,7 +191,7 @@ TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
   res.erase();
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
@@ -205,7 +205,7 @@ TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
   res_doc.Parse(res.c_str());
   // the second origin can't respect time (no historical data)
   check_matrix(res_doc, {0.0f, 2.8f, 3.2f, 0.0f}, false, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
 
   // forward tree, source & target within a single edge
   options = {{"/sources/0/date_time", "current"},
@@ -216,7 +216,7 @@ TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 0.2f}, true, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
 
   // bidir matrix allows less targets than sources and date_time on the sources
   options = {{"/sources/0/date_time", "2016-07-03T08:06"},
@@ -228,7 +228,7 @@ TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 2.8f}, true, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
 
   // we don't support date_time on the targets
   options = {{"/targets/0/date_time", "2016-07-03T08:06"},
@@ -242,8 +242,8 @@ TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
   // https://github.com/valhalla/valhalla/issues/3803
   // this should really take the longer route since it's not using traffic here
   check_matrix(res_doc, {0.0f, 2.8f}, false, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings(0).code(), 206);
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 206);
 }
 
 TEST_F(MatrixTrafficTest, DisallowedRequest) {
@@ -252,12 +252,12 @@ TEST_F(MatrixTrafficTest, DisallowedRequest) {
   const auto result =
       gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E", "L"}, "auto", options);
 
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
   for (auto& loc : result.options().sources()) {
-    ASSERT_TRUE(loc.date_time().empty());
+    EXPECT_TRUE(loc.date_time().empty());
   }
   for (auto& loc : result.options().targets()) {
-    ASSERT_TRUE(loc.date_time().empty());
+    EXPECT_TRUE(loc.date_time().empty());
   }
 
   // revert for other tests
@@ -274,7 +274,7 @@ TEST_F(MatrixTrafficTest, TDSources) {
                                  nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 3.2f}, true, Matrix::TimeDistanceMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
 
   // more targets than sources with date_time.type = 2 are disallowed
   options = {{"/date_time/type", "2"}, {"/date_time/value", "2016-07-03T08:06"}};
@@ -283,8 +283,8 @@ TEST_F(MatrixTrafficTest, TDSources) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 3.2f}, false, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
-  ASSERT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings().Get(0).code(), 202);
+  EXPECT_EQ(result.info().warnings().size(), 1);
 
   // date_time on the sources, disallowed reverse
   options = {{"/sources/0/date_time", "current"},
@@ -295,8 +295,8 @@ TEST_F(MatrixTrafficTest, TDSources) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 3.2f}, false, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
-  ASSERT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings().Get(0).code(), 201);
+  EXPECT_EQ(result.info().warnings().size(), 1);
 }
 
 TEST_F(MatrixTrafficTest, TDTargets) {
@@ -309,7 +309,7 @@ TEST_F(MatrixTrafficTest, TDTargets) {
                                  nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 2.8f}, true, Matrix::TimeDistanceMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  EXPECT_EQ(result.info().warnings().size(), 0);
 
   // more sources than targets with date_time.type = 1 are disallowed
   options = {{"/date_time/type", "1"}, {"/date_time/value", "2016-07-03T08:06"}};
@@ -318,8 +318,8 @@ TEST_F(MatrixTrafficTest, TDTargets) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 3.2f}, false, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings().Get(0).code(), 201);
 
   // date_time on the targets, disallowed forward
   options = {{"/targets/0/date_time", "current"}, {"/targets/1/date_time", "2016-07-03T08:06"}};
@@ -328,8 +328,8 @@ TEST_F(MatrixTrafficTest, TDTargets) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 3.2f}, false, Matrix::CostMatrix);
-  ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings().Get(0).code(), 202);
 }
 
 TEST(StandAlone, CostMatrixDeadends) {
@@ -757,6 +757,7 @@ TEST(StandAlone, MatrixSecondPass) {
     EXPECT_GT(api.matrix().times(0), 0.f);
     EXPECT_TRUE(api.matrix().second_pass(0));
     EXPECT_TRUE(api.info().warnings(0).description().find('0') != std::string::npos);
+    EXPECT_EQ(api.info().warnings(0).code(), 400);
   }
 
   // I -> K (idx 1) should pass on the first try
@@ -775,6 +776,7 @@ TEST(StandAlone, MatrixSecondPass) {
     EXPECT_FALSE(api.matrix().second_pass(0));
     EXPECT_FALSE(api.matrix().second_pass(3));
     EXPECT_TRUE(api.info().warnings(0).description().find('2') != std::string::npos);
+    EXPECT_EQ(api.info().warnings(0).code(), 400);
   }
 }
 
