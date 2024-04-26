@@ -180,8 +180,9 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const std::string&
       LOG_INFO("Loading " + feed_name);
       gtfs::Feed feed(feed_path.string());
       auto read_result = feed.read_feed();
-      if (read_result != gtfs::ResultCode::OK) {
-        LOG_ERROR("Couldn't find a required file for feed " + feed_path.filename().string());
+      if (read_result.code != gtfs::ResultCode::OK) {
+        LOG_ERROR("Couldn't find a required file for feed " + feed_path.filename().string() + ": " +
+                  read_result.message);
         continue;
       }
       LOG_INFO("Done loading, now parsing " + feed_name);
