@@ -113,18 +113,20 @@ TEST_F(RouteWithNarrativeLanguages, CheckLanguageCount) {
   // TODO: this test is asinine, we're just checking a hard coded list of locales, the files existence
   //  is already hardcoded isnt that good enough?
   std::set<std::string> supported;
-  for (const auto& kv : valhalla::odin::get_locales()){
+  for (const auto& kv : valhalla::odin::get_locales()) {
     supported.insert(kv.first);
   }
   std::set<std::string> expected;
-  for (const auto& kv: lang_phrase){
+  for (const auto& kv : lang_phrase) {
     expected.insert(kv.first);
   }
   for (const auto& should_find : expected) {
-    EXPECT_FALSE(supported.find(should_find) == supported.end()) << "Could not find support for " << should_find;
+    EXPECT_FALSE(supported.find(should_find) == supported.end())
+        << "Could not find support for " << should_find;
   }
-  for(const auto& should_expect : supported) {
-    EXPECT_TRUE(expected.find(should_expect) != expected.end()) << "Unexpected support for " << should_expect;
+  for (const auto& should_expect : supported) {
+    EXPECT_TRUE(expected.find(should_expect) != expected.end())
+        << "Unexpected support for " << should_expect;
   }
 }
 
