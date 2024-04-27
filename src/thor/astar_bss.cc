@@ -513,7 +513,7 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
   // Work backwards from the destination
   std::vector<PathInfo> path;
   travel_mode_t old = travel_mode_t::kPedestrian;
-  int mode_change_count = 0;
+  [[maybe_unused]] int mode_change_count = 0;
 
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {

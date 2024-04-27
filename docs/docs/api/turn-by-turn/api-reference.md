@@ -95,7 +95,10 @@ Another special case is `disable_hierarchy_pruning` costing option. As the name 
 
 Additionally to the main costing option, the `recostings` option can be used to calculate the travelling time of the found route based on different costing options. By e.g. adding
 ```json
-"recostings":[{"costing":"auto","fixed_speed":20,"name":"auto_20","costing":"auto","fixed_speed":50,"name":"auto_50"}]
+"recostings":[
+    {"costing":"auto","fixed_speed":20,"name":"auto_20"},
+    {"costing":"auto","fixed_speed":50,"name":"auto_50"}
+]
 ```
 to the route request, the values `time_auto_20` and `time_auto_50` will be added to summaries to show how much time the route would cost with these given costing options. Passing a recosting which make the route impossible to follow (e.g. the main rout is by car over a motorway and recosting with pedestrian costing) leads to a `none` result of this recosting.
 
@@ -133,6 +136,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `ignore_non_vehicular_restrictions` | Similar to `ignore_restrictions`, but will respect restrictions that impact vehicle safety, such as weight and size restrictions. |
 | `ignore_access` | Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions. Default is `false`. |
 | `ignore_closures` | Will ignore traffic closures. Default is `false`. |
+| `speed_types` | Will determine which speed sources are used, if available. A list of strings with the following possible values: <ul><li><code>freeflow</code></li><li><code>constrained</code></li><li><code>predicted</code></li><li><code>current</code></li></ul> Default is all sources (again, only if available). |
 
 ###### Other costing options
 The following options are available for `auto`, `bus`, `taxi`, and `truck` costing methods.
@@ -239,6 +243,7 @@ These options are available for pedestrian costing methods.
 | `transit_start_end_max_distance` | A pedestrian option that can be added to the request to extend the defaults (2145 meters or approximately 1.5 miles). This is the maximum walking distance at the beginning or end of a route.|
 | `transit_transfer_max_distance` | A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.|
 | `type` | If set to `blind`, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. Default `foot` |
+| `mode_factor` | A factor which the cost of a pedestrian edge will be multiplied with on multimodal request, e.g. `bss` or `multimodal/transit`. Default is a factor of 1.5, i.e. avoiding walking.
 
 ##### Transit costing options
 
