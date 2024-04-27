@@ -71,11 +71,11 @@ TODO(nils): I don't think that's how it's supposed to work (anymore?). If I unde
 
 # Syncing with Transifex
 
-Use the [Transifex command line client, `tx`](https://docs.transifex.com/client/introduction), to sync locale files with the Transifex website.
+Use the [Transifex command line client, `tx`](https://developers.transifex.com/docs/cli), to sync locale files with the Transifex website.
 
 ## Install
 
-* [Install tx](https://docs.transifex.com/client/installing-the-client).
+* [Install tx](https://developers.transifex.com/docs/cli).
 * Get an API secret from [your settings page](https://www.transifex.com/user/settings/api/).
 * Run `tx status` in the root valhalla directory to confirm.
 

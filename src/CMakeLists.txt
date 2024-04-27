@@ -66,8 +66,6 @@ function(valhalla_module)
     target_include_directories(${library} SYSTEM ${MODULE_SYSTEM_INCLUDE_DIRECTORIES})
   endif()
 
-  target_link_libraries(${library} Boost::boost)
-
   if(ENABLE_COVERAGE)
     target_compile_options(${library} PUBLIC -ftest-coverage -fprofile-arcs)
   endif()
