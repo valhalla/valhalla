@@ -49,6 +49,7 @@
    * FIXED: Fix segfault in OSRM serializer with bannerInstructions when destination is on roundabout [#4480](https://github.com/valhalla/valhalla/pull/4481)
    * FIXED: Fix segfault in costmatrix (date_time and time zone always added). [#4530](https://github.com/valhalla/valhalla/pull/4530)
    * FIXED: Fixed roundoff issue in Tiles Row and Col methods [#4585](https://github.com/valhalla/valhalla/pull/4585)
+   * FIXED: Fix for assigning attributes has_(highway, ferry, toll) if directions_type is none [#4465](https://github.com/valhalla/valhalla/issues/4465)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -112,6 +113,9 @@
    * CHANGED: contract nodes if connecting edges have different names or speed or non-conditional access restrictions [#4613](https://github.com/valhalla/valhalla/pull/4613)
    * CHANGED: CostMatrix switched from Dijkstra to A* [#4650](https://github.com/valhalla/valhalla/pull/4650)
    * ADDED: some missing documentation about request parameters [#4687](https://github.com/valhalla/valhalla/pull/4687)
+   * ADDED: Consider more forward/backward tags for access restrictions and speeds [#4686](https://github.com/valhalla/valhalla/pull/4686)
+   * CHANGED: change costmatrix max_distance threshold to a distance threshold instead of duration [#4672](https://github.com/valhalla/valhalla/pull/4672)
+   * ADDED: PBF support for expansion [#4614](https://github.com/valhalla/valhalla/pull/4614/) 
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

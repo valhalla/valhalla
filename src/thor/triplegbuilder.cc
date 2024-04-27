@@ -1754,6 +1754,9 @@ void TripLegBuilder::Build(
   // from the edge index that we assigned to them earlier in route_action
   auto intermediate_itr = trip_path.mutable_location()->begin() + 1;
   double total_distance = 0;
+  bool has_toll = false;
+  bool has_ferry = false;
+  bool has_highway = false;
 
   // loop over the edges to build the trip leg
   for (auto edge_itr = path_begin; edge_itr != path_end; ++edge_itr, ++edge_index) {
@@ -1766,6 +1769,16 @@ void TripLegBuilder::Build(
     const sif::TravelMode mode = edge_itr->mode;
     const uint8_t travel_type = travel_types[static_cast<uint32_t>(mode)];
     const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
+
+    if (directededge->toll()) {
+      has_toll = true;
+    }
+    if (directededge->use() == Use::kFerry) {
+      has_ferry = true;
+    }
+    if (directededge->classification() == baldr::RoadClass::kMotorway) {
+      has_highway = true;
+    }
 
     // Set node attributes - only set if they are true since they are optional
     graph_tile_ptr start_tile = graphtile;
@@ -2076,6 +2089,11 @@ void TripLegBuilder::Build(
   if (osmchangeset != 0 && controller(kOsmChangeset)) {
     trip_path.set_osm_changeset(osmchangeset);
   }
+
+  Summary* summary = trip_path.mutable_summary();
+  summary->set_has_toll(has_toll);
+  summary->set_has_ferry(has_ferry);
+  summary->set_has_highway(has_highway);
 
   // Add that extra costing information if requested
   AccumulateRecostingInfoForward(options, start_pct, end_pct, forward_time_info, invariant,

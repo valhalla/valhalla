@@ -53,10 +53,10 @@ message PbfFieldSelector {
   bool status = 4;     // /status
   bool matrix = 5;     // sources_to_targets
   bool isochrone = 6;
+  bool expansion = 9;
   // TODO: enable these once we have objects for them
   // bool locate = 7;
   // bool height = 8;
-  // bool expansion = 9;
 }
 
 message AvoidEdge {
