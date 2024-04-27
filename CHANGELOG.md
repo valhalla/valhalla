@@ -21,7 +21,7 @@
    * FIXED: motorcar:conditional should not apply to motorcycle and moped [#4359](https://github.com/valhalla/valhalla/pull/4359)
    * FIXED: break shortcuts when there are different restrictions on base edges [#4326](https://github.com/valhalla/valhalla/pull/4326)
    * FIXED: Incorrect `edge_index` assignment in `thor_worker_t::build_trace` [#4413](https://github.com/valhalla/valhalla/pull/4413)
-   * FIXED: lots of issues with CostMatrix (primarily deadend logic) with a complete refactor modeling things very close to bidir A*, also to prepare for a unification of the two [#4372](https://github.com/valhalla/valhalla/pull/4372)
+   * FIXED: lots of issues with CostMatrix (primarily deadend logic) with a complete refactor modeling things very close to bidir A\*, also to prepare for a unification of the two [#4372](https://github.com/valhalla/valhalla/pull/4372)
    * FIXED: diff_names check was missing for Graphfilter and Shortcutbuilder for AddEdgeInfo call.  [#4436](https://github.com/valhalla/valhalla/pull/4436)
    * FIXED: updated timezone database and added code to keep compatibility with old servers/new data and vice versa [#4446](https://github.com/valhalla/valhalla/pull/4446)
    * FIXED: retry elevation tile download if the download failed for some reason or the downloaded tile was corrupt [#4461](https://github.com/valhalla/valhalla/pull/4461)
@@ -116,6 +116,7 @@
    * ADDED: Consider more forward/backward tags for access restrictions and speeds [#4686](https://github.com/valhalla/valhalla/pull/4686)
    * CHANGED: change costmatrix max_distance threshold to a distance threshold instead of duration [#4672](https://github.com/valhalla/valhalla/pull/4672)
    * ADDED: PBF support for expansion [#4614](https://github.com/valhalla/valhalla/pull/4614/) 
+   * ADDED: mn-MN locale support [#4712](https://github.com/valhalla/valhalla/pull/4712)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
