@@ -219,7 +219,7 @@ private:
       // entry_->d_reclen =
       // entry_->d_off =
       entry_->d_ino = s.st_ino;
-      strcpy(entry_->d_name, filename.c_str());
+      strcpy(entry_->d_name, filename.c_str()); // NOLINT
 #ifdef _DIRENT_HAVE_D_NAMLEN
       entry_->d_namlen = filename.string().size();
 #endif
