@@ -660,9 +660,11 @@ TEST(GtfsExample, MakeProto) {
         // make sure:
         //   - the first stop pair has 0 as origin_dist_traveled
         //   - the last stop pair of tripOne has exactly 6.0f and tripTwo has the full shape length
-        if (stop_pair.origin_onestop_id() == std::string(f1_name).append("_").append(st1_id).append("_platform")) {
+        if (stop_pair.origin_onestop_id() ==
+            std::string(f1_name).append("_").append(st1_id).append("_platform")) {
           first_origin_dist_traveled.push_back(stop_pair.origin_dist_traveled());
-        } else if (stop_pair.destination_onestop_id() == std::string(f1_name).append("_").append(st3_id)) {
+        } else if (stop_pair.destination_onestop_id() ==
+                   std::string(f1_name).append("_").append(st3_id)) {
           last_dest_dist_traveled.push_back(stop_pair.destination_dist_traveled());
         }
       }
