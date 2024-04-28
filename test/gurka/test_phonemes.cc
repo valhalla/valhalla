@@ -414,10 +414,12 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
       if (iter == index_linguistic_map.end()) {
-        if (sign_index == 1)
+        if (sign_index == 1) {
           EXPECT_EQ(signs.at(sign_index).text(), "destination1");
-        if (sign_index == 2)
+        }
+        if (sign_index == 2) {
           EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        }
       } else {
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
             "node ref:pronunciation:katakana") {
