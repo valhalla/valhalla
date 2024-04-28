@@ -203,13 +203,15 @@ TEST(GtfsExample, WriteGtfs) {
   // write agency.txt
   struct Agency ttc {
     .agency_id = a1_id, .agency_name = "Toronto Commission", .agency_url = "http://www.ttc.ca",
-    .agency_timezone = "America/Toronto"
+    .agency_timezone = "America/Toronto", .agency_lang = "", .agency_phone = "",
+    .agency_fare_url = "", .agency_email = ""
   };
   f1.add_agency(ttc);
 
   struct Agency ttc2 {
     .agency_id = a2_id, .agency_name = "Toronto Commission Next Gen",
-    .agency_url = "http://www.ttc-next.ca", .agency_timezone = "America/Toronto"
+    .agency_url = "http://www.ttc-next.ca", .agency_timezone = "America/Toronto", .agency_lang = "",
+    .agency_phone = "", .agency_fare_url = "", .agency_email = ""
   };
   f2.add_agency(ttc2);
 
@@ -223,54 +225,62 @@ TEST(GtfsExample, WriteGtfs) {
   struct gtfs::Stop e1 {
     .stop_id = st1_id + "_egress", .stop_name = gtfs::Text("FIRST EGRESS"),
     .coordinates_present = true, .stop_lat = st1_ll->second.second, .stop_lon = st1_ll->second.first,
-    .parent_station = st1_id, .location_type = gtfs::StopLocationType::EntranceExit,
-    .wheelchair_boarding = "1",
+    .zone_id = "", .parent_station = st1_id, .stop_code = "", .stop_desc = "", .stop_url = "",
+    .location_type = gtfs::StopLocationType::EntranceExit, .stop_timezone = "",
+    .wheelchair_boarding = "1", .level_id = "", .platform_code = ""
   };
   f1.add_stop(e1);
   struct gtfs::Stop st1 {
     .stop_id = st1_id, .stop_name = gtfs::Text("FIRST STATION"), .coordinates_present = true,
-    .stop_lat = st1_ll->second.second, .stop_lon = st1_ll->second.first, .parent_station = "",
-    .location_type = gtfs::StopLocationType::Station, .wheelchair_boarding = "1",
+    .stop_lat = st1_ll->second.second, .stop_lon = st1_ll->second.first, .zone_id = "",
+    .parent_station = "", .stop_code = "", .stop_desc = "", .stop_url = "",
+    .location_type = gtfs::StopLocationType::Station, .stop_timezone = "", .wheelchair_boarding = "1",
+    .level_id = "", .platform_code = ""
   };
   f1.add_stop(st1);
   struct gtfs::Stop p1 {
     .stop_id = st1_id + "_platform", .stop_name = gtfs::Text("FIRST STOP"),
     .coordinates_present = true, .stop_lat = st1_ll->second.second, .stop_lon = st1_ll->second.first,
-    .parent_station = st1_id, .location_type = gtfs::StopLocationType::StopOrPlatform,
-    .wheelchair_boarding = "1",
+    .zone_id = "", .parent_station = st1_id, .stop_code = "", .stop_desc = "", .stop_url = "",
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "",
+    .wheelchair_boarding = "1", .level_id = "", .platform_code = ""
   };
   f1.add_stop(p1);
 
   struct gtfs::Stop st2 {
     .stop_id = st2_id, .stop_name = gtfs::Text("SECOND STATION"), .coordinates_present = true,
-    .stop_lat = st2_ll->second.second, .stop_lon = st2_ll->second.first, .parent_station = "",
+    .stop_lat = st2_ll->second.second, .stop_lon = st2_ll->second.first, .zone_id = "",
+    .parent_station = "", .stop_code = "", .stop_desc = "", .stop_url = "",
     .location_type = gtfs::StopLocationType::Station, .stop_timezone = "America/Toronto",
-    .wheelchair_boarding = "1",
+    .wheelchair_boarding = "1", .level_id = "", .platform_code = ""
   };
   f1.add_stop(st2);
   f2.add_stop(st2);
   struct gtfs::Stop p2 {
     .stop_id = st2_id + "_platform", .stop_name = gtfs::Text("SECOND STOP"),
     .coordinates_present = true, .stop_lat = st2_ll->second.second, .stop_lon = st2_ll->second.first,
-    .parent_station = st2_id, .location_type = gtfs::StopLocationType::StopOrPlatform,
-    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
+    .zone_id = "", .parent_station = st2_id, .stop_code = "", .stop_desc = "", .stop_url = "",
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
+    .wheelchair_boarding = "1", .level_id = "", .platform_code = ""
   };
   f1.add_stop(p2);
   f2.add_stop(p2);
 
   struct gtfs::Stop p3 {
     .stop_id = st3_id, .stop_name = gtfs::Text("THIRD STOP"), .coordinates_present = true,
-    .stop_lat = st3_ll->second.second, .stop_lon = st3_ll->second.first, .parent_station = "",
+    .stop_lat = st3_ll->second.second, .stop_lon = st3_ll->second.first, .zone_id = "",
+    .parent_station = "", .stop_code = "", .stop_desc = "", .stop_url = "",
     .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
-    .wheelchair_boarding = "1",
+    .wheelchair_boarding = "1", .level_id = "", .platform_code = ""
   };
   f1.add_stop(p3);
 
   struct gtfs::Stop p4 {
     .stop_id = st4_id, .stop_name = gtfs::Text("FOURTH STOP"), .coordinates_present = true,
-    .stop_lat = st4_ll->second.second, .stop_lon = st4_ll->second.first, .parent_station = "",
+    .stop_lat = st4_ll->second.second, .stop_lon = st4_ll->second.first, .zone_id = "",
+    .parent_station = "", .stop_code = "", .stop_desc = "", .stop_url = "",
     .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
-    .wheelchair_boarding = "1",
+    .wheelchair_boarding = "1", .level_id = "", .platform_code = ""
   };
   f2.add_stop(p4);
 
@@ -280,14 +290,14 @@ TEST(GtfsExample, WriteGtfs) {
   // write routes.txt
   struct Route r1 {
     .route_id = r1_id, .route_type = RouteType::Subway, .agency_id = a1_id, .route_short_name = "ba",
-    .route_long_name = "bababa", .route_desc = "this is the first route for TTC",
+    .route_long_name = "bababa", .route_desc = "this is the first route for TTC", .route_url = "",
     .route_color = "ff0000", .route_text_color = "00ff00"
   };
   f1.add_route(r1);
 
   struct Route r2 {
     .route_id = r2_id, .route_type = RouteType::Subway, .agency_id = a2_id, .route_short_name = "ba2",
-    .route_long_name = "bababa2", .route_desc = "this is the first route for TTC2",
+    .route_long_name = "bababa2", .route_desc = "this is the first route for TTC2", .route_url = "",
     .route_color = "0000ff", .route_text_color = "001100"
   };
   f2.add_route(r2);
@@ -298,26 +308,28 @@ TEST(GtfsExample, WriteGtfs) {
   // write trips.txt
   struct gtfs::Trip t1 {
     .route_id = r1_id, .service_id = sv1_id, .trip_id = t1_id, .trip_headsign = "hello",
-    .block_id = b1_id, .shape_id = sh1_id, .wheelchair_accessible = gtfs::TripAccess::Yes,
-    .bikes_allowed = gtfs::TripAccess::No,
+    .trip_short_name = "", .block_id = b1_id, .shape_id = sh1_id,
+    .wheelchair_accessible = gtfs::TripAccess::Yes, .bikes_allowed = gtfs::TripAccess::No,
   };
   f1.add_trip(t1);
 
   struct gtfs::Trip t2 {
     .route_id = r1_id, .service_id = sv2_id, .trip_id = t2_id, .trip_headsign = "bonjour",
-    .block_id = b2_id, .wheelchair_accessible = gtfs::TripAccess::Yes,
-    .bikes_allowed = gtfs::TripAccess::No,
+    .trip_short_name = "", .block_id = b2_id, .shape_id = "",
+    .wheelchair_accessible = gtfs::TripAccess::Yes, .bikes_allowed = gtfs::TripAccess::No,
   };
   f1.add_trip(t2);
 
   struct gtfs::Trip t3 {
     .route_id = r2_id, .service_id = sv3_id, .trip_id = t3_id, .trip_headsign = "grüß gott!",
+    .trip_short_name = "", .block_id = "", .shape_id = "",
     .wheelchair_accessible = gtfs::TripAccess::Yes, .bikes_allowed = gtfs::TripAccess::No
   };
   f2.add_trip(t3);
 
   struct gtfs::Trip t4 {
     .route_id = r2_id, .service_id = sv3_id, .trip_id = t4_id, .trip_headsign = "grüß gott!",
+    .trip_short_name = "", .block_id = "", .shape_id = "",
     .wheelchair_accessible = gtfs::TripAccess::Yes, .bikes_allowed = gtfs::TripAccess::No
   };
   f2.add_trip(t4);
@@ -648,9 +660,9 @@ TEST(GtfsExample, MakeProto) {
         // make sure:
         //   - the first stop pair has 0 as origin_dist_traveled
         //   - the last stop pair of tripOne has exactly 6.0f and tripTwo has the full shape length
-        if (stop_pair.origin_onestop_id() == f1_name + "_" + st1_id + "_platform") {
+        if (stop_pair.origin_onestop_id() == std::string(f1_name).append("_").append(st1_id).append("_platform")) {
           first_origin_dist_traveled.push_back(stop_pair.origin_dist_traveled());
-        } else if (stop_pair.destination_onestop_id() == f1_name + "_" + st3_id) {
+        } else if (stop_pair.destination_onestop_id() == std::string(f1_name).append("_").append(st3_id)) {
           last_dest_dist_traveled.push_back(stop_pair.destination_dist_traveled());
         }
       }
