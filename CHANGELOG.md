@@ -115,7 +115,8 @@
    * ADDED: some missing documentation about request parameters [#4687](https://github.com/valhalla/valhalla/pull/4687)
    * ADDED: Consider more forward/backward tags for access restrictions and speeds [#4686](https://github.com/valhalla/valhalla/pull/4686)
    * CHANGED: change costmatrix max_distance threshold to a distance threshold instead of duration [#4672](https://github.com/valhalla/valhalla/pull/4672)
-   * ADDED: PBF support for expansion [#4614](https://github.com/valhalla/valhalla/pull/4614/) 
+   * ADDED: PBF support for expansion [#4614](https://github.com/valhalla/valhalla/pull/4614/)
+   * ADDED: elapsed_cost field to map matching json response [#4709](https://github.com/valhalla/valhalla/pull/4709)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
