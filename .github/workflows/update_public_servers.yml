@@ -1,4 +1,4 @@
-name: Update public FOSSGIS servers
+name: Update public FOSSGIS servers 
 
 on:
   push:
