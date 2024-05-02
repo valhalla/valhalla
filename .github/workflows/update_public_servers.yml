@@ -12,6 +12,16 @@ on:
       - 'scripts'
       - 'lua'
   workflow_dispatch:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/workflows
+      - 'src'
+      - 'valhalla'
+      - 'proto'
+      - 'scripts'
+      - 'lua'
 
 jobs:
   update_servers:
