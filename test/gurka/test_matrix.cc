@@ -401,8 +401,8 @@ TEST(StandAlone, CostMatrixDeadends) {
   }
 
   // throw if no connection can be found at all
-    try {
-      auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"C"}, {"A"}, "auto");
+  try {
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"C"}, {"A"}, "auto");
     FAIL() << "No connection found should have thrown";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); }
 }

@@ -245,9 +245,8 @@ std::string serializeMatrix(Api& request) {
 
   // error if we failed finding any connection
   // dont bother serializing in case of /expansion request
-  if (std::all_of(request.matrix().times().begin(), request.matrix().times().end(), [](float& time) {
-    return time == kMaxCost;
-  })) {
+  if (std::all_of(request.matrix().times().begin(), request.matrix().times().end(),
+                  [](float& time) { return time == kMaxCost; })) {
     throw valhalla_exception_t(442);
   } else if (request.options().action() == Options_Action_expansion) {
     return "";
