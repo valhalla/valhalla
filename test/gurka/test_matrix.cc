@@ -399,6 +399,12 @@ TEST(StandAlone, CostMatrixDeadends) {
     res_doc.Parse(res.c_str());
     check_matrix(res_doc, {0.8f}, false, Matrix::CostMatrix);
   }
+
+  // throw if no connection can be found at all
+    try {
+      auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"C"}, {"A"}, "auto");
+    FAIL() << "No connection found should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); }
 }
 
 TEST(StandAlone, CostMatrixShapes) {
