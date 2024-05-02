@@ -5,6 +5,7 @@ on:
     branches:
       - nn-update-fossgis-gha
     paths:
+      - .github/workflows
       - 'src'
       - 'valhalla'
       - 'proto'
