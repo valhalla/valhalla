@@ -3,17 +3,6 @@ name: Update public FOSSGIS servers
 on:
   push:
     branches:
-      - nn-update-fossgis-gha
-    paths:
-      - .github/workflows
-      - 'src'
-      - 'valhalla'
-      - 'proto'
-      - 'scripts'
-      - 'lua'
-  workflow_dispatch:
-  pull_request:
-    branches:
       - master
     paths:
       - .github/workflows
@@ -22,6 +11,7 @@ on:
       - 'proto'
       - 'scripts'
       - 'lua'
+  workflow_dispatch:
 
 jobs:
   update_servers:

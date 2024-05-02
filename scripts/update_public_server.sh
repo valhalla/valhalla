@@ -5,6 +5,8 @@ set -e
 server=$1
 src_dir="/src/valhalla"
 
+git config --global --add safe.directory /src/valhalla
+
 git -C "${src_dir}" checkout master
 git -C "${src_dir}" pull
 
