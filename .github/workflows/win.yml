@@ -109,8 +109,7 @@ jobs:
             -DPREFER_EXTERNAL_DEPS=ON \
             -DENABLE_GDAL=ON
 
-      - if: ${{ steps.vcpkg-restore.outputs.cache-hit != 'true' }}
-        name: Save vcpkg packages (if cache miss)
+      - name: Save vcpkg packages (if cache miss)
         uses: actions/cache/save@v3
         with:
           key: ${{ steps.vcpkg-restore.outputs.cache-primary-key }}

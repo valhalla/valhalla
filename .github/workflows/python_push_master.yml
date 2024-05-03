@@ -1,0 +1,142 @@
+name: Python - Master Push
+
+# run (and build) only py3.8 but on all platforms
+# pull_request.yml tests all py versions but only on ubuntu
+
+on:
+  push:
+    branches:
+      - 'master'
+    paths:
+      - 'src/bindings/python'
+
+env:
+  VCPKG_VERSION: '8040303'
+  VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
+  VCPKG_DISABLE_COMPILER_TRACKING: ON
+
+jobs:
+  build_wheels:
+    name: Push - cp38*, ${{ matrix.platform }}
+    runs-on: ${{ matrix.image }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - image: ubuntu-latest
+            platform: linux
+          - image: windows-latest
+            platform: windows
+          - image: macos-latest
+            platform: macos
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Configure Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Configure vckpg
+      shell: bash
+      run: |
+        echo "VCPKG_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+        echo "VCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg/custom-triplets" >> $GITHUB_ENV
+        echo "VCPKG_DEFAULT_TRIPLET=custom-x64-windows" >> $GITHUB_ENV
+        echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg/archives" >> $GITHUB_ENV
+
+    - name: Install GNU make & awk (Windows)
+      if: matrix.platform == 'windows'
+      run: choco install gawk make
+
+    - name: Install vcpkg
+      shell: bash
+      run: |
+        git clone https://github.com/microsoft/vcpkg.git
+        cd vcpkg
+        git checkout $VCPKG_VERSION
+        mkdir archives
+        mkdir "$VCPKG_OVERLAY_TRIPLETS"
+        TRIPLET_FILE="$VCPKG_OVERLAY_TRIPLETS/$VCPKG_DEFAULT_TRIPLET.cmake"
+        cp triplets/x64-windows.cmake "$TRIPLET_FILE"
+        echo "set(VCPKG_BUILD_TYPE release)" >> "$TRIPLET_FILE"
+        echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$TRIPLET_FILE"
+        cmd.exe /c bootstrap-vcpkg.bat
+
+    - name: Restore vcpkg packages
+      id: vcpkg-restore
+      uses: actions/cache/restore@v3
+      with:
+        key: vcpkg=${{ env.VCPKG_VERSION }}-${{ matrix.platform }}-json=${{ hashFiles('vcpkg.json') }}
+        path: |
+          vcpkg/*
+          !vcpkg/downloads
+          !vcpkg/docs
+          !vcpkg/buildtrees
+          vcpkg/downloads/tools
+
+    - name: Restore ccache (Linux/OSX)
+      if: matrix.platform != 'windows'
+      id: cache-ccache-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/Library/Caches/ccache
+        key: ccache-osx-${{ env.VALHALLA_BRANCH }}
+        restore-keys: |
+          ccache-${{ matrix.platform }}-master
+          ccache-${{ matrix.platform }}-
+    
+    - name: Build and install libvalhalla
+      run: |
+        cmake -B build -DPREFER_EXTERNAL_DEPS=ON -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=OFF -DENABLE_TOOLS=OFF -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DENABLE_HTTP=OFF -DENABLE_TESTS=OFF
+
+    # only build the earliest supported python version
+    - uses: pypa/cibuildwheel@v2.12.1
+      env:
+        MACOSX_DEPLOYMENT_TARGET: 10.15
+        CIBW_BUILD: cp37*
+        CIBW_TEST_COMMAND: ''
+
+    # keep in-sync with the other yaml
+    # only macos makes sense, windows didn't work, linux installs conan inside the docker image
+    - name: Cache Conan (MacOS)
+      id: cache-conan
+      uses: actions/cache@v2
+      if: matrix.platform == 'macos'
+      with:
+        path: |
+          ${{ github.workspace }}/conan_data
+          ${{ github.workspace }}/conan_build
+        key: conan-${{ matrix.platform }}-${{ hashFiles('conanfile.txt') }}
+        restore-keys: |
+          conan-${{ matrix.platform }}-
+
+    - name: Install Conan (MacOS)
+      if: matrix.platform == 'macos' && steps.cache-conan.outputs.cache-hit != 'true'
+      run: |
+        pip install pip --upgrade
+        pip install "conan<2.0.0"
+        conan profile new default --detect
+        conan config set "storage.path=${{ github.workspace }}/conan_data"
+        conan install --install-folder ${{ github.workspace }}/conan_build --remote conancenter .
+
+    - name: Install Conan (Windows)
+      if: matrix.platform == 'windows'
+      run: |
+        pip install pip --upgrade
+        pip install "conan<2.0.0"
+        conan profile new default --detect
+        conan profile update "settings.compiler=Visual Studio" default
+        conan profile update "settings.compiler.version=16" default
+        conan config set "storage.path=$env:GITHUB_WORKSPACE/conan_data"
+        conan install --install-folder conan_build --remote conancenter .
+
+    # only build the earliest supported python version
+    - uses: pypa/cibuildwheel@v2.12.1
+      env:
+        MACOSX_DEPLOYMENT_TARGET: 10.15
+        CIBW_BUILD: cp37*
+        CIBW_TEST_COMMAND: ''

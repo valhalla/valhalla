@@ -41,4 +41,4 @@ python_sources=$(LANG=C find scripts src/bindings/python -type f -exec file {} \
 ${py} -m black --line-length=105 --skip-string-normalization ${python_sources}
 
 # Python linter
-${py} -m flake8 --max-line-length=105 --extend-ignore=E501,E731,E203 --extend-exclude=src/bindings/python/__init__.py ${python_sources}
+${py} -m flake8 --max-line-length=105 --extend-ignore=E501,E731,E203 --extend-exclude=src/bindings/python/valhalla/__init__.py ${python_sources}
