@@ -1,4 +1,5 @@
 # updates Valhalla on the FOSSGIS servers
+# accepts one argument, either "builder" or "service"
 
 set -e
 
