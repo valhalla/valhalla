@@ -351,6 +351,9 @@ int main(int argc, char** argv) {
   if (!summary)
     return EXIT_SUCCESS;
 
+  // don't use the .tar for stats
+  config.get_child("mjolnir").erase("tile_extract");
+
   GraphReader reader(config.get_child("mjolnir"));
   // Iterate through the tiles
   int shortcuts_with_speed = 0;
