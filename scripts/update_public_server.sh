@@ -1,12 +1,19 @@
 # updates Valhalla on the FOSSGIS servers
+# accepts one argument, either "builder" or "service"
 
 set -e
 
 server=$1
 src_dir="/src/valhalla"
 
+git config --global --add safe.directory /src/valhalla
+
 git -C "${src_dir}" checkout master
 git -C "${src_dir}" pull
+git submodule update --init --recursive
+
+# remove the build folder first
+rm -r "${src_dir}"/build
 
 if [[ $server == "builder" ]]; then
     cmake -S "${src_dir}" -B "${src_dir}/build" \
@@ -19,7 +26,7 @@ if [[ $server == "builder" ]]; then
         -DENABLE_GDAL=OFF
 
     sudo make -C "${src_dir}/build" -j$(nproc) install
-    # config is updated by 
+    # config is updated by the build script on the server
 else
     cmake -S "${src_dir}" -B "${src_dir}/build" \
     -DENABLE_DATA_TOOLS=OFF \
