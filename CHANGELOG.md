@@ -119,6 +119,7 @@
    * ADDED: PBF support for expansion [#4614](https://github.com/valhalla/valhalla/pull/4614/)
    * ADDED: elapsed_cost field to map matching json response [#4709](https://github.com/valhalla/valhalla/pull/4709)
    * ADDED: error if we fail to find any matrix connection [#4718](https://github.com/valhalla/valhalla/pull/4718)
+   * ADDED: Fail early in valhalla_ingest_transit if there's no valid GTFS feeds [#4710](https://github.com/valhalla/valhalla/pull/4710/)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
