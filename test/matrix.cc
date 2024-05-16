@@ -136,8 +136,6 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
-constexpr float kDistanceScale = 10.f;
-
 const auto cfg = test::make_config("test/data/utrecht_tiles");
 
 const auto test_request = R"({
@@ -174,7 +172,7 @@ const auto test_request_osrm = R"({
   })";
 
 // clang-format off
-std::vector<std::vector<uint32_t>> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838}, 
+std::vector<std::vector<uint32_t>> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838},
                                                      {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
                                                      {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626},
                                                      {5562, 5177}, {3952, 3707}, {4367, 4107}, {1825, 1680}};
@@ -233,7 +231,7 @@ TEST(Matrix, test_matrix) {
 
   CostMatrix cost_matrix_abort_source;
   cost_matrix_abort_source.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
-                                          90000.0);
+                                          7000.0);
 
   matrix = request.matrix();
   uint32_t found = 0;
@@ -247,7 +245,7 @@ TEST(Matrix, test_matrix) {
 
   CostMatrix cost_matrix_abort_target;
   cost_matrix_abort_target.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
-                                          50000.0);
+                                          5000.0);
 
   matrix = request.matrix();
   found = 0;
@@ -256,7 +254,7 @@ TEST(Matrix, test_matrix) {
       ++found;
     }
   }
-  EXPECT_EQ(found, 10) << " not the number of results as expected";
+  EXPECT_EQ(found, 13) << " not the number of results as expected";
   request.clear_matrix();
 
   TimeDistanceMatrix timedist_matrix;
@@ -309,7 +307,7 @@ TEST(Matrix, test_timedistancematrix_forward) {
 
   // expected results are the same as `matrix_answers`, but without the last origin
   // clang-format off
-  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838}, 
+  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838},
                                                       {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
                                                       {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626}};
   // clang-format on
@@ -360,7 +358,7 @@ TEST(Matrix, test_timedistancematrix_reverse) {
 
   // expected results are the same as `matrix_answers`, but without the last target
   // clang-format off
-  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213}, 
+  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213},
                                                       {1519, 1398}, {1808, 1638}, {2061, 1951},
                                                       {2311, 2111}, {701, 641},   {0, 0},
                                                       {5562, 5177}, {3952, 3707}, {4367, 4107}};

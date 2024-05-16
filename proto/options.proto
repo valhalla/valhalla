@@ -53,10 +53,10 @@ message PbfFieldSelector {
   bool status = 4;     // /status
   bool matrix = 5;     // sources_to_targets
   bool isochrone = 6;
+  bool expansion = 9;
   // TODO: enable these once we have objects for them
   // bool locate = 7;
   // bool height = 8;
-  // bool expansion = 9;
 }
 
 message AvoidEdge {
@@ -313,6 +313,9 @@ message Costing {
     float use_lit = 82;
     bool disable_hierarchy_pruning = 83;
     bool ignore_non_vehicular_restrictions = 84;
+    oneof has_hgv_no_access_penalty {
+      float hgv_no_access_penalty = 85;
+    }
   }
 
   oneof has_options {

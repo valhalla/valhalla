@@ -192,8 +192,9 @@ else()
 endif()
 
 # unless you said you didnt want gdal we try to turn it on, if we cant we tell you
+# we don't need it to build tiles (yet)
 set(GDAL_TARGET "")
-if (ENABLE_GDAL)
+if (ENABLE_GDAL AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDINGS))
   find_package(GDAL QUIET)
   if (GDAL_FOUND)
     set(GDAL_TARGET GDAL::GDAL)

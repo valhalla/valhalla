@@ -42,9 +42,9 @@ git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout <some-tag>
 ./vcpkg/bootstrap-vcpkg.sh
 # windows: cmd.exe /c bootstrap-vcpkg.bat
 # only build Release versions of dependencies, not Debug
-echo "VCPKG_BUILD_TYPE release" >> vcpkg/triplets/x64-linux.cmake
+echo "set(VCPKG_BUILD_TYPE release)" >> vcpkg/triplets/x64-linux.cmake
 # windows: echo.set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
-# osx: echo "VCPKG_BUILD_TYPE release" >> vcpkg/triplets/arm64-osx.cmake
+# osx: echo "set(VCPKG_BUILD_TYPE release)" >> vcpkg/triplets/arm64-osx.cmake
 
 # vcpkg will install everything during cmake configuration
 # if you want to ENABLE_SERVICES=ON, install https://github.com/kevinkreiser/prime_server#build-and-install (no Windows)
@@ -116,7 +116,7 @@ git -C C:\path\to\vcpkg checkout f330a32
 # only build release versions for vcpkg packages
 echo.set(VCPKG_BUILD_TYPE release)>> path\to\vcpkg\triplets\x64-windows.cmake
 cd C:\path\to\valhalla
-C:\path\to\vcpkg.exe install --triple x64-windows
+C:\path\to\vcpkg.exe install --triplet x64-windows
 ```
 2. Let CMake configure the build with the required modules enabled. The final command for `x64` could look like
 ```

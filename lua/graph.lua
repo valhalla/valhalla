@@ -91,7 +91,7 @@ access = {
 ["forestry"] = "false",
 ["destination"] = "true",
 ["customers"] = "true",
-["official"] = "false",
+["official"] = "true",
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true",
@@ -155,7 +155,7 @@ motor_vehicle = {
 ["forestry"] = "false",
 ["destination"] = "true",
 ["customers"] = "true",
-["official"] = "false",
+["official"] = "true",
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true",
@@ -232,7 +232,7 @@ bus = {
 ["restricted"] = "true",
 ["destination"] = "true",
 ["delivery"] = "false",
-["official"] = "false",
+["official"] = "true",
 ["permit"] = "true"
 }
 
@@ -245,7 +245,7 @@ taxi = {
 ["restricted"] = "true",
 ["destination"] = "true",
 ["delivery"] = "false",
-["official"] = "false",
+["official"] = "true",
 ["permit"] = "true"
 }
 
@@ -270,10 +270,10 @@ truck = {
 ["agricultural"] = "false",
 ["private"] = "true",
 ["discouraged"] = "false",
-["permissive"] = "false",
+["permissive"] = "true",
 ["unsuitable"] = "false",
 ["agricultural;forestry"] = "false",
-["official"] = "false",
+["official"] = "true",
 ["forestry"] = "false",
 ["destination;delivery"] = "true",
 ["permit"] = "true",
@@ -435,7 +435,7 @@ motor_vehicle_node = {
 ["forestry"] = 0,
 ["destination"] = 1,
 ["customers"] = 1,
-["official"] = 0,
+["official"] = 1,
 ["public"] = 1,
 ["restricted"] = 1,
 ["allowed"] = 1,
@@ -537,7 +537,7 @@ motor_cycle_node = {
 ["forestry"] = 0,
 ["destination"] = 1024,
 ["customers"] = 1024,
-["official"] = 0,
+["official"] = 1024,
 ["public"] = 1024,
 ["restricted"] = 1024,
 ["allowed"] = 1024,
@@ -553,7 +553,7 @@ bus_node = {
 ["restricted"] = 64,
 ["destination"] = 64,
 ["delivery"] = 0,
-["official"] = 0,
+["official"] = 64,
 ["permit"] = 64
 }
 
@@ -566,7 +566,7 @@ taxi_node = {
 ["restricted"] = 32,
 ["destination"] = 32,
 ["delivery"] = 0,
-["official"] = 0,
+["official"] = 32,
 ["permit"] = 32
 }
 
@@ -580,10 +580,10 @@ truck_node = {
 ["agricultural"] = 0,
 ["private"] = 8,
 ["discouraged"] = 0,
-["permissive"] = 0,
+["permissive"] = 8,
 ["unsuitable"] = 0,
 ["agricultural;forestry"] = 0,
-["official"] = 0,
+["official"] = 8,
 ["forestry"] = 0,
 ["destination;delivery"] = 8,
 ["permit"] = 8,
@@ -1827,15 +1827,31 @@ function filter_tags_generic(kv)
   kv["maxheight"] = normalize_measurement(kv["maxheight"]) or normalize_measurement(kv["maxheight:physical"])
   kv["maxwidth"] = normalize_measurement(kv["maxwidth"]) or normalize_measurement(kv["maxwidth:physical"])
   kv["maxlength"] = normalize_measurement(kv["maxlength"])
-
   kv["maxweight"] = normalize_weight(kv["maxweight"])
   kv["maxaxleload"] = normalize_weight(kv["maxaxleload"])
   kv["maxaxles"] = tonumber(kv["maxaxles"])
 
+  --forward/backward only tags
+  kv["maxheight_forward"] = normalize_measurement(kv["maxheight:forward"])
+  kv["maxheight_backward"] = normalize_measurement(kv["maxheight:backward"])
+  kv["maxlength_forward"] = normalize_measurement(kv["maxlength:forward"])
+  kv["maxlength_backward"] = normalize_measurement(kv["maxlength:backward"])
+  kv["maxweight_forward"] = normalize_weight(kv["maxweight:forward"])
+  kv["maxweight_backward"] = normalize_weight(kv["maxweight:backward"])
+  kv["maxwidth_forward"] = normalize_measurement(kv["maxwidth:forward"])
+  kv["maxwidth_backward"] = normalize_measurement(kv["maxwidth:backward"])
+
   --TODO: hazmat really should have subcategories
   kv["hazmat"] = hazmat[kv["hazmat"]] or hazmat[kv["hazmat:water"]] or hazmat[kv["hazmat:A"]] or hazmat[kv["hazmat:B"]] or
                  hazmat[kv["hazmat:C"]] or hazmat[kv["hazmat:D"]] or hazmat[kv["hazmat:E"]]
+  kv["hazmat_forward"] = hazmat[kv["hazmat:forward"]] or hazmat[kv["hazmat:water:forward"]] or hazmat[kv["hazmat:A:forward"]] or hazmat[kv["hazmat:B:forward"]] or
+                 hazmat[kv["hazmat:C:forward"]] or hazmat[kv["hazmat:D:forward"]] or hazmat[kv["hazmat:E:forward"]]
+  kv["hazmat_backward"] = hazmat[kv["hazmat:backward"]] or hazmat[kv["hazmat:water:backward"]] or hazmat[kv["hazmat:A:backward"]] or hazmat[kv["hazmat:B:backward"]] or
+                 hazmat[kv["hazmat:C:backward"]] or hazmat[kv["hazmat:D:backward"]] or hazmat[kv["hazmat:E:backward"]]
+
   kv["maxspeed:hgv"] = normalize_speed(kv["maxspeed:hgv"])
+  kv["maxspeed:hgv:forward"] = normalize_speed(kv["maxspeed:hgv:forward"])
+  kv["maxspeed:hgv:backward"] = normalize_speed(kv["maxspeed:hgv:backward"])
 
   if (kv["hgv:national_network"] or kv["hgv:state_network"] or kv["hgv"] == "local" or kv["hgv"] == "designated") then
     kv["truck_route"] = "true"

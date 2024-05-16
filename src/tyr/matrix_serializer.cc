@@ -50,7 +50,7 @@ json::ArrayPtr serialize_shape(const valhalla::Matrix& matrix,
                                const ShapeFormat shape_format) {
   // TODO(nils): shapes aren't implemented yet in TDMatrix
   auto shapes = json::array({});
-  if (shape_format == no_shape || matrix.algorithm() != Matrix::CostMatrix)
+  if (shape_format == no_shape || (matrix.algorithm() != Matrix::CostMatrix))
     return shapes;
 
   for (size_t i = start_td; i < start_td + td_count; ++i) {
@@ -213,7 +213,7 @@ std::string serialize(const Api& request, double distance_scale) {
     }
     matrix->emplace("distances", distance);
     matrix->emplace("durations", time);
-    if (!(options.shape_format() == no_shape) && request.matrix().algorithm() == Matrix::CostMatrix)
+    if (!(options.shape_format() == no_shape) && (request.matrix().algorithm() == Matrix::CostMatrix))
       matrix->emplace("shapes", shapes);
 
     json->emplace("sources_to_targets", matrix);
@@ -242,6 +242,16 @@ namespace tyr {
 
 std::string serializeMatrix(Api& request) {
   double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
+
+  // error if we failed finding any connection
+  // dont bother serializing in case of /expansion request
+  if (std::all_of(request.matrix().times().begin(), request.matrix().times().end(),
+                  [](const float& time) { return time == kMaxCost; })) {
+    throw valhalla_exception_t(442);
+  } else if (request.options().action() == Options_Action_expansion) {
+    return "";
+  }
+
   switch (request.options().format()) {
     case Options_Format_osrm:
       return osrm_serializers::serialize(request);

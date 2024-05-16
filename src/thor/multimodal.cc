@@ -751,7 +751,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels.size();
     edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                            walking_distance, baldr::kInvalidRestriction, true, false,
+                            walking_distance, baldr::kInvalidRestriction, false, false,
                             InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
@@ -809,7 +809,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
     // we cannot do transition_cost on this label yet because we have no predecessor, but when we find
     // it, we will do an update on it and set the real transition cost based on the path to it
     edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, mode_, length,
-                            baldr::kInvalidRestriction, true, false, InternalTurn::kNoTurn);
+                            baldr::kInvalidRestriction, false, false, InternalTurn::kNoTurn);
     adjlist.add(label_idx);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx, tile);
     label_idx++;

@@ -216,6 +216,9 @@ std::string serializePbf(Api& request) {
       case Options::isochrone:
         selection.set_isochrone(true);
         break;
+      case Options::expansion:
+        selection.set_expansion(true);
+        break;
       // should never get here, actions which dont have pbf yet return json
       default:
         throw std::logic_error("Requested action is not yet serializable as pbf");
@@ -243,6 +246,8 @@ std::string serializePbf(Api& request) {
     request.clear_matrix();
   if (!selection.isochrone())
     request.clear_isochrone();
+  if (!selection.expansion())
+    request.clear_expansion();
 
   // serialize the bytes
   auto bytes = request.SerializeAsString();
