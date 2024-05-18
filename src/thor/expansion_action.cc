@@ -1,10 +1,10 @@
-#include "thor/worker.h"
-#include <robin_hood.h>
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
+#include "thor/worker.h"
 #include "tyr/serializers.h"
+#include <robin_hood.h>
 
 using namespace rapidjson;
 using namespace valhalla::midgard;
@@ -19,10 +19,12 @@ void writeExpansionProgress(Expansion* expansion,
                             const baldr::GraphId& prev_edgeid,
                             const std::vector<midgard::PointLL>& shape,
                             const std::unordered_set<Options::ExpansionProperties>& exp_props,
+                            const Expansion_EdgeStatus& status,
                             const uint32_t& status_flags,
                             const float& duration,
                             const uint32_t& distance,
-                            const float& cost) {
+                            const float& cost,
+                            const bool dedupe) {
 
   auto* geom = expansion->add_geometries();
   // make the geom
@@ -44,7 +46,11 @@ void writeExpansionProgress(Expansion* expansion,
   if (exp_props.count(Options_ExpansionProperties_cost))
     expansion->add_costs(static_cast<uint32_t>(cost));
   if (exp_props.count(Options_ExpansionProperties_edge_status))
-    expansion->add_edge_status_flags(status_flags);
+    if (dedupe) {
+      expansion->add_edge_status_flags(status_flags);
+    } else {
+      expansion->add_edge_status(status);
+    }
   if (exp_props.count(Options_ExpansionProperties_edge_id))
     expansion->add_edge_id(static_cast<uint32_t>(edgeid));
   if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
@@ -96,6 +102,7 @@ std::string thor_worker_t::expansion(Api& request) {
   auto options = request.options();
   auto exp_action = options.expansion_action();
   bool skip_opps = options.skip_opposites();
+  bool dedupe = options.dedupe();
   std::unordered_set<baldr::GraphId> opp_edges;
   std::unordered_set<Options::ExpansionProperties> exp_props;
   typedef robin_hood::unordered_map<baldr::GraphId, expansion_properties_t> edge_state_t;
@@ -111,51 +118,56 @@ std::string thor_worker_t::expansion(Api& request) {
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
   std::string algo = "";
-  auto track_expansion = [&opp_edges, &gen_factor, &skip_opps, &algo,
-                          &edge_state](baldr::GraphReader& reader, baldr::GraphId edgeid,
-                                       baldr::GraphId prev_edgeid, const char* algorithm = nullptr,
-                                       const Expansion_EdgeStatus status =
-                                           Expansion_EdgeStatus_reached,
-                                       const float duration = 0.f, const uint32_t distance = 0,
-                                       const float cost = 0.f) {
-    algo = algorithm;
+  auto track_expansion =
+      [&expansion, &opp_edges, &gen_factor, &skip_opps, &exp_props, &algo, &edge_state,
+       &dedupe](baldr::GraphReader& reader, baldr::GraphId edgeid, baldr::GraphId prev_edgeid,
+                const char* algorithm = nullptr,
+                const Expansion_EdgeStatus status = Expansion_EdgeStatus_reached,
+                const float duration = 0.f, const uint32_t distance = 0, const float cost = 0.f) {
+        algo = algorithm;
 
-    auto tile = reader.GetGraphTile(edgeid);
-    if (tile == nullptr) {
-      LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
-                std::to_string(edgeid.Tile_Base()));
-      return;
-    }
-    const auto* edge = tile->directededge(edgeid);
-    // unfortunately we have to call this before checking if we can skip
-    // else the tile could change underneath us when we get the opposing
-    auto shape = tile->edgeinfo(edge).shape();
+        auto tile = reader.GetGraphTile(edgeid);
+        if (tile == nullptr) {
+          LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
+                    std::to_string(edgeid.Tile_Base()));
+          return;
+        }
+        const auto* edge = tile->directededge(edgeid);
+        // unfortunately we have to call this before checking if we can skip
+        // else the tile could change underneath us when we get the opposing
+        auto shape = tile->edgeinfo(edge).shape();
 
-    // if requested, skip this edge in case its opposite edge has been added
-    // before (i.e. lower cost) else add this edge's id to the lookup container
-    if (skip_opps) {
-      auto opp_edgeid = reader.GetOpposingEdgeId(edgeid, tile);
-      if (opp_edgeid && opp_edges.count(opp_edgeid))
-        return;
-      opp_edges.insert(edgeid);
-    }
+        // if requested, skip this edge in case its opposite edge has been added
+        // before (i.e. lower cost) else add this edge's id to the lookup container
+        if (skip_opps) {
+          auto opp_edgeid = reader.GetOpposingEdgeId(edgeid, tile);
+          if (opp_edgeid && opp_edges.count(opp_edgeid))
+            return;
+          opp_edges.insert(edgeid);
+        }
 
-    if (!edge->forward())
-      std::reverse(shape.begin(), shape.end());
-    Polyline2<PointLL>::Generalize(shape, gen_factor, {}, false);
-
-    uint8_t stage = 1 << status;
-    if (edge_state.contains(edgeid)) {
-      auto edge_stages = edge_state.at(edgeid).stages_mask;
-      // Keep only properties of last/highest status of edge, but update what stages the edge has seen
-      if (!expansion_properties_t::is_latest_status(edge_stages, stage)) {
-        edge_state.at(edgeid).stages_mask |= stage;
-        return;
-      }
-      stage |= edge_state.at(edgeid).stages_mask;
-    }
-    edge_state[edgeid] = expansion_properties_t(prev_edgeid, stage, duration, distance, shape, cost);
-  };
+        if (!edge->forward())
+          std::reverse(shape.begin(), shape.end());
+        Polyline2<PointLL>::Generalize(shape, gen_factor, {}, false);
+        if (dedupe) {
+          uint8_t stage = 1 << status;
+          if (edge_state.contains(edgeid)) {
+            auto edge_stages = edge_state.at(edgeid).stages_mask;
+            // Keep only properties of last/highest status of edge, but update what stages the edge
+            // has seen
+            if (!expansion_properties_t::is_latest_status(edge_stages, stage)) {
+              edge_state.at(edgeid).stages_mask |= stage;
+              return;
+            }
+            stage |= edge_state.at(edgeid).stages_mask;
+          }
+          edge_state[edgeid] =
+              expansion_properties_t(prev_edgeid, stage, duration, distance, shape, cost);
+        } else {
+          writeExpansionProgress(expansion, edgeid, prev_edgeid, shape, exp_props, status, status,
+                                 duration, distance, cost, false);
+        }
+      };
 
   // tell all the algorithms how to track expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
@@ -188,9 +200,12 @@ std::string thor_worker_t::expansion(Api& request) {
   }
 
   // assemble the properties from latest/highest stages it went through
-  for (const auto& e : edge_state) {
-    writeExpansionProgress(expansion, e.first, e.second.prev_edgeid, e.second.shape, exp_props,
-                           e.second.stages_mask, e.second.duration, e.second.distance, e.second.cost);
+  if (dedupe) {
+    for (const auto& e : edge_state) {
+      writeExpansionProgress(expansion, e.first, e.second.prev_edgeid, e.second.shape, exp_props,
+                             Expansion_EdgeStatus_reached, e.second.stages_mask, e.second.duration,
+                             e.second.distance, e.second.cost, true);
+    }
   }
 
   // tell all the algorithms to stop tracking the expansion

@@ -1118,6 +1118,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // should the expansion track opposites?
   options.set_skip_opposites(rapidjson::get<bool>(doc, "/skip_opposites", options.skip_opposites()));
 
+  // should the expansion be less verbose, printing each edge only once, default false
+  options.set_dedupe( rapidjson::get<bool>(doc, "/dedupe", options.dedupe()));
+
   // get the contours in there
   parse_contours(doc, options.mutable_contours());
 
