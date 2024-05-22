@@ -43,6 +43,7 @@ set(sources
   hierarchybuilder.cc
   ingest_transit.cc
   landmarks.cc
+  legal_speed.h
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc

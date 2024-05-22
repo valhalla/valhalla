@@ -18,10 +18,6 @@ constexpr float kRampDensityFactor = 0.8f;
 constexpr float kRampFactor = 0.85f;
 constexpr float kRoundaboutFactor = 0.5f;
 
-// The switch over between rural and urban densities. Anything above this is assumed to be urban.
-// If this density check is changed then we need to modify the urban flag in the osrm response too
-constexpr uint32_t kMaxRuralDensity = 8;
-
 // Default speeds (kph) in urban areas per road class
 constexpr uint32_t urban_rc_speed[] = {
     89, // 55 MPH - motorway

@@ -316,6 +316,11 @@ void DirectedEdge::set_speed_type(const SpeedType speed_type) {
   speed_type_ = static_cast<uint32_t>(speed_type);
 }
 
+// Set the speed type (see graphconstants.h)
+void DirectedEdge::set_truck_speed_type(const SpeedType speed_type) {
+  truck_speed_type_ = static_cast<uint32_t>(speed_type);
+}
+
 // Set the country crossing flag.
 void DirectedEdge::set_ctry_crossing(const bool crossing) {
   ctry_crossing_ = crossing;
@@ -594,7 +599,9 @@ json::MapPtr DirectedEdge::json() const {
       {"end_node", endnode().json()},
       {"speeds", json::map({
                      {"default", static_cast<uint64_t>(speed_)},
+                     {"truck", static_cast<uint64_t>(truck_speed_)},
                      {"type", to_string(static_cast<SpeedType>(speed_type_))},
+                     {"truck_type", to_string(static_cast<SpeedType>(truck_speed_type_))},
                      {"free_flow", static_cast<uint64_t>(free_flow_speed_)},
                      {"constrained_flow", static_cast<uint64_t>(constrained_flow_speed_)},
                      {"predicted", static_cast<bool>(has_predicted_speed_)},

@@ -86,6 +86,10 @@ enum class Traversability {
 // Maximum relative density at a node or within a tile
 constexpr uint32_t kMaxDensity = 15;
 
+// The switch over between rural and urban densities. Anything above this is assumed to be urban.
+// If this density check is changed then we need to modify the urban flag in the osrm response too
+constexpr uint32_t kMaxRuralDensity = 8;
+
 // Unlimited speed limit. In OSM maxspeed=none. Set to max value to signify
 // unlimited.
 constexpr uint8_t kUnlimitedSpeedLimit = std::numeric_limits<uint8_t>::max();
@@ -550,14 +554,13 @@ inline std::string to_string(Language l) {
 
 // Speed type
 enum class SpeedType : uint8_t {
-  kTagged = 0,    // Tagged maximum speed
-  kClassified = 1 // Speed assigned based on highway classification
+  kTagged = 0,     // Tagged maximum speed
+  kClassified = 1, // Speed assigned based on highway classification
 };
 inline std::string to_string(SpeedType s) {
-  static const std::unordered_map<uint8_t, std::string> SpeedTypeStrings = {
-      {static_cast<uint8_t>(SpeedType::kTagged), "tagged"},
-      {static_cast<uint8_t>(SpeedType::kClassified), "classified"},
-  };
+  static const std::unordered_map<uint8_t, std::string> SpeedTypeStrings =
+      {{static_cast<uint8_t>(SpeedType::kTagged), "tagged"},
+       {static_cast<uint8_t>(SpeedType::kClassified), "classified"}};
 
   auto i = SpeedTypeStrings.find(static_cast<uint8_t>(s));
   if (i == SpeedTypeStrings.cend()) {

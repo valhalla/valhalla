@@ -1,4 +1,5 @@
 #include "mjolnir/graphenhancer.h"
+#include "legal_speed.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/countryaccess.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -1302,6 +1303,10 @@ void enhance(const boost::property_tree::ptree& pt,
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
 
+  // Assign country-specific default speeds
+  auto legal_speeds_config = pt.get_optional<std::string>("legal_speeds_config");
+  SimpleLegalSpeedAssigner legal_speeds_assigner(legal_speeds_config);
+
   // Config driven speed assignment
   auto speeds_config = pt.get_optional<std::string>("default_speeds_config");
   SpeedAssigner speed_assigner(speeds_config);
@@ -1583,6 +1588,9 @@ void enhance(const boost::property_tree::ptree& pt,
         // Update the named flag
         auto names = e_offset.GetNames(false);
         directededge.set_named(names.size() > 0);
+
+        // Simple legal speed assignment
+        legal_speeds_assigner.update_speed(directededge, density, end_node_code, end_node_state_code);
 
         // Speed assignment
         speed_assigner.UpdateSpeed(directededge, density, infer_turn_channels, end_node_code,

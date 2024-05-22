@@ -19,22 +19,23 @@ class DirectedEdgeBuilder : public baldr::DirectedEdge {
 public:
   /**
    * Constructor with arguments.
-   * @param  way             OSM way info generated from parsing OSM tags with Lua.
-   * @param  endnode         GraphId of the end node of this directed edge.
-   * @param  length          Length in meters.
-   * @param  speed           Average speed in kph.
-   * @param  truck_speed     Truck speed limit in kph.
-   * @param  use             Use of the edge.
-   * @param  rc              Road class / importance
-   * @param  localidx        Index of the edge (from the node) on the local level
-   * @param  signal          Traffic signal
-   * @param  stop_sign       Stop sign
-   * @param  yield_sign      Yield sign
-   * @param  minor           Does the stop or yield only apply to minor roads?
-   * @param  restrictions    Mask of simple turn restrictions at the end node
-   *                         of this directed edge.
-   * @param  bike_network    Mask of bike_networks from relations.
-   * @param  remove_destonly Drop dest_only attribution for reclassified ferry paths
+   * @param  way                  OSM way info generated from parsing OSM tags with Lua.
+   * @param  endnode              GraphId of the end node of this directed edge.
+   * @param  length               Length in meters.
+   * @param  speed                Average speed in kph.
+   * @param  truck_speed          Truck speed limit in kph.
+   * @param  truck_speed_type     Type of truck speed (see graphconstants.h).
+   * @param  use                  Use of the edge.
+   * @param  rc                   Road class / importance
+   * @param  localidx             Index of the edge (from the node) on the local level
+   * @param  signal               Traffic signal
+   * @param  stop_sign            Stop sign
+   * @param  yield_sign           Yield sign
+   * @param  minor                Does the stop or yield only apply to minor roads?
+   * @param  restrictions         Mask of simple turn restrictions at the end node
+   *                              of this directed edge.
+   * @param  bike_network         Mask of bike_networks from relations.
+   * @param  remove_destonly      Drop dest_only attribution for reclassified ferry paths
    */
   DirectedEdgeBuilder(const OSMWay& way,
                       const baldr::GraphId& endnode,
@@ -42,6 +43,7 @@ public:
                       const uint32_t length,
                       const uint32_t speed,
                       const uint32_t truck_speed,
+                      const SpeedType truck_speed_type,
                       const baldr::Use use,
                       const baldr::RoadClass rc,
                       const uint32_t localidx,

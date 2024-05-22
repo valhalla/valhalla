@@ -620,6 +620,9 @@ void BuildTileSet(const std::string& ways_file,
 
           // if there's a general truck speed AND a directed one, apply the stricter one
           // otherwise just pick whichever is set
+
+          SpeedType truck_speed_type =
+              w.truck_speed() || directed_truck_speed ? SpeedType::kTagged : SpeedType::kClassified;
           uint32_t truck_speed = w.truck_speed() && directed_truck_speed
                                      ? std::min(w.truck_speed(), directed_truck_speed)
                                      : std::max(w.truck_speed(), directed_truck_speed);
@@ -907,8 +910,9 @@ void BuildTileSet(const std::string& ways_file,
           // Add a directed edge and get a reference to it
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
-                                 truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
-                                 n, has_signal, has_stop, has_yield,
+                                 truck_speed, truck_speed_type, use,
+                                 static_cast<RoadClass>(edge.attributes.importance), n, has_signal,
+                                 has_stop, has_yield,
                                  ((has_stop || has_yield) ? node.minor() : false), restrictions,
                                  bike_network, edge.attributes.reclass_ferry);
           graphtile.directededges().emplace_back(de);

@@ -17,6 +17,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const uint32_t length,
                                          const uint32_t speed,
                                          const uint32_t truck_speed,
+                                         const SpeedType truck_speed_type,
                                          const baldr::Use use,
                                          const RoadClass rc,
                                          const uint32_t localidx,
@@ -32,6 +33,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_use(use);
   set_speed(speed);             // KPH
   set_truck_speed(truck_speed); // KPH
+  set_truck_speed_type(truck_speed_type);
 
   // Protect against 0 length edges
   set_length(std::max(length, kMinimumEdgeLength), true);
