@@ -56,7 +56,7 @@ void assign(const boost::property_tree::ptree& config,
       // TODO: if this was a shortcut we need to bother about turn durations...
       // update the speed
       assigned += assigner.UpdateSpeed(edge, node->density(), infer_turn_channels,
-                                       admin->country_iso(), admin->state_iso());
+                                       admin->country_iso(), admin->state_iso(), true);
       ++total;
     }
 
