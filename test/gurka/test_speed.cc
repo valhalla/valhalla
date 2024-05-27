@@ -9,7 +9,8 @@ using namespace valhalla;
 
 struct testable_legal_speed_assigner : public SimpleLegalSpeedAssigner {
 public:
-  testable_legal_speed_assigner(const std::string& file_path) : SimpleLegalSpeedAssigner(file_path) {
+  testable_legal_speed_assigner(const std::string& file_path, const bool update_speeds)
+      : SimpleLegalSpeedAssigner(file_path, update_speeds) {
   }
   using SimpleLegalSpeedAssigner::legal_speeds_map_;
 };
@@ -103,6 +104,7 @@ TEST(Standalone, LegalSpeedsDensity) {
       gurka::buildtiles(layout, ways, {}, {}, "test/data/legalspeeddensity",
                         {{"mjolnir.admin",
                           {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}},
+                         {"mjolnir.use_legal_speed_as_edge_speed", "true"},
                          {"mjolnir.legal_speeds_config", "test/data/legal_speeds_density.json"}});
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
@@ -208,12 +210,13 @@ TEST(Standalone, LegalSpeedsRoadClass) {
       gurka::buildtiles(layout, ways, {}, {}, "test/data/legalspeed",
                         {{"mjolnir.admin",
                           {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}},
+                         {"mjolnir.use_legal_speed_as_edge_speed", "true"},
                          {"mjolnir.legal_speeds_config", "test/data/legal_speeds.json"}});
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   std::vector<expected_edge_speed> expected_speeds;
 
-  expected_speeds.emplace_back("A", "B", 117, 0);
+  expected_speeds.emplace_back("A", "B", 117, 58);
   expected_speeds.emplace_back("B", "C", 27, 17);
   expected_speeds.emplace_back("C", "D", 21, static_cast<uint32_t>(std::round(18 * kMPHtoKPH)));
   expected_speeds.emplace_back("D", "H", 10, 0);
@@ -224,7 +227,8 @@ TEST(Standalone, LegalSpeedsRoadClass) {
     auto found = gurka::findEdgeByNodes(reader, layout, speeds.start_node, speeds.end_node);
     auto edge = std::get<1>(found);
     EXPECT_EQ(edge->speed(), speeds.expected);
-
+    auto sl = reader.edgeinfo(std::get<0>(found)).speed_limit();
+    EXPECT_EQ(speeds.expected, sl);
     if (speeds.truck_expected) {
       EXPECT_EQ(edge->truck_speed(), speeds.truck_expected);
     }

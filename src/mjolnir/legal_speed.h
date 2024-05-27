@@ -125,6 +125,8 @@ struct SimpleLegalSpeed {
           break;
         case LegalSpeedDomain::kInvalid:
           break;
+        default:
+          break;
       }
     }
   }
@@ -134,9 +136,18 @@ class SimpleLegalSpeedAssigner {
 protected:
   // maps admin code to legal speed limits
   std::unordered_map<std::string, SimpleLegalSpeed> legal_speeds_map_;
+  bool update_speed_;
 
 public:
-  SimpleLegalSpeedAssigner(const boost::optional<std::string>& legal_speeds_file) {
+  /**
+   * @param legal_speeds_file optional path to legal speed config
+   * @param update_speed      whether to actually update the edge speeds or simply return it
+   *                          so it can be set as speed_limit
+   */
+  SimpleLegalSpeedAssigner(const boost::optional<std::string>& legal_speeds_file,
+                           const bool update_speed) {
+    update_speed_ = update_speed;
+
     if (!legal_speeds_file) {
       LOG_WARN("Disabled legal default speed assignment from config, no file specified.");
       return;
@@ -177,33 +188,33 @@ public:
   }
 
   /**
-   * Updates the speeds of a given edge if the legal speed config contains
+   * Determines the vehicle and truck speeds of a given edge if the legal speed config contains
    * entries for the admin the edge lies within. Is only concerned with
-   * urban/rural legal speed limits as well as for simple road classes.
-   *
+   * urban/rural legal speed limits as well as for simple road classes. Only actually sets the speed
+   * if update_speed was set to true in the constructor.
    *
    * @param directededge the directed edge whose speed will be updated
    * @param density              Relative road density.
    * @param country_code         2 letter country code
    * @param state_code           2 letter state code
-   * @return true if a speed was updated else false
+   * @return returns the updated (auto) speed or 0 if unchanged
    */
-  bool update_speed(DirectedEdge& directededge,
-                    const uint32_t density,
-                    const std::string& country_code,
-                    const std::string& state_code) const {
+  uint32_t update_speed(DirectedEdge& directededge,
+                        const uint32_t density,
+                        const std::string& country_code,
+                        const std::string& state_code) const {
 
     // return early if both truck and auto speed are tagged speeds or if the edge use
     if ((directededge.speed_type() == SpeedType::kTagged &&
          directededge.truck_speed_type() == SpeedType::kTagged) ||
         directededge.use() == Use::kFerry || directededge.use() == Use::kRailFerry ||
         directededge.use() == Use::kRail || !(directededge.forwardaccess() & kVehicularAccess)) {
-      return false;
+      return 0;
     }
     std::array<std::string, 2> codes = {country_code, (country_code + "-" + state_code)};
 
     // do country first, then state
-    bool speeds_updated = false;
+    bool auto_default_speed_changed = false;
     for (const auto& code : codes) {
       auto found = legal_speeds_map_.find(code);
 
@@ -295,15 +306,16 @@ public:
       }
 
       if (directededge.speed_type() == SpeedType::kClassified) {
-        speeds_updated |= directededge.speed() != speed;
-        directededge.set_speed(speed);
+        auto_default_speed_changed |= directededge.speed() != speed;
+        if (update_speed_)
+          directededge.set_speed(speed);
       }
 
       if (directededge.truck_speed_type() == SpeedType::kClassified) {
-        speeds_updated |= directededge.truck_speed() != truck_speed;
-        directededge.set_truck_speed(truck_speed);
+        if (update_speed_)
+          directededge.set_truck_speed(truck_speed);
       }
     }
-    return speeds_updated;
+    return auto_default_speed_changed ? directededge.speed() : 0;
   }
 };
