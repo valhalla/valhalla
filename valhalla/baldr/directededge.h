@@ -634,7 +634,7 @@ public:
    * @return  Returns the truck speed type.
    */
   SpeedType truck_speed_type() const {
-    return static_cast<SpeedType>(speed_type_);
+    return static_cast<SpeedType>(truck_speed_type_);
   }
 
   /**

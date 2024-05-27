@@ -880,6 +880,16 @@ uint32_t GraphTileBuilder::set_elevation(const uint32_t offset,
   return e->second->SizeOf();
 }
 
+uint32_t GraphTileBuilder::set_speed_limit(const uint32_t offset, const uint32_t sl) {
+  auto e = edgeinfo_offset_map_.find(offset);
+  if (e == edgeinfo_offset_map_.end()) {
+    LOG_ERROR("set_speed_limit - could not find the EdgeInfo index given the offset");
+    return 0;
+  }
+  e->second->set_speed_limit(sl);
+  return e->second->SizeOf();
+};
+
 // Add a name to the text list
 uint32_t GraphTileBuilder::AddName(const std::string& name) {
   if (name.empty()) {

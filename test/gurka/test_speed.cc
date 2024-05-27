@@ -43,10 +43,6 @@ TEST(Standalone, LegalSpeeds) {
       {"DH", {{"highway", "living_street"}}},
       {"EF", {{"highway", "motorway"}, {"maxspeed", "99"}}},
       {"AE", {{"highway", "motorway"}, {"maxspeed", "99"}, {"maxspeed:hgv", "96"}}},
-      {"BF", {{"highway", "motorway"}, {"maxspeed", "17 mph"}}},
-      {"CG", {{"highway", "living_street"}, {"maxspeed", "walk"}}},
-      {"FG", {{"highway", "motorway"}}},
-      {"GH", {{"highway", "motorway"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.167640, 52.088865});
@@ -54,7 +50,7 @@ TEST(Standalone, LegalSpeeds) {
   // build a small legal speed JSON file
   std::ofstream speed_config("test/data/legal_speeds.json");
   speed_config << R"(
-    {
+    { "speedLimitsByCountryCode": {
       "NL": [
       {
         "name": "urban",
@@ -67,7 +63,7 @@ TEST(Standalone, LegalSpeeds) {
         "name": "trunk",
         "tags": {
           "maxspeed": "21",
-          "maxspeed:hgv": "18"
+          "maxspeed:hgv": "18 mph"
         }
       },
       {
@@ -93,8 +89,7 @@ TEST(Standalone, LegalSpeeds) {
       {
         "name": "living street",
         "tags": {
-          "maxspeed": "17",
-          "maxspeed:hgv": "15"
+          "maxspeed": "walk"
         }
       },
       {
@@ -102,7 +97,10 @@ TEST(Standalone, LegalSpeeds) {
         "tags": {
           "maxspeed": "117",
           "maxspeed:hgv": "58"
-        }}]}
+        }
+      }
+    ]
+  }}
   )";
   speed_config.close();
 
@@ -117,8 +115,10 @@ TEST(Standalone, LegalSpeeds) {
 
   expected_speeds.emplace_back("A", "B", 117, 0);
   expected_speeds.emplace_back("B", "C", 27, 17);
-  expected_speeds.emplace_back("C", "D", 21, 18);
-  expected_speeds.emplace_back("D", "H", 17, 15);
+  expected_speeds.emplace_back("C", "D", 21, static_cast<uint32_t>(std::round(18 * kMPHtoKPH)));
+  expected_speeds.emplace_back("D", "H", 10, 0);
+  expected_speeds.emplace_back("E", "F", 99, 58);
+  expected_speeds.emplace_back("A", "E", 99, 96);
 
   for (const auto& speeds : expected_speeds) {
     auto found = gurka::findEdgeByNodes(reader, layout, speeds.start_node, speeds.end_node);

@@ -306,6 +306,8 @@ public:
                          const float mean_elevation,
                          const std::vector<int8_t>& encoded_elevation);
 
+  uint32_t set_speed_limit(const uint32_t offset, const uint32_t sl);
+
   /**
    * Add a name to the text list.
    * @param  name  Name/text to add.

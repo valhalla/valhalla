@@ -621,11 +621,11 @@ void BuildTileSet(const std::string& ways_file,
           // if there's a general truck speed AND a directed one, apply the stricter one
           // otherwise just pick whichever is set
 
-          SpeedType truck_speed_type =
-              w.truck_speed() || directed_truck_speed ? SpeedType::kTagged : SpeedType::kClassified;
           uint32_t truck_speed = w.truck_speed() && directed_truck_speed
                                      ? std::min(w.truck_speed(), directed_truck_speed)
                                      : std::max(w.truck_speed(), directed_truck_speed);
+          SpeedType truck_speed_type =
+              (truck_speed > 0) ? SpeedType::kTagged : SpeedType::kClassified;
 
           if (truck_speed > kMaxAssumedSpeed) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +

@@ -15,7 +15,7 @@ struct VehicleSpeeds {
   uint32_t auto_;
   uint32_t truck_;
 
-  VehicleSpeeds() = default;
+  VehicleSpeeds() : auto_(0), truck_(0) {};
 };
 
 enum class LegalSpeedDomain : int8_t {
@@ -64,7 +64,7 @@ inline uint32_t parseOSMSpeedString(const std::string& s) {
   uint32_t speed = num_ix < 1 ? s == "walk" ? 10 : 0 : stoi(s.substr(0, num_ix));
 
   if (s.size() > 3 && s.substr(s.size() - 3) == "mph") {
-    speed = static_cast<uint32_t>(std::floor(static_cast<float>(speed) * kMPHtoKPH));
+    speed = static_cast<uint32_t>(std::round(speed * kMPHtoKPH));
   }
 
   return speed;
@@ -136,7 +136,7 @@ protected:
 public:
   SimpleLegalSpeedAssigner(const boost::optional<std::string>& legal_speeds_file) {
     if (!legal_speeds_file) {
-      LOG_INFO("Disabled legal default speed assignment from config");
+      LOG_WARN("Disabled legal default speed assignment from config, no file specified.");
       return;
     }
 
@@ -146,9 +146,12 @@ public:
         throw std::runtime_error("malformed json");
       if (!doc.IsObject())
         throw std::runtime_error("must be a json object");
+      if (!doc.GetObject().HasMember("speedLimitsByCountryCode"))
+        throw std::runtime_error("missing speedLimitsByCountryCode member");
 
+      auto outer = doc.GetObject()["speedLimitsByCountryCode"].GetObject();
       // loop over each country/state array
-      for (const auto& [key, value] : doc.GetObject()) {
+      for (const auto& [key, value] : outer) {
         std::string code = key.GetString();
 
         // parse the array
@@ -161,14 +164,14 @@ public:
       }
     } // something went wrong with parsing or opening the file
     catch (const std::exception& e) {
-      LOG_WARN(std::string("Disabled default speeds assignment from config: ") + e.what());
+      LOG_WARN(std::string("Disabled legal default speeds assignment from config: ") + e.what());
       legal_speeds_map_.clear();
     } // something else was thrown
     catch (...) {
-      LOG_WARN("Disabled default speeds assignment from config: unknown error");
+      LOG_WARN("Disabled legal default speeds assignment from config: unknown error");
       legal_speeds_map_.clear();
     }
-    LOG_INFO("Enabled default speeds assignment from config: " + *legal_speeds_file);
+    LOG_INFO("Enabled legal default speeds assignment from config: " + *legal_speeds_file);
   }
 
   /**
@@ -207,6 +210,7 @@ public:
       auto speed = directededge.speed();
       auto truck_speed = directededge.truck_speed();
 
+      // start with density
       if (density > kMaxRuralDensity) {
         if (ls.urban.auto_)
           speed = ls.urban.auto_;
@@ -230,6 +234,7 @@ public:
         }
       }
 
+      // then look for more specific rules based on road class/use
       if (directededge.classification() == valhalla::baldr::RoadClass::kMotorway) {
         if (ls.motorway.auto_)
           speed = ls.motorway.auto_;
