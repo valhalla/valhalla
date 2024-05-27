@@ -241,6 +241,8 @@ public:
    * @param infer_turn_channels  Flag indicating if turn channels were inferred
    * @param country_code         2 letter country code
    * @param state_code           2 letter state code
+   * @param update_urban         Whether edges with urban density should be updated according
+   *                             to roadclass
    * @return  true if config based speeds were used to update the edge.
    *          false indicates the conventional heuristic based approach was used
    */
@@ -248,7 +250,8 @@ public:
                    const uint32_t density,
                    bool infer_turn_channels,
                    const std::string& country_code,
-                   const std::string& state_code) const {
+                   const std::string& state_code,
+                   const bool update_urban) const {
 
     // See if we can get a valid speed loaded from configuration
     auto configured_speed = FromConfig(directededge, density, country_code, state_code);
@@ -321,7 +324,7 @@ public:
     }
 
     // Modify speed for roads in urban regions
-    if (density > kMaxRuralDensity) {
+    if (density > kMaxRuralDensity && update_urban) {
       uint32_t rc = static_cast<uint32_t>(directededge.classification());
       directededge.set_speed(urban_rc_speed[rc]);
     }

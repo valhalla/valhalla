@@ -26,7 +26,107 @@ struct expected_edge_speed {
   }
 };
 
-TEST(Standalone, LegalSpeeds) {
+TEST(Standalone, LegalSpeedsDensity) {
+  const std::string urban = R"(
+    a  j  i
+
+    b K-L h
+    x | | y
+    c M-N g
+
+    d  e  f
+  )";
+
+  auto layout = gurka::detail::map_to_coordinates(urban, 190, {5.121517, 52.092902});
+
+  const std::string rural = R"(
+    0--1--2--3--4
+  )";
+
+  const auto rural_layout = gurka::detail::map_to_coordinates(rural, 100, {5.305367, 51.692884});
+  layout.insert(rural_layout.begin(), rural_layout.end());
+
+  gurka::ways ways = {
+      {"KL", {{"highway", "tertiary"}}},
+      {"KM", {{"highway", "tertiary"}, {"maxspeed", "12"}}},
+      {"LN", {{"highway", "tertiary"}, {"maxspeed:hgv", "12"}}},
+      {"MN", {{"highway", "tertiary"}, {"maxspeed", "11"}, {"maxspeed:hgv", "10"}}},
+      {"xy", {{"route", "ferry"}, {"maxspeed", "1"}, {"motor_vehicle", "yes"}}},
+      {"01", {{"highway", "tertiary"}}},
+      {"12", {{"highway", "tertiary"}, {"maxspeed", "12"}}},
+      {"23", {{"highway", "tertiary"}, {"maxspeed:hgv", "10"}}},
+      {"34", {{"highway", "tertiary"}, {"maxspeed", "11"}, {"maxspeed:hgv", "13"}}},
+
+  };
+
+  // we need to add a bunch of edges to pump up the road density
+  for (char from = 'a'; from <= 'j'; ++from) {
+    for (char to = from + 1; to <= 'j'; ++to) {
+      for (char too = to + 1; too <= 'j'; ++too) {
+        std::string nodes = "";
+        nodes.push_back(from);
+        nodes.push_back(to);
+        nodes.push_back(too);
+        ways.emplace(nodes, std::map<std::string, std::string>{
+                                {"maxspeed", "99"},
+                                {"highway", "residential"},
+                            });
+      }
+    }
+  }
+
+  // build a small legal speed JSON file
+  std::ofstream speed_config("test/data/legal_speeds_density.json");
+  speed_config << R"(
+    { "speedLimitsByCountryCode": {
+      "NL": [
+      {
+        "name": "urban",
+        "tags": {
+          "maxspeed": "30",
+          "maxspeed:hgv": "19"
+        }
+      },
+      {
+        "name": "rural",
+        "tags": {
+          "maxspeed": "21",
+          "maxspeed:hgv": "18"
+        }
+      }
+    ]
+  }}
+  )";
+  speed_config.close();
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/legalspeeddensity",
+                        {{"mjolnir.admin",
+                          {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}},
+                         {"mjolnir.legal_speeds_config", "test/data/legal_speeds_density.json"}});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  std::vector<expected_edge_speed> expected_speeds;
+  expected_speeds.emplace_back("K", "L", 30, 19);
+  expected_speeds.emplace_back("K", "M", 12, 19);
+  expected_speeds.emplace_back("L", "N", 30, 12);
+  expected_speeds.emplace_back("M", "N", 11, 10);
+  expected_speeds.emplace_back("0", "1", 21, 18);
+  expected_speeds.emplace_back("1", "2", 12, 18);
+  expected_speeds.emplace_back("2", "3", 21, 10);
+  expected_speeds.emplace_back("3", "4", 11, 13);
+
+  for (const auto& speeds : expected_speeds) {
+    auto found = gurka::findEdgeByNodes(reader, layout, speeds.start_node, speeds.end_node);
+    auto edge = std::get<1>(found);
+    EXPECT_EQ(edge->speed(), speeds.expected);
+
+    if (speeds.truck_expected) {
+      EXPECT_EQ(edge->truck_speed(), speeds.truck_expected);
+    }
+  }
+}
+TEST(Standalone, LegalSpeedsRoadClass) {
 
   constexpr double gridsize = 500;
 

@@ -15,7 +15,7 @@ struct VehicleSpeeds {
   uint32_t auto_;
   uint32_t truck_;
 
-  VehicleSpeeds() : auto_(0), truck_(0) {};
+  VehicleSpeeds() : auto_(0), truck_(0){};
 };
 
 enum class LegalSpeedDomain : int8_t {
@@ -119,9 +119,11 @@ struct SimpleLegalSpeed {
           service.auto_ = auto_speed;
           service.truck_ = truck_speed;
           break;
-        case LegalSpeedDomain::kInvalid:
+        case LegalSpeedDomain::kFallback:
+          fallback.auto_ = auto_speed;
+          fallback.truck_ = truck_speed;
           break;
-        default:
+        case LegalSpeedDomain::kInvalid:
           break;
       }
     }
@@ -191,9 +193,11 @@ public:
                     const std::string& country_code,
                     const std::string& state_code) const {
 
-    // return early if both truck and auto speed are tagged speeds
-    if (directededge.speed_type() == SpeedType::kTagged &&
-        directededge.truck_speed_type() == SpeedType::kTagged) {
+    // return early if both truck and auto speed are tagged speeds or if the edge use
+    if ((directededge.speed_type() == SpeedType::kTagged &&
+         directededge.truck_speed_type() == SpeedType::kTagged) ||
+        directededge.use() == Use::kFerry || directededge.use() == Use::kRailFerry ||
+        directededge.use() == Use::kRail || !(directededge.forwardaccess() & kVehicularAccess)) {
       return false;
     }
     std::array<std::string, 2> codes = {country_code, (country_code + "-" + state_code)};
@@ -212,25 +216,41 @@ public:
 
       // start with density
       if (density > kMaxRuralDensity) {
-        if (ls.urban.auto_)
+        if (ls.urban.auto_) {
           speed = ls.urban.auto_;
+        } else if (ls.fallback.auto_) {
+          speed = ls.fallback.auto_;
+        }
 
         // truck: try hgv specific limit, fall back to auto speed limit
+        // try to fall back to "fallback" speed if no urban speed limits were found
         if (ls.urban.truck_) {
           truck_speed = ls.urban.truck_;
         } else if (ls.urban.auto_) {
           truck_speed = ls.urban.auto_;
+        } else if (ls.fallback.truck_) {
+          truck_speed = ls.fallback.truck_;
+        } else if (ls.fallback.auto_) {
+          truck_speed = ls.fallback.auto_;
         }
 
       } else {
-        if (ls.rural.auto_)
+        if (ls.rural.auto_) {
           speed = ls.rural.auto_;
+        } else if (ls.fallback.auto_) {
+          speed = ls.fallback.auto_;
+        }
 
         // truck: try hgv specific limit, fall back to auto speed limit
+        // try to fall back to "fallback" speed if no rural speed limits were found
         if (ls.rural.truck_) {
           truck_speed = ls.rural.truck_;
         } else if (ls.rural.auto_) {
           truck_speed = ls.rural.auto_;
+        } else if (ls.fallback.truck_) {
+          truck_speed = ls.fallback.truck_;
+        } else if (ls.fallback.auto_) {
+          truck_speed = ls.fallback.auto_;
         }
       }
 
