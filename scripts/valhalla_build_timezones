@@ -11,11 +11,11 @@ error_exit() {
 }
 
 if  ! which spatialite >/dev/null; then
-    error_exit "spatialite not found which is required.  Please install via:  sudo apt-get install spatialite-bin"
+    error_exit "spatialite not found which is required.  Please install via:  apt-get install spatialite-bin"
 fi
 
 if  ! which unzip >/dev/null; then
-    error_exit "unzip not found which is required.  Please install via:  sudo apt-get install unzip"
+    error_exit "unzip not found which is required.  Please install via:  apt-get install unzip"
 fi
 
 rm -rf dist

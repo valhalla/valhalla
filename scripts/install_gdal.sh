@@ -9,9 +9,9 @@ else
 fi
 
 #prereqs
-sudo apt-get install geotiff-bin libgeotiff-dev libgeotiff2
+apt-get install geotiff-bin libgeotiff-dev libgeotiff2
 if [ ! -e /usr/lib/libproj.so ]; then
-	sudo ln -s /usr/lib/libproj.so.0 /usr/lib/libproj.so
+	ln -s /usr/lib/libproj.so.0 /usr/lib/libproj.so
 fi
 
 #get the src
@@ -24,6 +24,6 @@ pushd gdal-2.0.0
 ./autogen.sh
 ./configure
 make -j$(nproc)
-sudo make install
+make install
 
 popd

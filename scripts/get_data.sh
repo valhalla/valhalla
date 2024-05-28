@@ -131,7 +131,7 @@ echo "$(date): cutting tiles"
 set +e
 which parallel
 if [ $? -ne 0 ]; then
-	sudo apt-get install parallel
+	apt-get install parallel
 fi
 set -e
 ./args.py | parallel --joblog cut_tiles.log -C ' ' -P $(nproc) "./composite.sh {} 2>err.log 1>comp.log"

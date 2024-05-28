@@ -4,7 +4,7 @@ set -o errexit -o pipefail -o nounset
 
 if ! [ -x "$(command -v parallel)" ]; then
 	echo "parallel is required please install it"
-	echo "Debian: sudo apt-get install parallel"
+	echo "Debian: apt-get install parallel"
 	echo "Osx:    brew install parallel"
 	exit 1
 fi

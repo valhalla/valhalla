@@ -54,12 +54,17 @@ scripts/gdal-2.0.0.tar.gz
 .project
 .settings
 CMakeLists.txt.user
-/.vs*/
-/*build*/
+*build*/
 /CMakeSettings.json
+.vscode
 .idea
 /.tidytmp
-vcpkg*/
+
+#
+demos/
+
+#
+**/node_modules/
 
 # documentation
 site/

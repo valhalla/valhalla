@@ -1,5 +1,0 @@
-{
-  "overlay-ports": [
-        "./overlay-ports-vcpkg"
-  ]
-}
