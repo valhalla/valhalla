@@ -1,6 +1,6 @@
 [submodule "OSM-binary"]
 	path = third_party/OSM-binary
-	url = https://github.com/scrosby/OSM-binary.git
+	url = https://github.com/scrosby/OSM-binary
 [submodule "rapidjson"]
 	path = third_party/rapidjson
 	url = https://github.com/miloyip/rapidjson
@@ -9,40 +9,40 @@
 	url = https://github.com/tronkko/dirent
 [submodule "third_party/date"]
 	path = third_party/date
-	url = https://github.com/HowardHinnant/date.git
+	url = https://github.com/HowardHinnant/date
 [submodule "third_party/googletest"]
 	path = third_party/googletest
-	url = https://github.com/google/googletest.git
+	url = https://github.com/google/googletest
 [submodule "third_party/libosmium"]
 	path = third_party/libosmium
-	url = https://github.com/osmcode/libosmium.git
+	url = https://github.com/osmcode/libosmium
 [submodule "third_party/protozero"]
 	path = third_party/protozero
-	url = https://github.com/mapbox/protozero.git
+	url = https://github.com/mapbox/protozero
 [submodule "third_party/microtar"]
 	path = third_party/microtar
-	url = https://github.com/rxi/microtar.git
+	url = https://github.com/rxi/microtar
 [submodule "third_party/robin-hood-hashing"]
 	path = third_party/robin-hood-hashing
-	url = https://github.com/martinus/robin-hood-hashing.git
+	url = https://github.com/martinus/robin-hood-hashing
 [submodule "third_party/fastcov"]
 	path = third_party/fastcov
-	url = https://github.com/RPGillespie6/fastcov.git
+	url = https://github.com/RPGillespie6/fastcov
 [submodule "third_party/pybind11"]
 	path = third_party/pybind11
-	url = https://github.com/pybind/pybind11.git
+	url = https://github.com/pybind/pybind11
 [submodule "third_party/cpp-statsd-client"]
 	path = third_party/cpp-statsd-client
 	url = https://github.com/vthiery/cpp-statsd-client
 [submodule "third_party/cxxopts"]
 	path = third_party/cxxopts
-	url = https://github.com/jarro2783/cxxopts.git
+	url = https://github.com/jarro2783/cxxopts
 [submodule "third_party/just_gtfs"]
 	path = third_party/just_gtfs
 	url = https://github.com/valhalla/just_gtfs
 [submodule "third_party/tz"]
 	path = third_party/tz
-	url = https://github.com/eggert/tz.git
+	url = https://github.com/eggert/tz
 [submodule "demos"]
 	path = demos
 	url = https://github.com/valhalla/demos
