@@ -251,7 +251,7 @@ public:
                    bool infer_turn_channels,
                    const std::string& country_code,
                    const std::string& state_code,
-                   const bool update_urban) const {
+                   const bool update_urban = true) const {
 
     // See if we can get a valid speed loaded from configuration
     auto configured_speed = FromConfig(directededge, density, country_code, state_code);
