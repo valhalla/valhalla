@@ -43,3 +43,9 @@
 [submodule "third_party/tz"]
 	path = third_party/tz
 	url = https://github.com/eggert/tz.git
+[submodule "demos"]
+	path = demos
+	url = https://github.com/valhalla/demos
+[submodule "prime_server"]
+	path = prime_server
+	url = https://github.com/kevinkreiser/prime_server
