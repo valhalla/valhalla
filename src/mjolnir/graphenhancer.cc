@@ -1601,7 +1601,8 @@ void enhance(const boost::property_tree::ptree& pt,
 
         // Speed assignment
         speed_assigner.UpdateSpeed(directededge, density, infer_turn_channels, end_node_code,
-                                   end_node_state_code, found_speed == 0);
+                                   end_node_state_code,
+                                   found_speed == 0 || !update_speed_from_legal_speeds);
 
         // Name continuity - on the directededge.
         uint32_t ntrans = nodeinfo.local_edge_count();
