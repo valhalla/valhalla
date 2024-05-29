@@ -46,7 +46,8 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     python3-pip \
     spatialite-bin \
     unzip \
-    zlib1g-dev
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
   
 # build prime_server from source
 cd ./prime_server
