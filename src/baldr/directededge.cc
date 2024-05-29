@@ -352,7 +352,6 @@ void DirectedEdge::set_reverseaccess(const uint32_t modes) {
 
 // Sets the average speed in KPH.
 void DirectedEdge::set_speed(const uint32_t speed) {
-
   if (speed > kMaxAssumedSpeed) {
     LOG_WARN("Exceeding maximum.  Average speed: " + std::to_string(speed));
     speed_ = kMaxAssumedSpeed;
