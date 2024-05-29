@@ -10,23 +10,18 @@ ARG CONCURRENCY
 USER root
 
 # set paths
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 
 # install deps
 WORKDIR /usr/local/src/valhalla
 
-COPY ./prime_server /tmp/prime_server
-COPY ./scripts/install-linux-deps.sh ./scripts/install-linux-deps.sh
-
-RUN bash ./scripts/install-linux-deps.sh
-
 # get the code into the right place and prepare to build it
 ADD . .
-RUN mkdir build
+RUN bash ./scripts/install-linux-deps.sh
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
+
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
 RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off
 RUN make all -j${CONCURRENCY:-$(nproc)}
@@ -34,18 +29,17 @@ RUN make install
 
 # we wont leave the source around but we'll drop the commit hash we'll also keep the locales
 WORKDIR /usr/local/src
+
 RUN cd valhalla && echo $VALHALLA_VERSION > ../valhalla_version
 RUN for f in valhalla/locales/*.json; do cat ${f} | python3 -c 'import sys; import json; print(json.load(sys.stdin)["posix_locale"])'; done > valhalla_locales
 RUN rm -rf valhalla
 
 ####################################################################
-# copy the important stuff from the build stage to the runner image
 FROM $TARGET_IMAGE as runner
 
 USER root
 
 # basic paths
-ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 
 # grab the builder stages artifacts
@@ -61,6 +55,11 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt-get update -y && \
       curl gdb locales parallel python3-minimal python3-distutils python-is-python3 \
       spatialite-bin unzip wget && rm -rf /var/lib/apt/lists/*
 RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
+RUN mkdir /data
 
 # python smoke test
 RUN python3 -c "import valhalla,sys; print(sys.version, valhalla)"
+
+VOLUME /data
+
+EXPOSE 8002

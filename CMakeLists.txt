@@ -245,9 +245,6 @@ if(ENABLE_PYTHON_BINDINGS)
   find_package(Python COMPONENTS Development Interpreter)
   if (Python_FOUND)
     add_subdirectory(src/bindings/python)
-    install(FILES COPYING CHANGELOG.md
-      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
-      COMPONENT python)
   else()
     set(ENABLE_PYTHON_BINDINGS OFF)
     message(WARNING "Python development version not found, skipping Python bindings...")
@@ -332,10 +329,6 @@ foreach(script valhalla_build_config valhalla_build_elevation
       COMPONENT runtime
     )
 endforeach()
-
-install(FILES COPYING CHANGELOG.md
-  DESTINATION "${CMAKE_INSTALL_DOCDIR}"
-  COMPONENT runtime)
 
 # install third_party
 install(DIRECTORY ${rapidjson_include_dir}/

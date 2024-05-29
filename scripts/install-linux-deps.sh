@@ -49,8 +49,7 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     zlib1g-dev
   
 # build prime_server from source
-cd /tmp/prime_server
-chmod +x -R .
+cd ./prime_server
 ./autogen.sh
 ./configure
 make -j${CONCURRENCY:-$(nproc)}

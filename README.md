@@ -82,3 +82,24 @@ It's important to note that all Valhalla logs for one-shot mode are piped to `st
 ### Batch Script Tool
 
 - [Batch Run_Route](https://github.com/valhalla/valhalla/blob/master/run_route_scripts/README.md)
+
+### Build
+
+cd /data && mkdir -p valhalla
+
+valhalla_build_config \
+    --mjolnir-tile-dir ${PWD}/valhalla \
+    --mjolnir-tile-extract ${PWD}/valhalla/tiles.tar \
+    --mjolnir-timezone ${PWD}/valhalla/tz_world.sqlite \
+    --mjolnir-admin ${PWD}/valhalla/admins.sqlite \
+    > valhalla/valhalla.json
+
+valhalla_build_timezones > valhalla/tz_world.sqlite
+
+valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf
+
+valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
+
+valhalla_build_extract -c valhalla/valhalla.json -v
+
+valhalla_service valhalla/valhalla.json 2
