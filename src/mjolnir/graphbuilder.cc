@@ -624,8 +624,6 @@ void BuildTileSet(const std::string& ways_file,
           uint32_t truck_speed = w.truck_speed() && directed_truck_speed
                                      ? std::min(w.truck_speed(), directed_truck_speed)
                                      : std::max(w.truck_speed(), directed_truck_speed);
-          SpeedType truck_speed_type =
-              (truck_speed > 0) ? SpeedType::kTagged : SpeedType::kClassified;
 
           if (truck_speed > kMaxAssumedSpeed) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
@@ -910,9 +908,8 @@ void BuildTileSet(const std::string& ways_file,
           // Add a directed edge and get a reference to it
           DirectedEdgeBuilder de(w, (*nodes[target]).graph_id, forward,
                                  static_cast<uint32_t>(std::get<0>(found->second) + .5), speed,
-                                 truck_speed, truck_speed_type, use,
-                                 static_cast<RoadClass>(edge.attributes.importance), n, has_signal,
-                                 has_stop, has_yield,
+                                 truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
+                                 n, has_signal, has_stop, has_yield,
                                  ((has_stop || has_yield) ? node.minor() : false), restrictions,
                                  bike_network, edge.attributes.reclass_ferry);
           graphtile.directededges().emplace_back(de);

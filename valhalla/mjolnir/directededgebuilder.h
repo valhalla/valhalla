@@ -24,7 +24,6 @@ public:
    * @param  length               Length in meters.
    * @param  speed                Average speed in kph.
    * @param  truck_speed          Truck speed limit in kph.
-   * @param  truck_speed_type     Type of truck speed (see graphconstants.h).
    * @param  use                  Use of the edge.
    * @param  rc                   Road class / importance
    * @param  localidx             Index of the edge (from the node) on the local level
@@ -43,7 +42,6 @@ public:
                       const uint32_t length,
                       const uint32_t speed,
                       const uint32_t truck_speed,
-                      const SpeedType truck_speed_type,
                       const baldr::Use use,
                       const baldr::RoadClass rc,
                       const uint32_t localidx,

@@ -205,117 +205,115 @@ public:
                         const std::string& state_code) const {
 
     // return early if both truck and auto speed are tagged speeds or if the edge use
-    if ((directededge.speed_type() == SpeedType::kTagged &&
-         directededge.truck_speed_type() == SpeedType::kTagged) ||
+    if ((directededge.speed_type() == SpeedType::kTagged && directededge.truck_speed() > 0) ||
         directededge.use() == Use::kFerry || directededge.use() == Use::kRailFerry ||
         directededge.use() == Use::kRail || !(directededge.forwardaccess() & kVehicularAccess)) {
       return 0;
     }
-    std::array<std::string, 2> codes = {country_code, (country_code + "-" + state_code)};
 
-    // do country first, then state
-    bool auto_default_speed_changed = false;
-    for (const auto& code : codes) {
-      auto found = legal_speeds_map_.find(code);
+    bool speed_changed = false;
 
-      if (found == legal_speeds_map_.end())
-        continue;
+    // try to find state then country
+    auto found = legal_speeds_map_.find(country_code + "-" + state_code);
+    if (found == legal_speeds_map_.end())
+      found = legal_speeds_map_.find(country_code);
+    // none was found, bail
+    if (found == legal_speeds_map_.end())
+      return 0;
 
-      auto ls = found->second;
-      auto speed = directededge.speed();
-      auto truck_speed = directededge.truck_speed();
+    auto ls = found->second;
+    auto speed = directededge.speed();
+    auto truck_speed = directededge.truck_speed();
 
-      // start with density
-      if (density > kMaxRuralDensity) {
-        if (ls.urban.auto_) {
-          speed = ls.urban.auto_;
-        } else if (ls.fallback.auto_) {
-          speed = ls.fallback.auto_;
-        }
-
-        // truck: try hgv specific limit, fall back to auto speed limit
-        // try to fall back to "fallback" speed if no urban speed limits were found
-        if (ls.urban.truck_) {
-          truck_speed = ls.urban.truck_;
-        } else if (ls.urban.auto_) {
-          truck_speed = ls.urban.auto_;
-        } else if (ls.fallback.truck_) {
-          truck_speed = ls.fallback.truck_;
-        } else if (ls.fallback.auto_) {
-          truck_speed = ls.fallback.auto_;
-        }
-
-      } else {
-        if (ls.rural.auto_) {
-          speed = ls.rural.auto_;
-        } else if (ls.fallback.auto_) {
-          speed = ls.fallback.auto_;
-        }
-
-        // truck: try hgv specific limit, fall back to auto speed limit
-        // try to fall back to "fallback" speed if no rural speed limits were found
-        if (ls.rural.truck_) {
-          truck_speed = ls.rural.truck_;
-        } else if (ls.rural.auto_) {
-          truck_speed = ls.rural.auto_;
-        } else if (ls.fallback.truck_) {
-          truck_speed = ls.fallback.truck_;
-        } else if (ls.fallback.auto_) {
-          truck_speed = ls.fallback.auto_;
-        }
+    // start with density
+    if (density > kMaxRuralDensity) {
+      if (ls.urban.auto_) {
+        speed = ls.urban.auto_;
+      } else if (ls.fallback.auto_) {
+        speed = ls.fallback.auto_;
       }
 
-      // then look for more specific rules based on road class/use
-      if (directededge.classification() == valhalla::baldr::RoadClass::kMotorway) {
-        if (ls.motorway.auto_)
-          speed = ls.motorway.auto_;
-
-        // truck: try hgv specific limit, fall back to auto speed limit
-        if (ls.motorway.truck_) {
-          truck_speed = ls.motorway.truck_;
-        } else if (ls.motorway.auto_) {
-          truck_speed = ls.motorway.auto_;
-        }
-      } else if (directededge.use() == Use::kLivingStreet) {
-        if (ls.living_street.auto_)
-          speed = ls.living_street.auto_;
-
-        if (ls.living_street.truck_) {
-          truck_speed = ls.living_street.truck_;
-        } else if (ls.living_street.auto_) {
-          truck_speed = ls.living_street.auto_;
-        }
-      } else if (directededge.classification() == valhalla::baldr::RoadClass::kTrunk) {
-        if (ls.trunk.auto_)
-          speed = ls.trunk.auto_;
-
-        if (ls.trunk.truck_) {
-          truck_speed = ls.trunk.truck_;
-        } else if (ls.trunk.auto_) {
-          truck_speed = ls.trunk.auto_;
-        }
-      } else if (directededge.use() == Use::kServiceRoad) {
-        if (ls.service.auto_)
-          speed = ls.service.auto_;
-
-        if (ls.service.truck_) {
-          truck_speed = ls.service.truck_;
-        } else if (ls.service.auto_) {
-          truck_speed = ls.service.auto_;
-        }
+      // truck: try hgv specific limit, fall back to auto speed limit
+      // try to fall back to "fallback" speed if no urban speed limits were found
+      if (ls.urban.truck_) {
+        truck_speed = ls.urban.truck_;
+      } else if (ls.urban.auto_) {
+        truck_speed = ls.urban.auto_;
+      } else if (ls.fallback.truck_) {
+        truck_speed = ls.fallback.truck_;
+      } else if (ls.fallback.auto_) {
+        truck_speed = ls.fallback.auto_;
       }
 
-      if (directededge.speed_type() == SpeedType::kClassified) {
-        auto_default_speed_changed |= directededge.speed() != speed;
-        if (update_speed_)
-          directededge.set_speed(speed);
+    } else {
+      if (ls.rural.auto_) {
+        speed = ls.rural.auto_;
+      } else if (ls.fallback.auto_) {
+        speed = ls.fallback.auto_;
       }
 
-      if (directededge.truck_speed_type() == SpeedType::kClassified) {
-        if (update_speed_)
-          directededge.set_truck_speed(truck_speed);
+      // truck: try hgv specific limit, fall back to auto speed limit
+      // try to fall back to "fallback" speed if no rural speed limits were found
+      if (ls.rural.truck_) {
+        truck_speed = ls.rural.truck_;
+      } else if (ls.rural.auto_) {
+        truck_speed = ls.rural.auto_;
+      } else if (ls.fallback.truck_) {
+        truck_speed = ls.fallback.truck_;
+      } else if (ls.fallback.auto_) {
+        truck_speed = ls.fallback.auto_;
       }
     }
-    return auto_default_speed_changed ? directededge.speed() : 0;
+
+    // then look for more specific rules based on road class/use
+    if (directededge.classification() == valhalla::baldr::RoadClass::kMotorway) {
+      if (ls.motorway.auto_)
+        speed = ls.motorway.auto_;
+
+      // truck: try hgv specific limit, fall back to auto speed limit
+      if (ls.motorway.truck_) {
+        truck_speed = ls.motorway.truck_;
+      } else if (ls.motorway.auto_) {
+        truck_speed = ls.motorway.auto_;
+      }
+    } else if (directededge.use() == Use::kLivingStreet) {
+      if (ls.living_street.auto_)
+        speed = ls.living_street.auto_;
+
+      if (ls.living_street.truck_) {
+        truck_speed = ls.living_street.truck_;
+      } else if (ls.living_street.auto_) {
+        truck_speed = ls.living_street.auto_;
+      }
+    } else if (directededge.classification() == valhalla::baldr::RoadClass::kTrunk) {
+      if (ls.trunk.auto_)
+        speed = ls.trunk.auto_;
+
+      if (ls.trunk.truck_) {
+        truck_speed = ls.trunk.truck_;
+      } else if (ls.trunk.auto_) {
+        truck_speed = ls.trunk.auto_;
+      }
+    } else if (directededge.use() == Use::kServiceRoad) {
+      if (ls.service.auto_)
+        speed = ls.service.auto_;
+
+      if (ls.service.truck_) {
+        truck_speed = ls.service.truck_;
+      } else if (ls.service.auto_) {
+        truck_speed = ls.service.auto_;
+      }
+    }
+
+    if (directededge.speed_type() == SpeedType::kClassified) {
+      speed_changed |= directededge.speed() != speed;
+      if (update_speed_)
+        directededge.set_speed(speed);
+    }
+
+    if (!directededge.truck_speed() && update_speed_) {
+      directededge.set_truck_speed(truck_speed);
+    }
+    return speed_changed ? directededge.speed() : 0;
   }
 };
