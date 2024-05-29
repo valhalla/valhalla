@@ -33,6 +33,7 @@ protected:
 
   valhalla::Api do_expansion_action(std::string* res,
                                     bool skip_opps,
+                                    bool dedupe,
                                     std::string action,
                                     const std::vector<std::string>& props,
                                     const std::vector<std::string>& waypoints,
@@ -40,6 +41,7 @@ protected:
     std::unordered_map<std::string, std::string> options = {{"/skip_opposites",
                                                              skip_opps ? "1" : "0"},
                                                             {"/action", action},
+                                                            {"/dedupe", dedupe ? "1" : "0"},
                                                             {"/format", pbf ? "pbf" : "json"}};
     for (uint8_t i = 0; i < props.size(); i++) {
       options.insert({{"/expansion_properties/" + std::to_string(i), props[i]}});
@@ -64,17 +66,19 @@ protected:
                      const std::vector<std::string>& waypoints,
                      bool skip_opps,
                      unsigned exp_feats,
-                     const std::vector<std::string>& props = {}) {
-    check_result_json(action, waypoints, skip_opps, exp_feats, props);
-    check_result_pbf(action, waypoints, skip_opps, exp_feats, props);
+                     const std::vector<std::string>& props = {},
+                     bool dedupe = false) {
+    check_result_json(action, waypoints, skip_opps, dedupe, exp_feats, props);
+    check_result_pbf(action, waypoints, skip_opps, dedupe, exp_feats, props);
   }
   void check_result_pbf(const std::string& action,
                         const std::vector<std::string>& waypoints,
                         bool skip_opps,
+                        bool dedupe,
                         unsigned exp_feats,
                         const std::vector<std::string>& props) {
     std::string res;
-    auto api = do_expansion_action(&res, skip_opps, action, props, waypoints, true);
+    auto api = do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, true);
 
     Api parsed_api;
     parsed_api.ParseFromString(res);
@@ -110,7 +114,11 @@ protected:
       }
     }
     ASSERT_EQ(parsed_api.expansion().geometries_size(), exp_feats);
-    ASSERT_EQ(parsed_api.expansion().edge_status_size(), edge_status ? exp_feats : 0);
+    if (dedupe) {
+      ASSERT_EQ(parsed_api.expansion().edge_status_flags_size(), edge_status ? exp_feats : 0);
+    } else {
+      ASSERT_EQ(parsed_api.expansion().edge_status_size(), edge_status ? exp_feats : 0);
+    }
     ASSERT_EQ(parsed_api.expansion().distances_size(), distance ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().durations_size(), duration ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().pred_edge_id_size(), pred_edge_id ? exp_feats : 0);
@@ -120,11 +128,12 @@ protected:
   void check_result_json(const std::string& action,
                          const std::vector<std::string>& waypoints,
                          bool skip_opps,
+                         bool dedupe,
                          unsigned exp_feats,
                          const std::vector<std::string>& props) {
 
     std::string res;
-    auto api = do_expansion_action(&res, skip_opps, action, props, waypoints, false);
+    auto api = do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, false);
     // get the MultiLineString feature
     rapidjson::Document res_doc;
     res_doc.Parse(res.c_str());
@@ -133,9 +142,18 @@ protected:
     ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("LineString"));
     ASSERT_TRUE(feat.HasMember("properties"));
 
-    ASSERT_EQ(feat["properties"].MemberCount(), props.size());
+    // edge_status with dedupe enabled returns status_reached, status_settled and status_connected
     for (const auto& prop : props) {
-      ASSERT_TRUE(feat["properties"].HasMember(prop));
+      if (dedupe) {
+        if (prop == "edge_status") {
+          ASSERT_TRUE(feat["properties"].HasMember("status_reached"));
+          ASSERT_TRUE(feat["properties"].HasMember("status_settled"));
+          ASSERT_TRUE(feat["properties"].HasMember("status_connected"));
+        }
+      } else {
+        ASSERT_EQ(feat["properties"].MemberCount(), props.size());
+        ASSERT_TRUE(feat["properties"].HasMember(prop));
+      }
     }
   }
 };
@@ -173,6 +191,34 @@ TEST_P(ExpansionTest, MatrixNoOpposites) {
   check_results("sources_to_targets", {"E", "H"}, true, 23, GetParam());
 }
 
+TEST_P(ExpansionTest, IsochroneDedupe) {
+  // test Dijkstra expansion
+  // 11 because there's a one-way
+  check_results("isochrone", {"A"}, false, 11, GetParam(), true);
+}
+TEST_P(ExpansionTest, IsochroneNoOppositesDedupe) {
+  // test Dijkstra expansion and skip collecting more expensive opposite edges
+  check_results("isochrone", {"A"}, true, 6, GetParam(), true);
+}
+
+TEST_P(ExpansionTest, RoutingDedupe) {
+  // test AStar expansion
+  check_results("route", {"E", "H"}, false, 7, GetParam(), true);
+}
+
+TEST_P(ExpansionTest, RoutingNoOppositesDedupe) {
+  // test AStar expansion and no opposite edges
+  check_results("route", {"E", "H"}, true, 5, GetParam(), true);
+}
+
+TEST_P(ExpansionTest, MatrixDedupe) {
+  check_results("sources_to_targets", {"E", "H"}, false, 11, GetParam(), true);
+}
+
+TEST_P(ExpansionTest, MatrixNoOppositesDedupe) {
+  check_results("sources_to_targets", {"E", "H"}, true, 6, GetParam(), true);
+}
+
 TEST_F(ExpansionTest, UnsupportedAction) {
   try {
     check_results("status", {"E", "H"}, true, 16);
@@ -198,6 +244,22 @@ TEST_F(ExpansionTest, NoAction) {
   try {
     auto api = gurka::do_action(Options::expansion, expansion_map, req);
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 115); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
+TEST_F(ExpansionTest, UnsupportedActionDedupe) {
+  try {
+    check_results("status", {"E", "H"}, true, 5, {}, true);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 144); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
+TEST_F(ExpansionTest, UnsupportedPropTypeDedupe) {
+  try {
+    check_results("route", {"E", "H"}, true, 5, {"foo", "bar"}, true);
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 168); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
