@@ -85,6 +85,8 @@ It's important to note that all Valhalla logs for one-shot mode are piped to `st
 
 ### Build
 
+docker run --rm -it --name valhalla -p 8002:8002 -v /home/huy/Downloads/data/:/data valhalla:latest
+
 cd /data && mkdir -p valhalla
 
 valhalla_build_config \
