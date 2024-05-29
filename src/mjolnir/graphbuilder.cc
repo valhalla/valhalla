@@ -620,7 +620,6 @@ void BuildTileSet(const std::string& ways_file,
 
           // if there's a general truck speed AND a directed one, apply the stricter one
           // otherwise just pick whichever is set
-
           uint32_t truck_speed = w.truck_speed() && directed_truck_speed
                                      ? std::min(w.truck_speed(), directed_truck_speed)
                                      : std::max(w.truck_speed(), directed_truck_speed);
