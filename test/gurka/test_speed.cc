@@ -380,16 +380,19 @@ TEST(Standalone, AdminFallback) {
     speed_config << R"(
       [{
         "urban": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         },
         "suburban": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         },
         "rural": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         }
       }]
     )";
@@ -407,16 +410,19 @@ TEST(Standalone, AdminFallback) {
       [{
         "iso3166-1": "US", "iso3166-2": "PA",
         "urban": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         },
         "suburban": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         },
         "rural": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         }
       }]
     )";
@@ -440,45 +446,54 @@ TEST(Standalone, AdminFallback) {
       [{
         "iso3166-1": "US", "iso3166-2": "PA",
         "urban": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         },
         "suburban": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         },
         "rural": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         }
       },
       {
         "iso3166-1": "US",
         "urban": {
-          "way": [12,12,12,12,12,12,12,12], "link_exiting": [12,12,12,12,12], "link_turning": [12,12,12,12,12],
-          "roundabout": [12,12,12,12,12,12,12,12], "driveway": 12, "alley": 12, "parking_aisle": 12, "drive-through": 12
+          "way": [12,12,12,12,12,12,12,12], "link_exiting": [12,12,12,12,12], "link_turning":
+          [12,12,12,12,12], "roundabout": [12,12,12,12,12,12,12,12], "driveway": 12, "alley": 12,
+          "parking_aisle": 12, "drive-through": 12
         },
         "suburban": {
-          "way": [12,12,12,12,12,12,12,12], "link_exiting": [12,12,12,12,12], "link_turning": [12,12,12,12,12],
-          "roundabout": [12,12,12,12,12,12,12,12], "driveway": 12, "alley": 12, "parking_aisle": 12, "drive-through": 12
+          "way": [12,12,12,12,12,12,12,12], "link_exiting": [12,12,12,12,12], "link_turning":
+          [12,12,12,12,12], "roundabout": [12,12,12,12,12,12,12,12], "driveway": 12, "alley": 12,
+          "parking_aisle": 12, "drive-through": 12
         },
         "rural": {
-          "way": [12,12,12,12,12,12,12,12], "link_exiting": [12,12,12,12,12], "link_turning": [12,12,12,12,12],
-          "roundabout": [12,12,12,12,12,12,12,12], "driveway": 12, "alley": 12, "parking_aisle": 12, "drive-through": 12
+          "way": [12,12,12,12,12,12,12,12], "link_exiting": [12,12,12,12,12], "link_turning":
+          [12,12,12,12,12], "roundabout": [12,12,12,12,12,12,12,12], "driveway": 12, "alley": 12,
+          "parking_aisle": 12, "drive-through": 12
         }
       },
       {
         "urban": {
-          "way": [13,13,13,13,13,13,13,13], "link_exiting": [13,13,13,13,13], "link_turning": [13,13,13,13,13],
-          "roundabout": [13,13,13,13,13,13,13,13], "driveway": 13, "alley": 13, "parking_aisle": 13, "drive-through": 13
+          "way": [13,13,13,13,13,13,13,13], "link_exiting": [13,13,13,13,13], "link_turning":
+          [13,13,13,13,13], "roundabout": [13,13,13,13,13,13,13,13], "driveway": 13, "alley": 13,
+          "parking_aisle": 13, "drive-through": 13
         },
         "suburban": {
-          "way": [13,13,13,13,13,13,13,13], "link_exiting": [13,13,13,13,13], "link_turning": [13,13,13,13,13],
-          "roundabout": [13,13,13,13,13,13,13,13], "driveway": 13, "alley": 13, "parking_aisle": 13, "drive-through": 13
+          "way": [13,13,13,13,13,13,13,13], "link_exiting": [13,13,13,13,13], "link_turning":
+          [13,13,13,13,13], "roundabout": [13,13,13,13,13,13,13,13], "driveway": 13, "alley": 13,
+          "parking_aisle": 13, "drive-through": 13
         },
         "rural": {
-          "way": [13,13,13,13,13,13,13,13], "link_exiting": [13,13,13,13,13], "link_turning": [13,13,13,13,13],
-          "roundabout": [13,13,13,13,13,13,13,13], "driveway": 13, "alley": 13, "parking_aisle": 13, "drive-through": 13
+          "way": [13,13,13,13,13,13,13,13], "link_exiting": [13,13,13,13,13], "link_turning":
+          [13,13,13,13,13], "roundabout": [13,13,13,13,13,13,13,13], "driveway": 13, "alley": 13,
+          "parking_aisle": 13, "drive-through": 13
         }
       }]
     )";
@@ -537,8 +552,9 @@ TEST(Standalone, Malformed) {
     speed_config << R"(
       [{
         "rural": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         }
       }]
     )";
@@ -551,12 +567,14 @@ TEST(Standalone, Malformed) {
     speed_config << R"(
       [{
         "rural": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         },
         "suburban": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
         }
       }]
     )";
@@ -576,8 +594,8 @@ TEST(Standalone, Malformed) {
     speed_config << R"(
       [{
         "rural": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11]
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11]
         }
       }]
     )";
@@ -590,8 +608,8 @@ TEST(Standalone, Malformed) {
     speed_config << R"(
       [{
         "rural": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11
         }
       }]
     )";
@@ -604,8 +622,8 @@ TEST(Standalone, Malformed) {
     speed_config << R"(
       [{
         "rural": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11
         }
       }]
     )";
@@ -618,8 +636,9 @@ TEST(Standalone, Malformed) {
     speed_config << R"(
       [{
         "rural": {
-          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-          "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11
         }
       }]
     )";
@@ -637,16 +656,21 @@ TEST(Standalone, HandleNulls) {
   speed_config << R"(
     [{
       "urban": {
-        "way": [null,null,null,null,null,null,null,null], "link_exiting": [null,null,null,null,null], "link_turning": [null,null,null,null,null],
-        "roundabout": [null,null,null,null,null,null,null,null], "driveway": null, "alley": null, "parking_aisle": null, "drive-through": null
+        "way": [null,null,null,null,null,null,null,null], "link_exiting":
+        [null,null,null,null,null], "link_turning": [null,null,null,null,null], "roundabout":
+        [null,null,null,null,null,null,null,null], "driveway": null, "alley": null,
+        "parking_aisle": null, "drive-through": null
       },
       "suburban": {
-        "way": [null,null,null,null,null,null,null,null], "link_exiting": [null,null,null,null,null], "link_turning": [null,null,null,null,null],
-        "roundabout": [null,null,null,null,null,null,null,null], "driveway": null, "alley": null, "parking_aisle": null, "drive-through": null
+        "way": [null,null,null,null,null,null,null,null], "link_exiting":
+        [null,null,null,null,null], "link_turning": [null,null,null,null,null], "roundabout":
+        [null,null,null,null,null,null,null,null], "driveway": null, "alley": null,
+        "parking_aisle": null, "drive-through": null
       },
       "rural": {
-        "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
-        "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+        "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+        [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+        "parking_aisle": 11, "drive-through": 11
       }
     }]
   )";
@@ -779,6 +803,7 @@ TEST(Standalone, LegalSpeedsDensity) {
     }
   }
 }
+
 TEST(Standalone, LegalSpeedsRoadClass) {
 
   constexpr double gridsize = 500;
@@ -884,4 +909,70 @@ TEST(Standalone, LegalSpeedsRoadClass) {
       EXPECT_EQ(edge->truck_speed(), speeds.truck_expected);
     }
   }
+}
+
+TEST(Standalone, SpeedLimitOnly) {
+
+  constexpr double gridsize = 500;
+
+  const std::string ascii_map = R"(
+      A--B--C--D
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "motorway"}}},
+      {"BC", {{"highway", "service"}}},
+      {"CD", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.167640, 52.088865});
+
+  // build a small legal speed JSON file
+  std::ofstream speed_config("test/data/legal_speeds.json");
+  speed_config << R"(
+    { "speedLimitsByCountryCode": {
+      "NL": [
+      {
+        "name": "urban",
+        "tags": {
+          "maxspeed": "11"
+        }
+      },
+      {
+        "name": "service road",
+        "tags": {
+          "maxspeed": "12"
+        }
+      },
+      {
+        "name": "rural",
+        "tags": {
+          "maxspeed": "13"
+        }
+      },
+      {
+        "name": "motorway",
+        "tags": {
+          "maxspeed": "14"
+        }
+      }
+    ]
+  }}
+  )";
+  speed_config.close();
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/legalspeed",
+                        {{"mjolnir.admin",
+                          {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}},
+                         {"mjolnir.use_legal_speed_as_edge_speed", "false"},
+                         {"mjolnir.legal_speeds_config", "test/data/legal_speeds.json"}});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto AB = gurka::findEdgeByNodes(reader, layout, "A", "B");
+  auto AB_edge = std::get<1>(AB);
+  EXPECT_NE(AB_edge->speed(), 14);
+  auto AB_sl = reader.edgeinfo(std::get<0>(AB)).speed_limit();
+  EXPECT_EQ(AB_sl, 14);
 }

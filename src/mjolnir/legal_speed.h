@@ -197,7 +197,7 @@ public:
    * @param density              Relative road density.
    * @param country_code         2 letter country code
    * @param state_code           2 letter state code
-   * @return returns the updated (auto) speed or 0 if unchanged
+   * @return returns the found (auto) speed or 0
    */
   uint32_t update_speed(DirectedEdge& directededge,
                         const uint32_t density,
@@ -314,6 +314,6 @@ public:
     if (!directededge.truck_speed() && update_speed_) {
       directededge.set_truck_speed(truck_speed);
     }
-    return speed_changed ? directededge.speed() : 0;
+    return speed;
   }
 };

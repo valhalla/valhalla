@@ -1591,17 +1591,17 @@ void enhance(const boost::property_tree::ptree& pt,
         directededge.set_named(names.size() > 0);
 
         // Simple legal speed assignment
-        const uint32_t updated_speed =
+        const uint32_t found_speed =
             legal_speeds_assigner.update_speed(directededge, density, end_node_code,
                                                end_node_state_code);
-        if (updated_speed) {
+        if (found_speed && directededge.speed_type() == SpeedType::kClassified) {
           // EdgeInfo edgeinfo = tilebuilder->edgeinfo(&directededge);
-          tilebuilder->set_speed_limit(directededge.edgeinfo_offset(), directededge.speed());
+          tilebuilder->set_speed_limit(directededge.edgeinfo_offset(), found_speed);
         }
 
         // Speed assignment
         speed_assigner.UpdateSpeed(directededge, density, infer_turn_channels, end_node_code,
-                                   end_node_state_code, updated_speed == 0);
+                                   end_node_state_code, found_speed == 0);
 
         // Name continuity - on the directededge.
         uint32_t ntrans = nodeinfo.local_edge_count();
