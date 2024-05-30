@@ -15,9 +15,62 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-g
 # install deps
 WORKDIR /usr/local/src/valhalla
 
-# get the code into the right place and prepare to build it
 ADD . .
-RUN bash ./scripts/install-linux-deps.sh
+
+RUN set -ex; \
+  export DEBIAN_FRONTEND=noninteractive; \
+  apt-get -qq update; \
+  apt-get -y --no-install-recommends install \
+  autoconf \
+  automake \
+  ccache \
+  clang \
+  clang-tidy \
+  coreutils \
+  curl \
+  cmake \
+  g++ \
+  gcc \
+  git \
+  jq \
+  lcov \
+  libboost-all-dev \
+  libcurl4-openssl-dev \
+  libczmq-dev \
+  libgdal-dev \
+  libgeos++-dev \
+  libgeos-dev \
+  libluajit-5.1-dev \
+  liblz4-dev \
+  libprotobuf-dev \
+  libspatialite-dev \
+  libsqlite3-dev \
+  libsqlite3-mod-spatialite \
+  libtool \
+  libzmq3-dev \
+  lld \
+  locales \
+  luajit \
+  make \
+  osmium-tool \
+  parallel \
+  pkgconf \
+  protobuf-compiler \
+  python3-all-dev \
+  python3-shapely \
+  python3-pip \
+  spatialite-bin \
+  unzip \
+  zlib1g-dev; \
+  rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/local/src/valhalla/prime_server
+
+RUN ./autogen.sh && ./configure
+RUN make -j${CONCURRENCY:-$(nproc)}
+RUN make install
+
+RUN PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --upgrade requests shapely
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
@@ -30,7 +83,6 @@ RUN make install
 # we wont leave the source around but we'll drop the commit hash we'll also keep the locales
 WORKDIR /usr/local/src
 
-RUN cd valhalla && echo $VALHALLA_VERSION > ../valhalla_version
 RUN for f in valhalla/locales/*.json; do cat ${f} | python3 -c 'import sys; import json; print(json.load(sys.stdin)["posix_locale"])'; done > valhalla_locales
 RUN rm -rf valhalla
 
@@ -49,11 +101,11 @@ COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/d
 # we need to add back some runtime dependencies for binaries and scripts
 # install all the posix locales that we support
 RUN export DEBIAN_FRONTEND=noninteractive && apt-get update -y && \
-    apt-get install -y \
-      libcurl4 libczmq4 libluajit-5.1-2 libgdal32 \
-      libprotobuf-lite32 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
-      curl gdb locales parallel python3-minimal python3-distutils python-is-python3 \
-      spatialite-bin unzip wget && rm -rf /var/lib/apt/lists/*
+  apt-get install -y \
+  libcurl4 libczmq4 libluajit-5.1-2 libgdal32 \
+  libprotobuf-lite32 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
+  curl gdb locales parallel python3-minimal python3-distutils python-is-python3 \
+  spatialite-bin unzip wget && rm -rf /var/lib/apt/lists/*
 RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
 RUN mkdir /data
 
