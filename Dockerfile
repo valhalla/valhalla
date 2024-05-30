@@ -13,10 +13,6 @@ USER root
 ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 
 # install deps
-WORKDIR /usr/local/src/valhalla
-
-ADD . .
-
 RUN set -ex; \
   export DEBIAN_FRONTEND=noninteractive; \
   apt-get -qq update; \
@@ -62,15 +58,18 @@ RUN set -ex; \
   spatialite-bin \
   unzip \
   zlib1g-dev; \
+  PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --upgrade requests shapely; \
   rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/local/src/valhalla
+
+ADD . .
 
 WORKDIR /usr/local/src/valhalla/prime_server
 
 RUN ./autogen.sh && ./configure
 RUN make -j${CONCURRENCY:-$(nproc)}
 RUN make install
-
-RUN PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --upgrade requests shapely
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
