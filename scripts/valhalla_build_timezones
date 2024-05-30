@@ -17,3 +17,5 @@ spatialite ${tz_file} "VACUUM;"
 spatialite ${tz_file} "ANALYZE;"
 
 rm -rf /data/combined-shapefile-with-oceans* /data/alias_tz.csv
+
+cat $tz_file
