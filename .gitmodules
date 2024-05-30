@@ -46,3 +46,6 @@
 [submodule "prime_server"]
 	path = prime_server
 	url = https://github.com/kevinkreiser/prime_server
+[submodule "demos"]
+	path = demos
+	url = https://github.com/valhalla/demos
