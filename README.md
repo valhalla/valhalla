@@ -93,13 +93,11 @@ valhalla_build_config \
     --mjolnir-tile-dir ${PWD}/valhalla \
     --mjolnir-tile-extract ${PWD}/valhalla/tiles.tar \
     --mjolnir-timezone ${PWD}/valhalla/tz_world.sqlite \
-    --mjolnir-admin ${PWD}/valhalla/admins.sqlite \
+    --mjolnir-admin ${PWD}/valhalla/admin.sqlite \
     > valhalla/valhalla.json
 
 valhalla_build_timezones > valhalla/tz_world.sqlite
-
 valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf
-
 valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
 
 valhalla_build_extract -c valhalla/valhalla.json -v
