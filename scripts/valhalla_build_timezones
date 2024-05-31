@@ -1,7 +1,7 @@
 #!/bin/sh
 
 error_exit() {
-  echo "error: $1" 1>&2
+  echo "Error: $1" 1>&2
   # geos 3.9* has a double free bug which, although it crashes the programs
   # that use it when they go to exit, works fine otherwise in terms of the
   # output. so here if we detect that we ignore the failure and keep going
@@ -10,12 +10,20 @@ error_exit() {
   fi
 }
 
-if  ! which spatialite > /dev/null; then
+if ! which spatialite > /dev/null; then
   error_exit "spatialite not found which is required. Please install spatialite-bin"
 fi
 
-if  ! which unzip > /dev/null; then
+if ! which unzip > /dev/null; then
   error_exit "unzip not found which is required. Please install unzip"
+fi
+
+if [ ! -f ./timezones-with-oceans.shapefile.zip ]; then
+  echo "Downloading timezone polygon file..." 1>&2
+  url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/2024a/timezones-with-oceans.shapefile.zip"
+  curl -L -s -o ./timezones-with-oceans.shapefile.zip ${url} || error_exit "curl failed for ${url}"
+else
+  echo "Timezone polygon file already exists. Skipping download." 1>&2
 fi
 
 unzip ./timezones-with-oceans.shapefile.zip 1>&2 || error_exit "unzip failed"
