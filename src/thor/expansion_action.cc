@@ -132,19 +132,19 @@ std::string thor_worker_t::expansion(Api& request) {
                     std::to_string(edgeid.Tile_Base()));
           return;
         }
-        const auto* edge = tile->directededge(edgeid);
-        // unfortunately we have to call this before checking if we can skip
-        // else the tile could change underneath us when we get the opposing
-        auto shape = tile->edgeinfo(edge).shape();
 
         // if requested, skip this edge in case its opposite edge has been added
         // before (i.e. lower cost) else add this edge's id to the lookup container
         if (skip_opps) {
-          auto opp_edgeid = reader.GetOpposingEdgeId(edgeid, tile);
+          auto opp_tile = tile;
+          auto opp_edgeid = reader.GetOpposingEdgeId(edgeid, opp_tile);
           if (opp_edgeid && opp_edges.count(opp_edgeid))
             return;
           opp_edges.insert(edgeid);
         }
+
+        const auto* edge = tile->directededge(edgeid);
+        auto shape = tile->edgeinfo(edge).shape();
 
         if (!edge->forward())
           std::reverse(shape.begin(), shape.end());
