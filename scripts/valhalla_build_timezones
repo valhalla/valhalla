@@ -18,6 +18,8 @@ if  ! which unzip > /dev/null; then
   error_exit "unzip not found which is required. Please install unzip"
 fi
 
+unzip ./timezones-with-oceans.shapefile.zip 1>&2 || error_exit "unzip failed"
+
 tz_file=$(mktemp)
 spatialite_tool -i -shp "./combined-shapefile-with-oceans" -d "${tz_file}" -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
 spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed"
