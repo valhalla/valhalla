@@ -85,9 +85,9 @@ It's important to note that all Valhalla logs for one-shot mode are piped to `st
 
 ### Build
 
-docker run --rm -it --name valhalla -p 8002:8002 -v /home/huy/Downloads/data/:/data quanghuy2307/valhalla:3.4.0
+docker run --rm -it --name valhalla -p 8002:8002 -v /home/huy/Downloads/data/:/data quanghuy2307/valhalla:latest
 
-cd /data && mkdir -p valhalla valhalla/transit valhalla/elevation_tiles
+mkdir -p valhalla valhalla/transit valhalla/elevation_tiles
 
 valhalla_build_config \
     --mjolnir-tile-dir ${PWD}/valhalla/tiles \
@@ -102,11 +102,11 @@ valhalla_build_config \
 
 valhalla_build_timezones > valhalla/tz_world.sqlite
 
-valhalla_build_landmarks -c valhalla/valhalla.json vietnam-latest.osm.pbf -v
+valhalla_build_landmarks -c valhalla/valhalla.json vietnam-latest.osm.pbf
 
-valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf -v
+valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf
 
-valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf -v
+valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
 
 valhalla_build_elevation -c valhalla/valhalla.json -t -v
 
