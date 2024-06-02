@@ -106,9 +106,9 @@ valhalla_build_landmarks -c valhalla/valhalla.json vietnam-latest.osm.pbf
 
 valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf
 
-valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
-
 valhalla_build_elevation -c valhalla/valhalla.json -t -v
+
+valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
 
 valhalla_build_extract -c valhalla/valhalla.json -v
 
