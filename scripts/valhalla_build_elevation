@@ -17,9 +17,9 @@ from time import sleep
 from typing import List, Iterable, Set
 from urllib import request
 from urllib.error import URLError, HTTPError
+import ssl
 
-# hack so ArgumentParser can accept negative numbers
-# see https://github.com/valhalla/valhalla/issues/3426
+# hack so ArgumentParser can accept negative numbers see https://github.com/valhalla/valhalla/issues/3426
 for i, arg in enumerate(sys.argv):
     if not len(arg) > 1:
         continue
@@ -245,6 +245,11 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
 
     LOGGER.info(f"Downloading tile {tile.name}")
 
+    # Disable SSL certificate verification
+    ssl_context = ssl.create_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_NONE
+
     download_status = DownloadStatus.FAILED
     for i in range(5):
         try:
@@ -252,8 +257,8 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
 
             # tries up to 24 mins with exponentially increasing sleeps in between, starting with 5 seconds
             sleep((i**2) / 2 * 30)
-            with request.urlopen(url) as res, open(filepath, "wb") as f:
 
+            with request.urlopen(url, context=ssl_context) as res, open(filepath, "wb") as f:
                 if compression is TileCompression.GZIP:
                     f.write(res.read())
                 else:
