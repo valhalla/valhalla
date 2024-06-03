@@ -1262,3 +1262,62 @@ TEST(Standalone, SpeedMap) {
   EXPECT_EQ(map.urban.auto_, 16);
   EXPECT_EQ(map.urban.truck_, 15);
 }
+
+// make sure statistical assignment overwrites legal speeds, but not speed limit
+TEST(StandAlone, LegalAndStatistical) {
+  constexpr double gridsize = 500;
+
+  const std::string ascii_map = R"(
+      A--B
+    )";
+  // clang-format off
+  const gurka::ways ways = {
+      {"AB", {{"highway", "motorway"}}},
+  };
+  // clang-format on
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.167640, 52.088865});
+  std::ofstream speed_config("test/data/legal_speeds_w_statistical.json");
+  speed_config << R"(
+    { "speedLimitsByCountryCode": {
+      "NL": [
+      {
+        "name": "rural",
+        "tags": {
+          "maxspeed": "17"
+        }
+      }
+    ]
+  }}
+  )";
+  speed_config.close();
+  std::ofstream statistical_speed_config("test/data/default_speed_config.json");
+  statistical_speed_config << R"(
+      [{
+        "rural": {
+          "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning":
+          [11,11,11,11,11], "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11,
+          "parking_aisle": 11, "drive-through": 11
+        }
+      }]
+    )";
+  statistical_speed_config.close();
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/legalspeed",
+                        {
+                            {"mjolnir.admin",
+                             {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}},
+                            {"mjolnir.use_legal_speed_as_edge_speed", "true"},
+                            {"mjolnir.legal_speeds_config",
+                             "test/data/legal_speeds_w_statistical.json"},
+                            {"mjolnir.default_speeds_config", "test/data/default_speed_config.json"},
+                        });
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto AB = gurka::findEdgeByNodes(reader, layout, "A", "B");
+  auto AB_edge = std::get<1>(AB);
+  EXPECT_NE(AB_edge->speed(), 11);
+  auto AB_sl = reader.edgeinfo(std::get<0>(AB)).speed_limit();
+  EXPECT_EQ(AB_sl, 17);
+}

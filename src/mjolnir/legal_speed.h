@@ -68,7 +68,7 @@ inline uint32_t parseOSMSpeedString(const std::string& s) {
   }
 
   return speed;
-};
+}
 
 // structure that holds legal speed limits for auto/truck for urban/rural
 // regions and some road classes/uses
@@ -225,12 +225,21 @@ public:
     auto speed = directededge.speed();
     auto truck_speed = directededge.truck_speed();
 
-    // start with density
+    // start with fallback
+    if (ls.fallback.auto_) {
+      speed = ls.fallback.auto_;
+    }
+
+    if (ls.fallback.truck_) {
+      truck_speed = ls.fallback.truck_;
+    } else if (ls.fallback.auto_) {
+      truck_speed = ls.fallback.auto_;
+    }
+
+    // move on with density
     if (density > kMaxRuralDensity) {
       if (ls.urban.auto_) {
         speed = ls.urban.auto_;
-      } else if (ls.fallback.auto_) {
-        speed = ls.fallback.auto_;
       }
 
       // truck: try hgv specific limit, fall back to auto speed limit
@@ -248,8 +257,6 @@ public:
     } else {
       if (ls.rural.auto_) {
         speed = ls.rural.auto_;
-      } else if (ls.fallback.auto_) {
-        speed = ls.fallback.auto_;
       }
 
       // truck: try hgv specific limit, fall back to auto speed limit
@@ -258,10 +265,6 @@ public:
         truck_speed = ls.rural.truck_;
       } else if (ls.rural.auto_) {
         truck_speed = ls.rural.auto_;
-      } else if (ls.fallback.truck_) {
-        truck_speed = ls.fallback.truck_;
-      } else if (ls.fallback.auto_) {
-        truck_speed = ls.fallback.auto_;
       }
     }
 
