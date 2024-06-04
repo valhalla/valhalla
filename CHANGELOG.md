@@ -121,6 +121,7 @@
    * ADDED: elapsed_cost field to map matching json response [#4709](https://github.com/valhalla/valhalla/pull/4709)
    * ADDED: error if we fail to find any matrix connection [#4718](https://github.com/valhalla/valhalla/pull/4718)
    * ADDED: Fail early in valhalla_ingest_transit if there's no valid GTFS feeds [#4710](https://github.com/valhalla/valhalla/pull/4710/)
+   * ADDED: Added ssmlAnnouncements for voice instructions and removed voice and banner instructions from last step. [#4644](https://github.com/valhalla/valhalla/pull/4644)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
