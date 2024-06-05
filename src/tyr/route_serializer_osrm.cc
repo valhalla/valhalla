@@ -1513,6 +1513,10 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
       voice_instruction_start->emplace("distanceAlongGeometry", json::fixed_t{distance, 1});
       voice_instruction_start->emplace("announcement",
                                        prev_maneuver->verbal_pre_transition_instruction());
+      voice_instruction_start->emplace("ssmlAnnouncement",
+                                       "<speak>" +
+                                           prev_maneuver->verbal_pre_transition_instruction() +
+                                           "</speak>");
       voice_instructions_array->emplace_back(std::move(voice_instruction_start));
     } else if (distance > distance_before_verbal_transition_alert_instruction +
                               APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
@@ -1527,6 +1531,10 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
       voice_instruction_beginning->emplace("distanceAlongGeometry", json::fixed_t{distance - 10, 1});
       voice_instruction_beginning->emplace("announcement",
                                            prev_maneuver->verbal_post_transition_instruction());
+      voice_instruction_beginning->emplace("ssmlAnnouncement",
+                                           "<speak>" +
+                                               prev_maneuver->verbal_post_transition_instruction() +
+                                               "</speak>");
       voice_instructions_array->emplace_back(std::move(voice_instruction_beginning));
     }
   }
@@ -1545,6 +1553,9 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
                     json::fixed_t{distance_before_verbal_transition_alert_instruction, 1});
     }
     voice_instruction_end->emplace("announcement", maneuver.verbal_transition_alert_instruction());
+    voice_instruction_end->emplace("ssmlAnnouncement",
+                                   "<speak>" + maneuver.verbal_transition_alert_instruction() +
+                                       "</speak>");
     voice_instructions_array->emplace_back(std::move(voice_instruction_end));
   }
 
@@ -1563,6 +1574,9 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
                                                    1});
     }
     voice_instruction_end->emplace("announcement", maneuver.verbal_pre_transition_instruction());
+    voice_instruction_end->emplace("ssmlAnnouncement",
+                                   "<speak>" + maneuver.verbal_pre_transition_instruction() +
+                                       "</speak>");
     voice_instructions_array->emplace_back(std::move(voice_instruction_end));
   }
 
@@ -1839,9 +1853,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                                                  prev_distance, drive_side));
         }
         if (arrive_maneuver) {
-          step->emplace("bannerInstructions",
-                        banner_instructions(name, dest, ref, prev_maneuver, maneuver, arrive_maneuver,
-                                            &etp, mnvr_type, modifier, ex, distance, drive_side));
+          // just add empty array for arrival maneuver
+          step->emplace("bannerInstructions", json::array({}));
         }
       }
 
@@ -1853,8 +1866,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                                                 maneuver_index, &etp));
         }
         if (arrive_maneuver) {
-          step->emplace("voiceInstructions",
-                        voice_instructions(prev_maneuver, maneuver, distance, maneuver_index, &etp));
+          // just add empty array for arrival maneuver
+          step->emplace("voiceInstructions", json::array({}));
         }
       }
 
