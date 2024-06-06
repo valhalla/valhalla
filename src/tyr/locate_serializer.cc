@@ -117,7 +117,6 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
         incoming_pred = incoming_edge;
       }
     }
-
     std::function<void(const baldr::GraphId&, const bool, const bool)> expand_back;
     expand_back = [&](const baldr::GraphId& trans_node_id, const bool from_transition,
                       const bool up) {
