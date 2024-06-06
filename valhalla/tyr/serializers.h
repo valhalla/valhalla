@@ -18,6 +18,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto_conversions.h>
+#include <valhalla/sif/dynamiccost.h>
 #include <valhalla/tyr/actor.h>
 
 namespace valhalla {
@@ -70,7 +71,8 @@ std::string
 serializeLocate(const Api& request,
                 const std::vector<baldr::Location>& locations,
                 const std::unordered_map<baldr::Location, baldr::PathLocation>& projections,
-                baldr::GraphReader& reader);
+                baldr::GraphReader& reader,
+                sif::cost_ptr_t costing);
 
 /**
  * Turn a list of locations into a list of locations with a bool that says whether transit tiles are

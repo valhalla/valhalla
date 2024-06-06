@@ -118,9 +118,12 @@ std::string build_valhalla_request(const std::vector<std::string>& location_type
   costing_options.AddMember(rapidjson::Value(costing, allocator), co, allocator);
   doc.AddMember("costing_options", costing_options, allocator);
   doc.AddMember("verbose", true, allocator);
+  doc.AddMember("road_segments", true, allocator);
 
   // we do this last so that options are additive/overwrite
   for (const auto& kv : options) {
+    if (kv.first == "/verbose" || kv.first == "/road_segments")
+      continue;
     rapidjson::Pointer(kv.first).Set(doc, kv.second);
   }
 

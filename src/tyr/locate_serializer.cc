@@ -1,5 +1,6 @@
 #include "baldr/json.h"
 #include "baldr/openlr.h"
+#include "sif/dynamiccost.h"
 #include "tyr/serializers.h"
 #include <cstdint>
 
@@ -61,7 +62,243 @@ linear_reference(const baldr::DirectedEdge* de, float percent_along, const EdgeI
       .toBase64();
 }
 
-json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader, bool verbose) {
+const DirectedEdge* get_opposing_edge(const DirectedEdge* de, GraphReader& reader) {
+  auto tile = reader.GetGraphTile(de->endnode());
+  auto opp = de->opp_index();
+  auto end_node = reader.GetEndNode(de, tile);
+
+  return tile->directededge(end_node->edge_index() + opp);
+}
+
+std::string get_edge_shape(const DirectedEdge* de, GraphReader& reader) {
+  auto tile = reader.GetGraphTile(de->endnode());
+  auto edge_info = tile->edgeinfo(de);
+
+  return midgard::encode(edge_info.shape());
+}
+
+json::MapPtr get_full_road_segment(const DirectedEdge* de,
+                                   const std::shared_ptr<sif::DynamicCost>& costing,
+                                   GraphReader& reader) {
+  // first, find the beginning of the road segment
+  // things we need: the opposing edge and its start node
+  auto opp_edge = get_opposing_edge(de, reader);
+
+  if (de->shortcut() || de->deadend() || opp_edge->deadend()) {
+    return json::map({});
+  }
+  auto node_id = opp_edge->endnode();
+  auto node = reader.GetGraphTile(node_id)->node(node_id);
+  auto edge = de;
+
+  std::unordered_set<const DirectedEdge*> added_edges;
+  std::vector<const DirectedEdge*> edges;
+  // crawl in reverse direction until we find a "true" intersection given the costing
+  while (true) {
+    int allowed_cnt = 0;
+    const DirectedEdge* incoming_pred = nullptr;
+    const DirectedEdge* outgoing_pred = nullptr;
+    auto tile = reader.GetGraphTile(node_id);
+    // check the number of outgoing edges accessible with the provided costing
+    for (int i = 0; i < node->edge_count(); ++i) {
+      auto outgoing_edge = tile->directededge(node->edge_index() + i);
+
+      // except our current edge
+      if (outgoing_edge == edge)
+        continue;
+      auto incoming_edge = get_opposing_edge(outgoing_edge, reader);
+      if ((costing->Allowed(incoming_edge, reader.GetGraphTile(outgoing_edge->endnode()),
+                            sif::kDisallowShortcut) ||
+           costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
+          !(incoming_edge->deadend() || outgoing_edge->deadend())) {
+
+        allowed_cnt++;
+        outgoing_pred = outgoing_edge;
+        incoming_pred = incoming_edge;
+      }
+    }
+
+    std::function<void(const baldr::GraphId&, const bool, const bool)> expand_back;
+    expand_back = [&](const baldr::GraphId& trans_node_id, const bool from_transition,
+                      const bool up) {
+      graph_tile_ptr tile = reader.GetGraphTile(trans_node_id);
+      if (tile == nullptr) {
+        return;
+      }
+      const baldr::NodeInfo* trans_node = tile->node(trans_node_id);
+      // get the count of incoming edges
+      for (int i = 0; i < trans_node->edge_count(); ++i) {
+        auto outgoing_edge = tile->directededge(trans_node->edge_index() + i);
+        auto incoming_edge = get_opposing_edge(outgoing_edge, reader);
+        // auto opp_tile = reader.GetGraphTile(incoming_edge->endnode());
+        // auto name = tile->edgeinfo(outgoing_edge).GetNames()[0];
+        // auto opp_name = opp_tile->edgeinfo(incoming_edge).GetNames()[0];
+
+        if ((costing->Allowed(incoming_edge, reader.GetGraphTile(outgoing_edge->endnode()),
+                              sif::kDisallowShortcut) ||
+             costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
+            !(incoming_edge->deadend() || outgoing_edge->deadend())) {
+
+          allowed_cnt++;
+          incoming_pred = incoming_edge;
+          outgoing_pred = outgoing_pred;
+        }
+      }
+
+      if (!from_transition && trans_node->transition_count() > 0) {
+        const baldr::NodeTransition* trans = tile->transition(trans_node->transition_index());
+        for (uint32_t i = 0; i < trans_node->transition_count(); ++i, ++trans) {
+          if (!up == trans->up())
+            continue;
+          expand_back(trans->endnode(), true, up);
+        }
+      }
+    };
+    // follow node transitions
+    for (int i = 0; i < node->transition_count(); ++i) {
+      const baldr::NodeTransition* trans = tile->transition(node->transition_index() + i);
+      expand_back(trans->endnode(), false, trans->up());
+    }
+
+    // if there's exactly one allowed incoming edge (except for the current opposing edge)
+    if (allowed_cnt == 1) {
+      // keep going back
+      if (!(added_edges.insert(incoming_pred)).second) {
+        LOG_WARN("Duplicate edge when finding beginning of road segment for edge.");
+        break;
+      } else {
+        edges.push_back(incoming_pred);
+      }
+      edge = incoming_pred;
+      node_id = outgoing_pred->endnode();
+      node = reader.GetGraphTile(node_id)->node(node_id);
+    } else {
+      // we've found the start of the road segment
+      // either because this is a valid intersection given the costing
+      // or because there is no other edge to inspect
+      break;
+    }
+  }
+  // we've found our start node
+  auto start_node_id = node_id;
+
+  // resort and get our initial edge in there
+  std::reverse(edges.begin(), edges.end());
+  if (!(added_edges.insert(de)).second) {
+    LOG_WARN("Initial edge already inserted into road segment edges");
+  } else {
+    edges.push_back(de);
+  }
+
+  // now move forward
+  node_id = de->endnode();
+  node = reader.GetGraphTile(node_id)->node(node_id);
+  edge = de;
+
+  while (true) {
+    int allowed_cnt = 0;
+    auto tile = reader.GetGraphTile(node_id);
+    const DirectedEdge* possible_next = nullptr;
+
+    // check the number of outgoing edges accessible with the provided costing
+    for (int i = 0; i < node->edge_count(); ++i) {
+      auto candidate_edge = tile->directededge(node->edge_index() + i);
+      auto opp_candidate_edge = get_opposing_edge(candidate_edge, reader);
+      if (edge == opp_candidate_edge)
+        continue;
+      if ((costing->Allowed(candidate_edge, tile, sif::kDisallowShortcut) ||
+           costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
+                            sif::kDisallowShortcut)) &&
+          !(candidate_edge->deadend() || opp_candidate_edge->deadend())) {
+        allowed_cnt++;
+        possible_next = candidate_edge;
+      }
+    }
+    std::function<void(const baldr::GraphId&, const bool, const bool)> expand_forw;
+    expand_forw = [&](const baldr::GraphId& trans_node_id, const bool from_transition,
+                      const bool up) {
+      graph_tile_ptr tile = reader.GetGraphTile(trans_node_id);
+      if (tile == nullptr) {
+        return;
+      }
+      const baldr::NodeInfo* trans_node = tile->node(trans_node_id);
+      // get the count of outgoing edges
+      for (int i = 0; i < trans_node->edge_count(); ++i) {
+        auto candidate_edge = tile->directededge(trans_node->edge_index() + i);
+        auto opp_candidate_edge = get_opposing_edge(candidate_edge, reader);
+        if ((costing->Allowed(candidate_edge, tile, sif::kDisallowShortcut) ||
+             costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
+                              sif::kDisallowShortcut)) &&
+            !(candidate_edge->deadend() || opp_candidate_edge->deadend())) {
+          allowed_cnt++;
+          possible_next = candidate_edge;
+        }
+      }
+
+      if (!from_transition && trans_node->transition_count() > 0) {
+        const baldr::NodeTransition* trans = tile->transition(trans_node->transition_index());
+        for (uint32_t i = 0; i < trans_node->transition_count(); ++i, ++trans) {
+          if (!up == trans->up())
+            continue;
+          expand_forw(trans->endnode(), true, up);
+        }
+      }
+    };
+    // follow node transitions
+    for (int i = 0; i < node->transition_count(); ++i) {
+      const baldr::NodeTransition* trans = tile->transition(node->transition_index() + i);
+      expand_forw(trans->endnode(), false, trans->up());
+    }
+
+    if (allowed_cnt == 1) {
+      // keep moving forwards
+      if (!(added_edges.insert(possible_next)).second) {
+        LOG_WARN("Duplicate edge when finding beginning of road segment for edge.");
+        break;
+      } else {
+        edges.push_back(possible_next);
+      }
+
+      edge = possible_next;
+      node_id = possible_next->endnode();
+      node = reader.GetGraphTile(node_id)->node(node_id);
+    } else {
+      break;
+    }
+  }
+
+  // assemble the shape
+  std::list<midgard::PointLL> concatenated_shape;
+  for (auto e : edges) {
+    auto tile = reader.GetGraphTile(e->endnode());
+    auto edge_info = tile->edgeinfo(e);
+    auto shape = edge_info.shape();
+    if (!e->forward())
+      std::reverse(shape.begin(), shape.end());
+    if (concatenated_shape.size())
+      concatenated_shape.pop_back();
+    concatenated_shape.insert(concatenated_shape.end(), shape.begin(), shape.end());
+  }
+
+  std::string shape = midgard::encode(concatenated_shape);
+  auto start_tile = reader.GetGraphTile(start_node_id);
+  auto start_node = start_tile->node(start_node_id);
+  auto start_node_map =
+      json::map({{"id", start_node_id.json()}, {"node", start_node->json(start_tile)}});
+  auto end_tile = reader.GetGraphTile(node_id);
+  auto end_node = end_tile->node(node_id);
+  auto end_node_map = json::map({{"id", node_id.json()}, {"node", end_node->json(end_tile)}});
+  auto intersection = json::map({{"start_node", start_node_map}, {"end_node", end_node_map}});
+  auto road_segments = json::map({{"shape", shape}, {"intersections", intersection}});
+
+  return road_segments;
+}
+
+json::ArrayPtr serialize_edges(const PathLocation& location,
+                               GraphReader& reader,
+                               bool verbose,
+                               bool intersections,
+                               sif::cost_ptr_t costing) {
   auto array = json::array({});
   for (const auto& edge : location.edges) {
     try {
@@ -90,7 +327,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
         }
 
         // basic rest of it plus edge metadata
-        array->emplace_back(json::map({
+        auto info = json::map({
             {"correlated_lat", json::fixed_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fixed_t{edge.projected.lng(), 6}},
             {"side_of_street",
@@ -109,10 +346,15 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
             {"predicted_speeds", predicted_speeds},
             {"live_speed", live_speed},
             {"access_restrictions", get_access_restrictions(tile, edge.id.id())},
-        }));
+        });
+
+        if (intersections)
+          info->insert({"full_road_segment", get_full_road_segment(directed_edge, costing, reader)});
+
+        array->emplace_back(info);
       } // they want it lean and mean
       else {
-        array->emplace_back(json::map({
+        auto info = json::map({
             {"way_id", static_cast<uint64_t>(edge_info.wayid())},
             {"correlated_lat", json::fixed_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fixed_t{edge.projected.lng(), 6}},
@@ -121,7 +363,12 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
                  ? std::string("left")
                  : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
             {"percent_along", json::fixed_t{edge.percent_along, 5}},
-        }));
+        });
+
+        if (intersections)
+          info->insert({"full_road_segment", get_full_road_segment(directed_edge, costing, reader)});
+
+        array->emplace_back(info);
       }
     } catch (...) {
       // this really shouldnt ever get hit
@@ -162,10 +409,14 @@ json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader
   return array;
 }
 
-json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool verbose) {
+json::MapPtr serialize(const PathLocation& location,
+                       GraphReader& reader,
+                       bool verbose,
+                       bool road_segments,
+                       sif::cost_ptr_t costing) {
   // serialze all the edges
   auto m = json::map({
-      {"edges", serialize_edges(location, reader, verbose)},
+      {"edges", serialize_edges(location, reader, verbose, road_segments, costing)},
       {"nodes", serialize_nodes(location, reader, verbose)},
       {"input_lat", json::fixed_t{location.latlng_.lat(), 6}},
       {"input_lon", json::fixed_t{location.latlng_.lng(), 6}},
@@ -194,11 +445,13 @@ namespace tyr {
 std::string serializeLocate(const Api& request,
                             const std::vector<baldr::Location>& locations,
                             const std::unordered_map<baldr::Location, PathLocation>& projections,
-                            GraphReader& reader) {
+                            GraphReader& reader,
+                            sif::cost_ptr_t costing) {
   auto json = json::array({});
   for (const auto& location : locations) {
     try {
-      json->emplace_back(serialize(projections.at(location), reader, request.options().verbose()));
+      json->emplace_back(serialize(projections.at(location), reader, request.options().verbose(),
+                                   request.options().road_segments(), costing));
     } catch (const std::exception& e) {
       json->emplace_back(
           serialize(location.latlng_, "No data found for location", request.options().verbose()));

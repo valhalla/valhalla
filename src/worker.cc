@@ -1228,6 +1228,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   options.set_voice_instructions(
       rapidjson::get<bool>(doc, "/voice_instructions", options.voice_instructions()));
 
+  // whether to return road segments for located edges
+  options.set_road_segments(rapidjson::get<bool>(doc, "/road_segments", options.road_segments()));
+
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =
       rapidjson::get<bool>(doc, "/roundabout_exits",

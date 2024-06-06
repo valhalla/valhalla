@@ -24,7 +24,7 @@ std::string loki_worker_t::locate(Api& request) {
   init_locate(request);
   auto locations = PathLocation::fromPBF(request.options().locations());
   auto projections = loki::Search(locations, *reader, costing);
-  return tyr::serializeLocate(request, locations, projections, *reader);
+  return tyr::serializeLocate(request, locations, projections, *reader, costing);
 }
 
 } // namespace loki

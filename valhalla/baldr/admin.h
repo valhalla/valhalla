@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_ADMIN_H_
 #define VALHALLA_BALDR_ADMIN_H_
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstring>

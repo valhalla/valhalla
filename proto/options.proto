@@ -494,4 +494,5 @@ message Options {
   bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
   float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
   bool voice_instructions = 57;                                    // Whether to return voiceInstructions in the OSRM serializer response
+  bool road_segments = 58;                                         // Whether to return full road segments for edges in the locate response 
 }
