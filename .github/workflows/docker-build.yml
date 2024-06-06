@@ -40,6 +40,6 @@ jobs:
           docker buildx create --name mybuilder
           docker buildx use mybuilder
           docker buildx inspect --bootstrap
-          tag_name={{ env.REGISTRY }}/{{ env.IMAGE_NAME }}:${{ steps.extract_tag.outputs.tag }}
-          echo $tag_name
-          docker buildx build --push --platform linux/amd64,linux/arm64 --tag $tag_name  .
+          docker buildx build --push --platform linux/amd64,linux/arm64 --tag $TAG_NAME  .
+        env:
+          TAG_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.extract_tag.outputs.tag }}
