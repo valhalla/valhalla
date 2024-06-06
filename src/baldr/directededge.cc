@@ -627,6 +627,7 @@ json::MapPtr DirectedEdge::json() const {
       {"sidewalk_left", static_cast<bool>(sidewalk_left_)},
       {"sidewalk_right", static_cast<bool>(sidewalk_right_)},
       {"sac_scale", to_string(static_cast<SacScale>(sac_scale_))},
+      {"deadend", static_cast<bool>(deadend_)},
       {"geo_attributes",
        json::map({
            {"length", static_cast<uint64_t>(length_)},
