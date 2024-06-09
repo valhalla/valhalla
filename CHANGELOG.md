@@ -123,6 +123,7 @@
    * ADDED: Fail early in valhalla_ingest_transit if there's no valid GTFS feeds [#4710](https://github.com/valhalla/valhalla/pull/4710/)
    * ADDED: Added ssmlAnnouncements for voice instructions and removed voice and banner instructions from last step. [#4644](https://github.com/valhalla/valhalla/pull/4644)
    * ADDED: deadend information in directed edge JSON for `/locate` [#4751](https://github.com/valhalla/valhalla/pull/4751) 
+   * CHANGED: voice instructions for OSRM serializer to work better in real-world environment [#4756](https://github.com/valhalla/valhalla/pull/4756)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
