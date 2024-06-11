@@ -102,9 +102,9 @@ Tải timezone:
 
 	wget https://github.com/evansiroky/timezone-boundary-builder/releases/download/2024a/timezones-with-oceans.shapefile.zip
 
-Tải elevation data:
+Tải elevation data (thay thế {tile-name} bằng các mảnh cần tải):
 
-	wget -P /home/vht/data/valhalla/elevation_tiles wget https://dwtkns.com/srtm30m/
+	wget -P /home/vht/data/valhalla/elevation_tiles wget https://dwtkns.com/srtm30m/{tile-name}
 
 Chạy container:
 
