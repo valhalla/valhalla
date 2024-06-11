@@ -108,7 +108,7 @@ Tải elevation data:
 
 Chạy container:
 
-    docker run --rm -it --name valhalla -p 8002:8002 -v /home/huy/Downloads/data/:/data quanghuy2307/valhalla:latest
+    docker run --rm -it --name valhalla -p 8002:8002 -v /home/vht/data/:/data quanghuy2307/valhalla:latest
 
 Chạy các lệnh sau trong container:
 
