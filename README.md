@@ -128,4 +128,4 @@ Chạy các lệnh sau trong container:
     valhalla_build_elevation -c valhalla/valhalla.json -t -v
     valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
     valhalla_build_extract -c valhalla/valhalla.json -v
-    valhalla_service valhalla/valhalla.json
+    valhalla_service valhalla/valhalla.json 1
