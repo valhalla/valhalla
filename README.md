@@ -83,33 +83,49 @@ It's important to note that all Valhalla logs for one-shot mode are piped to `st
 
 - [Batch Run_Route](https://github.com/valhalla/valhalla/blob/master/run_route_scripts/README.md)
 
-### Build
+### Build & Run
 
-docker run --rm -it --name valhalla -p 8002:8002 -v /home/huy/Downloads/data/:/data quanghuy2307/valhalla:latest
+Tạo folder mới muốn đặt data và di chuyển vào đó:
 
-mkdir -p valhalla valhalla/transit valhalla/elevation_tiles
+	mkdir -p \
+		/home/vht/data \
+		/home/vht/data/valhalla \
+		/home/vht/data/valhalla/transit \
+		/home/vht/data/valhalla/elevation_tiles \
+		&& cd /home/vht/data
 
-valhalla_build_config \
-    --mjolnir-tile-dir ${PWD}/valhalla/tiles \
-    --mjolnir-transit-dir ${PWD}/valhalla/transit \
-    --additional-data-elevation ${PWD}/valhalla/elevation_tiles \
-    --mjolnir-tile-extract ${PWD}/valhalla/tiles.tar \
-    --mjolnir-traffic-extract ${PWD}/valhalla/traffic.tar \
-    --mjolnir-timezone ${PWD}/valhalla/tz_world.sqlite \
-    --mjolnir-admin ${PWD}/valhalla/admin.sqlite \
-    --mjolnir-landmarks ${PWD}/valhalla/landmarks.sqlite \
-    > valhalla/valhalla.json
+Tải OSM data source của Việt Nam:
 
-valhalla_build_timezones > valhalla/tz_world.sqlite
+	wget http://download.geofabrik.de/asia/vietnam-latest.osm.pbf
 
-valhalla_build_landmarks -c valhalla/valhalla.json vietnam-latest.osm.pbf
+Tải timezone:
 
-valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf
+	wget https://github.com/evansiroky/timezone-boundary-builder/releases/download/2024a/timezones-with-oceans.shapefile.zip
 
-valhalla_build_elevation -c valhalla/valhalla.json -t -v
+Tải elevation data:
 
-valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
+	wget -P /home/vht/data/valhalla/elevation_tiles wget https://dwtkns.com/srtm30m/
 
-valhalla_build_extract -c valhalla/valhalla.json -v
+Chạy container:
 
-valhalla_service valhalla/valhalla.json
+    docker run --rm -it --name valhalla -p 8002:8002 -v /home/huy/Downloads/data/:/data quanghuy2307/valhalla:latest
+
+Chạy các lệnh sau trong container:
+
+    valhalla_build_config \
+        --mjolnir-tile-dir ${PWD}/valhalla/tiles \
+        --mjolnir-transit-dir ${PWD}/valhalla/transit \
+        --additional-data-elevation ${PWD}/valhalla/elevation_tiles \
+        --mjolnir-tile-extract ${PWD}/valhalla/tiles.tar \
+        --mjolnir-traffic-extract ${PWD}/valhalla/traffic.tar \
+        --mjolnir-timezone ${PWD}/valhalla/tz_world.sqlite \
+        --mjolnir-admin ${PWD}/valhalla/admin.sqlite \
+        --mjolnir-landmarks ${PWD}/valhalla/landmarks.sqlite \
+        > valhalla/valhalla.json
+    valhalla_build_timezones > valhalla/tz_world.sqlite
+    valhalla_build_landmarks -c valhalla/valhalla.json vietnam-latest.osm.pbf
+    valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf
+    valhalla_build_elevation -c valhalla/valhalla.json -t -v
+    valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
+    valhalla_build_extract -c valhalla/valhalla.json -v
+    valhalla_service valhalla/valhalla.json
