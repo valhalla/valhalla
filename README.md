@@ -125,7 +125,7 @@ Chạy các lệnh sau trong container:
     valhalla_build_timezones > valhalla/tz_world.sqlite
     valhalla_build_landmarks -c valhalla/valhalla.json vietnam-latest.osm.pbf
     valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf
-    valhalla_build_elevation -c valhalla/valhalla.json -t -v
+    valhalla_build_elevation -t -v -c valhalla/valhalla.json
     valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
-    valhalla_build_extract -c valhalla/valhalla.json -v
+    valhalla_build_extract -v -c valhalla/valhalla.json
     valhalla_service valhalla/valhalla.json 1
