@@ -76,6 +76,17 @@ It's important to note that all Valhalla logs for one-shot mode are piped to `st
 - [Batch Run_Route](https://github.com/valhalla/valhalla/blob/master/run_route_scripts/README.md)
 
 ### Build & Run
+Clone source:
+
+	git clone --recurse-submodules https://github.com/lqh2307/valhalla.git
+
+Chuyển sang nhánh dev:
+
+	git checkout dev
+
+Build image:
+
+    docker build -t quanghuy2307/valhalla:latest .
 
 Tạo folder mới muốn đặt data và di chuyển vào đó:
 
