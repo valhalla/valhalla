@@ -46,14 +46,6 @@ The Valhalla organization is comprised of several library modules each responsib
 
 Documentation is stored in the `docs/` folder in this GitHub repository. It can be viewed at [valhalla.github.io/valhalla](https://valhalla.github.io/valhalla).
 
-## Installation
-
-To run Valhalla locally or your own server, we recommend using our Docker image. Checkout our docker image here: https://github.com/orgs/valhalla/packages. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
-
-If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
-
-For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](https://valhalla.github.io/valhalla).
-
 ## Benchmarks
 
 Valhalla includes several microbenchmarks which you can build and run using:
