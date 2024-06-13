@@ -16,18 +16,10 @@ The following image shows the world at level 0.  Using a world bounding box (-18
 ![Level 0](images/world_level0.png)
 Image generated using http://geojson.io
 
-Using a bounding box for Germany, Pennsylvania, and NYC we can show how the regions would be split up into the 3 levels.  Level 0 is colored in light blue.  Level 1 is light green and level 2 is light red.
-
-### Germany
-![Germany](images/germany.png)
-Image generated using http://geojson.io
+Using a bounding box for Pennsylvania we can show how the regions would be split up into the 3 levels.  Level 0 is colored in light blue.  Level 1 is light green and level 2 is light red.
 
 ### Pennsylvania
 ![Pennsylvania](images/pennsylvania.png)
-Image generated using http://geojson.io
-
-### NYC
-![NYC](images/nyc.png)
 Image generated using http://geojson.io
 
 # Sample Tile Code
