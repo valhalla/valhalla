@@ -18,7 +18,6 @@ Image generated using http://geojson.io
 
 Using a bounding box for Pennsylvania we can show how the regions would be split up into the 3 levels.  Level 0 is colored in light blue.  Level 1 is light green and level 2 is light red.
 
-### Pennsylvania
 ![Pennsylvania](images/pennsylvania.png)
 Image generated using http://geojson.io
 
