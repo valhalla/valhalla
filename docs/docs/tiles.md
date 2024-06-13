@@ -1,7 +1,10 @@
 # Tile Specifications
 
 ## Hierarchies/Levels
-Tiles are split up into three levels or hierarchies.  Hierarchy 0 contains edges pertaining to roads that are considered highway (motorway, trunk, and primary) roads and are stored in 4 degree tiles.  Hierarchy 1 contains roads that are at a arterial level (secondary and tertiary) and are saved in 1 degree tiles.  Finally, Hierarchy 2 contains roads that are considered at a local level (unclassified, residential, and service or other).  These tiles are saved in .25 degree tiles.
+Tiles are split up into 3 levels or hierarchies:
+`Hierarchy 0:` contains edges pertaining to roads that are considered highway (motorway, trunk, and primary) roads and are stored in 4 degree tiles.<br/>
+`Hierarchy 1:` contains roads that are at a arterial level (secondary and tertiary) and are saved in 1 degree tiles.<br/>
+`Hierarchy 2:` contains roads that are considered at a local level (unclassified, residential, and service or other) and are saved in .25 degree tiles.<br/>
 
 So in python, the levels are defined as:<br/>
 `valhalla_tiles = [{'level': 2, 'size': 0.25}, {'level': 1, 'size': 1.0}, {'level': 0, 'size': 4.0}]`
