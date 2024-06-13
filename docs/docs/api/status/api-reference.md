@@ -1,12 +1,10 @@
 # Status service API reference
 
-By default the `/status` endpoint will return a HTTP status code of 200 with `version` and `tileset_last_modified` (as UNIX timestamp) info, which can also be used as a health endpoint for the HTTP API.
+`/status` endpoint can be used as a health endpoint for the HTTP API.
 
-However, if `"verbose": true` is passed as a request parameter it will return additional information about the loaded tileset. **Note** that gathering this additional information can be computationally expensive, hence the `verbose` flag can be disallowed in the configuration JSON (`service_limits.status.allow_verbose`, default `false`).
+If `"verbose": true` is passed as a request parameter it will return additional information about the loaded tileset. **Note** that gathering this additional information can be computationally expensive, hence the `verbose` flag can be disallowed in the configuration JSON (`service_limits.status.allow_verbose`, default `false`).
 
-## Outputs of the Status service
-
-If `"verbose": true` is passed as a parameter, the service will output the following response:
+This API will return a HTTP status code of 200 with output the following response:
 
 | Response key       | Type    | Description  |
 | :----------------- | :-----  | :----------- |
