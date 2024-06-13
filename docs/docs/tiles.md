@@ -1,7 +1,7 @@
 # Tile Specifications
 
 ## Hierarchies/Levels
-Tiles are split up into 3 levels or hierarchies:
+Tiles are split up into 3 levels or hierarchies:<br/>
 `Hierarchy 0:` contains edges pertaining to roads that are considered highway (motorway, trunk, and primary) roads and are stored in 4 degree tiles.<br/>
 `Hierarchy 1:` contains roads that are at a arterial level (secondary and tertiary) and are saved in 1 degree tiles.<br/>
 `Hierarchy 2:` contains roads that are considered at a local level (unclassified, residential, and service or other) and are saved in .25 degree tiles.<br/>
