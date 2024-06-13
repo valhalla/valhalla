@@ -9,8 +9,6 @@ Tiles are split up into 3 levels or hierarchies:<br/>
 So in python, the levels are defined as:<br/>
 `valhalla_tiles = [{'level': 2, 'size': 0.25}, {'level': 1, 'size': 1.0}, {'level': 0, 'size': 4.0}]`
 
-### The World at Level 0
-
 The following image shows the world at level 0.  Using a world bounding box (-180, -90, 180, 90) the world is split up into 4 degree tiles.  The rows and columns start from the bottom left and increase to the top right.  Tiles are row ordered increasing from west to east.
 
 ![Level 0](images/world_level0.png)
@@ -22,6 +20,7 @@ Using a bounding box for Pennsylvania we can show how the regions would be split
 Image generated using http://geojson.io
 
 # Sample Tile Code
+
 Below are some sample functions to help you obtain latitude and longitude coordinates, levels, tile ids, and list of tiles that intersect a bounding box.
 ```bash
 #!/usr/bin/env python
