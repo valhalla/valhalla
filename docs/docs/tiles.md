@@ -9,12 +9,9 @@ Tiles are split up into 3 levels or hierarchies:<br/>
 So in python, the levels are defined as:<br/>
 `valhalla_tiles = [{'level': 2, 'size': 0.25}, {'level': 1, 'size': 1.0}, {'level': 0, 'size': 4.0}]`
 
-The following image shows the world at level 0.  Using a world bounding box (-180, -90, 180, 90) the world is split up into 4 degree tiles.  The rows and columns start from the bottom left and increase to the top right.  Tiles are row ordered increasing from west to east.
+At level 0, the world (-180, -90, 180, 90) is split up into 4 degree tiles. The rows and columns start from the bottom left and increase to the top right. Tiles are row ordered increasing from west to east.
 
-![Level 0](images/world_level0.png)
-Image generated using http://geojson.io
-
-Using a bounding box for Pennsylvania we can show how the regions would be split up into the 3 levels.  Level 0 is colored in light blue.  Level 1 is light green and level 2 is light red.
+Example: Using a bounding box for Pennsylvania we can show how the regions would be split up into the 3 levels. Level 0 is colored in light blue. Level 1 is light green and level 2 is light red.
 
 ![Pennsylvania](images/pennsylvania.png)
 Image generated using http://geojson.io
