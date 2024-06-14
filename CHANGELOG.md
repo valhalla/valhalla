@@ -52,6 +52,7 @@
    * FIXED: Fix for assigning attributes has_(highway, ferry, toll) if directions_type is none [#4465](https://github.com/valhalla/valhalla/issues/4465)
    * FIXED: Have the `valhalla_add_predicted_speeds` summary always be created from `mjolnir.tile_dir` [#4722](https://github.com/valhalla/valhalla/pull/4722) 
    * FIXED: Fix inconsistency in graph.lua for motor_vehicle_node [#4723](https://github.com/valhalla/valhalla/issues/4723)
+   * FIXED: Missing algorithm include in `baldr/admin.h` []()
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
