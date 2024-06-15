@@ -2126,6 +2126,11 @@ std::string serialize(valhalla::Api& api) {
                                           *api.mutable_trip()->mutable_routes(i)->mutable_legs(),
                                           imperial, options, controller));
 
+    // Add voice instructions if the user requested them
+    if (options.voice_instructions()) {
+      route->emplace("voiceLocale", options.language());
+    }
+
     routes->emplace_back(std::move(route));
   }
 
