@@ -12,9 +12,7 @@ The locate request run locally takes the form of `localhost:8002/locate?json={}`
 {"verbose":true,"locations":[{"lat":42.358528,"lon":-83.271400},{"lat":42.996613,"lon":-78.749855}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"road"}},"directions_options":{"units":"miles"},"id":"12abc3afe23984fe"}
 ```
 
-This request provides detailed information about specific streets and intersections near the two input locations. Steets which do not have a surface type condusive to road bicycles will be excluded from the results. The units used for the lengths of the street sections will be displayed in miles.
-
-There is an option to name your request. You can do this by adding and `id` key to your request. The `id` is returned with the response so a user could match to the corresponding request.
+This request provides detailed information about specific streets and intersections near the two input locations. Steets which do not have a surface type condusive to road bicycles will be excluded from the results. The units used for the lengths of the street sections will be displayed in miles. The `id` is returned with the response so a user could match to the corresponding request.
 
 Because the locate service is designed to work in tandem with the route service API, the inputs for the two APIs are identical. For detailed options regarding specifying locations, costing models, costing options, directions options please see the relevant sections in the [routing API docs](../turn-by-turn/api-reference.md#inputs-of-a-route)
 
@@ -22,7 +20,7 @@ Because the locate service is designed to work in tandem with the route service 
 
 | Options | Description |
 | :------------------ | :----------- |
-| `verbose` |  Can be set to `true` or `false`, but defaults to `false`. If set to `true` dense attribution of the given street or intersection will be returned. |
+| `verbose` |  Defaults to `false`. If set to `true` dense attribution of the given street or intersection will be returned. |
 | `id` | Name your route request. If `id` is specified, the naming will be sent through to the response. |
 
 ## Outputs of a locate request
