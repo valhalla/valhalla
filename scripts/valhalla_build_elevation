@@ -342,7 +342,7 @@ if __name__ == "__main__":
 
     # Check if outdir has any .hgt files inside
     if os.path.exists(elevation_fp) and any(file.endswith(".hgt") for file in os.listdir(elevation_fp)):
-        LOGGER.info(f"Directory {elevation_fp} contains .hgt files. Exiting.")
+        LOGGER.info(f"Directory {elevation_fp} contains .hgt files. Skipping download.")
         sys.exit(0)
 
     if args.from_geojson:
