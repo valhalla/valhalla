@@ -1,613 +1,611 @@
 --TODO: check if you can use lua type boolean instead of strings and pass that back to osm2pgsql
---with the hopes that they will become strings once they get back to c++ and then just work in
---postgres
+--with the hopes that they will become strings once they get back to c++ and then just work in postgres
 
 highway = {
-["motorway"] =          {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "false", ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["motorway_link"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "false", ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["trunk"] =             {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["trunk_link"] =        {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["primary"] =           {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["primary_link"] =      {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["secondary"] =         {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["secondary_link"] =    {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["residential"] =       {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["residential_link"] =  {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["service"] =           {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["tertiary"] =          {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["tertiary_link"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["road"] =              {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["track"] =             {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["unclassified"] =      {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["undefined"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["unknown"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["living_street"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["footway"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
-["pedestrian"] =        {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
-["steps"] =             {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["bridleway"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["cycleway"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "true"},
-["path"] =              {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["busway"] =            {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
-["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
-["platform"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
+	["motorway"] =          {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "false", ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+	["motorway_link"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "false", ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+	["trunk"] =             {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["trunk_link"] =        {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["primary"] =           {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["primary_link"] =      {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["secondary"] =         {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["secondary_link"] =    {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["residential"] =       {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["residential_link"] =  {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["service"] =           {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["tertiary"] =          {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["tertiary_link"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["road"] =              {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["track"] =             {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["unclassified"] =      {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["undefined"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+	["unknown"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+	["living_street"] =     {["auto_forward"] = "true",  ["truck_forward"] = "true",  ["bus_forward"] = "true",  ["taxi_forward"] = "true",  ["moped_forward"] = "true",  ["motorcycle_forward"] = "true",  ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["footway"] =           {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+	["pedestrian"] =        {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+	["steps"] =             {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["bridleway"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+	["cycleway"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "true"},
+	["path"] =              {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
+	["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+	["busway"] =            {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+	["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+	["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+	["platform"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
 }
 
 road_class = {
-["motorway"] = 0,
-["motorway_link"] = 0,
-["trunk"] = 1,
-["trunk_link"] = 1,
-["primary"] = 2,
-["primary_link"] = 2,
-["secondary"] = 3,
-["secondary_link"] = 3,
-["tertiary"] = 4,
-["tertiary_link"] = 4,
-["unclassified"] = 5,
-["residential"] = 6,
-["residential_link"] = 6
+	["motorway"] = 0,
+	["motorway_link"] = 0,
+	["trunk"] = 1,
+	["trunk_link"] = 1,
+	["primary"] = 2,
+	["primary_link"] = 2,
+	["secondary"] = 3,
+	["secondary_link"] = 3,
+	["tertiary"] = 4,
+	["tertiary_link"] = 4,
+	["unclassified"] = 5,
+	["residential"] = 6,
+	["residential_link"] = 6
 }
 
 restriction = {
-["no_left_turn"] = 0,
-["no_right_turn"] = 1,
-["no_straight_on"] = 2,
-["no_u_turn"] = 3,
-["only_right_turn"] = 4,
-["only_left_turn"] = 5,
-["only_straight_on"] = 6,
-["no_entry"] = 7,
-["no_exit"] = 8,
-["no_turn"] = 9
+	["no_left_turn"] = 0,
+	["no_right_turn"] = 1,
+	["no_straight_on"] = 2,
+	["no_u_turn"] = 3,
+	["only_right_turn"] = 4,
+	["only_left_turn"] = 5,
+	["only_straight_on"] = 6,
+	["no_entry"] = 7,
+	["no_exit"] = 8,
+	["no_turn"] = 9
 }
 
---the default speed for tracks is lowered after
---the call to default_speed
+--the default speed for tracks is lowered after the call to default_speed
 default_speed = {
-[0] = 105,
-[1] = 90,
-[2] = 75,
-[3] = 60,
-[4] = 50,
-[5] = 40,
-[6] = 35,
-[7] = 25
+	[0] = 105,
+	[1] = 90,
+	[2] = 75,
+	[3] = 60,
+	[4] = 50,
+	[5] = 40,
+	[6] = 35,
+	[7] = 25
 }
 
 access = {
-["yes"] = "true",
-["private"] = "true",
-["no"] = "false",
-["permissive"] = "true",
-["agricultural"] = "false",
-["use_sidepath"] = "true",
-["delivery"] = "true",
-["designated"] = "true",
-["dismount"] = "true",
-["discouraged"] = "false",
-["forestry"] = "false",
-["destination"] = "true",
-["customers"] = "true",
-["official"] = "true",
-["public"] = "true",
-["restricted"] = "true",
-["allowed"] = "true",
-["emergency"] = "false",
-["psv"] = "false",
-["permit"] = "true",
-["residents"] = "true"
+	["yes"] = "true",
+	["private"] = "true",
+	["no"] = "false",
+	["permissive"] = "true",
+	["agricultural"] = "false",
+	["use_sidepath"] = "true",
+	["delivery"] = "true",
+	["designated"] = "true",
+	["dismount"] = "true",
+	["discouraged"] = "false",
+	["forestry"] = "false",
+	["destination"] = "true",
+	["customers"] = "true",
+	["official"] = "true",
+	["public"] = "true",
+	["restricted"] = "true",
+	["allowed"] = "true",
+	["emergency"] = "false",
+	["psv"] = "false",
+	["permit"] = "true",
+	["residents"] = "true"
 }
 
 private = {
-["private"] = "true",
-["destination"] = "true",
-["customers"] = "true",
-["delivery"] = "true",
-["permit"] = "true",
-["residents"] = "true"
+	["private"] = "true",
+	["destination"] = "true",
+	["customers"] = "true",
+	["delivery"] = "true",
+	["permit"] = "true",
+	["residents"] = "true"
 }
 
 no_thru_traffic = {
-["destination"] = "true",
-["customers"] = "true",
-["delivery"] = "true",
-["permit"] = "true",
-["residents"] = "true"
+	["destination"] = "true",
+	["customers"] = "true",
+	["delivery"] = "true",
+	["permit"] = "true",
+	["residents"] = "true"
 }
 
 sidewalk = {
-["both"] = "true",
-["none"] = "false",
-["no"] = "false",
-["right"] = "true",
-["left"] = "true",
-["separate"] = "false",
-["yes"] = "true",
-["shared"] = "true",
-["this"] = "true",
-["detached"] = "false",
-["raised"] = "true",
-["separate_double"] = "false",
-["sidepath"] = "false",
-["explicit"] = "true"
+	["both"] = "true",
+	["none"] = "false",
+	["no"] = "false",
+	["right"] = "true",
+	["left"] = "true",
+	["separate"] = "false",
+	["yes"] = "true",
+	["shared"] = "true",
+	["this"] = "true",
+	["detached"] = "false",
+	["raised"] = "true",
+	["separate_double"] = "false",
+	["sidepath"] = "false",
+	["explicit"] = "true"
 }
 
 use = {
-["driveway"] = 4,
-["alley"] = 5,
-["parking_aisle"] = 6,
-["emergency_access"] = 7,
-["drive-through"] = 8
+	["driveway"] = 4,
+	["alley"] = 5,
+	["parking_aisle"] = 6,
+	["emergency_access"] = 7,
+	["drive-through"] = 8
 }
 
 motor_vehicle = {
-["yes"] = "true",
-["private"] = "true",
-["no"] = "false",
-["permissive"] = "true",
-["agricultural"] = "false",
-["delivery"] = "true",
-["designated"] = "true",
-["discouraged"] = "false",
-["forestry"] = "false",
-["destination"] = "true",
-["customers"] = "true",
-["official"] = "true",
-["public"] = "true",
-["restricted"] = "true",
-["allowed"] = "true",
-["permit"] = "true",
-["residents"] = "true"
+	["yes"] = "true",
+	["private"] = "true",
+	["no"] = "false",
+	["permissive"] = "true",
+	["agricultural"] = "false",
+	["delivery"] = "true",
+	["designated"] = "true",
+	["discouraged"] = "false",
+	["forestry"] = "false",
+	["destination"] = "true",
+	["customers"] = "true",
+	["official"] = "true",
+	["public"] = "true",
+	["restricted"] = "true",
+	["allowed"] = "true",
+	["permit"] = "true",
+	["residents"] = "true"
 }
 
 moped = {
-["yes"] = "true",
-["designated"] = "true",
-["private"] = "true",
-["permissive"] = "true",
-["destination"] = "true",
-["delivery"] = "true",
-["dismount"] = "true",
-["no"] = "false",
-["unknown"] = "false",
-["agricultural"] = "false",
-["permit"] = "true",
-["residents"] = "true"
+	["yes"] = "true",
+	["designated"] = "true",
+	["private"] = "true",
+	["permissive"] = "true",
+	["destination"] = "true",
+	["delivery"] = "true",
+	["dismount"] = "true",
+	["no"] = "false",
+	["unknown"] = "false",
+	["agricultural"] = "false",
+	["permit"] = "true",
+	["residents"] = "true"
 }
 
 foot = {
-["yes"] = "true",
-["private"] = "true",
-["no"] = "false",
-["permissive"] = "true",
-["agricultural"] = "false",
-["use_sidepath"] = "true",
-["delivery"] = "true",
-["designated"] = "true",
-["discouraged"] = "false",
-["forestry"] = "false",
-["destination"] = "true",
-["customers"] = "true",
-["official"] = "true",
-["public"] = "true",
-["restricted"] = "true",
-["crossing"] = "true",
-["sidewalk"] = "true",
-["allowed"] = "true",
-["passable"] = "true",
-["footway"] = "true",
-["permit"] = "true",
-["residents"] = "true"
+	["yes"] = "true",
+	["private"] = "true",
+	["no"] = "false",
+	["permissive"] = "true",
+	["agricultural"] = "false",
+	["use_sidepath"] = "true",
+	["delivery"] = "true",
+	["designated"] = "true",
+	["discouraged"] = "false",
+	["forestry"] = "false",
+	["destination"] = "true",
+	["customers"] = "true",
+	["official"] = "true",
+	["public"] = "true",
+	["restricted"] = "true",
+	["crossing"] = "true",
+	["sidewalk"] = "true",
+	["allowed"] = "true",
+	["passable"] = "true",
+	["footway"] = "true",
+	["permit"] = "true",
+	["residents"] = "true"
 }
 
 wheelchair = {
-["no"] = "false",
-["yes"] = "true",
-["designated"] = "true",
-["limited"] = "true",
-["official"] = "true",
-["destination"] = "true",
-["public"] = "true",
-["permissive"] = "true",
-["only"] = "true",
-["private"] = "true",
-["impassable"] = "false",
-["partial"] = "false",
-["bad"] = "false",
-["half"] = "false",
-["assisted"] = "true",
-["permit"] = "true",
-["residents"] = "true"
+	["no"] = "false",
+	["yes"] = "true",
+	["designated"] = "true",
+	["limited"] = "true",
+	["official"] = "true",
+	["destination"] = "true",
+	["public"] = "true",
+	["permissive"] = "true",
+	["only"] = "true",
+	["private"] = "true",
+	["impassable"] = "false",
+	["partial"] = "false",
+	["bad"] = "false",
+	["half"] = "false",
+	["assisted"] = "true",
+	["permit"] = "true",
+	["residents"] = "true"
 }
 
 bus = {
-["no"] = "false",
-["yes"] = "true",
-["designated"] = "true",
-["urban"] = "true",
-["permissive"] = "true",
-["restricted"] = "true",
-["destination"] = "true",
-["delivery"] = "false",
-["official"] = "true",
-["permit"] = "true"
+	["no"] = "false",
+	["yes"] = "true",
+	["designated"] = "true",
+	["urban"] = "true",
+	["permissive"] = "true",
+	["restricted"] = "true",
+	["destination"] = "true",
+	["delivery"] = "false",
+	["official"] = "true",
+	["permit"] = "true"
 }
 
 taxi = {
-["no"] = "false",
-["yes"] = "true",
-["designated"] = "true",
-["urban"] = "true",
-["permissive"] = "true",
-["restricted"] = "true",
-["destination"] = "true",
-["delivery"] = "false",
-["official"] = "true",
-["permit"] = "true"
+	["no"] = "false",
+	["yes"] = "true",
+	["designated"] = "true",
+	["urban"] = "true",
+	["permissive"] = "true",
+	["restricted"] = "true",
+	["destination"] = "true",
+	["delivery"] = "false",
+	["official"] = "true",
+	["permit"] = "true"
 }
 
 psv = {
-["bus"] = "true",
-["taxi"] = "true",
-["no"] = "false",
-["yes"] = "true",
-["designated"] = "true",
-["permissive"] = "true",
-["1"] = "true",
-["2"] = "true"
+	["bus"] = "true",
+	["taxi"] = "true",
+	["no"] = "false",
+	["yes"] = "true",
+	["designated"] = "true",
+	["permissive"] = "true",
+	["1"] = "true",
+	["2"] = "true"
 }
 
 truck = {
-["designated"] = "true",
-["yes"] = "true",
-["no"] = "false",
-["destination"] = "true",
-["delivery"] = "true",
-["local"] = "true",
-["agricultural"] = "false",
-["private"] = "true",
-["discouraged"] = "false",
-["permissive"] = "true",
-["unsuitable"] = "false",
-["agricultural;forestry"] = "false",
-["official"] = "true",
-["forestry"] = "false",
-["destination;delivery"] = "true",
-["permit"] = "true",
-["residents"] = "true"
+	["designated"] = "true",
+	["yes"] = "true",
+	["no"] = "false",
+	["destination"] = "true",
+	["delivery"] = "true",
+	["local"] = "true",
+	["agricultural"] = "false",
+	["private"] = "true",
+	["discouraged"] = "false",
+	["permissive"] = "true",
+	["unsuitable"] = "false",
+	["agricultural;forestry"] = "false",
+	["official"] = "true",
+	["forestry"] = "false",
+	["destination;delivery"] = "true",
+	["permit"] = "true",
+	["residents"] = "true"
 }
 
 hazmat = {
-["designated"] = "true",
-["yes"] = "true",
-["no"] = "false",
-["destination"] = "false",
-["delivery"] = "false"
+	["designated"] = "true",
+	["yes"] = "true",
+	["no"] = "false",
+	["destination"] = "false",
+	["delivery"] = "false"
 }
 
 shoulder = {
-["yes"] = "true",
-["both"] = "true",
-["no"] = "false"
+	["yes"] = "true",
+	["both"] = "true",
+	["no"] = "false"
 }
 
 shoulder_right = {
-["right"] = "true"
+	["right"] = "true"
 }
 
 shoulder_left = {
-["left"] = "true"
+	["left"] = "true"
 }
 
 bicycle = {
-["yes"] = "true",
-["designated"] = "true",
-["use_sidepath"] = "true",
-["no"] = "false",
-["permissive"] = "true",
-["destination"] = "true",
-["dismount"] = "true",
-["lane"] = "true",
-["track"] = "true",
-["shared"] = "true",
-["shared_lane"] = "true",
-["sidepath"] = "true",
-["share_busway"] = "true",
-["none"] = "false",
-["allowed"] = "true",
-["private"] = "true",
-["official"] = "true",
-["permit"] = "true",
-["residents"] = "true"
+	["yes"] = "true",
+	["designated"] = "true",
+	["use_sidepath"] = "true",
+	["no"] = "false",
+	["permissive"] = "true",
+	["destination"] = "true",
+	["dismount"] = "true",
+	["lane"] = "true",
+	["track"] = "true",
+	["shared"] = "true",
+	["shared_lane"] = "true",
+	["sidepath"] = "true",
+	["share_busway"] = "true",
+	["none"] = "false",
+	["allowed"] = "true",
+	["private"] = "true",
+	["official"] = "true",
+	["permit"] = "true",
+	["residents"] = "true"
 }
 
 cycleway = {
-["yes"] = "true",
-["designated"] = "true",
-["use_sidepath"] = "true",
-["permissive"] = "true",
-["destination"] = "true",
-["dismount"] = "true",
-["lane"] = "true",
-["track"] = "true",
-["shared"] = "true",
-["shared_lane"] = "true",
-["sidepath"] = "true",
-["share_busway"] = "true",
-["allowed"] = "true",
-["private"] = "true",
-["cyclestreet"] = "true",
-["crossing"] = "true"
+	["yes"] = "true",
+	["designated"] = "true",
+	["use_sidepath"] = "true",
+	["permissive"] = "true",
+	["destination"] = "true",
+	["dismount"] = "true",
+	["lane"] = "true",
+	["track"] = "true",
+	["shared"] = "true",
+	["shared_lane"] = "true",
+	["sidepath"] = "true",
+	["share_busway"] = "true",
+	["allowed"] = "true",
+	["private"] = "true",
+	["cyclestreet"] = "true",
+	["crossing"] = "true"
 }
 
 bike_reverse = {
-["opposite"] = "true",
-["opposite_lane"] = "true",
-["opposite_track"] = "true"
+	["opposite"] = "true",
+	["opposite_lane"] = "true",
+	["opposite_track"] = "true"
 }
 
 bus_reverse = {
-["opposite"] = "true",
-["opposite_lane"] = "true"
+	["opposite"] = "true",
+	["opposite_lane"] = "true"
 }
 
 shared = {
-["shared_lane"] = 1,
-["share_busway"] = 1,
-["shared"] = 1
+	["shared_lane"] = 1,
+	["share_busway"] = 1,
+	["shared"] = 1
 }
 
 buffer = {
-["yes"] = 2
+	["yes"] = 2
 }
 
 dedicated = {
-["opposite_lane"] = 2,
-["lane"] = 2,
-["buffered_lane"] = 2
+	["opposite_lane"] = 2,
+	["lane"] = 2,
+	["buffered_lane"] = 2
 }
 
 separated = {
-["opposite_track"] = 3,
-["track"] = 3
+	["opposite_track"] = 3,
+	["track"] = 3
 }
 
 oneway = {
-["no"] = "false",
-["false"] = "false",
-["-1"] = "true",
-["yes"] = "true",
-["true"] = "true",
-["1"] = "true",
-["reversible"] = "false",
-["alternating"] = "false"
+	["no"] = "false",
+	["false"] = "false",
+	["-1"] = "true",
+	["yes"] = "true",
+	["true"] = "true",
+	["1"] = "true",
+	["reversible"] = "false",
+	["alternating"] = "false"
 }
 
 bridge = {
-["yes"] = "true",
-["no"] = "false",
-["1"] = "true"
+	["yes"] = "true",
+	["no"] = "false",
+	["1"] = "true"
 }
 
 --TODO: building_passage is for ped only
-tunnel = {
-["yes"] = "true",
-["no"] = "false",
-["1"] = "true",
-["building_passage"] = "true"
+	tunnel = {
+	["yes"] = "true",
+	["no"] = "false",
+	["1"] = "true",
+	["building_passage"] = "true"
 }
 
 --TODO: snowmobile might not really be passable for much other than ped..
 toll = {
-["yes"] = "true",
-["no"] = "false",
-["true"] = "true",
-["false"] = "false",
-["1"] = "true",
-["interval"] = "true",
-["snowmobile"] = "true"
+	["yes"] = "true",
+	["no"] = "false",
+	["true"] = "true",
+	["false"] = "false",
+	["1"] = "true",
+	["interval"] = "true",
+	["snowmobile"] = "true"
 }
 
 lit = {
-  ["yes"] = "true",
-  ["no"] = "false",
-  ["24/7"] = "true",
-  ["automatic"] = "true",
-  ["limited"] = "false",
-  ["disused"] = "false",
-  ["dusk-dawn"] = "true",
-  ["sunset-sunrise"] = "true"
+	["yes"] = "true",
+	["no"] = "false",
+	["24/7"] = "true",
+	["automatic"] = "true",
+	["limited"] = "false",
+	["disused"] = "false",
+	["dusk-dawn"] = "true",
+	["sunset-sunrise"] = "true"
 }
 
 --node proc needs the same info as above but in the form of a mask so duplicate..
 motor_vehicle_node = {
-["yes"] = 1,
-["private"] = 1,
-["no"] = 0,
-["permissive"] = 1,
-["agricultural"] = 0,
-["delivery"] = 1,
-["designated"] = 1,
-["discouraged"] = 0,
-["forestry"] = 0,
-["destination"] = 1,
-["customers"] = 1,
-["official"] = 1,
-["public"] = 1,
-["restricted"] = 1,
-["allowed"] = 1,
-["permit"] = 1,
-["residents"] = 1
+	["yes"] = 1,
+	["private"] = 1,
+	["no"] = 0,
+	["permissive"] = 1,
+	["agricultural"] = 0,
+	["delivery"] = 1,
+	["designated"] = 1,
+	["discouraged"] = 0,
+	["forestry"] = 0,
+	["destination"] = 1,
+	["customers"] = 1,
+	["official"] = 1,
+	["public"] = 1,
+	["restricted"] = 1,
+	["allowed"] = 1,
+	["permit"] = 1,
+	["residents"] = 1
 }
 
 bicycle_node = {
-["yes"] = 4,
-["designated"] = 4,
-["use_sidepath"] = 4,
-["no"] = 0,
-["permissive"] = 4,
-["destination"] = 4,
-["dismount"] = 4,
-["lane"] = 4,
-["track"] = 4,
-["shared"] = 4,
-["shared_lane"] = 4,
-["sidepath"] = 4,
-["share_busway"] = 4,
-["none"] = 0,
-["allowed"] = 4,
-["private"] = 4,
-["official"] = 4,
-["permit"] = 4,
-["residents"] = 4
+	["yes"] = 4,
+	["designated"] = 4,
+	["use_sidepath"] = 4,
+	["no"] = 0,
+	["permissive"] = 4,
+	["destination"] = 4,
+	["dismount"] = 4,
+	["lane"] = 4,
+	["track"] = 4,
+	["shared"] = 4,
+	["shared_lane"] = 4,
+	["sidepath"] = 4,
+	["share_busway"] = 4,
+	["none"] = 0,
+	["allowed"] = 4,
+	["private"] = 4,
+	["official"] = 4,
+	["permit"] = 4,
+	["residents"] = 4
 }
 
 foot_node = {
-["yes"] = 2,
-["private"] = 2,
-["no"] = 0,
-["permissive"] = 2,
-["agricultural"] = 0,
-["use_sidepath"] = 2,
-["delivery"] = 2,
-["designated"] = 2,
-["discouraged"] = 0,
-["forestry"] = 0,
-["destination"] = 2,
-["customers"] = 2,
-["official"] = 2,
-["public"] = 2,
-["restricted"] = 2,
-["crossing"] = 2,
-["sidewalk"] = 2,
-["allowed"] = 2,
-["passable"] = 2,
-["footway"] = 2,
-["permit"] = 2,
-["residents"] = 2
+	["yes"] = 2,
+	["private"] = 2,
+	["no"] = 0,
+	["permissive"] = 2,
+	["agricultural"] = 0,
+	["use_sidepath"] = 2,
+	["delivery"] = 2,
+	["designated"] = 2,
+	["discouraged"] = 0,
+	["forestry"] = 0,
+	["destination"] = 2,
+	["customers"] = 2,
+	["official"] = 2,
+	["public"] = 2,
+	["restricted"] = 2,
+	["crossing"] = 2,
+	["sidewalk"] = 2,
+	["allowed"] = 2,
+	["passable"] = 2,
+	["footway"] = 2,
+	["permit"] = 2,
+	["residents"] = 2
 }
 
 wheelchair_node = {
-["no"] = 0,
-["yes"] = 256,
-["designated"] = 256,
-["limited"] = 256,
-["official"] = 256,
-["destination"] = 256,
-["public"] = 256,
-["permissive"] = 256,
-["only"] = 256,
-["private"] = 256,
-["impassable"] = 0,
-["partial"] = 0,
-["bad"] = 0,
-["half"] = 0,
-["assisted"] = 256,
-["permit"] = 256,
-["residents"] = 256
+	["no"] = 0,
+	["yes"] = 256,
+	["designated"] = 256,
+	["limited"] = 256,
+	["official"] = 256,
+	["destination"] = 256,
+	["public"] = 256,
+	["permissive"] = 256,
+	["only"] = 256,
+	["private"] = 256,
+	["impassable"] = 0,
+	["partial"] = 0,
+	["bad"] = 0,
+	["half"] = 0,
+	["assisted"] = 256,
+	["permit"] = 256,
+	["residents"] = 256
 }
 
 moped_node = {
-["yes"] = 512,
-["designated"] = 512,
-["private"] = 512,
-["permissive"] = 512,
-["destination"] = 512,
-["delivery"] = 512,
-["dismount"] = 512,
-["no"] = 0,
-["unknown"] = 0,
-["agricultural"] = 0,
-["permit"] = 512,
-["residents"] = 512
+	["yes"] = 512,
+	["designated"] = 512,
+	["private"] = 512,
+	["permissive"] = 512,
+	["destination"] = 512,
+	["delivery"] = 512,
+	["dismount"] = 512,
+	["no"] = 0,
+	["unknown"] = 0,
+	["agricultural"] = 0,
+	["permit"] = 512,
+	["residents"] = 512
 }
 
 motor_cycle_node = {
-["yes"] = 1024,
-["private"] = 1024,
-["no"] = 0,
-["permissive"] = 1024,
-["agricultural"] = 0,
-["delivery"] = 1024,
-["designated"] = 1024,
-["discouraged"] = 0,
-["forestry"] = 0,
-["destination"] = 1024,
-["customers"] = 1024,
-["official"] = 1024,
-["public"] = 1024,
-["restricted"] = 1024,
-["allowed"] = 1024,
-["permit"] = 1024
+	["yes"] = 1024,
+	["private"] = 1024,
+	["no"] = 0,
+	["permissive"] = 1024,
+	["agricultural"] = 0,
+	["delivery"] = 1024,
+	["designated"] = 1024,
+	["discouraged"] = 0,
+	["forestry"] = 0,
+	["destination"] = 1024,
+	["customers"] = 1024,
+	["official"] = 1024,
+	["public"] = 1024,
+	["restricted"] = 1024,
+	["allowed"] = 1024,
+	["permit"] = 1024
 }
 
 bus_node = {
-["no"] = 0,
-["yes"] = 64,
-["designated"] = 64,
-["urban"] = 64,
-["permissive"] = 64,
-["restricted"] = 64,
-["destination"] = 64,
-["delivery"] = 0,
-["official"] = 64,
-["permit"] = 64
+	["no"] = 0,
+	["yes"] = 64,
+	["designated"] = 64,
+	["urban"] = 64,
+	["permissive"] = 64,
+	["restricted"] = 64,
+	["destination"] = 64,
+	["delivery"] = 0,
+	["official"] = 64,
+	["permit"] = 64
 }
 
 taxi_node = {
-["no"] = 0,
-["yes"] = 32,
-["designated"] = 32,
-["urban"] = 32,
-["permissive"] = 32,
-["restricted"] = 32,
-["destination"] = 32,
-["delivery"] = 0,
-["official"] = 32,
-["permit"] = 32
+	["no"] = 0,
+	["yes"] = 32,
+	["designated"] = 32,
+	["urban"] = 32,
+	["permissive"] = 32,
+	["restricted"] = 32,
+	["destination"] = 32,
+	["delivery"] = 0,
+	["official"] = 32,
+	["permit"] = 32
 }
 
 truck_node = {
-["designated"] = 8,
-["yes"] = 8,
-["no"] = 0,
-["destination"] = 8,
-["delivery"] = 8,
-["local"] = 8,
-["agricultural"] = 0,
-["private"] = 8,
-["discouraged"] = 0,
-["permissive"] = 8,
-["unsuitable"] = 0,
-["agricultural;forestry"] = 0,
-["official"] = 8,
-["forestry"] = 0,
-["destination;delivery"] = 8,
-["permit"] = 8,
-["residents"] = 8
+	["designated"] = 8,
+	["yes"] = 8,
+	["no"] = 0,
+	["destination"] = 8,
+	["delivery"] = 8,
+	["local"] = 8,
+	["agricultural"] = 0,
+	["private"] = 8,
+	["discouraged"] = 0,
+	["permissive"] = 8,
+	["unsuitable"] = 0,
+	["agricultural;forestry"] = 0,
+	["official"] = 8,
+	["forestry"] = 0,
+	["destination;delivery"] = 8,
+	["permit"] = 8,
+	["residents"] = 8
 }
 
 psv_bus_node = {
-["bus"] = 64,
-["no"] = 0,
-["yes"] = 64,
-["designated"] = 64,
-["permissive"] = 64,
-["1"] = 64,
-["2"] = 64
+	["bus"] = 64,
+	["no"] = 0,
+	["yes"] = 64,
+	["designated"] = 64,
+	["permissive"] = 64,
+	["1"] = 64,
+	["2"] = 64
 }
 
 psv_taxi_node = {
-["taxi"] = 32,
-["no"] = 0,
-["yes"] = 32,
-["designated"] = 32,
-["permissive"] = 32,
-["1"] = 32,
-["2"] = 32
+	["taxi"] = 32,
+	["no"] = 0,
+	["yes"] = 32,
+	["designated"] = 32,
+	["permissive"] = 32,
+	["1"] = 32,
+	["2"] = 32
 }
 
 function round(val, n)
@@ -775,7 +773,6 @@ function normalize_weight(weight)
 end
 
 function normalize_measurement(measurement)
-
   if measurement then
     -- turn commas into dots to handle European-style decimal separators
     measurement = measurement:gsub(",", ".")
@@ -795,7 +792,6 @@ function normalize_measurement(measurement)
     local sum = 0
     local count = 0
     for item, unit in measurement:gmatch("(%d+[.,]?%d*) *([a-zA-Z\"\']*)") do
-
       -- just in case the pattern above matches some things that tonumber()
       -- disagrees are valid numbers, we'll bail here if we don't get a valid
       -- number.
@@ -868,7 +864,6 @@ end
 
 --returns 1 if you should filter this way 0 otherwise
 function filter_tags_generic(kv)
-
   if (kv["highway"] == "construction" and kv["construction"] == nil) or kv["highway"] == "proposed" then
     return 1
   end
@@ -908,7 +903,6 @@ function filter_tags_generic(kv)
     end
 
     if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
-
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["bus_forward"] = "false"
@@ -1006,7 +1000,6 @@ function filter_tags_generic(kv)
     end
 
     if ((ferry == false and rail == false) or kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
-
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["bus_forward"] = "false"
@@ -1087,7 +1080,6 @@ function filter_tags_generic(kv)
 
   --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
   if ((kv["access"] == "permissive" or kv["access"] == "hov" or kv["access"] == "taxi") and kv["oneway"] == "reversible") then
-
     -- for now enable only for buses if the tag exists and they are allowed.
     if (kv["bus_forward"] == "true") then
       kv["auto_forward"] = "false"
