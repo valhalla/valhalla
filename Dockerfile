@@ -13,8 +13,8 @@ USER root
 ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 
 # set proxy
-# ENV http_proxy=http://10.55.123.98:3333
-# ENV https_proxy=http://10.55.123.98:3333
+# ARG http_proxy=http://10.55.123.98:3333
+# ARG https_proxy=http://10.55.123.98:3333
 
 # install deps
 RUN set -ex; \
@@ -96,8 +96,8 @@ USER root
 ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 
 # set proxy
-# ENV http_proxy=http://10.55.123.98:3333
-# ENV https_proxy=http://10.55.123.98:3333
+# ARG http_proxy=http://10.55.123.98:3333
+# ARG https_proxy=http://10.55.123.98:3333
 
 # install deps
 RUN set -ex; \
