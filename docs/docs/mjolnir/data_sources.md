@@ -1,7 +1,5 @@
 # Data sources in Valhalla
-Valhalla routing tiles are created from several different open data sets. We owe a tremendous debt of gratitude to the individuals and communities which produced them. This document identifies the data sources and licensing of these data sources.
-
-**Attribution is required** for many of our data providers. See the [Attribution](./attribution.md) document for more information.
+Valhalla routing tiles are created from several different open data sets.
 
 ## OpenStreetMap
 
