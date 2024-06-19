@@ -7,10 +7,8 @@ Valhalla routing tiles are created from several different open data sets.
 
 ## Elevation data
 
-Valhalla uses terrain data for building elevation-influenced routes, such as for bicycles. You can find more about the license and attribution requirements for elevation data [here](https://github.com/tilezen/joerd/blob/master/docs/attribution.md).
+Valhalla uses terrain data for building elevation-influenced routes, such as for bicycles.
 
 ## Boost Timezone Data
 
 Valhalla attaches timezone information to every node/intersection in the road network. The timezone data comes from [tz_world](http://efele.net/maps/tz/world/). This data contains polygon definitions of the various timezones throughout the world. Timezone specifications within each region and conversions of time between timezones are derived using [Boost](http://www.boost.org/users/license.html).
-
-Please notify us if you believe that an open data project has not been properly noted.
