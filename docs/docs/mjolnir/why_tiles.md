@@ -4,13 +4,7 @@ This GIF gives a conceptual overview of the tiles used in a resultant graph trav
 
 ![Tiles along the Route Sketch](images/why_tiles.gif "Tiles along the Route Sketch")
 
-### Show me the What, Where and Why!
-
-So you can find all of our software at our [Valhalla](https://github.com/valhalla) github organization. There's a lot of software there but most of it is modern c++ with a little bit of python for prototypes, a bit of ruby for chef style deployment and a bit of javascript for demo'ing some of the functionality. 
-
-#### Onto the Why!
-
-We hope to enjoy some key benefits of a tile based approach to routing, they are as follows:
+### Benefits of a tile based approach to routing:
 
  - **Reduced memory requirements**  a connected graph can take up a lot of space in memory. By cutting the graph into a tiled structure you more easily impose limits on how much of the graph resides in memory at any one time. This could enable on device routing capabilities on even the most meager of hardware which could improve access to those in developing regions.
 
@@ -24,4 +18,4 @@ We hope to enjoy some key benefits of a tile based approach to routing, they are
  
  - **Enhanced Navigation** tiles along the route allow more detailed information to be presented along the route without having to increase the payload in the initial call to the routing service. Exits along the highway, names of upcoming roads, and other information can be presented when graph tiles are present.
 
-We're excited with what we've accomplished so far, and look forward to showing you more soon. We plan to launch an open routing service as well as downloadable tiles later in the year. In the meantime though, [have a quick browse of the code](https://github.com/valhalla) and reach out if something doesn't make sense!
+We're excited with what we've accomplished so far, and look forward to showing you more soon. We plan to launch an open routing service as well as downloadable tiles later in the year.
