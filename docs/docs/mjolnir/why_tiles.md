@@ -1,39 +1,5 @@
 ## Routing Tiles - the Who, What, When, Where, How and Why?
 
-### A bit of the Who, When and How
-
-We had just started our new endeavor at Mapzen and were kicking around fundamental ideas of what our system should look like. Here's a bit of a transcript of how we got here:
-
-17/11/14 01:27 EST **Kevin:** *wakes up in a cold sweat and begins to fumble around for his phone*
-
-17/11/14 01:28 EST **Kevin:** *violently stubs his toe on the sharpest lego he's ever witnessed*
-
-17/11/14 01:30 EST **Kevin:** *cursing and slightly bloody, he manages to ring Dave*
-
-17/11/14 01:32 EST **Dave:** Uhnnng...
-
-17/11/14 01:32 EST **Kevin:** Dave! What if we route on tiled data!?
-
-17/11/14 01:33 EST **Dave:** Um... yeah... you've been working in the mapping world for far too long
-
-17/11/14 01:33 EST **Dave:** *throws his phone to the furthest corner of the room*
-
-17/11/14 01:34 EST **Kevin:** Dave??
-
-17/11/14 01:35 EST **Kevin:** *begins pacing*
-
-17/11/14 04:17 EST **Kevin:** *still pacing*
-
-17/11/14 07:01 EST **Kevin:** *rings dave once again*
-
-17/11/14 07:02 EST **Kevin:** But Dave... We can have levels of detail, regional extracts, offline mobile routing... and we can open source it all
-
-17/11/14 07:03 EST **Dave:** Hmm... Tiled. Hierarchical. Open. Routing. We could call it THOR. That's a pretty sweet acronym! That will make a great project name. But yeah... I'm not sure it'll work.
-
-Ok, so the above is slightly embellished (everyone knows Dave stopped answering his phone after that one weekend call about traffic on the NJ Turnpike), and let's just say Kevin's proposal was met with some degree of skepticism. But after reasoned consideration the team decided that tiled, hierarchical routing data had merits and was worth pursuing.
-
-Several months later, we have found that a tiled routing graph is possible and have begun exploring some of the benefits we'd hoped it would provide us and especially you!
-
 This GIF gives a conceptual overview of the tiles used in a resultant graph traversal and how the level of detail needed may change depending on the connectivity of the road network in a given region.
 
 ![Tiles along the Route Sketch](images/why_tiles.gif "Tiles along the Route Sketch")
