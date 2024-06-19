@@ -2,12 +2,6 @@
 
 The mjolnir library is essentially a set of applications, data structures and algorithms which deal with things like: parsing OpenStreetMap data extracts, cutting routable "graph" tiles, generating tile hierarchies and testing for data deficiencies.
 
-### Data
-
-You can download extracts from [Geofabrik](http://download.geofabrik.de/).
-
-### Creating Data
-
 `valhalla_build_config` can use to generate the config file needed to build routing tiles. Check the `--help` text for all the various configuration options in the config file.
 
 Generate your config:
