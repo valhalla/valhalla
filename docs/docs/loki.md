@@ -1,14 +1,10 @@
 # Loki
 
-Loki can be used to associate location information to an underlying graph tile object for use in creating input to the [routing engine](thor.md). In keeping with the Norse mythological theme, the name [Loki](http://en.wikipedia.org/wiki/Loki) was chosen as a play on the word locate. Since loki deals mostly with correlating some input (minimally a lat,lon) to an object within a graph tile, this seemed like a fitting name!
+Loki can be used to associate location information (minimally a lat,lon) to an underlying graph tile object for use in creating input to the [routing engine](thor.md).
 
 Loki is essentially a set of various data structures and algorithms which deal with things like: correlating an input location to the underlying graph, partial distance along an edge and filtering edges which shouldn't be considered for correlation.
 
-## Components ##
-
-What follows are some notable components of loki.
-
-### Search ###
+## Some notable components of loki ##
 
 #### What's it do? ####
 
@@ -45,7 +41,3 @@ Another general problem is that of islands of connectivity. Without traversing t
 To tackle this issue we have a few options. We could at data creation time crawl the route network to find small islands of connectivity. We could mark the edges in these islands so that loki would know to only send them to the routing algorithm if both input coordinates were in the same island. Or we could use a multi-pass approach in which we have the routing algorithm detect when its search is trapped in an island of connectivity and send the list of edges with in back to loki as a set of edges excluded from the correlation process. That latter would seem like the best option at this point in time simply because the information needed to store and time to crawl the tiles to find these small islands of connectivity would be prohibitive.
 
 The final area for future work would be an elaboration to what was said earlier about wanting only to look a the highest detail level of route network data. One could conceive of a scenario in which a user has a route and they want to drag a portion of that route so as to force it toward a certain feature. If the route network is dense where that feature lives but the users map is zoomed out such that the user only sees certain route network edges loki should attempt to correlate to those rather than the possibly not visible edges in the area. Essentially when doing a correlation at a course zoom level we may want to exclude certain classes of edges that are unlikely to be visible to the user interacting with the map.
-
-### Benchmark ###
-
-TODO:
