@@ -1,18 +1,14 @@
 # Loki
 
-Loki can be used to associate location information (minimally a lat,lon) to an underlying graph tile object for use in creating input to the [routing engine](thor.md).
-
 Loki is essentially a set of various data structures and algorithms which deal with things like: correlating an input location to the underlying graph, partial distance along an edge and filtering edges which shouldn't be considered for correlation.
-
-## Some notable components of loki ##
 
 #### What's it do? ####
 
-The primary function of loki is to correlate the given input coordinate(s) to the underlying routing graph by searching over small portions of said graph near said input. The goal is to return information about the graph that can be used by a router to find a path in the graph from one point to another. Generally this is a set of candidate edges for each input coordinate. Additionally the actual correlated (snapped to route network geometry) coordinate is returned which can be useful for things like placing transit egress points on the route network or fun trivia stuff like dropping a point in the atlantic or a massive desert to find the closest signs of civilization to that point.
+The primary function of loki is to correlate the given input coordinate(s) to the underlying routing graph by searching over small portions of said graph near said input for use in creating input to the [routing engine](thor.md). The goal is to return information about the graph that can be used by a router to find a path in the graph from one point to another. Generally this is a set of candidate edges for each input coordinate. Additionally the actual correlated (snapped to route network geometry) coordinate is returned which can be useful for things like placing transit egress points on the route network or fun trivia stuff like dropping a point in the atlantic or a massive desert to find the closest signs of civilization to that point.
 
 #### How's it work? ####
 
-First, we exploit the fact that the graph is tiled and separated into levels of detail. See [Why Tiles?](mjolnir/why_tiles.md) for more detail. This is important because it lets us focus our search on specific partitions of the graph which are closest to the input coordinate. Also, note that loki is only interested in the most detailed level as it has all of the edges in the graph, even the lesser importance ones. You might be thinking ok so those tiles must be pretty darn small to make this reasonable (time/space complexity). Because the tiles are a regularly spaced grid, some will land on almost no routable edges and some will land on, well, Tokyo.
+The graph is tiled and separated into levels of detail. Loki is only interested in the most detailed level as it has all of the edges in the graph, even the lesser importance ones. You might be thinking ok so those tiles must be pretty darn small to make this reasonable (time/space complexity). Because the tiles are a regularly spaced grid, some will land on almost no routable edges and some will land on, well, Tokyo.
 
 This may not seem like much of a problem at first but closer inspection reveals its very important to strike a balance between tile size and complexity concerns. The heart of the problem is that we use these tiles for several different use-cases (algorithms) and each has different needs. Performing the actual graph traversal algorithm benefits from loading larger tiles into memory so the expansion of the graph doesn't hit (load more) new tiles so frequently. At the same time you want smaller tiles so that when you need to find just a couple edges nearest to a point you don't need to consider so many edges. There are more concerns but these illustrate the point well enough.
 
