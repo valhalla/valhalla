@@ -2,7 +2,7 @@
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-if [ $1 = "-d" ]; then
+if [ "$1" = "-d" ]; then
   echo 'Downloading timezone polygon file "timezones-with-oceans.shapefile.zip"...' 1>&2
 
   wget https://github.com/evansiroky/timezone-boundary-builder/releases/download/2024a/timezones-with-oceans.shapefile.zip 1>&2  || exit 1
