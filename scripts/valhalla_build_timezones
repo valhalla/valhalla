@@ -2,15 +2,21 @@
 
 set -e  # Exit immediately if a command exits with a non-zero status
 
-if [ ! -f ./timezones-with-oceans.shapefile.zip ]; then
-  echo 'Timezone polygon file "timezones-with-oceans.shapefile.zip" is not found'
+if [ "$param" = "-d" ]; then
+  echo 'Downloading timezone polygon file "timezones-with-oceans.shapefile.zip"...'
 
-  exit 1
+  wget https://github.com/evansiroky/timezone-boundary-builder/releases/download/2024a/timezones-with-oceans.shapefile.zip || exit 1
 else
-  echo 'Unzip timezone polygon file "timezones-with-oceans.shapefile.zip"...'
-
-  unzip ./timezones-with-oceans.shapefile.zip || exit 1
+  if [ ! -f ./timezones-with-oceans.shapefile.zip ]; then
+    echo 'Timezone polygon file "timezones-with-oceans.shapefile.zip" is not found'
+  
+    exit 1
+  fi
 fi
+
+echo 'Unzip timezone polygon file "timezones-with-oceans.shapefile.zip"...'
+
+unzip ./timezones-with-oceans.shapefile.zip || exit 1
 
 echo "Create spatial database..."
 
