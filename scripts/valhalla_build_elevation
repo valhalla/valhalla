@@ -36,7 +36,6 @@ handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)5s: %(message)s"))
 LOGGER.addHandler(handler)
 
-
 # Argument parser
 @unique
 class TileCompression(Enum):
@@ -53,14 +52,13 @@ class TileCompression(Enum):
         elif self is TileCompression.LZ4:
             return ".lz4"
 
-
 class DownloadStatus(Enum):
     OK = 1
     FAILED = 2
     CORRUPTED = 3
 
-
 parser = argparse.ArgumentParser(description=description)
+
 method = parser.add_mutually_exclusive_group()
 method.add_argument(
     "-g",
@@ -81,6 +79,7 @@ method.add_argument(
     help="Only download tiles covered by the Valhalla graph (requires a Valhalla config JSON file).",
     action="store_true",
 )
+
 parser.add_argument(
     "-c",
     "--config",
@@ -95,7 +94,17 @@ parser.add_argument(
     type=Path,
 )
 parser.add_argument(
-    "-p", "--parallelism", help="Number of processing units to use.", type=int, default=cpu_count()
+    "-f",
+    "--force",
+    help="Remove all existing elevation tiles before download new ones.",
+    action="store_true",
+)
+parser.add_argument(
+    "-p",
+    "--parallelism",
+    help="Number of processing units to use.",
+    type=int,
+    default=cpu_count(),
 )
 parser.add_argument(
     "-v",
@@ -124,7 +133,6 @@ group.add_argument(
 Tile = namedtuple("Tile", ["name", "dir"])
 LOCAL_SIZE = 0.25
 
-
 def get_tile_info(
     x: int,
     y: int,
@@ -140,7 +148,6 @@ def get_tile_info(
 
     return Tile(tile_name, dir_name)
 
-
 def grid_from_bounds(bounds: List[float]) -> List[List[int]]:
     """Creates a regular grid of size 1x1 within specified bounds"""
     # expand bbox by snapping to a 1 x 1 degree grid
@@ -150,7 +157,6 @@ def grid_from_bounds(bounds: List[float]) -> List[List[int]]:
     for x in range(min_x, max_x):
         for y in range(min_y, max_y):
             yield [x, y, x + 1, y + 1]
-
 
 def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
     try:
@@ -187,7 +193,6 @@ def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
 
     return tile_infos
 
-
 def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
     try:
         bbox = min_x, min_y, max_x, max_y = [float(x) for x in bbox_str.split(",")]
@@ -208,7 +213,6 @@ def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
         tile_infos.add(get_tile_info(tile_x, tile_y))
 
     return tile_infos
-
 
 def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
     if not graph_dir.is_dir():
@@ -231,87 +235,51 @@ def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
 
     return tile_infos
 
-
 def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
     dest_directory = Path(output_dir, tile.dir)
     dest_directory.mkdir(parents=True, exist_ok=True)
 
     filepath = dest_directory.joinpath(tile.name + compression.extension)
-    if filepath.is_file():
-        # Skip if the file already exists
-        return False
 
     url = f"https://elevation-tiles-prod.s3.us-east-1.amazonaws.com/skadi/{tile.dir}/{tile.name}.gz"
-
-    LOGGER.info(f"Downloading tile {tile.name}")
 
     # Disable SSL certificate verification
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
 
-    download_status = DownloadStatus.FAILED
-    for i in range(5):
-        try:
-            LOGGER.debug(f"Downloading tile {tile.dir}/{tile.name} for the {i}th time.")
+    try:
+        LOGGER.debug(f"Downloading elevation tile {tile.dir}/{tile.name}...")
 
-            # tries up to 24 mins with exponentially increasing sleeps in between, starting with 5 seconds
-            sleep((i**2) / 2 * 30)
+        with request.urlopen(url, context=ssl_context) as res, open(filepath, "wb") as f:
+            if compression is TileCompression.GZIP:
+                f.write(res.read())
+            else:
+                with gzip.GzipFile(fileobj=res, mode="rb") as gz:
+                    try:
+                        uncompressed = gz.read()
+                    except Exception as e:
+                        LOGGER.error(f"Failed to decompress elevation tile {tile.dir}/{tile.name}: {e}.")
 
-            with request.urlopen(url, context=ssl_context) as res, open(filepath, "wb") as f:
-                if compression is TileCompression.GZIP:
-                    f.write(res.read())
-                else:
-                    with gzip.GzipFile(fileobj=res, mode="rb") as gz:
-                        try:
-                            uncompressed = gz.read()
-                        except Exception as e:
-                            download_status = DownloadStatus.CORRUPTED
-                            LOGGER.error(
-                                f"Decompression error on tile {tile.dir}/{tile.name}: {e}. Likely a corrupted download."
-                            )
-                            continue
+                        return False
+                    else:
                         if compression is TileCompression.UNCOMPRESSED:
                             f.write(uncompressed)
                         elif compression is TileCompression.LZ4:
-                            # Compression level 6 was chosen after some benchmarking as the approx efficient frontier
-                            # between compression time and space savings (decompression time is roughly constant regardless
-                            # of level). The end result is larger than the maximally gzipped tiles from AWS, but only
-                            # by around 12%.
                             import lz4.frame
-
-                            with lz4.frame.LZ4FrameCompressor(
-                                block_size=lz4.frame.BLOCKSIZE_MAX4MB, compression_level=6
-                            ) as compressor:
-                                # Optimization: we know the exact size of every uncompressed hgt file
-                                f.write(compressor.begin(25934402))
+    
+                            with lz4.frame.LZ4FrameCompressor(block_size=lz4.frame.BLOCKSIZE_MAX4MB, compression_level=6) as compressor:
+                                f.write(compressor.begin(len(uncompressed)))
                                 f.write(compressor.compress(uncompressed))
                                 f.write(compressor.flush())
+    except HTTPError as e:
+        LOGGER.error(f"Failed to download elevation tile {tile.dir}/{tile.name} with HTTP code {e.code}: {e.reason}.")
+    except URLError as e:
+        LOGGER.error(f"Failed to download elevation tile {tile.dir}/{tile.name}: {e.reason}.")
+    except ImportError:
+        LOGGER.critical("Could not import lz4. Please install lz4 or use another compression format.")
 
-            download_status = DownloadStatus.OK
-            LOGGER.debug(f"Successfully downloaded tile {tile.dir}/{tile.name}")
-            break
-        except HTTPError as e:
-            LOGGER.error(f"Download failed with HTTP error {e.code}: {e.reason}.\nTrying again...")
-            continue
-        except URLError as e:
-            LOGGER.error(
-                f"Download failed of elevation tile {tile.dir}/{tile.name}: {e.reason}.\nTrying again.."
-            )
-            continue
-        except ImportError:
-            LOGGER.critical(
-                "Could not import lz4. Please install lz4 or use another compression format."
-            )
-            sys.exit(1)
-
-    if download_status == DownloadStatus.CORRUPTED:
-        LOGGER.error(f"Tile {tile.dir}/{tile.name} was corrupted, removing it...")
-        filepath.unlink()
-        return False
-    elif download_status == DownloadStatus.FAILED:
-        LOGGER.error(f"Tile {tile.dir}/{tile.name} couldn't be downloaded...")
-        return False
+        sys.exit(1)
 
     return True
 
@@ -373,4 +341,4 @@ if __name__ == "__main__":
     )
 
     sum_downloaded = list(filter(lambda res: res is True, results))
-    LOGGER.info(f"Downloaded {len(sum_downloaded)} tiles. Exiting.")
+    LOGGER.info(f"Downloaded {len(sum_downloaded)} tiles")
