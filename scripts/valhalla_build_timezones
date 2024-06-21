@@ -1,20 +1,24 @@
 #!/bin/sh
 
-error_exit() {
-  echo "Error: $1" 1>&2
-}
+set -e  # Exit immediately if a command exits with a non-zero status
 
 if [ ! -f ./timezones-with-oceans.shapefile.zip ]; then
-  error_exit 'Timezone polygon file "timezones-with-oceans.shapefile.zip" is not found'
+  echo 'Timezone polygon file "timezones-with-oceans.shapefile.zip" is not found'
+
+  exit 1
 else
-  unzip ./timezones-with-oceans.shapefile.zip 1>&2 || error_exit "unzip failed"
+  echo 'Unzip timezone polygon file "timezones-with-oceans.shapefile.zip"...'
+
+  unzip ./timezones-with-oceans.shapefile.zip || exit 1
 fi
 
+echo "Create spatial database..."
+
 tz_file=$(mktemp)
-spatialite_tool -i -shp "./combined-shapefile-with-oceans" -d "${tz_file}" -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
-spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed"
-spatialite ${tz_file} "VACUUM;" 1>&2 || error_exit "VACUUM failed"
-spatialite ${tz_file} "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
+spatialite_tool -i -shp ./combined-shapefile-with-oceans -d ${tz_file} -t tz_world -s 4326 -g geom -c UTF-8 || exit 1
+spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" || exit 1
+spatialite ${tz_file} "VACUUM;" || exit 1
+spatialite ${tz_file} "ANALYZE;" || exit 1
 
 rm -rf /data/combined-shapefile-with-oceans* /data/alias_tz.csv
 
