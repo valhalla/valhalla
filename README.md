@@ -46,35 +46,6 @@ The Valhalla organization is comprised of several library modules each responsib
 
 Documentation is stored in the `docs/` folder in this GitHub repository. It can be viewed at [valhalla.github.io/valhalla](https://valhalla.github.io/valhalla).
 
-## Benchmarks
-
-Valhalla includes several microbenchmarks which you can build and run using:
-
-    make benchmarks
-    make run-benchmarks
-
-They are enabled by the `-DENABLE_BENCHMARKS=On` CMake flag and are currently only available for
-Linux and MacOS.
-
-## Command Line Tools
-
-### `valhalla_service` aka one-shot mode
-
-If you can't (e.g. Windows Server) or don't want to have the full-fledged HTTP API running, you can have the (almost) exact same behavior with the 'valhalla_service' executable in so-called "one-shot" mode. It's simple, just pass the config file, the action (route, isochrone, matrix etc) and the stringified JSON request (or alternatively a file containing the request to circumvent shell command length issues):
-
-```
-valhalla_service valhalla.json isochrone '{"locations":[{"lat":42.552448,"lon":1.564865}],"costing":"auto","contours":[{"time":10,"color":"ff0000"}], "show_locations":true}'
-# Alternatively you can pass a file with the same contents
-valhalla_service valhalla.json isochrone isochrone_request.txt
-```
-
-It's important to note that all Valhalla logs for one-shot mode are piped to `stderr` while the actual JSON response will be in `stdout`. To completely silence the logs, pass `type: ""` to `midgard.logging` in the config file.
-
-
-### Batch Script Tool
-
-- [Batch Run_Route](https://github.com/valhalla/valhalla/blob/master/run_route_scripts/README.md)
-
 ## Build & Run
 
 Clone source:
@@ -131,5 +102,5 @@ Chạy các lệnh sau trong container:
     valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf
     valhalla_build_elevation -t -v -c valhalla/valhalla.json
     valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
-    valhalla_build_extract -v -c valhalla/valhalla.json
+    valhalla_build_extract --overwrite -v -c valhalla/valhalla.json
     valhalla_service valhalla/valhalla.json 1
