@@ -160,12 +160,14 @@ def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
         LOGGER.critical(
             "Could not import shapely. Please install shapely or use another download method instead."
         )
+
         sys.exit(1)
 
     if not input_dir.is_dir() or not len(list(input_dir.glob('*.geojson'))) > 0:
         LOGGER.critical(
             f"Geojson directory does not exist or contains no GeoJSON files: {input_dir.resolve()}"
         )
+
         sys.exit(1)
 
     def get_outer_rings(input_dir: Path) -> Iterable[Polygon]:
@@ -193,11 +195,13 @@ def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
         bbox = min_x, min_y, max_x, max_y = [float(x) for x in bbox_str.split(",")]
     except ValueError:
         LOGGER.critical(f"BBOX {bbox_str} is not a comma-separated string of coordinates.")
+
         sys.exit(1)
 
     # validate bbox
     if min_x > max_x or min_x < -180 or max_x > 180 or min_y > max_y or min_y < -90 or max_y > 90:
         LOGGER.critical(f"Bbox invalid: {bbox}")
+
         sys.exit(1)
 
     LOGGER.debug(f"Received valid bbox: {bbox}")
@@ -212,16 +216,19 @@ def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
 def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
     if not graph_dir.is_dir():
         LOGGER.critical(f"Graph directory {graph_dir.resolve()} does not exist.")
+
         sys.exit(1)
 
     tile_infos = set()
     local_dir = graph_dir.joinpath('2')
     tile_width = int(360 / LOCAL_SIZE)
+
     for tile_fp in local_dir.rglob('*.gph'):
         # turn the path into a tile ID
         tile_id = int(
             str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, '')
         )
+
         tile_x, tile_y = floor(int(tile_id % tile_width) * LOCAL_SIZE - 180), floor(
             int(tile_id / tile_width) * LOCAL_SIZE - 90
         )
@@ -301,11 +308,12 @@ if __name__ == "__main__":
         elevation_fp = Path(config["additional_data"]["elevation"] or "elevation")
     else:
         LOGGER.critical("Either config or outdir is required.")
+
         sys.exit(1)
 
-    # Check if outdir has any .hgt files inside
-    if os.path.exists(elevation_fp) and any(file.endswith(".hgt") for file in os.listdir(elevation_fp)):
-        LOGGER.info(f"Directory {elevation_fp} contains .hgt files. Skipping download.")
+    if !args.from_geojson.force and os.listdir(elevation_fp):
+        LOGGER.info(f"Elevation tile directory {elevation_fp} is not empty. Skipping download.")
+
         sys.exit(0)
 
     if args.from_geojson:
@@ -336,4 +344,4 @@ if __name__ == "__main__":
     )
 
     sum_downloaded = list(filter(lambda res: res is True, results))
-    LOGGER.info(f"Downloaded {len(sum_downloaded)} tiles")
+    LOGGER.info(f"Downloaded {len(sum_downloaded)} elevation tiles.")
