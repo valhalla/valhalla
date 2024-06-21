@@ -52,11 +52,6 @@ class TileCompression(Enum):
         elif self is TileCompression.LZ4:
             return ".lz4"
 
-class DownloadStatus(Enum):
-    OK = 1
-    FAILED = 2
-    CORRUPTED = 3
-
 parser = argparse.ArgumentParser(description=description)
 
 method = parser.add_mutually_exclusive_group()
