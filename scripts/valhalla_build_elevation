@@ -36,7 +36,6 @@ handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)5s: %(message)s"))
 LOGGER.addHandler(handler)
 
-# Argument parser
 @unique
 class TileCompression(Enum):
     UNCOMPRESSED = 1
@@ -285,7 +284,6 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
 
     return True
 
-
 if __name__ == "__main__":
     args = parser.parse_args()
 
@@ -323,10 +321,12 @@ if __name__ == "__main__":
     elif args.from_tiles:
         if config is None:
             LOGGER.critical("--from-tiles requires a config to be specified.")
+
             sys.exit(1)
         tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))
     else:
         LOGGER.critical("No download method specified.")
+
         sys.exit(1)
 
     tile_compression = TileCompression.GZIP
