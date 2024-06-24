@@ -1,32 +1,29 @@
 #!/usr/bin/env python3
 
 import argparse
+import logging
+import gzip
+import json
+import sys
+import os
 from collections import namedtuple
 from enum import Enum, unique
 from functools import partial
-import gzip
-import json
-import logging
 from math import ceil, floor
 from multiprocessing import cpu_count
 from multiprocessing.dummy import Pool as ThreadPool
-import os
 from pathlib import Path
-import sys
-from time import sleep
 from typing import List, Iterable, Set
 from urllib import request
 from urllib.error import URLError, HTTPError
-import ssl
 
-# hack so ArgumentParser can accept negative numbers see https://github.com/valhalla/valhalla/issues/3426
+# hack so ArgumentParser can accept negative numbers
+# see https://github.com/valhalla/valhalla/issues/3426
 for i, arg in enumerate(sys.argv):
     if not len(arg) > 1:
         continue
     if (arg[0] == '-') and arg[1].isdigit():
         sys.argv[i] = ' ' + arg
-
-description = """Downloads Tilezen's elevation tiles."""
 
 # set up the logger basics
 LOGGER = logging.getLogger(__name__)
@@ -50,7 +47,7 @@ class TileCompression(Enum):
         elif self is TileCompression.LZ4:
             return ".lz4"
 
-parser = argparse.ArgumentParser(description=description)
+parser = argparse.ArgumentParser(description="""Download elevation tiles.""")
 
 method = parser.add_mutually_exclusive_group()
 method.add_argument(
@@ -69,21 +66,14 @@ method.add_argument(
 method.add_argument(
     "-t",
     "--from-tiles",
-    help="Only download tiles covered by the Valhalla graph (requires a Valhalla config JSON file).",
+    help="Only download tiles covered by the Valhalla graph.",
     action="store_true",
 )
 
 parser.add_argument(
     "-c",
     "--config",
-    help="Absolute or relative path to the Valhalla config JSON. "
-    "If present, can be used for download location and bbox.",
-    type=Path,
-)
-parser.add_argument(
-    "-o",
-    "--outdir",
-    help="Absolute or relative path to the directory where the tiles will be saved. Overrides config JSON.",
+    help="Absolute or relative path to the Valhalla config JSON.",
     type=Path,
 )
 parser.add_argument(
@@ -104,7 +94,7 @@ group = parser.add_mutually_exclusive_group()
 group.add_argument(
     "-d",
     "--decompress",
-    help="If set, downloaded files will be decompressed (default format is gzip).",
+    help="If set, downloaded files will be decompressed (default: gzip).",
     action="store_true",
 )
 group.add_argument(
@@ -186,13 +176,13 @@ def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
     try:
         bbox = min_x, min_y, max_x, max_y = [float(x) for x in bbox_str.split(",")]
     except ValueError:
-        LOGGER.critical(f"BBOX {bbox_str} is not a comma-separated string of coordinates.")
+        LOGGER.critical(f"BBox {bbox_str} is not a comma-separated string of coordinates.")
 
         sys.exit(1)
 
     # validate bbox
     if min_x > max_x or min_x < -180 or max_x > 180 or min_y > max_y or min_y < -90 or max_y > 90:
-        LOGGER.critical(f"Bbox invalid: {bbox}")
+        LOGGER.critical(f"BBox invalid: {bbox}")
 
         sys.exit(1)
 
@@ -239,15 +229,10 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
 
     url = f"https://elevation-tiles-prod.s3.us-east-1.amazonaws.com/skadi/{tile.dir}/{tile.name}.gz"
 
-    # Disable SSL certificate verification
-    ssl_context = ssl.create_default_context()
-    ssl_context.check_hostname = False
-    ssl_context.verify_mode = ssl.CERT_NONE
-
     try:
         LOGGER.info(f"Downloading elevation tile {tile.dir}/{tile.name}...")
 
-        with request.urlopen(url, context=ssl_context) as res, open(filepath, "wb") as f:
+        with request.urlopen(url) as res, open(filepath, "wb") as f:
             if compression is TileCompression.GZIP:
                 f.write(res.read())
             else:
@@ -270,8 +255,12 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
                                 f.write(compressor.flush())
     except HTTPError as e:
         LOGGER.error(f"Failed to download elevation tile {tile.dir}/{tile.name} with HTTP code {e.code}: {e.reason}.")
+
+        return False
     except URLError as e:
         LOGGER.error(f"Failed to download elevation tile {tile.dir}/{tile.name}: {e.reason}.")
+
+        return False
     except ImportError:
         LOGGER.critical("Could not import lz4. Please install lz4 or use another compression format.")
 
@@ -282,27 +271,29 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    config = None
-    if args.config:
-        with open(args.config) as f:
-            config = json.load(f)
-
-    if args.outdir:
-        elevation_fp = args.outdir
-    elif config is not None:
-        elevation_fp = Path(config["additional_data"]["elevation"] or "elevation")
-    else:
-        LOGGER.critical("Either config or outdir is required.")
+    if not args.config:
+        LOGGER.critical("No valid config file used.")
 
         sys.exit(1)
 
-    if not args.force and os.listdir(elevation_fp):
-        LOGGER.info(f"Elevation tile directory {elevation_fp} is not empty. Skipping download.")
+    config = None
+    with open(args.config) as f:
+        config = json.load(f)
 
-        sys.exit(0)
-    elif args.force:
+    elevation_fp = config["additional_data"].get("elevation")
+    if not elevation_fp:
+        LOGGER.critical("No output file path specified in 'additional_data.elevation'.")
+
+        sys.exit(1)
+
+    if args.force:
         os.system(f'rm -rf {elevation_fp}')
         os.makedirs(elevation_fp)
+    else:
+        if os.listdir(elevation_fp):
+            LOGGER.info(f"Elevation tiles directory {elevation_fp} is not empty. Skipping download.")
+
+            sys.exit(0)
 
     if args.from_geojson:
         tiles = get_tiles_with_geojson(args.from_geojson)
@@ -313,6 +304,7 @@ if __name__ == "__main__":
             LOGGER.critical("--from-tiles requires a config to be specified.")
 
             sys.exit(1)
+
         tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))
     else:
         LOGGER.critical("No download method specified.")
@@ -325,10 +317,13 @@ if __name__ == "__main__":
     elif args.lz4:
         tile_compression = TileCompression.LZ4
 
-    tile_names = [f"{tile.dir}/{tile.name}" for tile in tiles]
+    tile_info = [f"{tile.dir}/{tile.name}" for tile in tiles]
 
-    LOGGER.info(f"Found {len(tile_names)} matching tiles: {tile_names}")
+    LOGGER.info(f"Found {len(tiles)} matching tiles: {tile_info}.")
 
     # create the threadpool and download
-    pool = ThreadPool(args.parallelism)
-    pool.imap_unordered(partial(download, output_dir=elevation_fp, compression=tile_compression), tiles)
+    results = ThreadPool(args.parallelism).imap_unordered(partial(download, output_dir=elevation_fp, compression=tile_compression), tiles)
+
+    downloaded = list(filter(lambda res: res is True, results))
+    
+    LOGGER.info(f"Downloaded {len(downloaded)} elevation tiles.")
