@@ -26,9 +26,7 @@ for i, arg in enumerate(sys.argv):
     if (arg[0] == '-') and arg[1].isdigit():
         sys.argv[i] = ' ' + arg
 
-description = """Downloads Tilezen's elevation tiles that either intersect with features in all .geojson files in
-              --input-geojson-dir or that intersect with --bbox. NOTE: geojson method requires shapely.
-              """
+description = """Downloads Tilezen's elevation tiles."""
 
 # set up the logger basics
 LOGGER = logging.getLogger(__name__)
@@ -118,9 +116,7 @@ group.add_argument(
 group.add_argument(
     "-z",
     "--lz4",
-    help="If set, downloaded files will be recompressed with LZ4. Requires lz4. "
-    "Requires ~12% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
-    "initial download, tiles will be several times faster to decompress vz gzip.",
+    help="If set, downloaded files will be recompressed with LZ4 (requires ~12% more disk space vs gzip). Requires lz4.",
     action="store_true",
 )
 
@@ -169,6 +165,8 @@ def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
 
         sys.exit(1)
 
+    LOGGER.info(f"Get elevation tiles with GeoJSON directory: {input_dir}")
+
     def get_outer_rings(input_dir: Path) -> Iterable[Polygon]:
         for file in input_dir.glob("*.geojson"):
             with open(file) as f:
@@ -190,6 +188,7 @@ def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
     return tile_infos
 
 def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
+    # parse bbox
     try:
         bbox = min_x, min_y, max_x, max_y = [float(x) for x in bbox_str.split(",")]
     except ValueError:
@@ -203,7 +202,7 @@ def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
 
         sys.exit(1)
 
-    LOGGER.debug(f"Received valid bbox: {bbox}")
+    LOGGER.info(f"Get elevation tiles with BBox: {bbox}")
 
     tile_infos = set()
     for grid in grid_from_bounds(bbox):
@@ -217,6 +216,8 @@ def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
         LOGGER.critical(f"Graph directory {graph_dir.resolve()} does not exist.")
 
         sys.exit(1)
+
+    LOGGER.info(f"Get elevation tiles with Graph directory: {graph_dir}")
 
     tile_infos = set()
     local_dir = graph_dir.joinpath('2')
@@ -250,7 +251,7 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
     ssl_context.verify_mode = ssl.CERT_NONE
 
     try:
-        LOGGER.debug(f"Downloading elevation tile {tile.dir}/{tile.name}...")
+        LOGGER.info(f"Downloading elevation tile {tile.dir}/{tile.name}...")
 
         with request.urlopen(url, context=ssl_context) as res, open(filepath, "wb") as f:
             if compression is TileCompression.GZIP:
@@ -309,10 +310,13 @@ if __name__ == "__main__":
 
         sys.exit(1)
 
-    if !args.from_geojson.force and os.listdir(elevation_fp):
+    if not args.force and os.listdir(elevation_fp):
         LOGGER.info(f"Elevation tile directory {elevation_fp} is not empty. Skipping download.")
 
         sys.exit(0)
+    elif args.force:
+        os.system(f'rm -rf {elevation_fp}')
+        os.makedirs(elevation_fp)
 
     if args.from_geojson:
         tiles = get_tiles_with_geojson(args.from_geojson)
@@ -335,13 +339,13 @@ if __name__ == "__main__":
     elif args.lz4:
         tile_compression = TileCompression.LZ4
 
-    LOGGER.debug(sorted(tiles, key=lambda x: x.name))
+    tile_names = [f"{tile.dir}/{tile.name}" for tile in tiles]
+    total_tiles = len(tile_names)
+
+    LOGGER.info(f"Found {total_tiles} matching tiles: {tile_names}")
 
     # create the threadpool and download
     pool = ThreadPool(args.parallelism)
     results = pool.imap_unordered(
         partial(download, output_dir=elevation_fp, compression=tile_compression), tiles
     )
-
-    sum_downloaded = list(filter(lambda res: res is True, results))
-    LOGGER.info(f"Downloaded {len(sum_downloaded)} elevation tiles.")
