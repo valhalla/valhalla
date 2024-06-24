@@ -89,7 +89,7 @@ class TileResolver:
         # deduplicate the list (geojson variant might've added dups)
         # since 3.7 python dicts are insertion-ordered, so order is preserved
         for t in list(dict.fromkeys(self.matched_paths)):
-            LOGGER.debug(f"Adding tile {t} to the tar file")
+            LOGGER.info(f"Adding tile {t} to the tar file")
             if self._is_tar:
                 tar_member = self._tar_obj.getmember(str(t))
                 tar.addfile(tar_member, self._tar_obj.extractfile(tar_member.name))
@@ -137,20 +137,13 @@ geom_type.add_argument(
     "as input to tile intersection. Requires shapely.",
     type=Path,
 )
-parser.add_argument(
-    "-v",
-    "--verbosity",
-    help="Accumulative verbosity flags; -v: INFO, -vv: DEBUG",
-    action='count',
-    default=0,
-)
 
 # set up the logger basics
 LOGGER = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)5s: %(message)s"))
 LOGGER.addHandler(handler)
-
+LOGGER.setLevel(logging.INFO)
 
 def get_tile_bbox(tile_path_id: str) -> Tuple[float, float, float, float]:
     """Returns a tile's bounding box in minx,miny,maxx,maxy format"""
@@ -265,7 +258,7 @@ def write_index_to_tar(tar_fp_: Path):
     with tarfile.open(tar_fp_, 'r|') as tar:
         for member in tar.getmembers():
             if member.name.endswith('.gph'):
-                LOGGER.debug(
+                LOGGER.info(
                     f"Tile {member.name} with offset: {member.offset_data}, size: {member.size}"
                 )
 
@@ -354,7 +347,7 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
                 BytesIO(header_bytes + b'\0' * traffic_size),
             )
 
-            LOGGER.debug(
+            LOGGER.info(
                 f"Traffic tile {tile_in.name} has {tile_header.directededgecount_} directed edges"
             )
 
@@ -365,14 +358,6 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
 
 if __name__ == '__main__':
     args = parser.parse_args()
-
-    # set the right logger level
-    if args.verbosity == 0:
-        LOGGER.setLevel(logging.CRITICAL)
-    elif args.verbosity == 1:
-        LOGGER.setLevel(logging.INFO)
-    elif args.verbosity >= 2:
-        LOGGER.setLevel(logging.DEBUG)
 
     if not args.config and not args.inline_config:
         LOGGER.critical("No valid config file or inline config used.")
@@ -404,11 +389,11 @@ if __name__ == '__main__':
     # optionally use the tile extract to find the tiles
     if args.extract_tar and (tiles_extract_in := Path(config["mjolnir"].get("tile_extract"))).is_file():
         tile_resolver = TileResolver(tiles_extract_in)
-        LOGGER.debug("Using tar file to extract tiles")
+        LOGGER.info("Using tar file to extract tiles")
     # else get and validate the tiles directory
     elif tiles_dir.is_dir():
         tile_resolver = TileResolver(tiles_dir)
-        LOGGER.debug("Using graph dir to extract tiles")
+        LOGGER.info("Using graph dir to extract tiles")
     else:
         LOGGER.critical(
             f"'Can't find valid paths for 'mjolnir.tile_dir' or 'mjolnir.tile_extract' in {args.config}"
