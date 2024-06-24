@@ -126,7 +126,7 @@ Chạy các lệnh sau trong container:
         --mjolnir-admin ${PWD}/valhalla/admin.sqlite \
         --mjolnir-landmarks ${PWD}/valhalla/landmarks.sqlite \
         > valhalla/valhalla.json
-    valhalla_build_timezones > valhalla/tz_world.sqlite
+    valhalla_build_timezones -d > valhalla/tz_world.sqlite
     valhalla_build_landmarks -c valhalla/valhalla.json vietnam-latest.osm.pbf
     valhalla_build_admins -c valhalla/valhalla.json vietnam-latest.osm.pbf
     valhalla_build_tiles -c valhalla/valhalla.json vietnam-latest.osm.pbf
