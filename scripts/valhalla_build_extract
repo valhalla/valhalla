@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 import argparse
-from collections import namedtuple
-import ctypes
-from io import BytesIO
-import json
-from math import floor
 import logging
-from pathlib import Path
-import struct
-import sys
 import tarfile
+import ctypes
+import struct
+import json
+import sys
+from collections import namedtuple
+from io import BytesIO
+from math import floor
+from pathlib import Path
 from tarfile import BLOCKSIZE
 from time import time
 from typing import List, Tuple, Optional
@@ -38,7 +38,6 @@ for i, arg in enumerate(sys.argv):
     if (arg[0] == '-') and arg[1].isdigit():
         sys.argv[i] = ' ' + arg
 
-
 class TileHeader(ctypes.Structure):
     """
     Resembles the uint64_t bit field at bytes 40 - 48 of the
@@ -51,7 +50,6 @@ class TileHeader(ctypes.Structure):
         ("predictedspeeds_count_", ctypes.c_ulonglong, 21),
         ("spare1_", ctypes.c_ulonglong, 1),
     ]
-
 
 class TileResolver:
     def __init__(self, path: Path):
@@ -97,36 +95,26 @@ class TileResolver:
                 tar.add(str(self.path.joinpath(t)), arcname=t)
                 tar_member = tar.getmember(str(t))
 
+parser = argparse.ArgumentParser(description="""Builds a tar extract from the tiles.""")
+parser.add_argument(
+    "-c",
+    "--config",
+    help="Absolute or relative path to the Valhalla config JSON.",
+    type=Path,
+)
+parser.add_argument(
+    "-t",
+    "--with-traffic",
+    help="Flag to add a traffic.tar skeleton",
+    action="store_true",
+    default=False,
+)
 
-description = "Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."
-
-parser = argparse.ArgumentParser(description=description)
-parser.add_argument(
-    "-c", "--config", help="Absolute or relative path to the Valhalla config JSON.", type=Path
-)
-parser.add_argument(
-    "-i",
-    "--inline-config",
-    help="Inline JSON config, will override --config JSON if present",
-    type=str,
-    default='{}',
-)
-parser.add_argument(
-    "-e",
-    "--extract-tar",
-    help="If specified, will build an extract from an existing tar file at 'mjolnir.tile_extract' and save it to this specified path.",
-    type=str,
-    default="",
-)
-parser.add_argument("-O", "--overwrite", help="Overwrites an output tar file", action="store_true")
-parser.add_argument(
-    "-t", "--with-traffic", help="Flag to add a traffic.tar skeleton", action="store_true", default=False
-)
 geom_type = parser.add_mutually_exclusive_group()
 geom_type.add_argument(
     "-b",
     "--bbox",
-    help="If specified, will only archive tiles which are intersecting this bbox. In 'minx,miny,maxx,maxy' format.",
+    help="If specified, will only archive tiles which are intersecting this bbox in the format 'minX,minY,maxX,maxY'.",
     type=str,
     default="",
 )
@@ -161,7 +149,6 @@ def get_tile_bbox(tile_path_id: str) -> Tuple[float, float, float, float]:
     tile_base_x = (col * tile_size) - 180
 
     return tile_base_x, tile_base_y, tile_base_x + tile_size, tile_base_y + tile_size
-
 
 def get_tiles_with_geojson(tile_resolver_: TileResolver, geojson_dir: Path):
     """Returns all tile paths intersecting with the GeoJSON (multi)polygons"""
@@ -199,20 +186,19 @@ def get_tiles_with_geojson(tile_resolver_: TileResolver, geojson_dir: Path):
             if poly.intersects(tile_bbox):
                 tile_resolver_.matched_paths.append(tile_path)
 
-
 def get_tiles_with_bbox(tile_resolver_: TileResolver, bbox_str: str):
     """Returns all tile paths intersecting with the bbox"""
     try:
         bbox = Bbox(*[float(x) for x in bbox_str.split(",")])
     except ValueError:
-        LOGGER.critical(f"BBOX {bbox_str} is not a comma-separated string of coordinates.")
+        LOGGER.critical(f"BBox {bbox_str} is not a comma-separated string of coordinates.")
         sys.exit(1)
 
     # validate bbox
     if (bbox.min_x >= bbox.max_x or bbox.min_x < -180 or bbox.max_x > 180) or (
         bbox.min_y >= bbox.max_y or bbox.min_y < -90 or bbox.max_y > 90
     ):
-        LOGGER.critical(f"Bbox invalid: {list(bbox)}")
+        LOGGER.critical(f"BBox invalid: {list(bbox)}")
         sys.exit(1)
 
     for tile_path in tile_resolver_.normalized_tile_paths:
@@ -228,18 +214,15 @@ def get_tiles_with_bbox(tile_resolver_: TileResolver, bbox_str: str):
         ):
             tile_resolver_.matched_paths.append(tile_path)
 
-
 def get_tile_level_id(path: str) -> List[str]:
     """Returns both level and tile ID"""
     return path[:-4].split('/', 1)
-
 
 def get_tile_id(path: str) -> int:
     """Turns a tile path into a numeric GraphId, including the level"""
     level, idx = get_tile_level_id(path)
 
     return int(level) | (int(idx.replace('/', '')) << 3)
-
 
 def get_tar_info(name: str, size: int) -> tarfile.TarInfo:
     """Creates and returns a tarinfo object"""
@@ -249,7 +232,6 @@ def get_tar_info(name: str, size: int) -> tarfile.TarInfo:
     tarinfo.type = tarfile.REGTYPE
 
     return tarinfo
-
 
 def write_index_to_tar(tar_fp_: Path):
     """Loop through all tiles and write the correct index.bin file to the tar"""
@@ -270,7 +252,6 @@ def write_index_to_tar(tar_fp_: Path):
         tar.seek(BLOCKSIZE)
         for entry in index:
             tar.write(struct.pack(INDEX_BIN_FORMAT, *entry))
-
 
 def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolver, extract_fp: Path):
     """Actually creates the tar ball. Break out of main function for testability."""
@@ -355,49 +336,34 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
 
     LOGGER.info(f"Finished creating the traffic extract at {traffic_fp}")
 
-
 if __name__ == '__main__':
     args = parser.parse_args()
 
-    if not args.config and not args.inline_config:
-        LOGGER.critical("No valid config file or inline config used.")
+    if not args.config:
+        LOGGER.critical("No valid config file used.")
+
         sys.exit(1)
 
-    config = dict()
-    try:
-        with open(args.config) as f:
-            config = json.load(f)
-    except TypeError:
-        LOGGER.warning("Only inline-config will be used.")
+    config = None
+    with open(args.config) as f:
+        config = json.load(f)
 
-    # override with inline-config
-    config.update(**json.loads(args.inline_config))
-
-    # if output file exists and not --overwrite specified, fail
-    tiles_extract_out = args.extract_tar or config["mjolnir"].get("tile_extract")
+    tiles_extract_out = config["mjolnir"].get("tile_extract")
     if not tiles_extract_out:
-        LOGGER.critical("No output file path specified in 'mjolnir.tile_extract' or --extract-tar.")
+        LOGGER.critical("No output file path specified in 'mjolnir.tile_extract'.")
+
         sys.exit(1)
 
-    tiles_extract_out = Path(tiles_extract_out)
-    if tiles_extract_out.is_file() and not args.overwrite:
-        LOGGER.critical(f"File exists. Specify --overwrite to overwrite {tiles_extract_out}")
-        sys.exit(1)
-
-    # prefer the tar file to extract from, fall back to the tile dir
     tiles_dir: Path = Path(config["mjolnir"].get("tile_dir", '/dev/null'))
-    # optionally use the tile extract to find the tiles
-    if args.extract_tar and (tiles_extract_in := Path(config["mjolnir"].get("tile_extract"))).is_file():
-        tile_resolver = TileResolver(tiles_extract_in)
-        LOGGER.info("Using tar file to extract tiles")
-    # else get and validate the tiles directory
-    elif tiles_dir.is_dir():
+    if tiles_dir.is_dir():
         tile_resolver = TileResolver(tiles_dir)
+
         LOGGER.info("Using graph dir to extract tiles")
     else:
         LOGGER.critical(
-            f"'Can't find valid paths for 'mjolnir.tile_dir' or 'mjolnir.tile_extract' in {args.config}"
+            f"'Can't find valid path for 'mjolnir.tile_dir' in {args.config}"
         )
+
         sys.exit(1)
 
     # get the tile paths which intersect with the geom, if any, and write to TileResolver
@@ -408,4 +374,4 @@ if __name__ == '__main__':
     else:
         tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
 
-    create_extracts(config, args.with_traffic, tile_resolver, tiles_extract_out)
+    create_extracts(config, args.with_traffic, tile_resolver, Path(tiles_extract_out))
