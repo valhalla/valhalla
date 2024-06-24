@@ -21,6 +21,8 @@ RUN set -ex; \
   export DEBIAN_FRONTEND=noninteractive; \
   apt-get -qq update; \
   apt-get -y --no-install-recommends install \
+  build-essential \
+  ca-certificates \
   autoconf \
   automake \
   ccache \
@@ -29,9 +31,6 @@ RUN set -ex; \
   coreutils \
   curl \
   cmake \
-  g++ \
-  gcc \
-  git \
   jq \
   lcov \
   libboost-all-dev \
@@ -51,7 +50,6 @@ RUN set -ex; \
   lld \
   locales \
   luajit \
-  make \
   osmium-tool \
   parallel \
   pkgconf \
@@ -104,6 +102,7 @@ RUN set -ex; \
   export DEBIAN_FRONTEND=noninteractive; \
   apt-get -qq update; \
   apt-get -y --no-install-recommends install \
+  ca-certificates \
   libcurl4 \
   libczmq4 \
   libluajit-5.1-2 \
