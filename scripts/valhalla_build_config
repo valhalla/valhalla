@@ -601,7 +601,6 @@ help_text = {
   },
 }
 
-
 def add_leaf_args(
   path: str,
   tree: Union[dict, bool, str, list, Optional],
