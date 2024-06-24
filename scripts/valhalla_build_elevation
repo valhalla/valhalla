@@ -326,11 +326,9 @@ if __name__ == "__main__":
         tile_compression = TileCompression.LZ4
 
     tile_names = [f"{tile.dir}/{tile.name}" for tile in tiles]
-    total_tiles = len(tile_names)
 
-    LOGGER.info(f"Found {total_tiles} matching tiles: {tile_names}")
+    LOGGER.info(f"Found {len(tile_names)} matching tiles: {tile_names}")
 
     # create the threadpool and download
-    ThreadPool(args.parallelism).imap_unordered(
-        partial(download, output_dir=elevation_fp, compression=tile_compression), tiles
-    )
+    pool = ThreadPool(args.parallelism)
+    pool.imap_unordered(partial(download, output_dir=elevation_fp, compression=tile_compression), tiles)
