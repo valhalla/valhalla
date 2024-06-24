@@ -33,6 +33,7 @@ LOGGER = logging.getLogger(__name__)
 handler = logging.StreamHandler()
 handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)5s: %(message)s"))
 LOGGER.addHandler(handler)
+LOGGER.setLevel(logging.INFO)
 
 @unique
 class TileCompression(Enum):
@@ -97,13 +98,6 @@ parser.add_argument(
     help="Number of processing units to use.",
     type=int,
     default=cpu_count(),
-)
-parser.add_argument(
-    "-v",
-    "--verbosity",
-    help="Accumulative verbosity flags; -v: INFO, -vv: DEBUG",
-    action="count",
-    default=0,
 )
 
 group = parser.add_mutually_exclusive_group()
@@ -288,14 +282,6 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
 if __name__ == "__main__":
     args = parser.parse_args()
 
-    # set the right logger level
-    if args.verbosity == 0:
-        LOGGER.setLevel(logging.CRITICAL)
-    elif args.verbosity == 1:
-        LOGGER.setLevel(logging.INFO)
-    elif args.verbosity >= 2:
-        LOGGER.setLevel(logging.DEBUG)
-
     config = None
     if args.config:
         with open(args.config) as f:
@@ -345,7 +331,6 @@ if __name__ == "__main__":
     LOGGER.info(f"Found {total_tiles} matching tiles: {tile_names}")
 
     # create the threadpool and download
-    pool = ThreadPool(args.parallelism)
-    results = pool.imap_unordered(
+    ThreadPool(args.parallelism).imap_unordered(
         partial(download, output_dir=elevation_fp, compression=tile_compression), tiles
     )
