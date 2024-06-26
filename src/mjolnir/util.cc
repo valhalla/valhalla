@@ -230,6 +230,11 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     }
   };
 
+  if (input_files.size() > 1) {
+    LOG_WARN(
+        "Tile building using more than one osm.pbf extract is discouraged. Consider merging the extracts into one file. See this issue for more info: https://github.com/valhalla/valhalla/issues/3925 ");
+  }
+
   // Take out tile_extract and tile_url from property tree as tiles must only use the tile_dir
   auto config = original_config;
   config.get_child("mjolnir").erase("tile_extract");
