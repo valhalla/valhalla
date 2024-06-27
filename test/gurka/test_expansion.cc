@@ -87,6 +87,7 @@ protected:
     bool pred_edge_id = false;
     bool edge_id = false;
     bool cost = false;
+    bool expansion_type = false;
 
     const std::unordered_map<std::string, int> prop_count;
     for (const auto& prop : props) {
@@ -108,6 +109,9 @@ protected:
       if (prop == "cost") {
         cost = true;
       }
+      if (prop == "expansion_type") {
+        expansion_type = true;
+      }
     }
     ASSERT_EQ(parsed_api.expansion().geometries_size(), exp_feats);
     ASSERT_EQ(parsed_api.expansion().edge_status_size(), edge_status ? exp_feats : 0);
@@ -116,6 +120,7 @@ protected:
     ASSERT_EQ(parsed_api.expansion().pred_edge_id_size(), pred_edge_id ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().edge_id_size(), edge_id ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().costs_size(), cost ? exp_feats : 0);
+    ASSERT_EQ(parsed_api.expansion().expansion_type_size(), expansion_type ? exp_feats : 0);
   }
   void check_result_json(const std::string& action,
                          const std::vector<std::string>& waypoints,
@@ -206,6 +211,6 @@ INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
                          ExpansionTest,
                          ::testing::Values(std::vector<std::string>{"edge_status"},
                                            std::vector<std::string>{"distance", "duration",
-                                                                    "pred_edge_id"},
+                                                                    "pred_edge_id", "expansion_type"},
                                            std::vector<std::string>{"edge_id", "cost"},
                                            std::vector<std::string>{}));
