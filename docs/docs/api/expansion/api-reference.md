@@ -16,7 +16,7 @@ Since this service wraps other services, the request format mostly follows the o
 |:----------------------------------| :------------------------------------ |
 | `action` (required)               | The service whose expansion should be tracked. Currently one of `route`, `isochrone` or `sources_to_targets`. | 
 | `skip_opposites` (optional)       | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. Default false. | 
-| `expansion_properties` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "duration", "distance", "cost", "edge_id", "pred_edge_id" or "edge_status". **Note**, that each additional property will increase the output size by minimum ~ 10%. By default an empty `properties` object is returned. |
+| `expansion_properties` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "duration", "distance", "cost", "edge_id", "pred_edge_id", "edge_status" or "expansion_type". **Note**, that each additional property will increase the output size by minimum ~ 10%. By default an empty `properties` object is returned. |
 
 The `expansion_properties` choices are as follows:
 
@@ -28,6 +28,7 @@ The `expansion_properties` choices are as follows:
 | `edge_id`   | Returns the internal edge IDs for each edge in order of graph traversal. Mostly interesting for debugging. | 
 | `pred_edge_id` |  Returns the internal edge IDs of the predecessor for each edge in order of graph traversal. Mostly interesting for debugging. |
 | `edge_status`   | Returns the edge states for each edge in order of graph traversal. Mostly interesting for debugging. Can be one of "r" (reached), "s" (settled), "c" (connected). |
+| `expansion_type`   | Returns the expansion direction from which the edge was encountered. 0 for forward, 1 for reverse. |
 
 An example request is:
 
@@ -53,7 +54,8 @@ An example request is:
 		"edge_id",
 		"pred_edge_id",
 		"edge_status",
-		"cost"
+		"cost", 
+		"expansion_type"
 	]
 }
 ```
