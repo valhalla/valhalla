@@ -4085,7 +4085,7 @@ public:
                   return; // should not make it here; has to be bad data.
                 }
               } // else
-            } // if (condition.empty())
+            }   // if (condition.empty())
 
             std::vector<std::string> conditions = GetTagTokens(condition, ';');
 
@@ -4112,7 +4112,7 @@ public:
             }
             return;
           } // if (isConditional)
-        } // end turning into complex restriction
+        }   // end turning into complex restriction
 
         restriction.set_modes(modes);
 
