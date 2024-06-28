@@ -15,13 +15,14 @@ from tarfile import BLOCKSIZE
 from time import time
 from typing import List, Tuple, Optional
 
-# "<" prefix means little-endian and no alignment
-# order is important! if uint64_t is not first, c++ will use padding bytes to unpack
+# "<" prefix: means little-endian and no alignment
 INDEX_BIN_FORMAT = '<QLL'
 INDEX_BIN_SIZE = struct.calcsize(INDEX_BIN_FORMAT)
 INDEX_FILE = "index.bin"
+
 # skip the first 40 bytes of the tile header
 GRAPHTILE_SKIP_BYTES = struct.calcsize('<Q2f16cQ')
+
 TRAFFIC_HEADER_FORMAT = '<2Q4I'
 TRAFFIC_HEADER_SIZE = struct.calcsize(TRAFFIC_HEADER_FORMAT)
 TRAFFIC_SPEED_SIZE = struct.calcsize('<Q')
@@ -56,7 +57,8 @@ class TileResolver:
         """
         Abstraction so we don't have to care whether we're looking at a tile directory or tar file.
 
-        :param path: path to the tile directory or tar file.
+        Args:
+            path: path to the tile directory or tar file.
         """
         self.path = path.resolve()
         self._is_tar = path.is_file()
@@ -76,7 +78,10 @@ class TileResolver:
             )
 
     def __del__(self):
-        # close the tar object on GC
+        """
+        Close the tar object on GC.
+
+        """
         if self._tar_obj:
             self._tar_obj.close()
 
@@ -99,7 +104,7 @@ parser = argparse.ArgumentParser(description="""Builds a tar extract from the ti
 parser.add_argument(
     "-c",
     "--config",
-    help="Absolute or relative path to the Valhalla config JSON.",
+    help="Path to the Valhalla config JSON.",
     type=Path,
 )
 parser.add_argument(
@@ -121,8 +126,7 @@ geom_type.add_argument(
 geom_type.add_argument(
     "-g",
     "--geojson-dir",
-    help="Absolute or relative path to directory with .geojson files used "
-    "as input to tile intersection. Requires shapely.",
+    help="Path to directory with .geojson files used as input to tile intersection. Requires shapely.",
     type=Path,
 )
 
