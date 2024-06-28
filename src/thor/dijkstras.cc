@@ -388,7 +388,8 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
                                  : bdedgelabels_[pred.predecessor()].edgeid();
       expansion_callback_(graphreader, pred.edgeid(), prev_pred, "dijkstras",
                           Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
-                          pred.cost().cost);
+                          pred.cost().cost,
+                          static_cast<Expansion_ExpansionType>(expansion_direction));
     }
   }
 }
