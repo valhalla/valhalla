@@ -6,9 +6,10 @@ from typing import List, Union
 
 def strtobool(value):
   lower = str(value).lower()
-  if lower in {'y', 'yes', 't', 'true', 'on', '1'}:
+
+  if lower == 'true':
     return True
-  elif lower in {'n', 'no', 'f', 'false', 'off', '0'}:
+  elif lower == 'false':
     return False
   else:
     raise ValueError('"{}" is not a valid bool value'.format(value))
