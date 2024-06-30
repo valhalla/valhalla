@@ -37,6 +37,36 @@ constexpr float kVerbalAlertMergePriorManeuverMinimumLength = kVerbalPostMinimum
 constexpr uint32_t kRoundaboutExitCountLowerBound = 1;
 constexpr uint32_t kRoundaboutExitCountUpperBound = 10;
 
+// Distance penalty to be added to the landmarks which are on the opposite direction to
+// maneuver's turn direction. i.e. if the maneuver is to turn right but a landmark is left hand, we
+// add this penalty to its distance. so that it's less preferred than the right handed landmarks
+// in selection.
+// TODO: maybe we can make it adjustable by input, or make it relevant to length of the edge
+constexpr double kLandmarkOppositeDirectionPenalty = 100.;
+
+// Select the most suitable landmark in a maneuver to be used in narrative generation.
+// TODO: the current logic is to select the nearest landmark to the maneuver and it should be
+// preferably on the correct side. However, if for say the maneuver is to turn right, the nearest
+// right handed landmark is far away from the maneuver but the nearest left handed landmark is very
+// close, than we pick the nearest left handed one.
+valhalla::RouteLandmark select_landmark(const std::vector<valhalla::RouteLandmark>& landmarks,
+                                        const std::string& relative_direction) {
+  bool turn_direction = relative_direction == "right";
+  // choose the nearest landmark to the maneuver
+  size_t idx = -1;
+  double min_dist = std::numeric_limits<double>::max();
+  for (auto i = 0; i < landmarks.size(); ++i) {
+    // adjust landmark distance with the penalty based on their direction
+    auto dist = landmarks[i].right() == turn_direction
+                    ? landmarks[i].distance()
+                    : (landmarks[i].distance() + kLandmarkOppositeDirectionPenalty);
+    if (dist < min_dist) {
+      idx = i;
+      min_dist = dist;
+    }
+  }
+  return landmarks[idx];
+}
 } // namespace
 
 namespace valhalla {
@@ -1152,6 +1182,7 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
   uint8_t phrase_id = 0;
   std::string junction_name;
   std::string guide_sign;
+  valhalla::RouteLandmark landmark;
 
   if (maneuver.HasGuideSign()) {
     // Set the toward phrase - it takes priority over street names and junction name
@@ -1172,6 +1203,22 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
     phrase_id = 1;
   }
 
+  // Select the most suitable landmark if there are landmarks associated with the maneuver
+  if (phrase_id < 4 && maneuver.landmarks().size() > 0) {
+    landmark =
+        select_landmark(maneuver.landmarks(),
+                        FormRelativeTwoDirection(maneuver.type(), subset->relative_directions));
+
+    // Make sure the landmark type is legal
+    if (static_cast<int>(landmark.type()) > 0 &&
+        static_cast<int>(landmark.type()) < subset->landmark_types.size()) {
+      // increment the phrase id by 6 to get the corresponding landmark phrase
+      phrase_id += 6;
+    } else {
+      throw valhalla_exception_t{233};
+    }
+  }
+
   // Set instruction to the determined tagged phrase
   instruction = subset->phrases.at(std::to_string(phrase_id));
 
@@ -1182,6 +1229,9 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
   boost::replace_all(instruction, kJunctionNameTag, junction_name);
   boost::replace_all(instruction, kTowardSignTag, guide_sign);
+  boost::replace_all(instruction, kLandmarkTypeTag,
+                     subset->landmark_types[static_cast<int>(landmark.type())]);
+  boost::replace_all(instruction, kLandmarkNameTag, landmark.name());
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -1326,6 +1376,7 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver,
   uint8_t phrase_id = 0;
   std::string junction_name;
   std::string guide_sign;
+  valhalla::RouteLandmark landmark;
 
   if (maneuver.HasGuideSign()) {
     // Set the toward phrase - it takes priority over street names and junction name
@@ -1350,6 +1401,23 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver,
     }
   }
 
+  // Select the most suitable landmark if there are landmarks associated with the maneuver
+  if (phrase_id < 6 && maneuver.landmarks().size() > 0) {
+    landmark =
+        select_landmark(maneuver.landmarks(),
+                        FormRelativeTwoDirection(maneuver.type(),
+                                                 dictionary_.uturn_subset.relative_directions));
+
+    // Make sure the landmark type is legal
+    if (static_cast<int>(landmark.type()) > 0 &&
+        static_cast<int>(landmark.type()) < dictionary_.uturn_subset.landmark_types.size()) {
+      // get the corresponding landmark phrase
+      phrase_id = (phrase_id % 3) + 8;
+    } else {
+      throw valhalla_exception_t{233};
+    }
+  }
+
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.uturn_subset.phrases.at(std::to_string(phrase_id));
 
@@ -1361,6 +1429,9 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver,
   boost::replace_all(instruction, kCrossStreetNamesTag, cross_street_names);
   boost::replace_all(instruction, kJunctionNameTag, junction_name);
   boost::replace_all(instruction, kTowardSignTag, guide_sign);
+  boost::replace_all(instruction, kLandmarkTypeTag,
+                     dictionary_.uturn_subset.landmark_types[static_cast<int>(landmark.type())]);
+  boost::replace_all(instruction, kLandmarkNameTag, landmark.name());
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
