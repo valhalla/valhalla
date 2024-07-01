@@ -123,7 +123,7 @@ group.add_argument(
     "-z",
     "--lz4",
     help="If set, downloaded files will be recompressed with LZ4. Requires lz4. "
-    "Requires ~12% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
+    "Requires ~12%% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
     "initial download, tiles will be several times faster to decompress vz gzip.",
     action="store_true",
 )
