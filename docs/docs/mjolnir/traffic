@@ -1,6 +1,6 @@
 # Traffic in Valhalla
 
-Traffic data for routing engines can be divided into two different types:
+Traffic data for routing engines can be divided into 2 different types:
 
 - *Historical traffic* describes the typically observed speed on a road at a specific point in time. So e.g. the typical speed on a Monday morning at 8 o'clock.
 - *Live traffic* describes the currently observed speed on a road according to the actual traffic situation.
