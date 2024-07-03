@@ -92,11 +92,10 @@ TEST(TruckSpeed, MaxTruckSpeed) {
   // should be clamped to edge speed
   valhalla::Api clamped_top_speed_route =
       gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "truck",
-                       {{"/costing_options/truck/top_speed", "110"},
+                       {{"/costing_options/truck/top_speed", "115"},
                         {"/date_time/type", "0"},
                         {"/date_time/value", "current"}});
 
-  // just below kMaxAssumedTruckSpeed
   valhalla::Api low_top_speed_route =
       gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "truck",
                        {{"/costing_options/truck/top_speed", "70"},
@@ -154,14 +153,13 @@ TEST(TruckSpeed, MaxTruckSpeed) {
   auto traffic_low_speed_time = getDuration(modified_traffic_low_speed_route);
 
   // top_speed = 110 > default top_speed = 90
-  ASSERT_GT(default_time, clamped_top_speed_time);
+  ASSERT_EQ(default_time, clamped_top_speed_time);
 
   // expect a trip to take longer when a low top speed is set
   ASSERT_LT(default_time, low_top_speed_time);
 
-  // expect duration to be equal to default if traffic speed is higher than kMaxAssumedTruckCost
-  // and no truck specific speed tag is set on the way
-  ASSERT_EQ(default_time, traffic_time);
+  // was clamped to 120 KPH
+  ASSERT_EQ(5500 / (120 / 3.6), traffic_time);
 
   // expect lower traffic speeds (< kMaxAssumedTruckSpeed ) to lead to a lower duration
   ASSERT_LT(traffic_time, traffic_low_speed_time);
@@ -186,13 +184,13 @@ TEST(TruckSpeed, TopSpeed) {
 
   valhalla::Api default_top_speed_route =
       gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "truck",
-                       {{"/costing_options/truck/top_speed", "90"}});
+                       {{"/costing_options/truck/top_speed", "120"}});
 
   auto default_dur = getDuration(default_route);
   auto top_speed_dur = getDuration(top_speed_route);
   auto default_top_speed_dur = getDuration(default_top_speed_route);
 
-  ASSERT_GT(default_dur, top_speed_dur);
+  ASSERT_LT(default_dur, top_speed_dur);
   ASSERT_EQ(default_dur, default_top_speed_dur);
 }
 
