@@ -53,6 +53,7 @@
    * FIXED: Have the `valhalla_add_predicted_speeds` summary always be created from `mjolnir.tile_dir` [#4722](https://github.com/valhalla/valhalla/pull/4722) 
    * FIXED: Fix inconsistency in graph.lua for motor_vehicle_node [#4723](https://github.com/valhalla/valhalla/issues/4723)
    * FIXED: Missing algorithm include in `baldr/admin.h` [#4766](https://github.com/valhalla/valhalla/pull/4766)
+   * FIXED: `top_speed` range not fully allowed for trucks [#4793](https://github.com/valhalla/valhalla/pull/4793)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
