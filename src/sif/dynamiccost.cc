@@ -108,10 +108,10 @@ constexpr float kDefaultClosureFactor = 9.0f;
 // non-closure end
 constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
 
-constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
-                                                        baldr::kMaxSpeedKph};
 constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
+constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
+                                                        baldr::kMaxSpeedKph};
 } // namespace
 
 /*
@@ -122,8 +122,8 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
     : dest_only_penalty_{0.f, kDefaultDestinationOnlyPenalty, kMaxPenalty},
       maneuver_penalty_{0.f, kDefaultManeuverPenalty, kMaxPenalty},
       alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
-      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
-                                                                    kMaxPenalty},
+      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty},
+      gate_penalty_{0.f, kDefaultGatePenalty, kMaxPenalty},
       private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
       country_crossing_cost_{0.f, kDefaultCountryCrossingCost, kMaxPenalty},
       country_crossing_penalty_{0.f, kDefaultCountryCrossingPenalty, kMaxPenalty},
@@ -131,15 +131,13 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       toll_booth_penalty_{0.f, kDefaultTollBoothPenalty, kMaxPenalty},
       ferry_cost_{0.f, kDefaultFerryCost, kMaxPenalty}, use_ferry_{0.f, kDefaultUseFerry, 1.f},
       rail_ferry_cost_{0.f, kDefaultRailFerryCost, kMaxPenalty},
-      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f}, service_penalty_{0.f, kDefaultServicePenalty,
-                                                                        kMaxPenalty},
-      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
-                                                                                  kDefaultUseTracks,
-                                                                                  1.f},
+      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f},
+      service_penalty_{0.f, kDefaultServicePenalty, kMaxPenalty},
+      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor},
+      use_tracks_{0.f, kDefaultUseTracks, 1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
-      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false),
-      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
-                                                                                      false} {
+      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_cash_only_tolls_(false),
+      include_hot_{false}, include_hov2_{false}, include_hov3_{false} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -402,9 +400,6 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   co->set_disable_hierarchy_pruning(
       rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
 
-  // top speed
-  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
-
   // destination only penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",
                           destination_only_penalty);
@@ -432,6 +427,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // country_crossing_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.country_crossing_penalty_, json, "/country_crossing_penalty",
                           country_crossing_penalty);
+
+  // // top_speed
+  // JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
 
   if (!cfg.disable_toll_booth_) {
     // toll_booth_cost

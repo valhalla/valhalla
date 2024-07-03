@@ -89,10 +89,10 @@ TEST(TruckSpeed, MaxTruckSpeed) {
   valhalla::Api default_route =
       gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "truck", {});
 
-  // should be clamped to kMaxAssumedTruckSpeed
+  // should be clamped to edge speed
   valhalla::Api clamped_top_speed_route =
       gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "truck",
-                       {{"/costing_options/truck/top_speed", "100"},
+                       {{"/costing_options/truck/top_speed", "110"},
                         {"/date_time/type", "0"},
                         {"/date_time/value", "current"}});
 
@@ -153,8 +153,8 @@ TEST(TruckSpeed, MaxTruckSpeed) {
   auto traffic_time = getDuration(modified_traffic_route);
   auto traffic_low_speed_time = getDuration(modified_traffic_low_speed_route);
 
-  // default and clamped durations should be the same in this case
-  ASSERT_EQ(default_time, clamped_top_speed_time);
+  // top_speed = 110 > default top_speed = 90
+  ASSERT_GT(default_time, clamped_top_speed_time);
 
   // expect a trip to take longer when a low top speed is set
   ASSERT_LT(default_time, low_top_speed_time);
@@ -165,6 +165,35 @@ TEST(TruckSpeed, MaxTruckSpeed) {
 
   // expect lower traffic speeds (< kMaxAssumedTruckSpeed ) to lead to a lower duration
   ASSERT_LT(traffic_time, traffic_low_speed_time);
+}
+
+TEST(TruckSpeed, TopSpeed) {
+  constexpr double gridsize = 500;
+
+  const std::string ascii_map = R"(
+      A----B
+    )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"maxspeed", "120"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/truckspeed");
+
+  valhalla::Api default_route = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "truck");
+
+  valhalla::Api top_speed_route = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "truck",
+                                                   {{"/costing_options/truck/top_speed", "110"}});
+
+  valhalla::Api default_top_speed_route =
+      gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "truck",
+                       {{"/costing_options/truck/top_speed", "90"}});
+
+  auto default_dur = getDuration(default_route);
+  auto top_speed_dur = getDuration(top_speed_route);
+  auto default_top_speed_dur = getDuration(default_top_speed_route);
+
+  ASSERT_GT(default_dur, top_speed_dur);
+  ASSERT_EQ(default_dur, default_top_speed_dur);
 }
 
 // tag name, tag value, costing opt name, costing opt value, forward
