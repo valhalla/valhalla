@@ -976,15 +976,6 @@ function filter_tags_generic(kv)
     kv["motorcycle_forward"] = motor_vehicle[kv["motorcycle"]] or motor_vehicle[kv["motor_vehicle"]] or kv["motorcycle_forward"]
     kv["motorcycle_tag"] = motor_vehicle[kv["motorcycle"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
-    if kv["bike_tag"] == nil then
-      if kv["sac_scale"] == "hiking" then
-        kv["bike_forward"] = "true"
-        kv["bike_tag"] = "true"
-      elseif kv["sac_scale"] then
-        kv["bike_forward"] = "false"
-      end
-    end
-
     if kv["access"] == "psv" then
       kv["taxi_forward"] = "true"
       kv["taxi_tag"] = "true"

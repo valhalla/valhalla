@@ -52,6 +52,7 @@
    * FIXED: Fix for assigning attributes has_(highway, ferry, toll) if directions_type is none [#4465](https://github.com/valhalla/valhalla/issues/4465)
    * FIXED: Have the `valhalla_add_predicted_speeds` summary always be created from `mjolnir.tile_dir` [#4722](https://github.com/valhalla/valhalla/pull/4722) 
    * FIXED: Fix inconsistency in graph.lua for motor_vehicle_node [#4723](https://github.com/valhalla/valhalla/issues/4723)
+   * FIXED: Missing algorithm include in `baldr/admin.h` [#4766](https://github.com/valhalla/valhalla/pull/4766)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -124,6 +125,8 @@
    * ADDED: Added ssmlAnnouncements for voice instructions and removed voice and banner instructions from last step. [#4644](https://github.com/valhalla/valhalla/pull/4644)
    * ADDED: deadend information in directed edge JSON for `/locate` [#4751](https://github.com/valhalla/valhalla/pull/4751) 
    * ADDED: Dedupe option for expansion, significantly reducing the response size. [#4601](https://github.com/valhalla/valhalla/issues/4601)
+   * FIXED: remove old code that allows bicycle access on hiking trails. [#4781](https://github.com/valhalla/valhalla/pull/4781)
+   * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
