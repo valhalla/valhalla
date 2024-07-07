@@ -146,8 +146,8 @@ std::string thor_worker_t::expansion(Api& request) {
           edge_state[edgeid] =
               expansion_properties_t(prev_edgeid, status, duration, distance, shape, cost);
         } else {
-          writeExpansionProgress(expansion, edgeid, prev_edgeid, shape, exp_props, status,
-                                 duration, distance, cost, false);
+          writeExpansionProgress(expansion, edgeid, prev_edgeid, shape, exp_props, status, duration,
+                                 distance, cost, false);
         }
       };
 
@@ -185,8 +185,8 @@ std::string thor_worker_t::expansion(Api& request) {
   if (dedupe) {
     for (const auto& e : edge_state) {
       writeExpansionProgress(expansion, e.first, e.second.prev_edgeid, e.second.shape, exp_props,
-                             e.second.status, e.second.duration,
-                             e.second.distance, e.second.cost, true);
+                             e.second.status, e.second.duration, e.second.distance, e.second.cost,
+                             true);
     }
   }
 
