@@ -20,7 +20,6 @@ void writeExpansionProgress(Expansion* expansion,
                             const std::vector<midgard::PointLL>& shape,
                             const std::unordered_set<Options::ExpansionProperties>& exp_props,
                             const Expansion_EdgeStatus& status,
-                            const uint32_t& status_flags,
                             const float& duration,
                             const uint32_t& distance,
                             const float& cost,
@@ -46,11 +45,7 @@ void writeExpansionProgress(Expansion* expansion,
   if (exp_props.count(Options_ExpansionProperties_cost))
     expansion->add_costs(static_cast<uint32_t>(cost));
   if (exp_props.count(Options_ExpansionProperties_edge_status))
-    if (dedupe) {
-      expansion->add_edge_status_flags(status_flags);
-    } else {
-      expansion->add_edge_status(status);
-    }
+    expansion->add_edge_status(status);
   if (exp_props.count(Options_ExpansionProperties_edge_id))
     expansion->add_edge_id(static_cast<uint32_t>(edgeid));
   if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
@@ -59,8 +54,8 @@ void writeExpansionProgress(Expansion* expansion,
 
 struct expansion_properties_t {
   baldr::GraphId prev_edgeid;
-  // mask describing what statuses the edge has seen
-  uint8_t stages_mask;
+  // highest status the edge has seen
+  Expansion_EdgeStatus status;
   float duration;
   std::vector<midgard::PointLL> shape;
   uint32_t distance;
@@ -68,25 +63,17 @@ struct expansion_properties_t {
 
   expansion_properties_t() = default;
   expansion_properties_t(baldr::GraphId prev_edgeid,
-                         uint8_t stages_mask,
+                         Expansion_EdgeStatus status,
                          float duration,
                          uint32_t distance,
                          std::vector<midgard::PointLL> shape,
                          float cost)
-      : prev_edgeid(prev_edgeid), stages_mask(stages_mask), duration(duration), distance(distance),
+      : prev_edgeid(prev_edgeid), status(status), duration(duration), distance(distance),
         shape(std::move(shape)), cost(cost){};
 
   // check if status is higher or same – as we will keep track of the latest one
-  static bool is_latest_status(uint8_t current, uint8_t candidate) {
-    uint8_t first_significant = current | candidate;
-    // connected(LSb) is the highest status, so check from right
-    for (uint8_t i = 0; i < Expansion_EdgeStatus_EdgeStatus_ARRAYSIZE; i++) {
-      uint8_t mask = 1 << i;
-      if (!(first_significant & mask))
-        continue;
-      return candidate & mask;
-    }
-    return false;
+  static bool is_latest_status(Expansion_EdgeStatus current, Expansion_EdgeStatus candidate) {
+    return candidate <= current;
   }
 };
 } // namespace
@@ -150,21 +137,16 @@ std::string thor_worker_t::expansion(Api& request) {
           std::reverse(shape.begin(), shape.end());
         Polyline2<PointLL>::Generalize(shape, gen_factor, {}, false);
         if (dedupe) {
-          uint8_t stage = 1 << status;
           if (edge_state.contains(edgeid)) {
-            auto edge_stages = edge_state.at(edgeid).stages_mask;
-            // Keep only properties of last/highest status of edge, but update what stages the edge
-            // has seen
-            if (!expansion_properties_t::is_latest_status(edge_stages, stage)) {
-              edge_state.at(edgeid).stages_mask |= stage;
+            // Keep only properties of last/highest status of edge
+            if (!expansion_properties_t::is_latest_status(edge_state.at(edgeid).status, status)) {
               return;
             }
-            stage |= edge_state.at(edgeid).stages_mask;
           }
           edge_state[edgeid] =
-              expansion_properties_t(prev_edgeid, stage, duration, distance, shape, cost);
+              expansion_properties_t(prev_edgeid, status, duration, distance, shape, cost);
         } else {
-          writeExpansionProgress(expansion, edgeid, prev_edgeid, shape, exp_props, status, status,
+          writeExpansionProgress(expansion, edgeid, prev_edgeid, shape, exp_props, status,
                                  duration, distance, cost, false);
         }
       };
@@ -203,7 +185,7 @@ std::string thor_worker_t::expansion(Api& request) {
   if (dedupe) {
     for (const auto& e : edge_state) {
       writeExpansionProgress(expansion, e.first, e.second.prev_edgeid, e.second.shape, exp_props,
-                             Expansion_EdgeStatus_reached, e.second.stages_mask, e.second.duration,
+                             e.second.status, e.second.duration,
                              e.second.distance, e.second.cost, true);
     }
   }

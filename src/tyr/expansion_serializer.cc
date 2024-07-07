@@ -62,17 +62,8 @@ std::string serializeExpansion(Api& request, const std::string& algo) {
     if (exp_props.count(Options_ExpansionProperties_cost)) {
       writer("cost", static_cast<uint64_t>(expansion.costs(i)));
     }
-    if (exp_props.count(Options_ExpansionProperties_edge_status)) {
-      if (request.options().dedupe()) {
-        static const std::vector<std::string> status_captions{{"status_connected"},
-                                                              {"status_settled"},
-                                                              {"status_reached"}};
-        for (uint8_t j = 0; j < status_captions.size(); j++)
-          writer(status_captions[j], (bool)(expansion.edge_status_flags(i) & 1 << j));
-      } else {
-        writer("edge_status", Expansion_EdgeStatus_Enum_Name(expansion.edge_status(i)));
-      }
-    }
+    if (exp_props.count(Options_ExpansionProperties_edge_status))
+      writer("edge_status", Expansion_EdgeStatus_Enum_Name(expansion.edge_status(i)));
     if (exp_props.count(Options_ExpansionProperties_edge_id))
       writer("edge_id", static_cast<uint64_t>(expansion.edge_id(i)));
     if (exp_props.count(Options_ExpansionProperties_pred_edge_id))

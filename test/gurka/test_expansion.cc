@@ -114,11 +114,7 @@ protected:
       }
     }
     ASSERT_EQ(parsed_api.expansion().geometries_size(), exp_feats);
-    if (dedupe) {
-      ASSERT_EQ(parsed_api.expansion().edge_status_flags_size(), edge_status ? exp_feats : 0);
-    } else {
-      ASSERT_EQ(parsed_api.expansion().edge_status_size(), edge_status ? exp_feats : 0);
-    }
+    ASSERT_EQ(parsed_api.expansion().edge_status_size(), edge_status ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().distances_size(), distance ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().durations_size(), duration ? exp_feats : 0);
     ASSERT_EQ(parsed_api.expansion().pred_edge_id_size(), pred_edge_id ? exp_feats : 0);
@@ -142,18 +138,9 @@ protected:
     ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("LineString"));
     ASSERT_TRUE(feat.HasMember("properties"));
 
-    // edge_status with dedupe enabled returns status_reached, status_settled and status_connected
+    ASSERT_EQ(feat["properties"].MemberCount(), props.size());
     for (const auto& prop : props) {
-      if (dedupe) {
-        if (prop == "edge_status") {
-          ASSERT_TRUE(feat["properties"].HasMember("status_reached"));
-          ASSERT_TRUE(feat["properties"].HasMember("status_settled"));
-          ASSERT_TRUE(feat["properties"].HasMember("status_connected"));
-        }
-      } else {
-        ASSERT_EQ(feat["properties"].MemberCount(), props.size());
-        ASSERT_TRUE(feat["properties"].HasMember(prop));
-      }
+      ASSERT_TRUE(feat["properties"].HasMember(prop));
     }
   }
 };
