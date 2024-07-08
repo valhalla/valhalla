@@ -152,16 +152,16 @@ TEST(TruckSpeed, MaxTruckSpeed) {
   auto traffic_time = getDuration(modified_traffic_route);
   auto traffic_low_speed_time = getDuration(modified_traffic_low_speed_route);
 
-  // top_speed = 110 > default top_speed = 90
+  // both default and set top_speeds exceeds edge speed, so use edge speed in both cases
   ASSERT_EQ(default_time, clamped_top_speed_time);
 
   // expect a trip to take longer when a low top speed is set
   ASSERT_LT(default_time, low_top_speed_time);
 
-  // was clamped to 120 KPH
+  // was clamped to 120 KPH, traffic speed was set to 140
   ASSERT_EQ(5500 / (120 / 3.6), traffic_time);
 
-  // expect lower traffic speeds (< kMaxAssumedTruckSpeed ) to lead to a lower duration
+  // expect lower traffic speeds to lead to a lower duration
   ASSERT_LT(traffic_time, traffic_low_speed_time);
 }
 
