@@ -553,13 +553,14 @@ protected:
 
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/osrm_serializer_voice", build_config);
   }
-
-  rapidjson::Document json_request(const std::string& from, const std::string& to) {
+  rapidjson::Document json_request(const std::string& from,
+                                   const std::string& to,
+                                   const std::string& language = "en-US") {
     const std::string& request =
         (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","voice_instructions":true})") %
+             R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","voice_instructions":true,"language":"%s"})") %
          std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
-         std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+         std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()) % language)
             .str();
     auto result = gurka::do_action(valhalla::Options::route, map, request);
     return gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
@@ -704,6 +705,26 @@ TEST_F(VoiceInstructions, AllVoiceInstructions) {
 
   auto last_instruction = steps[2]["voiceInstructions"].GetArray();
   EXPECT_EQ(last_instruction.Size(), 0);
+}
+
+TEST_F(VoiceInstructions, DefaultVoiceLocalePresent) {
+  auto json = json_request("A", "F");
+  auto routes = json["routes"].GetArray();
+  // Validate that each route has the default voiceLocale
+  for (int route = 0; route < routes.Size(); ++route) {
+    ASSERT_TRUE(routes[route].HasMember("voiceLocale"));
+    EXPECT_STREQ(routes[route]["voiceLocale"].GetString(), "en-US");
+  }
+}
+
+TEST_F(VoiceInstructions, VoiceLocalePresent) {
+  auto json = json_request("A", "F", "de-DE");
+  auto routes = json["routes"].GetArray();
+  // Validate that each route has the voiceLocale from the options
+  for (int route = 0; route < routes.Size(); ++route) {
+    ASSERT_TRUE(routes[route].HasMember("voiceLocale"));
+    EXPECT_STREQ(routes[route]["voiceLocale"].GetString(), "de-DE");
+  }
 }
 
 TEST(Standalone, BannerInstructions) {
