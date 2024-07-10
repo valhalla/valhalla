@@ -18,7 +18,6 @@ message Expansion {
   enum ExpansionType {
     forward = 0;
     reverse = 1;
-    multimodal = 2;
   }
 
   repeated uint32 costs = 1 [packed=true];
