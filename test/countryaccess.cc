@@ -1,4 +1,5 @@
-#include "filesystem.h"
+#include <filesystem>
+
 #include "midgard/sequence.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
@@ -33,8 +34,8 @@ const std::string config_file = "test/test_config_country";
 
 // Remove a temporary file if it exists
 void remove_temp_file(const std::string& fname) {
-  if (filesystem::exists(fname)) {
-    filesystem::remove(fname);
+  if (std::filesystem::exists(fname)) {
+    std::filesystem::remove(fname);
   }
 }
 
@@ -55,24 +56,6 @@ void write_config(const std::string& filename) {
   file.close();
 }
 
-const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid_ < b.node.osmid_;
-};
-
-OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
-  auto found = way_nodes.find({node_id}, node_predicate);
-  EXPECT_NE(found, way_nodes.end()) << "Couldn't find node: " + std::to_string(node_id);
-  return (*found).node;
-}
-
-auto way_predicate = [](const OSMWay& a, const OSMWay& b) { return a.osmwayid_ < b.osmwayid_; };
-
-OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {
-  auto found = ways.find({way_id}, way_predicate);
-  EXPECT_NE(found, ways.end()) << "Couldn't find way: " + std::to_string(way_id);
-  return *found;
-}
-
 void CountryAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(config_file, conf);
@@ -81,8 +64,8 @@ void CountryAccess(const std::string& config_file) {
   GraphReader graph_reader(conf.get_child("mjolnir"));
   for (const auto& level : TileHierarchy::levels()) {
     auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.level);
-    if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
-      filesystem::remove_all(level_dir);
+    if (std::filesystem::exists(level_dir) && !std::filesystem::is_empty(level_dir)) {
+      std::filesystem::remove_all(level_dir);
     }
   }
 

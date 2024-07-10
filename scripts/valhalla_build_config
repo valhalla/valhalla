@@ -304,7 +304,7 @@ help_text = {
         'landmarks': 'Location of sqlite file holding landmark POI created with valhalla_build_landmarks',
         'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
         'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
-        'transit_feeds_dir': 'Location of GTFS transit feeds',
+        'transit_feeds_dir': 'Location of all GTFS transit feeds, needs to contain one subdirectory per feed',
         'transit_bounding_box': 'Add comma separated bounding box values to only download transit data inside the given bounding box',
         'transit_pbf_limit': 'Limit individual PBF files to this many trips (needed for PBF\'s stupid size limit)',
         'hierarchy': 'bool indicating whether road hierarchy is to be built - default to True',

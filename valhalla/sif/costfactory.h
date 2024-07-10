@@ -101,6 +101,7 @@ public:
 
   mode_costing_t CreateModeCosting(const Options& options, TravelMode& mode) {
     mode_costing_t mode_costing;
+    mode = TravelMode::kMaxTravelMode;
     // Set travel mode and construct costing(s) for this type
     for (const auto& costing : kCostingTypeMapping.at(options.costing_type())) {
       valhalla::sif::cost_ptr_t cost = Create(options.costings().find(costing)->second);
@@ -111,6 +112,11 @@ public:
         options.costing_type() == Costing::bikeshare) {
       // For multi-modal we set the initial mode to pedestrian. (TODO - allow other initial modes)
       mode = valhalla::sif::TravelMode::kPedestrian;
+    }
+    // this should never happen
+    if (mode == TravelMode::kMaxTravelMode) {
+      throw std::runtime_error("sif::CostFactory couldn't find a valid TravelMode for " +
+                               Costing_Enum_Name(options.costing_type()));
     }
 
     return mode_costing;

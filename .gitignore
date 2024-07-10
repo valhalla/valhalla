@@ -61,6 +61,7 @@ CMakeLists.txt.user
 .idea
 /.tidytmp
 vcpkg*/
+*.log
 
 # python
 .venv
@@ -70,5 +71,6 @@ vcpkg*/
 
 # documentation
 site/
+*.gph
 
 .DS_Store
