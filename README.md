@@ -4,7 +4,7 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 There are several key features that we hope can differentiate the Valhalla project from other routing and network analysis engines. They are:
 
-- Open source software, on open source data with a very liberal license. Should allow for transparency in development, encourage contribution and community input, and foster use in other projects.
+- Open source software.
 - Tiled hierarchical data structure. Should allow users to have a small memory footprint on memory constrained devices, enable offline routing, provide a means for regional extracts and partial updates.
 - Dynamic, runtime costing of edges and vertices within the graph via a plugin architecture. Should allow for customization and alternate route generation.
 - C++ based API. Should allow for cross compilation of the various pieces to enable routing on offline portable devices.
@@ -19,15 +19,9 @@ Demo valhalla app on https://valhalla.openstreetmap.de.
 
 Valhalla is fully functional on many Linux and Mac OS distributions, and is also used on iOS and Android devices.
 
-For Windows, not all functionality is fully supported yet. Building the Valhalla library works flawlessly, as well as the following application modules:
-
-- `TOOLS`: utilities to query and benchmark various components
-- `DATA_TOOLS`: utilities to build input data and handle transit
-- `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full (i.e. development) Python distribution in the `PATH`)
-
 ## Organization
 
-The Valhalla organization is comprised of several library modules each responsible for a different function. The layout of the various modules is as follows:
+The Valhalla organization is comprised of several library modules each responsible for a different function:
 
 - [Midgard](https://github.com/valhalla/valhalla/tree/master/valhalla/midgard) - Basic geographic and geometric algorithms for use in the various other projects.
 - [Baldr](https://github.com/valhalla/valhalla/tree/master/valhalla/baldr) - The base data structures for accessing and caching tiled route data.
