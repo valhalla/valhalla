@@ -42,8 +42,6 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 ## Build & Run
 
-### Build Configuration (all platforms)
-
 Valhalla uses CMake as build system. When compiling with `gcc` (GNU Compiler Collection), currently version 5 or newer is supported.
 
 Important build options include:
