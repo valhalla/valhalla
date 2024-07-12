@@ -1,6 +1,6 @@
 # Midgard
 
-Midgard serves as a set of geographic/metric data structures and algorithms for use in essentially all other parts of valhalla. In keeping with the Norse mythological theme, the name Midgard was chosen as it is represents the world as humans know it. Since the software and classes within midgard deal mostly with the maths of our favorite spheroid, this seemed like a fitting name!
+Midgard serves as a set of geographic/metric data structures and algorithms for use in essentially all other parts of valhalla.
 
 Midgard contains a set of various geometric data structures and support classes. It also includes algorithms which deal with things like: closest point to line, vector and matrix operations, polyline encoding, logging, projection, tiling, and culling. Midgard also include a variety of constants for time and distance conversions as well as angular measures.
 
@@ -46,19 +46,3 @@ http://paulbourke.net/papers/conrec/
 ## Distance Approximation ###
 
 Midgard provides a special class to perform distance approximation in latitude, longitude space. This class approximates distance (meters) between two points. This method is more efficient than using spherical distance calculations within the PointLL class. It computes an approximate distance using the pythagorean theorem with the meters of latitude change (exact) and the meters of longitude change at the "test point". Longitude is inexact since meters per degree of longitude changes with latitude. This approximation has very little error (less than 1%) if the positions are close to one another (within several hundred meters). Error increases at high (near polar) latitudes. This method will not work if the points cross 180 degrees longitude.
-
-### Polyline Encoding ###
-
-TODO:
-
-### Logging ###
-
-TODO:
-
-### Util ###
-
-midgard includes a variety of utility methods supporting : TODO
-
-### Sequence ###
-
-TODO:
