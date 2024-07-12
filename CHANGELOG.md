@@ -3,6 +3,7 @@
    * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
    * REMOVED: ./bench and related files/code [#4560](https://github.com/valhalla/valhalla/pull/4560)
+   * FIXED: Handle list type arguments correctly when overriding config with valhalla_build_config [#4799](https://github.com/valhalla/valhalla/pull/4799)
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
