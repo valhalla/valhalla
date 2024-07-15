@@ -79,6 +79,8 @@ constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f
 constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
 constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
+constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
+                                                        baldr::kMaxSpeedKph};
 
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
@@ -694,6 +696,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_DEFAULT(co, false, json, "/include_hot", include_hot);
   JSON_PBF_DEFAULT(co, false, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, false, json, "/include_hov3", include_hov3);
+  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
 }
 
 cost_ptr_t CreateAutoCost(const Costing& costing_options) {
