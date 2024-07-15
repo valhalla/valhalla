@@ -37,7 +37,7 @@ The route request run locally takes the form of `localhost:8002/route?json={}`, 
 
 This request provides automobile routing between the Detroit, Michigan area and Buffalo, New York, with an optional street name parameter to improve navigation at the start and end points. It attempts to avoid routing north through Canada by adding a penalty for crossing international borders. The resulting route is displayed in miles.
 
-There is an option to name your route request. You can do this by appending the following to your request `&id=`. The `id` is returned with the response so a user could match to the corresponding request.
+`id` is an option to name your route request. The `id` is returned with the response so a user could match to the corresponding request.
 
 ### Locations
 
