@@ -99,7 +99,7 @@ constexpr uint8_t kMaxTrafficSpeed = 252; // ~157 MPH
 // clamped to this maximum value.
 constexpr uint32_t kMaxSpeedKph = std::max(kMaxTrafficSpeed, kMaxAssumedSpeed);
 
-constexpr uint32_t kMaxAssumedTruckSpeed = 90; // ~ 56 MPH
+constexpr uint32_t kMaxAssumedTruckSpeed = 120; // ~75 MPH
 
 // Minimum speed. This is a stop gap for dubious traffic data. While its possible
 // to measure a probe going this slow via stop and go traffic over a long enough
