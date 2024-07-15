@@ -11,7 +11,28 @@ You can display Valhalla routes on web and mobile maps, e.g. [https://valhalla.o
 The route request run locally takes the form of `localhost:8002/route?json={}`, where the JSON inputs inside the `{}` include location information, name and options for the costing model, and output options. Here is the JSON payload for an example request:
 
 ```json
-{"locations":[{"lat":42.358528,"lon":-83.271400,"street":"Appleton"},{"lat":42.996613,"lon":-78.749855,"street":"Ranch Trail"}],"costing":"auto","costing_options":{"auto":{"country_crossing_penalty":2000.0}},"units":"miles","id":"my_work_route"}
+{
+    "locations": [
+        {
+            "lat": 42.358528,
+            "lon": -83.271400,
+            "street": "Appleton"
+        },
+        {
+            "lat": 42.996613,
+            "lon": -78.749855,
+            "street": "Ranch Trail"
+        }
+    ],
+    "costing": "auto",
+    "costing_options": {
+        "auto": {
+            "country_crossing_penalty": 2000.0
+        }
+    },
+    "units": "miles",
+    "id": "my_work_route"
+}
 ```
 
 This request provides automobile routing between the Detroit, Michigan area and Buffalo, New York, with an optional street name parameter to improve navigation at the start and end points. It attempts to avoid routing north through Canada by adding a penalty for crossing international borders. The resulting route is displayed in miles.
@@ -263,25 +284,120 @@ These options are available for transit costing when the multimodal costing mode
 A multimodal request at the current date and time:
 
 ```json
-{"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","units":"miles"}
+{
+    "locations": [
+        {
+            "lat": 40.730930,
+            "lon": -73.991379,
+            "street": "Wanamaker Place"
+        },
+        {
+            "lat": 40.749706,
+            "lon": -73.991562,
+            "street": "Penn Plaza"
+        }
+    ],
+    "costing": "multimodal",
+    "units": "miles"
+}
 ```
 
 A multimodal request departing on 2016-03-29 at 08:00:
 
 ```json
-{"locations":[{"lat":40.749706,"lon":-73.991562,"type":"break","street":"Penn Plaza"},{"lat":40.73093,"lon":-73.991379,"type":"break","street":"Wanamaker Place"}],"costing":"multimodal","date_time":{"type":1,"value":"2016-03-29T08:00"}}
+{
+    "locations": [
+        {
+            "lat": 40.749706,
+            "lon": -73.991562,
+            "type": "break",
+            "street": "Penn Plaza"
+        },
+        {
+            "lat": 40.73093,
+            "lon": -73.991379,
+            "type": "break",
+            "street": "Wanamaker Place"
+        }
+    ],
+    "costing": "multimodal",
+    "date_time": {
+        "type": 1,
+        "value": "2016-03-29T08:00"
+    }
+}
 ```
 
 A multimodal request for a route favoring buses and a person walking at a set speed of 4.1 km/h:
 
 ```json
-{"locations":[{"lat":40.749706,"lon":-73.991562,"type":"break","street":"Penn Plaza"},{"lat":40.73093,"lon":-73.991379,"type":"break","street":"Wanamaker Place"}],"costing":"multimodal","costing_options":{"transit":{"use_bus":"1.0","use_rail":"0.0","use_transfers":"0.3"},"pedestrian":{"walking_speed":"4.1"}}}
+{
+    "locations": [
+        {
+            "lat": 40.749706,
+            "lon": -73.991562,
+            "type": "break",
+            "street": "Penn Plaza"
+        },
+        {
+            "lat": 40.73093,
+            "lon": -73.991379,
+            "type": "break",
+            "street": "Wanamaker Place"
+        }
+    ],
+    "costing": "multimodal",
+    "costing_options": {
+        "transit": {
+            "use_bus": "1.0",
+            "use_rail": "0.0",
+            "use_transfers": "0.3"
+        },
+        "pedestrian": {
+            "walking_speed": "4.1"
+        }
+    }
+}
 ```
 
 A multimodal request with a filter for certain Onestop IDs:
 
 ```json
-{"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","costing_options":{"transit":{"filters":{"routes":{"ids":["NYC_AUR"],"action":"exclude"},"operators":{"ids":["paris_CFG","berlin_VBB"],"action":"include"}}}},"units":"miles"}
+{
+    "locations": [
+        {
+            "lat": 40.730930,
+            "lon": -73.991379,
+            "street": "Wanamaker Place"
+        },
+        {
+            "lat": 40.749706,
+            "lon": -73.991562,
+            "street": "Penn Plaza"
+        }
+    ],
+    "costing": "multimodal",
+    "costing_options": {
+        "transit": {
+            "filters": {
+                "routes": {
+                    "ids": [
+                        "NYC_AUR"
+                    ],
+                    "action": "exclude"
+                },
+                "operators": {
+                    "ids": [
+                        "paris_CFG",
+                        "berlin_VBB"
+                    ],
+                    "action": "include"
+                }
+            }
+        }
+    },
+    "units": "miles"
+}
 ```
 
 #### Directions options
