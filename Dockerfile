@@ -8,7 +8,7 @@
 #  binaries that can target the target architecture. from there bob is your uncle maybe..
 
 ####################################################################
-FROM ubuntu:23.04 as builder
+FROM ubuntu:24.04 as builder
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 ARG CONCURRENCY
@@ -54,7 +54,7 @@ RUN rm -rf valhalla
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image
-FROM ubuntu:23.04 as runner
+FROM ubuntu:24.04 as runner
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 # basic paths
