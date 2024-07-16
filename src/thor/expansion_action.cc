@@ -140,9 +140,7 @@ std::string thor_worker_t::expansion(Api& request) {
 
         if (!edge->forward())
           std::reverse(shape.begin(), shape.end());
-
         Polyline2<PointLL>::Generalize(shape, gen_factor, {}, false);
-
         if (dedupe) {
           if (edge_state.contains(edgeid)) {
             // Keep only properties of last/highest status of edge

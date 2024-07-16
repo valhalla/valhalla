@@ -14,7 +14,6 @@ Since this service wraps other services, the request format mostly follows the o
 
 | Parameter                         | Description                           |
 |:----------------------------------| :------------------------------------ |
-<<<<<<< HEAD
 | `action` (required)               | The service whose expansion should be tracked. Currently one of `route`, `isochrone` or `sources_to_targets`. | 
 | `skip_opposites` (optional)       | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. Default false. | 
 | `dedupe` (optional)               | If set to `true`, the output will contain each edge only once, significantly reducing the response size. The expansion will keep track of already visited edges and override their properties, ensuring that only the one with higher edge state is returned. Default `false`.                                     | 
