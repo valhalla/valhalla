@@ -8,7 +8,7 @@ This GIF gives a conceptual overview of the tiles used in a resultant graph trav
 
  - **Reduced memory requirements**  a connected graph can take up a lot of space in memory. By cutting the graph into a tiled structure you more easily impose limits on how much of the graph resides in memory at any one time. This could enable on device routing capabilities on even the most meager of hardware which could improve access to those in developing regions.
 
- - **Cacheability**  imagine a multi-level cache where an S3 bucket has a setting of constantly updated route tiles with proper http cache headers etc. Follow that up with a client side disk cache used to back a memory cache that the routing algorithm actually uses in graph traversal computations. 
+ - **Cacheability** 
 
  - **Updateability**  updates to the graph could be highly parallelized simply because the graph is already broken up into a tiled structure. Faster turn around times on edits would be spectacular.
 
