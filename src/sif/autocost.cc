@@ -577,7 +577,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
-      turn_cost += 5.0f;
+      turn_cost += 10.0f;
       if (edge->roundabout())
         turn_cost += 0.5f;
     }
