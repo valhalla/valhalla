@@ -67,7 +67,7 @@ LABEL org.opencontainers.image.source = "https://github.com/valhalla/valhalla"
 
 # grab the builder stages artifacts
 COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
+COPY --from=builder /usr/lib/python3.12/dist-packages/valhalla/* /usr/lib/python3.12/dist-packages/valhalla/
 
 # we need to add back some runtime dependencies for binaries and scripts
 # install all the posix locales that we support
