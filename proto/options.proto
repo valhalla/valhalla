@@ -53,10 +53,10 @@ message PbfFieldSelector {
   bool status = 4;     // /status
   bool matrix = 5;     // sources_to_targets
   bool isochrone = 6;
+  bool expansion = 9;
   // TODO: enable these once we have objects for them
   // bool locate = 7;
   // bool height = 8;
-  // bool expansion = 9;
 }
 
 message AvoidEdge {
@@ -312,20 +312,26 @@ message Costing {
     uint32 axle_count = 81;
     float use_lit = 82;
     bool disable_hierarchy_pruning = 83;
-    oneof has_exclude_bridges {
-      bool exclude_bridges = 84;
+    bool ignore_non_vehicular_restrictions = 84;
+    oneof has_hgv_no_access_penalty {
+      float hgv_no_access_penalty = 85;
     }
+
+    oneof has_exclude_bridges {
+      bool exclude_bridges = 86;
+    }
+    
     oneof has_exclude_tunnels {
-      bool exclude_tunnels = 85;
+      bool exclude_tunnels = 87;
     }
     oneof has_exclude_tolls {
-      bool exclude_tolls = 86;
+      bool exclude_tolls = 88;
     }
     oneof has_exclude_highways {
-      bool exclude_highways = 87;
+      bool exclude_highways = 89;
     }
     oneof has_exclude_ferries {
-      bool exclude_ferries = 88;
+      bool exclude_ferries = 90;
     }
   }
 
@@ -355,6 +361,7 @@ message Options {
     gpx = 1;
     osrm = 2;
     pbf = 3;
+    geotiff = 4;
   }
 
   enum Action {
@@ -504,4 +511,6 @@ message Options {
   bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
   float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
   bool voice_instructions = 57;                                    // Whether to return voiceInstructions in the OSRM serializer response
+  bool dedupe = 58;                                                // Keep track of edges and override their properties during expansion,
+                                                                   // ensuring that each edge appears in the output only once. [default = false]
 }

@@ -17,14 +17,19 @@
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
+namespace bg = boost::geometry;
 
 namespace valhalla {
 namespace mjolnir {
 
 // Geometry types for admin queries
-typedef boost::geometry::model::d2::point_xy<double> point_type;
-typedef boost::geometry::model::polygon<point_type> polygon_type;
-typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
+typedef bg::model::d2::point_xy<double> point_type;
+typedef bg::model::polygon<point_type> polygon_type;
+typedef bg::model::multi_polygon<polygon_type> multi_polygon_type;
+typedef bg::index::rtree<
+    std::tuple<bg::model::box<point_type>, multi_polygon_type, std::vector<std::string>, bool>,
+    bg::index::rstar<16>>
+    language_poly_index;
 
 /**
  * Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
@@ -54,13 +59,12 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
 /**
  * Get the vector of languages for this LL.  Used by admin areas.  Checks if the pointLL is covered_by
  * the poly.
- * @param  polys      tuple that contains a language, poly, is_default_language.
+ * @param  language_polys      tuple that contains a language, poly, is_default_language.
  * @param  ll         point that needs to be checked.
  * @return  Returns the vector of pairs {language, is_default_language}
  */
 std::vector<std::pair<std::string, bool>>
-GetMultiPolyIndexes(const std::vector<std::tuple<std::string, multi_polygon_type, bool>>& polys,
-                    const PointLL& ll);
+GetMultiPolyIndexes(const language_poly_index& language_ploys, const PointLL& ll);
 
 /**
  * Get the timezone polys from the db
@@ -80,7 +84,7 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
  * road
  * @param  default_languages ordered map that is used for lower admins that have an
  * default language set
- * @param  language_ploys    ordered map that is used for lower admins that have an
+ * @param  language_polys    ordered map that is used for lower admins that have an
  * default language set
  * @param  languages_only    should we only process the languages with this query
  */
@@ -90,7 +94,7 @@ void GetData(sqlite3* db_handle,
              GraphTileBuilder& tilebuilder,
              std::multimap<uint32_t, multi_polygon_type>& polys,
              std::unordered_map<uint32_t, bool>& drive_on_right,
-             std::vector<std::tuple<std::string, multi_polygon_type, bool>>& language_ploys,
+             language_poly_index& language_polys,
              bool languages_only);
 
 /**
@@ -102,7 +106,7 @@ void GetData(sqlite3* db_handle,
  * names for this country
  * @param  default_languages ordered map that is used for lower admins that have an
  * default language set
- * @param  language_ploys    ordered map that is used for lower admins that have an
+ * @param  language_polys    ordered map that is used for lower admins that have an
  * default language set
  * @param  aabb              bb of the tile
  * @param  tilebuilder       Graph tile builder
@@ -111,7 +115,7 @@ std::multimap<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
-             std::vector<std::tuple<std::string, multi_polygon_type, bool>>& language_ploys,
+             language_poly_index& language_polys,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder);
 
@@ -123,4 +127,5 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_h
 
 } // namespace mjolnir
 } // namespace valhalla
+
 #endif // VALHALLA_MJOLNIR_ADMIN_H_

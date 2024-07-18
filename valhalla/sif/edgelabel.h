@@ -39,7 +39,7 @@ public:
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
         origin_(0), destination_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0),
         closure_pruning_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
-        has_measured_speed_(0), bridge_(0), tunnel_(0), cost_(0, 0), sortcost_(0) {
+        has_measured_speed_(0), hgv_access_(0), bridge_(0), tunnel_(0), cost_(0, 0), sortcost_(0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -61,6 +61,7 @@ public:
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
    * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
    */
   EdgeLabel(const uint32_t predecessor,
             const baldr::GraphId& edgeid,
@@ -74,7 +75,8 @@ public:
             const bool has_measured_speed,
             const InternalTurn internal_turn,
             const uint8_t path_id = 0,
-            const bool destonly = false)
+            const bool destonly = false,
+            const bool hgv_access = false)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
@@ -86,8 +88,8 @@ public:
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
         internal_turn_(static_cast<uint8_t>(internal_turn)), unpaved_(edge->unpaved()),
-        has_measured_speed_(has_measured_speed), bridge_(edge->bridge()), tunnel_(edge->tunnel()),
-        cost_(cost), sortcost_(sortcost) {
+        has_measured_speed_(has_measured_speed), hgv_access_(hgv_access), bridge_(edge->bridge()),
+        tunnel_(edge->tunnel()), cost_(cost), sortcost_(sortcost) {
     dest_only_ = destonly ? destonly : edge->destonly();
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -373,6 +375,14 @@ public:
   }
 
   /**
+   * Does it have HGV access?
+   * @return Returns true if the (opposing) edge had HGV access
+   */
+  bool has_hgv_access() const {
+    return hgv_access_;
+  }
+
+  /**
    * Get the bridge flag.
    * @return Returns true if the edge is a bridge, otherwise false.
    */
@@ -450,12 +460,13 @@ protected:
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
   uint32_t has_measured_speed_ : 1;
+  // Flag if this edge had HGV access
+  uint32_t hgv_access_ : 1;
   // Flag indicating edge is a bridge.
   uint32_t bridge_ : 1;
   // Flag indicating edge is a tunnel.
   uint32_t tunnel_ : 1;
-
-  uint32_t spare : 13;
+  uint32_t spare : 10;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
@@ -463,7 +474,7 @@ protected:
 
 /**
  * Derived label class used for recosting paths within the LabelCallback.
- * transition_cost is added to the label for use when recoting a path.
+ * transition_cost is added to the label for use when recosting a path.
  */
 class PathEdgeLabel : public EdgeLabel {
 public:
@@ -491,6 +502,7 @@ public:
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
    * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
    */
   PathEdgeLabel(const uint32_t predecessor,
                 const baldr::GraphId& edgeid,
@@ -505,7 +517,8 @@ public:
                 const bool has_measured_speed,
                 const InternalTurn internal_turn,
                 const uint8_t path_id = 0,
-                const bool destonly = false)
+                const bool destonly = false,
+                const bool hgv_access = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -518,7 +531,8 @@ public:
                   has_measured_speed,
                   internal_turn,
                   path_id,
-                  destonly),
+                  destonly,
+                  hgv_access),
         transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -571,6 +585,7 @@ public:
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
    * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -587,7 +602,8 @@ public:
               const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
               const uint8_t path_id = 0,
-              const bool destonly = false)
+              const bool destonly = false,
+              const bool hgv_access = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -600,7 +616,8 @@ public:
                   has_measured_speed,
                   internal_turn,
                   path_id,
-                  destonly),
+                  destonly,
+                  hgv_access),
         transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
         not_thru_pruning_(not_thru_pruning), distance_(dist) {
   }
@@ -626,6 +643,7 @@ public:
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
    * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -641,7 +659,8 @@ public:
               const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
               const uint8_t path_id = 0,
-              const bool destonly = false)
+              const bool destonly = false,
+              const bool hgv_access = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -654,7 +673,8 @@ public:
                   has_measured_speed,
                   internal_turn,
                   path_id,
-                  destonly),
+                  destonly,
+                  hgv_access),
         transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
         not_thru_pruning_(not_thru_pruning), distance_(0.0f) {
   }
@@ -677,6 +697,7 @@ public:
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
    * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -690,7 +711,8 @@ public:
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
               const uint8_t path_id = 0,
-              const bool destonly = false)
+              const bool destonly = false,
+              const bool hgv_access = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -703,7 +725,8 @@ public:
                   has_measured_speed,
                   internal_turn,
                   path_id,
-                  destonly),
+                  destonly,
+                  hgv_access),
         transition_cost_({}), not_thru_pruning_(!edge->not_thru()), distance_(dist) {
     opp_edgeid_ = {};
   }

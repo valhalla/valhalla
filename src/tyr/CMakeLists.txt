@@ -8,7 +8,8 @@ set(sources
   route_serializer_osrm.cc
   route_summary_cache.cc
   serializers.cc
-  transit_available_serializer.cc)
+  transit_available_serializer.cc
+  expansion_serializer.cc)
 
 set(sources_with_warnings
   locate_serializer.cc
@@ -44,4 +45,6 @@ valhalla_module(NAME tyr
     valhalla::odin
     valhalla::proto
     ${valhalla_protobuf_targets}
-    Boost::boost)
+    Boost::boost
+    ${GDAL_TARGET}
+    )

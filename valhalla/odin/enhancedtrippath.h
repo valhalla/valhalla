@@ -88,6 +88,10 @@ public:
     return trip_path_.bbox();
   }
 
+  const ::valhalla::Summary& summary() const {
+    return trip_path_.summary();
+  }
+
   std::unique_ptr<EnhancedTripLeg_Node> GetEnhancedNode(const int node_index);
 
   std::unique_ptr<EnhancedTripLeg_Edge> GetPrevEdge(const int node_index, int delta = 1);

@@ -43,10 +43,10 @@ void check_result(const std::string& exclude_parameter_value,
                   const std::vector<std::string>& waypoints,
                   const std::vector<std::string>& expected_names,
                   const gurka::map& map,
-                  const std::vector<std::string>& props = {}) {
+                  const std::tuple<std::string, std::string>& props = {}) {
 
-  const std::string& costing = props[0];
-  const std::string& exclude_parameter = props[1];
+  const std::string& costing = std::get<0>(props);
+  const std::string& exclude_parameter = std::get<1>(props);
   const auto result = gurka::do_action(valhalla::Options::route, map, waypoints, costing,
                                        {{"/costing_options/" + costing + "/" + exclude_parameter,
                                          exclude_parameter_value}});
@@ -55,7 +55,7 @@ void check_result(const std::string& exclude_parameter_value,
 
 } // namespace
 
-class ExclusionTest : public ::testing::TestWithParam<std::vector<std::string>> {
+class ExclusionTest : public ::testing::TestWithParam<std::tuple<std::string, std::string>> {
 protected:
   static gurka::map map;
   static gurka::map mapNotAllowed;
@@ -113,8 +113,7 @@ TEST_P(ExclusionTest, InTheEndNotAllowed) {
   };
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    ExcludePropsTest,
-    ExclusionTest,
-    ::testing::Values(::testing::Combine(::testing::Values(kSupportedCostingModels),
-                                         ::testing::Values(kExclusionParameters))));
+INSTANTIATE_TEST_SUITE_P(ExcludePropsTest,
+                         ExclusionTest,
+                         ::testing::Combine(::testing::ValuesIn(kSupportedCostingModels),
+                                            ::testing::ValuesIn(kExclusionParameters)));

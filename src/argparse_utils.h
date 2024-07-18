@@ -21,6 +21,7 @@
  * @param config  The config which will be populated here
  * @param log     The logging config node's key. If empty, logging will not be configured.
  * @param use_threads Whether this program multi-threads
+ * @param extra_help Optional function pointer to print more stuff to the end of the help message.
  *
  * @returns true if the program should continue, false if we should EXIT_SUCCESS
  * @throws cxxopts::exceptions::exception Thrown if there's no valid configuration
@@ -30,9 +31,13 @@ bool parse_common_args(const std::string& program,
                        const cxxopts::ParseResult& result,
                        boost::property_tree::ptree& conf,
                        const std::string& log,
-                       const bool use_threads = false) {
+                       const bool use_threads = false,
+                       std::function<void()> extra_help = nullptr) {
   if (result.count("help")) {
     std::cout << opts.help() << "\n";
+    if (extra_help) {
+      extra_help();
+    };
     return false;
   }
 

@@ -108,8 +108,6 @@ constexpr float kDefaultClosureFactor = 9.0f;
 // non-closure end
 constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
 
-constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
-                                                        baldr::kMaxSpeedKph};
 constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
 } // namespace
@@ -153,6 +151,9 @@ DynamicCost::DynamicCost(const Costing& costing,
       closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
       shortest_(costing.options().shortest()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
+      ignore_non_vehicular_restrictions_(costing.options().ignore_non_vehicular_restrictions()),
+      ignore_turn_restrictions_(costing.options().ignore_restrictions() ||
+                                costing.options().ignore_non_vehicular_restrictions()),
       ignore_oneways_(costing.options().ignore_oneways()),
       ignore_access_(costing.options().ignore_access()),
       ignore_closures_(costing.options().ignore_closures()),
@@ -391,6 +392,8 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, false, json, "/ignore_oneways", ignore_oneways);
   JSON_PBF_DEFAULT(co, false, json, "/ignore_access", ignore_access);
   JSON_PBF_DEFAULT(co, false, json, "/ignore_closures", ignore_closures);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_non_vehicular_restrictions",
+                      ignore_non_vehicular_restrictions);
 
   // shortest
   JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
@@ -398,9 +401,6 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // disable hierarchy pruning
   co->set_disable_hierarchy_pruning(
       rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
-
-  // top speed
-  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
 
   // destination only penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",
