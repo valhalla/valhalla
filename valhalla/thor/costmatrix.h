@@ -198,13 +198,15 @@ protected:
   void CheckForwardConnections(const uint32_t source,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
-                               baldr::GraphReader& graphreader);
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   bool Expand(const uint32_t index,
               const uint32_t n,
               baldr::GraphReader& graphreader,
+              const valhalla::Options& options,
               const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
               const bool invariant = false);
 
@@ -232,7 +234,8 @@ protected:
   void CheckReverseConnections(const uint32_t target,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
-                               baldr::GraphReader& graphreader);
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   /**
    * Update status when a connection is found.

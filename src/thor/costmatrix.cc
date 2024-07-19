@@ -55,9 +55,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -157,7 +157,7 @@ bool CostMatrix::SourceToTarget(Api& request,
     for (uint32_t i = 0; i < locs_count_[MATRIX_REV]; i++) {
       if (locs_status_[MATRIX_REV][i].threshold > 0) {
         locs_status_[MATRIX_REV][i].threshold--;
-        Expand<MatrixExpansionType::reverse>(i, n, graphreader);
+        Expand<MatrixExpansionType::reverse>(i, n, graphreader, request.options());
         // if we exhausted this search
         if (locs_status_[MATRIX_REV][i].threshold == 0) {
           for (uint32_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
@@ -192,7 +192,8 @@ bool CostMatrix::SourceToTarget(Api& request,
     for (uint32_t i = 0; i < locs_count_[MATRIX_FORW]; i++) {
       if (locs_status_[MATRIX_FORW][i].threshold > 0) {
         locs_status_[MATRIX_FORW][i].threshold--;
-        Expand<MatrixExpansionType::forward>(i, n, graphreader, time_infos[i], invariant);
+        Expand<MatrixExpansionType::forward>(i, n, graphreader, request.options(), time_infos[i],
+                                             invariant);
         // if we exhausted this search
         if (locs_status_[MATRIX_FORW][i].threshold == 0) {
           for (uint32_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
@@ -580,6 +581,7 @@ template <const MatrixExpansionType expansion_direction, const bool FORWARD>
 bool CostMatrix::Expand(const uint32_t index,
                         const uint32_t n,
                         baldr::GraphReader& graphreader,
+                        const valhalla::Options& options,
                         const baldr::TimeInfo& time_info,
                         const bool invariant) {
 
@@ -619,9 +621,9 @@ bool CostMatrix::Expand(const uint32_t index,
   }
 
   if (FORWARD) {
-    CheckForwardConnections(index, pred, n, graphreader);
+    CheckForwardConnections(index, pred, n, graphreader, options);
   } else if (check_reverse_connections_) {
-    CheckReverseConnections(index, pred, n, graphreader);
+    CheckReverseConnections(index, pred, n, graphreader, options);
   }
 
   GraphId node = pred.endnode();
@@ -752,7 +754,8 @@ bool CostMatrix::Expand(const uint32_t index,
 void CostMatrix::CheckForwardConnections(const uint32_t source,
                                          const BDEdgeLabel& fwd_pred,
                                          const uint32_t n,
-                                         GraphReader& graphreader) {
+                                         GraphReader& graphreader,
+                                         const valhalla::Options& options) {
 
   // Disallow connections that are part of an uturn on an internal edge
   if (fwd_pred.internal_turn() != InternalTurn::kNoTurn) {
@@ -798,8 +801,13 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
     // Special case - common edge for source and target are both initial edges
     if (fwd_pred.predecessor() == kInvalidLabel && rev_predidx == kInvalidLabel) {
-      // bail if either edge wasn't allowed (see notes in SetSources/Targets)
-      if (!fwd_pred.path_id() || !rev_label.path_id()) {
+      // bail if forward edge wasn't allowed (see notes in SetSources/Targets)
+      if (!fwd_pred.path_id()) {
+        return;
+      }
+
+      if (find_correlated_edge(options.sources(source), fwd_pred.edgeid()).percent_along() >
+          find_correlated_edge(options.targets(target), fwd_pred.edgeid()).percent_along()) {
         return;
       }
 
@@ -860,7 +868,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 void CostMatrix::CheckReverseConnections(const uint32_t target,
                                          const BDEdgeLabel& rev_pred,
                                          const uint32_t n,
-                                         GraphReader& graphreader) {
+                                         GraphReader& graphreader,
+                                         const valhalla::Options& options) {
 
   // Disallow connections that are part of an uturn on an internal edge
   if (rev_pred.internal_turn() != InternalTurn::kNoTurn) {
@@ -907,6 +916,11 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
       if (rev_pred.predecessor() == kInvalidLabel && fwd_predidx == kInvalidLabel) {
         // bail if either edge wasn't allowed
         if (!rev_pred.path_id() || !fwd_label.path_id()) {
+          return;
+        }
+
+        if (find_correlated_edge(options.sources(source), fwd_label.edgeid()).percent_along() >
+            find_correlated_edge(options.targets(target), fwd_label.edgeid()).percent_along()) {
           return;
         }
 
@@ -1070,7 +1084,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       uint32_t idx = edgelabel_[MATRIX_FORW][index].size();
       edgelabel_[MATRIX_FORW][index].push_back(std::move(edge_label));
       adjacency_[MATRIX_FORW][index].add(idx);
-      edgestatus_[MATRIX_FORW][index].Set(edgeid, EdgeSet::kUnreachedOrReset, idx, tile);
+      edgestatus_[MATRIX_FORW][index].Set(edgeid, EdgeSet::kTemporary, idx, tile);
       if (check_reverse_connections_)
         (*sources_)[edgeid].push_back(index);
     }
@@ -1160,7 +1174,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       uint32_t idx = edgelabel_[MATRIX_REV][index].size();
       edgelabel_[MATRIX_REV][index].push_back(std::move(edge_label));
       adjacency_[MATRIX_REV][index].add(idx);
-      edgestatus_[MATRIX_REV][index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx, opp_tile);
+      edgestatus_[MATRIX_REV][index].Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile);
       (*targets_)[opp_edge_id].push_back(index);
     }
     index++;
@@ -1244,14 +1258,14 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
   // TODO(nils): bug with trivial routes https://github.com/valhalla/valhalla/issues/4433
   // remove this whole block below once that's fixed
-  if (path_edges.size() == 1 && source_pct > target_pct) {
-    // it found the wrong direction, so let's turn that around
-    auto opp_id = graphreader.GetOpposingEdgeId(path_edges[0]);
-    path_edges.clear();
-    path_edges.emplace_back(opp_id);
-    source_pct = 1.f - source_pct;
-    target_pct = 1.f - target_pct;
-  }
+  // if (path_edges.size() == 1 && source_pct > target_pct) {
+  //   // it found the wrong direction, so let's turn that around
+  //   auto opp_id = graphreader.GetOpposingEdgeId(path_edges[0]);
+  //   path_edges.clear();
+  //   path_edges.emplace_back(opp_id);
+  //   source_pct = 1.f - source_pct;
+  //   target_pct = 1.f - target_pct;
+  // }
   // recost the path if this was a time-dependent expansion
   if (has_time_) {
     auto edge_itr = path_edges.begin();
