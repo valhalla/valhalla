@@ -322,15 +322,17 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
     }
-    edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
-                                     sortcost, dist, mode_, transition_cost, not_thru_pruning,
-                                     (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                                     restriction_idx, 0,
-                                     meta.edge->destonly() ||
-                                         (costing_->is_hgv() && meta.edge->destonly_hgv()),
-                                     meta.edge->forwardaccess() & kTruckAccess);
+    auto& label =
+        edgelabels_forward_
+            .emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, sortcost, dist,
+                          mode_, transition_cost, not_thru_pruning,
+                          (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
+                          static_cast<bool>(flow_sources & kDefaultFlowMask),
+                          costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
+                          restriction_idx, 0,
+                          meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv()),
+                          meta.edge->forwardaccess() & kTruckAccess);
+    label.set_path_distance(pred.path_distance() + meta.edge->length());
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
@@ -339,16 +341,19 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
     }
-    edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
-                                     sortcost, dist, mode_, transition_cost, not_thru_pruning,
-                                     (pred.closure_pruning() || !costing_->IsClosed(opp_edge, t2)),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                        opp_pred_edge),
-                                     restriction_idx, 0,
-                                     opp_edge->destonly() ||
-                                         (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                                     opp_edge->forwardaccess() & kTruckAccess);
+    auto& label =
+        edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
+                                         sortcost, dist, mode_, transition_cost, not_thru_pruning,
+                                         (pred.closure_pruning() ||
+                                          !costing_->IsClosed(opp_edge, t2)),
+                                         static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                         costing_->TurnType(meta.edge->localedgeidx(), nodeinfo,
+                                                            opp_edge, opp_pred_edge),
+                                         restriction_idx, 0,
+                                         opp_edge->destonly() ||
+                                             (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                                         opp_edge->forwardaccess() & kTruckAccess);
+    label.set_path_distance(pred.path_distance() + meta.edge->length());
     adjacencylist_reverse_.add(idx);
   }
 
@@ -584,7 +589,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         if (opp_status.set() == EdgeSet::kPermanent ||
             (opp_status.set() == EdgeSet::kTemporary &&
              edgelabels_reverse_[opp_status.index()].predecessor() == kInvalidLabel)) {
-          if (SetForwardConnection(graphreader, fwd_pred)) {
+          if (SetForwardConnection(graphreader, fwd_pred, mode_, costing_)) {
             continue;
           }
         }
@@ -633,7 +638,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         if (opp_status.set() == EdgeSet::kPermanent ||
             (opp_status.set() == EdgeSet::kTemporary &&
              edgelabels_forward_[opp_status.index()].predecessor() == kInvalidLabel)) {
-          if (SetReverseConnection(graphreader, rev_pred)) {
+          if (SetReverseConnection(graphreader, rev_pred, mode_, costing_)) {
             continue;
           }
         }
@@ -808,11 +813,21 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 // The edge on the forward search connects to a reached edge on the reverse
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
+bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader,
+                                              const BDEdgeLabel& pred,
+                                              const valhalla::sif::travel_mode_t mode,
+                                              const valhalla::sif::cost_ptr_t costing) {
   // Find pred on opposite side
   GraphId oppedge = pred.opp_edgeid();
   EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
   auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
+
+  if (mode == travel_mode_t::kPedestrian) {
+    auto* edge = graphreader.directededge(pred.edgeid());
+    if (pred.path_distance() + opp_pred.path_distance() - edge->length() > costing->MaxDistance()) {
+      return false;
+    }
+  }
 
   // Disallow connections that are part of an uturn on an internal edge
   if (pred.internal_turn() != InternalTurn::kNoTurn) {
@@ -882,10 +897,19 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
 // The edge on the reverse search connects to a reached edge on the forward
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
-bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BDEdgeLabel& rev_pred) {
+bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader,
+                                              const BDEdgeLabel& rev_pred,
+                                              const valhalla::sif::TravelMode mode,
+                                              const valhalla::sif::cost_ptr_t costing) {
   GraphId fwd_edge_id = rev_pred.opp_edgeid();
   EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
   auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];
+
+  if (mode == travel_mode_t::kPedestrian) {
+    if (rev_pred.path_distance() + fwd_pred.path_distance() > costing->MaxDistance()) {
+      return false;
+    }
+  }
 
   // Disallow connections that are part of an uturn on an internal edge
   if (rev_pred.internal_turn() != InternalTurn::kNoTurn) {
@@ -1018,13 +1042,16 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
     }
-    edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     kInvalidRestriction, !(costing_->IsClosed(directededge, tile)),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, 0,
-                                     directededge->destonly() ||
-                                         (costing_->is_hgv() && directededge->destonly_hgv()),
-                                     directededge->forwardaccess() & kTruckAccess);
+    auto& label =
+        edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
+                                         mode_, kInvalidRestriction,
+                                         !(costing_->IsClosed(directededge, tile)),
+                                         static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                         sif::InternalTurn::kNoTurn, 0,
+                                         directededge->destonly() ||
+                                             (costing_->is_hgv() && directededge->destonly_hgv()),
+                                         directededge->forwardaccess() & kTruckAccess);
+    label.set_path_distance(directededge->length() * (1.0 - edge.percent_along()));
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1115,14 +1142,16 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
     }
-    edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, !opp_dir_edge->not_thru(),
-                                     !(costing_->IsClosed(directededge, tile)),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, kInvalidRestriction,
-                                     directededge->destonly() ||
-                                         (costing_->is_hgv() && directededge->destonly_hgv()),
-                                     directededge->forwardaccess() & kTruckAccess);
+    auto& label =
+        edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost,
+                                         sortcost, dist, mode_, c, !opp_dir_edge->not_thru(),
+                                         !(costing_->IsClosed(directededge, tile)),
+                                         static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                         sif::InternalTurn::kNoTurn, kInvalidRestriction,
+                                         directededge->destonly() ||
+                                             (costing_->is_hgv() && directededge->destonly_hgv()),
+                                         directededge->forwardaccess() & kTruckAccess);
+    label.set_path_distance(directededge->length() * edge.percent_along());
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as reached, sending the opposing because this is the reverse tree

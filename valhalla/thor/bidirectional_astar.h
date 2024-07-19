@@ -208,7 +208,10 @@ protected:
    * @param  pred  Edge label of the predecessor.
    * @return Returns true if a connection was set, false if not (if on a complex restriction).
    */
-  bool SetForwardConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred);
+  bool SetForwardConnection(baldr::GraphReader& graphreader,
+                            const sif::BDEdgeLabel& pred,
+                            const valhalla::sif::TravelMode mode,
+                            const valhalla::sif::cost_ptr_t costing);
 
   /**
    * The edge on the reverse search connects to a reached edge on the forward
@@ -217,7 +220,10 @@ protected:
    * @param  pred  Edge label of the predecessor.
    * @return Returns true if a connection was set, false if not (if on a complex restriction).
    */
-  bool SetReverseConnection(baldr::GraphReader& graphreader, const sif::BDEdgeLabel& pred);
+  bool SetReverseConnection(baldr::GraphReader& graphreader,
+                            const sif::BDEdgeLabel& pred,
+                            const valhalla::sif::TravelMode mode,
+                            const valhalla::sif::cost_ptr_t costing);
 
   /**
    * Form the path from the adjacency lists. Recovers the path from the

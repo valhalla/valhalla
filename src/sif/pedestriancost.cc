@@ -469,6 +469,10 @@ public:
     return {kDefaultBssCost, kDefaultBssPenalty};
   };
 
+  virtual float MaxDistance() const override {
+    return max_distance_;
+  }
+
 public:
   // Type: foot (default), wheelchair, etc.
   PedestrianType type_;
@@ -648,7 +652,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       // path_distance for multimodal is currently checked inside the algorithm
-      (!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) {
+      (allow_transit_connections_ || ((pred.path_distance() + edge->length()) > max_distance_))) {
     return false;
   }
 
@@ -682,8 +686,14 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
-      opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
-      opp_edge->use() == Use::kPlatformConnection) {
+      (allow_transit_connections_ || ((pred.path_distance() + opp_edge->length()) > max_distance_))) {
+    return false;
+  }
+
+  // Disallow transit connections (except when set for multi-modal routes)
+  if (!allow_transit_connections_ &&
+      (opp_edge->use() == Use::kPlatformConnection || opp_edge->use() == Use::kEgressConnection ||
+       opp_edge->use() == Use::kTransitConnection)) {
     return false;
   }
 
