@@ -55,9 +55,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -1256,16 +1256,6 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
   float source_pct = static_cast<float>(source_edge.percent_along());
   float target_pct = static_cast<float>(target_edge.percent_along());
 
-  // TODO(nils): bug with trivial routes https://github.com/valhalla/valhalla/issues/4433
-  // remove this whole block below once that's fixed
-  // if (path_edges.size() == 1 && source_pct > target_pct) {
-  //   // it found the wrong direction, so let's turn that around
-  //   auto opp_id = graphreader.GetOpposingEdgeId(path_edges[0]);
-  //   path_edges.clear();
-  //   path_edges.emplace_back(opp_id);
-  //   source_pct = 1.f - source_pct;
-  //   target_pct = 1.f - target_pct;
-  // }
   // recost the path if this was a time-dependent expansion
   if (has_time_) {
     auto edge_itr = path_edges.begin();

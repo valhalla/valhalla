@@ -279,16 +279,16 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   // use bidirectional A*. Bidirectional A* does not handle trivial cases with oneways and
   // has issues when cost of origin or destination edge is high (needs a high threshold to
   // find the proper connection).
-  // for (auto& edge1 : origin.correlation().edges()) {
-  //   for (auto& edge2 : destination.correlation().edges()) {
-  //     bool same_graph_id = edge1.graph_id() == edge2.graph_id();
-  //     bool are_connected =
-  //         reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()));
-  //     if (same_graph_id || are_connected) {
-  //       return &timedep_forward;
-  //     }
-  //   }
-  // }
+  for (auto& edge1 : origin.correlation().edges()) {
+    for (auto& edge2 : destination.correlation().edges()) {
+      bool same_graph_id = edge1.graph_id() == edge2.graph_id();
+      bool are_connected =
+          reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()));
+      if (same_graph_id || are_connected) {
+        return &timedep_forward;
+      }
+    }
+  }
 
   // No other special cases we land on bidirectional a*
   return &bidir_astar;
