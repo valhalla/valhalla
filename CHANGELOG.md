@@ -53,6 +53,8 @@
    * FIXED: Have the `valhalla_add_predicted_speeds` summary always be created from `mjolnir.tile_dir` [#4722](https://github.com/valhalla/valhalla/pull/4722) 
    * FIXED: Fix inconsistency in graph.lua for motor_vehicle_node [#4723](https://github.com/valhalla/valhalla/issues/4723)
    * FIXED: Missing algorithm include in `baldr/admin.h` [#4766](https://github.com/valhalla/valhalla/pull/4766)
+   * FIXED: Handle list type arguments correctly when overriding config with valhalla_build_config [#4799](https://github.com/valhalla/valhalla/pull/4799)
+   * FIXED: `top_speed` range not fully allowed for trucks [#4793](https://github.com/valhalla/valhalla/pull/4793)
    * FIXED: Trivial routes for CostMatrix [#4634](https://github.com/valhalla/valhalla/pull/4634)
 
 * **Enhancement**
@@ -127,6 +129,7 @@
    * ADDED: Support for `voiceLocale` attribute in OSRM serializer via `voice_instructions` request parameter [#4677](https://github.com/valhalla/valhalla/pull/4742)
    * ADDED: Added ssmlAnnouncements for voice instructions and removed voice and banner instructions from last step. [#4644](https://github.com/valhalla/valhalla/pull/4644)
    * ADDED: deadend information in directed edge JSON for `/locate` [#4751](https://github.com/valhalla/valhalla/pull/4751) 
+   * ADDED: Dedupe option for expansion, significantly reducing the response size. [#4601](https://github.com/valhalla/valhalla/issues/4601)
    * FIXED: remove old code that allows bicycle access on hiking trails. [#4781](https://github.com/valhalla/valhalla/pull/4781)
    * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
 
