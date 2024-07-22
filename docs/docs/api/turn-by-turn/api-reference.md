@@ -89,7 +89,7 @@ Costing methods can have several options that can be adjusted to develop the rou
 * Penalty options are fixed costs in seconds that are only added to the path cost. Penalties can influence the route path determination but do not add to the estimated time along the path. For example, add a `toll_booth_penalty` to create route paths that tend to avoid toll booths. Penalties must be in the range of 0.0 seconds to 43200.0 seconds (12 hours), otherwise a default value will be assigned.
 * Factor options are used to multiply the cost along an edge or road section in a way that influences the path to favor or avoid a particular attribute. Factor options do not impact estimated time along the path, though. Factors must be in the range 0.1 to 100000.0, where factors of 1.0 have no influence on cost. Anything outside of this range will be assigned a default value. Use a factor less than 1.0 to attempt to favor paths containing preferred attributes, and a value greater than 1.0 to avoid paths with undesirable attributes. Avoidance factors are more effective than favor factors at influencing a path. A factor's impact also depends on the length of road containing the specified attribute, as longer roads have more impact on the costing than very short roads. For this reason, penalty options tend to be better at influencing paths.
 
-A special costing option is `shortest`, which, when `true`, will solely use distance as cost and disregard all other costs, penalties and factors. It's available for all costing models except `multimodal` & `bikeshare`.
+A special costing option is `shortest`, which, when `true`, will solely use distance as cost and disregard all other costs, penalties and factors. It's available for all costing models except `multimodal` & `bikeshare`. 
 
 Another special case is `disable_hierarchy_pruning` costing option. As the name indicates, `disable_hierarchy_pruning = true` will disable hierarchies in routing algorithms, which allows us to find the actual optimal route even in edge cases. For example, together with `shortest = true` they can find the actual shortest route. When `disable_hierarchy_pruning` is `true` and arc distances between source and target are not above the max limit, the actual optimal route will be calculated at the expense of performance. Note that if arc distances between locations exceed the max limit, `disable_hierarchy_pruning` is `true` will not be applied. This costing option is available for all motorized costing models, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. For `bicycle` and `pedestrian` hierarchies are always disabled by default.
 
@@ -265,14 +265,6 @@ These options are available for transit costing when the multimodal costing mode
 | `filters` | A way to filter for one or more ~~`stops`~~ (TODO: need to re-enable), `routes`, or `operators`. Filters must contain a list of so-called Onestop IDs, which is (supposed to be) a unique identifier for GTFS data, and an `action`. The OneStop ID is simply the feeds's directory name and the object's GTFS ID separated by an underscore, i.e. a route with `route_id: AUR` in `routes.txt` from the feed `NYC` would have the OneStop ID `NYC_AUR`, similar with operators/agencies. <ul><li>`ids`: any number of Onestop IDs</li><li>`action`: either `exclude` to exclude all of the `ids` listed in the filter or `include` to include only the `ids` listed in the filter</li></ul>
 
 
-###### Filter transit data
-
-When using `filters`, you need to include a [Onestop ID](https://transit.land/documentation/onestop-id-scheme/) to identify the stop, routes, or operators to include or exclude in your query. Depending on how you are interacting with transit data from Transitland, there are different ways of obtaining the Onestop ID.
-
-- Turn-by-Turn API: Query a transit route query and parse the returned JSON maneuver  for `transit_info` to find `operator_onestop_id` and the route `onestop_id`. A `transit_stop` contains the `onestop_id` for the stop.
-- [Mobility Explorer](https://github.com/transitland/mobility-explorer): Click a single route, stop, or operator on the map, or use the drop-down menu to find the Onestop ID for routes and operators. The Onestop ID, among other details, is listed in the sidebar.
-- [Transitland](https://transit.land/): Use the Transitland Datastore API to query directly for stops, routes, and operators using a number of options. For example, you can filter for only [subway routes](http://transit.land/api/v1/routes?vehicle_type=metro) or [bus routes](http://transit.land/api/v1/routes?vehicle_type=bus). See the [Transitland Datastore API documentation](https://transit.land/documentation/datastore/api-endpoints.html) for details.
-
 ##### Sample JSON payloads for multimodal requests with transit
 
 A multimodal request at the current date and time:
@@ -384,7 +376,7 @@ Basic trip information includes:
 | `units` | The specified units of length are returned, either kilometers or miles. |
 | `language` | The language of the narration instructions. If the user specified a language in the directions options and the specified language was supported - this returned value will be equal to the specified value. Otherwise, this value will be the default (en-US) language. |
 | `locations` | Location information is returned in the same form as it is entered with additional fields to indicate the side of the street. |
-| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. |
+| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 The summary JSON object includes:
 
@@ -601,7 +593,6 @@ The codes correspond to code returned from a particular [Valhalla project](https
 |141 | Arrive by for multimodal not implemented yet |
 |142 | Arrive by not implemented for isochrones |
 |143 | ignore_closure in costing and exclude_closure in search_filter cannot both be specified |
-|145 | Hard exclusions not allowed on this server |
 |150 | Exceeded max locations |
 |151 | Exceeded max time |
 |152 | Exceeded max contours |

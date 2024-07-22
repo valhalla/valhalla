@@ -131,6 +131,7 @@
    * ADDED: Dedupe option for expansion, significantly reducing the response size. [#4601](https://github.com/valhalla/valhalla/issues/4601)
    * FIXED: remove old code that allows bicycle access on hiking trails. [#4781](https://github.com/valhalla/valhalla/pull/4781)
    * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
+   * ADDED: `exclude_ferry` request parameter and location search filter []()
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
@@ -191,12 +192,6 @@
    * ADDED: "has_transit_tiles" & "osm_changeset" to verbose status response [#4062](https://github.com/valhalla/valhalla/pull/4062)
    * ADDED: time awareness to CostMatrix for e.g. traffic support [#4071](https://github.com/valhalla/valhalla/pull/4071)
    * UPDATED: transifex translations [#4102](https://github.com/valhalla/valhalla/pull/4102)
-   * ADDED: Added `exclude_tolls` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
-   * ADDED: Added `exclude_bridges` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
-   * ADDED: Added `exclude_tunnels` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
-   * ADDED: Added `service_limits.allow_hard_exclusions` server config parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
-   * ADDED: Added `exclude_highways` request parameter [#4524](https://github.com/valhalla/valhalla/pull/4524)
-   * ADDED: Added `exclude_ferries` request parameter [#4524](https://github.com/valhalla/valhalla/pull/4524)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
