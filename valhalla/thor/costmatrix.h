@@ -194,6 +194,8 @@ protected:
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
    * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
    */
   void CheckForwardConnections(const uint32_t source,
                                const sif::BDEdgeLabel& pred,
@@ -230,6 +232,8 @@ protected:
    * @param  pred        Edge label of the predecessor.
    * @param  n           Iteration counter.
    * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
    */
   void CheckReverseConnections(const uint32_t target,
                                const sif::BDEdgeLabel& pred,
