@@ -426,10 +426,10 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_turn_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
       (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
-       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry))) {
+       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge)) {
     return false;
   }
 
@@ -453,10 +453,10 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
       (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
-       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry))) {
+       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry)) ||
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge)) {
     return false;
   }
 
@@ -793,10 +793,10 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
       (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
-       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry))) {
+       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
     return false;
   }
 
@@ -820,10 +820,10 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
       (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
-       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry))) {
+       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry)) ||
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
     return false;
   }
 
@@ -976,10 +976,10 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
       (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
-       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry))) {
+       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
     return false;
   }
 
@@ -1003,10 +1003,10 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
       (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
-       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry))) {
+       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry)) ||
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,

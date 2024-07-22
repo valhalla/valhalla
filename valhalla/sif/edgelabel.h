@@ -446,7 +446,6 @@ protected:
   uint32_t has_measured_speed_ : 1;
   // Flag if this edge had HGV access
   uint32_t hgv_access_ : 1;
-  // Flag indicating edge is a bridge.
   uint32_t spare : 12;
 
   Cost cost_;      // Cost and elapsed time along the path.
