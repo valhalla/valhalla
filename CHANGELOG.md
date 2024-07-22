@@ -133,6 +133,7 @@
    * FIXED: remove old code that allows bicycle access on hiking trails. [#4781](https://github.com/valhalla/valhalla/pull/4781)
    * ADDED: `expansion_type` property to `/expansion` [#4784](https://github.com/valhalla/valhalla/pull/4784)
    * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
+   * ADDED: `exclude_ferry` request parameter and location search filter [#4812](https://github.com/valhalla/valhalla/pull/4812)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

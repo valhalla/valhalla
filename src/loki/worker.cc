@@ -164,7 +164,6 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")) {
-
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
   for (const auto& kv : config.get_child("loki.actions")) {

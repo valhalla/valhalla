@@ -135,7 +135,7 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
-      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false),
+      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_ferry_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
                                                                                       false} {
 }
@@ -483,6 +483,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 
   JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
+
+  // exclude_ferry
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_ferry_, json, "/exclude_ferry", exclude_ferry);
 }
 
 void ParseCosting(const rapidjson::Document& doc,

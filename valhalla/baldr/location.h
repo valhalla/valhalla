@@ -44,7 +44,8 @@ public:
                  bool exclude_tunnel = false,
                  bool exclude_bridge = false,
                  bool exclude_ramp = false,
-                 bool exclude_closures = true);
+                 bool exclude_closures = true,
+                 bool exclude_ferry_ = false);
 
     valhalla::RoadClass min_road_class_;
     valhalla::RoadClass max_road_class_;
@@ -52,6 +53,7 @@ public:
     bool exclude_bridge_;
     bool exclude_ramp_;
     bool exclude_closures_;
+    bool exclude_ferry_;
 
   protected:
   };

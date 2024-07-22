@@ -648,7 +648,9 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       // path_distance for multimodal is currently checked inside the algorithm
-      (!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) {
+      ((!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) ||
+      (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
+       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry))) {
     return false;
   }
 
@@ -683,7 +685,9 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
-      opp_edge->use() == Use::kPlatformConnection) {
+      opp_edge->use() == Use::kPlatformConnection ||
+      (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
+       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry))) {
     return false;
   }
 

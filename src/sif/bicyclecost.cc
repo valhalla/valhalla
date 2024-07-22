@@ -546,7 +546,9 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_turn_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
-      IsUserAvoidEdge(edgeid)) {
+      IsUserAvoidEdge(edgeid) ||
+      (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
+       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry))) {
     return false;
   }
 
@@ -583,7 +585,9 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_turn_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
-      IsUserAvoidEdge(opp_edgeid)) {
+      IsUserAvoidEdge(opp_edgeid) ||
+      (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
+       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry))) {
     return false;
   }
 
