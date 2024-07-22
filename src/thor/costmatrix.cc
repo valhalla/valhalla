@@ -571,7 +571,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // setting this edge as reached
   if (expansion_callback_) {
     expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix",
-                        Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost);
+                        Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost,
+                        static_cast<Expansion_ExpansionType>(expansion_direction));
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -617,7 +618,7 @@ bool CostMatrix::Expand(const uint32_t index,
         pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
     expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
                         Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
-                        pred.cost().cost);
+                        pred.cost().cost, static_cast<Expansion_ExpansionType>(expansion_direction));
   }
 
   if (FORWARD) {
@@ -860,7 +861,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
                            : edgelabel_[MATRIX_FORW][source][fwd_pred.predecessor()].edgeid();
       expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "costmatrix",
                           Expansion_EdgeStatus_connected, fwd_pred.cost().secs,
-                          fwd_pred.path_distance(), fwd_pred.cost().cost);
+                          fwd_pred.path_distance(), fwd_pred.cost().cost,
+                          Expansion_ExpansionType_forward);
     }
   }
 
@@ -974,7 +976,8 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
                              : edgelabel_[MATRIX_REV][source][rev_pred.predecessor()].edgeid();
         expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrix",
                             Expansion_EdgeStatus_connected, rev_pred.cost().secs,
-                            rev_pred.path_distance(), rev_pred.cost().cost);
+                            rev_pred.path_distance(), rev_pred.cost().cost,
+                            Expansion_ExpansionType_reverse);
       }
     }
   }
