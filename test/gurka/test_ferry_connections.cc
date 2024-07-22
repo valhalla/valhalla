@@ -509,7 +509,7 @@ TEST_P(ExcludeFerryTest, ExcludeFerry) {
         gurka::do_action(valhalla::Options::route, map, {"1", "D"}, GetParam(),
                          {{"/costing_options/" + GetParam() + "/exclude_ferry", "1"}});
     FAIL() << "Expected no path to be found";
-  } catch (valhalla_exception_t e) { EXPECT_EQ(e.code, 442); } catch (...) {
+  } catch (valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
     FAIL() << "Failed with unexpected error code";
   }
 }
