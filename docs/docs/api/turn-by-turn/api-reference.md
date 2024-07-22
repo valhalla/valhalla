@@ -138,6 +138,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `ignore_access` | Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions. Default is `false`. |
 | `ignore_closures` | Will ignore traffic closures. Default is `false`. |
 | `speed_types` | Will determine which speed sources are used, if available. A list of strings with the following possible values: <ul><li><code>freeflow</code></li><li><code>constrained</code></li><li><code>predicted</code></li><li><code>current</code></li></ul> Default is all sources (again, only if available). |
+| `exclude_ferry` | This value indicates whether or not the path may include ferries. If `exclude_ferry` is set to `true` it is allowed to start and end with ferries, but is not allowed to have them in the middle of the route path. If set to true, it is possible that no path will be found. Default is `false`. |
 
 ###### Other costing options
 The following options are available for `auto`, `bus`, `taxi`, and `truck` costing methods.
@@ -189,6 +190,8 @@ These additional options are available for bicycle costing methods.
 |`bss_return_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to return a rental bike. This value will be displayed in the final directions and used to calculate the whole duration. The default value is 120 seconds.|
 |`bss_return_penalty`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to return a rental bike. This value won't be displayed and used only inside of the algorithm.|
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
+| `exclude_ferry` | This value indicates whether or not the path may include ferries. If `exclude_ferry` is set to `true` it is allowed to start and end with ferries, but is not allowed to have them in the middle of the route path. If set to true, it is possible that no path will be found. Default is `false`. |
+
 
 ##### Motor_scooter costing options
 Standard costing for travel by motor scooter or moped.  By default, motor_scooter costing will avoid higher class roads unless the country overrides allows motor scooters on these roads.  Motor scooter routes follow regular roads when needed, but avoid roads without motor_scooter, moped, or mofa access. The costing model recognizes factors unique to motor_scooter travel and offers options for tuning motor_scooter routes. Factors unique to travel by motor_scooter influence the resulting route.
@@ -202,6 +205,8 @@ All of the options described above for autos also apply to motor_scooter costing
 | `use_hills` | A rider's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
+| `exclude_ferry` | This value indicates whether or not the path may include ferries. If `exclude_ferry` is set to `true` it is allowed to start and end with ferries, but is not allowed to have them in the middle of the route path. If set to true, it is possible that no path will be found. Default is `false`. |
+
 
 ##### Motorcycle costing options -> **BETA**
 Standard costing for travel by motorcycle.  By default, motorcycle costing will default to higher class roads.  The costing model recognizes factors unique to motorcycle travel and offers options for tuning motorcycle routes.
@@ -245,6 +250,8 @@ These options are available for pedestrian costing methods.
 | `transit_transfer_max_distance` | A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.|
 | `type` | If set to `blind`, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. Default `foot` |
 | `mode_factor` | A factor which the cost of a pedestrian edge will be multiplied with on multimodal request, e.g. `bss` or `multimodal/transit`. Default is a factor of 1.5, i.e. avoiding walking.
+| `exclude_ferry` | This value indicates whether or not the path may include ferries. If `exclude_ferry` is set to `true` it is allowed to start and end with ferries, but is not allowed to have them in the middle of the route path. If set to true, it is possible that no path will be found. Default is `false`. |
+
 
 ##### Transit costing options
 
@@ -256,18 +263,6 @@ These options are available for transit costing when the multimodal costing mode
 | `use_rail` | User's desire to use rail/subway/metro. Range of values from 0 (try to avoid rail) to 1 (strong preference for riding rail).|
 | `use_transfers` |User's desire to favor transfers. Range of values from 0 (try to avoid transfers) to 1 (totally comfortable with transfers).|
 | `filters` | A way to filter for one or more ~~`stops`~~ (TODO: need to re-enable), `routes`, or `operators`. Filters must contain a list of so-called Onestop IDs, which is (supposed to be) a unique identifier for GTFS data, and an `action`. The OneStop ID is simply the feeds's directory name and the object's GTFS ID separated by an underscore, i.e. a route with `route_id: AUR` in `routes.txt` from the feed `NYC` would have the OneStop ID `NYC_AUR`, similar with operators/agencies. <ul><li>`ids`: any number of Onestop IDs</li><li>`action`: either `exclude` to exclude all of the `ids` listed in the filter or `include` to include only the `ids` listed in the filter</li></ul>
-
-##### Hard exclusions -> **EXPERIMENTAL**
-
-The following options are available for all costing methods. Those options are not available by default, the server config must have `service_limits.allow_hard_exclusions` set to true in order to allow them. If not allowed and set to true, the server will return a 400 error code. If allowed and set to true, it is higly plausible that no route will be found.
-
-| Vehicle Options | Description |
-| :-------------------------- | :----------- |
-| `exclude_bridges` | This value indicates whether or not the path may include bridges. If `exclude_bridges` is set to 1 it is allowed to start and end with bridges, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
-| `exclude_tunnels` | This value indicates whether or not the path may include tunnels. If `exclude_tunnels` is set to 1 it is allowed to start and end with tunnels, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
-| `exclude_tolls` | This value indicates whether or not the path may include tolls. If `exclude_tolls` is set to 1 it is allowed to start and end with tolls, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
-| `exclude_highways` | This value indicates whether or not the path may include highways. If `exclude_highways` is set to 1 it is allowed to start and end with highways, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
-| `exclude_ferries` | This value indicates whether or not the path may include ferries. If `exclude_ferries` is set to 1 it is allowed to start and end with ferries, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
 
 
 ###### Filter transit data

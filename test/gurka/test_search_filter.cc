@@ -30,6 +30,10 @@ protected:
       \ 5     |
        \   6  |
         F-----E
+        |     |
+        |     y
+        |     |
+        G-x---H
          )";
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     const gurka::ways ways = {{"AB", {{"highway", "motorway"}}},
@@ -38,7 +42,10 @@ protected:
                               {"AD", {{"highway", "primary"}}},
                               {"DE", {{"highway", "primary"}}},
                               {"EF", {{"highway", "primary"}, {"bridge", "yes"}}},
-                              {"AF", {{"highway", "motorway_link"}}}};
+                              {"AF", {{"highway", "motorway_link"}}},
+                              {"FG", {{"highway", "secondary"}}},
+                              {"GH", {{"route", "ferry"}}},
+                              {"HE", {{"highway", "secondary"}}}};
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/search_filter");
   }
 };
@@ -204,6 +211,29 @@ TEST_F(SearchFilter, ExcludeRamp) {
 
   gurka::assert::osrm::expect_steps(result_filtered, {"AD", "AB", "BC"});
   gurka::assert::raw::expect_path(result_filtered, {"AD", "AB", "BC"});
+}
+TEST_F(SearchFilter, ExcludeFerry) {
+  auto from = "x";
+  auto to = "y";
+  const std::string& request_unfiltered =
+      (boost::format(R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result_unfiltered = gurka::do_action(valhalla::Options::route, map, request_unfiltered);
+  gurka::assert::osrm::expect_steps(result_unfiltered, {"GH", "HE"});
+  gurka::assert::raw::expect_path(result_unfiltered, {"GH", "HE"});
+
+  const std::string& request_filtered =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_ferry":true}},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result_filtered = gurka::do_action(valhalla::Options::route, map, request_filtered);
+
+  gurka::assert::osrm::expect_steps(result_filtered, {"FG", "EF", "HE"});
+  gurka::assert::raw::expect_path(result_filtered, {"FG", "EF", "HE"});
 }
 
 /*************************************************************/

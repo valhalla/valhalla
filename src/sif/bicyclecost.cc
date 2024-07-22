@@ -546,17 +546,9 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_turn_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
-      IsUserAvoidEdge(edgeid) || (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
-      (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && edge->toll()) ||
-      (exclude_highways_ &&
-       !((pred.classification() == baldr::RoadClass::kMotorway) ||
-         (pred.classification() == baldr::RoadClass::kTrunk)) &&
-       ((edge->classification() == baldr::RoadClass::kMotorway) ||
-        (edge->classification() == baldr::RoadClass::kTrunk))) ||
-      (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
-      (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
-      (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
+      IsUserAvoidEdge(edgeid) ||
+      (exclude_ferry_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
+      (exclude_ferry_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry)) {
     return false;
   }
 
@@ -593,17 +585,9 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_turn_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
-      IsUserAvoidEdge(opp_edgeid) || (exclude_bridges_ && !pred.bridge() && opp_edge->bridge()) ||
-      (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && opp_edge->toll()) ||
-      (exclude_highways_ &&
-       !((pred.classification() == baldr::RoadClass::kMotorway) ||
-         (pred.classification() == baldr::RoadClass::kTrunk)) &&
-       ((opp_edge->classification() == baldr::RoadClass::kMotorway) ||
-        (opp_edge->classification() == baldr::RoadClass::kTrunk))) ||
-      (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
-      (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
-      (opp_edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
+      IsUserAvoidEdge(opp_edgeid) ||
+      (exclude_ferry_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
+      (exclude_ferry_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry)) {
     return false;
   }
 

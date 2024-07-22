@@ -120,8 +120,8 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
     : dest_only_penalty_{0.f, kDefaultDestinationOnlyPenalty, kMaxPenalty},
       maneuver_penalty_{0.f, kDefaultManeuverPenalty, kMaxPenalty},
       alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
-      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
-                                                                    kMaxPenalty},
+      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty},
+      gate_penalty_{0.f, kDefaultGatePenalty, kMaxPenalty},
       private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
       country_crossing_cost_{0.f, kDefaultCountryCrossingCost, kMaxPenalty},
       country_crossing_penalty_{0.f, kDefaultCountryCrossingPenalty, kMaxPenalty},
@@ -129,17 +129,14 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       toll_booth_penalty_{0.f, kDefaultTollBoothPenalty, kMaxPenalty},
       ferry_cost_{0.f, kDefaultFerryCost, kMaxPenalty}, use_ferry_{0.f, kDefaultUseFerry, 1.f},
       rail_ferry_cost_{0.f, kDefaultRailFerryCost, kMaxPenalty},
-      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f}, service_penalty_{0.f, kDefaultServicePenalty,
-                                                                        kMaxPenalty},
-      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
-                                                                                  kDefaultUseTracks,
-                                                                                  1.f},
+      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f},
+      service_penalty_{0.f, kDefaultServicePenalty, kMaxPenalty},
+      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor},
+      use_tracks_{0.f, kDefaultUseTracks, 1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
-      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_bridges_(false),
-      exclude_tunnels_(false), exclude_tolls_(false), exclude_highways_(false),
-      exclude_ferries_(false),
-      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
-                                                                                      false} {
+      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_ferry_(false),
+      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
+      include_hov3_{false} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -457,12 +454,6 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   JSON_PBF_DEFAULT(co, cfg.exclude_unpaved_, json, "/exclude_unpaved", exclude_unpaved);
 
-  JSON_PBF_DEFAULT(co, cfg.exclude_bridges_, json, "/exclude_bridges", exclude_bridges);
-  JSON_PBF_DEFAULT(co, cfg.exclude_tunnels_, json, "/exclude_tunnels", exclude_tunnels);
-  JSON_PBF_DEFAULT(co, cfg.exclude_tolls_, json, "/exclude_tolls", exclude_tolls);
-  JSON_PBF_DEFAULT(co, cfg.exclude_highways_, json, "/exclude_highways", exclude_highways);
-  JSON_PBF_DEFAULT(co, cfg.exclude_ferries_, json, "/exclude_ferries", exclude_ferries);
-
   JSON_PBF_DEFAULT(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
                    exclude_cash_only_tolls);
 
@@ -491,6 +482,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 
   JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
+
+  // exclude_ferry
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_ferry_, json, "/exclude_ferry", exclude_ferry);
 }
 
 void ParseCosting(const rapidjson::Document& doc,

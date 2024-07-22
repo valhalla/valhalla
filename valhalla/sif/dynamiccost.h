@@ -1050,11 +1050,7 @@ protected:
   bool penalize_uturns_;
 
   bool exclude_unpaved_{false};
-  bool exclude_bridges_{false};
-  bool exclude_tunnels_{false};
-  bool exclude_tolls_{false};
-  bool exclude_highways_{false};
-  bool exclude_ferries_{false};
+  bool exclude_ferry_{false};
 
   bool exclude_cash_only_tolls_{false};
 
@@ -1155,11 +1151,7 @@ protected:
         fixed_speed_ == baldr::kDisableFixedSpeed ? costing_options.top_speed() : fixed_speed_;
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
-    exclude_bridges_ = costing_options.exclude_bridges();
-    exclude_tunnels_ = costing_options.exclude_tunnels();
-    exclude_tolls_ = costing_options.exclude_tolls();
-    exclude_highways_ = costing_options.exclude_highways();
-    exclude_ferries_ = costing_options.exclude_ferries();
+    exclude_ferry_ = costing_options.exclude_ferry();
 
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
   }
@@ -1269,11 +1261,7 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> closure_factor_;
 
   bool exclude_unpaved_;
-  bool exclude_bridges_;
-  bool exclude_tunnels_;
-  bool exclude_tolls_;
-  bool exclude_highways_;
-  bool exclude_ferries_;
+  bool exclude_ferry_;
 
   bool exclude_cash_only_tolls_ = false;
 

@@ -412,6 +412,9 @@ void parse_location(valhalla::Location* location,
         rapidjson::get<bool>(*search_filter, "/exclude_ramp", false));
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
+    // search_filter.exclude_ferry
+    location->mutable_search_filter()->set_exclude_ferry(
+        rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
   } // or is it pbf
   else if (location->has_search_filter()) {
     if (location->search_filter().has_min_road_class_case() &&
