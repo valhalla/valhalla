@@ -316,7 +316,7 @@ message Costing {
     oneof has_hgv_no_access_penalty {
       float hgv_no_access_penalty = 85;
     }
-    bool exclude_ferry = 96;
+    bool exclude_ferry = 86;
   }
 
   oneof has_options {
