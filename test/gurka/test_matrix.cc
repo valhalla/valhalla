@@ -788,6 +788,7 @@ TEST(StandAlone, CostMatrixTrivialRoutes) {
   const std::string ascii_map = R"(
     A---B--2->-1--C---D
         |         |
+        6         5
         |         |
         E--3---4--F
   )";
@@ -806,13 +807,23 @@ TEST(StandAlone, CostMatrixTrivialRoutes) {
   {
     auto matrix =
         gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", options);
-    EXPECT_EQ(matrix.matrix().distances(0), 2200);
+    EXPECT_EQ(matrix.matrix().distances(0), 2400);
 
     std::vector<PointLL> oneway_vertices;
     for (auto& node : {"1", "C", "F", "E", "B", "2"}) {
       oneway_vertices.push_back(layout[node]);
     }
     auto encoded = encode<std::vector<PointLL>>(oneway_vertices, 1e6);
+    EXPECT_EQ(matrix.matrix().shapes(0), encoded);
+  }
+
+  // test the oneway case
+  {
+    auto matrix =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"2"}, {"1"}, "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 400);
+
+    auto encoded = encode<std::vector<PointLL>>({layout["2"], layout["1"]}, 1e6);
     EXPECT_EQ(matrix.matrix().shapes(0), encoded);
   }
 
@@ -823,6 +834,16 @@ TEST(StandAlone, CostMatrixTrivialRoutes) {
     EXPECT_EQ(matrix.matrix().distances(0), 400);
 
     auto encoded = encode<std::vector<PointLL>>({layout["3"], layout["4"]}, 1e6);
+    EXPECT_EQ(matrix.matrix().shapes(0), encoded);
+  }
+
+  // test trivial case via connecting edge
+  {
+    auto matrix =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"4"}, {"5"}, "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 500);
+
+    auto encoded = encode<std::vector<PointLL>>({layout["4"], layout["F"], layout["5"]}, 1e6);
     EXPECT_EQ(matrix.matrix().shapes(0), encoded);
   }
 }

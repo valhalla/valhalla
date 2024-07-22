@@ -46,8 +46,7 @@ struct HierarchyLimits {
                                 // always allowed. Used for A*.
 
   /**
-   * Set hierarchy limits for the specified level using a property tree.
-   * @param  pt     Property tree
+   * Set hierarchy limits for the specified level.
    * @param  level  Hierarchy level
    */
   HierarchyLimits(const uint32_t level) : up_transition_count(0) {
