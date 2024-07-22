@@ -454,8 +454,8 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly_hgv()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
-      (exclude_ferry_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
-      (exclude_ferry_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry)) {
+      (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
+       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry))) {
     return false;
   }
 
@@ -480,8 +480,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly_hgv()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
-      (exclude_ferry_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
-      (exclude_ferry_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry)) {
+      (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
+       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry))) {
     return false;
   }
 

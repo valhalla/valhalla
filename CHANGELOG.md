@@ -131,7 +131,7 @@
    * ADDED: Dedupe option for expansion, significantly reducing the response size. [#4601](https://github.com/valhalla/valhalla/issues/4601)
    * FIXED: remove old code that allows bicycle access on hiking trails. [#4781](https://github.com/valhalla/valhalla/pull/4781)
    * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
-   * ADDED: `exclude_ferry` request parameter and location search filter []()
+   * ADDED: `exclude_ferry` request parameter and location search filter [#4812](https://github.com/valhalla/valhalla/pull/4812)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

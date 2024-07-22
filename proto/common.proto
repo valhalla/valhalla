@@ -61,7 +61,7 @@ message SearchFilter {
   oneof has_exclude_closures {
     bool exclude_closures = 6;// whether to exclude roads marked as closed due to traffic [default = true]
   }
-  bool exclude_ferry = 7;    // whether to exclude roads with ramp use from loki results [default = false]
+  bool exclude_ferry = 7;    // whether to exclude ferry routes from loki results [default = false]
 }
 
 message PathEdge {

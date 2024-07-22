@@ -83,7 +83,6 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {142, {142, "Arrive by not implemented for isochrones", 501, HTTP_501, OSRM_INVALID_VALUE, "no_arrive_by_isochrones"}},
     {143, {143, "ignore_closures in costing and exclude_closures in search_filter cannot both be specified", 400, HTTP_400, OSRM_INVALID_VALUE, "closures_conflict"}},
     {144, {144, "Action does not support expansion", 400, HTTP_400, OSRM_INVALID_VALUE, "no_action_for_expansion"}},
-    {145, {145, "Hard exclusions not allowed on this server", 400, HTTP_400, OSRM_INVALID_VALUE, "exclusion_not_allowed"}},
     {150, {150, "Exceeded max locations", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_locations"}},
     {151, {151, "Exceeded max time", 400, HTTP_400, OSRM_INVALID_VALUE, "too_large_time"}},
     {152, {152, "Exceeded max contours", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_contours"}},

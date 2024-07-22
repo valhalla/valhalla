@@ -380,8 +380,8 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
       (edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_ferry_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
-      (exclude_ferry_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry)) {
+      (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
+       (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry))) {
     return false;
   }
 
@@ -406,8 +406,8 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (opp_edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_ferry_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
-      (exclude_ferry_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry)) {
+      (exclude_ferry_ && !(pred.use() == Use::kFerry || pred.use() == Use::kRailFerry) &&
+       (opp_edge->use() == Use::kFerry || opp_edge->use() == Use::kRailFerry))) {
     return false;
   }
 
