@@ -15,7 +15,7 @@ struct VehicleSpeeds {
   uint32_t auto_;
   uint32_t truck_;
 
-  VehicleSpeeds() : auto_(0), truck_(0){};
+  VehicleSpeeds() : auto_(0), truck_(0) {};
 };
 
 enum class LegalSpeedDomain : int8_t {
@@ -310,11 +310,16 @@ public:
 
     if (directededge.speed_type() == SpeedType::kClassified) {
       speed_changed |= directededge.speed() != speed;
-      if (update_speed_)
+      // a lot of legal speeds are too high to be used as edge speeds (especially the fallback and
+      // rural speeds in many countries) so we clamp them to the classified speeds for now
+      if (update_speed_ && speed < directededge.speed())
         directededge.set_speed(speed);
     }
 
-    if (!directededge.truck_speed() && update_speed_) {
+    // same for truck, clamp it to the classified edge speed
+    // if the edge speed was changed in the above block, it's also okay to skip this, since it would
+    // be equal anyway
+    if (!directededge.truck_speed() && update_speed_ && truck_speed < directededge.speed()) {
       directededge.set_truck_speed(truck_speed);
     }
     return speed;

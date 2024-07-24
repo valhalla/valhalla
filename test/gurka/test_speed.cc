@@ -784,11 +784,12 @@ TEST(Standalone, LegalSpeedsDensity) {
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   std::vector<expected_edge_speed> expected_speeds;
   expected_speeds.emplace_back("K", "L", 30, 19);
-  expected_speeds.emplace_back("K", "M", 12, 19);
+  expected_speeds.emplace_back("K", "M", 12,
+                               0); // note that truck speed will not be set if higher than auto speed
   expected_speeds.emplace_back("L", "N", 30, 12);
   expected_speeds.emplace_back("M", "N", 11, 10);
   expected_speeds.emplace_back("0", "1", 21, 18);
-  expected_speeds.emplace_back("1", "2", 12, 18);
+  expected_speeds.emplace_back("1", "2", 12, 0);
   expected_speeds.emplace_back("2", "3", 21, 10);
   expected_speeds.emplace_back("3", "4", 11, 13);
 
@@ -840,7 +841,7 @@ TEST(Standalone, LegalSpeedsRoadClass) {
         "name": "trunk",
         "tags": {
           "maxspeed": "21",
-          "maxspeed:hgv": "18 mph"
+          "maxspeed:hgv": "10 mph"
         }
       },
       {
@@ -891,9 +892,9 @@ TEST(Standalone, LegalSpeedsRoadClass) {
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   std::vector<expected_edge_speed> expected_speeds;
 
-  expected_speeds.emplace_back("A", "B", 117, 58);
-  expected_speeds.emplace_back("B", "C", 27, 17);
-  expected_speeds.emplace_back("C", "D", 21, static_cast<uint32_t>(std::round(18 * kMPHtoKPH)));
+  expected_speeds.emplace_back("A", "B", 105, 58);
+  expected_speeds.emplace_back("B", "C", 25, 17); // clamped to classified speed
+  expected_speeds.emplace_back("C", "D", 21, static_cast<uint32_t>(std::round(10 * kMPHtoKPH)));
   expected_speeds.emplace_back("D", "H", 10, 0);
   expected_speeds.emplace_back("E", "F", 99, 58);
   expected_speeds.emplace_back("A", "E", 99, 96);
@@ -903,7 +904,8 @@ TEST(Standalone, LegalSpeedsRoadClass) {
     auto edge = std::get<1>(found);
     EXPECT_EQ(edge->speed(), speeds.expected);
     auto sl = reader.edgeinfo(std::get<0>(found)).speed_limit();
-    EXPECT_EQ(speeds.expected, sl);
+    // speed limit will be set to the actual value, actual speed will be clamped
+    EXPECT_LE(speeds.expected, sl);
     if (speeds.truck_expected) {
       EXPECT_EQ(edge->truck_speed(), speeds.truck_expected);
     }
@@ -1043,11 +1045,11 @@ TEST(Standalone, TruckSpeedFromAuto) {
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
   std::vector<expected_edge_speed> expected_speeds;
 
-  expected_speeds.emplace_back("A", "B", 11, 11);
-  expected_speeds.emplace_back("B", "C", 12, 12);
-  expected_speeds.emplace_back("C", "D", 13, 13);
-  expected_speeds.emplace_back("D", "E", 14, 14);
-  expected_speeds.emplace_back("E", "F", 15, 15);
+  expected_speeds.emplace_back("A", "B", 11, 0);
+  expected_speeds.emplace_back("B", "C", 12, 0);
+  expected_speeds.emplace_back("C", "D", 13, 0);
+  expected_speeds.emplace_back("D", "E", 14, 0);
+  expected_speeds.emplace_back("E", "F", 15, 0);
 
   for (const auto& speeds : expected_speeds) {
     auto found = gurka::findEdgeByNodes(reader, layout, speeds.start_node, speeds.end_node);
