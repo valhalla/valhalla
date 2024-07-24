@@ -379,6 +379,7 @@ message Options {
     edge_status = 3;
     edge_id = 4;
     pred_edge_id = 5;
+    expansion_type = 6;
   }
 
   Units units = 1;                                                 // kilometers or miles
