@@ -56,6 +56,7 @@
    * FIXED: Handle list type arguments correctly when overriding config with valhalla_build_config [#4799](https://github.com/valhalla/valhalla/pull/4799)
    * FIXED: `top_speed` range not fully allowed for trucks [#4793](https://github.com/valhalla/valhalla/pull/4793)
    * FIXED: Trivial routes for CostMatrix [#4634](https://github.com/valhalla/valhalla/pull/4634)
+   * FIXED: Reset `not_thru_pruning` in CostMatrix after second pass was used [#4817](https://github.com/valhalla/valhalla/pull/4817)  
 
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
