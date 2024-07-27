@@ -71,7 +71,7 @@ void CostMatrix::Clear() {
   if (check_reverse_connections_)
     sources_->clear();
 
-  // Clear all source adjacency lists, edge labels, and edge status
+  // Clear all adjacency lists, edge labels, and edge status
   // Resize and shrink_to_fit so all capacity is reduced.
   auto label_reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
   auto locs_reservation = clear_reserved_memory_ ? 0 : max_reserved_locations_count_;
@@ -105,6 +105,7 @@ void CostMatrix::Clear() {
     astar_heuristics_[is_fwd].clear();
   }
   best_connection_.clear();
+  set_not_thru_pruning(true);
   ignore_hierarchy_limits_ = false;
 }
 
