@@ -94,7 +94,7 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
-    uint8_t restriction_idx = -1;
+    uint8_t restriction_idx = kInvalidRestriction;
     const bool is_dest = dest_edges_.find(edgeid.value) != dest_edges_.cend();
     if (FORWARD) {
       if (!current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
@@ -138,7 +138,7 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode,
-                             path_distance, restriction_idx, true, false, InternalTurn::kNoTurn);
+                             path_distance, restriction_idx, false, false, InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -315,11 +315,11 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
       dist = static_cast<uint32_t>(directededge->length() * percent_along);
 
     } else {
-      opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
+      opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, endtile);
       if (!opp_edge_id.Is_Valid()) {
         continue;
       }
-      opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
+      opp_dir_edge = graphreader.GetOpposingEdge(edgeid, endtile);
       cost = pedestrian_costing_->EdgeCost(opp_dir_edge, endtile, time_info, flow_sources) *
              edge.percent_along();
       dist = static_cast<uint32_t>(directededge->length() * edge.percent_along());
@@ -335,11 +335,11 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
     // of the path. Set the origin flag
     if (FORWARD) {
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost,
-                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, true,
+                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, false,
                                false, InternalTurn::kNoTurn);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost,
-                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, true,
+                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, false,
                                false, InternalTurn::kNoTurn);
     }
     edgelabels_.back().set_origin();

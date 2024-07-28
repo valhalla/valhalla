@@ -105,7 +105,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
-    uint8_t restriction_idx = -1;
+    uint8_t restriction_idx = kInvalidRestriction;
     const bool is_dest = dest_edges_.find(edgeid) != dest_edges_.cend();
     if (FORWARD) {
       if (!costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
@@ -149,16 +149,28 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    sif::InternalTurn turn_type =
-        FORWARD ? costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
-                : costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
+    if (FORWARD) {
+      edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
+                               path_distance, restriction_idx,
+                               (pred.closure_pruning() || !(costing_->IsClosed(directededge, tile))),
+                               0 != (flow_sources & kDefaultFlowMask),
+                               costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge), 0,
+                               directededge->destonly() ||
+                                   (costing_->is_hgv() && directededge->destonly_hgv()),
+                               directededge->forwardaccess() & kTruckAccess);
+    } else {
+      edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
+                               path_distance, restriction_idx,
+                               (pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2))),
+                               0 != (flow_sources & kDefaultFlowMask),
+                               costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                  opp_pred_edge),
+                               0,
+                               opp_edge->destonly() ||
+                                   (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                               opp_edge->forwardaccess() & kTruckAccess);
+    }
 
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                             path_distance, restriction_idx,
-                             (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn_type, 0,
-                             directededge->destonly() ||
-                                 (costing_->is_hgv() && directededge->destonly_hgv()));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -364,14 +376,16 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn, 0,
                                directededge->destonly() ||
-                                   (costing_->is_hgv() && directededge->destonly_hgv()));
+                                   (costing_->is_hgv() && directededge->destonly_hgv()),
+                               directededge->forwardaccess() & kTruckAccess);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn, 0,
-                               opp_dir_edge->destonly() ||
-                                   (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
+                               directededge->destonly() ||
+                                   (costing_->is_hgv() && directededge->destonly_hgv()),
+                               directededge->forwardaccess() & kTruckAccess);
     }
     edgelabels_.back().set_origin();
     adjacencylist_.add(edgelabels_.size() - 1);

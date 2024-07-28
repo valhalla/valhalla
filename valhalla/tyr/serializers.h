@@ -17,6 +17,7 @@
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
+#include <valhalla/proto_conversions.h>
 #include <valhalla/tyr/actor.h>
 
 namespace valhalla {
@@ -40,9 +41,11 @@ std::string serializeMatrix(Api& request);
  */
 std::string serializeIsochrones(Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
-                                midgard::GriddedData<2>::contours_t& contours,
-                                bool polygons = true,
-                                bool show_locations = false);
+                                const std::shared_ptr<const midgard::GriddedData<2>>& isogrid);
+/**
+ * Write GeoJSON from expansion pbf
+ */
+std::string serializeExpansion(Api& request, const std::string& algo);
 
 /**
  * Turn heights and ranges into a height response

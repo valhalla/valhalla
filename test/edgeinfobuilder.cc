@@ -66,9 +66,9 @@ TEST(EdgeInfoBuilder, TestWriteRead) {
 
   // Name
   std::vector<NameInfo> name_info_list;
-  name_info_list.push_back({963});
-  name_info_list.push_back({957});
-  name_info_list.push_back({862});
+  name_info_list.push_back({963, 0, 0, 0, 0});
+  name_info_list.push_back({957, 0, 0, 0, 0});
+  name_info_list.push_back({862, 0, 0, 0, 0});
   eibuilder.set_name_info_list(name_info_list);
 
   // Shape

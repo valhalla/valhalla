@@ -545,7 +545,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || edge->is_shortcut() ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
-      (!ignore_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
+      (!ignore_turn_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
       IsUserAvoidEdge(edgeid) || (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_tolls_ && !pred.toll() && edge->toll()) ||
@@ -592,7 +592,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->use() == Use::kPlatformConnection ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
-      (!ignore_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
+      (!ignore_turn_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
       IsUserAvoidEdge(opp_edgeid) || (exclude_bridges_ && !pred.bridge() && opp_edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_tolls_ && !pred.toll() && opp_edge->toll()) ||
@@ -611,8 +611,8 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (edge->surface() > worst_allowed_surface_) {
     return false;
   }
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
-                                           tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
+                                           current_time, tz_index, restriction_idx);
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time

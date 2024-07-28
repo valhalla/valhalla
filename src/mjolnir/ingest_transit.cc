@@ -169,13 +169,22 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const std::string&
   filesystem::recursive_directory_iterator end_file_itr;
   for (; gtfs_feed_itr != end_file_itr; ++gtfs_feed_itr) {
     const auto& feed_path = gtfs_feed_itr->path();
+    if (gtfs_feed_itr->is_directory() && filesystem::is_empty(feed_path)) {
+      LOG_ERROR("Feed directory " + feed_path.string() + " is empty");
+      continue;
+    }
     if (filesystem::is_directory(feed_path)) {
       // feed_path has a trailing separator
       const auto feed_name = feed_path.filename().string();
 
       LOG_INFO("Loading " + feed_name);
       gtfs::Feed feed(feed_path.string());
-      feed.read_feed();
+      auto read_result = feed.read_feed();
+      if (read_result.code != gtfs::ResultCode::OK) {
+        LOG_ERROR("Couldn't find a required file for feed " + feed_path.filename().string() + ": " +
+                  read_result.message);
+        continue;
+      }
       LOG_INFO("Done loading, now parsing " + feed_name);
 
       const auto& stops = feed.get_stops();
@@ -874,6 +883,9 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   // go get information about what transit tiles we should be fetching
   LOG_INFO("Tiling GTFS Feeds");
   auto tiles = select_transit_tiles(gtfs_dir);
+  if (tiles.empty()) {
+    throw std::runtime_error("Couldn't find any usable GTFS feeds.");
+  }
 
   LOG_INFO("Writing " + std::to_string(tiles.size()) + " transit pbf tiles with " +
            std::to_string(thread_count) + " threads...");
