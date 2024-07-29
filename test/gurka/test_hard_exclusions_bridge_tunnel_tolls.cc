@@ -62,9 +62,10 @@ protected:
 
   static void SetUpTestSuite() {
 
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude",
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_bridge_tunnel_tolls",
                             {{"service_limits.allow_hard_exclusions", "true"}});
-    mapNotAllowed = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude");
+    mapNotAllowed =
+        gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_bridge_tunnel_tolls");
   }
 };
 

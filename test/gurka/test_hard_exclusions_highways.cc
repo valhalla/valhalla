@@ -66,7 +66,7 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude",
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_highways",
                             {{"service_limits.allow_hard_exclusions", "true"}});
   }
 };
@@ -94,7 +94,7 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude",
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_highways",
                             {{"service_limits.allow_hard_exclusions", "true"}});
   }
 };
@@ -123,7 +123,7 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude",
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_highways",
                             {{"service_limits.allow_hard_exclusions", "true"}});
   }
 };

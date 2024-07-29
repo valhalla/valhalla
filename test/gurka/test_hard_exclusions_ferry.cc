@@ -54,28 +54,28 @@ void check_result(const std::string& exclude_parameter_value,
 }
 } // namespace
 
-class ExclusionTest : public ::testing::TestWithParam<std::vector<std::string>> {
+class ExclusionFerryTest : public ::testing::TestWithParam<std::vector<std::string>> {
 protected:
   static gurka::map map;
   static gurka::map mapNotAllowed;
 
   static void SetUpTestSuite() {
 
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude",
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_ferry",
                             {{"service_limits.allow_hard_exclusions", "true"}});
-    mapNotAllowed = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude");
+    mapNotAllowed = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_ferry");
   }
 };
 
-gurka::map ExclusionTest::map = {};
-gurka::map ExclusionTest::mapNotAllowed = {};
+gurka::map ExclusionFerryTest::map = {};
+gurka::map ExclusionFerryTest::mapNotAllowed = {};
 
-TEST_P(ExclusionTest, ExcludeFerries) {
+TEST_P(ExclusionFerryTest, ExcludeFerries) {
   check_result("0", {"A", "D"}, {"AB", "BC", "CD"}, map, GetParam());
   check_result("1", {"A", "D"}, {"AB", "BC", "CD"}, map, GetParam());
 }
 
-INSTANTIATE_TEST_SUITE_P(ExcludePropsTest, ExclusionTest, ::testing::ValuesIn([]() {
+INSTANTIATE_TEST_SUITE_P(ExcludePropsTest, ExclusionFerryTest, ::testing::ValuesIn([]() {
                            std::vector<std::vector<std::string>> values;
                            for (const auto& costing : kSupportedCostingModels) {
                              for (const auto& param : kExclusionParameters) {
