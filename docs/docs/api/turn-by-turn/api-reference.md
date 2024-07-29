@@ -260,7 +260,7 @@ These options are available for transit costing when the multimodal costing mode
 
 ##### Hard exclusions -> **EXPERIMENTAL**
 
-The following options are available for all costing methods. Those options are not available by default, the server config must have `service_limits.allow_hard_exclusions` set to true in order to allow them. If not allowed and set to true, the server will return a 400 error code. If allowed and set to true, it is higly plausible that no route will be found.
+The following options are available for all costing methods. Those options are not available by default, the server config must have `service_limits.allow_hard_exclusions` set to true in order to allow them. If not allowed and set to true, the server will return a 400 error code. If allowed and set to true, it is highly plausible that no route will be found.
 
 | Vehicle Options | Description |
 | :-------------------------- | :----------- |
