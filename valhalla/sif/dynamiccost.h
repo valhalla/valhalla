@@ -290,6 +290,52 @@ public:
                               uint8_t& restriction_idx) const = 0;
 
   /**
+   * Checks if edge is bridge, tunnel, toll and if it is
+   * supposed to be excluded.
+   * @param  exclude_flag             Exclude flag value.
+   * @param  pred_class           Predecessor edge classification.
+   * @param  edge_class           Current Edge classification.
+   * @return Returns true if edge is allowed, false if not.
+   */
+  bool IsExcludedRoadClass(const bool exclude_flag,
+                           const baldr::RoadClass pred_class,
+                           const baldr::RoadClass edge_class) const {
+    return exclude_flag && (pred_class != baldr::RoadClass::kMotorway) &&
+           (edge_class == baldr::RoadClass::kMotorway);
+  }
+
+  /**
+   * Checks if any edge exclusion is present.
+   * This checks if bridges, tolls, tunnels, ferries
+   * or highways are excluded in the request.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @param  exclude_bridges         Flag to exclude bridges.
+   * @param  exclude_tunnels   Flag to exclude tunnels.
+   * @param  exclude_tolls       Flag to exclude tolls.
+   * @param  exclude_highways      Flag to exclude highways
+   * @param  exclude_ferries      Flag to exclude ferries.
+   * @return Returns true if edge should be excluded.
+   */
+
+  bool CheckExclusions(const baldr::DirectedEdge* edge,
+                       const EdgeLabel& pred,
+                       bool exclude_bridges,
+                       bool exclude_tunnels,
+                       bool exclude_tolls,
+                       bool exclude_highways,
+                       bool exclude_ferries) const {
+    return (exclude_bridges && !pred.bridge() && edge->bridge()) ||
+           (exclude_tunnels && !pred.tunnel() && edge->tunnel()) ||
+           (exclude_tolls && !pred.toll() && edge->toll()) ||
+           IsExcludedRoadClass(exclude_highways, pred.classification(), edge->classification()) ||
+           (exclude_ferries &&
+            !(pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry) &&
+            (edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry)) ||
+           (edge->is_shortcut() && (exclude_bridges || exclude_tunnels));
+  }
+
+  /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards are present.
    * @param   node  Pointer to node information.
@@ -1055,6 +1101,7 @@ protected:
   bool exclude_tolls_{false};
   bool exclude_highways_{false};
   bool exclude_ferries_{false};
+  bool has_excludes_{false};
 
   bool exclude_cash_only_tolls_{false};
 
@@ -1160,7 +1207,8 @@ protected:
     exclude_tolls_ = costing_options.exclude_tolls();
     exclude_highways_ = costing_options.exclude_highways();
     exclude_ferries_ = costing_options.exclude_ferries();
-
+    has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
+                    exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
   }
 
@@ -1274,6 +1322,7 @@ struct BaseCostingOptionsConfig {
   bool exclude_tolls_;
   bool exclude_highways_;
   bool exclude_ferries_;
+  bool has_excludes_;
 
   bool exclude_cash_only_tolls_ = false;
 

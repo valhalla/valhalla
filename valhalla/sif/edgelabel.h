@@ -89,7 +89,7 @@ public:
         closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
         internal_turn_(static_cast<uint8_t>(internal_turn)), unpaved_(edge->unpaved()),
         has_measured_speed_(has_measured_speed), hgv_access_(hgv_access), cost_(cost),
-        sortcost_(sortcost), bridge_(edge->bridge()), tunnel_(edge->tunnel()){
+        sortcost_(sortcost), bridge_(edge->bridge()), tunnel_(edge->tunnel()) {
     dest_only_ = destonly ? destonly : edge->destonly();
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -388,6 +388,7 @@ public:
    */
   bool tunnel() const {
     return tunnel_;
+  }
   /**
    * Does it have HGV access?
    * @return Returns true if the (opposing) edge had HGV access
@@ -458,10 +459,6 @@ protected:
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
   uint32_t has_measured_speed_ : 1;
-  // Flag indicating edge is a bridge.
-  uint32_t bridge_ : 1;
-  // Flag indicating edge is a tunnel.
-  uint32_t tunnel_ : 1;
 
   // Flag if this edge had HGV access
   uint32_t hgv_access_ : 1;
@@ -469,6 +466,10 @@ protected:
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
+                   // Flag indicating edge is a bridge.
+  uint32_t bridge_ : 1;
+  // Flag indicating edge is a tunnel.
+  uint32_t tunnel_ : 1;
 };
 
 /**

@@ -462,17 +462,8 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly_hgv()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
-      (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
-      (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && edge->toll()) ||
-      (exclude_highways_ &&
-       !((pred.classification() == baldr::RoadClass::kMotorway) ||
-         (pred.classification() == baldr::RoadClass::kTrunk)) &&
-       ((edge->classification() == baldr::RoadClass::kMotorway) ||
-        (edge->classification() == baldr::RoadClass::kTrunk))) ||
-      (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
-      (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
-      (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
+      (has_excludes_ && CheckExclusions(edge, pred, exclude_bridges_, exclude_tunnels_,
+                                        exclude_tolls_, exclude_highways_, exclude_ferries_))) {
     return false;
   }
 
@@ -497,17 +488,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly_hgv()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
-      (exclude_bridges_ && !pred.bridge() && opp_edge->bridge()) ||
-      (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && opp_edge->toll()) ||
-      (exclude_highways_ &&
-       !((pred.classification() == baldr::RoadClass::kMotorway) ||
-         (pred.classification() == baldr::RoadClass::kTrunk)) &&
-       ((opp_edge->classification() == baldr::RoadClass::kMotorway) ||
-        (opp_edge->classification() == baldr::RoadClass::kTrunk))) ||
-      (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
-      (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
-      (opp_edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
+      (has_excludes_ && CheckExclusions(opp_edge, pred, exclude_bridges_, exclude_tunnels_,
+                                        exclude_tolls_, exclude_highways_, exclude_ferries_))) {
     return false;
   }
 

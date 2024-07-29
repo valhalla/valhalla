@@ -113,8 +113,12 @@ TEST_P(ExclusionTest, InTheEndNotAllowed) {
   };
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    ExcludePropsTest,
-    ExclusionTest,
-    ::testing::Values(::testing::Combine(::testing::Values(kSupportedCostingModels),
-                                         ::testing::Values(kExclusionParameters))));
+INSTANTIATE_TEST_SUITE_P(ExcludePropsTest, ExclusionTest, ::testing::ValuesIn([]() {
+                           std::vector<std::vector<std::string>> values;
+                           for (const auto& costing : kSupportedCostingModels) {
+                             for (const auto& param : kExclusionParameters) {
+                               values.push_back({costing, param});
+                             }
+                           }
+                           return values;
+                         }()));
