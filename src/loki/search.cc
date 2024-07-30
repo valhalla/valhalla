@@ -38,7 +38,10 @@ bool is_search_filter_triggered(const DirectedEdge* edge,
   return (road_class > min_road_class || road_class < max_road_class) ||
          (search_filter.exclude_tunnel_ && edge->tunnel()) ||
          (search_filter.exclude_bridge_ && edge->bridge()) ||
+         (search_filter.exclude_toll_ && edge->toll()) ||
          (search_filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
+         (search_filter.exclude_ferry_ &&
+          (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
          (search_filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
           tile->IsClosed(edge));
 }

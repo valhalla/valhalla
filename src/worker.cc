@@ -407,9 +407,15 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_bridge
     location->mutable_search_filter()->set_exclude_bridge(
         rapidjson::get<bool>(*search_filter, "/exclude_bridge", false));
+    // search_filter.exclude_toll
+    location->mutable_search_filter()->set_exclude_toll(
+        rapidjson::get<bool>(*search_filter, "/exclude_toll", false));
     // search_filter.exclude_ramp
     location->mutable_search_filter()->set_exclude_ramp(
         rapidjson::get<bool>(*search_filter, "/exclude_ramp", false));
+    // search_filter.exclude_ferry
+    location->mutable_search_filter()->set_exclude_ferry(
+        rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf
