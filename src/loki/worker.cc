@@ -72,12 +72,39 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   }
 
   auto costings = options.costings();
-  for (const auto& pair : costings) {
-    if (!allow_hard_exclusions &&
-        (pair.second.options().exclude_bridges() || pair.second.options().exclude_tolls() ||
-         pair.second.options().exclude_tunnels() || pair.second.options().exclude_highways() ||
-         pair.second.options().exclude_ferries())) {
-      throw valhalla_exception_t{145};
+  for (auto& pair : costings) {
+    auto hard_exclude_options = pair.second.options();
+    if (!allow_hard_exclusions) {
+        bool exclusion_detected = false;
+
+        if (hard_exclude_options.exclude_bridges()) {
+            hard_exclude_options.set_exclude_bridges(false);
+            exclusion_detected = true;
+        }
+
+        if (hard_exclude_options.exclude_tolls()) {
+            hard_exclude_options.set_exclude_tolls(false);
+            exclusion_detected = true;
+        }
+
+        if (hard_exclude_options.exclude_tunnels()) {
+            hard_exclude_options.set_exclude_tunnels(false);
+            exclusion_detected = true;
+        }
+
+        if (hard_exclude_options.exclude_highways()) {
+            hard_exclude_options.set_exclude_highways(false);
+            exclusion_detected = true;
+        }
+
+        if (hard_exclude_options.exclude_ferries()) {
+            hard_exclude_options.set_exclude_ferries(false);
+            exclusion_detected = true;
+        }
+
+        if (exclusion_detected) {
+            add_warning(api, 208);
+        }
     }
   }
 

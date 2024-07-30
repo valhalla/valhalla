@@ -83,7 +83,6 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {142, {142, "Arrive by not implemented for isochrones", 501, HTTP_501, OSRM_INVALID_VALUE, "no_arrive_by_isochrones"}},
     {143, {143, "ignore_closures in costing and exclude_closures in search_filter cannot both be specified", 400, HTTP_400, OSRM_INVALID_VALUE, "closures_conflict"}},
     {144, {144, "Action does not support expansion", 400, HTTP_400, OSRM_INVALID_VALUE, "no_action_for_expansion"}},
-    {145, {145, "Hard exclusions not allowed on this server", 400, HTTP_400, OSRM_INVALID_VALUE, "exclusion_not_allowed"}},
     {150, {150, "Exceeded max locations", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_locations"}},
     {151, {151, "Exceeded max time", 400, HTTP_400, OSRM_INVALID_VALUE, "too_large_time"}},
     {152, {152, "Exceeded max contours", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_contours"}},
@@ -160,6 +159,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
   {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
   {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
+  {208, R"(Hard exclusions are not allowed on this server, ignoring hard excludes)"},
   // 3xx is used when costing options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
