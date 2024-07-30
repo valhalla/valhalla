@@ -974,7 +974,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
       if (expansion_callback_) {
         auto prev_pred = rev_pred.predecessor() == kInvalidLabel
                              ? GraphId{}
-                             : edgelabel_[MATRIX_REV][source][rev_pred.predecessor()].edgeid();
+                             : edgelabel_[MATRIX_REV][target][rev_pred.predecessor()].edgeid();
         expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrix",
                             Expansion_EdgeStatus_connected, rev_pred.cost().secs,
                             rev_pred.path_distance(), rev_pred.cost().cost,
