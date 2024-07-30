@@ -598,7 +598,6 @@ The codes correspond to code returned from a particular [Valhalla project](https
 |141 | Arrive by for multimodal not implemented yet |
 |142 | Arrive by not implemented for isochrones |
 |143 | ignore_closure in costing and exclude_closure in search_filter cannot both be specified |
-|145 | Hard exclusions not allowed on this server |
 |150 | Exceeded max locations |
 |151 | Exceeded max time |
 |152 | Exceeded max contours |
