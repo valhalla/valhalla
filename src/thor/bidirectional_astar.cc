@@ -816,7 +816,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader,
                                               const BDEdgeLabel& pred,
                                               const valhalla::sif::travel_mode_t mode,
-                                              const valhalla::sif::cost_ptr_t costing) {
+                                              const valhalla::sif::cost_ptr_t& costing) {
   // Find pred on opposite side
   GraphId oppedge = pred.opp_edgeid();
   EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
@@ -900,7 +900,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader,
 bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader,
                                               const BDEdgeLabel& rev_pred,
                                               const valhalla::sif::TravelMode mode,
-                                              const valhalla::sif::cost_ptr_t costing) {
+                                              const valhalla::sif::cost_ptr_t& costing) {
   GraphId fwd_edge_id = rev_pred.opp_edgeid();
   EdgeStatusInfo fwd_edge_status = edgestatus_forward_.Get(fwd_edge_id);
   auto fwd_pred = edgelabels_forward_[fwd_edge_status.index()];

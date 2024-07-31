@@ -211,7 +211,7 @@ protected:
   bool SetForwardConnection(baldr::GraphReader& graphreader,
                             const sif::BDEdgeLabel& pred,
                             const valhalla::sif::TravelMode mode,
-                            const valhalla::sif::cost_ptr_t costing);
+                            const valhalla::sif::cost_ptr_t& costing);
 
   /**
    * The edge on the reverse search connects to a reached edge on the forward
@@ -223,7 +223,7 @@ protected:
   bool SetReverseConnection(baldr::GraphReader& graphreader,
                             const sif::BDEdgeLabel& pred,
                             const valhalla::sif::TravelMode mode,
-                            const valhalla::sif::cost_ptr_t costing);
+                            const valhalla::sif::cost_ptr_t& costing);
 
   /**
    * Form the path from the adjacency lists. Recovers the path from the
