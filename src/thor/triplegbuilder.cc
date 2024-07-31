@@ -1203,6 +1203,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_speed(speed);
   }
 
+  // Set country crossing if requested
+  if (controller(kEdgeCountryCrossing)) {
+    trip_edge->set_ctry_crossing(directededge->ctry_crossing());
+  }
+
   uint8_t kAccess = 0;
   if (mode == sif::TravelMode::kBicycle) {
     kAccess = kBicycleAccess;
