@@ -7,8 +7,7 @@ using namespace valhalla;
 namespace {
 const std::vector<std::string> kCostingModelsExcludeHighways = {"auto",          "taxi",
                                                                 "bus",           "truck",
-                                                                "pedestrian",    "bicycle",
-                                                                "motor_scooter", "motorcycle"};
+                                                                "motorcycle"};
 
 const std::vector<std::string> kCostingModelsNoHardExcludeSetA = {"auto", "taxi", "bus", "truck",
                                                                   "motorcycle"};
@@ -21,26 +20,33 @@ const std::vector<std::string> kExclusionParameters = {"exclude_highways"};
 constexpr double grid_size_meters = 100.;
 
 const std::string ascii_map = R"(
-  E----F----G----H----I----A----J----K----L
-                                |    |
-                                |    |
-                                |    |
-                                |    |
-                                M----N
+  E----F----G----H----I----A----J----K----L----O----P----Q----R
+                                |    |         |    |
+                                |    |         |    |
+                                |    |         |    |
+                                |    |         |    |
+                                M----N         T----U
   )";
 
 const gurka::ways ways = {
-    {"EF", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
-    {"FG", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
+    {"EF", {{"highway", "motorway"}}},
+    {"FG", {{"highway", "residential"}}},
     {"GH", {{"highway", "residential"}}},
-    {"HI", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
+    {"HI", {{"highway", "residential"}}},
     {"IA", {{"highway", "residential"}}},
     {"IJ", {{"highway", "residential"}}},
-    {"JK", {{"highway", "motorway"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
+    {"JK", {{"highway", "motorway"}}},
     {"KL", {{"highway", "residential"}}},
     {"JM", {{"highway", "residential"}}},
     {"MN", {{"highway", "residential"}}},
     {"NK", {{"highway", "residential"}}},
+    {"LO", {{"highway", "motorway"}}},
+    {"OP", {{"highway", "motorway"}}},
+    {"PQ", {{"highway", "residential"}}},
+    {"QR", {{"highway", "residential"}}},
+    {"OT", {{"highway", "residential"}}},
+    {"TU", {{"highway", "residential"}}},
+    {"UP", {{"highway", "residential"}}},
 };
 
 const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
@@ -64,17 +70,42 @@ void check_result(const std::string& exclude_parameter_value,
 class ExclusionTestExcludeHighways : public ::testing::TestWithParam<std::vector<std::string>> {
 protected:
   static gurka::map map;
+  static gurka::map mapNotAllowed;
 
   static void SetUpTestSuite() {
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_highways",
                             {{"service_limits.allow_hard_exclusions", "true"}});
+
+    mapNotAllowed =
+        gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_highways");
   }
 };
 
 gurka::map ExclusionTestExcludeHighways::map = {};
+gurka::map ExclusionTestExcludeHighways::mapNotAllowed = {};
 
 TEST_P(ExclusionTestExcludeHighways, ExcludeHighways) {
   check_result("1", {"I", "L"}, {"IJ", "JM", "MN", "NK", "KL"}, map, GetParam());
+}
+
+TEST_P(ExclusionTestExcludeHighways, InTheBeginningWithNoExit) {
+  check_result("0", {"E", "H"}, {"EF", "FG", "GH"}, map, GetParam());
+  check_result("1", {"E", "H"}, {"EF", "FG", "GH"}, map, GetParam());
+}
+
+//It does not exit to the residential OT but keeps driving on the motorway OP
+TEST_P(ExclusionTestExcludeHighways, InTheBeginningWithPossibleExit) {
+  check_result("0", {"L", "U"}, {"LO", "OP", "UP"}, map, GetParam());
+  check_result("1", {"L", "U"}, {"LO", "OP", "UP"}, map, GetParam());
+}
+
+TEST_P(ExclusionTestExcludeHighways, InTheBeginningNotAllowed) {
+  check_result("0", {"E", "H"}, {"EF", "FG", "GH"}, mapNotAllowed, GetParam());
+  try {
+    check_result("1", {"E", "H"}, {"EF", "FG", "GH"}, mapNotAllowed, GetParam());
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 145); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
 }
 
 INSTANTIATE_TEST_SUITE_P(ExcludeHighwaysTests,
