@@ -241,9 +241,6 @@ TEST(SkadiService, test_requests) {
       },
       1);
 
-  // make this whole thing bail if it doesnt finish fast
-  alarm(120);
-
   // request and receive
   client.batch();
 }

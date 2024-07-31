@@ -55,6 +55,9 @@
    * FIXED: Missing algorithm include in `baldr/admin.h` [#4766](https://github.com/valhalla/valhalla/pull/4766)
    * FIXED: Handle list type arguments correctly when overriding config with valhalla_build_config [#4799](https://github.com/valhalla/valhalla/pull/4799)
    * FIXED: `top_speed` range not fully allowed for trucks [#4793](https://github.com/valhalla/valhalla/pull/4793)
+   * FIXED: Trivial routes for CostMatrix [#4634](https://github.com/valhalla/valhalla/pull/4634)
+   * FIXED: Reset `not_thru_pruning` in CostMatrix after second pass was used [#4817](https://github.com/valhalla/valhalla/pull/4817)  
+   * FIXED: wrong index used in CostMatrix expansion callback inside reverse connection check [#4821](https://github.com/valhalla/valhalla/pull/4821)
    * FIXED: fix `max_distance` for pedestrian costing [#4811](https://github.com/valhalla/valhalla/pull/4811)
 
 * **Enhancement**
@@ -131,7 +134,9 @@
    * ADDED: deadend information in directed edge JSON for `/locate` [#4751](https://github.com/valhalla/valhalla/pull/4751) 
    * ADDED: Dedupe option for expansion, significantly reducing the response size. [#4601](https://github.com/valhalla/valhalla/issues/4601)
    * FIXED: remove old code that allows bicycle access on hiking trails. [#4781](https://github.com/valhalla/valhalla/pull/4781)
+   * ADDED: `expansion_type` property to `/expansion` [#4784](https://github.com/valhalla/valhalla/pull/4784)
    * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
+   * ADDED: `use_truck_route` [#4809](https://github.com/valhalla/valhalla/pull/4809)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

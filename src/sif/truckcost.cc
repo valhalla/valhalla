@@ -65,6 +65,8 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 
 // How much to favor truck routes.
 constexpr float kTruckRouteFactor = 0.85f;
+constexpr float kDefaultUseTruckRoute = 0.0f;
+constexpr float kMinNonTruckRouteFactor = 1.0f;
 
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
@@ -99,6 +101,7 @@ constexpr ranged_default_t<uint32_t> kAxleCountRange{2, kDefaultAxleCount, 20};
 constexpr ranged_default_t<float> kUseHighwaysRange{0.f, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kTopSpeedRange{10.f, kMaxAssumedTruckSpeed, kMaxSpeedKph};
 constexpr ranged_default_t<float> kHGVNoAccessRange{0.f, kMaxPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kUseTruckRouteRange{0.f, kDefaultUseTruckRoute, 1.0f};
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
@@ -301,14 +304,15 @@ public:
   float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
-  bool hazmat_;          // Carrying hazardous materials
-  float weight_;         // Vehicle weight in metric tons
-  float axle_load_;      // Axle load weight in metric tons
-  float height_;         // Vehicle height in meters
-  float width_;          // Vehicle width in meters
-  float length_;         // Vehicle length in meters
-  float highway_factor_; // Factor applied when road is a motorway or trunk
-  uint8_t axle_count_;   // Vehicle axle count
+  bool hazmat_;                  // Carrying hazardous materials
+  float weight_;                 // Vehicle weight in metric tons
+  float axle_load_;              // Axle load weight in metric tons
+  float height_;                 // Vehicle height in meters
+  float width_;                  // Vehicle width in meters
+  float length_;                 // Vehicle length in meters
+  float highway_factor_;         // Factor applied when road is a motorway or trunk
+  float non_truck_route_factor_; // Factor applied when road is not part of a designated truck route
+  uint8_t axle_count_;           // Vehicle axle count
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -330,6 +334,10 @@ TruckCost::TruckCost(const Costing& costing)
   get_base_costs(costing);
 
   low_class_penalty_ = costing_options.low_class_penalty();
+  non_truck_route_factor_ =
+      costing_options.use_truck_route() < 0.5f
+          ? kMinNonTruckRouteFactor + 2.f * costing_options.use_truck_route()
+          : ((kMinNonTruckRouteFactor - 5.f) + 12.f * costing_options.use_truck_route());
 
   // Get the vehicle attributes
   hazmat_ = costing_options.hazmat();
@@ -523,6 +531,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
+  } else {
+    factor *= non_truck_route_factor_;
   }
 
   if (edge->toll()) {
@@ -733,6 +743,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kTopSpeedRange, json, "/top_speed", top_speed);
   JSON_PBF_RANGED_DEFAULT(co, kHGVNoAccessRange, json, "/hgv_no_access_penalty",
                           hgv_no_access_penalty);
+  JSON_PBF_RANGED_DEFAULT_V2(co, kUseTruckRouteRange, json, "/use_truck_route", use_truck_route);
 }
 
 cost_ptr_t CreateTruckCost(const Costing& costing_options) {
