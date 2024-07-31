@@ -57,6 +57,7 @@
    * FIXED: `top_speed` range not fully allowed for trucks [#4793](https://github.com/valhalla/valhalla/pull/4793)
    * FIXED: Trivial routes for CostMatrix [#4634](https://github.com/valhalla/valhalla/pull/4634)
    * FIXED: Reset `not_thru_pruning` in CostMatrix after second pass was used [#4817](https://github.com/valhalla/valhalla/pull/4817)  
+   * FIXED: wrong index used in CostMatrix expansion callback inside reverse connection check [#4821](https://github.com/valhalla/valhalla/pull/4821)
 
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
