@@ -5,8 +5,7 @@
 using namespace valhalla;
 
 namespace {
-const std::vector<std::string> kCostingModelsExcludeHighways = {"auto",          "taxi",
-                                                                "bus",           "truck",
+const std::vector<std::string> kCostingModelsExcludeHighways = {"auto", "taxi", "bus", "truck",
                                                                 "motorcycle"};
 
 const std::vector<std::string> kCostingModelsNoHardExcludeSetA = {"auto", "taxi", "bus", "truck",
@@ -29,24 +28,15 @@ const std::string ascii_map = R"(
   )";
 
 const gurka::ways ways = {
-    {"EF", {{"highway", "motorway"}}},
-    {"FG", {{"highway", "residential"}}},
-    {"GH", {{"highway", "residential"}}},
-    {"HI", {{"highway", "residential"}}},
-    {"IA", {{"highway", "residential"}}},
-    {"IJ", {{"highway", "residential"}}},
-    {"JK", {{"highway", "motorway"}}},
-    {"KL", {{"highway", "residential"}}},
-    {"JM", {{"highway", "residential"}}},
-    {"MN", {{"highway", "residential"}}},
-    {"NK", {{"highway", "residential"}}},
-    {"LO", {{"highway", "motorway"}}},
-    {"OP", {{"highway", "motorway"}}},
-    {"PQ", {{"highway", "residential"}}},
-    {"QR", {{"highway", "residential"}}},
-    {"OT", {{"highway", "residential"}}},
-    {"TU", {{"highway", "residential"}}},
-    {"UP", {{"highway", "residential"}}},
+    {"EF", {{"highway", "motorway"}}},    {"FG", {{"highway", "residential"}}},
+    {"GH", {{"highway", "residential"}}}, {"HI", {{"highway", "residential"}}},
+    {"IA", {{"highway", "residential"}}}, {"IJ", {{"highway", "residential"}}},
+    {"JK", {{"highway", "motorway"}}},    {"KL", {{"highway", "residential"}}},
+    {"JM", {{"highway", "residential"}}}, {"MN", {{"highway", "residential"}}},
+    {"NK", {{"highway", "residential"}}}, {"LO", {{"highway", "motorway"}}},
+    {"OP", {{"highway", "motorway"}}},    {"PQ", {{"highway", "residential"}}},
+    {"QR", {{"highway", "residential"}}}, {"OT", {{"highway", "residential"}}},
+    {"TU", {{"highway", "residential"}}}, {"UP", {{"highway", "residential"}}},
 };
 
 const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
@@ -76,8 +66,7 @@ protected:
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_highways",
                             {{"service_limits.allow_hard_exclusions", "true"}});
 
-    mapNotAllowed =
-        gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_highways");
+    mapNotAllowed = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_highways");
   }
 };
 
@@ -93,7 +82,7 @@ TEST_P(ExclusionTestExcludeHighways, InTheBeginningWithNoExit) {
   check_result("1", {"E", "H"}, {"EF", "FG", "GH"}, map, GetParam());
 }
 
-//It does not exit to the residential OT but keeps driving on the motorway OP
+// It does not exit to the residential OT but keeps driving on the motorway OP
 TEST_P(ExclusionTestExcludeHighways, InTheBeginningWithPossibleExit) {
   check_result("0", {"L", "U"}, {"LO", "OP", "UP"}, map, GetParam());
   check_result("1", {"L", "U"}, {"LO", "OP", "UP"}, map, GetParam());
