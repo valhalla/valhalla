@@ -600,7 +600,10 @@ def add_leaf_args(
             t = type(tree)
 
         arg = '--' + path.replace('_', '-').replace('\0', '-')
-        parser_.add_argument(arg, type=t, help=h, default=tree)
+        if t == list:
+            parser_.add_argument(arg, nargs="+", help=h, default=tree)
+        else:
+            parser_.add_argument(arg, type=t, help=h, default=tree)
         leaves_.append(path)
 
 

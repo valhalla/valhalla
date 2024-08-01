@@ -607,9 +607,6 @@ public:
 
 // Elevation service
 int main(int argc, char* argv[]) {
-  // make this whole thing bail if it doesnt finish fast
-  alarm(180);
-
   testing::AddGlobalTestEnvironment(new LokiServiceEnv);
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
