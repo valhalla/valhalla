@@ -136,6 +136,7 @@
    * ADDED: `expansion_type` property to `/expansion` [#4784](https://github.com/valhalla/valhalla/pull/4784)
    * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
    * ADDED: `use_truck_route` [#4809](https://github.com/valhalla/valhalla/pull/4809)
+   * ADDED: Add option `edge.country_crossing` to trace attributes[4825](https://github.com/valhalla/valhalla/pull/4825)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

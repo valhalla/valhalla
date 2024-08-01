@@ -81,6 +81,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeTaggedValues, true},
     {kEdgeIndoor, true},
     {kEdgeLandmarks, true},
+    {kEdgeCountryCrossing, true},
 
     // Node keys
     {kIncidents, false},
