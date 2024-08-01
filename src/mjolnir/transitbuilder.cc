@@ -296,8 +296,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     // Add the node and directed edges
     nb.set_edge_index(edge_index);
 
-    // reset the access to defaults.
-    nb.set_access((kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
     nb.set_edge_count(tilebuilder_transit.directededges().size() - edge_index);
     tilebuilder_transit.nodes().emplace_back(std::move(nb));
   }
