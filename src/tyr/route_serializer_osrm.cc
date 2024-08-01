@@ -1499,7 +1499,7 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
                                   valhalla::odin::EnhancedTripLeg* etp,
                                   const valhalla::Options& options) {
   // narrative builder for custom pre alert instructions
-  // TODO: actually we should build the alert instructions with enhanced distance inforation during
+  // TODO: actually we should build the alert instructions with enhanced distance information during
   // building the maneuver. The would require enhancing the voice instructions of the maneuver
   // providing distance information and therefore a larger refactor
   MarkupFormatter nullFormatter;
