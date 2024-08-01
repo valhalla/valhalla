@@ -15,7 +15,7 @@ struct VehicleSpeeds {
   uint32_t auto_;
   uint32_t truck_;
 
-  VehicleSpeeds() : auto_(0), truck_(0) {};
+  VehicleSpeeds() : auto_(0), truck_(0){};
 };
 
 enum class LegalSpeedDomain : int8_t {
