@@ -1481,6 +1481,16 @@ float distance_along_geometry(const valhalla::DirectionsLeg::Maneuver* prev_mane
   }
 }
 
+void addVoiceInstruction(const std::string& instruction,
+                         double distance_along_geometry,
+                         json::ArrayPtr& voice_instructions) {
+  json::MapPtr voice_instruction = json::map({});
+  voice_instruction->emplace("distanceAlongGeometry", json::fixed_t{distance_along_geometry, 1});
+  voice_instruction->emplace("announcement", instruction);
+  voice_instruction->emplace("ssmlAnnouncement", "<speak>" + instruction + "</speak>");
+  voice_instructions->emplace_back(std::move(voice_instruction));
+}
+
 // Populate the voiceInstructions within a step.
 json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
                                   const valhalla::DirectionsLeg::Maneuver& maneuver,
@@ -1498,7 +1508,7 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
 
   // voiceInstructions is an array, because there may be similar voice instructions.
   // When the step is long enough, there may be multiple voice instructions.
-  json::ArrayPtr voice_instructions_array = json::array({});
+  json::ArrayPtr voice_instructions = json::array({});
 
   // distanceAlongGeometry is the distance along the current step from where on this
   // voice instruction should be played. It is measured from the end of the maneuver.
@@ -1537,14 +1547,8 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
     // Drive West on XYZ Street.
     // This voice_instruction_start is only created once. It is always played, even when
     // the maneuver would otherwise be too short.
-    json::MapPtr voice_instruction_start = json::map({});
-    voice_instruction_start->emplace("distanceAlongGeometry", json::fixed_t{distance, 1});
-    voice_instruction_start->emplace("announcement",
-                                     prev_maneuver->verbal_pre_transition_instruction());
-    voice_instruction_start->emplace("ssmlAnnouncement",
-                                     "<speak>" + prev_maneuver->verbal_pre_transition_instruction() +
-                                         "</speak>");
-    voice_instructions_array->emplace_back(std::move(voice_instruction_start));
+    addVoiceInstruction(prev_maneuver->verbal_pre_transition_instruction(), double(distance),
+                        voice_instructions);
   } else if (distance_before_verbal_transition_alert_instruction >= 0.0 &&
              distance > distance_before_verbal_transition_alert_instruction +
                             APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
@@ -1558,73 +1562,49 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
     // The approximation here is that the verbal_post_transition_instruction takes 100
     // meters to play + the 10 meters after the maneuver start which is added so that the
     // instruction is not played directly on the intersection where the maneuver starts.
-    json::MapPtr voice_instruction_beginning = json::map({});
-    voice_instruction_beginning->emplace("distanceAlongGeometry", json::fixed_t{distance - 10, 1});
-    voice_instruction_beginning->emplace("announcement",
-                                         prev_maneuver->verbal_post_transition_instruction());
-    voice_instruction_beginning->emplace("ssmlAnnouncement",
-                                         "<speak>" +
-                                             prev_maneuver->verbal_post_transition_instruction() +
-                                             "</speak>");
-    voice_instructions_array->emplace_back(std::move(voice_instruction_beginning));
+    addVoiceInstruction(prev_maneuver->verbal_post_transition_instruction(), double(distance - 10),
+                        voice_instructions);
   }
 
   // If there is an alert instruction and we have enough time to play it, we will play it
-  // TODO: We shouldn't add an alert instruction if there was already a pre/post transition aleart
+  // TODO: We shouldn't add an alert instruction if there was already a pre/post transition alert
   // which is close by
   if (!maneuver.verbal_transition_alert_instruction().empty() &&
       distance_before_verbal_transition_alert_instruction >= 0.0 &&
       prev_maneuver->time() > SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION +
                                   APPROXIMATE_VERBAL_PRERANSITION_SECONDS) {
-    json::MapPtr voice_instruction_end = json::map({});
-    float distance_along_geometry = -1;
     if (maneuver_index == 1 && distance_before_verbal_transition_alert_instruction == distance) {
       // For the depart maneuver we want to play both the verbal_post_transition_instruction and
       // the verbal_transition_alert_instruction even if the maneuver is too short.
-      distance_along_geometry = distance / 2;
-    } else {
       // In all other cases we use distance_before_verbal_transition_alert_instruction value
-      // as it is capped to the maneuver length
-      distance_along_geometry = distance_before_verbal_transition_alert_instruction;
+      // as it is capped to the maneuver length.
+      distance_before_verbal_transition_alert_instruction = distance / 2;
     }
     // building voice instructions for the alert. We are enhancing it by the distance information here
     // by using the narrative builder
-    float distance_km = (float)distance_along_geometry / 1000.0f;
+    float distance_km = (float)distance_before_verbal_transition_alert_instruction / 1000.0f;
     std::string instruction =
         narrative_builder
             ->FormVerbalAlertApproachInstruction(distance_km,
                                                  maneuver.verbal_transition_alert_instruction());
-
-    // add instructions
-    voice_instruction_end->emplace("distanceAlongGeometry",
-                                   json::fixed_t{distance_along_geometry, 1});
-    voice_instruction_end->emplace("announcement", instruction);
-    voice_instruction_end->emplace("ssmlAnnouncement", "<speak>" + instruction + "</speak>");
-    voice_instructions_array->emplace_back(std::move(voice_instruction_end));
+    addVoiceInstruction(instruction, distance_before_verbal_transition_alert_instruction,
+                        voice_instructions);
   }
 
   // add pre transition instruction if available
   if (!maneuver.verbal_pre_transition_instruction().empty()) {
-    json::MapPtr voice_instruction_end = json::map({});
     if (maneuver_index == 1 && distance_before_verbal_pre_transition_instruction >= distance / 2) {
       // For the depart maneuver we want to play the verbal_post_transition_instruction and
       // the verbal_pre_transition_instruction even if the maneuver is too short.
-      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 4, 1});
-    } else {
-      // In all other cases we use distance_before_verbal_pre_transition_instruction value
-      // as it is capped to the maneuver length
-      voice_instruction_end->emplace("distanceAlongGeometry",
-                                     json::fixed_t{distance_before_verbal_pre_transition_instruction,
-                                                   1});
+      // In all other cases we use distance_before_verbal_pre_transition_instruction value as is
+      // because it is capped to the maneuver length.
+      distance_before_verbal_pre_transition_instruction = distance / 4;
     }
-    voice_instruction_end->emplace("announcement", maneuver.verbal_pre_transition_instruction());
-    voice_instruction_end->emplace("ssmlAnnouncement",
-                                   "<speak>" + maneuver.verbal_pre_transition_instruction() +
-                                       "</speak>");
-    voice_instructions_array->emplace_back(std::move(voice_instruction_end));
+    addVoiceInstruction(maneuver.verbal_pre_transition_instruction(),
+                        distance_before_verbal_pre_transition_instruction, voice_instructions);
   }
 
-  return voice_instructions_array;
+  return voice_instructions;
 }
 
 // Get the mode
