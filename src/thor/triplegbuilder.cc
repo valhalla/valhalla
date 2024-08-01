@@ -1205,7 +1205,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Set country crossing if requested
   if (controller(kEdgeCountryCrossing)) {
-    trip_edge->set_ctry_crossing(directededge->ctry_crossing());
+    trip_edge->set_country_crossing(directededge->ctry_crossing());
   }
 
   uint8_t kAccess = 0;

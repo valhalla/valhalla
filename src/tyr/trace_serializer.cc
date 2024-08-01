@@ -190,7 +190,7 @@ void serialize_edges(const AttributesController& controller,
         writer("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
       }
       if (controller(kEdgeCountryCrossing)) {
-        writer("country_crossing", static_cast<bool>(edge.ctry_crossing()));
+        writer("country_crossing", static_cast<bool>(edge.country_crossing()));
       }
       if (controller(kEdgeLength)) {
         writer.set_precision(3);
