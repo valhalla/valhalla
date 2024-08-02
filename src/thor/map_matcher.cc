@@ -1,6 +1,5 @@
 #include "midgard/logging.h"
 #include <algorithm>
-#include <exception>
 #include <vector>
 
 #include "baldr/datetime.h"

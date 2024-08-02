@@ -3,7 +3,6 @@
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include <algorithm>
-#include <map>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -9,10 +9,7 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
-#include <fstream>
 #include <random>
-#include <sstream>
-#include <stdexcept>
 #include <string>
 #ifndef _MSC_VER
 #include <sys/mman.h>
@@ -23,7 +20,6 @@
 #include <gtest/gtest.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 namespace test {

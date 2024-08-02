@@ -5,7 +5,6 @@
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
-#include <unordered_map>
 
 #include <valhalla/baldr/landmark.h>
 

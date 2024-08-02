@@ -2,8 +2,6 @@
 #define VALHALLA_MJOLNIR_NODE_EXPANDER_H_
 
 #include <map>
-#include <string>
-#include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>

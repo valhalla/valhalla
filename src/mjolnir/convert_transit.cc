@@ -1,19 +1,13 @@
 #include <cmath>
 #include <cstdint>
-#include <fstream>
 #include <future>
-#include <iostream>
 #include <memory>
-#include <queue>
-#include <random>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <unordered_set>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 

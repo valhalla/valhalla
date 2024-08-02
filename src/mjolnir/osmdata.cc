@@ -1,7 +1,6 @@
 #include <cctype>
 #include <cstdint>
 #include <fstream>
-#include <iostream>
 
 #include <boost/algorithm/string.hpp>
 

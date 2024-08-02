@@ -1,5 +1,3 @@
-#include <vector>
-
 #include "baldr/accessrestriction.h"
 
 #include "test.h"
