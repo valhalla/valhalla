@@ -2,8 +2,6 @@
 #define VALHALLA_BALDR_GRAPHID_H_
 
 #include <cstdint>
-#include <functional>
-#include <iostream>
 #include <string>
 #include <vector>
 

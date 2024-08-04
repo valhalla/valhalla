@@ -2,8 +2,6 @@
 #define VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
 
 #include <cstdint>
-#include <iostream>
-#include <list>
 #include <string>
 #include <vector>
 

@@ -1,6 +1,5 @@
 #include <future>
 #include <memory>
-#include <set>
 #include <thread>
 #include <utility>
 

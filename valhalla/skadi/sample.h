@@ -4,7 +4,6 @@
 #include <mutex>
 #include <shared_mutex>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>

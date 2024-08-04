@@ -1,7 +1,6 @@
 #include "midgard/logging.h"
 #include "test.h"
 #include <cstdint>
-#include <fstream>
 
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -39,7 +38,6 @@
 #include "proto/trip.pb.h"
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #if !defined(VALHALLA_SOURCE_DIR)

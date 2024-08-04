@@ -4,10 +4,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/traffictile.h"
 
-#include <boost/property_tree/ptree.hpp>
-
 #include <cmath>
-#include <sstream>
 #include <sys/mman.h>
 #include <sys/stat.h>
 

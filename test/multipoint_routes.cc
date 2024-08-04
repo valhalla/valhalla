@@ -1,6 +1,5 @@
 #include "test.h"
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -10,7 +9,6 @@
 #include "odin/worker.h"
 #include "sif/autocost.h"
 #include "thor/worker.h"
-#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::thor;

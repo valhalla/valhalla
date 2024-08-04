@@ -4,9 +4,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <tuple>
-
-#include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>

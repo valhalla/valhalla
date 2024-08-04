@@ -2,9 +2,6 @@
 #define VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
 
 #include <cstdint>
-#include <iostream>
-#include <list>
-#include <string>
 #include <vector>
 
 #include <valhalla/baldr/complexrestriction.h>
