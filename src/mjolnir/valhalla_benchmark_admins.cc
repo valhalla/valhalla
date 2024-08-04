@@ -1,14 +1,6 @@
 #include <cinttypes>
 #include <cstdint>
-#include <future>
-#include <limits>
-#include <list>
-#include <memory>
-#include <mutex>
-#include <queue>
-#include <thread>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include <boost/geometry.hpp>

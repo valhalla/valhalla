@@ -2,8 +2,6 @@
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
 #include <algorithm>
-#include <iostream> // TODO remove if not needed
-#include <map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

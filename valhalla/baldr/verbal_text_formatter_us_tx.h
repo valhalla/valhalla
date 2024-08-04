@@ -1,9 +1,7 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_US_TX_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_US_TX_H_
 
-#include <array>
 #include <string>
-#include <utility>
 
 #include <valhalla/baldr/verbal_text_formatter_us.h>
 

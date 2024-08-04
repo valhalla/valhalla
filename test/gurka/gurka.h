@@ -25,8 +25,6 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include <boost/format.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <osmium/builder/attr.hpp>
@@ -36,7 +34,6 @@
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/osm/object_comparisons.hpp>
 
-#include <regex>
 #include <string>
 #include <tuple>
 

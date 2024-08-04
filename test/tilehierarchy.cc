@@ -4,8 +4,6 @@
 
 #include "test.h"
 
-#include <boost/property_tree/ptree.hpp>
-
 using namespace std;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

@@ -1,7 +1,6 @@
 #include <optional>
 #include <unordered_map>
 
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
 
 #include "baldr/rapidjson_utils.h"

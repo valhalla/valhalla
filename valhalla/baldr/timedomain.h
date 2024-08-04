@@ -2,7 +2,6 @@
 #define VALHALLA_BALDR_TIMEDOMAIN_H_
 
 #include <valhalla/baldr/graphconstants.h>
-#include <vector>
 
 namespace valhalla {
 namespace baldr {

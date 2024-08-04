@@ -1,6 +1,5 @@
 #include "gurka.h"
 #include <gtest/gtest.h>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 

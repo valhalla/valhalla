@@ -2,7 +2,6 @@
 
 #include <valhalla/baldr/tilegetter.h>
 
-#include <array>
 #include <condition_variable>
 #include <memory>
 #include <mutex>

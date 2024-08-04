@@ -1,5 +1,4 @@
 #include <boost/optional.hpp>
-#include <utility>
 
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"

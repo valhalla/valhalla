@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 #include <ostream>
 
 #include "baldr/complexrestriction.h"

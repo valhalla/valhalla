@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include "argparse_utils.h"

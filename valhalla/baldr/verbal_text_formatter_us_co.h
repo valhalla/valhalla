@@ -3,9 +3,7 @@
 
 #include <valhalla/baldr/verbal_text_formatter_us.h>
 
-#include <array>
 #include <string>
-#include <utility>
 
 namespace valhalla {
 namespace baldr {
