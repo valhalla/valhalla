@@ -433,6 +433,140 @@ TEST(Standalone, ReclassifyCorrectPath) {
               valhalla::baldr::RoadClass::kServiceOther);
 }
 
+TEST(Standalone, ReclassifySeparateInboundAndOutbound) {
+  // Sometimes ferry path is connected to the separate inbound and outbound pathways.
+  // Both of them should be reclassified if both of them lead to the high road class.
+
+  const std::string ascii_map = R"(
+            A
+            |
+            |
+            B
+           / \
+          /   \
+         C     D
+        /      |
+    E--F---------------G
+    H-----I------------J
+           \  /
+            --
+  )";
+
+  std::map<std::string, std::string> primary = {{"highway", "primary"}, {"oneway", "yes"}};
+  std::map<std::string, std::string> service = {{"highway", "service"}, {"oneway", "yes"}};
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+      {"BCF", service},
+      {"IDB", service},
+      {"EFG", primary},
+      {"JIH", primary},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_inbound_outbound");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // make sure that both service roads get reclassified
+  auto outbound_service = gurka::findEdge(reader, layout, "BCF", "F");
+  EXPECT_EQ(std::get<1>(outbound_service)->classification(), valhalla::baldr::RoadClass::kPrimary);
+  auto inbound_service = gurka::findEdge(reader, layout, "IDB", "B");
+  EXPECT_EQ(std::get<1>(inbound_service)->classification(), valhalla::baldr::RoadClass::kPrimary);
+}
+
+TEST(Standalone, ReclassifyInboundOnly) {
+  const std::string ascii_map = R"(
+            A
+            |
+            |
+            B
+           /
+          /
+         C
+        /
+    E--F---------------G
+    H-----I------------J
+  )";
+
+  std::map<std::string, std::string> primary = {{"highway", "primary"}, {"oneway", "yes"}};
+  std::map<std::string, std::string> service = {{"highway", "service"}, {"oneway", "yes"}};
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+      {"BCF", service},
+      {"EFG", primary},
+      {"JIH", primary},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_outbound_only");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto outbound_service = gurka::findEdge(reader, layout, "BCF", "F");
+  EXPECT_EQ(std::get<1>(outbound_service)->classification(), valhalla::baldr::RoadClass::kPrimary);
+}
+
+TEST(Standalone, ReclassifyOutboundOnly) {
+  const std::string ascii_map = R"(
+            A
+            |
+            |
+            B
+             \
+              \
+               D
+               |
+    E--F---------------G
+    H-----I------------J
+           \  /
+            --
+  )";
+
+  std::map<std::string, std::string> primary = {{"highway", "primary"}, {"oneway", "yes"}};
+  std::map<std::string, std::string> service = {{"highway", "service"}, {"oneway", "yes"}};
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+      {"IDB", service},
+      {"EFG", primary},
+      {"JIH", primary},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_inbound_only");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto inbound_service = gurka::findEdge(reader, layout, "IDB", "B");
+  EXPECT_EQ(std::get<1>(inbound_service)->classification(), valhalla::baldr::RoadClass::kPrimary);
+}
+
 TEST(Standalone, ReclassifyNothingReclassified) {
   // Test to validate that if no edges are found with the target classification
   // nothing gets reclassified.
