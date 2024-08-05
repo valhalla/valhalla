@@ -2,9 +2,7 @@
 #define VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_
 
 #include <cstdint>
-#include <map>
 #include <string>
-#include <vector>
 
 #include <valhalla/mjolnir/dataquality.h>
 #include <valhalla/mjolnir/node_expander.h>

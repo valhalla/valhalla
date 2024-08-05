@@ -2,7 +2,6 @@
 #define VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 
 #include <boost/property_tree/ptree.hpp>
-#include <cstdint>
 #include <string>
 #include <vector>
 

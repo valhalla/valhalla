@@ -12,7 +12,6 @@
 #include <cxxopts.hpp>
 #include <iostream>
 #include <unordered_map>
-#include <utility>
 
 #include "argparse_utils.h"
 

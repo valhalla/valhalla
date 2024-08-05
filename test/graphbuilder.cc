@@ -7,7 +7,6 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
 
-#include <sstream>
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>

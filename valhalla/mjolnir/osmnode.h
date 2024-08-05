@@ -3,8 +3,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include <string>
-#include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/pointll.h>

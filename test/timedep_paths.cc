@@ -1,8 +1,6 @@
 #include "test.h"
 
-#include <iostream>
 #include <string>
-#include <vector>
 
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"

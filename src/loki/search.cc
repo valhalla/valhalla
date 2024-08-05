@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <cmath>
 #include <iterator>
-#include <list>
 #include <unordered_set>
 
 using namespace valhalla::midgard;

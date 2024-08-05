@@ -3,6 +3,7 @@
    * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
    * REMOVED: ./bench and related files/code [#4560](https://github.com/valhalla/valhalla/pull/4560)
+   * REMOVED: unused headers [#4829](https://github.com/valhalla/valhalla/pull/4829)
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
@@ -136,6 +137,8 @@
    * ADDED: `expansion_type` property to `/expansion` [#4784](https://github.com/valhalla/valhalla/pull/4784)
    * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
    * ADDED: `use_truck_route` [#4809](https://github.com/valhalla/valhalla/pull/4809)
+   * ADDED: Add option `edge.country_crossing` to trace attributes[4825](https://github.com/valhalla/valhalla/pull/4825)
+   * CHANGED: Unification of turn costs for ramps and roundabouts[4827](https://github.com/valhalla/valhalla/pull/4827)
    * ADDED: Simple legal default speed configuration [#4739](https://github.com/valhalla/valhalla/pull/4739)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0

@@ -1,6 +1,5 @@
 #include "gurka.h"
 #include <boost/algorithm/string/join.hpp>
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
 
 using namespace valhalla;

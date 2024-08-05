@@ -1,6 +1,5 @@
 #include "test.h"
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -10,7 +9,6 @@
 #include "midgard/encoded.h"
 #include "midgard/util.h"
 #include "src/baldr/shortcut_recovery.h"
-#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

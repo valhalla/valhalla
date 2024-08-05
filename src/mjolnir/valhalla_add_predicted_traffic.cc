@@ -1,11 +1,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <deque>
 #include <future>
-#include <mutex>
 #include <optional>
-#include <queue>
+#include <random>
 #include <string>
 #include <thread>
 
@@ -18,7 +16,6 @@
 
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
-#include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"

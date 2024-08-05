@@ -1,10 +1,6 @@
 #pragma once
 
 #include <functional>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/graphid.h>

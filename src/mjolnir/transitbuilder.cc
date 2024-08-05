@@ -3,12 +3,10 @@
 
 #include <fstream>
 #include <future>
-#include <iostream>
 #include <list>
 #include <mutex>
 #include <thread>
 #include <tuple>
-#include <unordered_map>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>

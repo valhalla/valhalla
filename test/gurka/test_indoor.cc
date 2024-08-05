@@ -1,5 +1,4 @@
 #include "gurka.h"
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)

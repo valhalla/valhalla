@@ -33,7 +33,6 @@
 #else
 #include <netinet/in.h>
 #endif
-#include <unordered_map>
 #include <vector>
 #include <zlib.h>
 
