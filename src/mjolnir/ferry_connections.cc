@@ -400,23 +400,23 @@ void ReclassifyFerryConnections(const std::string& ways_file,
                                   inbound, remove_destonly);
           total_count += ret.first;
           if (ret.second) {
+            // Reclassify the first/start edge if a connection to higher class roads
+            // is found. Do this AFTER finding shortest path so we do not immediately
+            // determine we hit the specified classification
+            sequence<Edge>::iterator element = edges[edge.second];
+            auto update_edge = *element;
+            if (update_edge.attributes.importance > kFerryUpClass) {
+              update_edge.attributes.importance = kFerryUpClass;
+              update_edge.attributes.reclass_ferry = remove_destonly;
+              element = update_edge;
+              total_count++;
+            }
+
             if (inbound) {
               inbound_path_found = true;
             } else {
               outbound_path_found = true;
             }
-          }
-
-          // Reclassify the first/start edge if a connection to higher class roads
-          // is found. Do this AFTER finding shortest path so we do not immediately
-          // determine we hit the specified classification
-          sequence<Edge>::iterator element = edges[edge.second];
-          auto update_edge = *element;
-          if (ret.second && update_edge.attributes.importance > kFerryUpClass) {
-            update_edge.attributes.importance = kFerryUpClass;
-            update_edge.attributes.reclass_ferry = remove_destonly;
-            element = update_edge;
-            total_count++;
           }
         }
         ferry_endpoint_count++;
