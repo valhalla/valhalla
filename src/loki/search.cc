@@ -309,13 +309,6 @@ struct bin_handler_t {
         distance = node_ll.Distance(location.latlng_);
       // add edges entering/leaving this node
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
-        // the edge candidate that we got this node from we know is not filtered so it will get pass
-        // but some of these edges attached to the node could have been already filtered out as edge
-        // candidates. now that we are re-evaluating these edges because of the node-snap, we must
-        // also re-evaluate whether they are filtered
-        if (is_search_filter_triggered(edge, *costing, tile, location.search_filter_))
-          continue;
-
         // get some info about this edge and the opposing
         GraphId id = tile->id();
         id.set_id(node->edge_index() + (edge - start_edge));
@@ -327,8 +320,10 @@ struct bin_handler_t {
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
         auto layer = info.layer();
-        // do we want this edge
-        if (costing->Allowed(edge, tile, kDisallowShortcut)) {
+        // do we want this edge, note we have to re-evaluate the filter check because we may be
+        // seeing these edges a second time (filtered out before)
+        if (costing->Allowed(edge, tile, kDisallowShortcut) &&
+            !is_search_filter_triggered(edge, *costing, tile, location.search_filter_)) {
           auto reach = get_reach(id, edge);
           PathLocation::PathEdge
               path_edge{id,   0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound,
@@ -347,7 +342,8 @@ struct bin_handler_t {
         if (!other_edge)
           continue;
 
-        if (costing->Allowed(other_edge, other_tile, kDisallowShortcut)) {
+        if (costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
+            !is_search_filter_triggered(other_edge, *costing, other_tile, location.search_filter_)) {
           auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{other_id,
@@ -539,6 +535,13 @@ struct bin_handler_t {
       bool all_prefiltered = true;
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
+        // TODO: for closings its possible that we could use the opposing edge if edge is filtered
+        //  need to do something like is done above with the allowed check filtering or below when we
+        //  switch to the opposing when the reach check fails. one concrete option is to make a little
+        //  lambda or anon namespace function that will check the edge and if is filtered it will pull
+        //  opposing edge to check it as well. that way if the opposing isnt filtered we'll let the
+        //  candidate through and then in correlate_edge we can check the filter once more and get the
+        //  one thats allowed.
         c_itr->prefiltered =
             is_search_filter_triggered(edge, *costing, tile, p_itr->location.search_filter_);
         // set to false if even one candidate was not filtered
