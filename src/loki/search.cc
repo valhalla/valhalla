@@ -309,6 +309,13 @@ struct bin_handler_t {
         distance = node_ll.Distance(location.latlng_);
       // add edges entering/leaving this node
       for (const auto* edge = start_edge; edge < end_edge; ++edge) {
+        // the edge candidate that we got this node from we know is not filtered so it will get pass
+        // but some of these edges attached to the node could have been already filtered out as edge
+        // candidates. now that we are re-evaluating these edges because of the node-snap, we must
+        // also re-evaluate whether they are filtered
+        if (is_search_filter_triggered(edge, *costing, tile, location.search_filter_))
+          continue;
+
         // get some info about this edge and the opposing
         GraphId id = tile->id();
         id.set_id(node->edge_index() + (edge - start_edge));
