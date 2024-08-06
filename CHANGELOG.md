@@ -60,6 +60,7 @@
    * FIXED: Reset `not_thru_pruning` in CostMatrix after second pass was used [#4817](https://github.com/valhalla/valhalla/pull/4817)  
    * FIXED: wrong index used in CostMatrix expansion callback inside reverse connection check [#4821](https://github.com/valhalla/valhalla/pull/4821)
    * FIXED: oneway ferry connections classification [#4828](https://github.com/valhalla/valhalla/pull/4828)
+   * FIXED: location search_filter ignored in certain cases [#4835](https://github.com/valhalla/valhalla/pull/4835)
 
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
