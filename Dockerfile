@@ -12,6 +12,7 @@ FROM ubuntu:24.04 as builder
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 ARG CONCURRENCY
+ARG ADDITIONAL_TARGETS
 
 # set paths
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
@@ -34,7 +35,7 @@ RUN rm -rf build && mkdir build
 WORKDIR /usr/local/src/valhalla/build
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
 RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off
-RUN make all -j${CONCURRENCY:-$(nproc)}
+RUN make all ${ADDITIONAL_TARGETS} -j${CONCURRENCY:-$(nproc)}
 RUN make install
 
 # we wont leave the source around but we'll drop the commit hash we'll also keep the locales
