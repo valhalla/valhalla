@@ -285,42 +285,70 @@ Member::Member(Member&& other)
     : member_type(other.member_type), member_id(other.member_id), role(std::move(other.role)) {
 }
 
+// parser constructor
+Parser::Parser(int numThreads) : thread_pool(numThreads) {}
+
 void Parser::parse(std::ifstream& file, const Interest interest, Callback& callback) {
+  // Read file in the main thread and queue tasks for worker threads
+  read_file(file, interest, callback);
+
+  // Wait for all jobs to complete
+  thread_pool.WaitForAllJobs();
+}
+
+void Parser::read_file(std::ifstream& file, const Interest interest, Callback& callback) {
   char* buffer = new char[MAX_UNCOMPRESSED_BLOB_SIZE];
   char* unpack_buffer = new char[MAX_UNCOMPRESSED_BLOB_SIZE];
 
-  // start from the top
+  // Start from the top
   file.clear();
   file.seekg(0, std::ios::beg);
 
-  // while there is more to read
+  // While there is more to read
   while (!file.eof()) {
-    // grab the blob header
+    // Grab the blob header
     bool finished = false;
     BlobHeader header = read_header(buffer, file, finished);
-    // if we didnt hit the end
+    // If we didn't hit the end
     if (!finished) {
-      // grab the blob that goes with the blob header
+      // Grab the blob that goes with the blob header
       int32_t sz = read_blob(buffer, unpack_buffer, file, header);
-      // if its data parse it
-      if (header.type() == "OSMData") {
-        parse_primitive_block(unpack_buffer, sz, interest, callback);
-        // if its something other than a header
-      } else if (header.type() == "OSMHeader") {
-        parse_header_block(unpack_buffer, sz);
-      } else {
-        LOG_WARN("Unknown blob type: " + header.type());
-      }
+
+      // Create a task and queue it for processing
+      Task task = { buffer, unpack_buffer, header, sz };
+      thread_pool.QueueJob([this, task, interest, &callback]() {
+        this->process_task(task, interest, callback);
+      });
+
+      // Allocate new buffers for the next read
+      buffer = new char[MAX_UNCOMPRESSED_BLOB_SIZE];
+      unpack_buffer = new char[MAX_UNCOMPRESSED_BLOB_SIZE];
     }
   }
 
-  // done with protobuf and buffers
+  // Clean up last unused buffers
   delete[] buffer;
   delete[] unpack_buffer;
 }
 
+void Parser::process_task(Task task, const Interest interest, Callback& callback) {
+  // Process the task
+  if (task.header.type() == "OSMData") {
+    parse_primitive_block(task.unpack_buffer, task.size, interest, callback);
+  } else if (task.header.type() == "OSMHeader") {
+    parse_header_block(task.unpack_buffer, task.size);
+  } else {
+    LOG_WARN("Unknown blob type: " + task.header.type());
+  }
+
+  // Clean up buffers
+  delete[] task.buffer;
+  delete[] task.unpack_buffer;
+}
+
+// Cleans up protobuf library level memory, making protobuf unusable after its called
 void Parser::free() {
-  google::protobuf::ShutdownProtobufLibrary();
+  // Implementation of the free method if needed
 }
 
 } // namespace OSMPBF
