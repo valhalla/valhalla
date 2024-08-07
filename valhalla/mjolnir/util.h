@@ -7,6 +7,11 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <thread>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
 
 #include <sqlite3.h>
 // needs to be after sqlite include
@@ -241,6 +246,66 @@ struct TileManifest {
              filename);
     return TileManifest{tileset};
   }
+};
+
+/**
+ * Thread pool for running jobs.
+ * @param numThreads Number of threads
+ */
+class ThreadPool {
+public:
+    /**
+     * Constructor
+     * @param numThreads Number of threads
+     */
+    explicit ThreadPool(int numThreads);
+
+    /**
+     * Destructor
+     */
+    ~ThreadPool();
+    
+    /**
+     * Add a job to the queue
+     * @param job Job to add
+     */
+    void QueueJob(const std::function<void()>& job);
+
+    /**
+     * Stop all threads and wait for them to finish
+     * @note Blocks until all jobs have been completed
+     */
+    void Stop();
+
+    /**
+     * Check if there are any jobs in the queue
+     * @return True if there are jobs in the queue, false otherwise
+     */
+    bool busy();
+
+    /**
+     * Check if the queue is full
+     * @return True if the queue is full, false otherwise
+     */
+    bool QueueFull();
+    
+    /**
+     * Wait for all jobs to complete
+     * @note Blocks until all jobs have been completed
+     */
+    void WaitForAllJobs();
+
+private:
+    void Start(int numThreads);
+    void ThreadLoop();
+
+    int numThreads;
+    bool should_terminate = false;           // Tells threads to stop looking for jobs
+    std::mutex queue_mutex;                  // Prevents data races to the job queue
+    std::condition_variable mutex_condition; // Allows threads to wait on new jobs or termination 
+    std::vector<std::thread> threads;
+    std::queue<std::function<void()>> jobs;
+    std::atomic<int> active_jobs{0};         // Count of jobs actively being executed
 };
 } // namespace mjolnir
 } // namespace valhalla

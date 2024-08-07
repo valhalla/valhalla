@@ -323,8 +323,9 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
   }
 
   LOG_INFO("Parsing nodes and storing landmarks...");
+  OSMPBF::Parser parser(4);
   for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
+    parser.parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                           callback);
   }
 

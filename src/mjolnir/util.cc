@@ -19,10 +19,16 @@
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/transitbuilder.h"
 
+#include <atomic>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <condition_variable>
+#include <mutex>
+#include <queue>
 #include <regex>
+#include <thread>
+#include <vector>
 
 using namespace valhalla::midgard;
 
@@ -463,6 +469,85 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     OSMData::cleanup_temp_files(tile_dir);
   }
   return true;
+}
+
+ThreadPool::ThreadPool(int numThreads) {
+  this->numThreads = std::max(1, numThreads);
+  Start(this->numThreads);
+}
+
+ThreadPool::~ThreadPool() {
+  Stop();
+}
+
+void ThreadPool::Start(int numThreads) {
+  for (int i = 0; i < numThreads; ++i) {
+    threads.emplace_back([this] { ThreadLoop(); });
+  }
+}
+
+void ThreadPool::QueueJob(const std::function<void()>& job) {
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    jobs.push(job);
+  }
+  mutex_condition.notify_one();
+}
+
+void ThreadPool::Stop() {
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    should_terminate = true;
+  }
+  mutex_condition.notify_all();
+  for (std::thread& active_thread : threads) {
+    active_thread.join();
+  }
+  threads.clear();
+}
+
+bool ThreadPool::busy() {
+  bool poolbusy;
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    poolbusy = !jobs.empty();
+  }
+  return poolbusy;
+}
+
+bool ThreadPool::QueueFull() {
+  bool poolfull;
+  {
+    std::unique_lock<std::mutex> lock(queue_mutex);
+    poolfull = jobs.size() >= numThreads;
+  }
+  return poolfull;
+}
+
+void ThreadPool::WaitForAllJobs() {
+  std::unique_lock<std::mutex> lock(queue_mutex);
+  mutex_condition.wait(lock, [this]() { return jobs.empty() && (active_jobs == 0); });
+}
+
+void ThreadPool::ThreadLoop() {
+  while (true) {
+    std::function<void()> job;
+    {
+      std::unique_lock<std::mutex> lock(queue_mutex);
+      mutex_condition.wait(lock, [this] { return !jobs.empty() || should_terminate; });
+      if (should_terminate) {
+        return;
+      }
+      job = std::move(jobs.front());
+      jobs.pop();
+    }
+    active_jobs++;
+    job();
+    active_jobs--;
+    if (active_jobs == 0 && jobs.empty()) {
+      mutex_condition.notify_all();
+    }
+  }
 }
 
 } // namespace mjolnir
