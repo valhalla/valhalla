@@ -648,7 +648,9 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       // path_distance for multimodal is currently checked inside the algorithm
-      (!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) {
+      ((!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) ||
+      (has_excludes_ && CheckExclusions(edge, pred, exclude_bridges_, exclude_tunnels_,
+                                        exclude_tolls_, exclude_highways_, exclude_ferries_))) {
     return false;
   }
 
@@ -683,7 +685,9 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
-      opp_edge->use() == Use::kPlatformConnection) {
+      opp_edge->use() == Use::kPlatformConnection ||
+      (has_excludes_ && CheckExclusions(opp_edge, pred, exclude_bridges_, exclude_tunnels_,
+                                        exclude_tolls_, exclude_highways_, exclude_ferries_))) {
     return false;
   }
 
