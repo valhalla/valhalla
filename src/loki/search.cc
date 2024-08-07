@@ -35,12 +35,10 @@ bool search_filter(const DirectedEdge* edge,
   // is 0 and min_road_class is 7. This filter rejects roads where the functional
   // road class is outside of the min to max range.
   return (road_class > min_road_class || road_class < max_road_class) ||
-         (filter.exclude_tunnel_ && edge->tunnel()) ||
-         (filter.exclude_bridge_ && edge->bridge()) ||
+         (filter.exclude_tunnel_ && edge->tunnel()) || (filter.exclude_bridge_ && edge->bridge()) ||
          (filter.exclude_toll_ && edge->toll()) ||
          (filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
-         (filter.exclude_ferry_ &&
-          (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
+         (filter.exclude_ferry_ && (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
          (filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
           tile->IsClosed(edge));
 }
