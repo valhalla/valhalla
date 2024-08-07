@@ -1,12 +1,10 @@
 #include <cmath>
 #include <iomanip>
-#include <iostream>
 #include <sstream>
 #include <string>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/format.hpp>
 
 #include "baldr/verbal_text_formatter.h"
 #include "midgard/constants.h"

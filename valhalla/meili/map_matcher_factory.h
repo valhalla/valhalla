@@ -1,9 +1,6 @@
 // -*- mode: c++ -*-
 #ifndef MMP_MAP_MATCHER_FACTORY_H_
 #define MMP_MAP_MATCHER_FACTORY_H_
-#include <cstdint>
-
-#include <string>
 
 #include <boost/property_tree/ptree.hpp>
 

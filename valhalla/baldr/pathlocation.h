@@ -1,8 +1,6 @@
 #ifndef VALHALLA_BALDR_PATHLOCATION_H_
 #define VALHALLA_BALDR_PATHLOCATION_H_
 
-#include <cstdint>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/graphid.h>

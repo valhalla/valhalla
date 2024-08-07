@@ -1,4 +1,3 @@
-#include <list>
 #include <optional>
 #include <queue>
 #include <unordered_set>

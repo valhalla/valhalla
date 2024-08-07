@@ -4,10 +4,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/traffictile.h"
 
-#include <boost/property_tree/ptree.hpp>
-
 #include <cmath>
-#include <sstream>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -113,7 +110,6 @@ TEST(Traffic, BasicUpdates) {
                "it's noticed the changes in the live traffic file"
             << std::endl;
   {
-
     auto result = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "auto",
                                    {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});

@@ -1,10 +1,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <unordered_set>
 
 #include "baldr/json.h"

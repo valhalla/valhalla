@@ -1,7 +1,6 @@
 #include "test.h"
 
 #include <string>
-#include <vector>
 
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
