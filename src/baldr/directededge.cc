@@ -594,6 +594,7 @@ json::MapPtr DirectedEdge::json() const {
       {"end_node", endnode().json()},
       {"speeds", json::map({
                      {"default", static_cast<uint64_t>(speed_)},
+                     {"truck", static_cast<uint64_t>(truck_speed_)},
                      {"type", to_string(static_cast<SpeedType>(speed_type_))},
                      {"free_flow", static_cast<uint64_t>(free_flow_speed_)},
                      {"constrained_flow", static_cast<uint64_t>(constrained_flow_speed_)},

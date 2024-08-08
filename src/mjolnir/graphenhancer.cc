@@ -1,4 +1,5 @@
 #include "mjolnir/graphenhancer.h"
+#include "legal_speed.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/countryaccess.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -1303,6 +1304,11 @@ void enhance(const boost::property_tree::ptree& pt,
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
 
+  // Assign country-specific default speeds
+  auto legal_speeds_config = pt.get_optional<std::string>("legal_speeds_config");
+  auto update_speed_from_legal_speeds = pt.get<bool>("use_legal_speed_as_edge_speed", false);
+  SimpleLegalSpeedAssigner legal_speeds_assigner(legal_speeds_config, update_speed_from_legal_speeds);
+
   // Config driven speed assignment
   auto speeds_config = pt.get_optional<std::string>("default_speeds_config");
   SpeedAssigner speed_assigner(speeds_config);
@@ -1585,9 +1591,19 @@ void enhance(const boost::property_tree::ptree& pt,
         auto names = e_offset.GetNames(false);
         directededge.set_named(names.size() > 0);
 
+        // Simple legal speed assignment
+        const uint32_t found_speed =
+            legal_speeds_assigner.update_speed(directededge, density, end_node_code,
+                                               end_node_state_code);
+        if (found_speed && directededge.speed_type() == SpeedType::kClassified) {
+          // EdgeInfo edgeinfo = tilebuilder->edgeinfo(&directededge);
+          tilebuilder->set_speed_limit(directededge.edgeinfo_offset(), found_speed);
+        }
+
         // Speed assignment
         speed_assigner.UpdateSpeed(directededge, density, infer_turn_channels, end_node_code,
-                                   end_node_state_code);
+                                   end_node_state_code,
+                                   found_speed == 0 || !update_speed_from_legal_speeds);
 
         // Name continuity - on the directededge.
         uint32_t ntrans = nodeinfo.local_edge_count();

@@ -141,6 +141,7 @@
    * ADDED: `use_truck_route` [#4809](https://github.com/valhalla/valhalla/pull/4809)
    * ADDED: Add option `edge.country_crossing` to trace attributes[4825](https://github.com/valhalla/valhalla/pull/4825)
    * CHANGED: Unification of turn costs for ramps and roundabouts[4827](https://github.com/valhalla/valhalla/pull/4827)
+   * ADDED: Simple legal default speed configuration [#4739](https://github.com/valhalla/valhalla/pull/4739)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

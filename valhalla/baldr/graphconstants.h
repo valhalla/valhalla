@@ -86,6 +86,10 @@ enum class Traversability {
 // Maximum relative density at a node or within a tile
 constexpr uint32_t kMaxDensity = 15;
 
+// The switch over between rural and urban densities. Anything above this is assumed to be urban.
+// If this density check is changed then we need to modify the urban flag in the osrm response too
+constexpr uint32_t kMaxRuralDensity = 8;
+
 // Unlimited speed limit. In OSM maxspeed=none. Set to max value to signify
 // unlimited.
 constexpr uint8_t kUnlimitedSpeedLimit = std::numeric_limits<uint8_t>::max();
