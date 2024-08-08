@@ -460,6 +460,55 @@ TEST(TimeParsing, TestConditionalRestrictions) {
   }
 }
 
+TEST(TimeParsing, TestConditionalMaxspeed) {
+  TryConditionalRestrictions("(19:00-06:00)", 0, 0, 0, {0, 0, 0, 19, 0}, {0, 0, 0, 6, 0});
+  TryConditionalRestrictions("(06:00-18:00)", 0, 0, 0, {0, 0, 0, 6, 0}, {0, 0, 0, 18, 0});
+
+  std::string condition = "(07:00-09:00,13:00-16:00; SH off)";
+  ASSERT_EQ(get_time_range(condition).size(), 2);
+  TryConditionalRestrictions(condition, 0, 0, 0, {0, 0, 0, 7, 0}, {0, 0, 0, 9, 0});
+  TryConditionalRestrictions(condition, 1, 0, 0, {0, 0, 0, 13, 0}, {0, 0, 0, 16, 0});
+
+  TryConditionalRestrictions("Mo-Fr 19:00-07:00,Sa,Su", 0, 0, 62, {0, 0, 0, 19, 0}, {0, 0, 0, 7, 0});
+
+  condition = "Mo-Fr 06:00-10:00,15:00-19:00 &quot;bij grote verkeersdrukte&quot;";
+  ASSERT_EQ(get_time_range(condition).size(), 2);
+  TryConditionalRestrictions(condition, 0, 0, 62, {0, 0, 0, 6, 0}, {0, 0, 0, 10, 0});
+  TryConditionalRestrictions(condition, 1, 0, 62, {0, 0, 0, 15, 0}, {0, 0, 0, 19, 0});
+
+  // todo: do we want to eliminate duplicates?
+  condition = "(Mo-Sa 07:00-20:00,07:00-20:00; Su 00:00-24:00; PH 00:00-24:00)";
+  ASSERT_EQ(get_time_range(condition).size(), 4);
+  TryConditionalRestrictions(condition, 0, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
+  TryConditionalRestrictions(condition, 1, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
+  TryConditionalRestrictions(condition, 2, 0, 127, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
+  TryConditionalRestrictions(condition, 3, 0, 127, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
+
+  TryConditionalRestrictions("Jun-Aug", 0, 0, 0, {6, 0, 0, 0, 0}, {8, 0, 0, 0, 0});
+  TryConditionalRestrictions("(Nov - Mar)", 0, 0, 0, {11, 0, 0, 0, 0}, {3, 0, 0, 0, 0});
+
+  TryConditionalRestrictions("(Apr 15-Oct 15 00:00-24:00)", 0, 0, 0, {4, 15, 0, 0, 0},
+                             {10, 15, 0, 0, 0});
+  TryConditionalRestrictions("(Aug 01-Jun 30 06:00-18:00)", 0, 0, 0, {8, 1, 0, 6, 0},
+                             {6, 30, 0, 18, 0});
+  TryConditionalRestrictions("(Aug 01-Jun 30 Mo-Fr 07:00-17:00; PH -1 day off; PH off)", 0, 0, 62,
+                             {8, 1, 0, 7, 0}, {6, 30, 0, 17, 0});
+
+  // not fully supported
+  condition =
+      "(Jan 01-Jun 15 Mo-Fr 07:00-18:00; PH -1 day off; PH off; Aug 15-Dec 31 Mo-Fr 00:00-24:00; PH -1 day off; PH off)";
+  ASSERT_EQ(get_time_range(condition).size(), 1);
+  TryConditionalRestrictions(condition, 0, 0, 62, {1, 1, 0, 7, 0}, {6, 15, 0, 18, 0});
+  // TryConditionalRestrictions(condition, 1, 0, 62, {8, 15, 0, 0, 0}, {12, 31, 0, 0, 0});
+
+  TryConditionalRestrictions("(Jun 1-Aug 31 00:00-24:00)", 0, 0, 0, {6, 1, 0, 0, 0},
+                             {8, 31, 0, 0, 0});
+
+  // non-standart season that is not supported for now
+  EXPECT_TRUE(get_time_range("summer").empty());
+  EXPECT_TRUE(get_time_range("winter").empty());
+}
+
 int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

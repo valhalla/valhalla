@@ -241,6 +241,18 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
 
               if (RegexFound(condition, regex)) {
                 condition = FormatCondition(condition, regex, "$1#$2-$1#$3");
+              } else {
+                // Nov - Mar => Nov-Mar
+                regex = std::regex(
+                    "(?:(January|February|March|April|May|June|July|"
+                    "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+                    "Sep|Sept|Oct|Nov|Dec)) - (?:(January|February|March|April|May|June|July|"
+                    "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+                    "Sep|Sept|Oct|Nov|Dec))",
+                    std::regex_constants::icase);
+                if (RegexFound(condition, regex)) {
+                  condition = FormatCondition(condition, regex, "$1-$2");
+                }
               }
             }
           }
