@@ -180,6 +180,7 @@ message TripLeg {
     repeated StreetName tunnel_name = 55;
     float elevation_sampling_interval = 56;
     repeated float elevation = 57;
+    bool country_crossing = 58;
   }
 
   message IntersectingEdge {
