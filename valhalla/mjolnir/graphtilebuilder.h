@@ -301,7 +301,7 @@ public:
    */
   uint32_t set_elevation(const uint32_t offset,
                          const float mean_elevation,
-                         const std::vector<int8_t>& encoded_elevation);
+                         std::vector<int8_t> encoded_elevation);
 
   /**
    * Add a name to the text list.

@@ -85,7 +85,7 @@ void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
 }
 
 // Set the encoded elevation vector.
-void EdgeInfoBuilder::set_encoded_elevation(const std::vector<int8_t>& encoded_elevation) {
+void EdgeInfoBuilder::set_encoded_elevation(std::vector<int8_t> encoded_elevation) {
   if (!encoded_elevation.empty()) {
     encoded_elevation_ = std::move(encoded_elevation);
   }

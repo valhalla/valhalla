@@ -866,7 +866,7 @@ void GraphTileBuilder::set_mean_elevation(const float elev) {
 // info offset. This requires a serialized tile builder.
 uint32_t GraphTileBuilder::set_elevation(const uint32_t offset,
                                          const float mean_elevation,
-                                         const std::vector<int8_t>& encoded_elevation) {
+                                         std::vector<int8_t> encoded_elevation) {
   auto e = edgeinfo_offset_map_.find(offset);
   if (e == edgeinfo_offset_map_.end()) {
     LOG_ERROR("set_elevation - could not find the EdgeInfo index given the offset");
@@ -874,7 +874,7 @@ uint32_t GraphTileBuilder::set_elevation(const uint32_t offset,
   }
   e->second->set_mean_elevation(mean_elevation);
   if (!encoded_elevation.empty()) {
-    e->second->set_encoded_elevation(encoded_elevation);
+    e->second->set_encoded_elevation(std::move(encoded_elevation));
     e->second->set_has_elevation(true);
   }
   return e->second->SizeOf();

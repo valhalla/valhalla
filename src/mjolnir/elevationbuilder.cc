@@ -225,7 +225,7 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       } else {
         encoded = encode_edge_elevation(sample, shape, length, wayid);
       }
-      ei_offset += tilebuilder.set_elevation(edge_info_offset, mean_elevation, encoded);
+      ei_offset += tilebuilder.set_elevation(edge_info_offset, mean_elevation, std::move(encoded));
     }
 
     // Edge elevation information. If the edge is forward (with respect to the shape)

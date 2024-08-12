@@ -98,7 +98,7 @@ public:
    * Set encoded elevation.
    * @param  encoded_elevation  Encoded elevation
    */
-  void set_encoded_elevation(const std::vector<int8_t>& encoded_elevation);
+  void set_encoded_elevation(std::vector<int8_t> encoded_elevation);
 
   /**
    * Get the size of this edge info (without padding).
