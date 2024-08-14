@@ -12,7 +12,8 @@ set(protobuf_descriptors
   incidents.proto
   status.proto
   matrix.proto
-  isochrone.proto)
+  isochrone.proto
+  expansion.proto)
 
 if(ENABLE_DATA_TOOLS)
   # Only mjolnir needs the OSM PBF descriptors

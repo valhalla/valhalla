@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <bitset>
 #include <cstdint>
 #include <string>
 

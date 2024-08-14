@@ -4,7 +4,6 @@
 #include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <sstream>
 #include <string>
 
 #include "baldr/rapidjson_utils.h"

@@ -15,7 +15,7 @@ namespace {
 
 template <typename PrecisionT>
 void TryGeneralizeAndLength(Polyline2<PointXY<PrecisionT>>& pl, const float& gen, const float& res) {
-  uint32_t size = pl.Generalize(gen);
+  pl.Generalize(gen);
 
   std::vector<PointXY<PrecisionT>> pts = pl.pts();
 

@@ -3,7 +3,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <memory>
-#include <unordered_map>
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>

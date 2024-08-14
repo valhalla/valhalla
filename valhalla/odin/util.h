@@ -5,9 +5,6 @@
 #include <locale>
 #include <string>
 #include <unordered_map>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/odin/narrative_dictionary.h>

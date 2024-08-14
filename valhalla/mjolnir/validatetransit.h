@@ -2,7 +2,6 @@
 #define VALHALLA_MJOLNIR_VALIDATETRANSIT_H
 
 #include <boost/property_tree/ptree.hpp>
-#include <cstdint>
 #include <unordered_set>
 
 #include <valhalla/baldr/datetime.h>

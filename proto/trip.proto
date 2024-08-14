@@ -287,6 +287,7 @@ message TripLeg {
   repeated Incident incidents = 11;
   repeated string algorithms = 12;
   repeated Closure closures = 13;
+  Summary summary = 14;
 }
 
 message TripRoute {

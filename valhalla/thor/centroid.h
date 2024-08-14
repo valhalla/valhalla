@@ -1,9 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/midgard/util.h>

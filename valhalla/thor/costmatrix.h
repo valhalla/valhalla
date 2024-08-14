@@ -2,10 +2,8 @@
 #define VALHALLA_THOR_COSTMATRIX_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <set>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
@@ -15,6 +13,7 @@
 #include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+#include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
@@ -139,8 +138,8 @@ protected:
   std::array<uint32_t, 2> locs_count_;
   std::array<uint32_t, 2> locs_remaining_;
 
-  // The cost threshold being used for the currently executing query
-  float current_cost_threshold_;
+  // The path distance threshold being used for the currently executing query
+  float current_pathdist_threshold_;
 
   // Status
   std::array<std::vector<LocationStatus>, 2> locs_status_;
@@ -151,6 +150,9 @@ protected:
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
 
+  // A* heuristics for both trees and each location
+  std::array<std::vector<AStarHeuristic>, 2> astar_heuristics_;
+
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
 
@@ -158,13 +160,6 @@ protected:
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
-
-  /**
-   * Get the cost threshold based on the current mode and the max arc-length distance
-   * for that mode.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   */
-  float GetCostThreshold(const float max_matrix_distance);
 
   /**
    * Form the initial time distance matrix given the sources
@@ -197,17 +192,21 @@ protected:
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
    * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
    */
   void CheckForwardConnections(const uint32_t source,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
-                               baldr::GraphReader& graphreader);
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   bool Expand(const uint32_t index,
               const uint32_t n,
               baldr::GraphReader& graphreader,
+              const valhalla::Options& options,
               const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
               const bool invariant = false);
 
@@ -231,11 +230,14 @@ protected:
    * @param  pred        Edge label of the predecessor.
    * @param  n           Iteration counter.
    * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
    */
   void CheckReverseConnections(const uint32_t target,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
-                               baldr::GraphReader& graphreader);
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   /**
    * Update status when a connection is found.
@@ -344,6 +346,19 @@ protected:
         hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
     }
   };
+
+  /**
+   * Get the minimum AStar heuristic for a given source/target, i.e. for a source we get
+   * the minimum heuristic of all targets for the forward expansion, so that we direct
+   * the search towards the closest target/source.
+   *
+   * @param loc_idx  either the source or target index
+   * @param node_ll  the current edge's end node's lat/lon
+   * @returns The heuristic for the closest target/source of the passed node
+   */
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
+  float GetAstarHeuristic(const uint32_t loc_idx, const PointLL& node_ll) const;
 
 private:
   class ReachedMap;

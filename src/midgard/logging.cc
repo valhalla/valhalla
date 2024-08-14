@@ -8,7 +8,6 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <sstream>
 #include <stdexcept>
 
 #ifdef __ANDROID__

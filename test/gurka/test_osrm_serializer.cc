@@ -1,5 +1,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include <boost/format.hpp>
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -553,13 +554,14 @@ protected:
 
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/osrm_serializer_voice", build_config);
   }
-
-  rapidjson::Document json_request(const std::string& from, const std::string& to) {
+  rapidjson::Document json_request(const std::string& from,
+                                   const std::string& to,
+                                   const std::string& language = "en-US") {
     const std::string& request =
         (boost::format(
-             R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","voice_instructions":true})") %
+             R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","voice_instructions":true,"language":"%s"})") %
          std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
-         std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+         std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()) % language)
             .str();
     auto result = gurka::do_action(valhalla::Options::route, map, request);
     return gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
@@ -571,17 +573,24 @@ gurka::map VoiceInstructions::map = {};
 TEST_F(VoiceInstructions, VoiceInstructionsPresent) {
   auto json = json_request("A", "F");
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
-  // Validate that each step has voiceInstructions with announcement and distanceAlongGeometry
-  for (int step = 0; step < steps.Size(); ++step) {
+  // Validate that each step (except the last one) has voiceInstructions with announcement,
+  // ssmlAnnouncement and distanceAlongGeometry
+  for (int step = 0; step < steps.Size() - 1; ++step) {
     ASSERT_TRUE(steps[step].HasMember("voiceInstructions"));
     ASSERT_TRUE(steps[step]["voiceInstructions"].IsArray());
 
     EXPECT_GT(steps[step]["voiceInstructions"].Size(), 0);
     for (int instr = 0; instr < steps[step]["voiceInstructions"].GetArray().Size(); ++instr) {
       ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("announcement"));
+      ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("ssmlAnnouncement"));
       ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("distanceAlongGeometry"));
     }
   }
+
+  // Validate the last step as empty voiceInstructions
+  ASSERT_TRUE(steps[steps.Size() - 1].HasMember("voiceInstructions"));
+  ASSERT_TRUE(steps[steps.Size() - 1]["voiceInstructions"].IsArray());
+  EXPECT_EQ(steps[steps.Size() - 1]["voiceInstructions"].Size(), 0);
 }
 
 // depart_instruction
@@ -695,9 +704,28 @@ TEST_F(VoiceInstructions, AllVoiceInstructions) {
   EXPECT_GT(final_arrive_instruction["distanceAlongGeometry"].GetFloat(), 41);
   EXPECT_LT(final_arrive_instruction["distanceAlongGeometry"].GetFloat(), 43);
 
-  auto last_instruction = steps[2]["voiceInstructions"][0].GetObject();
-  EXPECT_STREQ(last_instruction["announcement"].GetString(), "You will arrive at your destination.");
-  EXPECT_EQ(last_instruction["distanceAlongGeometry"].GetFloat(), 0.0);
+  auto last_instruction = steps[2]["voiceInstructions"].GetArray();
+  EXPECT_EQ(last_instruction.Size(), 0);
+}
+
+TEST_F(VoiceInstructions, DefaultVoiceLocalePresent) {
+  auto json = json_request("A", "F");
+  auto routes = json["routes"].GetArray();
+  // Validate that each route has the default voiceLocale
+  for (int route = 0; route < routes.Size(); ++route) {
+    ASSERT_TRUE(routes[route].HasMember("voiceLocale"));
+    EXPECT_STREQ(routes[route]["voiceLocale"].GetString(), "en-US");
+  }
+}
+
+TEST_F(VoiceInstructions, VoiceLocalePresent) {
+  auto json = json_request("A", "F", "de-DE");
+  auto routes = json["routes"].GetArray();
+  // Validate that each route has the voiceLocale from the options
+  for (int route = 0; route < routes.Size(); ++route) {
+    ASSERT_TRUE(routes[route].HasMember("voiceLocale"));
+    EXPECT_STREQ(routes[route]["voiceLocale"].GetString(), "de-DE");
+  }
 }
 
 TEST(Standalone, BannerInstructions) {
@@ -749,8 +777,8 @@ TEST(Standalone, BannerInstructions) {
 
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
-  // Validate that each step has bannerInstructions with primary
-  for (int step = 0; step < steps.Size(); ++step) {
+  // Validate that each step (except the last one) has bannerInstructions with primary
+  for (int step = 0; step < steps.Size() - 1; ++step) {
     ASSERT_TRUE(steps[step].HasMember("bannerInstructions"));
     ASSERT_TRUE(steps[step]["bannerInstructions"].IsArray());
     EXPECT_GT(steps[step]["bannerInstructions"].GetArray().Size(), 0);
@@ -762,6 +790,11 @@ TEST(Standalone, BannerInstructions) {
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("components"));
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"]["components"].IsArray());
     }
+
+    // Validate the last step has empty bannerInstructions
+    ASSERT_TRUE(steps[steps.Size() - 1].HasMember("bannerInstructions"));
+    ASSERT_TRUE(steps[steps.Size() - 1]["bannerInstructions"].IsArray());
+    EXPECT_EQ(steps[steps.Size() - 1]["bannerInstructions"].GetArray().Size(), 0);
   }
 
   // validate first step has two bannerInstruction
@@ -957,8 +990,8 @@ TEST(Standalone, BannerInstructionsRoundabout) {
 
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
-  // Validate that each step has bannerInstructions with primary
-  for (int step = 0; step < steps.Size(); ++step) {
+  // Validate that each step (except the last one) has bannerInstructions with primary
+  for (int step = 0; step < steps.Size() - 1; ++step) {
     ASSERT_TRUE(steps[step].HasMember("bannerInstructions"));
     ASSERT_TRUE(steps[step]["bannerInstructions"].IsArray());
     EXPECT_GT(steps[step]["bannerInstructions"].GetArray().Size(), 0);
@@ -971,6 +1004,11 @@ TEST(Standalone, BannerInstructionsRoundabout) {
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"]["components"].IsArray());
     }
   }
+
+  // Validate the last step has empty bannerInstructions
+  ASSERT_TRUE(steps[steps.Size() - 1].HasMember("bannerInstructions"));
+  ASSERT_TRUE(steps[steps.Size() - 1]["bannerInstructions"].IsArray());
+  EXPECT_EQ(steps[steps.Size() - 1]["bannerInstructions"].GetArray().Size(), 0);
 
   // validate first step's primary instructions
   auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();

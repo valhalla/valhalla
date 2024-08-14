@@ -2,7 +2,6 @@
 #ifndef MMP_MAP_MATCHER_H_
 #define MMP_MAP_MATCHER_H_
 
-#include <unordered_set>
 #include <vector>
 
 #include <valhalla/baldr/graphid.h>
