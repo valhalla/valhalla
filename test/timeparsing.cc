@@ -476,13 +476,24 @@ TEST(TimeParsing, TestConditionalMaxspeed) {
   TryConditionalRestrictions(condition, 0, 0, 62, {0, 0, 0, 6, 0}, {0, 0, 0, 10, 0});
   TryConditionalRestrictions(condition, 1, 0, 62, {0, 0, 0, 15, 0}, {0, 0, 0, 19, 0});
 
-  // todo: do we want to eliminate duplicates?
+  condition = "(Mo, We, Th, Sa 07:00-15:00)";
+  ASSERT_EQ(get_time_range(condition).size(), 1);
+  TryConditionalRestrictions(condition, 0, 0, 0b01011010, {0, 0, 0, 7, 0}, {0, 0, 0, 15, 0});
+
   condition = "(Mo-Sa 07:00-20:00,07:00-20:00; Su 00:00-24:00; PH 00:00-24:00)";
-  ASSERT_EQ(get_time_range(condition).size(), 4);
-  TryConditionalRestrictions(condition, 0, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
-  TryConditionalRestrictions(condition, 1, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
-  TryConditionalRestrictions(condition, 2, 0, 127, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
-  TryConditionalRestrictions(condition, 3, 0, 127, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
+  {
+    const auto conditions = GetTagTokens(condition, ';');
+    ASSERT_EQ(conditions.size(), 3);
+
+    ASSERT_EQ(get_time_range(conditions[0]).size(), 2);
+    TryConditionalRestrictions(conditions[0], 0, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
+    TryConditionalRestrictions(conditions[0], 1, 0, 126, {0, 0, 0, 7, 0}, {0, 0, 0, 20, 0});
+
+    ASSERT_EQ(get_time_range(conditions[1]).size(), 1);
+    TryConditionalRestrictions(conditions[1], 0, 0, 1, {0, 0, 0, 0, 0}, {0, 0, 0, 0, 0});
+
+    EXPECT_EQ(get_time_range(conditions[2]).size(), 0);
+  }
 
   TryConditionalRestrictions("Jun-Aug", 0, 0, 0, {6, 0, 0, 0, 0}, {8, 0, 0, 0, 0});
   TryConditionalRestrictions("(Nov - Mar)", 0, 0, 0, {11, 0, 0, 0, 0}, {3, 0, 0, 0, 0});
@@ -494,17 +505,29 @@ TEST(TimeParsing, TestConditionalMaxspeed) {
   TryConditionalRestrictions("(Aug 01-Jun 30 Mo-Fr 07:00-17:00; PH -1 day off; PH off)", 0, 0, 62,
                              {8, 1, 0, 7, 0}, {6, 30, 0, 17, 0});
 
-  // not fully supported
   condition =
       "(Jan 01-Jun 15 Mo-Fr 07:00-18:00; PH -1 day off; PH off; Aug 15-Dec 31 Mo-Fr 00:00-24:00; PH -1 day off; PH off)";
-  ASSERT_EQ(get_time_range(condition).size(), 1);
-  TryConditionalRestrictions(condition, 0, 0, 62, {1, 1, 0, 7, 0}, {6, 15, 0, 18, 0});
-  // TryConditionalRestrictions(condition, 1, 0, 62, {8, 15, 0, 0, 0}, {12, 31, 0, 0, 0});
+  {
+    const auto conditions = GetTagTokens(condition, ';');
+    ASSERT_EQ(conditions.size(), 6);
+
+    ASSERT_EQ(get_time_range(conditions[0]).size(), 1);
+    TryConditionalRestrictions(conditions[0], 0, 0, 62, {1, 1, 0, 7, 0}, {6, 15, 0, 18, 0});
+
+    ASSERT_EQ(get_time_range(conditions[1]).size(), 0);
+    ASSERT_EQ(get_time_range(conditions[2]).size(), 0);
+
+    ASSERT_EQ(get_time_range(conditions[3]).size(), 1);
+    TryConditionalRestrictions(conditions[3], 0, 0, 62, {8, 15, 0, 0, 0}, {12, 31, 0, 0, 0});
+
+    ASSERT_EQ(get_time_range(conditions[4]).size(), 0);
+    ASSERT_EQ(get_time_range(conditions[5]).size(), 0);
+  }
 
   TryConditionalRestrictions("(Jun 1-Aug 31 00:00-24:00)", 0, 0, 0, {6, 1, 0, 0, 0},
                              {8, 31, 0, 0, 0});
 
-  // non-standart season that is not supported for now
+  // non-standart seasons that are not supported
   EXPECT_TRUE(get_time_range("summer").empty());
   EXPECT_TRUE(get_time_range("winter").empty());
 }
