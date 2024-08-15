@@ -119,6 +119,25 @@ message TripLeg {
     uint32 type = 1;
   }
 
+  message ConditionalSpeedLimit {
+    uint32 speed_limit = 1;
+
+    // Encoded condition with the following format:
+    // uint64_t day_type_ : 1;       // type of day_dow, 0 - day of month, 1 - nth day of week
+    // uint64_t dow_ : 7;           // day of week mask, e.g. 0x0111110 for Mo-Fr as week starts from Su
+    // uint64_t begin_hrs_ : 5;     // begin hours, 0 if not set
+    // uint64_t begin_mins_ : 6;    // begin minutes, 0 if not set
+    // uint64_t begin_month_ : 4;   // begin month, from 1 to 12, 0 if not set
+    // uint64_t begin_day_dow_ : 5; // begin day of month or nth dow, i.e. 1st Sunday
+    // uint64_t begin_week_ : 3;    // which week does this start, i.e. 1st week in Oct
+    // uint64_t end_hrs_ : 5;       // end hours, 0 if not set
+    // uint64_t end_mins_ : 6;      // end minutes, 0 if not set
+    // uint64_t end_month_ : 4;     // end month, from 1 to 12, 0 if not set
+    // uint64_t end_day_dow_ : 5;   // end day of month or nth dow, i.e. last Sunday
+    // uint64_t end_week_ : 3;      // which week does this end, i.e. last week in Oct
+    uint64 condition = 2;
+  }
+
   message Edge {
     repeated StreetName name = 1;           // street names
     float length_km = 2;           // km
@@ -182,6 +201,7 @@ message TripLeg {
     repeated float elevation = 57;
     bool country_crossing = 58;
     bool forward = 59;
+    repeated ConditionalSpeedLimit conditional_speed_limits = 60;
   }
 
   message IntersectingEdge {

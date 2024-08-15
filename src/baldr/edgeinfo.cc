@@ -1,6 +1,6 @@
 #include "baldr/edgeinfo.h"
+#include "baldr/conditional_speed_limit.h"
 #include "baldr/graphconstants.h"
-
 #include "midgard/elevation_encoding.h"
 
 using namespace valhalla::baldr;
@@ -28,6 +28,14 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   auto a = json::array({});
   for (const auto& n : names) {
     a->push_back(n);
+  }
+  return a;
+}
+
+json::MapPtr conditional_speed_limits_json(const std::vector<ConditionalSpeedLimit>& limits) {
+  auto a = json::map({});
+  for (const auto& l : limits) {
+    a->emplace(l.condition_str(), static_cast<uint64_t>(l.speed_limit()));
   }
   return a;
 }
@@ -81,6 +89,13 @@ EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_le
   if (ei_.extended_wayid_size_ > 1) {
     extended_wayid3_ = static_cast<uint8_t>(*ptr);
     ptr += sizeof(uint8_t);
+  }
+  if (ei_.had_conditional_speed_limits) {
+    conditional_speed_limits_count_ = static_cast<uint8_t>(*ptr);
+    ptr += sizeof(uint8_t);
+
+    conditional_speed_limits_ = reinterpret_cast<ConditionalSpeedLimit*>(ptr);
+    ptr += conditional_speed_limits_count_ * sizeof(ConditionalSpeedLimit);
   }
 
   // Set encoded elevation pointer
@@ -391,6 +406,16 @@ std::vector<int8_t> EdgeInfo::encoded_elevation(const uint32_t length, double& i
   return std::vector<int8_t>(encoded_elevation_, encoded_elevation_ + n);
 }
 
+std::vector<ConditionalSpeedLimit> EdgeInfo::conditional_speed_limits() const {
+  if (!ei_.had_conditional_speed_limits) {
+    return {};
+  }
+
+  return std::vector<ConditionalSpeedLimit>(conditional_speed_limits_,
+                                            conditional_speed_limits_ +
+                                                conditional_speed_limits_count_);
+}
+
 int8_t EdgeInfo::layer() const {
   const auto& tags = GetTags();
   auto itr = tags.find(TaggedValue::kLayer);
@@ -443,6 +468,11 @@ json::MapPtr EdgeInfo::json() const {
     edge_info->emplace("speed_limit", std::string("unlimited"));
   } else {
     edge_info->emplace("speed_limit", static_cast<uint64_t>(speed_limit()));
+  }
+
+  const auto limits = conditional_speed_limits();
+  if (!limits.empty()) {
+    edge_info->emplace("conditional_speed_limits", conditional_speed_limits_json(limits));
   }
 
   return edge_info;

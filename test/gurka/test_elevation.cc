@@ -62,7 +62,14 @@ TEST(Standalone, ElevationCompareToSkadi) {
       {"NOP", {{"highway", "residential"}, {"name", "East Chestnut Street"}}},
       {"QRS", {{"highway", "service"}, {"service", "alley"}}},
       {"OR", {{"highway", "service"}, {"service", "alley"}}},
-      {"SPM2J1F", {{"highway", "service"}, {"service", "alley"}}},
+      {"SPM2J1F",
+       {
+           {"highway", "service"},
+           {"service", "alley"},
+           // both elevation and conditional speed limits are stored in the EdgeInfo,
+           // just double checking that they can work together
+           {"maxspeed:conditional", "30 @ (19:00-06:00)"},
+       }},
       {"KLM", {{"highway", "service"}, {"service", "alley"}, {"name", "East Center Alley"}}},
       {"DEFG", {{"highway", "service"}, {"service", "alley"}, {"name", "North Alley"}}},
       {"DH", {{"highway", "service"}, {"service", "alley"}}},
@@ -229,5 +236,15 @@ TEST(Standalone, ElevationCompareToSkadi) {
                                             .c_str());
       EXPECT_FALSE(elevation && elevation->IsArray());
     }
+  }
+
+  // Sanity check that conditional speed limits were not corrupted
+  auto route = gurka::do_action(valhalla::Options::route, map, {"S", "F"}, "auto");
+  const auto leg = route.trip().routes(0).legs(0);
+  ASSERT_EQ(leg.node_size(), 5); // 4 edges + last node
+  for (int i = 0; i < 4; ++i) {
+    ASSERT_EQ(leg.node(i).edge().conditional_speed_limits_size(), 1);
+    EXPECT_EQ(leg.node(i).edge().conditional_speed_limits(0).speed_limit(), 30);
+    EXPECT_EQ(leg.node(i).edge().conditional_speed_limits(0).condition(), 12884906752);
   }
 }

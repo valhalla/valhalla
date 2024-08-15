@@ -43,6 +43,7 @@ struct OSMConnectionEdge {
   std::vector<PointLL> shape;
   std::vector<std::string> tagged_values;
   std::vector<std::string> linguistics;
+  std::vector<ConditionalSpeedLimit> conditional_speed_limits;
 };
 
 // Struct to hold stats information during each threads work
@@ -165,7 +166,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       bool added = false;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, conn.shape,
-                                        conn.names, conn.tagged_values, conn.linguistics, 0, added);
+                                        conn.names, conn.tagged_values, conn.linguistics,
+                                        conn.conditional_speed_limits, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -262,7 +264,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, conn.stop_node, conn.osm_node, conn.wayid, 0, 0, 0,
                                             r_shape, conn.names, conn.tagged_values, conn.linguistics,
-                                            0, added);
+                                            conn.conditional_speed_limits, 0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);

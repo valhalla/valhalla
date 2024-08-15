@@ -946,6 +946,24 @@ public:
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
+    tag_handlers_["maxspeed:conditional"] = [this]() {
+      std::vector<std::string> tokens = GetTagTokens(tag_.second, '@');
+      const float speed = std::stof(tokens.at(0));
+      if (speed > kMaxAssumedSpeed) {
+        LOG_WARN("Ignoring maxspeed:conditional that exceedes max for way id: " +
+                 std::to_string(osmid_));
+        return;
+      }
+      uint8_t speed_u8 = static_cast<uint8_t>(speed + 0.5f);
+
+      std::vector<std::string> conditions = GetTagTokens(tokens.at(1), ';');
+      for (const auto& c : conditions) {
+        std::vector<uint64_t> values = get_time_range(c);
+        for (const auto& v : values) {
+          osmdata_.conditional_speeds.emplace(osmid_, ConditionalSpeedLimit(speed_u8, v));
+        }
+      }
+    };
     tag_handlers_["truck_route"] = [this]() {
       way_.set_truck_route(tag_.second == "true" ? true : false);
     };

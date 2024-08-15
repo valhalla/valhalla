@@ -7,6 +7,7 @@
 #include <tuple>
 #include <vector>
 
+#include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/encoded.h>
@@ -252,6 +253,12 @@ public:
   std::vector<int8_t> encoded_elevation(const uint32_t length, double& interval) const;
 
   /**
+   * Returns the list of conditional speed limits for the edge.
+   * @return Conditional speed limits for the edge.
+   */
+  std::vector<ConditionalSpeedLimit> conditional_speed_limits() const;
+
+  /**
    * Get layer index of the edge relatively to other edges(Z-level). Can be negative.
    * @see https://wiki.openstreetmap.org/wiki/Key:layer
    * @return layer index of the edge
@@ -290,12 +297,12 @@ public:
     uint32_t speed_limit_ : 8;     // Speed limit (kph)
     uint32_t extended_wayid0_ : 8; // Next byte of the way id
 
-    uint32_t name_count_ : 4;          // How many name infos we expect
-    uint32_t encoded_shape_size_ : 16; // How many bytes long the encoded shape is
-    uint32_t extended_wayid1_ : 8;     // Next next byte of the way id
-    uint32_t extended_wayid_size_ : 2; // How many more bytes the way id is stored in
-    uint32_t has_elevation_ : 1;       // Does the edgeinfo have elevation?
-    uint32_t spare0_ : 1;              // not used
+    uint32_t name_count_ : 4;                  // How many name infos we expect
+    uint32_t encoded_shape_size_ : 16;         // How many bytes long the encoded shape is
+    uint32_t extended_wayid1_ : 8;             // Next next byte of the way id
+    uint32_t extended_wayid_size_ : 2;         // How many more bytes the way id is stored in
+    uint32_t has_elevation_ : 1;               // Does the edgeinfo have elevation?
+    uint32_t had_conditional_speed_limits : 1; // Does the edgeifo have conditional speed limits?
   };
 
 protected:
@@ -312,8 +319,14 @@ protected:
   uint8_t extended_wayid2_;
   uint8_t extended_wayid3_;
 
+  // Size of the `conditional_speed_limits_` list
+  uint8_t conditional_speed_limits_count_;
+
   // Lng, lat shape of the edge
   mutable std::vector<midgard::PointLL> shape_;
+
+  // List of conditional speed limits associated with the edge
+  const ConditionalSpeedLimit* conditional_speed_limits_;
 
   // Encoded elevation
   const int8_t* encoded_elevation_;

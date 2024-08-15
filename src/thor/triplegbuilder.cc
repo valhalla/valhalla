@@ -1444,6 +1444,16 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_speed_limit(edgeinfo.speed_limit());
   }
 
+  if (controller(kEdgeConditionalSpeedLimits)) {
+    auto conditional_limits = edgeinfo.conditional_speed_limits();
+    trip_edge->mutable_conditional_speed_limits()->Reserve(conditional_limits.size());
+    for (const auto& limit : conditional_limits) {
+      auto proto = trip_edge->mutable_conditional_speed_limits()->Add();
+      proto->set_speed_limit(limit.speed_limit());
+      proto->set_condition(limit.condition());
+    }
+  }
+
   if (controller(kEdgeDefaultSpeed)) {
     trip_edge->set_default_speed(directededge->speed());
   }

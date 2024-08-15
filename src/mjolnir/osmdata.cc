@@ -10,6 +10,7 @@
 #include "mjolnir/util.h"
 
 using namespace valhalla::mjolnir;
+using valhalla::baldr::ConditionalSpeedLimit;
 
 namespace {
 
@@ -26,6 +27,7 @@ const std::string unique_names_file = "osmdata_unique_strings.bin";
 const std::string lane_connectivity_file = "osmdata_lane_connectivity.bin";
 const std::string pronunciation_file = "osmdata_pronunciation_file.bin";
 const std::string language_file = "osmdata_language_file.bin";
+const std::string conditional_speed_limit_file = "osmdata_conditional_speed_limit_file.bin";
 
 // Data structures to assist writing and reading data
 struct TempRestriction {
@@ -79,6 +81,16 @@ struct TempLinguistic {
   TempLinguistic() : way_id(0), linguistic(OSMLinguistic()) {
   }
   TempLinguistic(const uint64_t w, const OSMLinguistic& l) : way_id(w), linguistic(l) {
+  }
+};
+
+struct TempConditionalSpeedLimit {
+  uint64_t way_id;
+  ConditionalSpeedLimit conditional_speed_limit;
+  TempConditionalSpeedLimit() : way_id(0), conditional_speed_limit({}) {
+  }
+  TempConditionalSpeedLimit(const uint64_t w, const ConditionalSpeedLimit s)
+      : way_id(w), conditional_speed_limit(s) {
   }
 };
 
@@ -308,6 +320,31 @@ bool write_linguistic(const std::string& filename, const LinguisticMultiMap& lin
   return true;
 }
 
+bool write_conditional_speed_limits(const std::string& filename,
+                                    const ConditionalSpeedLimitsMultiMap& speed_map) {
+  // Open file and truncate
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  if (!file.is_open()) {
+    LOG_ERROR("write_linguistic failed to open output file: " + filename);
+    return false;
+  }
+
+  // Convert the multi map into a flat representation
+  std::vector<TempConditionalSpeedLimit> flat;
+  flat.reserve(speed_map.size());
+  for (auto it = speed_map.cbegin(); it != speed_map.cend(); ++it) {
+    flat.emplace_back(it->first, it->second);
+  }
+
+  // Write the count and then the via ids
+  uint32_t sz = flat.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(flat.data()),
+             flat.size() * sizeof(TempConditionalSpeedLimit));
+  file.close();
+  return true;
+}
+
 bool read_restrictions(const std::string& filename, RestrictionsMultiMap& res_map) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
@@ -525,6 +562,29 @@ bool read_linguistic(const std::string& filename, LinguisticMultiMap& ling_map) 
   return true;
 }
 
+bool read_conditional_speed_limits(const std::string& filename,
+                                   ConditionalSpeedLimitsMultiMap& speed_map) {
+  // Open file and truncate
+  std::ifstream file(filename, std::ios::in | std::ios::binary);
+  if (!file.is_open()) {
+    LOG_ERROR("read_conditional_speed_limits failed to open input file: " + filename);
+    return false;
+  }
+
+  // Read the count and then the temporary access restriction list
+  uint32_t count = 0;
+  file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
+  std::vector<TempConditionalSpeedLimit> flat(count);
+  file.read(reinterpret_cast<char*>(flat.data()), count * sizeof(TempConditionalSpeedLimit));
+  file.close();
+
+  // Iterate through the temporary access restriction list and add to the restriction multi-map
+  for (const auto& l : flat) {
+    speed_map.emplace(l.way_id, l.conditional_speed_limit);
+  }
+  return true;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -554,17 +614,19 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
   file.close();
 
   // Write the rest of OSMData
-  bool status = write_restrictions(tile_dir + restrictions_file, restrictions) &&
-                write_viaset(tile_dir + viaset_file, via_set) &&
-                write_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
-                write_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
-                write_way_refs(tile_dir + way_ref_file, way_ref) &&
-                write_way_refs(tile_dir + way_ref_rev_file, way_ref_rev) &&
-                write_node_names(tile_dir + node_names_file, node_names) &&
-                write_unique_names(tile_dir + unique_names_file, name_offset_map) &&
-                write_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map) &&
-                write_linguistic(tile_dir + pronunciation_file, pronunciations) &&
-                write_linguistic(tile_dir + language_file, langs);
+  bool status =
+      write_restrictions(tile_dir + restrictions_file, restrictions) &&
+      write_viaset(tile_dir + viaset_file, via_set) &&
+      write_access_restrictions(tile_dir + access_restrictions_file, access_restrictions) &&
+      write_bike_relations(tile_dir + bike_relations_file, bike_relations) &&
+      write_way_refs(tile_dir + way_ref_file, way_ref) &&
+      write_way_refs(tile_dir + way_ref_rev_file, way_ref_rev) &&
+      write_node_names(tile_dir + node_names_file, node_names) &&
+      write_unique_names(tile_dir + unique_names_file, name_offset_map) &&
+      write_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map) &&
+      write_linguistic(tile_dir + pronunciation_file, pronunciations) &&
+      write_linguistic(tile_dir + language_file, langs) &&
+      write_conditional_speed_limits(tile_dir + conditional_speed_limit_file, conditional_speeds);
   LOG_INFO("Done");
   return status;
 }
@@ -609,7 +671,8 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
       read_unique_names(tile_directory + unique_names_file, name_offset_map) &&
       read_lane_connectivity(tile_directory + lane_connectivity_file, lane_connectivity_map) &&
       read_linguistic(tile_directory + pronunciation_file, pronunciations) &&
-      read_linguistic(tile_directory + language_file, langs);
+      read_linguistic(tile_directory + language_file, langs) &&
+      read_conditional_speed_limits(tile_directory + lane_connectivity_file, conditional_speeds);
   LOG_INFO("Done");
   initialized = status;
   return status;
