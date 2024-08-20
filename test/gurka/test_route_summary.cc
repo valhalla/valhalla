@@ -1,6 +1,5 @@
 #include <cmath>
 #include <filesystem>
-#include <sstream>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -10,7 +9,6 @@
 #include "mjolnir/adminbuilder.h"
 #include "test/test.h"
 
-#include <boost/property_tree/ptree.hpp>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/traffictile.h>
 

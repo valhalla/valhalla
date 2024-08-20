@@ -1,15 +1,9 @@
 #include <fstream>
-#include <functional>
 #include <iostream>
 #include <list>
-#include <memory>
-#include <set>
-#include <sstream>
-#include <stdexcept>
 #include <streambuf>
 #include <string>
 #include <thread>
-#include <unordered_set>
 
 #ifdef ENABLE_SERVICES
 #include <prime_server/http_protocol.hpp>

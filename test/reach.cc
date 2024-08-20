@@ -10,7 +10,6 @@
 #include "sif/dynamiccost.h"
 
 #include <algorithm>
-#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

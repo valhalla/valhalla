@@ -1,6 +1,5 @@
 #include <cmath>
 #include <cstdlib>
-#include <iostream>
 
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"

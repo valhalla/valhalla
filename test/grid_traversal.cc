@@ -1,5 +1,3 @@
-#include <iostream>
-#include <tuple>
 #include <vector>
 
 #include "midgard/linesegment2.h"

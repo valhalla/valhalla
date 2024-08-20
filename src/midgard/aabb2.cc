@@ -5,7 +5,6 @@
 #include "midgard/util.h"
 
 #include <cmath>
-#include <list>
 
 namespace {
 

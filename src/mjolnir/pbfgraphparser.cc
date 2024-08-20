@@ -1,10 +1,8 @@
-#include <future>
 #include <optional>
 #include <thread>
 #include <utility>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 
 #include "baldr/complexrestriction.h"

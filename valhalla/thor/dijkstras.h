@@ -2,10 +2,8 @@
 #define VALHALLA_THOR_Dijkstras_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
@@ -77,7 +75,8 @@ public:
                                                   const Expansion::EdgeStatus,
                                                   float,
                                                   uint32_t,
-                                                  float)>;
+                                                  float,
+                                                  const Expansion_ExpansionType)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }

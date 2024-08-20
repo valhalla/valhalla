@@ -2,7 +2,6 @@
 #define VALHALLA_MJOLNIR_HIERARCHYBUILDER_H
 
 #include <boost/property_tree/ptree.hpp>
-#include <cstdint>
 
 namespace valhalla {
 namespace mjolnir {

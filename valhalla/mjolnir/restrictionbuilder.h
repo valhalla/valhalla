@@ -2,9 +2,6 @@
 #define VALHALLA_MJOLNIR_RESTRICTIONBUILDER_H
 
 #include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <unordered_map>
-#include <unordered_set>
 
 namespace valhalla {
 namespace mjolnir {

@@ -3,7 +3,6 @@
 #include "midgard/logging.h"
 #include "worker.h"
 #include <algorithm>
-#include <map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

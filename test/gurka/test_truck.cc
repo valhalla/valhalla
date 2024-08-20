@@ -312,3 +312,38 @@ TEST(Standalone, TruckSpeeds) {
   EXPECT_EQ(de_both_1->truck_speed(), 15);
   EXPECT_EQ(de_both_2->truck_speed(), 15);
 }
+
+TEST(Standalone, UseTruckRoute) {
+  constexpr double gridsize = 500;
+
+  const std::string ascii_map = R"(
+      A------B
+      |      |
+      |      |
+      |      |
+      |      |
+      |      C
+      |      |
+      E------D
+    )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+                            {"AE", {{"highway", "residential"}, {"hgv", "designated"}}},
+                            {"BC", {{"highway", "residential"}}},
+                            {"CD", {{"highway", "residential"}}},
+                            {"ED", {{"highway", "residential"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/use_truck_route");
+
+  std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/truck/use_truck_route", "1"}};
+
+  valhalla::Api default_route = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "truck");
+
+  valhalla::Api use_truck_route =
+      gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "truck", options);
+
+  gurka::assert::raw::expect_path(default_route, {"AB", "BC"});
+  gurka::assert::raw::expect_path(use_truck_route, {"AE", "ED", "CD"});
+}

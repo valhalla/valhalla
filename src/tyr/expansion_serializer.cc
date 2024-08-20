@@ -68,6 +68,8 @@ std::string serializeExpansion(Api& request, const std::string& algo) {
       writer("edge_id", static_cast<uint64_t>(expansion.edge_id(i)));
     if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
       writer("pred_edge_id", static_cast<uint64_t>(expansion.pred_edge_id(i)));
+    if (exp_props.count(Options_ExpansionProperties_expansion_type))
+      writer("expansion_type", static_cast<uint64_t>(expansion.expansion_type(i)));
 
     writer.end_object(); // properties
     writer.end_object(); // feature

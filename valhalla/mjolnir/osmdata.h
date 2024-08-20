@@ -2,11 +2,8 @@
 #define VALHALLA_MJOLNIR_OSMDATA_H
 
 #include <cstdint>
-#include <map>
-#include <memory>
 #include <string>
 #include <unordered_set>
-#include <vector>
 
 #include <valhalla/mjolnir/osmaccessrestriction.h>
 #include <valhalla/mjolnir/osmlinguistic.h>
