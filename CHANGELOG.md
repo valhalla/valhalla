@@ -62,6 +62,7 @@
    * FIXED: oneway ferry connections classification [#4828](https://github.com/valhalla/valhalla/pull/4828)
    * FIXED: location search_filter ignored in certain cases [#4835](https://github.com/valhalla/valhalla/pull/4835)
    * FIXED: Ferry reclassification finds shortest path that is blocked by inaccessible node [#4854](https://github.com/valhalla/valhalla/pull/4854)
+   * FIXED: `(Nov - Mar)` (and similar, months with spaces) condition parsing [#4857](https://github.com/valhalla/valhalla/pull/4857)
 
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
