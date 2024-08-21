@@ -245,6 +245,20 @@ TEST(Standalone, ElevationCompareToSkadi) {
   for (int i = 0; i < 4; ++i) {
     ASSERT_EQ(leg.node(i).edge().conditional_speed_limits_size(), 1);
     EXPECT_EQ(leg.node(i).edge().conditional_speed_limits(0).speed_limit(), 30);
-    EXPECT_EQ(leg.node(i).edge().conditional_speed_limits(0).condition(), 12884906752);
+
+    // 19:00-06:00
+    const auto& condition = leg.node(i).edge().conditional_speed_limits(0).condition();
+    EXPECT_EQ(condition.day_dow_type(), TripLeg_TimeDomain_DayDowType_kDayOfMonth);
+    EXPECT_EQ(condition.dow_mask(), 0);
+    EXPECT_EQ(condition.begin_hrs(), 19);
+    EXPECT_EQ(condition.begin_mins(), 0);
+    EXPECT_EQ(condition.begin_month(), 0);
+    EXPECT_EQ(condition.begin_day_dow(), 0);
+    EXPECT_EQ(condition.begin_week(), 0);
+    EXPECT_EQ(condition.end_hrs(), 6);
+    EXPECT_EQ(condition.end_mins(), 0);
+    EXPECT_EQ(condition.end_month(), 0);
+    EXPECT_EQ(condition.end_day_dow(), 0);
+    EXPECT_EQ(condition.end_week(), 0);
   }
 }

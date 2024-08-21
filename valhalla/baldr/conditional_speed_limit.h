@@ -39,18 +39,18 @@ struct ConditionalSpeedLimit {
   std::string condition_str() const;
 
 private:
-  // This structure basically copies `TimeDomain` definition and adds speed_limit value into the spare
-  // bits, which allows us to use only 8 bytes per conditional speed limit.
-  uint64_t day_dow_type_ : 1;  // type of day_dow, 0 - day of month, 1 - nth day of week
-  uint64_t dow_ : 7;           // day of week mask for this restriction
-  uint64_t begin_hrs_ : 5;     // begin hours
-  uint64_t begin_mins_ : 6;    // begin minutes
-  uint64_t begin_month_ : 4;   // begin month
+  // This structure basically copies `TimeDomain` definition and adds `speed_limit` value into the
+  // `TimeDomain::spare` bits, which allows us to use only 8 bytes per conditional speed limit.
+  uint64_t day_dow_type_ : 1;  // type of day_dow, 0 - day of month [1,31], 1 - nth day of week [1,7]
+  uint64_t dow_mask_ : 7;      // day of week mask, e.g. 0b0111110 for Mo-Fr as week starts from Su
+  uint64_t begin_hrs_ : 5;     // begin hours, 0 if not set
+  uint64_t begin_mins_ : 6;    // begin minutes, 0 if not set
+  uint64_t begin_month_ : 4;   // begin month, from 1 (January) to 12 (December), 0 if not set
   uint64_t begin_day_dow_ : 5; // begin day of month or nth dow, i.e. 1st Sunday
   uint64_t begin_week_ : 3;    // which week does this start, i.e. 1st week in Oct
-  uint64_t end_hrs_ : 5;       // end hours
-  uint64_t end_mins_ : 6;      // end minutes
-  uint64_t end_month_ : 4;     // end month
+  uint64_t end_hrs_ : 5;       // end hours, 0 if not set
+  uint64_t end_mins_ : 6;      // end minutes, 0 if not set
+  uint64_t end_month_ : 4;     // end month, from 1 (January) to 12 (December), 0 if not set
   uint64_t end_day_dow_ : 5;   // end day of month or nth dow, i.e. last Sunday
   uint64_t end_week_ : 3;      // which week does this end, i.e. last week in Oct
   uint64_t spare_ : 2;

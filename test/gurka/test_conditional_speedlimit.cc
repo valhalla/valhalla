@@ -7,6 +7,28 @@
 
 using namespace valhalla;
 
+using a = ::valhalla::TripLeg_TimeDomain;
+
+namespace valhalla {
+bool operator==(const TripLeg_TimeDomain& proto, const TimeDomain& td) {
+  TimeDomain other;
+  other.set_type(proto.day_dow_type());
+  other.set_dow(proto.dow_mask());
+  other.set_begin_hrs(proto.begin_hrs());
+  other.set_begin_mins(proto.begin_mins());
+  other.set_begin_month(proto.begin_month());
+  other.set_begin_day_dow(proto.begin_day_dow());
+  other.set_begin_week(proto.begin_week());
+  other.set_end_hrs(proto.end_hrs());
+  other.set_end_mins(proto.end_mins());
+  other.set_end_month(proto.end_month());
+  other.set_end_day_dow(proto.end_day_dow());
+  other.set_end_week(proto.end_week());
+
+  return td.td_value() == other.td_value();
+}
+} // namespace valhalla
+
 class ConditionalSpeedlimit : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -106,7 +128,7 @@ TEST_F(ConditionalSpeedlimit, RouteApiProto) {
     baldr::TimeDomain condition;
     condition.set_begin_hrs(19);
     condition.set_end_hrs(6);
-    EXPECT_EQ(leg.node(0).edge().conditional_speed_limits(0).condition(), condition.td_value());
+    EXPECT_EQ(leg.node(0).edge().conditional_speed_limits(0).condition(), condition);
   }
 
   EXPECT_EQ(leg.node(1).edge().conditional_speed_limits_size(), 0);
@@ -133,13 +155,16 @@ TEST_F(ConditionalSpeedlimit, RouteApiProto) {
 
   // "30 @ (Mo-Fr 07:00-16:00; Sa 09:00-16:00; Su 09:00-16:00)"}
   EXPECT_EQ(leg.node(5).edge().conditional_speed_limits_size(), 3); // three time ranges on PR
-  std::vector<uint64_t> condtitions;
+  std::vector<TripLeg_TimeDomain> condtitions;
   for (const auto& conditional_speed_limit : leg.node(5).edge().conditional_speed_limits()) {
     EXPECT_EQ(conditional_speed_limit.speed_limit(), 30);
     condtitions.emplace_back(conditional_speed_limit.condition());
   }
   // Conditions are stored unsorted, so let's sort them for comparison
-  std::sort(condtitions.begin(), condtitions.end());
+  std::sort(condtitions.begin(), condtitions.end(), [](const auto& lha, const auto& rha) {
+    return lha.dow_mask() < rha.dow_mask() && lha.begin_hrs() < rha.begin_hrs() &&
+           lha.end_hrs() < rha.end_hrs();
+  });
 
   {
     // Mo-Fr 07:00-16:00
@@ -147,15 +172,7 @@ TEST_F(ConditionalSpeedlimit, RouteApiProto) {
     condition.set_dow(0b0111110); // Week starts from kSunday
     condition.set_begin_hrs(7);
     condition.set_end_hrs(16);
-    EXPECT_EQ(condtitions[0], condition.td_value());
-  }
-  {
-    // Su 09:00-16:00
-    baldr::TimeDomain condition;
-    condition.set_dow(0b0000001); // Week starts from kSunday
-    condition.set_begin_hrs(9);
-    condition.set_end_hrs(16);
-    EXPECT_EQ(condtitions[1], condition.td_value());
+    EXPECT_EQ(condtitions[0], condition);
   }
   {
     // Sa 09:00-16:00
@@ -163,7 +180,15 @@ TEST_F(ConditionalSpeedlimit, RouteApiProto) {
     condition.set_dow(0b1000000); // Week starts from kSunday
     condition.set_begin_hrs(9);
     condition.set_end_hrs(16);
-    EXPECT_EQ(condtitions[2], condition.td_value());
+    EXPECT_EQ(condtitions[1], condition);
+  }
+  {
+    // Su 09:00-16:00
+    baldr::TimeDomain condition;
+    condition.set_dow(0b0000001); // Week starts from kSunday
+    condition.set_begin_hrs(9);
+    condition.set_end_hrs(16);
+    EXPECT_EQ(condtitions[2], condition);
   }
 
   EXPECT_EQ(leg.node(6).edge().conditional_speed_limits_size(), 0);

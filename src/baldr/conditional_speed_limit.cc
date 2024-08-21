@@ -108,7 +108,7 @@ ConditionalSpeedLimit::ConditionalSpeedLimit(uint8_t speed, uint64_t condition) 
   TimeDomain time_domain(condition);
 
   day_dow_type_ = time_domain.type();
-  dow_ = time_domain.dow();
+  dow_mask_ = time_domain.dow();
   begin_hrs_ = time_domain.begin_hrs();
   begin_mins_ = time_domain.begin_mins();
   begin_month_ = time_domain.begin_month();
@@ -126,7 +126,7 @@ ConditionalSpeedLimit::ConditionalSpeedLimit(uint8_t speed, uint64_t condition) 
 uint64_t ConditionalSpeedLimit::condition() const {
   TimeDomain time_domain;
   time_domain.set_type(day_dow_type_);
-  time_domain.set_dow(dow_);
+  time_domain.set_dow(dow_mask_);
   time_domain.set_begin_hrs(begin_hrs_);
   time_domain.set_begin_mins(begin_mins_);
   time_domain.set_begin_month(begin_month_);
