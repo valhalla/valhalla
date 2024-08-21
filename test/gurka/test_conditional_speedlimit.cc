@@ -1,8 +1,7 @@
-#include "baldr/rapidjson_utils.h"
 #include "baldr/timedomain.h"
 #include "gurka.h"
 #include "test.h"
-#include <gtest/gtest.h>
+
 #include <vector>
 
 using namespace valhalla;
@@ -162,30 +161,41 @@ TEST_F(ConditionalSpeedlimit, RouteApiProto) {
   }
   // Conditions are stored unsorted, so let's sort them for comparison
   std::sort(condtitions.begin(), condtitions.end(), [](const auto& lha, const auto& rha) {
-    return lha.dow_mask() < rha.dow_mask() && lha.begin_hrs() < rha.begin_hrs() &&
-           lha.end_hrs() < rha.end_hrs();
+    if (lha.dow_mask() < rha.dow_mask()) {
+      return true;
+    } else if (lha.dow_mask() > rha.dow_mask()) {
+      return false;
+    } else if (lha.begin_hrs() < rha.begin_hrs()) {
+      return true;
+    } else if (lha.begin_hrs() > rha.begin_hrs()) {
+      return false;
+    } else if (lha.end_hrs() < rha.end_hrs()) {
+      return true;
+    } else {
+      return false;
+    }
   });
 
+  {
+    // Su 09:00-16:00
+    baldr::TimeDomain condition;
+    condition.set_dow(0b0000001); // Week starts from kSunday
+    condition.set_begin_hrs(9);
+    condition.set_end_hrs(16);
+    EXPECT_EQ(condtitions[0], condition);
+  }
   {
     // Mo-Fr 07:00-16:00
     baldr::TimeDomain condition;
     condition.set_dow(0b0111110); // Week starts from kSunday
     condition.set_begin_hrs(7);
     condition.set_end_hrs(16);
-    EXPECT_EQ(condtitions[0], condition);
+    EXPECT_EQ(condtitions[1], condition);
   }
   {
     // Sa 09:00-16:00
     baldr::TimeDomain condition;
     condition.set_dow(0b1000000); // Week starts from kSunday
-    condition.set_begin_hrs(9);
-    condition.set_end_hrs(16);
-    EXPECT_EQ(condtitions[1], condition);
-  }
-  {
-    // Su 09:00-16:00
-    baldr::TimeDomain condition;
-    condition.set_dow(0b0000001); // Week starts from kSunday
     condition.set_begin_hrs(9);
     condition.set_end_hrs(16);
     EXPECT_EQ(condtitions[2], condition);
