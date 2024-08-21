@@ -9,7 +9,6 @@
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
    * REMOVED: ./bench and related files/code [#4560](https://github.com/valhalla/valhalla/pull/4560)
    * REMOVED: unused headers [#4829](https://github.com/valhalla/valhalla/pull/4829)
-     
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
@@ -70,7 +69,6 @@
    * FIXED: location search_filter ignored in certain cases [#4835](https://github.com/valhalla/valhalla/pull/4835)
    * FIXED: Ferry reclassification finds shortest path that is blocked by inaccessible node [#4854](https://github.com/valhalla/valhalla/pull/4854)
    * FIXED: `(Nov - Mar)` (and similar, months with spaces) condition parsing [#4857](https://github.com/valhalla/valhalla/pull/4857)
-
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
