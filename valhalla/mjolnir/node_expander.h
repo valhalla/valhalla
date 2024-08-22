@@ -9,8 +9,6 @@
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace mjolnir {
 
@@ -245,9 +243,9 @@ struct node_bundle : Node {
 /**
  * Collect node information and edges from the node.
  */
-node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
-                               sequence<Node>& nodes,
-                               sequence<Edge>& edges);
+node_bundle collect_node_edges(const midgard::sequence<Node>::iterator& node_itr,
+                               midgard::sequence<Node>& nodes,
+                               midgard::sequence<Edge>& edges);
 
 } // namespace mjolnir
 } // namespace valhalla
