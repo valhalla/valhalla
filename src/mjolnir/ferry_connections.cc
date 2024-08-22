@@ -147,9 +147,12 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
           continue;
         }
 
-        // Skip uses other than road / other (service?)
+        // Skip uses other than road / other (service?) and driveways.
+        // Note about driveways - additional penalty to the driveways is added below in the destonly
+        // penalty handling (driveways always have destonly flag) if they are not continious.
         const OSMWay w = *ways[edge.wayindex_];
         if (w.use() != baldr::Use::kOther && w.use() != baldr::Use::kServiceRoad &&
+            w.use() != baldr::Use::kDriveway &&
             static_cast<int>(w.use()) > static_cast<int>(baldr::Use::kTurnChannel)) {
           continue;
         }

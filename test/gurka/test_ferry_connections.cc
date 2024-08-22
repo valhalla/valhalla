@@ -176,11 +176,11 @@ TEST_F(FerryTest, DoNotReclassifyFerryConnection) {
 
   // roads with these values of 'service' tag do not participate in search for ferry connection so
   // edge class remains low
-  const std::vector<std::string> not_reclassifiable_use = {"parking_aisle", "driveway", "alley",
+  const std::vector<std::string> not_reclassifiable_use = {"parking_aisle", "alley",
                                                            "emergency_access", "drive-through"};
   for (const auto& use : not_reclassifiable_use) {
     std::map<std::string, std::string> desc = {{"highway", "service"}, {"service", use}};
-    EXPECT_FALSE(edges_were_reclassified(desc));
+    EXPECT_FALSE(edges_were_reclassified(desc)) << use;
   }
 }
 
@@ -350,6 +350,64 @@ TEST(Standalone, ReclassifyFerryNodePair) {
   auto not_upclassed = gurka::findEdge(reader, layout, "BIJC", "C");
   EXPECT_TRUE(std::get<1>(not_upclassed)->classification() ==
               valhalla::baldr::RoadClass::kResidential);
+}
+
+TEST(Standalone, ReclassifyContiniousDriveways) {
+  // Test to validate the reclassification in case if the ferry is reachable
+  // only following several driveway edges and that only the shortest path is
+  // reclassified.
+
+  const std::string ascii_map = R"(
+    A----B--C--D------E
+    |    |
+    F----G
+    |
+    H
+  )";
+
+  std::map<std::string, std::string> trunk = {{"highway", "trunk"}};
+  std::map<std::string, std::string> service = {{"highway", "service"}};
+  std::map<std::string, std::string> driveway = {{"highway", "service"}, {"service", "driveway"}};
+
+  const gurka::ways ways = {
+      {"AFH", trunk},
+      {"AB", driveway},
+      {"BC", driveway},
+      {"CD", driveway},
+      {"FG", service},
+      {"GB", service},
+      {"DE",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_cont_driveways");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // make sure that FGB, BC and CD are reclassified and that the destonly flag is removed
+  for (const std::string& way_name : {"FG", "GB", "BC", "CD"}) {
+    auto way = gurka::findEdge(reader, layout, way_name, way_name.substr(way_name.size() - 1));
+    EXPECT_EQ(std::get<1>(way)->classification(), valhalla::baldr::RoadClass::kPrimary) << way_name;
+    EXPECT_EQ(std::get<1>(way)->destonly(), false) << way_name;
+  }
+
+  // make sure that AB driveway is not reclassified and destonly is not removed as another route is
+  // possible
+  auto not_upclassed = gurka::findEdge(reader, layout, "AB", "B");
+  EXPECT_EQ(std::get<1>(not_upclassed)->classification(), valhalla::baldr::RoadClass::kServiceOther);
+  EXPECT_EQ(std::get<1>(not_upclassed)->destonly(), true);
+
+  // Ensure that the longer route is taken
+  auto route = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
+  gurka::assert::raw::expect_path(route, {"AFH", "FG", "GB", "BC", "CD", "DE"});
 }
 
 TEST(Standalone, ReclassifyCorrectPath) {
