@@ -1,5 +1,6 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: `using namespace` from a distributed header [#4866](https://github.com/valhalla/valhalla/pull/4866)
 * **Bug Fix**
 * **Enhancement**
 
