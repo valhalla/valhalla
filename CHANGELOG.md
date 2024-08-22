@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: Continious driwevay ferry connection reclassification [#4863](https://github.com/valhalla/valhalla/pull/4863)
 * **Enhancement**
 
 ## Release Date: 2024-08-21 Valhalla 3.5.0
