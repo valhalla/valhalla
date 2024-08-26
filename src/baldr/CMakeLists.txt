@@ -48,7 +48,6 @@ set(sources
     admin.cc
     attributes_controller.cc
     compression_utils.cc
-    conditional_speed_limit.cc
     connectivity_map.cc
     curler.cc
     datetime.cc

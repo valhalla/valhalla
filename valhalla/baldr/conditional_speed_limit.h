@@ -24,12 +24,6 @@ struct ConditionalSpeedLimit {
     return condition_;
   }
 
-  /**
-   * String representation of the condition of this speed limit. Intended to use for debug purpose.
-   * @return Condition string representation in the opening_hours format.
-   */
-  std::string condition_str() const;
-
   uint64_t condition_ : 56;  // TimeDomain meaningful bits
   uint64_t speed_limit_ : 8; // speed limit in KPH
 };
