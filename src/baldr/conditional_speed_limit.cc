@@ -104,43 +104,6 @@ std::string dow_name(DOW dow) {
 namespace valhalla {
 namespace baldr {
 
-ConditionalSpeedLimit::ConditionalSpeedLimit(uint8_t speed, uint64_t condition) {
-  TimeDomain time_domain(condition);
-
-  day_dow_type_ = time_domain.type();
-  dow_mask_ = time_domain.dow();
-  begin_hrs_ = time_domain.begin_hrs();
-  begin_mins_ = time_domain.begin_mins();
-  begin_month_ = time_domain.begin_month();
-  begin_day_dow_ = time_domain.begin_day_dow();
-  begin_week_ = time_domain.begin_week();
-  end_hrs_ = time_domain.end_hrs();
-  end_mins_ = time_domain.end_mins();
-  end_month_ = time_domain.end_month();
-  end_day_dow_ = time_domain.end_day_dow();
-  end_week_ = time_domain.end_week();
-  spare_ = 0;
-  speed_limit_ = speed;
-}
-
-uint64_t ConditionalSpeedLimit::condition() const {
-  TimeDomain time_domain;
-  time_domain.set_type(day_dow_type_);
-  time_domain.set_dow(dow_mask_);
-  time_domain.set_begin_hrs(begin_hrs_);
-  time_domain.set_begin_mins(begin_mins_);
-  time_domain.set_begin_month(begin_month_);
-  time_domain.set_begin_day_dow(begin_day_dow_);
-  time_domain.set_begin_week(begin_week_);
-  time_domain.set_end_hrs(end_hrs_);
-  time_domain.set_end_mins(end_mins_);
-  time_domain.set_end_month(end_month_);
-  time_domain.set_end_day_dow(end_day_dow_);
-  time_domain.set_end_week(end_week_);
-
-  return time_domain.td_value();
-}
-
 std::string ConditionalSpeedLimit::condition_str() const {
   std::ostringstream ss;
 
