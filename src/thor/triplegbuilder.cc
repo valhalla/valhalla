@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <iostream>
-#include <ostream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -1201,6 +1199,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
               kMetersPerSectoKPH;
     }
     trip_edge->set_speed(speed);
+  }
+
+  // Set country crossing if requested
+  if (controller(kEdgeCountryCrossing)) {
+    trip_edge->set_country_crossing(directededge->ctry_crossing());
   }
 
   uint8_t kAccess = 0;

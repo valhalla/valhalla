@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include <boost/property_tree/ptree.hpp>
 
 #include "midgard/logging.h"

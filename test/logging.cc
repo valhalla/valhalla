@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <cstdio>
 #include <fstream>
-#include <functional>
 #include <future>
 #include <iterator>
 #include <sstream>

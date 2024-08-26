@@ -6,7 +6,6 @@
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include <algorithm>
-#include <thread>
 #include <unistd.h>
 
 using namespace valhalla;

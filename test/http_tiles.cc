@@ -8,7 +8,6 @@
 #include <prime_server/prime_server.hpp>
 
 #include <filesystem>
-#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <thread>

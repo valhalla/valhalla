@@ -6,7 +6,6 @@
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/pointll.h>
 
-#include <list>
 #include <tuple>
 #include <unordered_set>
 #include <vector>

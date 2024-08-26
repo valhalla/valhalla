@@ -2,7 +2,6 @@
 #define VALHALLA_MIDGARD_ELEVATION_ENCODING_H_
 
 #include <cmath>
-#include <string>
 #include <type_traits>
 #include <vector>
 

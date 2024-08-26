@@ -1,5 +1,3 @@
-#include <limits>
-
 #include "baldr/graphid.h"
 
 namespace valhalla {

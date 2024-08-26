@@ -550,6 +550,16 @@ TEST(DateTime, TestIsRestricted) {
   TryIsRestricted(td, "2022-05-10T16:00", false);
   TryIsRestricted(td, "2021-02-18T16:00", false);
   TryIsRestricted(td, "2021-06-26T16:00", false);
+
+  td = TimeDomain(35184375234560); // "Jun-Aug"
+  TryIsRestricted(td, "2024-04-03T08:00", false);
+  TryIsRestricted(td, "2024-05-31T21:00", false);
+  TryIsRestricted(td, "2024-06-01T00:01", true);
+  TryIsRestricted(td, "2024-06-15T16:00", true);
+  TryIsRestricted(td, "2024-07-10T16:00", true);
+  TryIsRestricted(td, "2024-08-18T16:00", true);
+  TryIsRestricted(td, "2024-08-31T23:59", true);
+  TryIsRestricted(td, "2024-09-01T00:01", false);
 }
 
 TEST(DateTime, TestTimezoneDiff) {
