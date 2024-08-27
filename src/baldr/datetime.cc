@@ -1308,22 +1308,38 @@ std::string conditional_to_str(const bool type,
     if (begin_month != 0) {
       ss << month_name(static_cast<MONTH>(begin_month)) << ' ';
     }
-    if (begin_week != 0) {
-      ss << static_cast<int>(begin_week) << ' ';
+
+    if (begin_week) {
+      // Mo[1] or Su[-1]
+      // 5 annotates the last week of the month
+      const int begin_nth_week = (begin_week != 5) ? static_cast<int>(begin_week) : -1;
+      ss << dow_name(static_cast<DOW>(begin_day_dow)) << '[' << begin_nth_week << ']';
+    } else {
+      // Regular date, like March 3-...
+      ss << static_cast<int>(begin_day_dow);
     }
-    ss << dow_name(static_cast<DOW>(begin_day_dow));
+
     if (end_day_dow != 0 &&
         (end_day_dow != begin_day_dow || end_week != begin_week || end_month != begin_month)) {
       ss << '-';
-      if ((end_week != 0)) {
-        ss << static_cast<int>(end_week) << ' ';
+      if (end_month != begin_month) {
+        ss << month_name(static_cast<MONTH>(end_month)) << ' ';
       }
-      ss << dow_name(static_cast<DOW>(end_day_dow));
+
+      if (end_week) {
+        // Mo[1] or Su[-1]
+        // 5 annotates the last week of the month
+        const int end_nth_week = (end_week != 5) ? static_cast<int>(end_week) : -1;
+        ss << dow_name(static_cast<DOW>(end_day_dow)) << '[' << end_nth_week << ']';
+      } else {
+        // Regular date, like ...-March 3
+        ss << static_cast<int>(end_day_dow);
+      }
     }
     need_space = true;
   }
 
-  if (dow) {
+  if (dow != 0 && dow != 0b1111111) {
     if (need_space) {
       ss << ' ';
     }

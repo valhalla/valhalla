@@ -1,3 +1,4 @@
+#include "baldr/datetime.h"
 #include "baldr/timedomain.h"
 #include "gurka.h"
 #include "test.h"
@@ -26,6 +27,23 @@ bool operator==(const TripLeg_TimeDomain& proto, const TimeDomain& td) {
 
   return td.td_value() == other.td_value();
 }
+
+std::ostream& operator<<(std::ostream& os, TripLeg_TimeDomain const& proto) {
+  return os << DateTime::conditional_to_str(proto.day_dow_type(), proto.begin_hrs(),
+                                            proto.begin_mins(), proto.end_hrs(), proto.end_mins(),
+                                            proto.dow_mask(), proto.begin_week(), proto.begin_month(),
+                                            proto.begin_day_dow(), proto.end_week(),
+                                            proto.end_month(), proto.end_day_dow());
+}
+
+namespace baldr {
+std::ostream& operator<<(std::ostream& os, TimeDomain const& td) {
+  return os << DateTime::conditional_to_str(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
+                                            td.end_mins(), td.dow(), td.begin_week(),
+                                            td.begin_month(), td.begin_day_dow(), td.end_week(),
+                                            td.end_month(), td.end_day_dow());
+}
+} // namespace baldr
 } // namespace valhalla
 
 class ConditionalSpeedlimit : public ::testing::Test {
@@ -50,6 +68,10 @@ protected:
                4
                |
                O--5--P-6-R
+                         |
+                         7
+                         |
+                         Q
     )";
 
     const gurka::ways ways = {
@@ -89,6 +111,12 @@ protected:
              {"maxspeed", "50"},
              {"maxspeed:conditional", "30 @ (Mo-Fr 07:00-16:00; Sa 09:00-16:00; Su 09:00-16:00)"},
          }},
+        {"RQ",
+         {
+             {"highway", "tertiary"},
+             {"maxspeed", "50"},
+             {"maxspeed:conditional", "20 @ (Dec Fr[-1]-Jan Mo[2])"},
+         }},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
@@ -103,12 +131,12 @@ gurka::map ConditionalSpeedlimit::map = {};
 /*************************************************************/
 
 TEST_F(ConditionalSpeedlimit, RouteApiProto) {
-  const auto result = gurka::do_action(valhalla::Options::route, map, {"D", "R"}, "auto",
+  const auto result = gurka::do_action(valhalla::Options::route, map, {"D", "Q"}, "auto",
                                        {{"/date_time/value", "2024-08-15T21:00"}});
   ASSERT_EQ(result.trip().routes_size(), 1);
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   const auto leg = result.trip().routes(0).legs(0);
-  ASSERT_EQ(leg.node_size(), 7);
+  ASSERT_EQ(leg.node_size(), 8);
 
   // Regular speed limit are not affected, even if date was passed
   EXPECT_EQ(leg.node(0).edge().speed_limit(), 100); // DC
@@ -117,7 +145,8 @@ TEST_F(ConditionalSpeedlimit, RouteApiProto) {
   EXPECT_EQ(leg.node(3).edge().speed_limit(), 80);  // NO
   EXPECT_EQ(leg.node(4).edge().speed_limit(), 50);  // OP
   EXPECT_EQ(leg.node(5).edge().speed_limit(), 50);  // PR
-  EXPECT_EQ(leg.node(6).edge().speed_limit(), 0);   // the end
+  EXPECT_EQ(leg.node(6).edge().speed_limit(), 50);  // RQ
+  EXPECT_EQ(leg.node(7).edge().speed_limit(), 0);   // the end
 
   // Now check conditional speed limits
   // 120 @ (19:00-06:00)
@@ -201,19 +230,36 @@ TEST_F(ConditionalSpeedlimit, RouteApiProto) {
     EXPECT_EQ(condtitions[2], condition);
   }
 
-  EXPECT_EQ(leg.node(6).edge().conditional_speed_limits_size(), 0);
+  ASSERT_EQ(leg.node(6).edge().conditional_speed_limits_size(), 1);
+  EXPECT_EQ(leg.node(6).edge().conditional_speed_limits(0).speed_limit(), 20);
+  {
+    // Dec Fr[-1]-Jan Mo[2]
+    baldr::TimeDomain condition;
+    condition.set_type(kNthDow);
+    condition.set_dow(0b1111111);   // Magic mask that means every day, don't ask why it is not 0
+    condition.set_begin_month(12);  // Dec
+    condition.set_begin_day_dow(6); // Fr
+    condition.set_begin_week(5);    // [-1]
+    condition.set_end_month(1);     // Jan
+    condition.set_end_day_dow(2);   // Mo
+    condition.set_end_week(2);      // [2]
+    EXPECT_EQ(leg.node(6).edge().conditional_speed_limits(0).condition(), condition);
+  }
+
+  EXPECT_EQ(leg.node(7).edge().conditional_speed_limits_size(), 0);
 }
 
 TEST_F(ConditionalSpeedlimit, LocateApiJson) {
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
-  const auto result = gurka::do_action(valhalla::Options::locate, map, {"1", "2", "3", "4", "5", "6"},
-                                       "auto", {}, reader, &json);
+  const auto result =
+      gurka::do_action(valhalla::Options::locate, map, {"1", "2", "3", "4", "5", "6", "7"}, "auto",
+                       {}, reader, &json);
 
   rapidjson::Document root;
   root.Parse(json);
   ASSERT_FALSE(root.HasParseError()) << json;
-  ASSERT_EQ(root.GetArray().Size(), 6);
+  ASSERT_EQ(root.GetArray().Size(), 7);
 
   const auto& edge_info_0 = *rapidjson::Pointer("/0/edges/0/edge_info").Get(root);
   EXPECT_EQ(edge_info_0["speed_limit"], 100);
@@ -262,4 +308,12 @@ TEST_F(ConditionalSpeedlimit, LocateApiJson) {
   EXPECT_EQ(conditions_str[0], "Mo-Fr 07:00-16:00");
   EXPECT_EQ(conditions_str[1], "Sa 09:00-16:00");
   EXPECT_EQ(conditions_str[2], "Su 09:00-16:00");
+
+  const auto& edge_info_6 = *rapidjson::Pointer("/6/edges/0/edge_info").Get(root);
+  EXPECT_EQ(edge_info_6["speed_limit"], 50);
+  ASSERT_TRUE(edge_info_6.HasMember("conditional_speed_limits"));
+  for (const auto& [k, v] : edge_info_6["conditional_speed_limits"].GetObject()) {
+    EXPECT_STREQ(k.GetString(), "Dec Fr[-1]-Jan Mo[2]");
+    EXPECT_EQ(v, 20);
+  }
 }
