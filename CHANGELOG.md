@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+* * CHANGED: voice instructions for OSRM serializer to work better in real-world environment [#4756](https://github.com/valhalla/valhalla/pull/4756)
 
 ## Release Date: 2024-08-21 Valhalla 3.5.0
 * **Removed**
