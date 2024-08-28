@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <limits>
-#include <list>
 #include <mutex>
 #include <thread>
 #include <tuple>

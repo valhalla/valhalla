@@ -1,5 +1,3 @@
-#include <string>
-
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "sif/autocost.h"

@@ -2,7 +2,6 @@
 #include "midgard/util.h"
 #include "mjolnir/osmway.h"
 #include "mjolnir/uniquenames.h"
-#include <iostream>
 
 #include "test.h"
 

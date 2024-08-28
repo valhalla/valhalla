@@ -2,10 +2,8 @@
 #define VALHALLA_THOR_COSTMATRIX_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <set>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>

@@ -2,7 +2,6 @@
 #define VALHALLA_MJOLNIR_GRAPHFILTER_H
 
 #include <boost/property_tree/ptree.hpp>
-#include <cstdint>
 
 #include <valhalla/baldr/graphreader.h>
 

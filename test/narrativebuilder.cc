@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <regex>
 
 #include "baldr/verbal_text_formatter_factory.h"
 

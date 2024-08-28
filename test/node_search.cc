@@ -5,7 +5,6 @@
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
-#include <unordered_set>
 
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
