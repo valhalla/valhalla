@@ -94,7 +94,6 @@ protected:
   float current_cost_threshold_;
 
   uint32_t max_reserved_labels_count_;
-  bool clear_reserved_memory_;
 
   // List of destinations
   std::vector<Destination> destinations_;
