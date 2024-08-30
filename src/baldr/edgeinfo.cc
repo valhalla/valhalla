@@ -1,8 +1,5 @@
 #include "baldr/edgeinfo.h"
-#include "baldr/conditional_speed_limit.h"
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
-#include "baldr/timedomain.h"
 #include "midgard/elevation_encoding.h"
 
 using namespace valhalla::baldr;
@@ -35,18 +32,11 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
 }
 
 json::MapPtr conditional_speed_limits_json(const std::vector<ConditionalSpeedLimit>& limits) {
-  auto a = json::map({});
+  auto map = json::map({});
   for (const auto& l : limits) {
-    TimeDomain td(l.condition());
-    std::string condition =
-        DateTime::conditional_to_str(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
-                                     td.end_mins(), td.dow(), td.begin_week(), td.begin_month(),
-                                     td.begin_day_dow(), td.end_week(), td.end_month(),
-                                     td.end_day_dow());
-
-    a->emplace(std::move(condition), static_cast<uint64_t>(l.speed_limit()));
+    map->emplace(l.td_.to_string(), static_cast<uint64_t>(l.speed_));
   }
-  return a;
+  return map;
 }
 
 // per tag parser. each returned string includes the leading TaggedValue.

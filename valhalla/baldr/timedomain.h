@@ -311,6 +311,12 @@ public:
     return value;
   }
 
+  /**
+   * Provides a string representation of a condition in format close to the
+   * [opening hours](https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification)
+   */
+  std::string to_string() const;
+
 protected:
   // represents a single date/time range from https://wiki.openstreetmap.org/wiki/Key:opening_hours
   struct DateRange {

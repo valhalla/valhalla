@@ -213,38 +213,6 @@ bool is_conditional_active(const bool type,
                            const date::time_zone* time_zone);
 
 /**
- * Provides a string representation of a condition in format close to the
- * [opening hours](https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification)
- * @param   type          type of restriction kYMD or kNthDow
- * @param   begin_hrs     begin hours
- * @param   begin_mins    begin minutes
- * @param   end_hrs       end hours
- * @param   end_mins      end minutes
- * @param   dow           days of the week to apply this restriction
- * @param   begin_week    only set for kNthDow.  which week in the month
- * @param   begin_month   begin month
- * @param   begin_day_dow if kNthDow, then which dow to start the restriction.
- *                        if kYMD then it is the day of the month
- * @param   end_week      only set for kNthDow.  which week in the month
- * @param   end_month     end month
- * @param   end_day_dow   if kNthDow, then which dow to end the restriction.
- *                        if kYMD then it is the day of the month
- * @return String with time range that represents the condition
- */
-std::string conditional_to_str(const bool type,
-                               const uint8_t begin_hrs,
-                               const uint8_t begin_mins,
-                               const uint8_t end_hrs,
-                               const uint8_t end_mins,
-                               const uint8_t dow,
-                               const uint8_t begin_week,
-                               const uint8_t begin_month,
-                               const uint8_t begin_day_dow,
-                               const uint8_t end_week,
-                               const uint8_t end_month,
-                               const uint8_t end_day_dow);
-
-/**
  * Gets the second of the week in local time from an epoch time and timezone
  * @param epoch_time   the time from which to offset
  * @param time_zone

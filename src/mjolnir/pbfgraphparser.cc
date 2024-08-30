@@ -974,7 +974,10 @@ public:
       for (const auto& c : conditions) {
         std::vector<uint64_t> values = get_time_range(c);
         for (const auto& v : values) {
-          osmdata_.conditional_speeds.emplace(osmid_, ConditionalSpeedLimit{v, speed});
+          ConditionalSpeedLimit limit = {};
+          limit.td_ = TimeDomain(v);
+          limit.speed_ = speed;
+          osmdata_.conditional_speeds.emplace(osmid_, limit);
         }
       }
     };

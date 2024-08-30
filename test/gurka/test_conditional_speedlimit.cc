@@ -7,41 +7,35 @@
 
 using namespace valhalla;
 
-using a = ::valhalla::TripLeg_TimeDomain;
+TimeDomain from_proto(const TripLeg_TimeDomain& proto) {
+  TimeDomain td;
+  td.set_type(proto.day_dow_type());
+  td.set_dow(proto.dow_mask());
+  td.set_begin_hrs(proto.begin_hrs());
+  td.set_begin_mins(proto.begin_mins());
+  td.set_begin_month(proto.begin_month());
+  td.set_begin_day_dow(proto.begin_day_dow());
+  td.set_begin_week(proto.begin_week());
+  td.set_end_hrs(proto.end_hrs());
+  td.set_end_mins(proto.end_mins());
+  td.set_end_month(proto.end_month());
+  td.set_end_day_dow(proto.end_day_dow());
+  td.set_end_week(proto.end_week());
+  return td;
+}
 
 namespace valhalla {
 bool operator==(const TripLeg_TimeDomain& proto, const TimeDomain& td) {
-  TimeDomain other;
-  other.set_type(proto.day_dow_type());
-  other.set_dow(proto.dow_mask());
-  other.set_begin_hrs(proto.begin_hrs());
-  other.set_begin_mins(proto.begin_mins());
-  other.set_begin_month(proto.begin_month());
-  other.set_begin_day_dow(proto.begin_day_dow());
-  other.set_begin_week(proto.begin_week());
-  other.set_end_hrs(proto.end_hrs());
-  other.set_end_mins(proto.end_mins());
-  other.set_end_month(proto.end_month());
-  other.set_end_day_dow(proto.end_day_dow());
-  other.set_end_week(proto.end_week());
-
-  return td.td_value() == other.td_value();
+  return td.td_value() == from_proto(proto).td_value();
 }
 
 std::ostream& operator<<(std::ostream& os, TripLeg_TimeDomain const& proto) {
-  return os << DateTime::conditional_to_str(proto.day_dow_type(), proto.begin_hrs(),
-                                            proto.begin_mins(), proto.end_hrs(), proto.end_mins(),
-                                            proto.dow_mask(), proto.begin_week(), proto.begin_month(),
-                                            proto.begin_day_dow(), proto.end_week(),
-                                            proto.end_month(), proto.end_day_dow());
+  return os << from_proto(proto).to_string();
 }
 
 namespace baldr {
 std::ostream& operator<<(std::ostream& os, TimeDomain const& td) {
-  return os << DateTime::conditional_to_str(td.type(), td.begin_hrs(), td.begin_mins(), td.end_hrs(),
-                                            td.end_mins(), td.dow(), td.begin_week(),
-                                            td.begin_month(), td.begin_day_dow(), td.end_week(),
-                                            td.end_month(), td.end_day_dow());
+  return os << td.to_string();
 }
 } // namespace baldr
 } // namespace valhalla

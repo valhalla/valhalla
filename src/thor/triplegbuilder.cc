@@ -1450,12 +1450,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->mutable_conditional_speed_limits()->Reserve(conditional_limits.size());
     for (const auto& limit : conditional_limits) {
       auto proto = trip_edge->mutable_conditional_speed_limits()->Add();
-      proto->set_speed_limit(limit.speed_limit());
+      proto->set_speed_limit(limit.speed_);
 
-      const TimeDomain td(limit.condition());
       auto* condition = proto->mutable_condition();
 
-      switch (td.type()) {
+      switch (limit.td_.type()) {
         case kYMD:
           condition->set_day_dow_type(TripLeg_TimeDomain_DayDowType_kDayOfMonth);
           break;
@@ -1464,17 +1463,17 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
           break;
       }
 
-      condition->set_dow_mask(td.dow());
-      condition->set_begin_hrs(td.begin_hrs());
-      condition->set_begin_mins(td.begin_mins());
-      condition->set_begin_month(td.begin_month());
-      condition->set_begin_day_dow(td.begin_day_dow());
-      condition->set_begin_week(td.begin_week());
-      condition->set_end_hrs(td.end_hrs());
-      condition->set_end_mins(td.end_mins());
-      condition->set_end_month(td.end_month());
-      condition->set_end_day_dow(td.end_day_dow());
-      condition->set_end_week(td.end_week());
+      condition->set_dow_mask(limit.td_.dow());
+      condition->set_begin_hrs(limit.td_.begin_hrs());
+      condition->set_begin_mins(limit.td_.begin_mins());
+      condition->set_begin_month(limit.td_.begin_month());
+      condition->set_begin_day_dow(limit.td_.begin_day_dow());
+      condition->set_begin_week(limit.td_.begin_week());
+      condition->set_end_hrs(limit.td_.end_hrs());
+      condition->set_end_mins(limit.td_.end_mins());
+      condition->set_end_month(limit.td_.end_month());
+      condition->set_end_day_dow(limit.td_.end_day_dow());
+      condition->set_end_week(limit.td_.end_week());
     }
   }
 
