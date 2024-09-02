@@ -487,7 +487,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, {}, {}, {}, {}, 0, forward, false);
+                                  edgeinfo.speed_limit(), shape, {}, {}, {}, 0, forward, false);
       ;
 
       newedge.set_edgeinfo_offset(edge_info_offset);
@@ -699,8 +699,7 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
                                     edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
-                                    edgeinfo.conditional_speed_limits(), edgeinfo.GetTypes(), added,
-                                    diff_names);
+                                    edgeinfo.GetTypes(), added, diff_names);
 
         newedge.set_edgeinfo_offset(edge_info_offset);
 

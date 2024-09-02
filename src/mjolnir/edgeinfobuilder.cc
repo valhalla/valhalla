@@ -91,22 +91,12 @@ void EdgeInfoBuilder::set_encoded_elevation(const std::vector<int8_t>& encoded_e
   }
 }
 
-void EdgeInfoBuilder::set_conditional_speed_limits(
-    const std::vector<ConditionalSpeedLimit>& speed_limits) {
-  conditional_speed_limits_ = speed_limits;
-}
-
 // Get the size of the edge info (including name offsets and shape string)
 std::size_t EdgeInfoBuilder::BaseSizeOf() const {
   std::size_t size = sizeof(EdgeInfo::EdgeInfoInner);
   size += (name_info_list_.size() * sizeof(NameInfo));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
   size += ei_.extended_wayid_size_;
-  if (!conditional_speed_limits_.empty()) {
-    size += sizeof(int8_t);
-    const uint8_t limits_count = conditional_speed_limits_.size();
-    size += (limits_count * sizeof(ConditionalSpeedLimit));
-  }
   size += (encoded_elevation_.size() * sizeof(int8_t));
   return size;
 }
@@ -144,7 +134,6 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
 
   // Set the has_elevation flag if encoded_elevation vector is not empty
   ei.has_elevation_ = !eib.encoded_elevation_.empty();
-  ei.had_conditional_speed_limits = !eib.conditional_speed_limits_.empty();
 
   // Write out the bytes
   os.write(reinterpret_cast<const char*>(&ei), sizeof(ei));
@@ -156,12 +145,6 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   }
   if (ei.extended_wayid_size_ > 1) {
     os.write(reinterpret_cast<const char*>(&eib.extended_wayid3_), sizeof(eib.extended_wayid3_));
-  }
-  if (!eib.conditional_speed_limits_.empty()) {
-    const uint8_t limits_count = eib.conditional_speed_limits_.size();
-    os.write(reinterpret_cast<const char*>(&limits_count), sizeof(limits_count));
-    os.write(reinterpret_cast<const char*>(eib.conditional_speed_limits_.data()),
-             (limits_count * sizeof(ConditionalSpeedLimit)));
   }
   if (!eib.encoded_elevation_.empty()) {
     os.write(reinterpret_cast<const char*>(eib.encoded_elevation_.data()),

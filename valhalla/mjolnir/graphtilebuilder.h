@@ -241,7 +241,6 @@ public:
                        const std::vector<std::string>& names,
                        const std::vector<std::string>& tagged_values,
                        const std::vector<std::string>& linguistics,
-                       const std::vector<ConditionalSpeedLimit>& cond_spds,
                        const uint16_t types,
                        bool& added,
                        bool diff_names = false);
@@ -284,7 +283,6 @@ public:
                        const std::vector<std::string>& names,
                        const std::vector<std::string>& tagged_values,
                        const std::vector<std::string>& linguistics,
-                       const std::vector<ConditionalSpeedLimit>& cond_spds,
                        const uint16_t types,
                        bool& added,
                        bool diff_names = false);

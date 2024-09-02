@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
@@ -102,12 +101,6 @@ public:
   void set_encoded_elevation(const std::vector<int8_t>& encoded_elevation);
 
   /**
-   * Set conditional speed limits.
-   * @param speed_limits Conditional speed limits
-   */
-  void set_conditional_speed_limits(const std::vector<ConditionalSpeedLimit>& speed_limits);
-
-  /**
    * Get the size of this edge info (without padding).
    * @return  Returns the size in bytes of this object.
    */
@@ -150,9 +143,6 @@ protected:
 
   // Encoded elevation
   std::vector<int8_t> encoded_elevation_;
-
-  // List of conditional speed limits
-  std::vector<ConditionalSpeedLimit> conditional_speed_limits_;
 
   friend std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& id);
 };

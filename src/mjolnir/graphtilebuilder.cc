@@ -193,7 +193,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     eib.set_mean_elevation(ei.mean_elevation());
     eib.set_bike_network(ei.bike_network());
     eib.set_speed_limit(ei.speed_limit());
-    eib.set_conditional_speed_limits(ei.conditional_speed_limits());
     for (uint32_t nm = 0; nm < ei.name_count(); nm++) {
       NameInfo info = ei.GetNameInfo(nm);
       name_info.insert(info);
@@ -651,7 +650,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const std::vector<std::string>& names,
                                        const std::vector<std::string>& tagged_values,
                                        const std::vector<std::string>& linguistics,
-                                       const std::vector<ConditionalSpeedLimit>& cond_spds,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -666,7 +664,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edgeinfo.set_mean_elevation(elev);
     edgeinfo.set_bike_network(bn);
     edgeinfo.set_speed_limit(spd);
-    edgeinfo.set_conditional_speed_limits(cond_spds);
     edgeinfo.set_shape(lls);
 
     // Add names to the common text/name list. Skip blank names.
@@ -736,38 +733,34 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
   return existing_edge_offset_item->second;
 }
 
-template uint32_t
-GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint32_t edgeindex,
-                                                    GraphId,
-                                                    GraphId,
-                                                    const uint64_t,
-                                                    const float,
-                                                    const uint32_t,
-                                                    const uint32_t,
-                                                    const std::vector<PointLL>&,
-                                                    const std::vector<std::string>&,
-                                                    const std::vector<std::string>&,
-                                                    const std::vector<std::string>&,
-                                                    const std::vector<ConditionalSpeedLimit>&,
-                                                    const uint16_t,
-                                                    bool&,
-                                                    bool);
-template uint32_t
-GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32_t edgeindex,
-                                                  GraphId,
-                                                  baldr::GraphId,
-                                                  const uint64_t,
-                                                  const float,
-                                                  const uint32_t,
-                                                  const uint32_t,
-                                                  const std::list<PointLL>&,
-                                                  const std::vector<std::string>&,
-                                                  const std::vector<std::string>&,
-                                                  const std::vector<std::string>&,
-                                                  const std::vector<ConditionalSpeedLimit>&,
-                                                  const uint16_t,
-                                                  bool&,
-                                                  bool);
+template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint32_t edgeindex,
+                                                                      GraphId,
+                                                                      GraphId,
+                                                                      const uint64_t,
+                                                                      const float,
+                                                                      const uint32_t,
+                                                                      const uint32_t,
+                                                                      const std::vector<PointLL>&,
+                                                                      const std::vector<std::string>&,
+                                                                      const std::vector<std::string>&,
+                                                                      const std::vector<std::string>&,
+                                                                      const uint16_t,
+                                                                      bool&,
+                                                                      bool);
+template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32_t edgeindex,
+                                                                    GraphId,
+                                                                    baldr::GraphId,
+                                                                    const uint64_t,
+                                                                    const float,
+                                                                    const uint32_t,
+                                                                    const uint32_t,
+                                                                    const std::list<PointLL>&,
+                                                                    const std::vector<std::string>&,
+                                                                    const std::vector<std::string>&,
+                                                                    const std::vector<std::string>&,
+                                                                    const uint16_t,
+                                                                    bool&,
+                                                                    bool);
 
 // AddEdgeInfo - accepts an encoded shape string.
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
@@ -781,7 +774,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const std::vector<std::string>& names,
                                        const std::vector<std::string>& tagged_values,
                                        const std::vector<std::string>& linguistics,
-                                       const std::vector<ConditionalSpeedLimit>& cond_spds,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -796,7 +788,6 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     edgeinfo.set_mean_elevation(elev);
     edgeinfo.set_bike_network(bn);
     edgeinfo.set_speed_limit(spd);
-    edgeinfo.set_conditional_speed_limits(cond_spds);
     edgeinfo.set_encoded_shape(llstr);
 
     // Add names to the common text/name list. Skip blank names.

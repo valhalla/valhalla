@@ -6,6 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
+#include "baldr/conditional_speed_limit.h"
 #include "filesystem.h"
 
 #include "baldr/datetime.h"
@@ -467,7 +468,6 @@ void BuildTileSet(const std::string& ways_file,
 
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> pronunciationMap;
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> langMap;
-  std::vector<ConditionalSpeedLimit> conditional_speed_limits;
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
   while (true) {
@@ -755,13 +755,6 @@ void BuildTileSet(const std::string& ways_file,
             }
           }
 
-          // Get conditional speed limits for the edge
-          conditional_speed_limits.clear();
-          auto cond_limits_range = osmdata.conditional_speeds.equal_range(w.way_id());
-          for (auto it = cond_limits_range.first; it != cond_limits_range.second; ++it) {
-            conditional_speed_limits.push_back(it->second);
-          }
-
           // Get the shape for the edge and compute its length
           uint32_t edge_info_offset;
           auto found = geo_attribute_cache.cend();
@@ -867,8 +860,19 @@ void BuildTileSet(const std::string& ways_file,
             w.GetTaggedValues(osmdata.name_offset_map, pronunciationMap, langMap, default_languages,
                               tunnel_index, tunnel_lang_index, names.size(), tagged_values,
                               linguistics, type, diff_names);
-            // Update bike_network type
 
+            // Append conditional limits as tagged values
+            const auto cond_limits_range = osmdata.conditional_speeds.equal_range(w.way_id());
+            for (auto it = cond_limits_range.first; it != cond_limits_range.second; ++it) {
+              std::string value;
+              value.reserve(1 + sizeof(ConditionalSpeedLimit));
+              value += static_cast<std::string::value_type>(TaggedValue::kConditionalSpeedLimits);
+              value.append(reinterpret_cast<const std::string::value_type*>(&it->second),
+                           sizeof(ConditionalSpeedLimit));
+              tagged_values.push_back(std::move(value));
+            }
+
+            // Update bike_network type
             if (bike_network) {
               bike_network |= w.bike_network();
             } else {
@@ -879,8 +883,7 @@ void BuildTileSet(const std::string& ways_file,
                 graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
                                       (*nodes[target]).graph_id, w.way_id(), kNoElevationData,
                                       bike_network, speed_limit, shape, names, tagged_values,
-                                      linguistics, conditional_speed_limits, types, added,
-                                      (diff_names || dual_refs));
+                                      linguistics, types, added, (diff_names || dual_refs));
 
             if (added) {
               stats.edgeinfocount++;

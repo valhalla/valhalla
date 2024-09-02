@@ -8,10 +8,7 @@ namespace {
 
 // should return true if not equal to TaggedValue::kLinguistic
 bool IsNonLiguisticTagValue(char ch) {
-  static const std::unordered_set<TaggedValue> kNameTags =
-      {TaggedValue::kBridge, TaggedValue::kTunnel,   TaggedValue::kBssInfo, TaggedValue::kLayer,
-       TaggedValue::kLevel,  TaggedValue::kLevelRef, TaggedValue::kLandmark};
-  return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
+  return static_cast<TaggedValue>(ch) != TaggedValue::kLinguistic;
 }
 
 json::MapPtr bike_network_json(uint8_t mask) {
@@ -31,14 +28,6 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   return a;
 }
 
-json::MapPtr conditional_speed_limits_json(const std::vector<ConditionalSpeedLimit>& limits) {
-  auto map = json::map({});
-  for (const auto& l : limits) {
-    map->emplace(l.td_.to_string(), static_cast<uint64_t>(l.speed_));
-  }
-  return map;
-}
-
 // per tag parser. each returned string includes the leading TaggedValue.
 std::vector<std::string> parse_tagged_value(const char* ptr) {
   switch (static_cast<TaggedValue>(ptr[0])) {
@@ -53,6 +42,9 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
       std::string landmark_name = ptr + 10;
       size_t landmark_size = landmark_name.size() + 10;
       return {std::string(ptr, landmark_size)};
+    }
+    case TaggedValue::kConditionalSpeedLimits: {
+      return {std::string(ptr, 1 + sizeof(ConditionalSpeedLimit))};
     }
     case TaggedValue::kLinguistic:
     default:
@@ -88,13 +80,6 @@ EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_le
   if (ei_.extended_wayid_size_ > 1) {
     extended_wayid3_ = static_cast<uint8_t>(*ptr);
     ptr += sizeof(uint8_t);
-  }
-  if (ei_.had_conditional_speed_limits) {
-    conditional_speed_limits_count_ = static_cast<uint8_t>(*ptr);
-    ptr += sizeof(uint8_t);
-
-    conditional_speed_limits_ = reinterpret_cast<ConditionalSpeedLimit*>(ptr);
-    ptr += conditional_speed_limits_count_ * sizeof(ConditionalSpeedLimit);
   }
 
   // Set encoded elevation pointer
@@ -218,8 +203,9 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
         if (IsNonLiguisticTagValue(tag)) {
           name_type_pairs.push_back({std::string(name + 1), false, static_cast<uint8_t>(tag)});
         }
-      } else
+      } else {
         throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
+      }
     } else if (ni->name_offset_ < names_list_length_) {
       name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_, 0});
     } else {
@@ -406,13 +392,14 @@ std::vector<int8_t> EdgeInfo::encoded_elevation(const uint32_t length, double& i
 }
 
 std::vector<ConditionalSpeedLimit> EdgeInfo::conditional_speed_limits() const {
-  if (!ei_.had_conditional_speed_limits) {
-    return {};
+  std::vector<ConditionalSpeedLimit> limits;
+  const auto cond_limits_range = GetTags().equal_range(TaggedValue::kConditionalSpeedLimits);
+  for (auto it = cond_limits_range.first; it != cond_limits_range.second; ++it) {
+    const ConditionalSpeedLimit* l =
+        reinterpret_cast<const ConditionalSpeedLimit*>(it->second.data());
+    limits.push_back(*l);
   }
-
-  return std::vector<ConditionalSpeedLimit>(conditional_speed_limits_,
-                                            conditional_speed_limits_ +
-                                                conditional_speed_limits_count_);
+  return limits;
 }
 
 int8_t EdgeInfo::layer() const {
@@ -469,9 +456,15 @@ json::MapPtr EdgeInfo::json() const {
     edge_info->emplace("speed_limit", static_cast<uint64_t>(speed_limit()));
   }
 
-  const auto limits = conditional_speed_limits();
-  if (!limits.empty()) {
-    edge_info->emplace("conditional_speed_limits", conditional_speed_limits_json(limits));
+  const auto cond_limits_range = GetTags().equal_range(TaggedValue::kConditionalSpeedLimits);
+  if (cond_limits_range.first != cond_limits_range.second) {
+    auto map = json::map({});
+    for (auto it = cond_limits_range.first; it != cond_limits_range.second; ++it) {
+      const ConditionalSpeedLimit* l =
+          reinterpret_cast<const ConditionalSpeedLimit*>(it->second.data());
+      map->emplace(l->td_.to_string(), static_cast<uint64_t>(l->speed_));
+    }
+    edge_info->emplace("conditional_speed_limits", std::move(map));
   }
 
   return edge_info;
