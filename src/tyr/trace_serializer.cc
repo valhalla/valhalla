@@ -192,6 +192,9 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeCountryCrossing)) {
         writer("country_crossing", static_cast<bool>(edge.country_crossing()));
       }
+      if (controller(kEdgeForward)) {
+        writer("forward", static_cast<bool>(edge.forward()));
+      }
       if (controller(kEdgeLength)) {
         writer.set_precision(3);
         writer("length", edge.length_km() * scale);
