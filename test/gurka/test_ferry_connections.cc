@@ -567,6 +567,77 @@ TEST(Standalone, ReclassifyOutboundOnly) {
   EXPECT_EQ(std::get<1>(inbound_service)->classification(), valhalla::baldr::RoadClass::kPrimary);
 }
 
+TEST(Standalone, ConsiderBlockedRoads) {
+  // Nodes that block the path should be considered when the fastest way from ferry to high class road
+  // is evaluated, as otherwise found shortest path might be not traversable
+
+  const std::string ascii_map = R"(
+    A-------B   M
+            |   |
+            |   |
+        D---C-1-N
+       /        |
+      E         |
+       \        |
+        F-------O
+                |
+                P
+
+  )";
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+
+      // shorter road that is blocked by block
+      {"C1N", {{"highway", "service"}}},
+
+      // longer unblocked road
+      {"BC", {{"highway", "service"}}},
+      {"CD", {{"highway", "service"}}},
+      {"DE", {{"highway", "service"}}},
+      {"EF", {{"highway", "service"}}},
+      {"FO", {{"highway", "service"}}},
+
+      {"MNOP", {{"highway", "primary"}}},
+  };
+
+  const gurka::nodes nodes = {
+      {"1",
+       {
+           {"barrier", "block"},
+           {"motor_vehicle", "no"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_reclassify_block");
+
+  // sanity check that the longer route is taken
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "M"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FO", "MNOP", "MNOP"});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // long not blocked road should be reclassified
+  for (const auto& name : {"BC", "CD", "DE", "EF", "FO"}) {
+    const auto way = gurka::findEdge(reader, layout, name, name + 1);
+    EXPECT_EQ(std::get<1>(way)->classification(), valhalla::baldr::RoadClass::kPrimary);
+  }
+
+  // short blocked route is not reclassified
+  auto blocked = gurka::findEdge(reader, layout, "C1N", "N");
+  EXPECT_EQ(std::get<1>(blocked)->classification(), valhalla::baldr::RoadClass::kServiceOther);
+}
+
 TEST(Standalone, ReclassifyNothingReclassified) {
   // Test to validate that if no edges are found with the target classification
   // nothing gets reclassified.
