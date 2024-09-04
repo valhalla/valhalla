@@ -404,24 +404,22 @@ int8_t EdgeInfo::layer() const {
   return static_cast<int8_t>(value.front());
 }
 
-std::string EdgeInfo::level() const {
+std::vector<std::string> EdgeInfo::level() const {
   const auto& tags = GetTags();
-  auto itr = tags.find(TaggedValue::kLevel);
-  if (itr == tags.end()) {
-    return "";
+  std::vector<std::string> values;
+  for (auto [itr, range_end] = tags.equal_range(TaggedValue::kLevel); itr != range_end; ++itr) {
+    values.emplace_back(itr->second);
   }
-  const std::string& value = itr->second;
-  return value;
+  return values;
 }
 
-std::string EdgeInfo::level_ref() const {
+std::vector<std::string> EdgeInfo::level_ref() const {
   const auto& tags = GetTags();
-  auto itr = tags.find(TaggedValue::kLevelRef);
-  if (itr == tags.end()) {
-    return "";
+  std::vector<std::string> values;
+  for (auto [itr, range_end] = tags.equal_range(TaggedValue::kLevelRef); itr != range_end; ++itr) {
+    values.emplace_back(itr->second);
   }
-  const std::string& value = itr->second;
-  return value;
+  return values;
 }
 
 json::MapPtr EdgeInfo::json() const {

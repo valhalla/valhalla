@@ -1870,11 +1870,6 @@ function filter_tags_generic(kv)
   kv["bike_local_ref"] = lref
   kv["bike_network_mask"] = bike_mask
 
-  -- turn semicolon into colon due to challenges to store ";" in string
-  if kv["level"] ~= nil then
-    kv["level"] = kv["level"]:gsub(";", ":")
-  end
-
   -- Explicitly turn off access for construction type. It's done for backward compatibility
   -- of valhalla tiles and valhalla routing. In case we allow non-zero access then older
   -- versions of router will work with new tiles incorrectly. They would start to route

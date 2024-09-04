@@ -523,19 +523,19 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
   return name_list;
 }
 
-std::string EnhancedTripLeg_Edge::GetLevelRef() const {
-  std::string level_ref;
+std::vector<std::string> EnhancedTripLeg_Edge::GetLevelRef() const {
+  std::vector<std::string> level_refs;
   if (!tagged_value().empty()) {
     for (int t = 0; t < tagged_value().size(); ++t) {
       if (tagged_value().Get(t).type() == TaggedValue_Type_kLevelRef) {
-        level_ref = tagged_value().Get(t).value();
+        level_refs.emplace_back(tagged_value().Get(t).value());
         break;
       } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevel) {
-        level_ref = "Level " + tagged_value().Get(t).value();
+        level_refs.emplace_back("Level " + tagged_value().Get(t).value());
       }
     }
   }
-  return level_ref;
+  return level_refs;
 }
 
 float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
