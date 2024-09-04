@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -124,17 +125,17 @@ TEST_F(Indoor, EdgeInfo) {
     auto edgeId = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));
     return graphreader.edgeinfo(edgeId).level();
   };
-  EXPECT_EQ(get_level("A", "B"), "0");
-  EXPECT_EQ(get_level("B", "C"), "0:1");
-  EXPECT_EQ(get_level("C", "F"), "1");
+  EXPECT_THAT(get_level("A", "B"), ::testing::ElementsAre("0"));
+  EXPECT_THAT(get_level("B", "C"), ::testing::ElementsAre("0", "1"));
+  EXPECT_THAT(get_level("C", "F"), ::testing::ElementsAre("1"));
 
   auto get_level_ref = [&](auto from, auto to) {
     auto edge_id = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));
     return graphreader.edgeinfo(edge_id).level_ref();
   };
-  EXPECT_EQ(get_level_ref("A", "B"), "Parking");
-  EXPECT_EQ(get_level_ref("B", "C"), "");
-  EXPECT_EQ(get_level_ref("C", "F"), "Lobby");
+  EXPECT_THAT(get_level_ref("A", "B"), ::testing::ElementsAre("Parking"));
+  EXPECT_THAT(get_level_ref("B", "C"), ::testing::ElementsAre());
+  EXPECT_THAT(get_level_ref("C", "F"), ::testing::ElementsAre("Lobby"));
 }
 
 TEST_F(Indoor, ElevatorPenalty) {
