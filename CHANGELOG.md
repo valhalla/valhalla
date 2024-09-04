@@ -3,6 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
    * CHANGED: voice instructions for OSRM serializer to work better in real-world environment [#4756](https://github.com/valhalla/valhalla/pull/4756)
+   * ADDED: Add option `edge.forward` to trace attributes [#4876](https://github.com/valhalla/valhalla/pull/4876)
 
 ## Release Date: 2024-08-21 Valhalla 3.5.0
 * **Removed**
@@ -146,8 +147,8 @@
    * ADDED: `expansion_type` property to `/expansion` [#4784](https://github.com/valhalla/valhalla/pull/4784)
    * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
    * ADDED: `use_truck_route` [#4809](https://github.com/valhalla/valhalla/pull/4809)
-   * ADDED: Add option `edge.country_crossing` to trace attributes[4825](https://github.com/valhalla/valhalla/pull/4825)
-   * CHANGED: Unification of turn costs for ramps and roundabouts[4827](https://github.com/valhalla/valhalla/pull/4827)
+   * ADDED: Add option `edge.country_crossing` to trace attributes [#4825](https://github.com/valhalla/valhalla/pull/4825)
+   * CHANGED: Unification of turn costs for ramps and roundabouts [#4827](https://github.com/valhalla/valhalla/pull/4827)
    * CHANGED: updated dockerfile to use ubuntu 24.04 [#4805](https://github.com/valhalla/valhalla/pull/4805)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
@@ -196,7 +197,7 @@
    * ADDED: Support for configuring a universal request timeout [#3966](https://github.com/valhalla/valhalla/pull/3966)
    * ADDED: optionally include highway=platform edges for pedestrian access [#3971](https://github.com/valhalla/valhalla/pull/3971)
    * ADDED: `use_lit` costing option for pedestrian costing [#3957](https://github.com/valhalla/valhalla/pull/3957)
-   * CHANGED: Removed stray NULL values in log output[#3974](https://github.com/valhalla/valhalla/pull/3974)
+   * CHANGED: Removed stray NULL values in log output [#3974](https://github.com/valhalla/valhalla/pull/3974)
    * CHANGED: More conservative estimates for cost of walking slopes [#3982](https://github.com/valhalla/valhalla/pull/3982)
    * ADDED: An option to slim down matrix response [#3987](https://github.com/valhalla/valhalla/pull/3987)
    * CHANGED: Updated url for just_gtfs library [#3994](https://github.com/valhalla/valhalla/pull/3995)
@@ -219,7 +220,7 @@
 ## Release Date: 2023-01-03 Valhalla 3.2.1
 * **Removed**
 * **Bug Fix**
-   * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
+   * FIXED: valhalla_run_route was missing config logic. [#3824](https://github.com/valhalla/valhalla/pull/3824)
    * FIXED: Added missing ferry tag if manoeuver uses a ferry. It's supposed to be there according to the docs. [#3815](https://github.com/valhalla/valhalla/issues/3815)
    * FIXED: Handle hexlifying strings with unsigned chars [#3842](https://github.com/valhalla/valhalla/pull/3842)
    * FIXED: Newer clang warns on `sprintf` which becomes a compilation error (due to `Werror`) so we use `snprintf` instead [#3846](https://github.com/valhalla/valhalla/issues/3846)
@@ -252,8 +253,8 @@
 * **Bug Fix**
    * FIXED: Fix precision losses while encoding-decoding distance parameter in openlr [#3374](https://github.com/valhalla/valhalla/pull/3374)
    * FIXED: Fix bearing calculation for openlr records [#3379](https://github.com/valhalla/valhalla/pull/3379)
-   * FIXED: Some refactoring that was proposed for the PR 3379 [3381](https://github.com/valhalla/valhalla/pull/3381)
-   * FIXED: Avoid calling out "keep left/right" when passing an exit [3349](https://github.com/valhalla/valhalla/pull/3349)
+   * FIXED: Some refactoring that was proposed for the PR 3379 [#3381](https://github.com/valhalla/valhalla/pull/3381)
+   * FIXED: Avoid calling out "keep left/right" when passing an exit [#3349](https://github.com/valhalla/valhalla/pull/3349)
    * FIXED: Fix iterator decrement beyond begin() in GeoPoint::HeadingAtEndOfPolyline() method [#3393](https://github.com/valhalla/valhalla/pull/3393)
    * FIXED: Add string for Use:kPedestrianCrossing to fix null output in to_string(Use). [#3416](https://github.com/valhalla/valhalla/pull/3416)
    * FIXED: Remove simple restrictions check for pedestrian cost calculation. [#3423](https://github.com/valhalla/valhalla/pull/3423)
@@ -289,7 +290,7 @@
    * FIXED: Removed duplicate degrees/radians constants [#3642](https://github.com/valhalla/valhalla/pull/3642)
    * FIXED: Forgot to adapt driving side and country access rules in [#3619](https://github.com/valhalla/valhalla/pull/3619) [#3652](https://github.com/valhalla/valhalla/pull/3652)
    * FIXED: DateTime::is_conditional_active(...) incorrect end week handling [#3655](https://github.com/valhalla/valhalla/pull/3655)
-   * FIXED: TimeDistanceBSSMatrix: incorrect initialization for destinations[#3659](https://github.com/valhalla/valhalla/pull/3659)
+   * FIXED: TimeDistanceBSSMatrix: incorrect initialization for destinations [#3659](https://github.com/valhalla/valhalla/pull/3659)
    * FIXED: Some interpolated points had invalid edge_index in trace_attributes response [#3646](https://github.com/valhalla/valhalla/pull/3670)
    * FIXED: Use a small node snap distance in map-matching. FIxes issue with incorrect turn followed by Uturn. [#3677](https://github.com/valhalla/valhalla/pull/3677)
    * FIXED: Conan error when building Docker image. [#3689](https://github.com/valhalla/valhalla/pull/3689)
@@ -530,7 +531,7 @@
    * FIXED: Store restrictions in the right tile [#2781](https://github.com/valhalla/valhalla/pull/2781)
    * FIXED: Failing to write tiles because of racing directory creation [#2810](https://github.com/valhalla/valhalla/pull/2810)
    * FIXED: Regression in stopping expansion on transitions down in time-dependent routes [#2815](https://github.com/valhalla/valhalla/pull/2815)
-   * FIXED: Fix crash in loki when trace_route is called with 2 locations.[#2817](https://github.com/valhalla/valhalla/pull/2817)
+   * FIXED: Fix crash in loki when trace_route is called with 2 locations. [#2817](https://github.com/valhalla/valhalla/pull/2817)
    * FIXED: Mark the restriction start and end as via ways to fix IsBridgingEdge function in Bidirectional Astar [#2796](https://github.com/valhalla/valhalla/pull/2796)
    * FIXED: Dont add predictive traffic to the tile if it's empty [#2826](https://github.com/valhalla/valhalla/pull/2826)
    * FIXED: Fix logic bidirectional astar to avoid double u-turns and extra detours [#2802](https://github.com/valhalla/valhalla/pull/2802)
@@ -683,12 +684,12 @@
    * FIXED: Checks protobuf serialization/parsing success [#2477](https://github.com/valhalla/valhalla/pull/2477)
    * FIXED: Fix dereferencing of end for std::lower_bound in sequence and possible UB [#2488](https://github.com/valhalla/valhalla/pull/2488)
    * FIXED: Make tile building reproducible: fix UB-s [#2480](https://github.com/valhalla/valhalla/pull/2480)
-   * FIXED: Zero initialize EdgeInfoInner.spare0_. Uninitialized spare0_ field produced UB which causes gurka_reproduce_tile_build to fail intermittently. [2499](https://github.com/valhalla/valhalla/pull/2499)
+   * FIXED: Zero initialize EdgeInfoInner.spare0_. Uninitialized spare0_ field produced UB which causes gurka_reproduce_tile_build to fail intermittently. [#2499](https://github.com/valhalla/valhalla/pull/2499)
    * FIXED: Drop unused CHANGELOG validation script, straggling NodeJS references [#2506](https://github.com/valhalla/valhalla/pull/2506)
    * FIXED: Fix missing nullptr checks in graphreader and loki::Reach (causing segfault during routing with not all levels of tiles available) [#2504](https://github.com/valhalla/valhalla/pull/2504)
    * FIXED: Fix mismatch of triplegedge roadclass and directededge roadclass [#2507](https://github.com/valhalla/valhalla/pull/2507)
    * FIXED: Improve german destination_verbal_alert phrases [#2509](https://github.com/valhalla/valhalla/pull/2509)
-   * FIXED: Undefined behavior cases discovered with undefined behavior sanitizer tool. [2498](https://github.com/valhalla/valhalla/pull/2498)
+   * FIXED: Undefined behavior cases discovered with undefined behavior sanitizer tool. [#2498](https://github.com/valhalla/valhalla/pull/2498)
    * FIXED: Fixed logic so verbal keep instructions use branch exit sign info for ramps [#2520](https://github.com/valhalla/valhalla/pull/2520)
    * FIXED: Fix bug in trace_route for uturns causing garbage coordinates [#2517](https://github.com/valhalla/valhalla/pull/2517)
    * FIXED: Simplify heading calculation for turn type. Remove undefined behavior case. [#2513](https://github.com/valhalla/valhalla/pull/2513)
@@ -716,7 +717,7 @@
    * FIXED: Improve German post_transition_verbal instruction [#2677](https://github.com/valhalla/valhalla/pull/2677)
    * FIXED: Lane updates.  Add the turn lanes to all edges of the way.  Do not "enhance" turn lanes if they are part of a complex restriction.  Moved ProcessTurnLanes after UpdateManeuverPlacementForInternalIntersectionTurns.  Fix for a missing "uturn" indication for intersections on the previous maneuver, we were serializing an empty list. [#2679](https://github.com/valhalla/valhalla/pull/2679)
    * FIXED: Fixes OpenLr serialization [#2688](https://github.com/valhalla/valhalla/pull/2688)
-   * FIXED: Internal edges can't be also a ramp or a turn channel.  Also, if an edge is marked as ramp and turn channel mark it as a ramp.  [2689](https://github.com/valhalla/valhalla/pull/2689)
+   * FIXED: Internal edges can't be also a ramp or a turn channel.  Also, if an edge is marked as ramp and turn channel mark it as a ramp.  [#2689](https://github.com/valhalla/valhalla/pull/2689)
    * FIXED: Check that speeds are equal for the edges going in the same direction while buildig shortcuts [#2691](https://github.com/valhalla/valhalla/pull/2691)
    * FIXED: Missing fork or bear instruction [#2683](https://github.com/valhalla/valhalla/pull/2683)
    * FIXED: Eliminate null pointer dereference in GraphReader::AreEdgesConnected [#2695](https://github.com/valhalla/valhalla/issues/2695)
@@ -822,7 +823,7 @@
    * ADDED: Cross-compilation ability with MinGW64 [#2619](https://github.com/valhalla/valhalla/pull/2619)
    * ADDED: Defines the incident tile schema and incident metadata [#2620](https://github.com/valhalla/valhalla/pull/2620)
    * ADDED: Moves incident serializer logic into a generic serializer [#2621](https://github.com/valhalla/valhalla/pull/2621)
-   * ADDED: Incident loading singleton for continually refreshing incident tiles[#2573](https://github.com/valhalla/valhalla/pull/2573)
+   * ADDED: Incident loading singleton for continually refreshing incident tiles [#2573](https://github.com/valhalla/valhalla/pull/2573)
    * ADDED: One shot mode to valhalla_service so you can run a single request of any type without starting a server [#2624](https://github.com/valhalla/valhalla/pull/2624)
    * ADDED: Adds text instructions to OSRM output [#2625](https://github.com/valhalla/valhalla/pull/2625)
    * ADDED: Adds support for alternate routes [#2626](https://github.com/valhalla/valhalla/pull/2626)
@@ -836,7 +837,7 @@
    * ADDED: Add annotations to osrm response including speed limits, unit and sign conventions [#2668](https://github.com/valhalla/valhalla/pull/2668)
    * ADDED: Added functions for predicted speeds encoding-decoding [#2674](https://github.com/valhalla/valhalla/pull/2674)
    * ADDED: Time invariant routing via the bidirectional algorithm. This has the effect that when time dependent routes (arrive_by and depart_at) fall back to bidirectional due to length restrictions they will actually use the correct time of day for one of the search directions [#2660](https://github.com/valhalla/valhalla/pull/2660)
-   * ADDED: If the length of the edge is greater than kMaxEdgeLength, then consider this a catastrophic error if the should_error bool is true in the set_length function. [2678](https://github.com/valhalla/valhalla/pull/2678)
+   * ADDED: If the length of the edge is greater than kMaxEdgeLength, then consider this a catastrophic error if the should_error bool is true in the set_length function. [#2678](https://github.com/valhalla/valhalla/pull/2678)
    * ADDED: Moved lat,lon coordinates structures from single to double precision. Improves geometry accuracy noticibly at zooms above 17 as well as coordinate snapping and any other geometric operations. Adds about a 2% performance penalty for standard routes. Graph nodes now have 7 digits of precision.  [#2693](https://github.com/valhalla/valhalla/pull/2693)
    * ADDED: Added signboards to guidance views.  [#2687](https://github.com/valhalla/valhalla/pull/2687)
    * ADDED: Regular speed on shortcut edges is calculated with turn durations taken into account. Truck, motorcycle and motorscooter profiles use OSRM-like turn duration. [#2662](https://github.com/valhalla/valhalla/pull/2662)
@@ -973,7 +974,7 @@
    * FIXED: Fix pedestrian routes using walkway_factor [#1780](https://github.com/valhalla/valhalla/pull/1780)
    * FIXED: Update the begin and end heading of short edges based on use [#1783](https://github.com/valhalla/valhalla/pull/1783)
    * FIXED: GraphReader::AreEdgesConnected update.  If transition count == 0 return false and do not call transition function. [#1786](https://github.com/valhalla/valhalla/pull/1786)
-   * FIXED: Only edge candidates that were used in the path are send to serializer: [1788](https://github.com/valhalla/valhalla/pull/1788)
+   * FIXED: Only edge candidates that were used in the path are send to serializer: [#1788](https://github.com/valhalla/valhalla/pull/1788)
    * FIXED: Added logic to prevent the removal of a destination maneuver when ending on an internal edge [#1792](https://github.com/valhalla/valhalla/pull/1792)
    * FIXED: Fixed instructions when starting on an internal edge [#1796](https://github.com/valhalla/valhalla/pull/1796)
 
@@ -1050,10 +1051,10 @@
 
 ## Release Date: 2018-09-13 Valhalla 2.7.0
 * **Enhancement**
-   * UPDATED: Refactor to use the pbf options instead of the ptree config [#1428](https://github.com/valhalla/valhalla/pull/1428) This completes [1357](https://github.com/valhalla/valhalla/issues/1357)
+   * UPDATED: Refactor to use the pbf options instead of the ptree config [#1428](https://github.com/valhalla/valhalla/pull/1428) This completes [#1357](https://github.com/valhalla/valhalla/issues/1357)
    * UPDATED: Removed the boost/date_time dependency from baldr and odin. We added the Howard Hinnant date and time library as a submodule. [#1494](https://github.com/valhalla/valhalla/pull/1494)
-   * UPDATED: Fixed 'Drvie' typo [#1505](https://github.com/valhalla/valhalla/pull/1505) This completes [1504](https://github.com/valhalla/valhalla/issues/1504)
-   * UPDATED: Optimizations of GetSpeed for predicted speeds [1490](https://github.com/valhalla/valhalla/issues/1490)
+   * UPDATED: Fixed 'Drvie' typo [#1505](https://github.com/valhalla/valhalla/pull/1505) This completes [#1504](https://github.com/valhalla/valhalla/issues/1504)
+   * UPDATED: Optimizations of GetSpeed for predicted speeds [#1490](https://github.com/valhalla/valhalla/issues/1490)
    * UPDATED: Isotile optimizations
    * UPDATED: Added stats to predictive traffic logging
    * UPDATED: resample_polyline - Breaks the polyline into equal length segments at a sample distance near the resolution. Break out of the loop through polyline points once we reach the specified number of samplesthen append the last
@@ -1102,8 +1103,8 @@ polyline point.
    * FIXED: Fixed trace_route edge_walk server abort [#1365](https://github.com/valhalla/valhalla/pull/1365)
 * **Enhancement**
    * ADDED: Added post process for updating free and constrained speeds in the directed edges.
-   * UPDATED: Parse the json request once and store in a protocol buffer to pass along the pipeline. This completed the first portion of [1357](https://github.com/valhalla/valhalla/issues/1357)
-   * UPDATED: Changed the shape_match attribute from a string to an enum. Fixes [1376](https://github.com/valhalla/valhalla/issues/1376)
+   * UPDATED: Parse the json request once and store in a protocol buffer to pass along the pipeline. This completed the first portion of [#1357](https://github.com/valhalla/valhalla/issues/1357)
+   * UPDATED: Changed the shape_match attribute from a string to an enum. Fixes [#1376](https://github.com/valhalla/valhalla/issues/1376)
    * ADDED: Node bindings for route [#1341](https://github.com/valhalla/valhalla/pull/1341)
    * UPDATED: Use a non-linear use_highways factor (to more heavily penalize highways as use_highways approaches 0).
 

@@ -181,6 +181,7 @@ message TripLeg {
     float elevation_sampling_interval = 56;
     repeated float elevation = 57;
     bool country_crossing = 58;
+    bool forward = 59;
   }
 
   message IntersectingEdge {
