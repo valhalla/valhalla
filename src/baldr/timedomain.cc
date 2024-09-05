@@ -47,34 +47,16 @@ void format_dow(uint64_t dow_mask, std::ostringstream& ss) {
 
 std::string month_name(valhalla::baldr::MONTH month) {
   using valhalla::baldr::MONTH;
-  switch (month) {
-    case MONTH::kJan:
-      return "Jan";
-    case MONTH::kFeb:
-      return "Feb";
-    case MONTH::kMar:
-      return "Mar";
-    case MONTH::kApr:
-      return "Apr";
-    case MONTH::kMay:
-      return "May";
-    case MONTH::kJun:
-      return "Jun";
-    case MONTH::kJul:
-      return "Jul";
-    case MONTH::kAug:
-      return "Aug";
-    case MONTH::kSep:
-      return "Sep";
-    case MONTH::kOct:
-      return "Oct";
-    case MONTH::kNov:
-      return "Nov";
-    case MONTH::kDec:
-      return "Dec";
-    default:
-      return "";
+  static const std::unordered_map<MONTH, std::string> month_name = {
+      {MONTH::kJan, "Jan"}, {MONTH::kFeb, "Feb"}, {MONTH::kMar, "Mar"}, {MONTH::kApr, "Apr"},
+      {MONTH::kMay, "May"}, {MONTH::kJun, "Jun"}, {MONTH::kJul, "Jul"}, {MONTH::kAug, "Aug"},
+      {MONTH::kSep, "Sep"}, {MONTH::kOct, "Oct"}, {MONTH::kNov, "Nov"}, {MONTH::kDec, "Dec"},
+  };
+  auto it = month_name.find(month);
+  if (it != month_name.end()) {
+    return it->second;
   }
+  return "";
 }
 
 std::string dow_name(valhalla::baldr::DOW dow) {
