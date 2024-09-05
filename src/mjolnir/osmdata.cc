@@ -7,7 +7,6 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
-#include "mjolnir/util.h"
 
 using namespace valhalla::mjolnir;
 using valhalla::baldr::ConditionalSpeedLimit;
@@ -81,16 +80,6 @@ struct TempLinguistic {
   TempLinguistic() : way_id(0), linguistic(OSMLinguistic()) {
   }
   TempLinguistic(const uint64_t w, const OSMLinguistic& l) : way_id(w), linguistic(l) {
-  }
-};
-
-struct TempConditionalSpeedLimit {
-  uint64_t way_id;
-  ConditionalSpeedLimit conditional_speed_limit;
-  TempConditionalSpeedLimit() : way_id(0), conditional_speed_limit({}) {
-  }
-  TempConditionalSpeedLimit(const uint64_t w, const ConditionalSpeedLimit s)
-      : way_id(w), conditional_speed_limit(s) {
   }
 };
 
@@ -329,18 +318,11 @@ bool write_conditional_speed_limits(const std::string& filename,
     return false;
   }
 
-  // Convert the multi map into a flat representation
-  std::vector<TempConditionalSpeedLimit> flat;
-  flat.reserve(speed_map.size());
-  for (auto it = speed_map.cbegin(); it != speed_map.cend(); ++it) {
-    flat.emplace_back(it->first, it->second);
-  }
-
-  // Write the count and then the via ids
-  uint32_t sz = flat.size();
+  uint32_t sz = speed_map.size();
   file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
-  file.write(reinterpret_cast<const char*>(flat.data()),
-             flat.size() * sizeof(TempConditionalSpeedLimit));
+  for (const std::pair<const uint64_t, ConditionalSpeedLimit>& sp : speed_map) {
+    file.write(reinterpret_cast<const char*>(&sp), sizeof(sp));
+  }
   file.close();
   return true;
 }
@@ -571,17 +553,16 @@ bool read_conditional_speed_limits(const std::string& filename,
     return false;
   }
 
-  // Read the count and then the temporary access restriction list
+  // Read the count and following conditional speed limits
   uint32_t count = 0;
   file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
-  std::vector<TempConditionalSpeedLimit> flat(count);
-  file.read(reinterpret_cast<char*>(flat.data()), count * sizeof(TempConditionalSpeedLimit));
-  file.close();
-
-  // Iterate through the temporary access restriction list and add to the restriction multi-map
-  for (const auto& l : flat) {
-    speed_map.emplace(l.way_id, l.conditional_speed_limit);
+  speed_map.reserve(count);
+  while (count--) {
+    std::pair<uint64_t, ConditionalSpeedLimit> sp = {{}, {}};
+    file.read(reinterpret_cast<char*>(&sp), sizeof(sp));
+    speed_map.emplace(std::move(sp));
   }
+  file.close();
   return true;
 }
 
