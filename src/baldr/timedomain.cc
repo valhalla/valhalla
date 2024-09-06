@@ -4,6 +4,22 @@
 #include <sstream>
 
 namespace {
+std::string month_name(valhalla::baldr::MONTH month) {
+  using valhalla::baldr::MONTH;
+  static const std::string months[] = {"",    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  static_assert(static_cast<size_t>(MONTH::kDec) == std::size(months) - 1,
+                "baldr::MONTH enum doesn't match with month names");
+  return months[static_cast<size_t>(month)];
+}
+
+std::string dow_name(valhalla::baldr::DOW dow) {
+  static const std::string days[] = {"", "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"};
+  static_assert(static_cast<size_t>(valhalla::baldr::DOW::kSaturday) == std::size(days) - 1,
+                "baldr::DOW enum doesn't match with DoW names");
+  return days[static_cast<size_t>(dow)];
+}
+
 // Format daterange.dow mask into human-readable format. Week starts from Sunday in the mask
 // - 0b1000001 => Su,Sa
 // - 0b0111110 => Mo-Fr
@@ -25,13 +41,13 @@ void format_dow(uint64_t dow_mask, std::ostringstream& ss) {
       if (!empty) {
         ss << ',';
       }
-      ss << days[i];
+      ss << dow_name(static_cast<valhalla::baldr::DOW>(i + 1));
       empty = false;
     }
 
     if (!curr && prev && preprev) {
       // we passed the range end - print the previous day
-      ss << '-' << days[i - 1];
+      ss << '-' << dow_name(static_cast<valhalla::baldr::DOW>(i));
     }
 
     preprev = prev;
@@ -42,42 +58,6 @@ void format_dow(uint64_t dow_mask, std::ostringstream& ss) {
   if (prev && preprev) {
     // we passed the range end - print the previous day
     ss << '-' << days[6];
-  }
-}
-
-std::string month_name(valhalla::baldr::MONTH month) {
-  using valhalla::baldr::MONTH;
-  static const std::unordered_map<MONTH, std::string> month_name = {
-      {MONTH::kJan, "Jan"}, {MONTH::kFeb, "Feb"}, {MONTH::kMar, "Mar"}, {MONTH::kApr, "Apr"},
-      {MONTH::kMay, "May"}, {MONTH::kJun, "Jun"}, {MONTH::kJul, "Jul"}, {MONTH::kAug, "Aug"},
-      {MONTH::kSep, "Sep"}, {MONTH::kOct, "Oct"}, {MONTH::kNov, "Nov"}, {MONTH::kDec, "Dec"},
-  };
-  auto it = month_name.find(month);
-  if (it != month_name.end()) {
-    return it->second;
-  }
-  return "";
-}
-
-std::string dow_name(valhalla::baldr::DOW dow) {
-  using valhalla::baldr::DOW;
-  switch (dow) {
-    case DOW::kSunday:
-      return "Su";
-    case DOW::kMonday:
-      return "Mo";
-    case DOW::kTuesday:
-      return "Tu";
-    case DOW::kWednesday:
-      return "We";
-    case DOW::kThursday:
-      return "Th";
-    case DOW::kFriday:
-      return "Fr";
-    case DOW::kSaturday:
-      return "Sa";
-    default:
-      return "";
   }
 }
 } // namespace
