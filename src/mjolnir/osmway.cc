@@ -4,7 +4,6 @@
 
 #include "midgard/logging.h"
 #include <boost/algorithm/string.hpp>
-#include <iostream>
 
 using namespace valhalla::baldr;
 
@@ -78,6 +77,24 @@ void OSMWay::set_truck_speed(const float speed) {
     truck_speed_ = kMaxOSMSpeed;
   } else {
     truck_speed_ = static_cast<unsigned char>(speed + 0.5f);
+  }
+}
+
+void OSMWay::set_truck_speed_forward(const float truck_speed_forward) {
+  if (truck_speed_forward > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max forward truck speed for way id: " + std::to_string(osmwayid_));
+    truck_speed_forward_ = kMaxOSMSpeed;
+  } else {
+    truck_speed_forward_ = static_cast<unsigned char>(truck_speed_forward + 0.5f);
+  }
+}
+
+void OSMWay::set_truck_speed_backward(const float truck_speed_backward) {
+  if (truck_speed_backward > kMaxOSMSpeed) {
+    LOG_WARN("Exceeded max backward truck speed for way id: " + std::to_string(osmwayid_));
+    truck_speed_backward_ = kMaxOSMSpeed;
+  } else {
+    truck_speed_backward_ = static_cast<unsigned char>(truck_speed_backward + 0.5f);
   }
 }
 

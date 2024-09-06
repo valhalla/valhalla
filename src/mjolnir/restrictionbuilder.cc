@@ -6,7 +6,7 @@
 
 #include <future>
 #include <queue>
-#include <set>
+#include <random>
 #include <thread>
 #include <unordered_set>
 
@@ -270,8 +270,8 @@ ComplexRestrictionBuilder CreateComplexRestriction(const OSMRestriction& restric
 };
 
 struct Result {
-  uint32_t forward_restrictions_count;
-  uint32_t reverse_restrictions_count;
+  uint32_t forward_restrictions_count = 0;
+  uint32_t reverse_restrictions_count = 0;
   std::vector<ComplexRestrictionBuilder> restrictions;
   std::unordered_set<GraphId> part_of_restriction;
 };
@@ -752,7 +752,7 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     std::vector<std::promise<Result>> promises(threads.size());
 
     // Start the threads
-    LOG_INFO("Adding Restrictions at level " + std::to_string(tl->level));
+    LOG_INFO("Adding complex turn restrictions at level " + std::to_string(tl->level));
     for (size_t i = 0; i < threads.size(); ++i) {
       threads[i].reset(new std::thread(build, std::cref(complex_from_restrictions_file),
                                        std::cref(complex_to_restrictions_file),

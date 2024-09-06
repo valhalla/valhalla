@@ -1,8 +1,5 @@
 #include "test.h"
 
-#include <iostream>
-#include <stdexcept>
-
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"

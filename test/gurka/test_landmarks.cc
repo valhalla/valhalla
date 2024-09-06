@@ -143,6 +143,9 @@ void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
 
   auto tile = reader.GetGraphTile(graphid);
   for (const auto& e : tile->GetDirectedEdges()) {
+    if (e.is_shortcut()) {
+      continue;
+    }
     auto ei = tile->edgeinfo(&e);
     auto tagged_values = ei.GetTags();
 
@@ -177,11 +180,9 @@ void DisplayLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
     LOG_INFO("edge endnode: " + std::to_string(e.endnode().id()) +
              ", length: " + std::to_string(e.length()));
 
-    int count_landmarks = 0;
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
-      count_landmarks++;
       DisplayLandmark(Landmark(value.second));
     }
   }
@@ -248,8 +249,8 @@ TEST(LandmarkTest, TestBuildDatabase) {
 }
 
 TEST(LandmarkTest, TestParseLandmarks) {
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -393,8 +394,8 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
 }
 
 TEST(LandmarkTest, TestAddLandmarksToTiles) {
-  if (!filesystem::exists(workdir_tiles)) {
-    bool created = filesystem::create_directories(workdir_tiles);
+  if (!std::filesystem::exists(workdir_tiles)) {
+    bool created = std::filesystem::create_directories(workdir_tiles);
     EXPECT_TRUE(created);
   }
 
@@ -429,8 +430,8 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
 // hierarchy max level", and "Could not compute FileSuffix for GraphId with invalid tile
 // id:0/245760/0". We need to fix it in the future.
 TEST(LandmarkTest, DISABLED_ErrorTest) {
-  if (!filesystem::exists(workdir_tiles)) {
-    bool created = filesystem::create_directories(workdir_tiles);
+  if (!std::filesystem::exists(workdir_tiles)) {
+    bool created = std::filesystem::create_directories(workdir_tiles);
     EXPECT_TRUE(created);
   }
 
@@ -508,8 +509,8 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
   const std::string db_path = workdir + "/landmarks.sqlite";
   const std::string pbf = workdir + "/map.pbf";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -620,7 +621,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
           "Checking landmarks in maneuver failed: cannot find the maneuver in the expected result!");
     }
     ASSERT_EQ(result_landmarks.size(), expected->second.size());
-    for (auto i = 0; i < result_landmarks.size(); ++i) {
+    for (size_t i = 0; i < result_landmarks.size(); ++i) {
       EXPECT_EQ(result_landmarks[i], expected->second[i]);
     }
   }

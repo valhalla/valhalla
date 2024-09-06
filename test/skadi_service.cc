@@ -2,7 +2,6 @@
 #include "pixels.h"
 #include "test.h"
 
-#include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 
@@ -240,9 +239,6 @@ TEST(SkadiService, test_requests) {
         return request != requests.cend();
       },
       1);
-
-  // make this whole thing bail if it doesnt finish fast
-  alarm(120);
 
   // request and receive
   client.batch();

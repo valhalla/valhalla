@@ -12,7 +12,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "loki/worker.h"
 #include "midgard/constants.h"
 #include "midgard/encoded.h"
@@ -26,7 +25,6 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <osmium/builder/attr.hpp>
@@ -36,7 +34,6 @@
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/osm/object_comparisons.hpp>
 
-#include <regex>
 #include <string>
 #include <tuple>
 

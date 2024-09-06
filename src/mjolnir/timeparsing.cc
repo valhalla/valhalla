@@ -1,4 +1,3 @@
-#include <bitset>
 #include <ctime>
 #include <regex>
 #include <sstream>

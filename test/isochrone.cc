@@ -14,6 +14,10 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
+#ifdef ENABLE_GDAL
+#include <gdal_priv.h>
+#endif
+
 using point_type = boost::geometry::model::d2::point_xy<double>;
 using polygon_type = boost::geometry::model::polygon<point_type>;
 using boost::geometry::within;
@@ -328,6 +332,170 @@ TEST(Isochrones, test_max_reserved_labels_count) {
   IsochroneTest isochrone(config);
   isochrone.Clear();
 }
+
+#ifdef ENABLE_GDAL
+
+void check_raster_edges(size_t x, size_t y, uint16_t* data) {
+
+  // make sure the outer "edges" are not 0
+  for (size_t i = 0; i < y; ++i) {
+    // if not in first or last row
+    if (i != 0 || i != y - 1) {
+      // just check first and last element in the row
+      ASSERT_NE(data[i * y], 0);
+      ASSERT_NE(data[i * y + x], 0);
+      continue;
+    }
+
+    // else check the whole row
+    for (size_t j = 0; j < x; ++j) {
+      ASSERT_NE(data[i * y + j], 0);
+    }
+  }
+}
+
+TEST(Isochrones, test_geotiff_output_distance) {
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+
+  const auto request =
+      R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"distance":1}], "format": "geotiff"})";
+  Api request_pbf;
+  ParseApi(request, Options::isochrone, request_pbf);
+  loki_worker.isochrones(request_pbf);
+  std::string geotiff = thor_worker.isochrones(request_pbf);
+
+  std::string name = "/vsimem/test_isogrid_geotiff_d.tif";
+  unsigned char buffer[geotiff.length()];
+  std::copy(geotiff.cbegin(), geotiff.cend(), buffer);
+  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
+  auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
+  int x = geotiff_dataset->GetRasterXSize();
+  int y = geotiff_dataset->GetRasterYSize();
+  GDALRasterBand* band = geotiff_dataset->GetRasterBand(1);
+  uint16_t data_array[x * y];
+  CPLErr err = band->RasterIO(GF_Read, 0, 0, x, y, data_array, x, y, GDT_UInt16, 0, 0);
+  double min_max[2];
+
+  band->ComputeRasterMinMax(0, min_max);
+
+  ASSERT_EQ(err, CE_None);
+  ASSERT_NE(x, 0);
+  ASSERT_NE(y, 0);
+  ASSERT_EQ(static_cast<int>(min_max[0]), 0);
+  ASSERT_EQ(static_cast<int>(min_max[1]), 1100);
+  ASSERT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
+  size_t array_size = x * y;
+
+  check_raster_edges(x, y, data_array);
+
+  // make sure there are some grid cells whose metric value is neither 0 nor the max
+  bool no_intermediate_values = true;
+  for (size_t i = 0; i < array_size; ++i) {
+    if (data_array[i] > 0 && data_array[i] < min_max[1])
+      no_intermediate_values = false;
+  }
+  ASSERT_EQ(no_intermediate_values, false);
+  VSIFCloseL(handle);
+}
+
+TEST(Isochrones, test_geotiff_output_time) {
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+
+  const auto request =
+      R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"time":1}], "format": "geotiff"})";
+  Api request_pbf;
+  ParseApi(request, Options::isochrone, request_pbf);
+  loki_worker.isochrones(request_pbf);
+  std::string geotiff = thor_worker.isochrones(request_pbf);
+
+  std::string name = "/vsimem/test_isogrid_geotiff_t.tif";
+  unsigned char buffer[geotiff.length()];
+  std::copy(geotiff.cbegin(), geotiff.cend(), buffer);
+  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
+  auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
+  int x = geotiff_dataset->GetRasterXSize();
+  int y = geotiff_dataset->GetRasterYSize();
+  GDALRasterBand* band = geotiff_dataset->GetRasterBand(1);
+  uint16_t data_array[x * y];
+  CPLErr err = band->RasterIO(GF_Read, 0, 0, x, y, data_array, x, y, GDT_UInt16, 0, 0);
+  double min_max[2];
+
+  band->ComputeRasterMinMax(0, min_max);
+
+  ASSERT_EQ(err, CE_None);
+  ASSERT_GT(x, 0);
+  ASSERT_GT(y, 0);
+  ASSERT_EQ(static_cast<int>(min_max[0]), 0);
+  ASSERT_EQ(static_cast<int>(min_max[1]), 660);
+  ASSERT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
+  size_t array_size = x * y;
+
+  check_raster_edges(x, y, data_array);
+
+  // make sure there are some grid cells whose metric value is neither 0 nor the max
+  bool no_intermediate_values = true;
+  for (size_t i = 0; i < array_size; ++i) {
+    if (data_array[i] > 0 && data_array[i] < min_max[1])
+      no_intermediate_values = false;
+  }
+  ASSERT_EQ(no_intermediate_values, false);
+  VSIFCloseL(handle);
+}
+
+// test request with two metrics
+TEST(Isochrones, test_geotiff_output_time_distance) {
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+
+  const auto request =
+      R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"time":1},{"distance":2}], "format": "geotiff"})";
+  Api request_pbf;
+  ParseApi(request, Options::isochrone, request_pbf);
+  loki_worker.isochrones(request_pbf);
+  std::string geotiff = thor_worker.isochrones(request_pbf);
+
+  std::string name = "/vsimem/test_isogrid_geotiff_td.tif";
+  unsigned char buffer[geotiff.length()];
+  std::copy(geotiff.cbegin(), geotiff.cend(), buffer);
+  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
+  auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
+  int x = geotiff_dataset->GetRasterXSize();
+  int y = geotiff_dataset->GetRasterYSize();
+
+  // time, distance
+  std::array<int, 2> expected_max{660, 1200};
+
+  for (int b = 1; b <= 2; ++b) {
+    GDALRasterBand* band = geotiff_dataset->GetRasterBand(b);
+    uint16_t data_array[x * y];
+    CPLErr err = band->RasterIO(GF_Read, 0, 0, x, y, data_array, x, y, GDT_UInt16, 0, 0);
+    double min_max[2];
+
+    band->ComputeRasterMinMax(0, min_max);
+
+    ASSERT_EQ(err, CE_None);
+    ASSERT_NE(x, 0);
+    ASSERT_NE(y, 0);
+    ASSERT_EQ(static_cast<int>(min_max[0]), 0);
+    ASSERT_EQ(static_cast<int>(min_max[1]), expected_max[b - 1]);
+    ASSERT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
+    size_t array_size = x * y;
+
+    check_raster_edges(x, y, data_array);
+
+    // make sure there are some grid cells whose metric value is neither 0 nor the max
+    bool no_intermediate_values = true;
+    for (size_t j = 0; j < array_size; ++j) {
+      if (data_array[j] > 0 && data_array[j] < min_max[1])
+        no_intermediate_values = false;
+    }
+    ASSERT_EQ(no_intermediate_values, false);
+  }
+  VSIFCloseL(handle);
+}
+#endif
 
 } // namespace
 

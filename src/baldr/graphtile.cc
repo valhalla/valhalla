@@ -18,8 +18,6 @@
 #include <ctime>
 #include <fstream>
 #include <iomanip>
-#include <iostream>
-#include <locale>
 #include <string>
 #include <thread>
 #include <utility>
@@ -1196,7 +1194,7 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
   }
 
   // Access restriction are sorted by edge Id.
-  // Binary search to find a access restriction with matching edge Id.
+  // Binary search to find an access restriction with matching edge Id.
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;

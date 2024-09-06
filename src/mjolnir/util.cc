@@ -52,6 +52,7 @@ const std::string tile_manifest_file = "tile_manifest.json";
 const std::string access_file = "access.bin";
 const std::string pronunciation_file = "pronunciation.bin";
 const std::string bss_nodes_file = "bss_nodes.bin";
+const std::string linguistic_node_file = "linguistics_node.bin";
 const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
@@ -69,9 +70,11 @@ namespace mjolnir {
  */
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value,
-                          std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
-                          boost::algorithm::token_compress_off);
+  boost::algorithm::split(
+      tokens, tag_value,
+      [delim](auto&& PH1) { return std::equal_to<char>()(delim, std::forward<decltype(PH1)>(PH1)); },
+      boost::algorithm::token_compress_off);
+
   return tokens;
 }
 
@@ -213,7 +216,7 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
   spatialite_singleton_t::get_instance();
   void* conn = spatialite_alloc_connection();
   spatialite_init_ex(handle, conn, 0);
-  return std::shared_ptr<void>(conn, [](void* c) { spatialite_cleanup_ex(c); });
+  return {conn, [](void* c) { spatialite_cleanup_ex(c); }};
 }
 
 bool build_tile_set(const boost::property_tree::ptree& original_config,
@@ -226,6 +229,11 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
       filesystem::remove(fname);
     }
   };
+
+  if (input_files.size() > 1) {
+    LOG_WARN(
+        "Tile building using more than one osm.pbf extract is discouraged. Consider merging the extracts into one file. See this issue for more info: https://github.com/valhalla/valhalla/issues/3925 ");
+  }
 
   // Take out tile_extract and tile_url from property tree as tiles must only use the tile_dir
   auto config = original_config;
@@ -271,6 +279,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string tile_manifest = tile_dir + tile_manifest_file;
   std::string access_bin = tile_dir + access_file;
   std::string bss_nodes_bin = tile_dir + bss_nodes_file;
+  std::string linguistic_node_bin = tile_dir + linguistic_node_file;
   std::string cr_from_bin = tile_dir + cr_from_file;
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
@@ -320,7 +329,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
     PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
-                               osm_data);
+                               linguistic_node_bin, osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory) {
@@ -364,7 +373,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, tiles);
+                        cr_to_bin, linguistic_node_bin, tiles);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -447,6 +456,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(bss_nodes_bin);
     remove_temp_file(cr_from_bin);
     remove_temp_file(cr_to_bin);
+    remove_temp_file(linguistic_node_bin);
     remove_temp_file(new_to_old_bin);
     remove_temp_file(old_to_new_bin);
     remove_temp_file(tile_manifest);

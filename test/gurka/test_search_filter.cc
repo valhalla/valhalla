@@ -61,6 +61,23 @@ TEST_F(SearchFilter, Unfiltered) {
   gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
   gurka::assert::raw::expect_path(result, {"AB", "BC"});
 }
+TEST_F(SearchFilter, NodeSnapped) {
+  auto from = "B";
+  auto to = "C";
+
+  const std::string& request =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_tunnel":true}},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
+
+  // should take the shortest path
+  gurka::assert::osrm::expect_steps(result, {"AB", "AD", "CD"});
+  gurka::assert::raw::expect_path(result, {"AB", "AD", "CD"});
+}
 TEST_F(SearchFilter, Heading) {
   auto from = "1";
   auto to = "2";

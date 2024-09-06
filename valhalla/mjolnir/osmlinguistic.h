@@ -2,10 +2,7 @@
 #define VALHALLA_MJOLNIR_OSMLINGUISTIC_H
 
 #include <cstdint>
-#include <string>
-#include <vector>
 
-#include <iostream>
 #include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {

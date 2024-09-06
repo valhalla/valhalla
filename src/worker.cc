@@ -1,4 +1,3 @@
-#include <iostream>
 #include <sstream>
 #include <typeinfo>
 #include <unordered_map>
@@ -139,6 +138,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {445, {445, "Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input.", 400, HTTP_400, OSRM_INVALID_URL, "wrong_match_type"}},
     {499, {499, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
+    {504, {504, "This service does not support GeoTIFF serialization.", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
+    {599, {599, "Unknown serialization error", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
 };
 
 // unordered map for warning pairs
@@ -687,7 +688,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
                                                           Options::trace_attributes,
                                                           Options::status,
                                                           Options::sources_to_targets,
-                                                          Options::isochrone};
+                                                          Options::isochrone,
+                                                          Options::expansion};
     // if its not a pbf supported action we reset to json
     if (pbf_actions.count(options.action()) == 0) {
       options.set_format(Options::json);
@@ -696,6 +698,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.clear_jsonp();
     }
   }
+#ifndef ENABLE_GDAL
+  else if (options.format() == Options::geotiff) {
+    throw valhalla_exception_t{504};
+  }
+#endif
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
   if (units && ((*units == "miles") || (*units == "mi"))) {
@@ -1110,6 +1117,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // should the expansion track opposites?
   options.set_skip_opposites(rapidjson::get<bool>(doc, "/skip_opposites", options.skip_opposites()));
+
+  // should the expansion be less verbose, printing each edge only once, default false
+  options.set_dedupe(rapidjson::get<bool>(doc, "/dedupe", options.dedupe()));
 
   // get the contours in there
   parse_contours(doc, options.mutable_contours());

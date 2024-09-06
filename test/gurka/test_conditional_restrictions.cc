@@ -97,8 +97,9 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/conditional_restrictions",
-                            {{"mjolnir.timezone", {"test/data/tz.sqlite"}}});
+    map = gurka::buildtiles(layout, ways, {}, {},
+                            VALHALLA_BUILD_DIR "test/data/conditional_restrictions",
+                            {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   }
 };
 
