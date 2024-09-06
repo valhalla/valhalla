@@ -1069,7 +1069,33 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
     // level
     auto tokens = GetTagTokens(name_offset_map.name(level_index_));
     for (const auto& t : tokens) {
-      names.emplace_back(encode_tag(TaggedValue::kLevel) + t);
+
+      // get ranged values
+      const char dash = '-';
+      auto dash_pos = t.find(dash);
+
+      // if there is a dash and its not at the first position,
+      // we have a range
+      if (dash_pos != std::string::npos && dash_pos != 0) {
+        std::vector<std::string> range_start_end;
+        boost::algorithm::split(
+            range_start_end, t, [dash](const char c) { return c == dash; },
+            boost::algorithm::token_compress_on);
+        if (range_start_end.size() == 2) {
+          try {
+            auto start = std::stoi(range_start_end[0]);
+            auto end = std::stoi(range_start_end[1]);
+
+            for (; start <= end; ++start) {
+              names.emplace_back(encode_tag(TaggedValue::kLevel) + std::to_string(start));
+            }
+          } catch (...) { LOG_ERROR("Unable to process level range: " + t); }
+        } else {
+          LOG_ERROR("Unable to process level range: " + t);
+        }
+      } else { // no range
+        names.emplace_back(encode_tag(TaggedValue::kLevel) + t);
+      }
     }
   }
   if (level_ref_index_ != 0) {

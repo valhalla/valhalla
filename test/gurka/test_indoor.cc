@@ -55,7 +55,7 @@ protected:
         {"DN", {{"highway", "steps"}}},
         {"NO", {{"highway", "footway"}}},
 
-        {"Cx", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "1;2"}}},
+        {"Cx", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "-1;0-2"}}},
         {"xy", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "2;3"}}},
         {"yJ", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
     };
@@ -125,9 +125,11 @@ TEST_F(Indoor, EdgeInfo) {
     auto edgeId = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));
     return graphreader.edgeinfo(edgeId).level();
   };
-  EXPECT_THAT(get_level("A", "B"), ::testing::ElementsAre("0"));
-  EXPECT_THAT(get_level("B", "C"), ::testing::ElementsAre("0", "1"));
-  EXPECT_THAT(get_level("C", "F"), ::testing::ElementsAre("1"));
+  EXPECT_THAT(get_level("A", "B"), ::testing::ElementsAre(0));
+  EXPECT_THAT(get_level("B", "C"), ::testing::ElementsAre(0, 1));
+  EXPECT_THAT(get_level("C", "F"), ::testing::ElementsAre(1));
+  EXPECT_THAT(get_level("C", "x"), ::testing::ElementsAre(-1, 0, 1, 2));
+  EXPECT_THAT(get_level("x", "y"), ::testing::ElementsAre(2, 3));
 
   auto get_level_ref = [&](auto from, auto to) {
     auto edge_id = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));

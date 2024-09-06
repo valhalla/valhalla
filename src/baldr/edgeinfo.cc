@@ -404,11 +404,13 @@ int8_t EdgeInfo::layer() const {
   return static_cast<int8_t>(value.front());
 }
 
-std::vector<std::string> EdgeInfo::level() const {
+std::vector<int16_t> EdgeInfo::level() const {
   const auto& tags = GetTags();
-  std::vector<std::string> values;
+  std::vector<int16_t> values;
   for (auto [itr, range_end] = tags.equal_range(TaggedValue::kLevel); itr != range_end; ++itr) {
-    values.emplace_back(itr->second);
+    try {
+      values.emplace_back(static_cast<uint16_t>(std::stoi(itr->second)));
+    } catch (...) { LOG_ERROR("Unable to parse numerical level value " + itr->second); }
   }
   return values;
 }

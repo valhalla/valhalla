@@ -264,7 +264,7 @@ public:
    * @return layer index of the edge
    */
 
-  std::vector<std::string> level() const;
+  std::vector<int16_t> level() const;
   /**
    * Get layer:ref of the edge.
    * @see https://wiki.openstreetmap.org/wiki/Key:level:ref
