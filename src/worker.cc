@@ -322,6 +322,10 @@ void parse_location(valhalla::Location* location,
   if (preferred_layer) {
     location->set_preferred_layer(*preferred_layer);
   }
+  auto preferred_level = rapidjson::get_optional<int>(r_loc, "/preferred_level");
+  if (preferred_level) {
+    location->set_preferred_level(*preferred_level);
+  }
   auto node_snap_tolerance = rapidjson::get_optional<float>(r_loc, "/node_snap_tolerance");
   if (node_snap_tolerance) {
     location->set_node_snap_tolerance(*node_snap_tolerance);
@@ -408,6 +412,8 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_ramp
     location->mutable_search_filter()->set_exclude_ramp(
         rapidjson::get<bool>(*search_filter, "/exclude_ramp", false));
+    location->mutable_search_filter()->set_level(
+        rapidjson::get<int>(*search_filter, "/level", static_cast<int>(baldr::kMaxLevel)));
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf
@@ -420,6 +426,8 @@ void parse_location(valhalla::Location* location,
       location->mutable_search_filter()->clear_max_road_class();
     if (location->search_filter().has_exclude_closures_case())
       exclude_closures = location->search_filter().exclude_closures();
+    if (location->search_filter().has_level())
+      location->mutable_search_filter()->clear_level();
   }
 
   // if you specified both of these they may contradict so we throw up our hands

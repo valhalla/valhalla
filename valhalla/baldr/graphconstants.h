@@ -209,6 +209,9 @@ constexpr uint32_t kMaxAddedTime = 255;
 // this is the minimum we support, i.e. -500 m would result in "no elevation"
 constexpr float kNoElevationData = -500.0f;
 
+// Maximum level value
+constexpr int16_t kMaxLevel = std::numeric_limits<int16_t>::max();
+
 // Node types.
 enum class NodeType : uint8_t {
   kStreetIntersection = 0, // Regular intersection of 2 roads

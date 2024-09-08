@@ -117,6 +117,9 @@ public:
     if (pl.preferred_layer_) {
       l->set_preferred_layer(*pl.preferred_layer_);
     }
+    if (pl.preferred_level_) {
+      l->set_preferred_level(*pl.preferred_level_);
+    }
     l->set_minimum_reachability(std::max(pl.min_outbound_reach_, pl.min_inbound_reach_));
     l->set_radius(pl.radius_);
     l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
@@ -228,12 +231,17 @@ public:
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
       l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
+      if (loc.search_filter().has_level())
+        l.search_filter_.level_ = loc.search_filter().level();
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
     }
     if (loc.has_preferred_layer_case()) {
       l.preferred_layer_ = loc.preferred_layer();
+    }
+    if (loc.has_preferred_level_case()) {
+      l.preferred_level_ = loc.preferred_level();
     }
     return l;
   }

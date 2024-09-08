@@ -31,14 +31,18 @@ bool search_filter(const DirectedEdge* edge,
   uint32_t min_road_class = static_cast<uint32_t>(filter.min_road_class_);
   uint32_t max_road_class = static_cast<uint32_t>(filter.max_road_class_);
 
+  auto lvl = tile->edgeinfo(edge).level();
   // Note that min_ and max_road_class are integers where, by default, max_road_class
   // is 0 and min_road_class is 7. This filter rejects roads where the functional
   // road class is outside of the min to max range.
+
   return (road_class > min_road_class || road_class < max_road_class) ||
          (filter.exclude_tunnel_ && edge->tunnel()) || (filter.exclude_bridge_ && edge->bridge()) ||
          (filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
          (filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
-          tile->IsClosed(edge));
+              tile->IsClosed(edge) ||
+          (filter.level_ != kMaxLevel &&
+           std::find(lvl.begin(), lvl.end(), filter.level_) == lvl.end()));
 }
 
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
@@ -95,6 +99,22 @@ bool layer_filter(const Location& location, int8_t layer) {
   }
 
   return *location.preferred_layer_ != layer;
+}
+
+bool level_filter(const Location& location, const std::vector<int16_t>& levels) {
+  // no preferred level or no levels - we do not filter
+  if (!location.preferred_level_ || levels.empty()) {
+    return false;
+  }
+
+  bool matching_level = false;
+  std::cerr << location.preferred_level_.value() << "****\n";
+  for (auto& level : levels) {
+    std::cerr << level << "\n";
+    matching_level |= (location.preferred_level_.value() == level);
+  }
+
+  return matching_level;
 }
 
 PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {

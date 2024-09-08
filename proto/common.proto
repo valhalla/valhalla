@@ -61,6 +61,10 @@ message SearchFilter {
   oneof has_exclude_closures {
     bool exclude_closures = 6;// whether to exclude roads marked as closed due to traffic [default = true]
   }
+
+  oneof has_level {
+    int32 level = 7; // level to filter edges by
+  }
 }
 
 message PathEdge {
@@ -155,6 +159,9 @@ message Location {
   float waiting_secs = 29;                   // waiting period before a new leg starts, e.g. for servicing/loading goods
   oneof has_street_side_cutoff {
     RoadClass street_side_cutoff = 30;
+  }
+  oneof has_preferred_level {
+    int32 preferred_level = 31;
   }
 
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
