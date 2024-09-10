@@ -456,15 +456,37 @@ json::MapPtr EdgeInfo::json() const {
     edge_info->emplace("speed_limit", static_cast<uint64_t>(speed_limit()));
   }
 
-  const auto cond_limits_range = GetTags().equal_range(TaggedValue::kConditionalSpeedLimits);
-  if (cond_limits_range.first != cond_limits_range.second) {
-    auto map = json::map({});
-    for (auto it = cond_limits_range.first; it != cond_limits_range.second; ++it) {
-      const ConditionalSpeedLimit* l =
-          reinterpret_cast<const ConditionalSpeedLimit*>(it->second.data());
-      map->emplace(l->td_.to_string(), static_cast<uint64_t>(l->speed_));
+  json::MapPtr conditional_speed_limits;
+  for (const auto& [tag, value] : GetTags()) {
+    switch (tag) {
+      case TaggedValue::kLayer:
+        break;
+      case TaggedValue::kLinguistic:
+        break;
+      case TaggedValue::kBssInfo:
+        break;
+      case TaggedValue::kLevel:
+        break;
+      case TaggedValue::kLevelRef:
+        break;
+      case TaggedValue::kLandmark:
+        break;
+      case TaggedValue::kConditionalSpeedLimits: {
+        if (!conditional_speed_limits) {
+          conditional_speed_limits = json::map({});
+        }
+        const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
+        conditional_speed_limits->emplace(l->td_.to_string(), static_cast<uint64_t>(l->speed_));
+        break;
+      }
+      case TaggedValue::kTunnel:
+        break;
+      case TaggedValue::kBridge:
+        break;
     }
-    edge_info->emplace("conditional_speed_limits", std::move(map));
+  }
+  if (conditional_speed_limits) {
+    edge_info->emplace("conditional_speed_limits", std::move(conditional_speed_limits));
   }
 
   return edge_info;
