@@ -1236,3 +1236,40 @@ TEST(StandAlone, HGVNoAccessPenalty) {
     }
   }
 }
+
+TEST(StandAlone, PedestrianMaxDistance) {
+  const std::string ascii_map = R"(
+    A----B----C----D----E----F----G-----H
+)";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}}, {"DE", {{"highway", "path"}}},
+      {"EF", {{"highway", "path"}}},        {"FG", {{"highway", "path"}}},
+      {"GH", {{"highway", "path"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/pedestrian_max_distance");
+
+  std::unordered_map<std::string, std::string> max_dist_opts = {
+      {"/costing_options/pedestrian/max_distance", "500"}};
+
+  // by default, expect a route to be found
+  {
+    auto route = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "pedestrian");
+    gurka::assert::raw::expect_path(route, {"AB", "BC", "CD", "DE", "EF", "FG", "GH"});
+  }
+
+  // with max_distance set to 500, this should throw
+  {
+    try {
+      auto route =
+          gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "pedestrian", max_dist_opts);
+      const auto actual_names = gurka::detail::get_paths(route).front();
+      FAIL() << "Expected no path to be found, found ";
+    } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+      FAIL() << "Expected valhalla_exception_t.";
+    };
+  }
+}

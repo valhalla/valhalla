@@ -925,6 +925,11 @@ public:
 
   virtual Cost BSSCost() const;
 
+  /**
+   * Get the current max distance (currently only implemented by PedestrianCost).
+   * @return  Returns the maximum allowed path distance.
+   */
+  virtual float MaxDistance() const;
   /*
    * Determine whether an edge is currently closed due to traffic.
    * @param  edgeid         GraphId of the opposing edge.

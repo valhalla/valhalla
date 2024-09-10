@@ -328,6 +328,10 @@ Cost DynamicCost::BSSCost() const {
   return kNoCost;
 }
 
+float DynamicCost::MaxDistance() const {
+  return kMaxDistance;
+}
+
 void DynamicCost::set_use_tracks(float use_tracks) {
   // Calculate penalty value based on use preference. Return value
   // in range [kMaxTrackPenalty; 0], if use < 0.5; or

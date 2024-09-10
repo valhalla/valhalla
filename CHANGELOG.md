@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+   * FIXED: fix `max_distance` for pedestrian costing [#4811](https://github.com/valhalla/valhalla/pull/4811)
 * **Enhancement**
    * CHANGED: voice instructions for OSRM serializer to work better in real-world environment [#4756](https://github.com/valhalla/valhalla/pull/4756)
    * ADDED: Add option `edge.forward` to trace attributes [#4876](https://github.com/valhalla/valhalla/pull/4876)
@@ -71,6 +72,7 @@
    * FIXED: location search_filter ignored in certain cases [#4835](https://github.com/valhalla/valhalla/pull/4835)
    * FIXED: Ferry reclassification finds shortest path that is blocked by inaccessible node [#4854](https://github.com/valhalla/valhalla/pull/4854)
    * FIXED: `(Nov - Mar)` (and similar, months with spaces) condition parsing [#4857](https://github.com/valhalla/valhalla/pull/4857)
+
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
