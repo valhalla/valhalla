@@ -21,7 +21,7 @@ fi
 rm -rf dist
 rm -f ./timezones-with-oceans.shapefile.zip
 
-url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/2024a/timezones-with-oceans.shapefile.zip"
+url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/2024b/timezones-with-oceans.shapefile.zip"
 
 echo "downloading timezone polygon file." 1>&2
 curl -L -s -o ./timezones-with-oceans.shapefile.zip ${url} || error_exit "curl failed for ${url}"
