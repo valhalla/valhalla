@@ -132,6 +132,7 @@ TEST_F(ConditionalSpeedlimit, RouteApiProto) {
   const auto leg = result.trip().routes(0).legs(0);
   ASSERT_EQ(leg.node_size(), 8);
 
+  gurka::assert::raw::expect_path(result, {"A20/DCBA", "CM", "MNO", "MNO", "OP", "PR", "RQ"});
   // Regular speed limit are not affected, even if date was passed
   EXPECT_EQ(leg.node(0).edge().speed_limit(), 100); // DC
   EXPECT_EQ(leg.node(1).edge().speed_limit(), 100); // CM
