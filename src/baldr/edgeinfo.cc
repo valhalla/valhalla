@@ -1,6 +1,5 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
-
 #include "midgard/elevation_encoding.h"
 
 using namespace valhalla::baldr;
@@ -9,10 +8,7 @@ namespace {
 
 // should return true if not equal to TaggedValue::kLinguistic
 bool IsNonLiguisticTagValue(char ch) {
-  static const std::unordered_set<TaggedValue> kNameTags =
-      {TaggedValue::kBridge, TaggedValue::kTunnel,   TaggedValue::kBssInfo, TaggedValue::kLayer,
-       TaggedValue::kLevel,  TaggedValue::kLevelRef, TaggedValue::kLandmark};
-  return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
+  return static_cast<TaggedValue>(ch) != TaggedValue::kLinguistic;
 }
 
 json::MapPtr bike_network_json(uint8_t mask) {
@@ -46,6 +42,9 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
       std::string landmark_name = ptr + 10;
       size_t landmark_size = landmark_name.size() + 10;
       return {std::string(ptr, landmark_size)};
+    }
+    case TaggedValue::kConditionalSpeedLimits: {
+      return {std::string(ptr, 1 + sizeof(ConditionalSpeedLimit))};
     }
     case TaggedValue::kLinguistic:
     default:
@@ -204,8 +203,9 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
         if (IsNonLiguisticTagValue(tag)) {
           name_type_pairs.push_back({std::string(name + 1), false, static_cast<uint8_t>(tag)});
         }
-      } else
+      } else {
         throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
+      }
     } else if (ni->name_offset_ < names_list_length_) {
       name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_, 0});
     } else {
@@ -391,6 +391,17 @@ std::vector<int8_t> EdgeInfo::encoded_elevation(const uint32_t length, double& i
   return std::vector<int8_t>(encoded_elevation_, encoded_elevation_ + n);
 }
 
+std::vector<ConditionalSpeedLimit> EdgeInfo::conditional_speed_limits() const {
+  std::vector<ConditionalSpeedLimit> limits;
+  const auto cond_limits_range = GetTags().equal_range(TaggedValue::kConditionalSpeedLimits);
+  for (auto it = cond_limits_range.first; it != cond_limits_range.second; ++it) {
+    const ConditionalSpeedLimit* l =
+        reinterpret_cast<const ConditionalSpeedLimit*>(it->second.data());
+    limits.push_back(*l);
+  }
+  return limits;
+}
+
 int8_t EdgeInfo::layer() const {
   const auto& tags = GetTags();
   auto itr = tags.find(TaggedValue::kLayer);
@@ -443,6 +454,39 @@ json::MapPtr EdgeInfo::json() const {
     edge_info->emplace("speed_limit", std::string("unlimited"));
   } else {
     edge_info->emplace("speed_limit", static_cast<uint64_t>(speed_limit()));
+  }
+
+  json::MapPtr conditional_speed_limits;
+  for (const auto& [tag, value] : GetTags()) {
+    switch (tag) {
+      case TaggedValue::kLayer:
+        break;
+      case TaggedValue::kLinguistic:
+        break;
+      case TaggedValue::kBssInfo:
+        break;
+      case TaggedValue::kLevel:
+        break;
+      case TaggedValue::kLevelRef:
+        break;
+      case TaggedValue::kLandmark:
+        break;
+      case TaggedValue::kConditionalSpeedLimits: {
+        if (!conditional_speed_limits) {
+          conditional_speed_limits = json::map({});
+        }
+        const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
+        conditional_speed_limits->emplace(l->td_.to_string(), static_cast<uint64_t>(l->speed_));
+        break;
+      }
+      case TaggedValue::kTunnel:
+        break;
+      case TaggedValue::kBridge:
+        break;
+    }
+  }
+  if (conditional_speed_limits) {
+    edge_info->emplace("conditional_speed_limits", std::move(conditional_speed_limits));
   }
 
   return edge_info;
