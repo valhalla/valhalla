@@ -32,7 +32,6 @@ RUN make install
 WORKDIR /usr/local/src
 RUN cd valhalla && echo "https://github.com/valhalla/valhalla/tree/$(git rev-parse HEAD)" > ../valhalla_version
 RUN for f in valhalla/locales/*.json; do cat ${f} | python3 -c 'import sys; import json; print(json.load(sys.stdin)["posix_locale"])'; done > valhalla_locales
-RUN rm -rf valhalla
 
 # the binaries are huge with all the symbols so we strip them but keep the debug there if we need it
 #WORKDIR /usr/local/bin

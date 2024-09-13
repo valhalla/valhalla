@@ -15,6 +15,7 @@ stages:
         displayName: ${{ parameters.name }}
         pool:
           vmImage: ubuntu-22.04
+        timeoutInMinutes: 360
         steps:
           - checkout: self
             clean: true
@@ -48,13 +49,13 @@ stages:
             name: version
             displayName: Version
 
+
           - bash: |
-              source pipeline/build/scripts/20-scan.sh
-            name: scan
-            displayName: Scanners
+              source pipeline/build/scripts/20-package.sh
+            name: package
+            displayName: Package
             env:
-              BLACKDUCK_API_TOKEN: $(blackduck.api.token)
-            condition: and(succeeded(), eq(variables['blackduck.enabled'], 'true'))
+              SHARE_REGISTRY_PASSWORD: $(share.registry.password)
 
           - bash: |
               source pipeline/build/scripts/21-acr-cleanup.sh
@@ -66,8 +67,13 @@ stages:
               SHARE_CLIENT_SECRET: $(share.client.secret)
 
           - bash: |
-              source pipeline/build/scripts/30-package.sh
-            name: package
-            displayName: Package
+              source pipeline/build/scripts/30-scan.sh
+            name: scan
+            displayName: Scanners
             env:
               SHARE_REGISTRY_PASSWORD: $(share.registry.password)
+              DEVOPS_TOKEN: $(System.AccessToken)
+              BLACKDUCK_PREFIX: $(blackduck.project.prefix)
+              BLACKDUCK_TOKEN: $(blackduck.api.token)
+            condition: and(succeeded(), eq(variables['blackduck.enabled'], 'true'))
+
