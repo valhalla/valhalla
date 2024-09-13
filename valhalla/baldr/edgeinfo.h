@@ -7,6 +7,7 @@
 #include <tuple>
 #include <vector>
 
+#include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/encoded.h>
@@ -250,6 +251,12 @@ public:
    * @return Returns a vector holding delta encoded elevation along the edge.
    */
   std::vector<int8_t> encoded_elevation(const uint32_t length, double& interval) const;
+
+  /**
+   * Returns the list of conditional speed limits for the edge.
+   * @return Conditional speed limits for the edge.
+   */
+  std::vector<ConditionalSpeedLimit> conditional_speed_limits() const;
 
   /**
    * Get layer index of the edge relatively to other edges(Z-level). Can be negative.
