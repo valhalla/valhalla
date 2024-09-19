@@ -4,13 +4,6 @@ on:
   push:
     branches:
       - master
-    paths:
-      - .github/workflows
-      - src
-      - valhalla
-      - proto
-      - scripts
-      - lua
   workflow_dispatch:
 
 jobs:
