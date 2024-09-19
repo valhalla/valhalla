@@ -10,7 +10,7 @@ git config --global --add safe.directory /src/valhalla
 
 git -C "${src_dir}" checkout master
 git -C "${src_dir}" pull
-git submodule update --init --recursive
+git -C "${src_dir}" submodule update --init --recursive
 
 # remove the build folder first
 rm -r "${src_dir}"/build
