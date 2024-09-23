@@ -1,6 +1,7 @@
 #include "mjolnir/osmway.h"
 #include "baldr/edgeinfo.h"
 #include "mjolnir/util.h"
+#include "regex"
 
 #include "midgard/logging.h"
 #include <boost/algorithm/string.hpp>
@@ -12,6 +13,56 @@ namespace {
 constexpr uint32_t kMaxNodesPerWay = 65535;
 constexpr uint8_t kUnlimitedOSMSpeed = std::numeric_limits<uint8_t>::max();
 constexpr float kMaxOSMSpeed = 140.0f;
+
+const std::regex kFloatRegex("\\d+\\.(\\d+)");
+
+/**
+ * Convenience structure for temporarily storing
+ * level values before serializing them to varint
+ */
+struct level_range_t {
+public:
+  level_range_t(float s, float e = kMinLevel) : start(s), end(e) {};
+  level_range_t() {
+    start = kMinLevel;
+    end = kMaxLevel;
+  };
+
+  /**
+   * get the max value this range covers
+   */
+  float max() {
+    return end == kMaxLevel ? start : end;
+  }
+
+  bool valid() {
+    return end > start;
+  }
+
+  float start;
+  float end;
+};
+
+/**
+ * 7-bit varint encoding
+ */
+std::string encode_varint(float lvl, int precision = 0) {
+  std::string encoded;
+  encoded.reserve(2);
+
+  int val = (int)(lvl * pow(10, precision));
+  val = val < 0 ? ~(static_cast<unsigned int>(lvl) << 1) : val << 1;
+  // we take 7 bits of this at a time
+  while (val > 0x7f) {
+    // marking the most significant bit means there are more pieces to come
+    int next_value = (0x80 | (val & 0x7f));
+    encoded.push_back(static_cast<char>(next_value));
+    val >>= 7;
+  }
+  // write the last chunk
+  encoded.push_back(static_cast<char>(val & 0x7f));
+  return encoded;
+}
 
 } // namespace
 
@@ -1067,36 +1118,94 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
 
   if (level_index_ != 0) {
     // level
+
+    std::list<level_range_t> values;
+    const char dash = '-';
     auto tokens = GetTagTokens(name_offset_map.name(level_index_));
-    for (const auto& t : tokens) {
 
-      // get ranged values
-      const char dash = '-';
-      auto dash_pos = t.find(dash);
-
-      // if there is a dash and its not at the first position,
-      // we have a range
+    // we store the precision once for all values
+    // so we keep track of the max
+    int precision = 0;
+    for (int i = 0; i < tokens.size(); ++i) {
+      const auto token = tokens[i];
+      auto dash_pos = token.find(dash);
+      level_range_t range;
+      float start, end;
       if (dash_pos != std::string::npos && dash_pos != 0) {
-        std::vector<std::string> range_start_end;
+        // we're dealing with a range
+        std::vector<std::string> nums;
         boost::algorithm::split(
-            range_start_end, t, [dash](const char c) { return c == dash; },
+            nums, token, [dash](const char c) { return c == dash; },
             boost::algorithm::token_compress_on);
-        if (range_start_end.size() == 2) {
-          try {
-            auto start = std::stoi(range_start_end[0]);
-            auto end = std::stoi(range_start_end[1]);
 
-            for (; start <= end; ++start) {
-              names.emplace_back(encode_tag(TaggedValue::kLevel) + std::to_string(start));
+        try {
+          std::smatch match;
+          for (auto num : nums) {
+            if (std::regex_search(num, match, kFloatRegex)) {
+              precision = std::max(precision, static_cast<int>(match[1].str().size()));
             }
-          } catch (...) { LOG_ERROR("Unable to process level range: " + t); }
-        } else {
-          LOG_ERROR("Unable to process level range: " + t);
+          }
+          start = std::stof(nums[0]);
+          end = std::stof(nums[1]);
+        } catch (...) {
+          LOG_ERROR("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
+          continue;
         }
-      } else { // no range
-        names.emplace_back(encode_tag(TaggedValue::kLevel) + t);
+
+        if (end <= start) {
+          LOG_ERROR("Invalid level range, " + std::to_string(start) + " - " + std::to_string(end) +
+                    "; way_id " + std::to_string(osmwayid_));
+          continue;
+        }
+
+        range.start = start;
+        range.end = end;
+      } else { // we have a number
+        try {
+          std::smatch match;
+          if (std::regex_search(token, match, kFloatRegex)) {
+            precision = std::max(precision, static_cast<int>(match[1].str().size()));
+          }
+          start = std::stof(token);
+        } catch (...) {
+          LOG_ERROR("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
+          continue;
+        }
+        range.start = start;
+      }
+      if ((range.start > values.back().max() || values.empty()) && range.valid()) {
+        values.emplace_back(range);
+        continue;
+      }
+      // it's not sorted, so go through sorted list and insert at the right spot
+      for (auto it = values.begin(); it != values.end(); ++it) {
+        // TODO: does not take care of invalid ranges
+        if (range.start < (*it).start) {
+          values.insert(it, range);
+          break;
+        }
       }
     }
+
+    std::string encoded;
+    encoded.reserve(values.size() * 2);
+    // sentinel value that marks discontinuity
+    std::string sep = encode_varint(kLevelRangeSeparator);
+    for (auto it = values.begin(); it != values.end(); ++it) {
+      auto& range = *it;
+      encoded.append(encode_varint(range.start * pow(10, precision)));
+      if (range.end != kMaxLevel)
+        encoded.append(encode_varint(range.end * pow(10, precision)));
+
+      if (it != --values.end())
+        encoded.append(sep);
+    }
+
+    std::string precision_enc = encode_varint(static_cast<float>(precision));
+    std::string r = encode_tag(TaggedValue::kLevels) +
+                    encode_varint(static_cast<float>(encoded.size() + precision_enc.size())) +
+                    precision_enc + encoded;
+    names.emplace_back(r);
   }
   if (level_ref_index_ != 0) {
     // level:ref

@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdlib>
 
+#include "baldr/edgeinfo.h"
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"
 #include "midgard/constants.h"
@@ -532,8 +533,18 @@ std::vector<std::string> EnhancedTripLeg_Edge::GetLevelRef() const {
     for (int t = 0; t < tagged_value().size(); ++t) {
       if (tagged_value().Get(t).type() == TaggedValue_Type_kLevelRef) {
         level_refs.emplace_back(tagged_value().Get(t).value());
-      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevel) {
-        levels.emplace_back("Level " + tagged_value().Get(t).value());
+      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevels) {
+        // parse varint encoded levels, we're only interested in single
+        // level values though
+        const auto& encoded = tagged_value().Get(t).value();
+        std::vector<float> decoded;
+        int precision;
+        std::tie(decoded, precision) = baldr::decode_levels(encoded);
+        if (decoded.size() == 1) {
+          std::stringstream ss;
+          ss << std::fixed << std::setprecision(precision) << decoded[0];
+          levels.emplace_back("Level " + ss.str());
+        }
       }
     }
   }

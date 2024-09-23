@@ -1029,7 +1029,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options){};
+  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options) {};
 
   using AutoCost::alley_penalty_;
   using AutoCost::country_crossing_cost_;

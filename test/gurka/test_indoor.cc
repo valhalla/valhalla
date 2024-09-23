@@ -118,28 +118,64 @@ TEST_F(Indoor, DirectedEdge) {
   EXPECT_TRUE(directededge->reverseaccess() & baldr::kPedestrianAccess);
 }
 
-TEST_F(Indoor, EdgeInfo) {
+TEST(Standalone, EdgeInfo) {
+
+  std::string ascii_map = R"(
+    A-B-C-D-E-F-G-H-I-J
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "1"}, {"level:ref", "Parking"}}},
+      {"BC", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "0"}, {"level:ref", "Parking"}}},
+      {"CD", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "2"}, {"level:ref", "Parking"}}},
+      {"DE",
+       {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "100"}, {"level:ref", "Parking"}}},
+      {"EF",
+       {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "12;14"}, {"level:ref", "Parking"}}},
+      {"FG",
+       {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "-1;0"}, {"level:ref", "Parking"}}},
+      {"GH",
+       {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "85.5;12"}, {"level:ref", "Parking"}}},
+      {"HI",
+       {{"highway", "corridor"},
+        {"indoor", "yes"},
+        {"level", "-2;-1;0-3"},
+        {"level:ref", "Parking"}}},
+      {"IJ",
+       {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "0-2.5"}, {"level:ref", "Parking"}}},
+  };
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_failing");
+
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
-  auto get_level = [&](auto from, auto to) {
+  auto get_level = [&](auto from, auto to, auto lvl) {
     auto edgeId = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));
-    return graphreader.edgeinfo(edgeId).level();
+    return graphreader.edgeinfo(edgeId).includes_level(lvl);
   };
-  EXPECT_THAT(get_level("A", "B"), ::testing::ElementsAre(0));
-  EXPECT_THAT(get_level("B", "C"), ::testing::ElementsAre(0, 1));
-  EXPECT_THAT(get_level("C", "F"), ::testing::ElementsAre(1));
-  EXPECT_THAT(get_level("C", "x"), ::testing::ElementsAre(-1, 0, 1, 2));
-  EXPECT_THAT(get_level("x", "y"), ::testing::ElementsAre(2, 3));
 
-  auto get_level_ref = [&](auto from, auto to) {
-    auto edge_id = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));
-    return graphreader.edgeinfo(edge_id).level_ref();
+  std::vector<std::pair<std::array<std::string, 2>, std::vector<float>>> values = {
+      {{"A", "B"}, {1}},
+      {{"B", "C"}, {0}},
+      {{"C", "D"}, {2}},
+      {{"D", "E"}, {100}},
+      {{"E", "F"}, {12, 14}},
+      {{"F", "G"}, {-1, 0}},
+      {{"G", "H"}, {85.5, 12}},
+      {{"H", "I"}, {-2, -1, 0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5, 2.75, 3}},
+      {{"I", "J"}, {0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5}},
   };
-  EXPECT_THAT(get_level_ref("A", "B"), ::testing::ElementsAre("Parking"));
-  EXPECT_THAT(get_level_ref("B", "C"), ::testing::ElementsAre());
-  EXPECT_THAT(get_level_ref("C", "F"), ::testing::ElementsAre("Lobby"));
+
+  for (auto [way, levels] : values) {
+
+    auto edgeId = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, way[0], way[1]));
+    for (float i = -2.0f; i <= 100.0f; i = i + 0.25f) {
+      bool expected_includes_level = std::find(levels.begin(), levels.end(), i) != levels.end();
+      bool includes = graphreader.edgeinfo(edgeId).includes_level(i);
+      EXPECT_EQ(includes, expected_includes_level);
+    }
+  }
 }
-
 TEST_F(Indoor, ElevatorPenalty) {
   // first route should take the elevator node
   auto result = gurka::do_action(valhalla::Options::route, map, {"E", "J"}, "pedestrian");

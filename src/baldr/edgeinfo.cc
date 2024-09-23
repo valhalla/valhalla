@@ -11,7 +11,7 @@ namespace {
 bool IsNonLiguisticTagValue(char ch) {
   static const std::unordered_set<TaggedValue> kNameTags =
       {TaggedValue::kBridge, TaggedValue::kTunnel,   TaggedValue::kBssInfo, TaggedValue::kLayer,
-       TaggedValue::kLevel,  TaggedValue::kLevelRef, TaggedValue::kLandmark};
+       TaggedValue::kLevel,  TaggedValue::kLevelRef, TaggedValue::kLevels,  TaggedValue::kLandmark};
   return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
 }
 
@@ -32,6 +32,20 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   return a;
 }
 
+int32_t parse_varint(const char*& encoded, int& i) {
+  int32_t byte, shift = 0, result = 0;
+
+  while (byte & 0x80 || shift == 0) {
+    byte = int32_t(*encoded);
+    result |= (byte & 0x7f) << shift;
+    shift += 7;
+    ++encoded;
+    ++i;
+  }
+
+  return (result & 1 ? ~result : result) >> 1;
+}
+
 // per tag parser. each returned string includes the leading TaggedValue.
 std::vector<std::string> parse_tagged_value(const char* ptr) {
   switch (static_cast<TaggedValue>(ptr[0])) {
@@ -47,6 +61,13 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
       size_t landmark_size = landmark_name.size() + 10;
       return {std::string(ptr, landmark_size)};
     }
+    case TaggedValue::kLevels: {
+      // parse out the size to construct the string
+      int i = 0; // a place to store the size of the size varint
+      auto start = ptr + 1;
+      int size = static_cast<int>(parse_varint(start, i));
+      return {std::string(ptr, size + i + 1)};
+    }
     case TaggedValue::kLinguistic:
     default:
       return {};
@@ -57,6 +78,30 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
 
 namespace valhalla {
 namespace baldr {
+
+std::tuple<std::vector<float>, int> decode_levels(const std::string& encoded) {
+  int precision = 0;
+  int i = 0;
+
+  std::vector<float> decoded;
+  decoded.reserve(10);
+
+  auto c = encoded.data();
+  // first varint is the size
+  int _ = parse_varint(c, i);
+  // second varint is the precision
+  int val = parse_varint(c, i);
+  precision = val > 0 ? (pow(10, val)) : 0;
+
+  while (i < encoded.size()) {
+    int val = parse_varint(c, i);
+    decoded.emplace_back(val == kLevelRangeSeparator || precision == 0
+                             ? static_cast<float>(val)
+                             : static_cast<float>(val) / static_cast<float>(precision));
+  }
+
+  return {decoded, precision};
+}
 
 EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length)
     : names_list_(names_list), names_list_length_(names_list_length) {
@@ -404,15 +449,35 @@ int8_t EdgeInfo::layer() const {
   return static_cast<int8_t>(value.front());
 }
 
-std::vector<int16_t> EdgeInfo::level() const {
+bool EdgeInfo::includes_level(float lvl) {
   const auto& tags = GetTags();
-  std::vector<int16_t> values;
-  for (auto [itr, range_end] = tags.equal_range(TaggedValue::kLevel); itr != range_end; ++itr) {
-    try {
-      values.emplace_back(static_cast<uint16_t>(std::stoi(itr->second)));
-    } catch (...) { LOG_ERROR("Unable to parse numerical level value " + itr->second); }
+  auto itr = tags.find(TaggedValue::kLevels);
+  if (itr == tags.end()) {
+    return false;
   }
-  return values;
+  try {
+    auto decoded = std::get<0>(decode_levels(itr->second));
+    for (size_t i = 0; i < decoded.size();) {
+      size_t j = i + 1;
+      auto cur = decoded[i];
+
+      if (j >= decoded.size() || decoded[j] == kLevelRangeSeparator) {
+        // single number
+        if (lvl == cur)
+          return true;
+        // move to next pair
+        i += 2;
+      } else {
+        // we have a range
+        // create in between values
+        if (cur <= lvl && lvl <= decoded[j])
+          return true;
+        // skip over the separator
+        i += 3;
+      }
+    }
+  } catch (...) { LOG_ERROR("Unable to parse encoded level, way_id " + wayid()); }
+  return false;
 }
 
 std::vector<std::string> EdgeInfo::level_ref() const {

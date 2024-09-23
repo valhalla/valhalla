@@ -73,6 +73,14 @@ struct linguistic_text_header_t {
 };
 
 /**
+ * Decode the level information encoded as variable length, variable precision numbers.
+ * The first varint denotes the string size, to avoid the value 0 from being interpreted
+ * as a null character. The second varint denotes the precision to apply to all values
+ * except for the sentinel value used as a continuous range separator.
+ */
+std::tuple<std::vector<float>, int> decode_levels(const std::string& encoded);
+
+/**
  * Edge information not required in shortest path algorithm and is
  * common among the 2 directions.
  */
@@ -258,13 +266,19 @@ public:
    */
   int8_t layer() const;
 
-  /**
-   * Get level of the edge.
-   * @see https://wiki.openstreetmap.org/wiki/Key:level
-   * @return layer index of the edge
-   */
+  // /**
+  //  * Get level of the edge.
+  //  * @see https://wiki.openstreetmap.org/wiki/Key:level
+  //  * @return layer index of the edge
+  //  */
 
-  std::vector<int16_t> level() const;
+  // std::vector<int16_t> level() const;
+
+  /**
+   * Convenience method that checks whether the edge connects the passed level.
+   */
+  bool includes_level(float lvl);
+
   /**
    * Get layer:ref of the edge.
    * @see https://wiki.openstreetmap.org/wiki/Key:level:ref
