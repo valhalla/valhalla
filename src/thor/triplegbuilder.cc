@@ -13,6 +13,7 @@
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/time_info.h"
+#include "baldr/timedomain.h"
 #include "meili/match_result.h"
 #include "midgard/elevation_encoding.h"
 #include "midgard/encoded.h"
@@ -1442,6 +1443,38 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   if (controller(kEdgeSpeedLimit)) {
     trip_edge->set_speed_limit(edgeinfo.speed_limit());
+  }
+
+  if (controller(kEdgeConditionalSpeedLimits)) {
+    auto conditional_limits = edgeinfo.conditional_speed_limits();
+    trip_edge->mutable_conditional_speed_limits()->Reserve(conditional_limits.size());
+    for (const auto& limit : conditional_limits) {
+      auto proto = trip_edge->mutable_conditional_speed_limits()->Add();
+      proto->set_speed_limit(limit.speed_);
+
+      auto* condition = proto->mutable_condition();
+
+      switch (limit.td_.type()) {
+        case kYMD:
+          condition->set_day_dow_type(TripLeg_TimeDomain_DayDowType_kDayOfMonth);
+          break;
+        case kNthDow:
+          condition->set_day_dow_type(TripLeg_TimeDomain_DayDowType_kNthDayOfWeek);
+          break;
+      }
+
+      condition->set_dow_mask(limit.td_.dow());
+      condition->set_begin_hrs(limit.td_.begin_hrs());
+      condition->set_begin_mins(limit.td_.begin_mins());
+      condition->set_begin_month(limit.td_.begin_month());
+      condition->set_begin_day_dow(limit.td_.begin_day_dow());
+      condition->set_begin_week(limit.td_.begin_week());
+      condition->set_end_hrs(limit.td_.end_hrs());
+      condition->set_end_mins(limit.td_.end_mins());
+      condition->set_end_month(limit.td_.end_month());
+      condition->set_end_day_dow(limit.td_.end_day_dow());
+      condition->set_end_week(limit.td_.end_week());
+    }
   }
 
   if (controller(kEdgeDefaultSpeed)) {
