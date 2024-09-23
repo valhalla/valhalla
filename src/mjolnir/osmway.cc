@@ -22,7 +22,7 @@ const std::regex kFloatRegex("\\d+\\.(\\d+)");
  */
 struct level_range_t {
 public:
-  level_range_t(float s, float e = kMinLevel) : start(s), end(e) {};
+  level_range_t(float s, float e = kMinLevel) : start(s), end(e){};
   level_range_t() {
     start = kMinLevel;
     end = kMaxLevel;
