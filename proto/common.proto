@@ -344,7 +344,8 @@ message TaggedValue {
     kLevel = 4;
     kLevelRef = 5;
     kLandmark = 6;
-    kLevels = 7;
+    kConditionalSpeedLimits = 7;
+    kLevels = 8;
     kTunnel = 49;
     kBridge = 50;
   }

@@ -79,7 +79,7 @@ struct linguistic_text_header_t {
  * as a null character. The second varint denotes the precision to apply to all values
  * except for the sentinel value used as a continuous range separator.
  */
-std::tuple<std::vector<float>, int> decode_levels(const std::string& encoded);
+std::tuple<std::vector<float>, uint32_t> decode_levels(const std::string& encoded);
 
 /**
  * Edge information not required in shortest path algorithm and is

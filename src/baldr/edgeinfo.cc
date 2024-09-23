@@ -28,7 +28,7 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   return a;
 }
 
-int32_t parse_varint(const char*& encoded, int& i) {
+int32_t parse_varint(const char*& encoded, uint32_t& i) {
   int32_t byte, shift = 0, result = 0;
 
   while (byte & 0x80 || shift == 0) {
@@ -59,7 +59,7 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
     }
     case TaggedValue::kLevels: {
       // parse out the size to construct the string
-      int i = 0; // a place to store the size of the size varint
+      uint32_t i = 0; // a place to store the size of the size varint
       auto start = ptr + 1;
       int size = static_cast<int>(parse_varint(start, i));
       return {std::string(ptr, size + i + 1)};
@@ -78,16 +78,16 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
 namespace valhalla {
 namespace baldr {
 
-std::tuple<std::vector<float>, int> decode_levels(const std::string& encoded) {
-  int precision = 0;
-  int i = 0;
+std::tuple<std::vector<float>, uint32_t> decode_levels(const std::string& encoded) {
+  uint32_t precision = 0;
+  uint32_t i = 0;
 
   std::vector<float> decoded;
   decoded.reserve(10);
 
   auto c = encoded.data();
   // first varint is the size
-  int _ = parse_varint(c, i);
+  parse_varint(c, i);
   // second varint is the precision
   int val = parse_varint(c, i);
   precision = val > 0 ? (pow(10, val)) : 0;
@@ -535,6 +535,8 @@ json::MapPtr EdgeInfo::json() const {
       case TaggedValue::kLevelRef:
         break;
       case TaggedValue::kLandmark:
+        break;
+      case TaggedValue::kLevels:
         break;
       case TaggedValue::kConditionalSpeedLimits: {
         if (!conditional_speed_limits) {
