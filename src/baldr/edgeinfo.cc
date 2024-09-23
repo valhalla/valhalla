@@ -29,7 +29,7 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
 }
 
 int32_t parse_varint(const char*& encoded, uint32_t& i) {
-  int32_t byte, shift = 0, result = 0;
+  int32_t byte = 0, shift = 0, result = 0;
 
   while (byte & 0x80 || shift == 0) {
     byte = int32_t(*encoded);
