@@ -565,6 +565,7 @@ json::MapPtr EdgeInfo::json() const {
           }
         }
         edge_info->emplace("levels", levels);
+        break;
       }
       case TaggedValue::kConditionalSpeedLimits: {
         if (!conditional_speed_limits) {
