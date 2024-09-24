@@ -28,6 +28,13 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   return a;
 }
 
+/**
+ * Parse a 7-bit encoded varint.
+ *
+ * @param encoded the encoded c string
+ * @param i       value to store the varint size in
+ *
+ */
 int32_t parse_varint(const char*& encoded, uint32_t& i) {
   int32_t byte = 0, shift = 0, result = 0;
 
@@ -468,6 +475,7 @@ bool EdgeInfo::includes_level(float lvl) {
   }
   try {
     auto decoded = std::get<0>(decode_levels(itr->second));
+    // TODO: use binary search
     for (size_t i = 0; i < decoded.size();) {
       size_t j = i + 1;
       auto cur = decoded[i];
@@ -476,11 +484,9 @@ bool EdgeInfo::includes_level(float lvl) {
         // single number
         if (lvl == cur)
           return true;
-        // move to next pair
         i += 2;
       } else {
-        // we have a range
-        // create in between values
+        // range
         if (cur <= lvl && lvl <= decoded[j])
           return true;
         // skip over the separator
@@ -536,8 +542,30 @@ json::MapPtr EdgeInfo::json() const {
         break;
       case TaggedValue::kLandmark:
         break;
-      case TaggedValue::kLevels:
-        break;
+      case TaggedValue::kLevels: {
+        json::ArrayPtr levels = json::array({});
+        std::vector<float> decoded;
+        uint32_t precision;
+        std::tie(decoded, precision) = decode_levels(value);
+        for (size_t i = 0; i < decoded.size();) {
+          size_t j = i + 1;
+          auto cur = decoded[i];
+          json::ArrayPtr level = json::array({});
+          if (j >= decoded.size() || decoded[j] == kLevelRangeSeparator) {
+            // single number
+            level->emplace_back(json::fixed_t{cur, precision});
+            i += 2;
+          } else {
+            // range
+            level->emplace_back(json::fixed_t{cur, precision});
+            level->emplace_back(json::fixed_t{decoded[j], precision});
+            // skip over the next separator
+            i += 3;
+          }
+          levels->emplace_back(level);
+        }
+        edge_info->emplace("levels", levels);
+      }
       case TaggedValue::kConditionalSpeedLimits: {
         if (!conditional_speed_limits) {
           conditional_speed_limits = json::map({});

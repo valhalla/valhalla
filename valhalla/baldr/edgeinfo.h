@@ -75,9 +75,21 @@ struct linguistic_text_header_t {
 
 /**
  * Decode the level information encoded as variable length, variable precision numbers.
+ *
  * The first varint denotes the string size, to avoid the value 0 from being interpreted
  * as a null character. The second varint denotes the precision to apply to all values
- * except for the sentinel value used as a continuous range separator.
+ * except for the sentinel value used as a separator of continuous ranges.
+ *
+ *
+ * The returned array includes level values and sentinel values. Ex.:
+ *  "12;14" translates to {12, 1048575, 14}
+ *  "0-12;14" translates to {0, 12, 1048575, 14}
+ *
+ * @param encoded the encoded varint array
+ *
+ * @return a tuple that contains
+ *   a) the decoded levels array and
+ *   b) the precision used
  */
 std::tuple<std::vector<float>, uint32_t> decode_levels(const std::string& encoded);
 

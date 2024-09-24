@@ -18,11 +18,11 @@ const std::regex kFloatRegex("\\d+\\.(\\d+)");
 
 /**
  * Convenience structure for temporarily storing
- * level values before serializing them to varint
+ * level values before serializing them to varint.
  */
 struct level_range_t {
 public:
-  level_range_t(float s, float e = kMinLevel) : start(s), end(e){};
+  level_range_t(float s, float e = kMinLevel) : start(s), end(e) {};
   level_range_t() {
     start = kMinLevel;
     end = kMaxLevel;
@@ -44,10 +44,17 @@ public:
 };
 
 /**
- * 7-bit varint encoding
+ * For levels we use 7-bit varint encoding, with arbitrary precision stored separately.
+ *
+ * @param lvl       the level to encode
+ * @param precision the precision with which to encode the level value
+ *
+ * @return a string containing the encoded value
  */
-std::string encode_varint(float lvl, int precision = 0) {
+std::string encode_level(float lvl, int precision = 0) {
   std::string encoded;
+  // most of the time precision will be zero and level values will be lower
+  // than 4191 (even in the case of higher precision)
   encoded.reserve(2);
 
   int val = (int)(lvl * pow(10, precision));
@@ -1190,20 +1197,20 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
     std::string encoded;
     encoded.reserve(values.size() * 2);
     // sentinel value that marks discontinuity
-    std::string sep = encode_varint(kLevelRangeSeparator);
+    std::string sep = encode_level(kLevelRangeSeparator);
     for (auto it = values.begin(); it != values.end(); ++it) {
       auto& range = *it;
-      encoded.append(encode_varint(range.start * pow(10, precision)));
+      encoded.append(encode_level(range.start * pow(10, precision)));
       if (range.end != kMaxLevel)
-        encoded.append(encode_varint(range.end * pow(10, precision)));
+        encoded.append(encode_level(range.end * pow(10, precision)));
 
       if (it != --values.end())
         encoded.append(sep);
     }
 
-    std::string precision_enc = encode_varint(static_cast<float>(precision));
+    std::string precision_enc = encode_level(static_cast<float>(precision));
     std::string r = encode_tag(TaggedValue::kLevels) +
-                    encode_varint(static_cast<float>(encoded.size() + precision_enc.size())) +
+                    encode_level(static_cast<float>(encoded.size() + precision_enc.size())) +
                     precision_enc + encoded;
     names.emplace_back(r);
   }
