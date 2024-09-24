@@ -275,7 +275,7 @@ protected:
   static void SetUpTestSuite() {
     constexpr double gridsize_metres = 100;
     ascii_map = R"(
-    A-B-C-D-E-F-G-H-I-J
+    A-z-B-y-C-x-D-w-E-v-F-u-G-t-H-s-I-r-J
     )";
 
     const gurka::ways ways = {
@@ -336,14 +336,62 @@ TEST_F(Levels, EdgeInfoJson) {
 
   auto graphreader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
+  std::vector<std::string> locs = {
+      "z", // AB
+      "y", // BC
+      "x", // CD
+      "w", // DE
+      "v", // EF
+      "u", // FG
+      "t", // GH
+      "s", // HI
+      "r", // IJ
+  };
   auto result =
-      gurka::do_action(valhalla::Options::locate, map, {"A"}, "pedestrian", {}, graphreader, &json);
+      gurka::do_action(valhalla::Options::locate, map, locs, "pedestrian", {}, graphreader, &json);
 
+  std::unordered_map<std::string, std::vector<std::vector<float>>> expected_levels_map = {
+      {"z", {{1}}},        {"y", {{0}}},       {"x", {{2}}},          {"w", {{100}}},
+      {"v", {{12}, {14}}}, {"u", {{-1}, {0}}}, {"t", {{12}, {85.5}}}, {"s", {{-2}, {-1}, {0, 3}}},
+      {"r", {{0, 2.5}}},
+  };
   rapidjson::Document response;
   response.Parse(json);
 
   if (response.HasParseError())
     throw std::runtime_error("bad json response");
 
-  ASSERT_EQ(response.GetArray().Size(), 1);
+  ASSERT_EQ(response.GetArray().Size(), 9);
+
+  for (size_t i = 0; i < locs.size(); ++i) {
+    auto name = locs[i];
+    auto edges = rapidjson::Pointer("/" + std::to_string(i) + "/edges").Get(response)->GetArray();
+    ASSERT_EQ(edges.Size(), 2);
+    auto expected_levels = expected_levels_map[name];
+    for (size_t edge_ix = 0; edge_ix < 2; ++edge_ix) {
+      auto actual_levels = rapidjson::Pointer("/" + std::to_string(i) + "/edges/" +
+                                              std::to_string(edge_ix) + "/edge_info/levels")
+                               .Get(response)
+                               ->GetArray();
+      ASSERT_EQ(actual_levels.Size(), expected_levels.size());
+      for (size_t j = 0; j < expected_levels.size(); ++j) {
+        auto expected_level = expected_levels[j];
+        auto actual_level =
+            rapidjson::Pointer("/" + std::to_string(i) + "/edges/" + std::to_string(edge_ix) +
+                               "/edge_info/levels/" + std::to_string(j))
+                .Get(response)
+                ->GetArray();
+        ASSERT_EQ(actual_level.Size(), expected_level.size());
+        for (size_t k = 0; k < expected_level.size(); ++k) {
+          auto expected_level_value = expected_level[k];
+          auto actual_level_value =
+              rapidjson::Pointer("/" + std::to_string(i) + "/edges/" + std::to_string(edge_ix) +
+                                 "/edge_info/levels/" + std::to_string(j) + "/" + std::to_string(k))
+                  .Get(response)
+                  ->GetFloat();
+          EXPECT_EQ(actual_level_value, expected_level_value);
+        }
+      }
+    }
+  }
 }

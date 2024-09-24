@@ -550,19 +550,19 @@ json::MapPtr EdgeInfo::json() const {
         for (size_t i = 0; i < decoded.size();) {
           size_t j = i + 1;
           auto cur = decoded[i];
-          json::ArrayPtr level = json::array({});
           if (j >= decoded.size() || decoded[j] == kLevelRangeSeparator) {
             // single number
-            level->emplace_back(json::fixed_t{cur, precision});
+            levels->emplace_back(json::fixed_t{cur, precision});
             i += 2;
           } else {
             // range
+            json::ArrayPtr level = json::array({});
             level->emplace_back(json::fixed_t{cur, precision});
             level->emplace_back(json::fixed_t{decoded[j], precision});
+            levels->emplace_back(level);
             // skip over the next separator
             i += 3;
           }
-          levels->emplace_back(level);
         }
         edge_info->emplace("levels", levels);
       }

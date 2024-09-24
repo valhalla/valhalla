@@ -17,33 +17,6 @@ constexpr float kMaxOSMSpeed = 140.0f;
 const std::regex kFloatRegex("\\d+\\.(\\d+)");
 
 /**
- * Convenience structure for temporarily storing
- * level values before serializing them to varint.
- */
-struct level_range_t {
-public:
-  level_range_t(float s, float e = kMinLevel) : start(s), end(e) {};
-  level_range_t() {
-    start = kMinLevel;
-    end = kMaxLevel;
-  };
-
-  /**
-   * get the max value this range covers
-   */
-  float max() {
-    return end == kMaxLevel ? start : end;
-  }
-
-  bool valid() {
-    return end > start;
-  }
-
-  float start;
-  float end;
-};
-
-/**
  * For levels we use 7-bit varint encoding, with arbitrary precision stored separately.
  *
  * @param lvl       the level to encode
@@ -51,7 +24,7 @@ public:
  *
  * @return a string containing the encoded value
  */
-std::string encode_level(float lvl, int precision = 0) {
+std::string encode_level(const float lvl, const int precision = 0) {
   std::string encoded;
   // most of the time precision will be zero and level values will be lower
   // than 4191 (even in the case of higher precision)
@@ -1179,6 +1152,7 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
           continue;
         }
         range.start = start;
+        range.end = start;
       }
       if ((range.start > values.back().max() || values.empty()) && range.valid()) {
         values.emplace_back(range);
@@ -1194,25 +1168,30 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
       }
     }
 
-    std::string encoded;
-    encoded.reserve(values.size() * 2);
+    std::string levels_encoded;
+    // 2 bytes per value and 2 for each sentinel with some headroom should be good
+    levels_encoded.reserve(values.size() * 4);
+
     // sentinel value that marks discontinuity
     std::string sep = encode_level(kLevelRangeSeparator);
+
+    auto last_it = --values.end();
     for (auto it = values.begin(); it != values.end(); ++it) {
       auto& range = *it;
-      encoded.append(encode_level(range.start * pow(10, precision)));
-      if (range.end != kMaxLevel)
-        encoded.append(encode_level(range.end * pow(10, precision)));
+      levels_encoded.append(encode_level(range.start * pow(10, precision)));
+      if (range.end != range.start)
+        levels_encoded.append(encode_level(range.end * pow(10, precision)));
 
-      if (it != --values.end())
-        encoded.append(sep);
+      if (it != last_it)
+        levels_encoded.append(sep);
     }
 
     std::string precision_enc = encode_level(static_cast<float>(precision));
-    std::string r = encode_tag(TaggedValue::kLevels) +
-                    encode_level(static_cast<float>(encoded.size() + precision_enc.size())) +
-                    precision_enc + encoded;
-    names.emplace_back(r);
+    std::string encoded =
+        encode_tag(TaggedValue::kLevels) +
+        encode_level(static_cast<float>(levels_encoded.size() + precision_enc.size())) +
+        precision_enc + levels_encoded;
+    names.emplace_back(encoded);
   }
   if (level_ref_index_ != 0) {
     // level:ref
