@@ -20,8 +20,8 @@ namespace mjolnir {
  */
 struct level_range_t {
 public:
-  level_range_t(float s, float e) : start(s), end(e) {};
-  level_range_t(float s) : start(s), end(s) {};
+  level_range_t(float s, float e) : start(s), end(e){};
+  level_range_t(float s) : start(s), end(s){};
   level_range_t() {
     start = valhalla::baldr::kMinLevel;
     end = valhalla::baldr::kMaxLevel;
