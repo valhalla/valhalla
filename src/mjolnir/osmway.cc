@@ -1106,7 +1106,7 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
     // we store the precision once for all values
     // so we keep track of the max
     int precision = 0;
-    for (int i = 0; i < tokens.size(); ++i) {
+    for (size_t i = 0; i < tokens.size(); ++i) {
       const auto token = tokens[i];
       auto dash_pos = token.find(dash);
       level_range_t range;
