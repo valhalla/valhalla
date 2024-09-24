@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include "mjolnir/osmway.h"
 #include "test.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -8,6 +9,7 @@
 #endif
 
 using namespace valhalla;
+using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 class Indoor : public ::testing::Test {
@@ -350,10 +352,12 @@ TEST_F(Levels, EdgeInfoJson) {
   auto result =
       gurka::do_action(valhalla::Options::locate, map, locs, "pedestrian", {}, graphreader, &json);
 
-  std::unordered_map<std::string, std::vector<std::vector<float>>> expected_levels_map = {
-      {"z", {{1}}},        {"y", {{0}}},       {"x", {{2}}},          {"w", {{100}}},
-      {"v", {{12}, {14}}}, {"u", {{-1}, {0}}}, {"t", {{12}, {85.5}}}, {"s", {{-2}, {-1}, {0, 3}}},
-      {"r", {{0, 2.5}}},
+  std::unordered_map<std::string, std::vector<level_range_t>> expected_levels_map = {
+      {"z", {{1.0f}}},           {"y", {{0.0f}}},
+      {"x", {{2.0f}}},           {"w", {{100.0f}}},
+      {"v", {{12.0f}, {14.0f}}}, {"u", {{-1.f}, {0.f}}},
+      {"t", {{12.0f}, {85.5f}}}, {"s", {{-2.f}, {-1.f}, {0.f, 3.f}}},
+      {"r", {{0.f, 2.5f}}},
   };
   rapidjson::Document response;
   response.Parse(json);
@@ -376,14 +380,17 @@ TEST_F(Levels, EdgeInfoJson) {
       ASSERT_EQ(actual_levels.Size(), expected_levels.size());
       for (size_t j = 0; j < expected_levels.size(); ++j) {
         auto expected_level = expected_levels[j];
-        auto actual_level =
-            rapidjson::Pointer("/" + std::to_string(i) + "/edges/" + std::to_string(edge_ix) +
-                               "/edge_info/levels/" + std::to_string(j))
-                .Get(response)
-                ->GetArray();
-        ASSERT_EQ(actual_level.Size(), expected_level.size());
-        for (size_t k = 0; k < expected_level.size(); ++k) {
-          auto expected_level_value = expected_level[k];
+        auto ptr = rapidjson::Pointer("/" + std::to_string(i) + "/edges/" + std::to_string(edge_ix) +
+                                      "/edge_info/levels/" + std::to_string(j))
+                       .Get(response);
+        if (expected_level.start == expected_level.end) {
+          EXPECT_EQ(expected_level.start, ptr->GetFloat());
+          continue;
+        }
+        auto actual_level = ptr->GetArray();
+        ASSERT_EQ(actual_level.Size(), 2);
+        for (size_t k = 0; k < 2; ++k) {
+          auto expected_level_value = k == 0 ? expected_level.start : expected_level.end;
           auto actual_level_value =
               rapidjson::Pointer("/" + std::to_string(i) + "/edges/" + std::to_string(edge_ix) +
                                  "/edge_info/levels/" + std::to_string(j) + "/" + std::to_string(k))
