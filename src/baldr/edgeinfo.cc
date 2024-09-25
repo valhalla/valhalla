@@ -86,7 +86,7 @@ namespace valhalla {
 namespace baldr {
 
 std::tuple<std::vector<float>, uint32_t> decode_levels(const std::string& encoded) {
-  uint32_t precision = 0;
+  int32_t precision = 0;
   uint32_t i = 0;
 
   std::vector<float> decoded;
@@ -96,11 +96,11 @@ std::tuple<std::vector<float>, uint32_t> decode_levels(const std::string& encode
   // first varint is the size
   parse_varint(c, i);
   // second varint is the precision
-  int val = parse_varint(c, i);
+  int32_t val = parse_varint(c, i);
   precision = val > 0 ? (pow(10, val)) : 0;
 
   while (i < encoded.size()) {
-    int val = parse_varint(c, i);
+    int32_t val = parse_varint(c, i);
     decoded.emplace_back(val == kLevelRangeSeparator || precision == 0
                              ? static_cast<float>(val)
                              : static_cast<float>(val) / static_cast<float>(precision));
