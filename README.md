@@ -14,7 +14,9 @@
 
 
 
-Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time+distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
+Valhalla is an open source routing engine and accompanying libraries for use with OpenStreetMap data. Valhalla also includes tools like time and distance matrix computation, isochrones, elevation sampling, map matching and tour optimization (Travelling Salesman).
+
+I am just adding this line to see the contribution and learn the steps as a first time contributor! 
 
 ## Build Status
 
