@@ -116,8 +116,8 @@ void loki_worker_t::matrix(Api& request) {
   check_hierarchy_distance(request);
 
   // correlate the various locations to the underlying graph
-  auto sources_targets = PathLocation::fromPBF(options.sources());
-  auto st = PathLocation::fromPBF(options.targets());
+  auto sources_targets = PathLocation::fromPBF(request, options.sources());
+  auto st = PathLocation::fromPBF(request, options.targets());
   sources_targets.insert(sources_targets.end(), std::make_move_iterator(st.begin()),
                          std::make_move_iterator(st.end()));
 

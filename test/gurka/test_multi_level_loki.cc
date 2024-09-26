@@ -77,24 +77,24 @@ protected:
     return gurka::do_action(valhalla::Options::route, map, nodes, "auto", options);
   }
 };
-// gurka::map MultiLayerLoki::map = {};
-// std::string MultiLayerLoki::ascii_map = {};
-// gurka::nodelayout MultiLayerLoki::layout = {};
+gurka::map MultiLayerLoki::map = {};
+std::string MultiLayerLoki::ascii_map = {};
+gurka::nodelayout MultiLayerLoki::layout = {};
 
-// TEST_F(MultiLayerLoki, test_multilevel_loki) {
-//   auto result = Route({{"B", -1}, {"G"}});
-//   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"HI"}));
+TEST_F(MultiLayerLoki, test_multilevel_loki) {
+  auto result = Route({{"B", -1}, {"G"}});
+  gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"HI"}));
 
-//   result = Route({{"B", 0}, {"G"}});
-//   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"BE", "EF", "FD", "DG"}));
-//   result = Route({{"B"}, {"G"}});
-//   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"HI"}));
-// }
+  result = Route({{"B", 0}, {"G"}});
+  gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"BE", "EF", "FD", "DG"}));
+  result = Route({{"B"}, {"G"}});
+  gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"HI"}));
+}
 
-// TEST_F(MultiLayerLoki, test_no_matching_layer) {
-//   auto result = Route({{"E", -1}, {"G"}});
-//   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"EF", "FD", "DG"}));
-// }
+TEST_F(MultiLayerLoki, test_no_matching_layer) {
+  auto result = Route({{"E", -1}, {"G"}});
+  gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"EF", "FD", "DG"}));
+}
 
 /**************************************************************************************/
 
@@ -129,7 +129,7 @@ protected:
       C-G-----------H-D
       | |  x    y   | |
       | |           | |
-      | |           | |
+      | |           | |                     z
       | |           | |
       | |           | |
       A~E-----------F~B
@@ -165,7 +165,7 @@ protected:
       if (wp.preferred_level) {
         options["/locations/" + std::to_string(index) + "/search_filter/level"] =
             std::to_string(*wp.preferred_level);
-        options["/locations/" + std::to_string(index) + "/radius"] = "200";
+        // options["/locations/" + std::to_string(index) + "/radius"] = "200";
       }
     }
     return gurka::do_action(valhalla::Options::route, map, nodes, "pedestrian", options);
@@ -175,26 +175,30 @@ gurka::map MultiLevelLoki::map = {};
 std::string MultiLevelLoki::ascii_map = {};
 gurka::nodelayout MultiLevelLoki::layout = {};
 
-TEST_F(MultiLevelLoki, traverse_levels) {
+TEST_F(MultiLevelLoki, TraverseLevels) {
   auto result = Route({{"x", 0, 0}, {"y", 0, 1}});
+  ASSERT_EQ(result.info().warnings().size(), 2);
+  EXPECT_EQ(result.info().warnings().Get(0).code(), 401);
+  EXPECT_EQ(result.info().warnings().Get(1).code(), 401);
   gurka::assert::raw::expect_path(result, {"CD", "AC", "AE", "EG", "GH"});
-  // baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
+}
 
-  // int count = 0;
-  // for (const auto& tile_id : graphreader.GetTileSet()) {
-  //   auto tile = graphreader.GetGraphTile(tile_id);
-  //   count += tile->header()->directededgecount();
-  //   // for (auto edge_id = tile_id; edge_id.id() < tile->header()->directededgecount(); ++edge_id)
-  //   {
-  //   //   // we should find every way id in the tile set, unless it's a shortcut, no way id there
-  //   //   auto* edge = tile->directededge(edge_id);
-  //   //   if (edge->is_shortcut()) {
-  //   //     continue;
-  //   //   }
-  //   //   auto info = tile->edgeinfo(edge);
+TEST_F(MultiLevelLoki, NonExistentLevel) {
+  try {
+    auto result = Route({{"x", 0, 0}, {"y", 0, 6}});
+    FAIL() << "We should not get to here";
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, 171);
+    EXPECT_STREQ(e.what(), "No suitable edges near location");
+  } catch (...) { FAIL() << "Failed with unexpected exception type"; }
+}
 
-  //   // }
-  // }
-
-  // std::cerr << "Count: " << count << "\n";
+TEST_F(MultiLevelLoki, Cutoff) {
+  try {
+    auto result = Route({{"x", 0, 0}, {"z", 0, 1}});
+    FAIL() << "We should not get to here";
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, 171);
+    EXPECT_STREQ(e.what(), "No suitable edges near location");
+  } catch (...) { FAIL() << "Failed with unexpected exception type"; }
 }

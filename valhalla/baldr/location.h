@@ -76,8 +76,7 @@ public:
            const PreferredSide& side = PreferredSide::EITHER,
            valhalla::RoadClass street_side_cutoff = valhalla::RoadClass::kServiceOther,
            const SearchFilter& search_filter = SearchFilter(),
-           std::optional<int8_t> preferred_layer = {},
-           std::optional<int16_t> preferred_level = {});
+           std::optional<int8_t> preferred_layer = {});
 
   /**
    * equality.
@@ -121,7 +120,6 @@ public:
   std::optional<midgard::PointLL> display_latlng_;
 
   std::optional<int8_t> preferred_layer_;
-  std::optional<int16_t> preferred_level_;
 
 protected:
 };

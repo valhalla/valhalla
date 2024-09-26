@@ -28,14 +28,13 @@ Location::Location(const midgard::PointLL& latlng,
                    const PreferredSide& side,
                    valhalla::RoadClass street_side_cutoff,
                    const SearchFilter& search_filter,
-                   std::optional<int8_t> preferred_layer,
-                   std::optional<int16_t> preferred_level)
+                   std::optional<int8_t> preferred_layer)
     : latlng_(latlng), stoptype_(stoptype), min_outbound_reach_(min_outbound_reach),
       min_inbound_reach_(min_inbound_reach), radius_(radius), preferred_side_(side),
       node_snap_tolerance_(5), heading_tolerance_(60), search_cutoff_(35000),
       street_side_tolerance_(5), street_side_max_distance_(1000),
       street_side_cutoff_(street_side_cutoff), search_filter_(search_filter),
-      preferred_layer_(std::move(preferred_layer)), preferred_level_(std::move(preferred_level)) {
+      preferred_layer_(std::move(preferred_layer)) {
 }
 
 bool Location::operator==(const Location& o) const {
@@ -48,8 +47,7 @@ bool Location::operator==(const Location& o) const {
          street_side_cutoff_ == o.street_side_cutoff_ &&
          min_outbound_reach_ == o.min_outbound_reach_ && min_inbound_reach_ == o.min_inbound_reach_ &&
          radius_ == o.radius_ && preferred_side_ == o.preferred_side_ &&
-         display_latlng_ == o.display_latlng_ && preferred_layer_ == o.preferred_layer_ &&
-         preferred_level_ == o.preferred_level_;
+         display_latlng_ == o.display_latlng_ && preferred_layer_ == o.preferred_layer_;
 }
 
 } // namespace baldr

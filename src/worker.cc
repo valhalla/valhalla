@@ -162,7 +162,8 @@ const std::unordered_map<int, std::string> warning_codes = {
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
   // 4xx is used when we do sneaky important things the user should be aware of
-  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
+  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
+  {401, R"("search_filter.level" was specified without a custom "search_cutoff", lowering default default cutoff to )"}
 };
 // clang-format on
 
@@ -321,10 +322,6 @@ void parse_location(valhalla::Location* location,
   auto preferred_layer = rapidjson::get_optional<int>(r_loc, "/preferred_layer");
   if (preferred_layer) {
     location->set_preferred_layer(*preferred_layer);
-  }
-  auto preferred_level = rapidjson::get_optional<int>(r_loc, "/preferred_level");
-  if (preferred_level) {
-    location->set_preferred_level(*preferred_level);
   }
   auto node_snap_tolerance = rapidjson::get_optional<float>(r_loc, "/node_snap_tolerance");
   if (node_snap_tolerance) {

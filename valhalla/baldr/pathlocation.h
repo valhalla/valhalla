@@ -9,6 +9,7 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/options.pb.h>
+#include <valhalla/worker.h>
 
 namespace valhalla {
 namespace baldr {
@@ -117,9 +118,6 @@ public:
     if (pl.preferred_layer_) {
       l->set_preferred_layer(*pl.preferred_layer_);
     }
-    if (pl.preferred_level_) {
-      l->set_preferred_level(*pl.preferred_level_);
-    }
     l->set_minimum_reachability(std::max(pl.min_outbound_reach_, pl.min_inbound_reach_));
     l->set_radius(pl.radius_);
     l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
@@ -185,7 +183,7 @@ public:
     return Location::StopType::BREAK_THROUGH;
   }
 
-  static Location fromPBF(const valhalla::Location& loc) {
+  static Location fromPBF(const valhalla::Location& loc, valhalla::Api& request) {
     auto side = PreferredSide::EITHER;
     if (loc.preferred_side() == valhalla::Location::same)
       side = PreferredSide::SAME;
@@ -231,17 +229,20 @@ public:
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
       l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
-      if (loc.search_filter().has_level())
+      if (loc.search_filter().has_level()) {
         l.search_filter_.level_ = loc.search_filter().level();
+        if (loc.has_search_cutoff_case()) {
+          // set smaller default and add warning
+          l.search_cutoff_ = 300;
+          add_warning(request, 401, std::to_string(300) + " meters");
+        }
+      }
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
     }
     if (loc.has_preferred_layer_case()) {
       l.preferred_layer_ = loc.preferred_layer();
-    }
-    if (loc.has_preferred_level_case()) {
-      l.preferred_level_ = loc.preferred_level();
     }
     return l;
   }
@@ -255,11 +256,12 @@ public:
    * @return
    */
   static std::vector<Location>
-  fromPBF(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+  fromPBF(Api& request,
+          const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool route_reach = false) {
     std::vector<Location> pls;
-    for (const auto& l : locations) {
-      pls.emplace_back(fromPBF(l));
+    for (const auto& l : request.options().locations()) {
+      pls.emplace_back(fromPBF(l, request));
     }
     // for regular routing we dont really care about inbound reach for the origin or outbound reach
     // for the destination so we remove that requirement

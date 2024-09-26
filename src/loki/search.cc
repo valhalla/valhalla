@@ -101,22 +101,6 @@ bool layer_filter(const Location& location, int8_t layer) {
   return *location.preferred_layer_ != layer;
 }
 
-bool level_filter(const Location& location, const std::vector<int16_t>& levels) {
-  // no preferred level or no levels - we do not filter
-  if (!location.preferred_level_ || levels.empty()) {
-    return false;
-  }
-
-  bool matching_level = false;
-  std::cerr << location.preferred_level_.value() << "****\n";
-  for (auto& level : levels) {
-    std::cerr << level << "\n";
-    matching_level |= (location.preferred_level_.value() == level);
-  }
-
-  return matching_level;
-}
-
 PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
   if (side != PathLocation::SideOfStreet::NONE) {
     return side == PathLocation::SideOfStreet::LEFT ? PathLocation::SideOfStreet::RIGHT

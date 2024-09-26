@@ -303,8 +303,8 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
                                        bool verbose_lanes,
                                        valhalla::odin::MarkupFormatter& markup_formatter) {
   // TEMPORARY? Change to PathLocation...
-  const PathLocation& origin = PathLocation::fromPBF(orig);
-  const PathLocation& destination = PathLocation::fromPBF(dest);
+  const PathLocation& origin = PathLocation::fromPBF(orig, api);
+  const PathLocation& destination = PathLocation::fromPBF(dest, api);
 
   DirectionsBuilder::Build(api, markup_formatter);
   const auto& trip_directions = api.directions().routes(0).legs(0);
@@ -534,7 +534,7 @@ int main(int argc, char* argv[]) {
   LOG_INFO("routetype: " + routetype);
 
   // Locations
-  auto locations = valhalla::baldr::PathLocation::fromPBF(options.locations());
+  auto locations = valhalla::baldr::PathLocation::fromPBF(request, options.locations());
   if (locations.size() < 2) {
     throw;
   }

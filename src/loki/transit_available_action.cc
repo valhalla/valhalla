@@ -23,7 +23,7 @@ std::string loki_worker_t::transit_available(Api& request) {
   auto _ = measure_scope_time(request);
 
   init_transit_available(request);
-  auto locations = PathLocation::fromPBF(request.options().locations());
+  auto locations = PathLocation::fromPBF(request, request.options().locations());
   std::unordered_set<baldr::Location> found;
   try {
     const auto& tiles = TileHierarchy::levels().back().tiles;

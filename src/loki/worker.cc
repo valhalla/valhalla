@@ -101,7 +101,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       throw valhalla_exception_t{157, std::to_string(max_exclude_locations)};
     }
     try {
-      auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
+      auto exclude_locations = PathLocation::fromPBF(api, options.exclude_locations());
       auto results = loki::Search(exclude_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
       auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();

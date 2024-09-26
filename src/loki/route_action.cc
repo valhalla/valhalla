@@ -101,7 +101,7 @@ void loki_worker_t::route(Api& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    auto locations = PathLocation::fromPBF(options.locations(), true);
+    auto locations = PathLocation::fromPBF(request, options.locations(), true);
     const auto projections = loki::Search(locations, *reader, costing);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);

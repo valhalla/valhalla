@@ -190,8 +190,9 @@ void search(valhalla::baldr::Location location,
 
   // send it to pbf and back just in case something is wrong with that conversion
   valhalla::Location pbf;
+  valhalla::Api api;
   PathLocation::toPBF(location, &pbf, reader);
-  location = PathLocation::fromPBF(pbf);
+  location = PathLocation::fromPBF(pbf, api);
   location.street_side_max_distance_ = 5000;
 
   const auto costing = create_costing();
@@ -228,8 +229,9 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
 
   // send it to pbf and back just in case something is wrong with that conversion
   valhalla::Location pbf;
+  valhalla::Api api;
   PathLocation::toPBF(location, &pbf, reader);
-  location = PathLocation::fromPBF(pbf);
+  location = PathLocation::fromPBF(pbf, api);
   location.street_side_max_distance_ = 5000;
 
   const auto costing = create_costing();

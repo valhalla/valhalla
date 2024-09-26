@@ -160,9 +160,6 @@ message Location {
   oneof has_street_side_cutoff {
     RoadClass street_side_cutoff = 30;
   }
-  oneof has_preferred_level {
-    int32 preferred_level = 31;
-  }
 
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
   Correlation correlation = 90;
