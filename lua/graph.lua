@@ -33,6 +33,10 @@ highway = {
 ["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
 ["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
 ["platform"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
+-- Following one of the comments made in this issue I will add a via_ferrata here and give it pedestrian access
+-- No idea at the moment if I should add the rest that are false
+["via_ferrata"] =       {["pedestrian_forward"] = "true", ["pedestrian_backward"] = "true"}
+
 }
 
 road_class = {
@@ -1648,6 +1652,23 @@ function filter_tags_generic(kv)
      kv["link"] = "true"  --do we need to add more?  turnlane?
      kv["link_type"] = kv["link_type"]
   end
+
+  
+  -- now here add the check of sac_scale also mentioned in the comment 
+  if highway_type == "via_ferrata" then
+    -- need to give it pedestrian access
+    kv["pedestrian_forward"] == "true"
+    kv["pedestrian_backward"] == "true"
+    -- same as what I wrote when adding via_ferrata
+
+    -- now here check of sac_scale
+    -- if it does not have it set difficult_alpine_hiking
+    if not kv["sac_scale"] then
+      kv["sac_scale"] == "difficult_alpine_hiking"
+    end
+  end
+
+
 
   --- TODO(nils): "private" also has directionality which we don't parse and handle yet
   kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or "false"
