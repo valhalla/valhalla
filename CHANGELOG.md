@@ -4,6 +4,7 @@
    * FIXED: All logging in `valhalla_export_edges` now goes to stderr [#4892](https://github.com/valhalla/valhalla/pull/4892)
    * FIXED: Iterate over only `kLandmark` tagged values in `AddLandmarks()` [#4873](https://github.com/valhalla/valhalla/pull/4873)
    * FIXED: `walk_or_snap` mode edge case with loop routes [#4895](https://github.com/valhalla/valhalla/pull/4895)
+   * FIXED: Map matching endpoints no longer return invalid `edge_index` values [#4911](https://github.com/valhalla/valhalla/pull/4911)
 * **Enhancement**
    * CHANGED: voice instructions for OSRM serializer to work better in real-world environment [#4756](https://github.com/valhalla/valhalla/pull/4756)
    * ADDED: Add option `edge.forward` to trace attributes [#4876](https://github.com/valhalla/valhalla/pull/4876)
