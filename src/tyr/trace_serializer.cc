@@ -398,7 +398,7 @@ void serialize_matched_points(const AttributesController& controller,
     // TODO: need to keep track of the index of the edge in the global set of edges a given
     // TODO: match result belongs/correlated to
     // Process matched point edge index
-    if (controller(kMatchedEdgeIndex) && match_result.edgeid.Is_Valid()) {
+    if (controller(kMatchedEdgeIndex) && match_result.edgeid.Is_Valid() && match_result.edge_index != meili::kInvalidEdgeIndex) {
       writer("edge_index", static_cast<uint64_t>(match_result.edge_index));
     }
 
