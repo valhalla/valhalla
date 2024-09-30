@@ -46,3 +46,6 @@
 [submodule "third_party/just_gtfs"]
 	path = third_party/just_gtfs
 	url = https://github.com/mesozoic-drones/just_gtfs.git
+[submodule "third_party/range-v3"]
+	path = third_party/range-v3
+	url = https://github.com/ericniebler/range-v3
