@@ -272,7 +272,7 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
   valhalla_convert_transit valhalla_ingest_transit valhalla_query_transit valhalla_add_predicted_traffic
-  valhalla_assign_speeds valhalla_add_elevation)
+  valhalla_assign_speeds valhalla_add_elevation valhalla_openlr_to_edges)
 
 ## Valhalla services
 set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)
@@ -298,7 +298,7 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include ${VALHALLA_SOURCE_DIR}/third_party/range-v3/include)
     target_link_libraries(${program} valhalla)
     if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags

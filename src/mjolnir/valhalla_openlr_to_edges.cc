@@ -1,63 +1,116 @@
 #include <algorithm>
+#include <cmath>
 #include <fstream>
-#include <functional>
 #include <iostream>
-#include <list>
 #include <memory>
-#include <set>
-#include <sstream>
-#include <stdexcept>
-#include <streambuf>
-#include <string>
-#include <thread>
 #include <unordered_set>
-
+#include <boost/algorithm/string/join.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/range/algorithm_ext.hpp>
 #include <range/v3/all.hpp>
 
 #include "baldr/graphconstants.h"
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
-
-#include "midgard/logging.h"
-#include "sif/costfactory.h"
-
 #include "loki/search.h"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/range/algorithm_ext.hpp>
-
-#include "loki/worker.h"
-#include "odin/worker.h"
-#include "thor/worker.h"
-#include "tyr/actor.h"
+#include "midgard/logging.h"
 #include "midgard/polyline2.h"
-#include "midgard/util.h"
+#include "sif/costfactory.h"
+#include "thor/unidirectional_astar.h"
+#include "thor/bidirectional_astar.h"
+
 
 const float LENGTH_TOLERANCE_M = 50;
 
-std::unique_ptr<valhalla::thor::PathAlgorithm> get_path_algorithm(valhalla::baldr::GraphReader& reader,
-		                                          const valhalla::Location& origin,
-                                                  const valhalla::Location& dest) {
+namespace baldr = valhalla::baldr;
+namespace loki = valhalla::loki;
+namespace migard = valhalla::midgard;
+namespace sif = valhalla::sif;
+namespace thor = valhalla::thor;
 
-    for (auto& edge1 : origin.correlation().edges()) {
-        for (auto& edge2 : dest.correlation().edges()) {
-            bool same_graph_id = edge1.graph_id() == edge2.graph_id();
-            bool are_connected = reader.AreEdgesConnected(valhalla::baldr::GraphId(edge1.graph_id()), valhalla::baldr::GraphId(edge2.graph_id()));
-            if (same_graph_id || are_connected) {
-                return std::make_unique<valhalla::thor::TimeDepForward>();
-            }
-        }
+namespace {
+
+std::unique_ptr<valhalla::thor::PathAlgorithm>
+get_path_algorithm(valhalla::baldr::GraphReader& reader,
+                   const valhalla::Location& origin,
+                   const valhalla::Location& dest) {
+
+  for (auto& edge1 : origin.correlation().edges()) {
+    for (auto& edge2 : dest.correlation().edges()) {
+      bool same_graph_id = edge1.graph_id() == edge2.graph_id();
+      bool are_connected = reader.AreEdgesConnected(valhalla::baldr::GraphId(edge1.graph_id()),
+                                                    valhalla::baldr::GraphId(edge2.graph_id()));
+      if (same_graph_id || are_connected) {
+        return std::make_unique<valhalla::thor::TimeDepForward>();
+      }
     }
-    return std::make_unique<valhalla::thor::BidirectionalAStar>();
+  }
+  return std::make_unique<valhalla::thor::BidirectionalAStar>();
 }
 
-int main(int argc, char** argv) {
+valhalla::baldr::Location
+lrp_to_location(const valhalla::baldr::OpenLR::LocationReferencePoint& lrp) {
+  auto location = valhalla::baldr::Location({lrp.longitude, lrp.latitude});
+  location.node_snap_tolerance_ = 20;
+  location.heading_ = lrp.bearing;
+  location.heading_tolerance_ = 34;
+  location.search_cutoff_ = 20;
+  location.radius_ = 20;
+  return location;
+}
 
-  namespace baldr = valhalla::baldr;
-  namespace loki = valhalla::loki;
-  namespace migard = valhalla::midgard;
-  namespace sif = valhalla::sif;
-  namespace thor = valhalla::thor;
+bool is_one_way(const valhalla::baldr::DirectedEdge& edge) {
+  auto fward = edge.forwardaccess() & valhalla::baldr::kAutoAccess;
+  auto bward = edge.reverseaccess() & valhalla::baldr::kAutoAccess;
+  return (fward != bward);
+};
+
+bool is_motor_way(const baldr::DirectedEdge& edge) {
+  return edge.classification() == baldr::RoadClass::kMotorway;
+};
+
+size_t frc_mismatches_roadclass(auto frc, baldr::RoadClass rc) {
+
+  const auto main_roadclass =
+      std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kMotorway, baldr::RoadClass::kTrunk,
+                                           baldr::RoadClass::kPrimary};
+  const auto secondary_roadclass = std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kSecondary};
+  const auto tertiary_roadclass = std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kTertiary};
+  const auto other_roadclass = std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kUnclassified,
+                                                                    baldr::RoadClass::kResidential,
+                                                                    baldr::RoadClass::kServiceOther};
+  if (frc == 0) {
+    return main_roadclass.find(rc) == main_roadclass.end();
+  }
+
+  if (frc == 1) {
+    return secondary_roadclass.find(rc) == secondary_roadclass.end();
+  }
+
+  if (frc == 2) {
+    return tertiary_roadclass.find(rc) == tertiary_roadclass.end();
+  }
+
+  return other_roadclass.find(rc) == other_roadclass.end();
+};
+
+void print_final_result(int start_rank,
+                        int end_rank,
+                        const baldr::OpenLR::OpenLr& lr,
+                        int length,
+                        const std::vector<std::string>& edge_ids) {
+  LOG_INFO("Found!");
+  std::ostringstream ss;
+  ss << "start rank: " << start_rank << " end rank: " << end_rank;
+  ss << " lr.getLength: " << lr.getLength();
+  ss << " length: " << length;
+  ss << " edge_ids are: " << boost::algorithm::join(edge_ids, ", ") << std::endl;
+  LOG_INFO(ss.str());
+}
+
+} // namespace
+
+int main(int argc, char** argv) {
 
   if (argc != 3) {
     LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json openlr_binary");
@@ -83,49 +136,33 @@ int main(int argc, char** argv) {
 
   auto lr = baldr::OpenLR::OpenLr(argv[2], true);
 
-  auto lrp_to_location = [](const auto& lrp) -> baldr::Location {
-    auto location = baldr::Location({lrp.longitude, lrp.latitude});
-    location.node_snap_tolerance_ = 20;
-    location.heading_ = lrp.bearing;
-    location.heading_tolerance_ = 34;
-    location.search_cutoff_ = 20;
-    location.radius_ = 20;
-    return location;
-  };
-
   std::vector<baldr::Location> locations =
       lr.lrps | ranges::view::transform(lrp_to_location) | ranges::to<std::vector>();
 
   {
-	  auto& last_location = locations.back();
-	  //flip the bearing of the last lrp by 180
-	  last_location.heading_ = *last_location.heading_ + 180.f;
-	  last_location.heading_ = int(*last_location.heading_) % 360;
+    // flip the bearing of the last lrp by 180
+    auto& last_location = locations.back();
+    last_location.heading_ = *last_location.heading_ + 180.f;
+    last_location.heading_ = int(*last_location.heading_) % 360;
   }
 
   auto projections = loki::Search(locations, *reader, mode_costing[static_cast<size_t>(mode)]);
 
-  std::cout << "projections size: " << projections.size() << std::endl;
+  assert(lr.lrps.size() == projections.size());
 
-  const auto main_roadclass =
-      std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kMotorway, baldr::RoadClass::kTrunk,
-                                           baldr::RoadClass::kPrimary};
-  const auto secondary_roadclass = std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kSecondary};
-  const auto tertiary_roadclass = std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kTertiary};
-  const auto other_roadclass = std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kUnclassified,
-                                                                    baldr::RoadClass::kResidential,
-                                                                    baldr::RoadClass::kServiceOther};
+  LOG_INFO("projections size: " + std::to_string(projections.size()));
 
-  auto is_one_way = [](const baldr::DirectedEdge& edge) {
-    auto fward = edge.forwardaccess() & baldr::kAutoAccess;
-    auto bward = edge.reverseaccess() & baldr::kAutoAccess;
-    return (fward != bward);
-  };
-  auto is_motor_way = [](const baldr::DirectedEdge& edge) {
-    return edge.classification() == baldr::RoadClass::kMotorway;
-  };
-
-  auto frc_mismatches_roadclass = [&](auto frc, baldr::RoadClass rc) {
+  auto frc_mismatches_roadclass = [&](auto frc, baldr::RoadClass rc) -> size_t {
+    const auto main_roadclass =
+        std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kMotorway, baldr::RoadClass::kTrunk,
+                                             baldr::RoadClass::kPrimary};
+    const auto secondary_roadclass =
+        std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kSecondary};
+    const auto tertiary_roadclass = std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kTertiary};
+    const auto other_roadclass =
+        std::unordered_set<baldr::RoadClass>{baldr::RoadClass::kUnclassified,
+                                             baldr::RoadClass::kResidential,
+                                             baldr::RoadClass::kServiceOther};
     if (frc == 0) {
       return main_roadclass.find(rc) == main_roadclass.end();
     }
@@ -141,14 +178,13 @@ int main(int argc, char** argv) {
     return other_roadclass.find(rc) == other_roadclass.end();
   };
 
+  auto lrp_ranked_path_edges =
+      std::vector<std::unordered_map<size_t, std::vector<baldr::PathLocation::PathEdge>>>{};
 
   for (auto const& [idx, lrp] : lr.lrps | ranges::views::enumerate) {
 
-    //const auto& idx = lrp_idx.first;
-    //const auto& lrp = lrp_idx.second;
-
-    std::cout << lrp.longitude << std::endl;
-    std::cout << lrp.latitude << std::endl;
+    LOG_INFO("lrp longitude latitude: " + std::to_string(lrp.longitude) + "," +
+             std::to_string(lrp.latitude));
 
     // filter out the bad projection that are not in accordance with LRP
     auto rank = [&](const baldr::PathLocation::PathEdge& edge) -> int {
@@ -163,8 +199,10 @@ int main(int argc, char** argv) {
     };
 
     if (auto path_location = projections.find(locations[idx]); path_location == projections.end()) {
-      std::cout << "ERROR" << std::endl;
-      continue;
+      const auto& latlng = locations[idx].latlng_;
+      LOG_ERROR("Impossible to projection location: " + std::to_string(latlng.first) + " " +
+                std::to_string(latlng.second));
+      exit(1);
     } else {
       boost::range::remove_erase_if(path_location->second.edges,
                                     [rank](const auto& edge) { return rank(edge) > 1; });
@@ -172,86 +210,159 @@ int main(int argc, char** argv) {
       // process start lrp and end lrp
       if (idx == 0 && path_location->second.edges.size() > 1) {
 
-    	auto at_end = [](const auto& edge) { return edge.percent_along == 1; };
+        auto at_end = [](const auto& edge) { return edge.percent_along == 1; };
 
-    	auto count = ranges::count_if(path_location->second.edges, at_end);
+        auto count = ranges::count_if(path_location->second.edges, at_end);
 
-    	if (count != path_location->second.edges.size()) {
-        	// remove the edge if the location is projected at the end of the edge
-            boost::range::remove_erase_if(path_location->second.edges, at_end);
-    	}
-
+        if (count != path_location->second.edges.size()) {
+          // remove the edge if the location is projected at the end of the edge
+          boost::range::remove_erase_if(path_location->second.edges, at_end);
+        }
       }
       if (idx == (lr.lrps.size() - 1) && path_location->second.edges.size() > 1) {
 
+        auto at_start = [](const auto& edge) { return edge.percent_along == 0; };
 
-      	auto at_start= [](const auto& edge) { return edge.percent_along == 0; };
+        auto count = ranges::count_if(path_location->second.edges, at_start);
 
-      	auto count = ranges::count_if(path_location->second.edges, at_start);
-
-      	if (count != path_location->second.edges.size()) {
-            // remove the edge if the location is projected at the beginning of the edge
-            boost::range::remove_erase_if(path_location->second.edges, at_start);
-      	}
+        if (count != path_location->second.edges.size()) {
+          // remove the edge if the location is projected at the beginning of the edge
+          boost::range::remove_erase_if(path_location->second.edges, at_start);
+        }
       }
 
-      std::sort(path_location->second.edges.begin(), path_location->second.edges.end(),
-                [rank](const auto& lhs, const auto& rhs) { return rank(lhs) < rank(rhs); });
+      std::unordered_map<size_t, std::vector<baldr::PathLocation::PathEdge>> ranked_path_edges;
 
-      std::cout << "path edges size: " << path_location->second.edges.size() << std::endl;
-
+      for (auto edge : path_location->second.edges) {
+        LOG_INFO("potential path edge id: " + std::to_string(edge.id) +
+                 " rank: " + std::to_string(rank(edge)));
+        ranked_path_edges[rank(edge)].push_back(edge);
+      }
+      lrp_ranked_path_edges.push_back(ranked_path_edges);
     }
   }
 
+  assert(lr.lrps.size() == lrp_ranked_path_edges.size());
 
-  auto first_lrp = lr.lrps.front();
-  auto last_lrp = lr.lrps.back();
+  auto possible_trivial_edge_id = baldr::GraphId{baldr::kInvalidGraphId};
+
+  auto first_percentage = 0.;
+  auto last_percentage = 0.;
+
+  if (auto first_0_rank_edges = lrp_ranked_path_edges[0].find(0);
+      first_0_rank_edges != lrp_ranked_path_edges[0].end()) {
+
+    for (const auto& first_edge : first_0_rank_edges->second) {
+
+      auto find_trivial_route =
+          ranges::all_of(lrp_ranked_path_edges | ranges::views::enumerate,
+                         [&](const auto& idx_ranked_path_edges) {
+                           auto& [idx, ranked_path_edges] = idx_ranked_path_edges;
+
+                           auto rank_0_edges = ranked_path_edges.find(0);
+                           if (rank_0_edges == ranked_path_edges.end())
+                             return false;
+                           for (const auto& edge : rank_0_edges->second) {
+                             if (first_edge.id == edge.id) {
+                               if (idx == 0) {
+                                 first_percentage = edge.percent_along;
+                               } else if (idx == (lrp_ranked_path_edges.size() - 1)) {
+                                 last_percentage = edge.percent_along;
+                               }
+                               return true;
+                             }
+                           }
+                           return false;
+                         });
+      if (find_trivial_route) {
+        possible_trivial_edge_id = first_edge.id;
+        break;
+      }
+    }
+  }
+
+  if (possible_trivial_edge_id.Is_Valid()) {
+
+    auto trivial_route_length = reader->directededge(possible_trivial_edge_id)->length() *
+                                (last_percentage - first_percentage);
+
+    if (std::abs(trivial_route_length - lr.getLength()) <= LENGTH_TOLERANCE_M) {
+
+      print_final_result(0, 0, lr, trivial_route_length, {std::to_string(possible_trivial_edge_id)});
+      std::cout << possible_trivial_edge_id << std::endl;
+      return 0;
+    }
+  }
+
+  LOG_INFO("No trivial route has been found");
+
+  const auto& start_ranked_path_edges = lrp_ranked_path_edges.front();
+  const auto& end_ranked_path_edges = lrp_ranked_path_edges.back();
+
+  std::tuple<std::size_t, std::size_t, float, std::vector<baldr::GraphId>> best_res;
 
   auto first_location = locations.front();
   auto last_location = locations.back();
 
-  auto first_edge_id = projections.find(first_location)->second.edges[0].id;
+  // start rank and end rank are cartesian product of (0, 1, 2) and (0, 1, 2)
+  auto rank_length_penality = 10;
+  const auto& start_edges_map = lrp_ranked_path_edges.front();
+  const auto& end_edges_map = lrp_ranked_path_edges.back();
 
-  std::cout << "first_edge_id: " << first_edge_id << std::endl;
+  for (const auto& [start_rank, end_rank] :
+       ranges::cartesian_product_view(ranges::views::ints(0, 3), ranges::views::ints(0, 3))) {
+    {
+      std::ostringstream ss;
+      ss << "start rank: " << start_rank << " end rank: " << end_rank;
+      LOG_INFO(ss.str());
+    }
+    const auto start_edges = start_edges_map.find(static_cast<size_t>(start_rank));
+    const auto end_edges = end_edges_map.find(static_cast<size_t>(end_rank));
 
-  auto trivial_route =
-      std::all_of(locations.cbegin(), locations.cend(), [&](const auto& location) {
-	  	  auto edge_id =  projections.find(location)->second.edges[0].id;
-	  	  std::cout << "edge_id: " << edge_id << std::endl;
-	  	  return  edge_id  == first_edge_id;
-      });
+    if (start_edges == start_edges_map.end() || end_edges == end_edges_map.end()) {
+      continue;
+    }
 
-  if (trivial_route) {
-    std::cout << "Lucky, a trivial route has been found" << std::endl;
-    auto length =
-        ranges::accumulate(locations | ranges::views::enumerate |
-                               ranges::views::transform([reader, &projections, &locations](const auto& idx_location) -> uint32_t {
-    							 const auto& [idx, location] = idx_location;
-    							 const auto& path_location = projections.find(location)->second;
-                                 if (path_location.edges.empty())
-                                   return 0;
-                                 const auto* direct_edge = reader->directededge(path_location.edges[0].id);
+    for (const auto& [start, end] :
+         ranges::cartesian_product_view(start_edges->second, end_edges->second)) {
+      // copy
+      baldr::PathLocation start_path_location = projections.find(first_location)->second;
+      baldr::PathLocation end_path_location = projections.find(last_location)->second;
 
-                                 if (idx == 0) {
-                                     return direct_edge->length() * (1 - path_location.edges[0].percent_along);
-                                 }
+      start_path_location.edges = start_edges->second;
+      end_path_location.edges = end_edges->second;
 
-                                 if (idx == (locations.size() - 1)) {
-                                     return direct_edge->length() * (path_location.edges[0].percent_along);
-                                 }
-                                 return direct_edge->length();
-                               }),
-                           0.);
-    if ((lr.getLength() - LENGTH_TOLERANCE_M) < length &&
-        length < (lr.getLength() + LENGTH_TOLERANCE_M)) {
+      valhalla::Location origin;
+      valhalla::Location dest;
 
-    	std::cout << "length: " <<  length << std::endl;
-    	std::cout << "lr.getLength: " <<  lr.getLength() << std::endl;
-    	std::cout << first_edge_id << std::endl;
-      return 0;
+      baldr::PathLocation::toPBF(start_path_location, &origin, *reader);
+      baldr::PathLocation::toPBF(end_path_location, &dest, *reader);
+
+      auto algo = get_path_algorithm(*reader, origin, dest);
+      auto path_list = algo->GetBestPath(origin, dest, *reader, mode_costing, mode);
+
+      if (path_list.empty() || path_list[0].empty())
+        continue;
+
+      double length = path_list[0].back().path_distance;
+
+      if (std::abs(length - lr.getLength()) <= LENGTH_TOLERANCE_M) {
+
+        std::vector<std::string> edge_ids;
+        for (const auto& p : path_list) {
+          for (const auto info : p) {
+            edge_ids.push_back(std::to_string(info.edgeid));
+          }
+        }
+        print_final_result(start_rank, end_rank, lr, length, edge_ids);
+        std::cout << boost::algorithm::join(edge_ids, ", ") << std::endl;
+        return 0;
+      }
     }
   }
-  // copy
+
+  LOG_INFO("Last try");
+  // last try:
   baldr::PathLocation start_path_location = projections.find(first_location)->second;
   baldr::PathLocation end_path_location = projections.find(last_location)->second;
 
@@ -262,34 +373,25 @@ int main(int argc, char** argv) {
   baldr::PathLocation::toPBF(end_path_location, &dest, *reader);
 
   auto algo = get_path_algorithm(*reader, origin, dest);
-
   auto path_list = algo->GetBestPath(origin, dest, *reader, mode_costing, mode);
 
-  valhalla::Api api;
-  auto* trip_leg = api.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-  baldr::AttributesController controller;
-  thor::TripLegBuilder::Build(default_options, controller, *reader, mode_costing, path_list[0].begin(), path_list[0].end(), origin, dest, *trip_leg, {"route"}, nullptr);
+  if (path_list.empty() || path_list[0].empty())
+    exit(1);
 
   double length = path_list[0].back().path_distance;
-  std::cout << "length: " << length << std::endl;
 
-  std::vector<std::string> edge_ids;
-  for (const auto& p : path_list){
-	  for (const auto info: p){
-		  edge_ids.push_back(std::to_string(info.edgeid));
+  if (std::abs(length - lr.getLength()) <= LENGTH_TOLERANCE_M) {
 
-	  }
-  }
-  std::cout << "path_list size: " << path_list.size() << std::endl;
-
-  std::cout << "lr.getLength: " << lr.getLength() << std::endl;
-
-  if ((lr.getLength() - LENGTH_TOLERANCE_M) < length &&
-		  length < (lr.getLength() + LENGTH_TOLERANCE_M)) {
-	  auto joined = boost::algorithm::join(edge_ids, ", ");
-	  std::cout << "result: " << joined << std::endl;
-	  return 0;
+    std::vector<std::string> edge_ids;
+    for (const auto& p : path_list) {
+      for (const auto info : p) {
+        edge_ids.push_back(std::to_string(info.edgeid));
+      }
+    }
+    print_final_result(-1, -1, lr, length, edge_ids);
+    std::cout << boost::algorithm::join(edge_ids, ", ") << std::endl;
+    return 0;
   }
 
-  return 0;
+  exit(1);
 }
