@@ -30,7 +30,7 @@ std::string encode_level(const float lvl, const int precision = 0) {
   // than 4191 (even in the case of higher precision)
   encoded.reserve(2);
 
-  int val = (int)(lvl * pow(10, precision));
+  int val = static_cast<int>(lvl * pow(10, precision));
   val = val < 0 ? ~(static_cast<unsigned int>(lvl) << 1) : val << 1;
   // we take 7 bits of this at a time
   while (val > 0x7f) {
