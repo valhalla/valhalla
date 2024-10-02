@@ -499,10 +499,6 @@ bool EdgeInfo::includes_level(float lvl) const {
   }
   try {
     auto decoded = std::get<0>(decode_levels(itr->second));
-    // short circuit, most cases will have one level, or one range
-    if (decoded.size() == 1)
-      return decoded[0].first <= lvl && decoded[0].second >= lvl;
-
     auto lower = std::lower_bound(decoded.cbegin(), decoded.cend(), lvl,
                                   [&](const decltype(decoded)::value_type& val, float lvl) {
                                     return val.second < lvl;
