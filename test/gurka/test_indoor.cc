@@ -12,6 +12,14 @@ using namespace valhalla;
 using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
+struct range_t {
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
+
+  float start;
+  float end;
+};
+
 class Indoor : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -329,7 +337,7 @@ TEST_F(Levels, EdgeInfoIncludes) {
     for (float i = -2.0f; i <= 100.0f; i = i + 0.25f) {
       bool expected_includes_level = std::find(levels.begin(), levels.end(), i) != levels.end();
       bool includes = graphreader.edgeinfo(edgeId).includes_level(i);
-      EXPECT_EQ(includes, expected_includes_level);
+      EXPECT_EQ(includes, expected_includes_level) << "Failing level " << i << "\n";
     }
   }
 }
@@ -352,11 +360,15 @@ TEST_F(Levels, EdgeInfoJson) {
   auto result =
       gurka::do_action(valhalla::Options::locate, map, locs, "pedestrian", {}, graphreader, &json);
 
-  std::unordered_map<std::string, std::vector<level_range_t>> expected_levels_map = {
-      {"z", {{1.0f}}},           {"y", {{0.0f}}},
-      {"x", {{2.0f}}},           {"w", {{100.0f}}},
-      {"v", {{12.0f}, {14.0f}}}, {"u", {{-1.f}, {0.f}}},
-      {"t", {{12.0f}, {85.5f}}}, {"s", {{-2.f}, {-1.f}, {0.f, 3.f}}},
+  std::unordered_map<std::string, std::vector<range_t>> expected_levels_map = {
+      {"z", {{1.f}}},
+      {"y", {{0.f}}},
+      {"x", {{2.f}}},
+      {"w", {{100.f}}},
+      {"v", {{12.f}, {14.f}}},
+      {"u", {{-1.f}, {0.f}}},
+      {"t", {{12.0f}, {85.5f}}},
+      {"s", {{-2.f}, {-1.f}, {0.f, 3.f}}},
       {"r", {{0.f, 2.5f}}},
   };
   rapidjson::Document response;

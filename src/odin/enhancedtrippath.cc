@@ -537,12 +537,12 @@ std::vector<std::string> EnhancedTripLeg_Edge::GetLevelRef() const {
         // parse varint encoded levels, we're only interested in single
         // level values though
         const auto& encoded = tagged_value().Get(t).value();
-        std::vector<float> decoded;
-        int precision;
+        std::vector<std::pair<float, float>> decoded;
+        uint32_t precision;
         std::tie(decoded, precision) = baldr::decode_levels(encoded);
-        if (decoded.size() == 1) {
+        if (decoded.size() == 1 && decoded[0].first == decoded[0].second) {
           std::stringstream ss;
-          ss << std::fixed << std::setprecision(precision) << decoded[0];
+          ss << std::fixed << std::setprecision(precision) << decoded[0].first;
           levels.emplace_back("Level " + ss.str());
         }
       }

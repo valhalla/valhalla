@@ -35,7 +35,7 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
  * @param i       value to store the varint size in
  *
  */
-int32_t parse_varint(const char*& encoded, uint32_t& i) {
+int32_t parse_varint(const char*& encoded) {
   int32_t byte = 0, shift = 0, result = 0;
 
   while (byte & 0x80 || shift == 0) {
@@ -43,7 +43,6 @@ int32_t parse_varint(const char*& encoded, uint32_t& i) {
     result |= (byte & 0x7f) << shift;
     shift += 7;
     ++encoded;
-    ++i;
   }
 
   return (result & 1 ? ~result : result) >> 1;
@@ -65,11 +64,9 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
       return {std::string(ptr, landmark_size)};
     }
     case TaggedValue::kLevels: {
-      // parse out the size to construct the string
-      uint32_t i = 0; // a place to store the size of the size varint
       auto start = ptr + 1;
-      int size = static_cast<int>(parse_varint(start, i));
-      return {std::string(ptr, size + i + 1)};
+      int size = static_cast<int>(parse_varint(start));
+      return {std::string(ptr, (start + size) - ptr)};
     }
     case TaggedValue::kConditionalSpeedLimits: {
       return {std::string(ptr, 1 + sizeof(ConditionalSpeedLimit))};
@@ -85,28 +82,44 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
 namespace valhalla {
 namespace baldr {
 
-std::tuple<std::vector<float>, uint32_t> decode_levels(const std::string& encoded) {
-  int32_t precision = 0;
-  uint32_t i = 0;
+std::pair<std::vector<std::pair<float, float>>, uint32_t> decode_levels(const std::string& encoded) {
+  uint32_t precision = 0;
+  std::vector<std::pair<float, float>> decoded;
+  decoded.reserve(4);
+  auto ptr = encoded.data();
 
-  std::vector<float> decoded;
-  decoded.reserve(10);
-
-  auto c = encoded.data();
   // first varint is the size
-  parse_varint(c, i);
+  auto size = parse_varint(ptr);
+  // we keep track of where the string ends
+  auto end = ptr + size;
   // second varint is the precision
-  int32_t val = parse_varint(c, i);
-  precision = val > 0 ? (pow(10, val)) : 0;
+  if (int32_t prec_power = parse_varint(ptr) > 0)
+    precision = pow(10, prec_power);
 
-  while (i < encoded.size()) {
-    int32_t val = parse_varint(c, i);
-    decoded.emplace_back(val == kLevelRangeSeparator || precision == 0
-                             ? static_cast<float>(val)
-                             : static_cast<float>(val) / static_cast<float>(precision));
+  // keep track of whether we're looking at the first or second value
+  // of a contiguous block
+  bool prev = false;
+
+  while (ptr != end) {
+    int32_t val = parse_varint(ptr);
+    if (val == kLevelRangeSeparator) {
+      prev = false;
+      continue;
+    }
+    float f = precision == 0 ? static_cast<float>(val)
+                             : static_cast<float>(val) / static_cast<float>(precision);
+    if (!prev) {
+      // first value
+      // (temporarily) set to the same value to indicate a single number
+      decoded.emplace_back(std::pair<float, float>{f, f});
+      prev = true;
+    } else {
+      // we found a second value
+      decoded.back().second = f;
+    }
   }
 
-  return {decoded, precision};
+  return {decoded, static_cast<uint32_t>(precision)};
 }
 
 EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length)
@@ -467,7 +480,18 @@ int8_t EdgeInfo::layer() const {
   return static_cast<int8_t>(value.front());
 }
 
-bool EdgeInfo::includes_level(float lvl) {
+std::pair<std::vector<std::pair<float, float>>, uint32_t> EdgeInfo::levels() const {
+  const auto& tags = GetTags();
+  auto itr = tags.find(TaggedValue::kLevels);
+  if (itr == tags.end()) {
+    return {};
+  }
+  try {
+    return decode_levels(itr->second);
+  } catch (...) { throw std::runtime_error("failed to decode levels"); };
+}
+
+bool EdgeInfo::includes_level(float lvl) const {
   const auto& tags = GetTags();
   auto itr = tags.find(TaggedValue::kLevels);
   if (itr == tags.end()) {
@@ -475,24 +499,16 @@ bool EdgeInfo::includes_level(float lvl) {
   }
   try {
     auto decoded = std::get<0>(decode_levels(itr->second));
-    // TODO: use binary search
-    for (size_t i = 0; i < decoded.size();) {
-      size_t j = i + 1;
-      auto cur = decoded[i];
+    // short circuit, most cases will have one level, or one range
+    if (decoded.size() == 1)
+      return decoded[0].first <= lvl && decoded[0].second >= lvl;
 
-      if (j >= decoded.size() || decoded[j] == kLevelRangeSeparator) {
-        // single number
-        if (lvl == cur)
-          return true;
-        i += 2;
-      } else {
-        // range
-        if (cur <= lvl && lvl <= decoded[j])
-          return true;
-        // skip over the separator
-        i += 3;
-      }
-    }
+    auto lower = std::lower_bound(decoded.cbegin(), decoded.cend(), lvl,
+                                  [&](const decltype(decoded)::value_type& val, float lvl) {
+                                    return val.second < lvl;
+                                  });
+    if (lower != decoded.end())
+      return lower->first <= lvl && lvl <= lower->second;
   } catch (...) { LOG_ERROR("Unable to parse encoded level, way_id " + wayid()); }
   return false;
 }
@@ -544,24 +560,19 @@ json::MapPtr EdgeInfo::json() const {
         break;
       case TaggedValue::kLevels: {
         json::ArrayPtr levels = json::array({});
-        std::vector<float> decoded;
+        std::vector<std::pair<float, float>> decoded;
         uint32_t precision;
         std::tie(decoded, precision) = decode_levels(value);
-        for (size_t i = 0; i < decoded.size();) {
-          size_t j = i + 1;
-          auto cur = decoded[i];
-          if (j >= decoded.size() || decoded[j] == kLevelRangeSeparator) {
+        for (auto& range : decoded) {
+          if (range.first == range.second) {
             // single number
-            levels->emplace_back(json::fixed_t{cur, precision});
-            i += 2;
+            levels->emplace_back(json::fixed_t{range.first, precision});
           } else {
             // range
             json::ArrayPtr level = json::array({});
-            level->emplace_back(json::fixed_t{cur, precision});
-            level->emplace_back(json::fixed_t{decoded[j], precision});
+            level->emplace_back(json::fixed_t{range.first, precision});
+            level->emplace_back(json::fixed_t{range.second, precision});
             levels->emplace_back(level);
-            // skip over the next separator
-            i += 3;
           }
         }
         edge_info->emplace("levels", levels);

@@ -91,7 +91,7 @@ struct linguistic_text_header_t {
  *   a) the decoded levels array and
  *   b) the precision used
  */
-std::tuple<std::vector<float>, uint32_t> decode_levels(const std::string& encoded);
+std::pair<std::vector<std::pair<float, float>>, uint32_t> decode_levels(const std::string& encoded);
 
 /**
  * Edge information not required in shortest path algorithm and is
@@ -291,12 +291,11 @@ public:
   //  * @return layer index of the edge
   //  */
 
-  // std::vector<int16_t> level() const;
-
+  std::pair<std::vector<std::pair<float, float>>, uint32_t> levels() const;
   /**
    * Convenience method that checks whether the edge connects the passed level.
    */
-  bool includes_level(float lvl);
+  bool includes_level(float lvl) const;
 
   /**
    * Get layer:ref of the edge.

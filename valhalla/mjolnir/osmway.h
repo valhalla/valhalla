@@ -14,33 +14,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-/**
- * Convenience structure for temporarily storing
- * level values before serializing them to varint.
- */
-struct level_range_t {
-public:
-  level_range_t(float s, float e) : start(s), end(e){};
-  level_range_t(float s) : start(s), end(s){};
-  level_range_t() {
-    start = valhalla::baldr::kMinLevel;
-    end = valhalla::baldr::kMaxLevel;
-  };
-
-  /**
-   * get the max value this range covers
-   */
-  float max() {
-    return std::max(start, end);
-  }
-
-  bool valid() {
-    return end >= start && start != valhalla::baldr::kMinLevel && end != valhalla::baldr::kMaxLevel;
-  }
-
-  float start;
-  float end;
-};
 
 // OSM way
 struct OSMWay {

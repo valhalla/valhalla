@@ -1099,7 +1099,7 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
   if (level_index_ != 0) {
     // level
 
-    std::list<level_range_t> values;
+    std::vector<std::pair<float, float>> values;
     const char dash = '-';
     auto tokens = GetTagTokens(name_offset_map.name(level_index_));
 
@@ -1109,8 +1109,7 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
     for (size_t i = 0; i < tokens.size(); ++i) {
       const auto token = tokens[i];
       auto dash_pos = token.find(dash);
-      level_range_t range;
-      float start, end;
+      std::pair<float, float> range;
       if (dash_pos != std::string::npos && dash_pos != 0) {
         // we're dealing with a range
         std::vector<std::string> nums;
@@ -1125,48 +1124,36 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
               precision = std::max(precision, static_cast<int>(match[1].str().size()));
             }
           }
-          start = std::stof(nums[0]);
-          end = std::stof(nums[1]);
+          range.first = std::stof(nums[0]);
+          range.second = std::stof(nums[1]);
         } catch (...) {
           LOG_ERROR("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
           continue;
         }
 
-        if (end <= start) {
-          LOG_ERROR("Invalid level range, " + std::to_string(start) + " - " + std::to_string(end) +
-                    "; way_id " + std::to_string(osmwayid_));
+        if (range.first > range.second) {
+          LOG_ERROR("Invalid level range, " + std::to_string(range.first) + " - " +
+                    std::to_string(range.second) + "; way_id " + std::to_string(osmwayid_));
           continue;
         }
 
-        range.start = start;
-        range.end = end;
       } else { // we have a number
         try {
           std::smatch match;
           if (std::regex_search(token, match, kFloatRegex)) {
             precision = std::max(precision, static_cast<int>(match[1].str().size()));
           }
-          start = std::stof(token);
+          range.first = std::stof(token);
+          range.second = range.first;
         } catch (...) {
           LOG_ERROR("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
           continue;
         }
-        range.start = start;
-        range.end = start;
       }
-      if ((range.start > values.back().max() || values.empty()) && range.valid()) {
-        values.emplace_back(range);
-        continue;
-      }
-      // it's not sorted, so go through sorted list and insert at the right spot
-      for (auto it = values.begin(); it != values.end(); ++it) {
-        // TODO: does not take care of invalid ranges
-        if (range.start < (*it).start) {
-          values.insert(it, range);
-          break;
-        }
-      }
+      values.emplace_back(range);
     }
+    std::sort(values.begin(), values.end(),
+              [](auto& left, auto& right) { return left.first < right.first; });
 
     std::string levels_encoded;
     // 2 bytes per value and 2 for each sentinel with some headroom should be good
@@ -1176,11 +1163,12 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
     std::string sep = encode_level(kLevelRangeSeparator);
 
     auto last_it = --values.end();
+    auto prec_power = pow(10, precision);
     for (auto it = values.begin(); it != values.end(); ++it) {
       auto& range = *it;
-      levels_encoded.append(encode_level(range.start * pow(10, precision)));
-      if (range.end != range.start)
-        levels_encoded.append(encode_level(range.end * pow(10, precision)));
+      levels_encoded.append(encode_level(range.first * prec_power));
+      if (range.first != range.second)
+        levels_encoded.append(encode_level(range.second * prec_power));
 
       if (it != last_it)
         levels_encoded.append(sep);
