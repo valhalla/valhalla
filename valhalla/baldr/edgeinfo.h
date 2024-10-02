@@ -285,13 +285,14 @@ public:
    */
   int8_t layer() const;
 
-  // /**
-  //  * Get level of the edge.
-  //  * @see https://wiki.openstreetmap.org/wiki/Key:level
-  //  * @return layer index of the edge
-  //  */
-
+  /**
+   * Get levels of the edge.
+   * @see https://wiki.openstreetmap.org/wiki/Key:level
+   * @return a pair where the first member is a vector of contiguous level ranges (inclusive) and
+   * the the second member is the max precision found on any of the level tokens.
+   */
   std::pair<std::vector<std::pair<float, float>>, uint32_t> levels() const;
+
   /**
    * Convenience method that checks whether the edge connects the passed level.
    */
