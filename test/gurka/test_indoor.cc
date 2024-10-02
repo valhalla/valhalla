@@ -314,11 +314,6 @@ TEST_F(Levels, EdgeInfoIncludes) {
 
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
-  auto get_level = [&](auto from, auto to, auto lvl) {
-    auto edgeId = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, from, to));
-    return graphreader.edgeinfo(edgeId).includes_level(lvl);
-  };
-
   std::vector<std::pair<std::array<std::string, 2>, std::vector<float>>> values = {
       {{"A", "B"}, {1}},
       {{"B", "C"}, {0}},
