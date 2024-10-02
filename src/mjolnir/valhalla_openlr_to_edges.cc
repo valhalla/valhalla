@@ -68,6 +68,10 @@ bool is_motor_way(const baldr::DirectedEdge& edge) {
   return edge.classification() == baldr::RoadClass::kMotorway;
 };
 
+bool is_link(const baldr::DirectedEdge& edge) {
+  return edge.link();
+};
+
 size_t frc_mismatches_roadclass(unsigned char frc, baldr::RoadClass rc) {
 
   const auto main_roadclass =
@@ -91,6 +95,20 @@ size_t frc_mismatches_roadclass(unsigned char frc, baldr::RoadClass rc) {
   }
 
   return other_roadclass.find(rc) == other_roadclass.end();
+};
+
+// filter out the bad projection that are not in accordance with LRP
+int rank(valhalla::baldr::GraphReader& reader,
+         const valhalla::baldr::OpenLR::LocationReferencePoint& lrp,
+         const baldr::PathLocation::PathEdge& edge) {
+  // frc mismatch + (motorway mismatch || oneway mismatch || slip road mismatch)
+  // FRC 0 – Main road
+  // FRC 1 – First class road ...
+  const auto* directed_edge = reader.directededge(edge.id);
+  auto rank = frc_mismatches_roadclass(lrp.frc, directed_edge->classification()) +
+                  !is_one_way(*directed_edge) ||
+              !is_motor_way(*directed_edge) || !is_link(*directed_edge);
+  return rank;
 };
 
 void print_final_result(int start_rank,
@@ -173,18 +191,6 @@ int main(int argc, char** argv) {
     LOG_INFO("lrp longitude latitude: " + std::to_string(lrp.longitude) + "," +
              std::to_string(lrp.latitude));
 
-    // filter out the bad projection that are not in accordance with LRP
-    auto rank = [&](const baldr::PathLocation::PathEdge& edge) -> int {
-      // frc mismatch + (motorway mismatch || oneway mismatch || slip road mismatch)
-      // FRC 0 – Main road
-      // FRC 1 – First class road ...
-      const auto* directed_edge = reader->directededge(edge.id);
-      auto rank = frc_mismatches_roadclass(lrp.frc, directed_edge->classification()) +
-                      !is_one_way(*directed_edge) ||
-                  !is_motor_way(*directed_edge);
-      return rank;
-    };
-
     if (auto path_location = projections.find(locations[idx]); path_location == projections.end()) {
       const auto& latlng = locations[idx].latlng_;
       LOG_ERROR("Impossible to projection location: " + std::to_string(latlng.first) + " " +
@@ -192,7 +198,7 @@ int main(int argc, char** argv) {
       exit(1);
     } else {
       boost::range::remove_erase_if(path_location->second.edges,
-                                    [rank](const auto& edge) { return rank(edge) > 1; });
+                                    [&](const auto& edge) { return rank(*reader, lrp, edge) > 1; });
 
       // process start lrp and end lrp
       if (idx == 0 && path_location->second.edges.size() > 1) {
@@ -221,9 +227,10 @@ int main(int argc, char** argv) {
       std::unordered_map<size_t, std::vector<baldr::PathLocation::PathEdge>> ranked_path_edges;
 
       for (auto edge : path_location->second.edges) {
-        LOG_INFO("potential path edge id: " + std::to_string(edge.id) +
-                 " rank: " + std::to_string(rank(edge)));
-        ranked_path_edges[rank(edge)].push_back(edge);
+
+        auto r = rank(*reader, lrp, edge);
+        LOG_INFO("path edge id: " + std::to_string(edge.id) + " rank: " + std::to_string(r));
+        ranked_path_edges[r].push_back(edge);
       }
       lrp_ranked_path_edges.push_back(ranked_path_edges);
     }
@@ -352,6 +359,9 @@ int main(int argc, char** argv) {
     exit(1);
 
   double length = path_list[0].back().path_distance;
+  LOG_INFO("length: " + std::to_string(length));
+  LOG_INFO("lr.getLength: " + std::to_string(lr.getLength()));
+
   if (std::abs(length - lr.getLength()) <= LENGTH_TOLERANCE_M) {
     std::vector<std::string> edge_ids;
     for (const auto& p : path_list) {
