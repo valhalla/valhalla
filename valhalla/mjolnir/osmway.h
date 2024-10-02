@@ -14,7 +14,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-
 // OSM way
 struct OSMWay {
   OSMWay() {
