@@ -127,7 +127,7 @@ void print_final_result(int start_rank,
 
 std::vector<std::vector<thor::PathInfo>> compute_path(const baldr::PathLocation& start,
                                                       const baldr::PathLocation& end,
-                                                      sif::mode_costing_t mode_costing,
+                                                      const sif::mode_costing_t& mode_costing,
                                                       sif::TravelMode mode,
                                                       baldr::GraphReader& reader) {
 
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
   auto lr = baldr::OpenLR::OpenLr(argv[2], true);
 
   std::vector<baldr::Location> locations =
-      lr.lrps | ranges::view::transform(lrp_to_location) | ranges::to<std::vector>();
+      lr.lrps | ranges::views::transform(lrp_to_location) | ranges::to<std::vector>();
 
   {
     // flip the bearing of the last lrp by 180
@@ -197,8 +197,9 @@ int main(int argc, char** argv) {
                 std::to_string(latlng.second));
       exit(1);
     } else {
-      boost::range::remove_erase_if(path_location->second.edges,
-                                    [&](const auto& edge) { return rank(*reader, lrp, edge) > 1; });
+      boost::range::remove_erase_if(path_location->second.edges, [lrp, &reader](const auto& edge) {
+        return rank(*reader, lrp, edge) > 1;
+      });
 
       // process start lrp and end lrp
       if (idx == 0 && path_location->second.edges.size() > 1) {
@@ -207,7 +208,7 @@ int main(int argc, char** argv) {
 
         auto count = ranges::count_if(path_location->second.edges, at_end);
 
-        if (count != path_location->second.edges.size()) {
+        if (static_cast<size_t>(count) != path_location->second.edges.size()) {
           // remove the edge if the location is projected at the end of the edge
           boost::range::remove_erase_if(path_location->second.edges, at_end);
         }
@@ -317,34 +318,31 @@ int main(int argc, char** argv) {
       continue;
     }
 
-    for (const auto& [start, end] :
-         ranges::cartesian_product_view(start_edges->second, end_edges->second)) {
-      // copy
-      baldr::PathLocation start_path_location = projections.find(first_location)->second;
-      baldr::PathLocation end_path_location = projections.find(last_location)->second;
+    // copy
+    baldr::PathLocation start_path_location = projections.find(first_location)->second;
+    baldr::PathLocation end_path_location = projections.find(last_location)->second;
 
-      start_path_location.edges = start_edges->second;
-      end_path_location.edges = end_edges->second;
+    start_path_location.edges = start_edges->second;
+    end_path_location.edges = end_edges->second;
 
-      auto path_list =
-          compute_path(start_path_location, end_path_location, mode_costing, mode, *reader);
+    auto path_list =
+        compute_path(start_path_location, end_path_location, mode_costing, mode, *reader);
 
-      if (path_list.empty() || path_list[0].empty())
-        continue;
+    if (path_list.empty() || path_list[0].empty())
+      continue;
 
-      double length = path_list[0].back().path_distance;
+    double length = path_list[0].back().path_distance;
 
-      if (std::abs(length - lr.getLength()) <= LENGTH_TOLERANCE_M) {
-        std::vector<std::string> edge_ids;
-        for (const auto& p : path_list) {
-          for (const auto info : p) {
-            edge_ids.push_back(std::to_string(info.edgeid));
-          }
+    if (std::abs(length - lr.getLength()) <= LENGTH_TOLERANCE_M) {
+      std::vector<std::string> edge_ids;
+      for (const auto& p : path_list) {
+        for (const auto info : p) {
+          edge_ids.push_back(std::to_string(info.edgeid));
         }
-        print_final_result(start_rank, end_rank, lr, length, edge_ids);
-        std::cout << boost::algorithm::join(edge_ids, ", ") << std::endl;
-        return 0;
       }
+      print_final_result(start_rank, end_rank, lr, length, edge_ids);
+      std::cout << boost::algorithm::join(edge_ids, ", ") << std::endl;
+      return 0;
     }
   }
 
