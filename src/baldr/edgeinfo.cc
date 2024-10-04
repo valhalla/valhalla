@@ -86,6 +86,7 @@ std::pair<std::vector<std::pair<float, float>>, uint32_t> decode_levels(const st
   uint32_t precision = 0;
   std::vector<std::pair<float, float>> decoded;
   decoded.reserve(4);
+
   auto ptr = encoded.data();
 
   // first varint is the size
