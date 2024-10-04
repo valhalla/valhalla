@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -326,7 +326,7 @@ TEST_F(Levels, EdgeInfoIncludes) {
       {{"I", "J"}, {0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.25, 2.5}},
   };
 
-  for (auto [way, levels] : values) {
+  for (const auto& [way, levels] : values) {
 
     auto edgeId = std::get<0>(gurka::findEdgeByNodes(graphreader, layout, way[0], way[1]));
     for (float i = -2.0f; i <= 100.0f; i = i + 0.25f) {
