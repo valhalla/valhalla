@@ -1128,7 +1128,8 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
         // we're dealing with a range
         std::vector<std::string> nums;
         boost::algorithm::split(
-            nums, token, [](const char c) { return c == dash; }, boost::algorithm::token_compress_on);
+            nums, token, [&dash](const char c) { return c == dash; },
+            boost::algorithm::token_compress_on);
 
         try {
           std::smatch match;
