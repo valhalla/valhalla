@@ -31,7 +31,21 @@ std::string encode_level(const float lvl, const int precision = 0) {
   encoded.reserve(2);
 
   int val = static_cast<int>(lvl * pow(10, precision));
-  val = val < 0 ? ~(static_cast<unsigned int>(lvl) << 1) : val << 1;
+  const bool negative = val < 0;
+  if (negative) {
+    // convert to positive
+    val *= -1;
+    // flip
+    val = ~val;
+    // add 1
+    val += 1;
+  }
+
+  val <<= 1;
+
+  if (negative)
+    val = ~val;
+
   // we take 7 bits of this at a time
   while (val > 0x7f) {
     // marking the most significant bit means there are more pieces to come
