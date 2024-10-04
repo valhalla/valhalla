@@ -506,7 +506,7 @@ bool EdgeInfo::includes_level(float lvl) const {
                                   });
     if (lower != decoded.end())
       return lower->first <= lvl && lvl <= lower->second;
-  } catch (...) { LOG_ERROR("Unable to parse encoded level, way_id " + wayid()); }
+  } catch (...) { LOG_ERROR("Unable to parse encoded level, way_id " + std::to_string(wayid())); }
   return false;
 }
 

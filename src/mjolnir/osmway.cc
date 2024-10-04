@@ -1133,7 +1133,7 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
 
         try {
           std::smatch match;
-          for (auto num : nums) {
+          for (const auto& num : nums) {
             if (std::regex_search(num, match, kFloatRegex)) {
               precision = std::max(precision, static_cast<int>(match[1].str().size()));
             }
