@@ -1232,6 +1232,33 @@ TEST(Mapmatch, test_loop_matching) {
   }
 }
 
+TEST(Mapmatch, test_loop_matching_walk_or_snap) {
+  // The walk_or_snap case sometimes incorrectly identifies trivial cases where it can optimize away.
+  // This tests loops which are not trivial.
+  std::vector<std::string> test_cases = {
+      // Simple loop around a block; incorrectly identified as trivial in such a way that
+      // it caused an exception in TripLegBuilder (no maneuvers)
+      R"({"shape_match":"walk_or_snap", "shape":[
+          {"lat": 52.11870746741026, "lon": 5.117783546447755, "type": "break", "node_snap_tolerance": 0},
+          {"lat": 52.11905661947785, "lon": 5.118234157562257, "type": "via", "node_snap_tolerance": 0},
+          {"lat": 52.11934977334695, "lon": 5.117751359939576, "type": "via", "node_snap_tolerance": 0},
+          {"lat": 52.118852398789194, "lon": 5.116935968399049, "type": "via", "node_snap_tolerance": 0},
+          {"lat": 52.11852959643748, "lon": 5.117445588111878, "type": "via", "node_snap_tolerance": 0},
+          {"lat": 52.11870746741026, "lon": 5.117783546447755, "type": "break", "node_snap_tolerance": 0}],
+          "costing":"auto"})",
+  };
+
+  api_tester tester;
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    // Verify that the map_snap output matches the walk_or_snap output.
+    // This approach is inspired by the above.
+    auto map_snap_case = R"({"shape_match":"map_snap)" + test_cases[i].substr(28);
+    auto map_snapped = tester.match(map_snap_case);
+    auto matched = tester.match(test_cases[i]);
+    compare_results(map_snapped, matched);
+  }
+}
+
 TEST(Mapmatch, test_intersection_matching) {
   std::vector<std::string> test_cases = {
       R"({"shape":[

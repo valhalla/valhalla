@@ -13,7 +13,7 @@ Location::SearchFilter::SearchFilter(valhalla::RoadClass min_road_class,
                                      bool exclude_bridge,
                                      bool exclude_ramp,
                                      bool exclude_closures,
-                                     int16_t level)
+                                     float level)
     : min_road_class_(min_road_class), max_road_class_(max_road_class),
       exclude_tunnel_(exclude_tunnel), exclude_bridge_(exclude_bridge), exclude_ramp_(exclude_ramp),
       exclude_closures_(exclude_closures), level_(level) {

@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_set>
 
+#include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/mjolnir/osmaccessrestriction.h>
 #include <valhalla/mjolnir/osmlinguistic.h>
 #include <valhalla/mjolnir/osmnode.h>
@@ -48,6 +49,8 @@ using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRe
 using BikeMultiMap = std::unordered_multimap<uint64_t, OSMBike>;
 using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
 using LinguisticMultiMap = std::unordered_multimap<uint64_t, OSMLinguistic>;
+using ConditionalSpeedLimitsMultiMap =
+    std::unordered_multimap<uint64_t, baldr::ConditionalSpeedLimit>;
 
 // OSMString map uses the way Id as the key and the name index into UniqueNames as the value
 using OSMStringMap = std::unordered_map<uint64_t, uint32_t>;
@@ -134,6 +137,9 @@ struct OSMData {
 
   // Stores the pronunciation languages. Indexed by the way Id.
   LinguisticMultiMap langs;
+
+  // Stores the conditional speed limits ("maxspeed:conditional" osm key). Indexed by the way Id.
+  ConditionalSpeedLimitsMultiMap conditional_speeds;
 
   bool initialized = false;
 };

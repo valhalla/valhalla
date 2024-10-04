@@ -63,7 +63,7 @@ message SearchFilter {
   }
 
   oneof has_level {
-    int32 level = 7; // level to filter edges by
+    float level = 7; // level to filter edges by
   }
 }
 
@@ -348,6 +348,8 @@ message TaggedValue {
     kLevel = 4;
     kLevelRef = 5;
     kLandmark = 6;
+    kConditionalSpeedLimits = 7;
+    kLevels = 8;
     kTunnel = 49;
     kBridge = 50;
   }

@@ -46,7 +46,7 @@ public:
                  bool exclude_bridge = false,
                  bool exclude_ramp = false,
                  bool exclude_closures = true,
-                 int16_t level = kMaxLevel);
+                 float level = kMaxLevel);
 
     valhalla::RoadClass min_road_class_;
     valhalla::RoadClass max_road_class_;
@@ -54,7 +54,7 @@ public:
     bool exclude_bridge_;
     bool exclude_ramp_;
     bool exclude_closures_;
-    int16_t level_;
+    float level_;
 
   protected:
   };
