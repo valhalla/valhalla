@@ -9,6 +9,7 @@
    * CHANGED: voice instructions for OSRM serializer to work better in real-world environment [#4756](https://github.com/valhalla/valhalla/pull/4756)
    * ADDED: Add option `edge.forward` to trace attributes [#4876](https://github.com/valhalla/valhalla/pull/4876)
    * ADDED: Provide conditional speed limits from "maxspeed:conditional" in `/locate` and proto `/route` responses [#4851](https://github.com/valhalla/valhalla/pull/4851)
+   * ADDED: Support multiple levels and level ranges [#4879](https://github.com/valhalla/valhalla/pull/4879)
 
 ## Release Date: 2024-08-21 Valhalla 3.5.0
 * **Removed**

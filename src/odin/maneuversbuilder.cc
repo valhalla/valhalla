@@ -1157,7 +1157,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
 
   // Set the end level ref
   if (curr_edge && !curr_edge->GetLevelRef().empty()) {
-    maneuver.set_end_level_ref(curr_edge->GetLevelRef());
+    if (curr_edge->GetLevelRef().size() > 1) {
+      maneuver.set_end_level_ref("");
+    } else {
+      maneuver.set_end_level_ref(curr_edge->GetLevelRef()[0]);
+    }
   }
 
   // Elevator
@@ -1452,7 +1456,11 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_elevator(true);
     // Set the end level ref
     if (curr_edge && !curr_edge->GetLevelRef().empty()) {
-      maneuver.set_end_level_ref(curr_edge->GetLevelRef());
+      if (curr_edge->GetLevelRef().size() > 1) {
+        maneuver.set_end_level_ref("");
+      } else {
+        maneuver.set_end_level_ref(curr_edge->GetLevelRef()[0]);
+      }
     }
   }
 
@@ -4006,10 +4014,12 @@ void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& m
 
     for (auto node = man->begin_node_index(); node < man->end_node_index(); ++node) {
       auto curr_edge = trip_path_->GetCurrEdge(node);
-      // multipoint routes with `through` or `via` types can have consecutive copies of the same edge
+      // multipoint routes with `through` or `via` types can have consecutive copies of the same
+      // edge
       if (curr_edge != trip_path_->GetCurrEdge(node + 1)) {
         // every time we are about to leave an edge, collect all landmarks in it
-        // and reset distance of each landmark to the distance from the landmark to the maneuver point
+        // and reset distance of each landmark to the distance from the landmark to the maneuver
+        // point
         auto curr_landmarks = curr_edge->landmarks();
         for (auto& l : curr_landmarks) {
           double new_distance =
