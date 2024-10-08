@@ -31,21 +31,8 @@ std::string encode_level(const float lvl, const int precision = 0) {
   encoded.reserve(2);
 
   int val = static_cast<int>(lvl * pow(10, precision));
-  const bool negative = val < 0;
-  if (negative) {
-    // convert to positive
-    val *= -1;
-    // flip
-    val = ~val;
-    // add 1
-    val += 1;
-  }
 
-  val <<= 1;
-
-  if (negative)
-    val = ~val;
-
+  val = val < 0 ? ~(*reinterpret_cast<unsigned int*>(&val) << 1) : val << 1;
   // we take 7 bits of this at a time
   while (val > 0x7f) {
     // marking the most significant bit means there are more pieces to come
@@ -1128,7 +1115,7 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
         // we're dealing with a range
         std::vector<std::string> nums;
         boost::algorithm::split(
-            nums, token, [&dash](const char c) { return c == dash; },
+            nums, token, [&](const char c) { return c == dash; },
             boost::algorithm::token_compress_on);
 
         try {
