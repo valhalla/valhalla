@@ -209,6 +209,8 @@ constexpr uint32_t kMaxAddedTime = 255;
 // this is the minimum we support, i.e. -500 m would result in "no elevation"
 constexpr float kNoElevationData = -500.0f;
 
+constexpr float kDefaultIndoorSearchCutoff = 300.f;
+
 // (building) level constants
 // highest 3-byte value
 constexpr float kLevelRangeSeparator = 1048575.0f;

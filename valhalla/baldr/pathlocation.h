@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/rapidjson_utils.h>
@@ -233,8 +234,8 @@ public:
         l.search_filter_.level_ = loc.search_filter().level();
         if (loc.has_search_cutoff_case()) {
           // set smaller default and add warning
-          l.search_cutoff_ = 300;
-          add_warning(request, 401, std::to_string(300) + " meters");
+          l.search_cutoff_ = kDefaultIndoorSearchCutoff;
+          add_warning(request, 401, std::to_string(kDefaultIndoorSearchCutoff) + " meters");
         }
       }
     }
