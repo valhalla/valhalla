@@ -498,16 +498,12 @@ bool EdgeInfo::includes_level(float lvl) const {
   if (itr == tags.end()) {
     return false;
   }
-  try {
-    auto decoded = std::get<0>(decode_levels(itr->second));
-    auto lower = std::lower_bound(decoded.cbegin(), decoded.cend(), lvl,
-                                  [&](const decltype(decoded)::value_type& val, float lvl) {
-                                    return val.second < lvl;
-                                  });
-    if (lower != decoded.end())
-      return lower->first <= lvl && lvl <= lower->second;
-  } catch (...) { LOG_ERROR("Unable to parse encoded level, way_id " + std::to_string(wayid())); }
-  return false;
+  auto decoded = std::get<0>(decode_levels(itr->second));
+  auto lower = std::lower_bound(decoded.cbegin(), decoded.cend(), lvl,
+                                [&](const decltype(decoded)::value_type& val, float lvl) {
+                                  return val.second < lvl;
+                                });
+  return lower != decoded.end() && lower->first <= lvl && lvl <= lower->second;
 }
 
 std::vector<std::string> EdgeInfo::level_ref() const {
