@@ -260,7 +260,7 @@ public:
           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool route_reach = false) {
     std::vector<Location> pls;
-    for (const auto& l : request.options().locations()) {
+    for (const auto& l : locations) {
       pls.emplace_back(fromPBF(l, request));
     }
     // for regular routing we dont really care about inbound reach for the origin or outbound reach
