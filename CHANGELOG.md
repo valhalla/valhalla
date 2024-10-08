@@ -5,6 +5,7 @@
    * FIXED: Iterate over only `kLandmark` tagged values in `AddLandmarks()` [#4873](https://github.com/valhalla/valhalla/pull/4873)
    * FIXED: `walk_or_snap` mode edge case with loop routes [#4895](https://github.com/valhalla/valhalla/pull/4895)
    * FIXED: `-Wdefaulted-function-deleted` compilation warning/error in `NarrativeBuilder` [#4877](https://github.com/valhalla/valhalla/pull/4877)
+   * FIXED: For a long time we were potentially wrongly encoding varints by using `static_cast` vs `reinterpret_cast` [#4877]https://github.com/valhalla/valhalla/pull/4925
 * **Enhancement**
    * CHANGED: voice instructions for OSRM serializer to work better in real-world environment [#4756](https://github.com/valhalla/valhalla/pull/4756)
    * ADDED: Add option `edge.forward` to trace attributes [#4876](https://github.com/valhalla/valhalla/pull/4876)
