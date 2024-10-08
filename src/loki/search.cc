@@ -39,8 +39,8 @@ bool search_filter(const DirectedEdge* edge,
          (filter.exclude_tunnel_ && edge->tunnel()) || (filter.exclude_bridge_ && edge->bridge()) ||
          (filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
          (filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
-              tile->IsClosed(edge) ||
-          (filter.level_ != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level_)));
+          tile->IsClosed(edge)) ||
+         (filter.level_ != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level_));
 }
 
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {

@@ -409,8 +409,10 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_ramp
     location->mutable_search_filter()->set_exclude_ramp(
         rapidjson::get<bool>(*search_filter, "/exclude_ramp", false));
-    location->mutable_search_filter()->set_level(
-        rapidjson::get<float>(*search_filter, "/level", static_cast<float>(baldr::kMaxLevel)));
+    auto level =
+        rapidjson::get<float>(*search_filter, "/level", static_cast<float>(baldr::kMaxLevel));
+    if (level != baldr::kMaxLevel)
+      location->mutable_search_filter()->set_level(level);
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf

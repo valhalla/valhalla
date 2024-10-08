@@ -35,7 +35,7 @@ protected:
                           H
                           |
                           |
-                          B-------E        
+                          B-------E
                           |       |
                           |       |
                           I       |
@@ -156,7 +156,7 @@ protected:
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_multi_level_loki", build_config);
   }
 
-  valhalla::Api Route(const std::vector<Waypoint>& waypoints) {
+  valhalla::Api Route(const std::vector<Waypoint>& waypoints, float cutoff = -1) {
     std::vector<std::string> nodes;
     std::unordered_map<std::string, std::string> options;
     for (size_t index = 0; index < waypoints.size(); ++index) {
@@ -165,7 +165,9 @@ protected:
       if (wp.preferred_level) {
         options["/locations/" + std::to_string(index) + "/search_filter/level"] =
             std::to_string(*wp.preferred_level);
-        // options["/locations/" + std::to_string(index) + "/radius"] = "200";
+        if (cutoff > -1) {
+          options["/locations/" + std::to_string(index) + "/search_cutoff"] = std::to_string(cutoff);
+        }
       }
     }
     return gurka::do_action(valhalla::Options::route, map, nodes, "pedestrian", options);
@@ -201,4 +203,11 @@ TEST_F(MultiLevelLoki, Cutoff) {
     EXPECT_EQ(e.code, 171);
     EXPECT_STREQ(e.what(), "No suitable edges near location");
   } catch (...) { FAIL() << "Failed with unexpected exception type"; }
+}
+
+TEST_F(MultiLevelLoki, CutoffOverride) {
+  try {
+    auto result = Route({{"x", 0, 0}, {"z", 0, 1}}, 9000);
+    EXPECT_EQ(result.info().warnings().size(), 0);
+  } catch (...) { FAIL() << "Shoud succeed"; }
 }
