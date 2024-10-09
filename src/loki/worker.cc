@@ -29,6 +29,7 @@ using namespace valhalla::loki;
 namespace valhalla {
 namespace loki {
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
+                                    Api& request,
                                     std::optional<valhalla_exception_t> required_exception) {
   if (locations->size()) {
     for (auto& location : *locations) {
@@ -48,9 +49,25 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
       if (!location.has_node_snap_tolerance_case())
         location.set_node_snap_tolerance(default_node_snap_tolerance);
 
-      if (!location.has_search_cutoff_case())
-        location.set_search_cutoff(default_search_cutoff);
+      const bool has_level =
+          location.has_search_filter() && location.search_filter().has_level_case();
 
+      if (!location.has_search_cutoff_case() && !has_level) {
+        // no level and no cutoff, provide regular default
+        location.set_search_cutoff(default_search_cutoff);
+      } else if (location.has_search_cutoff_case() && has_level) {
+        // level and cutoff, clamp value to limit candidate search in case of bogus level input
+        auto search_cutoff = location.has_search_cutoff_case()
+                                 ? std::min(kMaxIndoorSearchCutoff, location.search_cutoff())
+                                 : kDefaultIndoorSearchCutoff;
+        location.set_search_cutoff(search_cutoff);
+        add_warning(request, 303, std::to_string(search_cutoff) + " meters");
+      } else if (!location.has_search_cutoff_case() && has_level) {
+        // level and no cutoff, set special default
+        location.set_search_cutoff(kDefaultIndoorSearchCutoff);
+        add_warning(request, 302, std::to_string(kDefaultIndoorSearchCutoff) + " meters");
+      }
+      // if there is a level search filter and
       if (!location.has_street_side_tolerance_case())
         location.set_street_side_tolerance(default_street_side_tolerance);
 
@@ -101,7 +118,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
       throw valhalla_exception_t{157, std::to_string(max_exclude_locations)};
     }
     try {
-      auto exclude_locations = PathLocation::fromPBF(api, options.exclude_locations());
+      auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
       auto results = loki::Search(exclude_locations, *reader, costing);
       std::unordered_set<uint64_t> avoids;
       auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();

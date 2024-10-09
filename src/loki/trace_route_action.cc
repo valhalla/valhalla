@@ -175,8 +175,8 @@ void loki_worker_t::trace(Api& request) {
 // actually use the display_ll now as its  used in loki::Search
 void loki_worker_t::locations_from_shape(Api& request) {
   auto& options = *request.mutable_options();
-  std::vector<baldr::Location> locations{PathLocation::fromPBF(*options.shape().begin(), request),
-                                         PathLocation::fromPBF(*options.shape().rbegin(), request)};
+  std::vector<baldr::Location> locations{PathLocation::fromPBF(*options.shape().begin()),
+                                         PathLocation::fromPBF(*options.shape().rbegin())};
   locations.front().node_snap_tolerance_ = 0.f;
   locations.front().radius_ = 10;
   locations.back().node_snap_tolerance_ = 0.f;

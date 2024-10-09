@@ -118,14 +118,14 @@ int main(int argc, char* argv[]) {
   }
 
   // Process locations
-  auto locations = PathLocation::fromPBF(request, options.locations());
+  auto locations = PathLocation::fromPBF(options.locations());
   if (locations.size() != 1) {
     // TODO - for now just 1 location - maybe later allow multiple?
     throw std::runtime_error("Requires a single location");
   }
 
   // Process avoid locations
-  auto exclude_locations = PathLocation::fromPBF(request, options.exclude_locations());
+  auto exclude_locations = PathLocation::fromPBF(options.exclude_locations());
   if (exclude_locations.size() == 0) {
     LOG_INFO("No avoid locations");
   }

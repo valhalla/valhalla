@@ -41,13 +41,12 @@ valhalla::gurka::map PathlocationSerialization::map = {};
 void TryLocationSerializeAndDeserialize(const PathLocation& originalLoc) {
   GraphReader reader(PathlocationSerialization::map.config.get_child("mjolnir"));
   valhalla::Location odinLoc;
-  valhalla::Api api;
 
   // Serialize the passed in location
   PathLocation::toPBF(originalLoc, &odinLoc, reader);
 
   // Deserialize it back so we can sanity check the serialization
-  PathLocation loc = PathLocation::fromPBF(odinLoc, api);
+  PathLocation loc = PathLocation::fromPBF(odinLoc);
 
   // Make sure the object we got back is equivalent to the original
   EXPECT_EQ(originalLoc, loc) << "Deserialized location is not equal to the original";

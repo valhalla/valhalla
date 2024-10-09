@@ -44,7 +44,7 @@ namespace valhalla {
 namespace loki {
 
 void loki_worker_t::init_route(Api& request) {
-  parse_locations(request.mutable_options()->mutable_locations());
+  parse_locations(request.mutable_options()->mutable_locations(), request);
   // need to check location size here instead of in parse_locations because of locate action needing
   // a different size
   if (request.options().locations_size() < 2) {
@@ -101,7 +101,7 @@ void loki_worker_t::route(Api& request) {
   // correlate the various locations to the underlying graph
   std::unordered_map<size_t, size_t> color_counts;
   try {
-    auto locations = PathLocation::fromPBF(request, options.locations(), true);
+    auto locations = PathLocation::fromPBF(options.locations(), true);
     const auto projections = loki::Search(locations, *reader, costing);
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);

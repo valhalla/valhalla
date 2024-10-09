@@ -1141,3 +1141,132 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
 }
 
 INSTANTIATE_TEST_SUITE_P(SearchFilter, ClosuresWithTimedepRoutes, ::testing::ValuesIn(buildParams()));
+
+/*********************************************************************/
+
+struct Waypoint {
+  std::string node;
+  int16_t preferred_level;
+};
+class MultiLevelLoki : public ::testing::Test {
+protected:
+  static gurka::map map;
+  static std::string ascii_map;
+  static gurka::nodelayout layout;
+  static void SetUpTestSuite() {
+    constexpr double gridsize_metres = 50;
+
+    /**
+     * Difficult to represent visually, so here is a stacked view:
+     *
+     * ground level:
+     *  C-----------------D
+     *  |                 |
+     *  |                 |
+     *  |                 |
+     * (A)---------------(B)
+     *
+     * first floor:
+     *   G---------------H
+     *   |               |
+     *   |               |
+     *   |               |
+     *  (E)-------------(F)
+     *
+     * () = connected via stairs
+     */
+    ascii_map = R"(
+      C-G-----------H-D
+      | |  x    y   | |
+      | |           | |
+      | |           | |                z
+      | |           | |                       w
+      | |           | |
+      A~E-----------F~B
+    )";
+
+    const gurka::ways ways = {
+        // ground floor
+        {"AB", {{"highway", "corridor"}, {"level", "0"}}},
+        {"AC", {{"highway", "corridor"}, {"level", "0"}}},
+        {"CD", {{"highway", "corridor"}, {"level", "0"}}},
+        {"DB", {{"highway", "corridor"}, {"level", "0"}}},
+        // level 1
+        {"EG", {{"highway", "corridor"}, {"level", "1"}}},
+        {"EF", {{"highway", "corridor"}, {"level", "1"}}},
+        {"GH", {{"highway", "corridor"}, {"level", "1"}}},
+        {"HF", {{"highway", "corridor"}, {"level", "1"}}},
+        // stairs
+        {"AE", {{"highway", "steps"}, {"level", "0;1"}}},
+        {"FB", {{"highway", "steps"}, {"level", "0;1"}}},
+
+    };
+
+    layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_multi_level_loki", {});
+  }
+
+  valhalla::Api Route(const std::vector<Waypoint>& waypoints, unsigned int cutoff = 0) {
+    std::vector<std::string> nodes;
+    std::unordered_map<std::string, std::string> options;
+    for (size_t index = 0; index < waypoints.size(); ++index) {
+      const auto& wp = waypoints[index];
+      nodes.emplace_back(wp.node);
+      options["/locations/" + std::to_string(index) + "/search_filter/level"] =
+          std::to_string(wp.preferred_level);
+      if (cutoff > 0) {
+        options["/locations/" + std::to_string(index) + "/search_cutoff"] = std::to_string(cutoff);
+      }
+    }
+    return gurka::do_action(valhalla::Options::route, map, nodes, "pedestrian", options);
+  }
+};
+gurka::map MultiLevelLoki::map = {};
+std::string MultiLevelLoki::ascii_map = {};
+gurka::nodelayout MultiLevelLoki::layout = {};
+
+TEST_F(MultiLevelLoki, TraverseLevels) {
+  auto result = Route({{"x", 0}, {"y", 1}});
+  ASSERT_EQ(result.info().warnings().size(), 2);
+  EXPECT_EQ(result.info().warnings().Get(0).code(), 302);
+  EXPECT_EQ(result.info().warnings().Get(1).code(), 302);
+  gurka::assert::raw::expect_path(result, {"CD", "AC", "AE", "EG", "GH"});
+}
+
+TEST_F(MultiLevelLoki, NonExistentLevel) {
+  try {
+    auto result = Route({{"x", 0}, {"y", 6}});
+    FAIL() << "We should not get to here";
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, 171);
+    EXPECT_STREQ(e.what(), "No suitable edges near location");
+  } catch (...) { FAIL() << "Failed with unexpected exception type"; }
+}
+
+TEST_F(MultiLevelLoki, Cutoff) {
+  try {
+    auto result = Route({{"x", 0}, {"z", 1}});
+    FAIL() << "We should not get to here";
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, 171);
+    EXPECT_STREQ(e.what(), "No suitable edges near location");
+  } catch (...) { FAIL() << "Failed with unexpected exception type"; }
+}
+
+TEST_F(MultiLevelLoki, CutoffOverride) {
+  try {
+    auto result = Route({{"x", 0}, {"z", 1}}, 9000);
+    EXPECT_EQ(result.info().warnings().size(), 2);
+  } catch (...) { FAIL() << "Shoud succeed"; }
+}
+
+TEST_F(MultiLevelLoki, CutoffClamped) {
+  try {
+    // w is about 1300m away, so the search_cutoff being clamped to 1000 should result
+    // in an exception
+    auto result = Route({{"x", 0}, {"w", 1}}, 2000);
+    FAIL() << "Should fail";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 171); } catch (...) {
+    FAIL() << "Failed with unexpected exception type";
+  };
+}

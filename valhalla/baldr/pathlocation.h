@@ -184,7 +184,7 @@ public:
     return Location::StopType::BREAK_THROUGH;
   }
 
-  static Location fromPBF(const valhalla::Location& loc, valhalla::Api& request) {
+  static Location fromPBF(const valhalla::Location& loc) {
     auto side = PreferredSide::EITHER;
     if (loc.preferred_side() == valhalla::Location::same)
       side = PreferredSide::SAME;
@@ -230,13 +230,8 @@ public:
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
       l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
-      if (loc.search_filter().has_level()) {
+      if (loc.search_filter().has_level_case()) {
         l.search_filter_.level_ = loc.search_filter().level();
-        if (loc.has_search_cutoff_case()) {
-          // set smaller default and add warning
-          l.search_cutoff_ = kDefaultIndoorSearchCutoff;
-          add_warning(request, 401, std::to_string(kDefaultIndoorSearchCutoff) + " meters");
-        }
       }
     }
     if (loc.has_display_ll()) {
@@ -257,12 +252,11 @@ public:
    * @return
    */
   static std::vector<Location>
-  fromPBF(Api& request,
-          const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+  fromPBF(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool route_reach = false) {
     std::vector<Location> pls;
     for (const auto& l : locations) {
-      pls.emplace_back(fromPBF(l, request));
+      pls.emplace_back(fromPBF(l));
     }
     // for regular routing we dont really care about inbound reach for the origin or outbound reach
     // for the destination so we remove that requirement
