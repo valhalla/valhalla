@@ -81,16 +81,16 @@ std::string MultiLayerLoki::ascii_map = {};
 gurka::nodelayout MultiLayerLoki::layout = {};
 
 TEST_F(MultiLayerLoki, test_multilevel_loki) {
-  auto result = Route({{"B", -1}, {"G"}});
+  auto result = Route({{"B", -1}, {"G", std::nullopt}});
   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"HI"}));
 
-  result = Route({{"B", 0}, {"G"}});
+  result = Route({{"B", 0}, {"G", std::nullopt}});
   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"BE", "EF", "FD", "DG"}));
   result = Route({{"B"}, {"G"}});
   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"HI"}));
 }
 
 TEST_F(MultiLayerLoki, test_no_matching_layer) {
-  auto result = Route({{"E", -1}, {"G"}});
+  auto result = Route({{"E", -1}, {"G", std::nullopt}});
   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"EF", "FD", "DG"}));
 }
