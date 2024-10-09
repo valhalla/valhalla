@@ -86,7 +86,7 @@ TEST_F(MultiLayerLoki, test_multilevel_loki) {
 
   result = Route({{"B", 0}, {"G", std::nullopt}});
   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"BE", "EF", "FD", "DG"}));
-  result = Route({{"B"}, {"G"}});
+  result = Route({{"B", std::nullopt}, {"G", std::nullopt}});
   gurka::assert::osrm::expect_steps(result, std::vector<std::string>({"HI"}));
 }
 
