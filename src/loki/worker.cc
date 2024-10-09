@@ -69,6 +69,43 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     throw valhalla_exception_t{124};
   }
 
+  auto costings = options.costings();
+  for (auto& pair : costings) {
+    auto hard_exclude_options = pair.second.options();
+    if (!allow_hard_exclusions) {
+      bool exclusion_detected = false;
+
+      if (hard_exclude_options.exclude_bridges()) {
+        hard_exclude_options.set_exclude_bridges(false);
+        exclusion_detected = true;
+      }
+
+      if (hard_exclude_options.exclude_tolls()) {
+        hard_exclude_options.set_exclude_tolls(false);
+        exclusion_detected = true;
+      }
+
+      if (hard_exclude_options.exclude_tunnels()) {
+        hard_exclude_options.set_exclude_tunnels(false);
+        exclusion_detected = true;
+      }
+
+      if (hard_exclude_options.exclude_highways()) {
+        hard_exclude_options.set_exclude_highways(false);
+        exclusion_detected = true;
+      }
+
+      if (hard_exclude_options.exclude_ferries()) {
+        hard_exclude_options.set_exclude_ferries(false);
+        exclusion_detected = true;
+      }
+
+      if (exclusion_detected) {
+        add_warning(api, 208);
+      }
+    }
+  }
+
   const auto& costing_str = Costing_Enum_Name(options.costing_type());
   try {
     // For the begin and end of multimodal we expect you to be walking
@@ -161,7 +198,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
-      min_resample(config.get<float>("service_limits.skadi.min_resample")) {
+      min_resample(config.get<float>("service_limits.skadi.min_resample")),
+      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)) {
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -185,7 +223,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
-        kv.first == "status") {
+        kv.first == "status" || kv.first == "allow_hard_exclusions") {
       continue;
     }
     if (kv.first != "trace") {
@@ -248,6 +286,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   // assign max_distance_disable_hierarchy_culling
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
+  allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
 
   // signal that the worker started successfully
   started();
