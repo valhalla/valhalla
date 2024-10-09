@@ -17,7 +17,6 @@ namespace {
 struct Waypoint {
   std::string node;
   std::optional<int8_t> preferred_layer;
-  std::optional<int16_t> preferred_level;
 };
 
 } // namespace
