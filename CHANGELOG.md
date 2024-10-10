@@ -1,6 +1,11 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2024-10-10 Valhalla 3.5.1
+* **Removed**
+* **Bug Fix**
    * FIXED: All logging in `valhalla_export_edges` now goes to stderr [#4892](https://github.com/valhalla/valhalla/pull/4892)
    * FIXED: Iterate over only `kLandmark` tagged values in `AddLandmarks()` [#4873](https://github.com/valhalla/valhalla/pull/4873)
    * FIXED: `walk_or_snap` mode edge case with loop routes [#4895](https://github.com/valhalla/valhalla/pull/4895)
