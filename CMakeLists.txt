@@ -127,10 +127,10 @@ find_package(Threads REQUIRED)
 
 # resolve vendored libraries
 set(date_include_dir ${VALHALLA_SOURCE_DIR}/third_party/date/include)
-set(rapidjson_include_dir ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include)
-set(robinhoodhashing_include_dir ${CMAKE_SOURCE_DIR}/third_party/robin-hood-hashing/src/include)
+set(rapidjson_include_dir ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)
+set(robinhoodhashing_include_dir ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include)
 set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
-set(dirent_include_dir ${CMAKE_SOURCE_DIR}/third_party/dirent/include)
+set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
 if (PREFER_EXTERNAL_DEPS)
   # date
   find_package(date QUIET)

@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
+   * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
 * **Enhancement**
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
