@@ -43,3 +43,6 @@
 [submodule "third_party/tz"]
 	path = third_party/tz
 	url = https://github.com/eggert/tz.git
+[submodule "third_party/range-v3"]
+	path = third_party/range-v3
+	url = https://github.com/ericniebler/range-v3
