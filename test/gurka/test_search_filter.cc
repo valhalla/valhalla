@@ -1148,7 +1148,7 @@ struct Waypoint {
   std::string node;
   int16_t preferred_level;
 };
-class MultiLevelLoki : public ::testing::Test {
+class LevelSearchFilter : public ::testing::Test {
 protected:
   static gurka::map map;
   static std::string ascii_map;
@@ -1221,19 +1221,18 @@ protected:
     return gurka::do_action(valhalla::Options::route, map, nodes, "pedestrian", options);
   }
 };
-gurka::map MultiLevelLoki::map = {};
-std::string MultiLevelLoki::ascii_map = {};
-gurka::nodelayout MultiLevelLoki::layout = {};
+gurka::map LevelSearchFilter::map = {};
+std::string LevelSearchFilter::ascii_map = {};
+gurka::nodelayout LevelSearchFilter::layout = {};
 
-TEST_F(MultiLevelLoki, TraverseLevels) {
+TEST_F(LevelSearchFilter, TraverseLevels) {
   auto result = Route({{"x", 0}, {"y", 1}});
-  ASSERT_EQ(result.info().warnings().size(), 2);
+  ASSERT_EQ(result.info().warnings().size(), 1);
   EXPECT_EQ(result.info().warnings().Get(0).code(), 302);
-  EXPECT_EQ(result.info().warnings().Get(1).code(), 302);
   gurka::assert::raw::expect_path(result, {"CD", "AC", "AE", "EG", "GH"});
 }
 
-TEST_F(MultiLevelLoki, NonExistentLevel) {
+TEST_F(LevelSearchFilter, NonExistentLevel) {
   try {
     auto result = Route({{"x", 0}, {"y", 6}});
     FAIL() << "We should not get to here";
@@ -1243,7 +1242,7 @@ TEST_F(MultiLevelLoki, NonExistentLevel) {
   } catch (...) { FAIL() << "Failed with unexpected exception type"; }
 }
 
-TEST_F(MultiLevelLoki, Cutoff) {
+TEST_F(LevelSearchFilter, Cutoff) {
   try {
     auto result = Route({{"x", 0}, {"z", 1}});
     FAIL() << "We should not get to here";
@@ -1253,14 +1252,14 @@ TEST_F(MultiLevelLoki, Cutoff) {
   } catch (...) { FAIL() << "Failed with unexpected exception type"; }
 }
 
-TEST_F(MultiLevelLoki, CutoffOverride) {
+TEST_F(LevelSearchFilter, CutoffOverride) {
   try {
     auto result = Route({{"x", 0}, {"z", 1}}, 9000);
-    EXPECT_EQ(result.info().warnings().size(), 2);
+    EXPECT_EQ(result.info().warnings().size(), 1);
   } catch (...) { FAIL() << "Shoud succeed"; }
 }
 
-TEST_F(MultiLevelLoki, CutoffClamped) {
+TEST_F(LevelSearchFilter, CutoffClamped) {
   try {
     // w is about 1300m away, so the search_cutoff being clamped to 1000 should result
     // in an exception

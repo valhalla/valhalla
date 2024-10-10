@@ -410,10 +410,8 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_ramp
     location->mutable_search_filter()->set_exclude_ramp(
         rapidjson::get<bool>(*search_filter, "/exclude_ramp", false));
-    auto level =
-        rapidjson::get<float>(*search_filter, "/level", static_cast<float>(baldr::kMaxLevel));
-    if (level != baldr::kMaxLevel)
-      location->mutable_search_filter()->set_level(level);
+    location->mutable_search_filter()->set_level(
+        rapidjson::get<float>(*search_filter, "/level", baldr::kMaxLevel));
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf
@@ -426,8 +424,8 @@ void parse_location(valhalla::Location* location,
       location->mutable_search_filter()->clear_max_road_class();
     if (location->search_filter().has_exclude_closures_case())
       exclude_closures = location->search_filter().exclude_closures();
-    if (location->search_filter().has_level())
-      location->mutable_search_filter()->clear_level();
+    if (!location->search_filter().has_level_case())
+      location->mutable_search_filter()->set_level(baldr::kMaxLevel);
   }
 
   // if you specified both of these they may contradict so we throw up our hands
@@ -444,6 +442,8 @@ void parse_location(valhalla::Location* location,
   if (!location->search_filter().has_max_road_class_case()) {
     location->mutable_search_filter()->set_max_road_class(valhalla::kMotorway);
   }
+  if (!location->search_filter().has_level_case())
+    location->mutable_search_filter()->set_level(baldr::kMaxLevel);
 
   float waiting_secs = rapidjson::get<float>(r_loc, "/waiting", 0.f);
   switch (location->type()) {

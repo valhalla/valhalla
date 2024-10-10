@@ -31,6 +31,8 @@ namespace loki {
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
                                     Api& request,
                                     std::optional<valhalla_exception_t> required_exception) {
+  bool has_302 = false, has_303 = false;
+
   if (locations->size()) {
     for (auto& location : *locations) {
       if (!location.has_minimum_reachability_case())
@@ -50,22 +52,21 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
         location.set_node_snap_tolerance(default_node_snap_tolerance);
 
       const bool has_level =
-          location.has_search_filter() && location.search_filter().has_level_case();
+          location.has_search_filter() && location.search_filter().level() != baldr::kMaxLevel;
 
       if (!location.has_search_cutoff_case() && !has_level) {
         // no level and no cutoff, provide regular default
         location.set_search_cutoff(default_search_cutoff);
       } else if (location.has_search_cutoff_case() && has_level) {
         // level and cutoff, clamp value to limit candidate search in case of bogus level input
-        auto search_cutoff = location.has_search_cutoff_case()
-                                 ? std::min(kMaxIndoorSearchCutoff, location.search_cutoff())
-                                 : kDefaultIndoorSearchCutoff;
-        location.set_search_cutoff(search_cutoff);
-        add_warning(request, 303, std::to_string(search_cutoff) + " meters");
+        if (location.search_cutoff() > kMaxIndoorSearchCutoff) {
+          has_303 = location.search_cutoff() > kMaxIndoorSearchCutoff;
+          location.set_search_cutoff(kMaxIndoorSearchCutoff);
+        }
       } else if (!location.has_search_cutoff_case() && has_level) {
         // level and no cutoff, set special default
         location.set_search_cutoff(kDefaultIndoorSearchCutoff);
-        add_warning(request, 302, std::to_string(kDefaultIndoorSearchCutoff) + " meters");
+        has_302 = true;
       }
       // if there is a level search filter and
       if (!location.has_street_side_tolerance_case())
@@ -74,6 +75,11 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
       if (!location.has_street_side_max_distance_case())
         location.set_street_side_max_distance(default_street_side_max_distance);
     }
+    if (has_302)
+      add_warning(request, 302, std::to_string(kDefaultIndoorSearchCutoff));
+    if (has_303)
+      add_warning(request, 303, std::to_string(kMaxIndoorSearchCutoff));
+
   } else if (required_exception) {
     throw *required_exception;
   }

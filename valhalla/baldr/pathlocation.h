@@ -230,9 +230,7 @@ public:
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
       l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
-      if (loc.search_filter().has_level_case()) {
-        l.search_filter_.level_ = loc.search_filter().level();
-      }
+      l.search_filter_.level_ = loc.search_filter().level();
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
