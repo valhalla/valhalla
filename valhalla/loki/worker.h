@@ -48,6 +48,7 @@ public:
 
 protected:
   void parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
+                       Api& request,
                        std::optional<valhalla_exception_t> required_exception = valhalla_exception_t{
                            110});
   void parse_trace(Api& request);

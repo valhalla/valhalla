@@ -3,12 +3,14 @@
 
 #include <vector>
 
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/options.pb.h>
+#include <valhalla/worker.h>
 
 namespace valhalla {
 namespace baldr {
@@ -228,6 +230,7 @@ public:
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
       l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
+      l.search_filter_.level_ = loc.search_filter().level();
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};

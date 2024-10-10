@@ -34,11 +34,13 @@ bool search_filter(const DirectedEdge* edge,
   // Note that min_ and max_road_class are integers where, by default, max_road_class
   // is 0 and min_road_class is 7. This filter rejects roads where the functional
   // road class is outside of the min to max range.
+
   return (road_class > min_road_class || road_class < max_road_class) ||
          (filter.exclude_tunnel_ && edge->tunnel()) || (filter.exclude_bridge_ && edge->bridge()) ||
          (filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
          (filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
-          tile->IsClosed(edge));
+          tile->IsClosed(edge)) ||
+         (filter.level_ != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level_));
 }
 
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
