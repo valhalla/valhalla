@@ -3,14 +3,12 @@
 
 #include <vector>
 
-#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/options.pb.h>
-#include <valhalla/worker.h>
 
 namespace valhalla {
 namespace baldr {
