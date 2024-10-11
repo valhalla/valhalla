@@ -723,6 +723,7 @@ void OSMData::cleanup_temp_files(const std::string& tile_dir) {
   remove_temp_file(tile_dir + lane_connectivity_file);
   remove_temp_file(tile_dir + pronunciation_file);
   remove_temp_file(tile_dir + language_file);
+  remove_temp_file(tile_dir + conditional_speed_limit_file);
 }
 
 } // namespace mjolnir
