@@ -60,7 +60,7 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
       } else if (location.has_search_cutoff_case() && has_level) {
         // level and cutoff, clamp value to limit candidate search in case of bogus level input
         if (location.search_cutoff() > kMaxIndoorSearchCutoff) {
-          has_303 = location.search_cutoff() > kMaxIndoorSearchCutoff;
+          has_303 = true;
           location.set_search_cutoff(kMaxIndoorSearchCutoff);
         }
       } else if (!location.has_search_cutoff_case() && has_level) {
