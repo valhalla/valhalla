@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdlib>
 
+#include "baldr/edgeinfo.h"
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"
 #include "midgard/constants.h"
@@ -523,19 +524,31 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
   return name_list;
 }
 
-std::string EnhancedTripLeg_Edge::GetLevelRef() const {
-  std::string level_ref;
+std::vector<std::string> EnhancedTripLeg_Edge::GetLevelRef() const {
+  std::vector<std::string> level_refs;
+  std::vector<std::string> levels;
+
+  // try to get level_refs, else create some from levels as fallback
   if (!tagged_value().empty()) {
     for (int t = 0; t < tagged_value().size(); ++t) {
       if (tagged_value().Get(t).type() == TaggedValue_Type_kLevelRef) {
-        level_ref = tagged_value().Get(t).value();
-        break;
-      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevel) {
-        level_ref = "Level " + tagged_value().Get(t).value();
+        level_refs.emplace_back(tagged_value().Get(t).value());
+      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevels) {
+        // parse varint encoded levels, we're only interested in single
+        // level values though
+        const auto& encoded = tagged_value().Get(t).value();
+        std::vector<std::pair<float, float>> decoded;
+        uint32_t precision;
+        std::tie(decoded, precision) = baldr::decode_levels(encoded);
+        if (decoded.size() == 1 && decoded[0].first == decoded[0].second) {
+          std::stringstream ss;
+          ss << std::fixed << std::setprecision(precision) << decoded[0].first;
+          levels.emplace_back("Level " + ss.str());
+        }
       }
     }
   }
-  return level_ref;
+  return level_refs.empty() ? levels : level_refs;
 }
 
 float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
