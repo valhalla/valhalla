@@ -424,8 +424,6 @@ void parse_location(valhalla::Location* location,
       location->mutable_search_filter()->clear_max_road_class();
     if (location->search_filter().has_exclude_closures_case())
       exclude_closures = location->search_filter().exclude_closures();
-    if (!location->search_filter().has_level_case())
-      location->mutable_search_filter()->set_level(baldr::kMaxLevel);
   }
 
   // if you specified both of these they may contradict so we throw up our hands
