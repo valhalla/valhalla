@@ -684,8 +684,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
-      opp_edge->use() == Use::kPlatformConnection ||
-      CheckExclusions(opp_edge, pred)) {
+      opp_edge->use() == Use::kPlatformConnection || CheckExclusions(opp_edge, pred)) {
     return false;
   }
 
@@ -874,7 +873,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options){};
+  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options) {};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;

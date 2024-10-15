@@ -546,8 +546,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_turn_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
-      IsUserAvoidEdge(edgeid) ||
-      CheckExclusions(edge, pred)) {
+      IsUserAvoidEdge(edgeid) || CheckExclusions(edge, pred)) {
     return false;
   }
 
@@ -584,8 +583,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
       (!ignore_turn_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
-      IsUserAvoidEdge(opp_edgeid) ||
-      CheckExclusions(opp_edge, pred)) {
+      IsUserAvoidEdge(opp_edgeid) || CheckExclusions(opp_edge, pred)) {
     return false;
   }
 
@@ -898,7 +896,7 @@ namespace {
 
 class TestBicycleCost : public BicycleCost {
 public:
-  TestBicycleCost(const Costing& costing_options) : BicycleCost(costing_options){};
+  TestBicycleCost(const Costing& costing_options) : BicycleCost(costing_options) {};
 
   using BicycleCost::alley_penalty_;
   using BicycleCost::country_crossing_cost_;
