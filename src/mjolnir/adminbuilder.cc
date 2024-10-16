@@ -433,6 +433,19 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return false;
   }
 
+  /* creating a MULTIPOLYGON Geometry column */
+  sql = "SELECT AddGeometryColumn('admins', ";
+  sql += "'geom', 4326, 'MULTIPOLYGON', 2)";
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return false;
+  }
+
+  LOG_INFO("Created admin table.");
+
   /* creating an admin access table
    * We could support all the commented out
    * columns below; however, for now we only
@@ -481,19 +494,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   LOG_INFO("Created admin access table.");
-
-  /* creating a MULTIPOLYGON Geometry column */
-  sql = "SELECT AddGeometryColumn('admins', ";
-  sql += "'geom', 4326, 'MULTIPOLYGON', 2)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return false;
-  }
-
-  LOG_INFO("Created admin table.");
+  LOG_INFO("Start populating admin tables.");
 
   /*
    * inserting some MULTIPOLYGONs
