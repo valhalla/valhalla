@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/common.pb.h>
@@ -44,7 +45,8 @@ public:
                  bool exclude_tunnel = false,
                  bool exclude_bridge = false,
                  bool exclude_ramp = false,
-                 bool exclude_closures = true);
+                 bool exclude_closures = true,
+                 float level = kMaxLevel);
 
     valhalla::RoadClass min_road_class_;
     valhalla::RoadClass max_road_class_;
@@ -52,6 +54,7 @@ public:
     bool exclude_bridge_;
     bool exclude_ramp_;
     bool exclude_closures_;
+    float level_;
 
   protected:
   };
