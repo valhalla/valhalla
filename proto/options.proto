@@ -317,6 +317,11 @@ message Costing {
       float hgv_no_access_penalty = 85;
     }
     float use_truck_route = 86;
+    bool exclude_bridges = 87;
+    bool exclude_tunnels = 88;
+    bool exclude_tolls = 89;
+    bool exclude_highways = 90;
+    bool exclude_ferries = 91;
   }
 
   oneof has_options {
