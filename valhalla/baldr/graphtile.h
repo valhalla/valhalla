@@ -649,13 +649,17 @@ public:
     *flow_sources = kNoFlowMask;
 
     // TODO: Make this configurable if possible and contribute the changes
-    constexpr double LIVE_SPEED_FADE = 1. / 10800.;
+    // constexpr double LIVE_SPEED_FADE = 1. / 10800.;
 
     // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
     // route live-traffic gives more information about current congestion situation. But the further
     // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
     // Want to have a smooth decrease function.
-    float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
+    // float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
+
+    // Instead of fading the traffic we want it to hard cut off after 3 hours, while taking in the
+    // full traffic before that.
+    float live_traffic_multiplier = seconds_from_now < 10800 ? 1.0 : 0.0;
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
     if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
