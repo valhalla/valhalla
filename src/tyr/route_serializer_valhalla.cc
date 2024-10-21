@@ -534,7 +534,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     if (api.options().admin_crossings() && trip_leg_itr->admin_size() > 0) {
       // write the admin array
       writer.start_array("admins");
-      for (auto admin : trip_leg_itr->admin()) {
+      for (const auto& admin : trip_leg_itr->admin()) {
         writer.start_object();
         writer("country_code", admin.country_code());
         writer("country_text", admin.country_text());
