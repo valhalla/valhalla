@@ -396,6 +396,9 @@ Each leg of the trip includes a summary, which is comprised of the same informat
 
 If `elevation_interval` is specified, each leg of the trip will return `elevation` along the route as a JSON array. The `elevation_interval` is also returned. Units for both `elevation` and `elevation_interval` are either meters or feet based on the input units specified. 
 
+If a trip leg includes level changes (i.e. when navigating inside a building), each leg in the JSON 
+response will have a `level_changes` member containing an array in the form of `[[shape_index, level], ...]` that can be used to split up the geometry along the level changes. 
+
 Each maneuver includes:
 
 | Maneuver item | Description |

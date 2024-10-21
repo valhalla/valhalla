@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -83,6 +83,27 @@ protected:
 gurka::map Indoor::map = {};
 std::string Indoor::ascii_map = {};
 gurka::nodelayout Indoor::layout = {};
+
+/**
+ * Convenience function to make sure that
+ *   a) the JSON response has a "level_changes" member and
+ *   b) that it indicates level changes as expected
+ */
+void check_level_changes(rapidjson::Document& doc, const std::vector<std::vector<float>>& expected) {
+  EXPECT_TRUE(doc["trip"]["legs"][0].HasMember("level_changes"));
+  auto level_changes = doc["trip"]["legs"][0]["level_changes"].GetArray();
+  EXPECT_EQ(level_changes.Size(), expected.size());
+  for (int i = 0; i < expected.size(); ++i) {
+    auto expected_entry = expected[i];
+    auto change_entry = level_changes[i].GetArray();
+    EXPECT_EQ(change_entry.Size(), expected_entry.size());
+    for (int j = 0; j < expected_entry.size(); ++j) {
+      auto expected_value = expected_entry[j];
+      auto change_value = change_entry[j].GetFloat();
+      EXPECT_EQ(change_value, expected_value);
+    }
+  }
+}
 
 /*************************************************************/
 
@@ -272,6 +293,43 @@ TEST_F(Indoor, CombineStepsManeuvers) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
                                                             "Take the stairs to Level 3.", "", "", "",
                                                             "");
+}
+
+TEST_F(Indoor, StepsLevelChanges) {
+  // get a route via steps and check the level changelog
+  std::string route_json;
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"A", "J"}, "pedestrian",
+                       {{"/costing_options/pedestrian/elevator_penalty", "3600"}}, {}, &route_json);
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "Cx", "xy", "yJ"});
+  rapidjson::Document doc;
+  doc.Parse(route_json.c_str());
+
+  check_level_changes(doc, {{0.f, 0.f}, {4.f, 3.f}});
+}
+
+TEST_F(Indoor, EdgeElevatorLevelChanges) {
+  // get a route via an edge-modeled elevator and check the level changelog
+  std::string route_json;
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "pedestrian", {}, {}, &route_json);
+  gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"});
+  rapidjson::Document doc;
+  doc.Parse(route_json.c_str());
+
+  check_level_changes(doc, {{0.f, 1.f}, {2.f, 2.f}});
+}
+
+TEST_F(Indoor, NodeElevatorLevelChanges) {
+  // get a route via a node-modeled elevator and check the level changelog
+  std::string route_json;
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"H", "J"}, "pedestrian", {}, {}, &route_json);
+  gurka::assert::raw::expect_path(result, {"HI", "IJ"});
+  rapidjson::Document doc;
+  doc.Parse(route_json.c_str());
+
+  check_level_changes(doc, {{0.f, 2.f}, {1.f, 3.f}});
 }
 
 /****************************************************************************************/

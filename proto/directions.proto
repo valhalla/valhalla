@@ -141,6 +141,7 @@ message DirectionsLeg {
   Summary summary = 5;
   repeated Maneuver maneuver = 6;
   string shape = 7;
+  repeated LevelChange level_changes = 8;
 }
 
 message DirectionsRoute {

@@ -1052,7 +1052,10 @@ void ProcessTunnelBridgeTaggedValue(valhalla::StreetName* trip_edge_name,
  * @param  has_junction_name  True if named junction exists, false otherwise
  * @param  start_tile         The start tile of the start node
  * @param  blind_instructions Whether instructions should be generated for blind users
- *
+ * @param  prev_level         The previous level the path is on. Gets updated if the new edge is
+ *                            on a different level.
+ * @param  trip               The trip path
+ * @param  shape_index        The index of the edges first point into the final leg shape
  */
 TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const GraphId& edge,
@@ -1071,7 +1074,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const graph_tile_ptr& start_tile,
                           const uint8_t restrictions_idx,
                           float elapsed_secs,
-                          bool blind_instructions) {
+                          bool blind_instructions,
+                          float& prev_level,
+                          TripLeg& trip,
+                          const uint32_t shape_index) {
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
@@ -1208,6 +1214,31 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set forward if requested
   if (controller(kEdgeForward)) {
     trip_edge->set_forward(directededge->forward());
+  }
+
+  std::vector<std::pair<float, float>> levels;
+  uint32_t precision;
+  std::tie(levels, precision) = edgeinfo.levels();
+  // for the level changes, only consider edges on a single level
+  if (levels.size() == 1 && levels[0].first == levels[0].second) {
+    auto& lvl = levels[0].first;
+    // if this edge is on a different level than the previous one,
+    // add a level change
+    if (std::fabs(lvl - prev_level) >= std::numeric_limits<float>::epsilon()) {
+      auto* change = trip.add_level_changes();
+      change->set_level(lvl);
+      change->set_shape_index(shape_index);
+      change->set_precision(std::max(static_cast<uint32_t>(1), precision));
+      prev_level = lvl;
+    }
+  }
+  if (controller(kEdgeLevels)) {
+    trip_edge->set_level_precision(std::max(static_cast<uint32_t>(1), precision));
+    for (const auto& level : levels) {
+      auto proto_level = trip_edge->mutable_levels()->Add();
+      proto_level->set_start(level.first);
+      proto_level->set_end(level.second);
+    }
   }
 
   uint8_t kAccess = 0;
@@ -1789,6 +1820,9 @@ void TripLegBuilder::Build(
   // prepare to make some edges!
   trip_path.mutable_node()->Reserve((path_end - path_begin) + 1);
 
+  // collect the level changes
+  float prev_level = kMaxLevel;
+
   // we track the intermediate locations while we iterate so we can update their shape index
   // from the edge index that we assigned to them earlier in route_action
   auto intermediate_itr = trip_path.mutable_location()->begin() + 1;
@@ -1891,20 +1925,22 @@ void TripLegBuilder::Build(
     multimodal_builder.Build(trip_node, edge_itr->trip_id, node, startnode, directededge, edge,
                              start_tile, graphtile, mode_costing, controller, graphreader);
 
+    uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
+
     // Add edge to the trip node and set its attributes
     TripLeg_Edge* trip_edge =
         AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
                     travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
                     time_info, startnode.id(), node->named_intersection(), start_tile,
                     edge_itr->restriction_index, edge_itr->elapsed_cost.secs,
-                    travel_type == PedestrianType::kBlind && mode == sif::TravelMode::kPedestrian);
+                    travel_type == PedestrianType::kBlind && mode == sif::TravelMode::kPedestrian,
+                    prev_level, trip_path, begin_index);
 
     // some information regarding shape/length trimming
     float trim_start_pct = is_first_edge ? start_pct : 0;
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
     // Some edges at the beginning and end of the path and at intermediate locations will need trimmed
-    uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
     auto trimming = edge_trimming.end();
     if (!edge_trimming.empty() &&
