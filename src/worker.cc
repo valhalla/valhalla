@@ -874,6 +874,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_linear_references(*linear_references);
   }
 
+  auto admin_crossings = rapidjson::get_optional<bool>(doc, "/admin_crossings");
+  if (admin_crossings) {
+    options.set_admin_crossings(*admin_crossings);
+  }
+
   // whatever our costing is, check to see if we are going to ignore_closures
   std::stringstream ss;
   ss << "/costing_options/" << costing_str << "/ignore_closures";

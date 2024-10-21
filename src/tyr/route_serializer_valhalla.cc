@@ -530,6 +530,45 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       writer.end_array(); // elevation
     }
 
+    // Does the user want admin info?
+    if (api.options().admin_crossings() && trip_leg_itr->admin_size() > 0) {
+      // write the admin array
+      writer.start_array("admins");
+      for (auto admin : trip_leg_itr->admin()) {
+        writer.start_object();
+        writer("country_code", admin.country_code());
+        writer("country_text", admin.country_text());
+        writer("state_code", admin.state_code());
+        writer("state_text", admin.state_text());
+        writer.end_object();
+      }
+      writer.end_array();
+      uint32_t* last_admin_index = nullptr;
+      auto node_itr = trip_leg_itr->node().begin();
+      writer.start_array("admin_crossings");
+
+      // we go through the nodes while keeping track of the last admin we've seen
+      while (node_itr != trip_leg_itr->node().end()) {
+        if (!last_admin_index || (*last_admin_index) != node_itr->admin_index()) {
+          // if there was a previous admin,
+          if (last_admin_index) {
+            auto prev_node_itr = node_itr - 1;
+            writer.start_object();
+            writer("from_admin_index", static_cast<uint64_t>(*last_admin_index));
+            writer("to_admin_index", static_cast<uint64_t>(node_itr->admin_index()));
+            writer("begin_shape_index",
+                   static_cast<uint64_t>(prev_node_itr->edge().begin_shape_index()));
+            writer("end_shape_index", static_cast<uint64_t>(prev_node_itr->edge().end_shape_index()));
+            writer.end_object();
+          }
+          auto cur_index = node_itr->admin_index();
+          last_admin_index = &cur_index;
+        }
+        ++node_itr;
+      }
+      writer.end_array();
+    }
+
     writer.start_object("summary");
     writer("has_time_restrictions", has_time_restrictions);
     writer("has_toll", has_toll);
