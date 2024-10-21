@@ -33,11 +33,19 @@
 
 #include <fstream>
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <thread>
+#include <vector>
+#include <queue>
+#include <mutex>
+#include <condition_variable>
 
 // this describes the low-level blob storage
 #include <valhalla/proto/fileformat.pb.h>
 // this describes the high-level OSM objects
 #include <valhalla/proto/osmformat.pb.h>
+#include "mjolnir/util.h"
 
 // extend the protobuf osmpbf namespace
 namespace OSMPBF {
@@ -80,11 +88,31 @@ struct Callback {
 // the parser used to get data out of the osmpbf file
 class Parser {
 public:
+  // Constructor that initializes the thread pool with a specified number of threads
+  explicit Parser(int numThreads);
+  
+  // Deleted default constructor
   Parser() = delete;
-  // parse the pbf file for the things you are interested in
-  static void parse(std::ifstream& file, const Interest interest, Callback& callback);
-  // clean up protobuf library level memory, this will make protobuf unusable after its called
+  
+  // Parses the PBF file for the specified interest and uses the callback
+  void parse(std::ifstream& file, const Interest interest, Callback& callback);
+
+  // Cleans up protobuf library level memory, making protobuf unusable after its called
   static void free();
+  
+private:
+  void read_file(std::ifstream& file, const Interest interest, Callback& callback);
+
+  struct Task {
+    char* buffer;
+    char* unpack_buffer;
+    BlobHeader header;
+    int32_t size;
+  };
+
+  valhalla::mjolnir::ThreadPool thread_pool;  // Thread pool for managing tasks
+
+  void process_task(Task task, const Interest interest, Callback& callback);
 };
 
 } // namespace OSMPBF
