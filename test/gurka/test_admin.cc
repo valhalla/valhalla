@@ -270,3 +270,99 @@ TEST(Standalone, AdminCrossingsMultiple) {
   EXPECT_EQ(crossings[2]["begin_shape_index"].GetUint64(), 5);
   EXPECT_EQ(crossings[2]["end_shape_index"].GetUint64(), 6);
 }
+
+TEST(Standalone, AdminCrossingsNone) {
+  constexpr double gridsize_metres = 100;
+
+  // No borders, just one admin
+  const std::string ascii_map = R"(
+   A
+   |
+   B
+   |
+   C
+    \
+     D
+      \
+       E
+       |
+       F
+       |
+       G
+  )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "motorway"}}}, {"BC", {{"highway", "motorway"}}},
+                            {"CD", {{"highway", "motorway"}}}, {"DE", {{"highway", "motorway"}}},
+                            {"EF", {{"highway", "motorway"}}}, {"FG", {{"highway", "motorway"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-111.96, 50.0});
+  const auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_admin_country",
+                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}}});
+  std::string result_json;
+  rapidjson::Document result;
+  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                              {{"/admin_crossings", "1"}}, {}, &result_json);
+  result.Parse(result_json.c_str());
+
+  ASSERT_EQ(result["trip"]["legs"].Size(), 1);
+
+  // Expect admin list at leg level
+  auto leg = result["trip"]["legs"][0].GetObject();
+  EXPECT_TRUE(leg.HasMember("admins"));
+  EXPECT_EQ(leg["admins"].GetArray().Size(), 1);
+  EXPECT_STREQ(leg["admins"][0]["country_code"].GetString(), "CA");
+  EXPECT_STREQ(leg["admins"][0]["state_code"].GetString(), "");
+  EXPECT_STREQ(leg["admins"][0]["country_text"].GetString(), "Canada");
+  EXPECT_STREQ(leg["admins"][0]["state_text"].GetString(), "");
+
+  // But no admin_crossings
+  EXPECT_FALSE(leg.HasMember("admin_crossings"));
+}
+
+// Crossing from no admin into an admin
+TEST(Standalone, AdminCrossingsEnter) {
+  constexpr double gridsize_metres = 100;
+
+  // From no admin to GB at DE
+  const std::string ascii_map = R"(
+  A-B-C-D+E-F-G
+  )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "motorway"}}}, {"BC", {{"highway", "motorway"}}},
+                            {"CD", {{"highway", "motorway"}}}, {"DE", {{"highway", "motorway"}}},
+                            {"EF", {{"highway", "motorway"}}}, {"FG", {{"highway", "motorway"}}}};
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-4.96381, 53.437069});
+  const auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_admin_enter",
+                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}}});
+  std::string result_json;
+  rapidjson::Document result;
+  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                              {{"/admin_crossings", "1"}}, {}, &result_json);
+  result.Parse(result_json.c_str());
+
+  ASSERT_EQ(result["trip"]["legs"].Size(), 1);
+
+  // Expect admin list at leg level
+  auto leg = result["trip"]["legs"][0].GetObject();
+  EXPECT_TRUE(leg.HasMember("admins"));
+  EXPECT_EQ(leg["admins"].GetArray().Size(), 2);
+  EXPECT_STREQ(leg["admins"][0]["country_code"].GetString(), "");
+  EXPECT_STREQ(leg["admins"][0]["state_code"].GetString(), "");
+  EXPECT_STREQ(leg["admins"][0]["country_text"].GetString(), "None");
+  EXPECT_STREQ(leg["admins"][0]["state_text"].GetString(), "None");
+  EXPECT_STREQ(leg["admins"][1]["country_code"].GetString(), "GB");
+  EXPECT_STREQ(leg["admins"][1]["state_code"].GetString(), "WLS");
+  EXPECT_STREQ(leg["admins"][1]["country_text"].GetString(), "United Kingdom");
+  EXPECT_STREQ(leg["admins"][1]["state_text"].GetString(), "Cymru / Wales");
+
+  auto crossings = leg["admin_crossings"].GetArray();
+  EXPECT_EQ(crossings.Size(), 1);
+  EXPECT_EQ(crossings[0]["from_admin_index"], 0);
+  EXPECT_EQ(crossings[0]["to_admin_index"], 1);
+  EXPECT_EQ(crossings[0]["begin_shape_index"].GetUint64(), 3);
+  EXPECT_EQ(crossings[0]["end_shape_index"].GetUint64(), 4);
+}

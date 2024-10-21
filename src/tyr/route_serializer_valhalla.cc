@@ -543,30 +543,28 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
         writer.end_object();
       }
       writer.end_array();
-      uint32_t* last_admin_index = nullptr;
-      auto node_itr = trip_leg_itr->node().begin();
-      writer.start_array("admin_crossings");
 
-      // we go through the nodes while keeping track of the last admin we've seen
-      while (node_itr != trip_leg_itr->node().end()) {
-        if (!last_admin_index || (*last_admin_index) != node_itr->admin_index()) {
-          // if there was a previous admin,
-          if (last_admin_index) {
-            auto prev_node_itr = node_itr - 1;
+      if (trip_leg_itr->admin_size() > 1) {
+        // write the admin crossings
+        auto node_itr = trip_leg_itr->node().begin();
+        auto next_node_itr = trip_leg_itr->node().begin();
+        next_node_itr++;
+        writer.start_array("admin_crossings");
+
+        while (next_node_itr != trip_leg_itr->node().end()) {
+          if (next_node_itr->admin_index() != node_itr->admin_index()) {
             writer.start_object();
-            writer("from_admin_index", static_cast<uint64_t>(*last_admin_index));
-            writer("to_admin_index", static_cast<uint64_t>(node_itr->admin_index()));
-            writer("begin_shape_index",
-                   static_cast<uint64_t>(prev_node_itr->edge().begin_shape_index()));
-            writer("end_shape_index", static_cast<uint64_t>(prev_node_itr->edge().end_shape_index()));
+            writer("from_admin_index", static_cast<uint64_t>(node_itr->admin_index()));
+            writer("to_admin_index", static_cast<uint64_t>(next_node_itr->admin_index()));
+            writer("begin_shape_index", static_cast<uint64_t>(node_itr->edge().begin_shape_index()));
+            writer("end_shape_index", static_cast<uint64_t>(node_itr->edge().end_shape_index()));
             writer.end_object();
           }
-          auto cur_index = node_itr->admin_index();
-          last_admin_index = &cur_index;
+          ++node_itr;
+          ++next_node_itr;
         }
-        ++node_itr;
+        writer.end_array();
       }
-      writer.end_array();
     }
 
     writer.start_object("summary");
