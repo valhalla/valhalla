@@ -42,7 +42,7 @@ jobs:
         run: |
           HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
           sudo python -m venv .venv && source .venv/bin/activate
-          python -m pip install requests shapely
+          sudo python -m pip install requests shapely
           git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j$(sysctl -n hw.logicalcpu) && sudo make install
 
       - name: Get branch name
