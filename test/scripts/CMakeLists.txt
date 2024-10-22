@@ -1,10 +1,5 @@
 # be aware: the python modules that need testing, need to be symlinked to the test/scripts folder with a .py extension
 
-# FindPython should return first matching version instead of newest
-if (POLICY CMP0094)  # https://cmake.org/cmake/help/latest/policy/CMP0094.html
-        cmake_policy(SET CMP0094 NEW)  
-endif ()
-
 find_package(Python COMPONENTS Interpreter)
 if (Python_FOUND)
   add_custom_command(OUTPUT scripts.log
