@@ -48,16 +48,6 @@ jobs:
       - name: Get branch name
         run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
 
-      - name: Restore ccache
-        id: cache-ccache-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/Library/Caches/ccache
-          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
-          restore-keys: |
-            ccache-osx-master
-            ccache-osx-
-
       - name: Configure CMake
         run: |
           source .venv/bin/activate
