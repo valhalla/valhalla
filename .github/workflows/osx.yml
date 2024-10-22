@@ -59,15 +59,15 @@ jobs:
             ccache-osx-
 
       - name: Configure CMake
-        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON
+        run: |
+          source .venv/bin/activate
+          cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON
 
       - name: Build Valhalla
         run: make -C build -j$(sysctl -n hw.logicalcpu)
 
       - name: Build Tests
-        run: |
-          source .venv/bin/activate
-          make -C build -j$(sysctl -n hw.logicalcpu) tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
 
       - name: Save ccache
         uses: actions/cache/save@v4
