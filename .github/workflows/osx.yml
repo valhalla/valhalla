@@ -65,7 +65,9 @@ jobs:
         run: make -C build -j$(sysctl -n hw.logicalcpu)
 
       - name: Build Tests
-        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
+        run: |
+          source .venv/bin/activate
+          make -C build -j$(sysctl -n hw.logicalcpu) tests
 
       - name: Save ccache
         uses: actions/cache/save@v4
@@ -75,7 +77,6 @@ jobs:
 
       - name: Run Tests
         run: |
-          source .venv/bin/activate
           make -C build -j$(sysctl -n hw.logicalcpu) check
 
       - name: Setup tmate session
