@@ -40,26 +40,32 @@ jobs:
 
       - name: Install dependencies
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
-          sudo python -m venv .venv && source .venv/bin/activate
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
+          export PATH="$(brew --prefix python)/libexec/bin:$PATH"
           sudo python -m pip install requests shapely
           git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j$(sysctl -n hw.logicalcpu) && sudo make install
 
       - name: Get branch name
         run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
 
+      - name: Restore ccache
+        id: cache-ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
+          restore-keys: |
+            ccache-osx-master
+            ccache-osx-
+
       - name: Configure CMake
-        run: |
-          source .venv/bin/activate
-          cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON
+        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON
 
       - name: Build Valhalla
         run: make -C build -j$(sysctl -n hw.logicalcpu)
 
       - name: Build Tests
-        run: |
-          source .venv/bin/activate
-          make -C build -j$(sysctl -n hw.logicalcpu) tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
 
       - name: Save ccache
         uses: actions/cache/save@v4
@@ -68,9 +74,7 @@ jobs:
           key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
 
       - name: Run Tests
-        run: |
-          source .venv/bin/activate
-          make -C build -j$(sysctl -n hw.logicalcpu) check
+        run: make -C build -j$(sysctl -n hw.logicalcpu) check
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
