@@ -80,6 +80,7 @@ const std::string kEdgeIndoor = "edge.indoor";
 const std::string kEdgeLandmarks = "edge.landmarks";
 const std::string kEdgeCountryCrossing = "edge.country_crossing";
 const std::string kEdgeForward = "edge.forward";
+const std::string kEdgeLevels = "edge.levels";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";

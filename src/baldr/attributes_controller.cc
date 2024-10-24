@@ -84,6 +84,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeLandmarks, true},
     {kEdgeCountryCrossing, true},
     {kEdgeForward, true},
+    {kEdgeLevels, true},
 
     // Node keys
     {kIncidents, false},

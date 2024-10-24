@@ -209,6 +209,12 @@ message TripLeg {
     bool country_crossing = 58;
     bool forward = 59;
     repeated ConditionalSpeedLimit conditional_speed_limits = 60;
+    message Level {
+      float start = 1;
+      float end = 2;
+    }
+    repeated Level levels = 61;
+    uint32 level_precision = 62;
   }
 
   message IntersectingEdge {
@@ -316,6 +322,7 @@ message TripLeg {
   repeated string algorithms = 12;
   repeated Closure closures = 13;
   Summary summary = 14;
+  repeated LevelChange level_changes = 15;
 }
 
 message TripRoute {
