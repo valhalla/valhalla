@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -93,11 +93,11 @@ void check_level_changes(rapidjson::Document& doc, const std::vector<std::vector
   EXPECT_TRUE(doc["trip"]["legs"][0].HasMember("level_changes"));
   auto level_changes = doc["trip"]["legs"][0]["level_changes"].GetArray();
   EXPECT_EQ(level_changes.Size(), expected.size());
-  for (int i = 0; i < expected.size(); ++i) {
+  for (size_t i = 0; i < expected.size(); ++i) {
     auto expected_entry = expected[i];
     auto change_entry = level_changes[i].GetArray();
     EXPECT_EQ(change_entry.Size(), expected_entry.size());
-    for (int j = 0; j < expected_entry.size(); ++j) {
+    for (size_t j = 0; j < expected_entry.size(); ++j) {
       auto expected_value = expected_entry[j];
       auto change_value = change_entry[j].GetFloat();
       EXPECT_EQ(change_value, expected_value);
