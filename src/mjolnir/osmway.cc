@@ -1128,13 +1128,13 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
           range.first = std::stof(nums[0]);
           range.second = std::stof(nums[1]);
         } catch (...) {
-          LOG_ERROR("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
+          LOG_WARN("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
           continue;
         }
 
         if (range.first > range.second) {
-          LOG_ERROR("Invalid level range, " + std::to_string(range.first) + " - " +
-                    std::to_string(range.second) + "; way_id " + std::to_string(osmwayid_));
+          LOG_WARN("Invalid level range, " + std::to_string(range.first) + " - " +
+                   std::to_string(range.second) + "; way_id " + std::to_string(osmwayid_));
           continue;
         }
 
@@ -1147,7 +1147,7 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
           range.first = std::stof(token);
           range.second = range.first;
         } catch (...) {
-          LOG_ERROR("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
+          LOG_WARN("Invalid level: " + token + "; way_id " + std::to_string(osmwayid_));
           continue;
         }
       }
