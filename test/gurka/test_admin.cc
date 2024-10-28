@@ -430,8 +430,12 @@ TEST(Standalone, AdminAlongEdge) {
 
   // build the PBF
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0, 0});
-  std::string workdir = "test/data/gurka_admin_along/";
-  std::string pbf_fname = workdir + "map.pbf";
+  std::string workdir = "test/data/gurka_admin_along";
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
+    EXPECT_TRUE(created);
+  }
+  std::string pbf_fname = workdir + "/map.pbf";
   std::vector<std::string> input_files = {pbf_fname};
   gurka::detail::build_pbf(layout, ways, {}, relations, pbf_fname, 0, false);
 
