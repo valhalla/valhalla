@@ -530,8 +530,10 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       writer.end_array(); // elevation
     }
 
+    writer.start_object("summary");
+
     // Does the user want admin info?
-    if (api.options().admin_crossings() && trip_leg_itr->admin_size() > 0) {
+    if (api.options().admin_crossings()) {
       // write the admin array
       writer.start_array("admins");
       for (const auto& admin : trip_leg_itr->admin()) {
@@ -567,7 +569,6 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       }
     }
 
-    writer.start_object("summary");
     writer("has_time_restrictions", has_time_restrictions);
     writer("has_toll", has_toll);
     writer("has_highway", has_highway);
