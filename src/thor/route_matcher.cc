@@ -492,20 +492,23 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
       index++;
     }
 
-    // Did not find the end of the origin edge. Check for trivial route on a single edge
-    for (const auto& end : end_nodes) {
-      if (end.second.first.graph_id() == edge.graph_id()) {
-        // Update the elapsed time based on edge cost
-        uint8_t flow_sources;
-        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, time_info,
-                                                                  flow_sources) *
-                   (end.second.first.percent_along() - edge.percent_along());
-        if (options.use_timestamps())
-          elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
+    // Look for trivial cases if we didn't bail based on checking more than the edge length
+    if (length <= de_length) {
+      // Did not find the end of the origin edge. Check for trivial route on a single edge
+      for (const auto& end : end_nodes) {
+        if (end.second.first.graph_id() == edge.graph_id()) {
+          // Update the elapsed time based on edge cost
+          uint8_t flow_sources;
+          elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, time_info,
+                                                                    flow_sources) *
+                     (end.second.first.percent_along() - edge.percent_along());
+          if (options.use_timestamps())
+            elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 
-        // Add end edge
-        path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, 0.f, -1);
-        return true;
+          // Add end edge
+          path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, 0.f, -1);
+          return true;
+        }
       }
     }
   }

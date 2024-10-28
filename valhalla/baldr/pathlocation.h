@@ -131,6 +131,7 @@ public:
     l->mutable_search_filter()->set_exclude_ramp(pl.search_filter_.exclude_ramp_);
     l->mutable_search_filter()->set_exclude_ferry(pl.search_filter_.exclude_ferry_);
     l->mutable_search_filter()->set_exclude_closures(pl.search_filter_.exclude_closures_);
+    l->mutable_search_filter()->set_level(pl.search_filter_.level_);
 
     auto* path_edges = l->mutable_correlation()->mutable_edges();
     for (const auto& e : pl.edges) {
@@ -232,6 +233,7 @@ public:
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
       l.search_filter_.exclude_ferry_ = loc.search_filter().exclude_ferry();
       l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
+      l.search_filter_.level_ = loc.search_filter().level();
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
