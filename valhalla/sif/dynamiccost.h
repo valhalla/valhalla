@@ -297,7 +297,7 @@ public:
    * @param  pred           Predecessor edge information.
    * @return Returns true if edge should be excluded.
    */
-  bool CheckExclusions(const baldr::DirectedEdge* edge, const EdgeLabel& pred) const {
+  inline bool CheckExclusions(const baldr::DirectedEdge* edge, const EdgeLabel& pred) const {
     return has_excludes_ &&
            ((exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
             (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
