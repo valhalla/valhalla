@@ -907,7 +907,7 @@ function filter_tags_generic(kv)
       kv[k] = v
     end
 
-    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
+    if kv["impassable"] == "yes" or kv["smoothness"] == "impassable" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -996,7 +996,7 @@ function filter_tags_generic(kv)
       default_val = tostring(rail)
     end
 
-    if ((ferry == false and rail == false) or kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+    if ((ferry == false and rail == false) or kv["impassable"] == "yes" or kv["smoothness"] == "impassable" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -1931,7 +1931,7 @@ function nodes_proc (kv, nokeys)
   local initial_access = access[kv["access"]]
   local access = initial_access or "true"
 
-  if (kv["impassable"] == "yes" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+  if (kv["impassable"] == "yes" or kv["smoothness"] == "impassable" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
     access = "false"
   end
 
