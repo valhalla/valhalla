@@ -1481,6 +1481,28 @@ public:
         has_surface_ = false;
       }
     };
+
+    // surface and tracktype tag should win over smoothness.
+    tag_handlers_["smoothness"] = [this]() {
+      if (!has_surface_tag_ && !has_tracktype_tag_) {
+        has_surface_ = true;
+        if (tag_.second == "excellent" || tag_.second == "good") {
+          way_.set_surface(Surface::kPavedSmooth);
+        } else if (tag_.second == "intermediate") {
+          way_.set_surface(Surface::kPavedRough);
+        } else if (tag_.second == "bad") {
+          way_.set_surface(Surface::kCompacted);
+        } else if (tag_.second == "very_bad") {
+          way_.set_surface(Surface::kDirt);
+        } else if (tag_.second == "horrible") {
+          way_.set_surface(Surface::kGravel);
+        } else if (tag_.second == "very_horrible") {
+          way_.set_surface(Surface::kPath);
+        } else {
+          has_surface_ = false;
+        }
+      }
+    };
     // surface tag should win over tracktype.
     tag_handlers_["tracktype"] = [this]() {
       if (!has_surface_tag_) {
@@ -2480,6 +2502,9 @@ public:
     if (!has_surface_tag_) {
       has_surface_ = false;
     }
+
+    const auto& tracktype_exists = results.find("tracktype");
+    has_tracktype_tag_ = (tracktype_exists != results.end());
 
     way_.set_drive_on_right(true); // default
 
@@ -4822,7 +4847,7 @@ public:
   bool has_default_speed_ = false, has_max_speed_ = false;
   bool has_average_speed_ = false, has_advisory_speed_ = false;
   bool has_surface_ = true;
-  bool has_surface_tag_ = true;
+  bool has_surface_tag_ = true, has_tracktype_tag_ = true;
   OSMAccess osm_access_;
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> pronunciationMap;
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> langMap;
