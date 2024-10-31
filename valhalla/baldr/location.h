@@ -44,7 +44,9 @@ public:
                  valhalla::RoadClass max_road_class = valhalla::RoadClass::kMotorway,
                  bool exclude_tunnel = false,
                  bool exclude_bridge = false,
+                 bool exclude_toll_ = false,
                  bool exclude_ramp = false,
+                 bool exclude_ferry_ = false,
                  bool exclude_closures = true,
                  float level = kMaxLevel);
 
@@ -52,7 +54,9 @@ public:
     valhalla::RoadClass max_road_class_;
     bool exclude_tunnel_;
     bool exclude_bridge_;
+    bool exclude_toll_;
     bool exclude_ramp_;
+    bool exclude_ferry_;
     bool exclude_closures_;
     float level_;
 
