@@ -1039,23 +1039,21 @@ void ProcessTunnelBridgeTaggedValue(valhalla::StreetName* trip_edge_name,
  * Add trip edge. (TODO more comments)
  * @param  controller         Controller to determine which attributes to set.
  * @param  edge               Identifier of an edge within the tiled, hierarchical graph.
- * @param  trip_id            Trip Id (0 if not a transit edge).
+ * @param  edge_itr           PathInfo iterator
  * @param  block_id           Transit block Id (0 if not a transit edge)
  * @param  mode               Travel mode for the edge: Biking, walking, etc.
  * @param  directededge       Directed edge information.
  * @param  drive_right        Right side driving for this edge.
  * @param  trip_node          Trip node to add the edge information to.
  * @param  graphtile          Graph tile for accessing data.
- * @param  second_of_week     The time, from the beginning of the week in seconds at which
+ * @param  time_info          The time, from the beginning of the week in seconds at which
  *                            the path entered this edge (always monday at noon on timeless route)
  * @param  start_node_idx     The start node index
  * @param  has_junction_name  True if named junction exists, false otherwise
  * @param  start_tile         The start tile of the start node
  * @param  blind_instructions Whether instructions should be generated for blind users
- * @param  prev_level         The previous level the path is on. Gets updated if the new edge is
- *                            on a different level.
- * @param  trip               The trip path
- * @param  shape_index        The index of the edges first point into the final leg shape
+ * @param  edgeinfo           EdgeInfo of the directed edge
+ * @param  levels             level information of the edge
  */
 TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const GraphId& edge,
@@ -1803,25 +1801,6 @@ void TripLegBuilder::Build(
   // collect the level changes
   float prev_level = kMaxLevel;
 
-  // if present, we can use the level search filter for the start level,
-  // in case the start edge traverses multiple levels
-  if (trip_path.location().begin()->has_search_filter() &&
-      trip_path.location().begin()->search_filter().has_level_case()) {
-    graphtile = graphreader.GetGraphTile(path_begin->edgeid, graphtile);
-    const auto* de = graphtile->directededge(path_begin->edgeid);
-    auto begin_ei = graphtile->edgeinfo(de);
-    std::vector<std::pair<float, float>> levels;
-    uint32_t prec;
-    std::tie(levels, prec) = begin_ei.levels();
-    if (levels.size() > 1 || (levels.size() == 1 && levels[0].first != levels[0].second)) {
-      auto* change = trip_path.add_level_changes();
-      change->set_level(trip_path.location().begin()->search_filter().level());
-      change->set_shape_index(0);
-      change->set_precision(prec);
-      prev_level = trip_path.location().begin()->search_filter().level();
-    }
-  }
-
   // we track the intermediate locations while we iterate so we can update their shape index
   // from the edge index that we assigned to them earlier in route_action
   auto intermediate_itr = trip_path.mutable_location()->begin() + 1;
@@ -1936,16 +1915,8 @@ void TripLegBuilder::Build(
                     edgeinfo, levels);
 
     // for the level changes, only consider edges on a single level
-    // or those that correlate to an intermediate location that has
-    // a level search filter set
-    bool use_search_filter =
-        intermediate_itr != trip_path.mutable_location()->end() &&
-        (intermediate_itr->correlation().leg_shape_index() == edge_index || is_last_edge) &&
-        intermediate_itr->has_search_filter() && intermediate_itr->search_filter().has_level_case();
-    bool is_single_level =
-        levels.first.size() == 1 && levels.first[0].first == levels.first[0].second;
-    if (is_single_level || use_search_filter) {
-      float lvl = is_single_level ? levels.first[0].first : intermediate_itr->search_filter().level();
+    if (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second) {
+      float lvl = levels.first[0].first;
       // if this edge is on a different level than the previous one,
       // add a level change
       if (std::fabs(lvl - prev_level) >= std::numeric_limits<float>::epsilon()) {

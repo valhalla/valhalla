@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -336,51 +336,6 @@ TEST_F(Indoor, NodeElevatorLevelChanges) {
   doc.Parse(route_json.c_str());
 
   check_level_changes(doc, {{0, 2.f}, {1, 3.f}});
-}
-
-TEST_F(Indoor, LevelChangesIntermediate) {
-  std::string route_json;
-  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "z", "Y"}, "pedestrian",
-                                 {{"/locations/0/search_filter/level", "0"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/1/search_filter/level", "3"},
-                                  {"/locations/2/search_filter/level", "4"}},
-                                 {}, &route_json);
-  gurka::assert::raw::expect_path(result, {"AB", "AZ", "AZ", "ZY"});
-  rapidjson::Document doc;
-  doc.Parse(route_json.c_str());
-
-  check_level_changes(doc, {{0, 0.f}, {1, 3.f}, {3, 4.f}});
-}
-
-TEST_F(Indoor, LevelChangesBegin) {
-  std::string route_json;
-  auto result = gurka::do_action(valhalla::Options::route, map, {"z", "Y", "W"}, "pedestrian",
-                                 {{"/locations/0/search_filter/level", "3"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/1/search_filter/level", "4"},
-                                  {"/locations/2/search_filter/level", "5"}},
-                                 {}, &route_json);
-  gurka::assert::raw::expect_path(result, {"AZ", "ZY", "YX", "XW"});
-  rapidjson::Document doc;
-  doc.Parse(route_json.c_str());
-
-  check_level_changes(doc, {{0, 3.f}, {1, 4.f}, {3, 5.f}});
-}
-
-TEST_F(Indoor, LevelChangesEnd) {
-  std::string route_json;
-  auto result = gurka::do_action(valhalla::Options::route, map, {"W", "Y", "z"}, "pedestrian",
-                                 {{"/locations/0/search_filter/level", "5"},
-                                  {"/locations/1/type", "through"},
-                                  {"/locations/1/search_filter/level", "4"},
-                                  {"/locations/2/search_filter/level", "3"}},
-                                 {}, &route_json);
-  gurka::assert::raw::expect_path(result, {"XW", "YX", "ZY", "AZ"});
-  rapidjson::Document doc;
-  doc.Parse(route_json.c_str());
-
-  check_level_changes(doc, {{0, 5.f}, {1, 4.f}, {3, 3.f}});
 }
 /****************************************************************************************/
 
