@@ -13,11 +13,16 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
+};
+
+struct level_change_t {
+  uint32_t index;
+  float level;
 };
 
 class Indoor : public ::testing::Test {
@@ -30,7 +35,7 @@ protected:
     constexpr double gridsize_metres = 100;
 
     ascii_map = R"(
-              A
+              AzZ-Y-X-W
               |
               B
               |
@@ -69,6 +74,10 @@ protected:
         {"Cx", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "-1;0-2"}}},
         {"xy", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "2;3"}}},
         {"yJ", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+        {"AZ", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "0-4"}}},
+        {"ZY", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "4"}}},
+        {"YX", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "4;5"}}},
+        {"XW", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "5"}}},
     };
 
     const gurka::nodes nodes = {
@@ -89,19 +98,16 @@ gurka::nodelayout Indoor::layout = {};
  *   a) the JSON response has a "level_changes" member and
  *   b) that it indicates level changes as expected
  */
-void check_level_changes(rapidjson::Document& doc, const std::vector<std::vector<float>>& expected) {
+void check_level_changes(rapidjson::Document& doc, const std::vector<level_change_t>& expected) {
   EXPECT_TRUE(doc["trip"]["legs"][0].HasMember("level_changes"));
   auto level_changes = doc["trip"]["legs"][0]["level_changes"].GetArray();
   EXPECT_EQ(level_changes.Size(), expected.size());
   for (size_t i = 0; i < expected.size(); ++i) {
     auto expected_entry = expected[i];
     auto change_entry = level_changes[i].GetArray();
-    EXPECT_EQ(change_entry.Size(), expected_entry.size());
-    for (size_t j = 0; j < expected_entry.size(); ++j) {
-      auto expected_value = expected_entry[j];
-      auto change_value = change_entry[j].GetFloat();
-      EXPECT_EQ(change_value, expected_value);
-    }
+    EXPECT_EQ(change_entry.Size(), 2);
+    EXPECT_EQ(change_entry[0].GetUint64(), expected_entry.index);
+    EXPECT_EQ(change_entry[1].GetFloat(), expected_entry.level);
   }
 }
 
@@ -305,7 +311,7 @@ TEST_F(Indoor, StepsLevelChanges) {
   rapidjson::Document doc;
   doc.Parse(route_json.c_str());
 
-  check_level_changes(doc, {{0.f, 0.f}, {4.f, 3.f}});
+  check_level_changes(doc, {{0, 0.f}, {4, 3.f}});
 }
 
 TEST_F(Indoor, EdgeElevatorLevelChanges) {
@@ -317,7 +323,7 @@ TEST_F(Indoor, EdgeElevatorLevelChanges) {
   rapidjson::Document doc;
   doc.Parse(route_json.c_str());
 
-  check_level_changes(doc, {{0.f, 1.f}, {2.f, 2.f}});
+  check_level_changes(doc, {{0, 1.f}, {2, 2.f}});
 }
 
 TEST_F(Indoor, NodeElevatorLevelChanges) {
@@ -329,9 +335,53 @@ TEST_F(Indoor, NodeElevatorLevelChanges) {
   rapidjson::Document doc;
   doc.Parse(route_json.c_str());
 
-  check_level_changes(doc, {{0.f, 2.f}, {1.f, 3.f}});
+  check_level_changes(doc, {{0, 2.f}, {1, 3.f}});
 }
 
+TEST_F(Indoor, LevelChangesIntermediate) {
+  std::string route_json;
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "z", "Y"}, "pedestrian",
+                                 {{"/locations/0/search_filter/level", "0"},
+                                  {"/locations/1/type", "through"},
+                                  {"/locations/1/search_filter/level", "3"},
+                                  {"/locations/2/search_filter/level", "4"}},
+                                 {}, &route_json);
+  gurka::assert::raw::expect_path(result, {"AB", "AZ", "AZ", "ZY"});
+  rapidjson::Document doc;
+  doc.Parse(route_json.c_str());
+
+  check_level_changes(doc, {{0, 0.f}, {1, 3.f}, {3, 4.f}});
+}
+
+TEST_F(Indoor, LevelChangesBegin) {
+  std::string route_json;
+  auto result = gurka::do_action(valhalla::Options::route, map, {"z", "Y", "W"}, "pedestrian",
+                                 {{"/locations/0/search_filter/level", "3"},
+                                  {"/locations/1/type", "through"},
+                                  {"/locations/1/search_filter/level", "4"},
+                                  {"/locations/2/search_filter/level", "5"}},
+                                 {}, &route_json);
+  gurka::assert::raw::expect_path(result, {"AZ", "ZY", "YX", "XW"});
+  rapidjson::Document doc;
+  doc.Parse(route_json.c_str());
+
+  check_level_changes(doc, {{0, 3.f}, {1, 4.f}, {3, 5.f}});
+}
+
+TEST_F(Indoor, LevelChangesEnd) {
+  std::string route_json;
+  auto result = gurka::do_action(valhalla::Options::route, map, {"W", "Y", "z"}, "pedestrian",
+                                 {{"/locations/0/search_filter/level", "5"},
+                                  {"/locations/1/type", "through"},
+                                  {"/locations/1/search_filter/level", "4"},
+                                  {"/locations/2/search_filter/level", "3"}},
+                                 {}, &route_json);
+  gurka::assert::raw::expect_path(result, {"XW", "YX", "ZY", "AZ"});
+  rapidjson::Document doc;
+  doc.Parse(route_json.c_str());
+
+  check_level_changes(doc, {{0, 5.f}, {1, 4.f}, {3, 3.f}});
+}
 /****************************************************************************************/
 
 class Levels : public ::testing::Test {
@@ -369,7 +419,6 @@ std::string Levels::ascii_map = {};
 gurka::nodelayout Levels::layout = {};
 
 TEST_F(Levels, EdgeInfoIncludes) {
-
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
   std::vector<std::pair<std::array<std::string, 2>, std::vector<float>>> values = {
@@ -396,7 +445,6 @@ TEST_F(Levels, EdgeInfoIncludes) {
 }
 
 TEST_F(Levels, EdgeInfoJson) {
-
   auto graphreader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
   std::vector<std::string> locs = {
