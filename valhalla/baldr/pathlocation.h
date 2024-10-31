@@ -127,7 +127,9 @@ public:
     l->mutable_search_filter()->set_max_road_class(pl.search_filter_.max_road_class_);
     l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
     l->mutable_search_filter()->set_exclude_bridge(pl.search_filter_.exclude_bridge_);
+    l->mutable_search_filter()->set_exclude_toll(pl.search_filter_.exclude_toll_);
     l->mutable_search_filter()->set_exclude_ramp(pl.search_filter_.exclude_ramp_);
+    l->mutable_search_filter()->set_exclude_ferry(pl.search_filter_.exclude_ferry_);
     l->mutable_search_filter()->set_exclude_closures(pl.search_filter_.exclude_closures_);
     l->mutable_search_filter()->set_level(pl.search_filter_.level_);
 
@@ -227,7 +229,9 @@ public:
       l.search_filter_.max_road_class_ = loc.search_filter().max_road_class();
       l.search_filter_.exclude_tunnel_ = loc.search_filter().exclude_tunnel();
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
+      l.search_filter_.exclude_toll_ = loc.search_filter().exclude_toll();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
+      l.search_filter_.exclude_ferry_ = loc.search_filter().exclude_ferry();
       l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
       l.search_filter_.level_ = loc.search_filter().level();
     }
