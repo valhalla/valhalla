@@ -317,6 +317,11 @@ message Costing {
       float hgv_no_access_penalty = 85;
     }
     float use_truck_route = 86;
+    bool exclude_bridges = 87;
+    bool exclude_tunnels = 88;
+    bool exclude_tolls = 89;
+    bool exclude_highways = 90;
+    bool exclude_ferries = 91;
   }
 
   oneof has_options {
@@ -498,4 +503,5 @@ message Options {
   bool voice_instructions = 57;                                    // Whether to return voiceInstructions in the OSRM serializer response
   bool dedupe = 58;                                                // Keep track of edges and override their properties during expansion,
                                                                    // ensuring that each edge appears in the output only once. [default = false]
+  bool admin_crossings = 59;                                     // Include administrative boundary crossings
 }
