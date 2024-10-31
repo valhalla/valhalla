@@ -158,6 +158,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
   {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
   {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
+  {208, R"(Hard exclusions are not allowed on this server, ignoring hard excludes)"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
@@ -407,9 +408,15 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_bridge
     location->mutable_search_filter()->set_exclude_bridge(
         rapidjson::get<bool>(*search_filter, "/exclude_bridge", false));
+    // search_filter.exclude_toll
+    location->mutable_search_filter()->set_exclude_toll(
+        rapidjson::get<bool>(*search_filter, "/exclude_toll", false));
     // search_filter.exclude_ramp
     location->mutable_search_filter()->set_exclude_ramp(
         rapidjson::get<bool>(*search_filter, "/exclude_ramp", false));
+    // search_filter.exclude_ferry
+    location->mutable_search_filter()->set_exclude_ferry(
+        rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
     location->mutable_search_filter()->set_level(
         rapidjson::get<float>(*search_filter, "/level", baldr::kMaxLevel));
     // search_filter.exclude_closures
