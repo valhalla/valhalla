@@ -99,8 +99,8 @@ gurka::nodelayout Indoor::layout = {};
  *   b) that it indicates level changes as expected
  */
 void check_level_changes(rapidjson::Document& doc, const std::vector<level_change_t>& expected) {
-  EXPECT_TRUE(doc["trip"]["legs"][0].HasMember("level_changes"));
-  auto level_changes = doc["trip"]["legs"][0]["level_changes"].GetArray();
+  EXPECT_TRUE(doc["trip"]["legs"][0]["summary"].HasMember("level_changes"));
+  auto level_changes = doc["trip"]["legs"][0]["summary"]["level_changes"].GetArray();
   EXPECT_EQ(level_changes.Size(), expected.size());
   for (size_t i = 0; i < expected.size(); ++i) {
     auto expected_entry = expected[i];
