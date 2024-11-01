@@ -398,7 +398,7 @@ The summary JSON object includes:
 | `min_lon` | Minimum longitude of a bounding box containing the route. |
 | `max_lat` | Maximum latitude of a bounding box containing the route. |
 | `max_lon` | Maximum longitude of a bounding box containing the route. |
-
+| `level_changes` | If a trip leg includes level changes (i.e. when navigating inside a building), the summary will include an array in the form of `[[shape_index, level], ...]` that can be used to split up the geometry along the level changes. 
 
 ### Trip legs and maneuvers
 
@@ -407,9 +407,6 @@ A `trip` contains one or more `legs`. For *n* number of `break` locations, there
 Each leg of the trip includes a summary, which is comprised of the same information as a trip summary but applied to the single leg of the trip. It also includes a `shape`, which is an [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path (with 6 digits decimal precision), and a list of `maneuvers` as a JSON array. For more about decoding route shapes, see these [code examples](../../decoding.md).
 
 If `elevation_interval` is specified, each leg of the trip will return `elevation` along the route as a JSON array. The `elevation_interval` is also returned. Units for both `elevation` and `elevation_interval` are either meters or feet based on the input units specified. 
-
-If a trip leg includes level changes (i.e. when navigating inside a building), each leg in the JSON 
-response will have a `level_changes` member containing an array in the form of `[[shape_index, level], ...]` that can be used to split up the geometry along the level changes. 
 
 Each maneuver includes:
 
