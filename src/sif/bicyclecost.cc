@@ -29,7 +29,7 @@ constexpr float kDefaultAlleyPenalty = 60.0f; // Seconds
 constexpr float kDefaultGatePenalty = 300.0f; // Seconds
 constexpr float kDefaultBssCost = 120.0f;     // Seconds
 constexpr float kDefaultBssPenalty = 0.0f;    // Seconds
-constexpr float kDefaultNonNetworkPenalty = 0.0f;  // Factor between 0 and 1
+constexpr float kDefaultNonNetworkPenalty = 0.05f;  // Factor between 0 and 1
 
 // Other options
 constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
@@ -195,9 +195,6 @@ constexpr float kAvoidHillsStrength[] = {
 // speed traffic). This threshold is adjusted upwards with higher useroads
 // factors.
 constexpr uint32_t kSpeedPenaltyThreshold = 40; // 40 KPH ~ 25 MPH
-
-// How much to favor bicycle networks.
-constexpr float kBicycleNetworkFactor = 0.95f;
 
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kUseRoadRange{0.0f, kDefaultUseRoad, 1.0f};
