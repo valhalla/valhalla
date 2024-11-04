@@ -37,35 +37,39 @@ constexpr size_t kScriptIndex = 2;
 constexpr size_t kRegionIndex = 3;
 constexpr size_t kPrivateuseIndex = 4;
 
+void add_narrative_locale(valhalla::odin::locales_singleton_t& locales, const std::string& key, const std::string& json) {
+  LOG_TRACE("LOCALES");
+  LOG_TRACE("-------");
+  LOG_TRACE("- " + key);
+  // load the json
+  boost::property_tree::ptree narrative_pt;
+  std::stringstream ss;
+  ss << json;
+  rapidjson::read_json(ss, narrative_pt);
+  LOG_TRACE("JSON read");
+  // parse it into an object and add it to the map
+  auto narrative_dictionary =
+      std::make_shared<valhalla::odin::NarrativeDictionary>(key, narrative_pt);
+  LOG_TRACE("NarrativeDictionary created");
+  locales.insert(std::make_pair(key, narrative_dictionary));
+  // insert all the aliases as this same object
+  auto aliases = narrative_pt.get_child("aliases");
+  for (const auto& alias : aliases) {
+    auto name = alias.second.get_value<std::string>();
+    auto inserted = locales.insert(std::make_pair(name, narrative_dictionary));
+    if (!inserted.second) {
+      throw std::logic_error("Alias '" + name + "' in json locale '" + key +
+                              "' has duplicate with posix_locale '" +
+                              inserted.first->second->GetLocale().name());
+    }
+  }
+}
+
 valhalla::odin::locales_singleton_t load_narrative_locals() {
   valhalla::odin::locales_singleton_t locales;
   // for each locale
   for (const auto& json : locales_json) {
-    LOG_TRACE("LOCALES");
-    LOG_TRACE("-------");
-    LOG_TRACE("- " + json.first);
-    // load the json
-    boost::property_tree::ptree narrative_pt;
-    std::stringstream ss;
-    ss << json.second;
-    rapidjson::read_json(ss, narrative_pt);
-    LOG_TRACE("JSON read");
-    // parse it into an object and add it to the map
-    auto narrative_dictionary =
-        std::make_shared<valhalla::odin::NarrativeDictionary>(json.first, narrative_pt);
-    LOG_TRACE("NarrativeDictionary created");
-    locales.insert(std::make_pair(json.first, narrative_dictionary));
-    // insert all the aliases as this same object
-    auto aliases = narrative_pt.get_child("aliases");
-    for (const auto& alias : aliases) {
-      auto name = alias.second.get_value<std::string>();
-      auto inserted = locales.insert(std::make_pair(name, narrative_dictionary));
-      if (!inserted.second) {
-        throw std::logic_error("Alias '" + name + "' in json locale '" + json.first +
-                               "' has duplicate with posix_locale '" +
-                               inserted.first->second->GetLocale().name());
-      }
-    }
+    add_narrative_locale(locales, json.first, json.second);
   }
   return locales;
 }
@@ -149,6 +153,11 @@ const locales_singleton_t& get_locales() {
   // thread safe static initializer for singleton
   static locales_singleton_t locales(load_narrative_locals());
   return locales;
+}
+
+const void add_locale(std::string key, std::string json) {
+    static locales_singleton_t locales = get_locales();
+  add_narrative_locale(locales, key, json);
 }
 
 const std::unordered_map<std::string, std::string>& get_locales_json() {

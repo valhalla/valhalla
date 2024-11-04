@@ -80,6 +80,12 @@ using locales_singleton_t = std::unordered_map<std::string, std::shared_ptr<Narr
 const locales_singleton_t& get_locales();
 
 /**
+ * add locale 
+ *
+ */
+const void add_locale(std::string key, std::string json);
+
+/**
  * Returns locale strings mapped to json strings defining the dictionaries
  *
  * @return the map of locales to json strings
