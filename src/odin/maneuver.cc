@@ -8,6 +8,7 @@
 #include "odin/maneuver.h"
 #include "odin/transitrouteinfo.h"
 
+#include "baldr/graphconstants.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
 
@@ -144,7 +145,7 @@ Maneuver::Maneuver()
       has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
       pedestrian_crossing_(false), has_long_street_name_(false), elevator_(false),
       indoor_steps_(false), escalator_(false), building_enter_(false), building_exit_(false),
-      end_level_ref_("") {
+      end_level_ref_(""), start_level_(kMaxLevel), end_level_(kMaxLevel), traversed_levels_(0) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -1223,6 +1224,28 @@ std::string Maneuver::end_level_ref() const {
 void Maneuver::set_end_level_ref(const std::string& end_level_ref) {
   end_level_ref_ = end_level_ref;
 }
+
+float Maneuver::start_level() const {
+  return start_level_;
+};
+
+void Maneuver::set_start_level(const float start_level) {
+  start_level_ = start_level;
+};
+
+float Maneuver::end_level() const {
+  return end_level_;
+};
+void Maneuver::set_end_level(const float end_level) {
+  end_level_ = end_level;
+};
+
+float Maneuver::traversed_levels() const {
+  return traversed_levels_;
+};
+void Maneuver::set_traversed_levels(const float traversed_levels) {
+  traversed_levels_ = traversed_levels;
+};
 
 const std::vector<RouteLandmark>& Maneuver::landmarks() const {
   return landmarks_;

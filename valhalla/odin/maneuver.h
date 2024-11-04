@@ -407,6 +407,15 @@ public:
   std::string end_level_ref() const;
   void set_end_level_ref(const std::string& end_level_ref);
 
+  float start_level() const;
+  void set_start_level(const float start_level);
+
+  float end_level() const;
+  void set_end_level(const float end_level);
+
+  float traversed_levels() const;
+  void set_traversed_levels(const float traversed_levels);
+
   const std::vector<RouteLandmark>& landmarks() const;
   void set_landmarks(const std::vector<RouteLandmark>& landmarks);
 
@@ -497,6 +506,9 @@ protected:
   bool escalator_;
   bool building_enter_;
   bool building_exit_;
+  float start_level_;
+  float end_level_;
+  float traversed_levels_;
   std::string end_level_ref_;
 
   // Landmarks correlated to the maneuver

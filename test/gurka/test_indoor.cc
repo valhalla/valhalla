@@ -149,6 +149,7 @@ TEST_F(Indoor, ElevatorManeuver) {
                                                 DirectionsLeg_Maneuver_Type_kElevatorEnter,
                                                 DirectionsLeg_Maneuver_Type_kContinue,
                                                 DirectionsLeg_Maneuver_Type_kElevatorEnter,
+                                                DirectionsLeg_Maneuver_Type_kContinue,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
 
   // Verify single maneuver prior to elevator
