@@ -6,6 +6,7 @@
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
+   * ADDED: steps and elevator maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
