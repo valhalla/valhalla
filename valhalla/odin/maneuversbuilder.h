@@ -79,13 +79,13 @@ protected:
 
   void CreateDestinationManeuver(Maneuver& maneuver);
 
-  void CreateStartManeuver(std::list<Maneuver>& maneuvers);
+  void CreateStartManeuver(Maneuver& maneuver);
 
   void InitializeManeuver(Maneuver& maneuver, int node_index);
 
   void UpdateManeuver(Maneuver& maneuver, int node_index);
 
-  void FinalizeManeuver(int node_index, std::list<Maneuver>& maneuvers);
+  void FinalizeManeuver(Maneuver& maneuver, int node_index);
 
   void SetManeuverType(Maneuver& maneuver, bool none_type_allowed = true);
 
@@ -140,10 +140,6 @@ protected:
 
   void UpdateInternalTurnCount(Maneuver& maneuver, int node_index) const;
 
-  void CreateElevatorManeuver(Maneuver& maneuver,
-                              int node_index,
-                              std::unique_ptr<odin::EnhancedTripLeg_Edge>& prev_edge,
-                              std::unique_ptr<odin::EnhancedTripLeg_Edge>& curr_edge) const;
   /**
    * Returns the speed based on the specified travel mode.
    *

@@ -307,7 +307,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
       UpdateManeuver(maneuvers.front(), i);
     } else {
       // Finalize current maneuver
-      FinalizeManeuver(i, maneuvers);
+      FinalizeManeuver(maneuvers.front(), i);
 
       // Initialize new maneuver
       maneuvers.emplace_front();
@@ -336,7 +336,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
 #endif
 
   // Process the Start maneuver
-  CreateStartManeuver(maneuvers);
+  CreateStartManeuver(maneuvers.front());
 
   return maneuvers;
 }
@@ -1116,9 +1116,9 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
                                          trip_path_->GetStateCode(node_index)));
 }
 
-void ManeuversBuilder::CreateStartManeuver(std::list<Maneuver>& maneuvers) {
+void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   int node_index = 0;
-  auto& maneuver = maneuvers.front();
+
   // Determine if the origin has a side of street
   // and set the appropriate start maneuver type
   switch (trip_path_->GetOrigin().side_of_street()) {
@@ -1138,7 +1138,7 @@ void ManeuversBuilder::CreateStartManeuver(std::list<Maneuver>& maneuvers) {
     }
   }
 
-  FinalizeManeuver(node_index, maneuvers);
+  FinalizeManeuver(maneuver, node_index);
 }
 
 void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
@@ -1432,8 +1432,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   }
 }
 
-void ManeuversBuilder::FinalizeManeuver(int node_index, std::list<Maneuver>& maneuvers) {
-  auto& maneuver = maneuvers.front();
+void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   auto prev_edge = trip_path_->GetPrevEdge(node_index);
   auto curr_edge = trip_path_->GetCurrEdge(node_index);
   auto next_edge = trip_path_->GetNextEdge(node_index);
@@ -1456,10 +1455,17 @@ void ManeuversBuilder::FinalizeManeuver(int node_index, std::list<Maneuver>& man
   maneuver.set_time(trip_path_->node(maneuver.end_node_index()).cost().elapsed_cost().seconds() -
                     trip_path_->node(maneuver.begin_node_index()).cost().elapsed_cost().seconds());
 
-  // Create level change maneuver
+  // Set elevator
   if (node->IsElevator()) {
-    // insert new maneuver before this one
-    CreateElevatorManeuver(maneuvers.emplace_front(), node_index, prev_edge, curr_edge);
+    maneuver.set_elevator(true);
+    // Set the end level ref
+    if (curr_edge && !curr_edge->GetLevelRef().empty()) {
+      if (curr_edge->GetLevelRef().size() > 1) {
+        maneuver.set_end_level_ref("");
+      } else {
+        maneuver.set_end_level_ref(curr_edge->GetLevelRef()[0]);
+      }
+    }
   }
 
   // Set enter/exit building
@@ -4028,61 +4034,6 @@ void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& m
         // accumulate the distance from maneuver to the curr edge we are working on
         distance_from_begin_to_curr_edge += curr_edge->length_km() * kMetersPerKm;
       }
-    }
-  }
-}
-
-void ManeuversBuilder::CreateElevatorManeuver(
-    Maneuver& maneuver,
-    int node_index,
-    std::unique_ptr<odin::EnhancedTripLeg_Edge>& prev_edge,
-    std::unique_ptr<odin::EnhancedTripLeg_Edge>& curr_edge) const {
-
-  const auto node = trip_path_->node(node_index);
-
-  if (prev_edge) {
-    // Travel mode
-    maneuver.set_travel_mode(prev_edge->travel_mode());
-
-    // Vehicle type
-    if (prev_edge->has_vehicle_type()) {
-      maneuver.set_vehicle_type(prev_edge->vehicle_type());
-    }
-
-    // Pedestrian type
-    if (prev_edge->has_pedestrian_type()) {
-      maneuver.set_pedestrian_type(prev_edge->pedestrian_type());
-    }
-
-    // Bicycle type
-    if (prev_edge->has_bicycle_type()) {
-      maneuver.set_bicycle_type(prev_edge->bicycle_type());
-    }
-
-    // Transit type
-    if (prev_edge->has_transit_type()) {
-      maneuver.set_transit_type(prev_edge->transit_type());
-    }
-  }
-
-  // Set the verbal text formatter
-  maneuver.set_verbal_formatter(
-      VerbalTextFormatterFactory::Create(trip_path_->GetCountryCode(node_index),
-                                         trip_path_->GetStateCode(node_index)));
-  maneuver.set_begin_node_index(node_index);
-  maneuver.set_end_node_index(node_index);
-
-  maneuver.set_elevator(true);
-
-  maneuver.set_begin_shape_index(prev_edge ? prev_edge->begin_shape_index() : 0);
-  maneuver.set_end_shape_index(prev_edge ? prev_edge->begin_shape_index() : 0);
-
-  // Set the end level ref
-  if (curr_edge && !curr_edge->GetLevelRef().empty()) {
-    if (curr_edge->GetLevelRef().size() > 1) {
-      maneuver.set_end_level_ref("");
-    } else {
-      maneuver.set_end_level_ref(curr_edge->GetLevelRef()[0]);
     }
   }
 }
