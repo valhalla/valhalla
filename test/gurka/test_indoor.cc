@@ -20,6 +20,11 @@ struct range_t {
   float end;
 };
 
+struct level_change_t {
+  uint32_t index;
+  float level;
+};
+
 class Indoor : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -30,7 +35,7 @@ protected:
     constexpr double gridsize_metres = 100;
 
     ascii_map = R"(
-              A
+              AzZ-Y-X-W
               |
               B
               |
@@ -69,6 +74,10 @@ protected:
         {"Cx", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "-1;0-2"}}},
         {"xy", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "2;3"}}},
         {"yJ", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+        {"AZ", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "0-4"}}},
+        {"ZY", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "4"}}},
+        {"YX", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "4;5"}}},
+        {"XW", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "5"}}},
     };
 
     const gurka::nodes nodes = {
@@ -83,6 +92,24 @@ protected:
 gurka::map Indoor::map = {};
 std::string Indoor::ascii_map = {};
 gurka::nodelayout Indoor::layout = {};
+
+/**
+ * Convenience function to make sure that
+ *   a) the JSON response has a "level_changes" member and
+ *   b) that it indicates level changes as expected
+ */
+void check_level_changes(rapidjson::Document& doc, const std::vector<level_change_t>& expected) {
+  EXPECT_TRUE(doc["trip"]["legs"][0]["summary"].HasMember("level_changes"));
+  auto level_changes = doc["trip"]["legs"][0]["summary"]["level_changes"].GetArray();
+  EXPECT_EQ(level_changes.Size(), expected.size());
+  for (size_t i = 0; i < expected.size(); ++i) {
+    auto expected_entry = expected[i];
+    auto change_entry = level_changes[i].GetArray();
+    EXPECT_EQ(change_entry.Size(), 2);
+    EXPECT_EQ(change_entry[0].GetUint64(), expected_entry.index);
+    EXPECT_EQ(change_entry[1].GetFloat(), expected_entry.level);
+  }
+}
 
 /*************************************************************/
 
@@ -274,6 +301,42 @@ TEST_F(Indoor, CombineStepsManeuvers) {
                                                             "");
 }
 
+TEST_F(Indoor, StepsLevelChanges) {
+  // get a route via steps and check the level changelog
+  std::string route_json;
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"A", "J"}, "pedestrian",
+                       {{"/costing_options/pedestrian/elevator_penalty", "3600"}}, {}, &route_json);
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "Cx", "xy", "yJ"});
+  rapidjson::Document doc;
+  doc.Parse(route_json.c_str());
+
+  check_level_changes(doc, {{0, 0.f}, {4, 3.f}});
+}
+
+TEST_F(Indoor, EdgeElevatorLevelChanges) {
+  // get a route via an edge-modeled elevator and check the level changelog
+  std::string route_json;
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"F", "I"}, "pedestrian", {}, {}, &route_json);
+  gurka::assert::raw::expect_path(result, {"FG", "GH", "HI"});
+  rapidjson::Document doc;
+  doc.Parse(route_json.c_str());
+
+  check_level_changes(doc, {{0, 1.f}, {2, 2.f}});
+}
+
+TEST_F(Indoor, NodeElevatorLevelChanges) {
+  // get a route via a node-modeled elevator and check the level changelog
+  std::string route_json;
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"H", "J"}, "pedestrian", {}, {}, &route_json);
+  gurka::assert::raw::expect_path(result, {"HI", "IJ"});
+  rapidjson::Document doc;
+  doc.Parse(route_json.c_str());
+
+  check_level_changes(doc, {{0, 2.f}, {1, 3.f}});
+}
 /****************************************************************************************/
 
 class Levels : public ::testing::Test {
@@ -311,7 +374,6 @@ std::string Levels::ascii_map = {};
 gurka::nodelayout Levels::layout = {};
 
 TEST_F(Levels, EdgeInfoIncludes) {
-
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
   std::vector<std::pair<std::array<std::string, 2>, std::vector<float>>> values = {
@@ -338,7 +400,6 @@ TEST_F(Levels, EdgeInfoIncludes) {
 }
 
 TEST_F(Levels, EdgeInfoJson) {
-
   auto graphreader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
   std::vector<std::string> locs = {

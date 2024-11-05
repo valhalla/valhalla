@@ -398,7 +398,7 @@ The summary JSON object includes:
 | `min_lon` | Minimum longitude of a bounding box containing the route. |
 | `max_lat` | Maximum latitude of a bounding box containing the route. |
 | `max_lon` | Maximum longitude of a bounding box containing the route. |
-
+| `level_changes` | If a trip leg includes level changes (i.e. when navigating inside a building), the summary will include an array in the form of `[[shape_index, level], ...]` that can be used to split up the geometry along the level changes. |
 
 ### Trip legs and maneuvers
 
