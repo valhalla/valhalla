@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -76,7 +76,6 @@ protected:
 
     const gurka::nodes nodes = {
         {"E", {{"entrance", "yes"}, {"indoor", "yes"}}},
-        // {"S", {{"entrance", "yes"}, {"indoor", "yes"}}},
         {"I", {{"highway", "elevator"}, {"indoor", "yes"}, {"level", "2;3"}}},
     };
 
