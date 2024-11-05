@@ -322,6 +322,7 @@ message TripLeg {
   repeated string algorithms = 12;
   repeated Closure closures = 13;
   Summary summary = 14;
+  repeated LevelChange level_changes = 15;
 }
 
 message TripRoute {

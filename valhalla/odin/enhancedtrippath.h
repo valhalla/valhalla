@@ -80,6 +80,10 @@ public:
     return trip_path_.leg_count();
   }
 
+  const ::google::protobuf::RepeatedPtrField<::valhalla::LevelChange>& level_changes() const {
+    return trip_path_.level_changes();
+  }
+
   const ::google::protobuf::RepeatedPtrField<::valhalla::Location>& location() const {
     return trip_path_.location();
   }
