@@ -77,10 +77,6 @@ std::vector<std::string> split(const std::string& source, char delimiter) {
 bool is_pair(const std::vector<std::string>& tokens) {
   return (tokens.size() == 2);
 }
-
-bool is_single_level_edge(std::unique_ptr<EnhancedTripLeg_Edge>& edge) {
-  return edge->levels().size() == 1 && edge->levels().Get(0).start() == edge->levels().Get(0).end();
-}
 } // namespace
 
 namespace valhalla {
@@ -1168,14 +1164,6 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     }
   }
 
-  // Set start end end level information
-  if (prev_edge && !prev_edge->levels().empty() && prev_edge->levels().size() == 1) {
-    maneuver.set_start_level(prev_edge->levels().Get(0).start());
-  }
-  if (curr_edge && !curr_edge->levels().empty() && curr_edge->levels().size() == 1) {
-    maneuver.set_end_level(curr_edge->levels().Get(0).start());
-  }
-
   // Elevator
   if (prev_edge->IsElevatorUse()) {
     maneuver.set_elevator(true);
@@ -1303,6 +1291,9 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
       LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_DESTINATION");
     }
   }
+
+  // only set steps to true if it involves a level change
+  maneuver.set_steps(prev_edge->use() == TripLeg_Use_kStepsUse && prev_edge->traverses_levels());
 
   if (maneuver.pedestrian_type() == PedestrianType::kBlind) {
     if (prev_edge->use() == TripLeg_Use_kStepsUse)
@@ -1469,8 +1460,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver,
   // Create level change maneuver
   if (node->IsElevator()) {
     // insert new maneuver before this one
-    CreateLevelChangeManeuver(maneuvers.emplace_front(), node_index, prev_edge, curr_edge,
-                              node->IsElevator());
+    CreateElevatorManeuver(maneuvers.emplace_front(), node_index, prev_edge, curr_edge);
   }
 
   // Set enter/exit building
@@ -1817,7 +1807,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=ELEVATOR");
   }
   // Process steps
-  else if (maneuver.indoor_steps()) {
+  else if (maneuver.indoor_steps() || maneuver.is_steps()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kStepsEnter);
     LOG_TRACE("ManeuverType=STEPS");
   }
@@ -4043,12 +4033,11 @@ void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& m
   }
 }
 
-void ManeuversBuilder::CreateLevelChangeManeuver(
+void ManeuversBuilder::CreateElevatorManeuver(
     Maneuver& maneuver,
     int node_index,
     std::unique_ptr<odin::EnhancedTripLeg_Edge>& prev_edge,
-    std::unique_ptr<odin::EnhancedTripLeg_Edge>& curr_edge,
-    const bool elevator) const {
+    std::unique_ptr<odin::EnhancedTripLeg_Edge>& curr_edge) const {
 
   const auto node = trip_path_->node(node_index);
 
@@ -4077,27 +4066,6 @@ void ManeuversBuilder::CreateLevelChangeManeuver(
     }
   }
 
-  float start_level = kMinLevel;
-  float end_level = kMinLevel;
-  float traversed_levels = 0;
-  if (prev_edge && is_single_level_edge(prev_edge)) {
-    start_level = prev_edge->levels().Get(0).start();
-  } else if (trip_path_->GetOrigin().has_search_filter() &&
-             trip_path_->GetOrigin().search_filter().has_level()) {
-    start_level = trip_path_->GetOrigin().search_filter().level();
-  }
-  if (curr_edge && is_single_level_edge(curr_edge)) {
-    end_level = curr_edge->levels().Get(0).end();
-  } else if (trip_path_->GetDestination().has_search_filter() &&
-             trip_path_->GetDestination().search_filter().has_level()) {
-    end_level = trip_path_->GetDestination().search_filter().level();
-  }
-
-  if (start_level != kMinLevel && end_level != kMinLevel)
-    traversed_levels = end_level - start_level;
-
-  maneuver.set_traversed_levels(traversed_levels);
-
   // Set the verbal text formatter
   maneuver.set_verbal_formatter(
       VerbalTextFormatterFactory::Create(trip_path_->GetCountryCode(node_index),
@@ -4105,14 +4073,7 @@ void ManeuversBuilder::CreateLevelChangeManeuver(
   maneuver.set_begin_node_index(node_index);
   maneuver.set_end_node_index(node_index);
 
-  if (elevator)
-    maneuver.set_elevator(true);
-  else {
-    if (prev_edge && prev_edge->indoor())
-      maneuver.set_indoor_steps(true);
-    else
-      maneuver.set_steps(true);
-  }
+  maneuver.set_elevator(true);
 
   maneuver.set_begin_shape_index(prev_edge ? prev_edge->begin_shape_index() : 0);
   maneuver.set_end_shape_index(prev_edge ? prev_edge->begin_shape_index() : 0);

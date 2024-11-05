@@ -1914,20 +1914,6 @@ void TripLegBuilder::Build(
                     travel_type == PedestrianType::kBlind && mode == sif::TravelMode::kPedestrian,
                     edgeinfo, levels);
 
-    // for the level changes, only consider edges on a single level
-    if (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second) {
-      float lvl = levels.first[0].first;
-      // if this edge is on a different level than the previous one,
-      // add a level change
-      if (std::fabs(lvl - prev_level) >= std::numeric_limits<float>::epsilon()) {
-        auto* change = trip_path.add_level_changes();
-        change->set_level(lvl);
-        change->set_shape_index(begin_index);
-        change->set_precision(std::max(static_cast<uint32_t>(1), levels.second));
-        prev_level = lvl;
-      }
-    }
-
     // some information regarding shape/length trimming
     float trim_start_pct = is_first_edge ? start_pct : 0;
     float trim_end_pct = is_last_edge ? end_pct : 1;

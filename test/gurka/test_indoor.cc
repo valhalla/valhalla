@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -36,7 +36,7 @@ protected:
               |
               C---------x--------y
               |                  |
-    D----E----F----G----H----I---J
+    D----E----F----G----H----I---J--S--T--U
     |         |
     N         K
     |         |
@@ -69,10 +69,14 @@ protected:
         {"Cx", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "-1;0-2"}}},
         {"xy", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "2;3"}}},
         {"yJ", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+        {"JS", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+        {"ST", {{"highway", "steps"}, {"level", "3;4"}}},
+        {"TU", {{"highway", "footway"}, {"level", "4"}}},
     };
 
     const gurka::nodes nodes = {
         {"E", {{"entrance", "yes"}, {"indoor", "yes"}}},
+        // {"S", {{"entrance", "yes"}, {"indoor", "yes"}}},
         {"I", {{"highway", "elevator"}, {"indoor", "yes"}, {"level", "2;3"}}},
     };
 
@@ -275,6 +279,23 @@ TEST_F(Indoor, CombineStepsManeuvers) {
                                                             "");
 }
 
+// Dont combine maneuvers if there is a level change
+TEST_F(Indoor, OutdoorStepsLevelChange) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"J", "U"}, "pedestrian", {});
+  gurka::assert::raw::expect_path(result, {"JS", "ST", "TU"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kStepsEnter,
+                                                DirectionsLeg_Maneuver_Type_kContinue,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify steps instructions
+  int maneuver_index = 1;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Take the stairs to Level 4.", "", "", "",
+                                                            "");
+}
 /****************************************************************************************/
 
 class Levels : public ::testing::Test {
