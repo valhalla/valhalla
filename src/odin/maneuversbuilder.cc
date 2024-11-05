@@ -307,7 +307,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
       UpdateManeuver(maneuvers.front(), i);
     } else {
       // Finalize current maneuver
-      FinalizeManeuver(maneuvers.front(), i, maneuvers);
+      FinalizeManeuver(i, maneuvers);
 
       // Initialize new maneuver
       maneuvers.emplace_front();
@@ -336,7 +336,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
 #endif
 
   // Process the Start maneuver
-  CreateStartManeuver(maneuvers.front(), maneuvers);
+  CreateStartManeuver(maneuvers);
 
   return maneuvers;
 }
@@ -1116,9 +1116,9 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
                                          trip_path_->GetStateCode(node_index)));
 }
 
-void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver, std::list<Maneuver>& maneuvers) {
+void ManeuversBuilder::CreateStartManeuver(std::list<Maneuver>& maneuvers) {
   int node_index = 0;
-
+  auto& maneuver = maneuvers.front();
   // Determine if the origin has a side of street
   // and set the appropriate start maneuver type
   switch (trip_path_->GetOrigin().side_of_street()) {
@@ -1138,7 +1138,7 @@ void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver, std::list<Maneuve
     }
   }
 
-  FinalizeManeuver(maneuver, node_index, maneuvers);
+  FinalizeManeuver(node_index, maneuvers);
 }
 
 void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
@@ -1432,9 +1432,8 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   }
 }
 
-void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver,
-                                        int node_index,
-                                        std::list<Maneuver>& maneuvers) {
+void ManeuversBuilder::FinalizeManeuver(int node_index, std::list<Maneuver>& maneuvers) {
+  auto& maneuver = maneuvers.front();
   auto prev_edge = trip_path_->GetPrevEdge(node_index);
   auto curr_edge = trip_path_->GetCurrEdge(node_index);
   auto next_edge = trip_path_->GetNextEdge(node_index);

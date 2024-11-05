@@ -79,13 +79,13 @@ protected:
 
   void CreateDestinationManeuver(Maneuver& maneuver);
 
-  void CreateStartManeuver(Maneuver& maneuver, std::list<Maneuver>& maneuvers);
+  void CreateStartManeuver(std::list<Maneuver>& maneuvers);
 
   void InitializeManeuver(Maneuver& maneuver, int node_index);
 
   void UpdateManeuver(Maneuver& maneuver, int node_index);
 
-  void FinalizeManeuver(Maneuver& maneuver, int node_index, std::list<Maneuver>& maneuvers);
+  void FinalizeManeuver(int node_index, std::list<Maneuver>& maneuvers);
 
   void SetManeuverType(Maneuver& maneuver, bool none_type_allowed = true);
 
