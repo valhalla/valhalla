@@ -8,7 +8,6 @@
 #include "odin/maneuver.h"
 #include "odin/transitrouteinfo.h"
 
-#include "baldr/graphconstants.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
 

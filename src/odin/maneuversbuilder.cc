@@ -1437,7 +1437,6 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   auto prev_edge = trip_path_->GetPrevEdge(node_index);
   auto curr_edge = trip_path_->GetCurrEdge(node_index);
-  auto next_edge = trip_path_->GetNextEdge(node_index);
   auto node = trip_path_->GetEnhancedNode(node_index);
 
   // Set begin cardinal direction
