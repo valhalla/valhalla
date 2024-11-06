@@ -643,8 +643,8 @@ public:
                            bool is_truck = false,
                            uint8_t* flow_sources = nullptr,
                            const uint64_t seconds_from_now = 0,
-                           const uint64_t traffic_fading_duration = 10800,
-                           const uint64_t traffic_fading_start = 0,
+                           const uint64_t traffic_fading_duration = 0,
+                           const uint64_t traffic_fading_start = 10800,
                            const float traffic_fading_exponent = 1) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
