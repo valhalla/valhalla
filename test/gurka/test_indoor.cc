@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -224,17 +224,14 @@ TEST_F(Indoor, OutdoorStepsManeuver) {
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
-                                                DirectionsLeg_Maneuver_Type_kLeft,
+                                                DirectionsLeg_Maneuver_Type_kStepsEnter,
                                                 DirectionsLeg_Maneuver_Type_kContinue,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
 
   // Verify steps instructions
   int maneuver_index = 1;
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Turn left onto DN.", "Turn left.",
-                                                            "Turn left onto DN.",
-                                                            "Turn left onto DN.",
-                                                            "Continue for 200 meters.");
+                                                            "Take the stairs.", "", "", "", "");
 }
 
 TEST_F(Indoor, EscalatorManeuver) {
