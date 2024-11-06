@@ -31,6 +31,7 @@
 
 #include <valhalla/filesystem.h>
 
+#include <cmath>
 #include <cstdint>
 #include <iterator>
 #include <memory>
@@ -641,25 +642,33 @@ public:
                            uint64_t seconds = kInvalidSecondsOfWeek,
                            bool is_truck = false,
                            uint8_t* flow_sources = nullptr,
-                           const uint64_t seconds_from_now = 0) const {
+                           const uint64_t seconds_from_now = 0,
+                           uint64_t traffic_fading_duration = 10800,
+                           uint64_t traffic_fading_start = 0,
+                           float traffic_fading_exponent = 1) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO: Make this configurable if possible and contribute the changes
-    // constexpr double LIVE_SPEED_FADE = 1. / 10800.;
-
     // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
     // route live-traffic gives more information about current congestion situation. But the further
     // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
-    // Want to have a smooth decrease function.
-    // float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
+    float live_traffic_multiplier;
+    if (seconds_from_now < traffic_fading_start) {
+      live_traffic_multiplier = 1;
+    } else if (seconds_from_now >= traffic_fading_start + traffic_fading_duration) {
+      live_traffic_multiplier = 0;
+    } else {
+      live_traffic_multiplier =
+          1 - std::pow(1 + ((seconds_from_now - traffic_fading_start - traffic_fading_duration) /
+                            traffic_fading_duration),
+                       traffic_fading_exponent);
+    }
+    // const double LIVE_SPEED_FADING = 1. / 3600.;
+    // live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADING, 1.);
 
-    // Instead of fading the traffic we want it to hard cut off after 3 hours, while taking in the
-    // full traffic before that.
-    float live_traffic_multiplier = seconds_from_now < 10800 ? 1.0 : 0.0;
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
     if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {

@@ -329,6 +329,15 @@ message Costing {
     oneof has_exclude_ferries {
       bool exclude_ferries = 90;
     }
+    oneof has_traffic_fading_duration {
+      uint32 traffic_fading_duration = 91;
+    }
+    oneof has_traffic_fading_start {
+      uint32 traffic_fading_start = 92;
+    }
+    oneof has_traffic_fading_exponent {
+      uint32 traffic_fading_exponent = 93;
+    }
   }
 
   oneof has_options {

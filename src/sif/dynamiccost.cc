@@ -490,6 +490,11 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 
+  // fading function parameters
+  JSON_PBF_DEFAULT(co, cfg.traffic_fading_start_, json, "/traffic_fading_start", traffic_fading_start);
+  JSON_PBF_DEFAULT(co, cfg.traffic_fading_duration_, json, "/traffic_fading_duration", traffic_fading_duration);
+  JSON_PBF_DEFAULT(co, cfg.traffic_fading_exponent_, json, "/traffic_fading_exponent", traffic_fading_exponent);
+
   JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
 }
 

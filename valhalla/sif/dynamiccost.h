@@ -1061,6 +1061,11 @@ protected:
   bool include_hot_{false};
   bool include_hov2_{false};
   bool include_hov3_{false};
+  
+  // traffic fading function parameters
+  uint64_t traffic_fading_start;
+  uint64_t traffic_fading_duration;
+  float traffic_fading_exponent;
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
@@ -1276,6 +1281,10 @@ struct BaseCostingOptionsConfig {
   bool include_hot_ = false;
   bool include_hov2_ = false;
   bool include_hov3_ = false;
+
+  uint64_t traffic_fading_start_ = 0;
+  uint64_t traffic_fading_duration_ = 10800;
+  float traffic_fading_exponent_ = 1;
 };
 
 /**
