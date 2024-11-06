@@ -498,8 +498,8 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto edge_speed =
       fixed_speed_ == baldr::kDisableFixedSpeed
           ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
-                           time_info.seconds_from_now, traffic_fading_duration, traffic_fading_start,
-                           traffic_fading_exponent)
+                           time_info.seconds_from_now, traffic_fading_duration_,
+                           traffic_fading_start_, traffic_fading_exponent_)
           : fixed_speed_;
 
   auto final_speed = std::min(edge_speed, top_speed_);
@@ -945,10 +945,12 @@ public:
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
-    auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
-                          ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
-                                           &flow_sources, time_info.seconds_from_now, traffic_fading_duration, traffic_fading_start, traffic_fading_exponent)
-                          : fixed_speed_;
+    auto edge_speed =
+        fixed_speed_ == baldr::kDisableFixedSpeed
+            ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
+                             time_info.seconds_from_now, traffic_fading_duration_,
+                             traffic_fading_start_, traffic_fading_exponent_)
+            : fixed_speed_;
     auto final_speed = std::min(edge_speed, top_speed_);
 
     float sec = (edge->length() * speedfactor_[final_speed]);
@@ -1070,7 +1072,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options) {};
+  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options){};
 
   using AutoCost::alley_penalty_;
   using AutoCost::country_crossing_cost_;

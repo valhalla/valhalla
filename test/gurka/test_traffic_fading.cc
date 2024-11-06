@@ -64,7 +64,7 @@ TEST_F(SmallRouteSpeedTest, FadingTraffic) {
                     max_speed_ * 0.1 + current_ * 0.9, 1);
         // 40 minutes
         EXPECT_NEAR(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 2400, 3600),
-                    max_speed_ * 2/3 + current_ * 1/3, 1);
+                    max_speed_ * 2 / 3 + current_ * 1 / 3, 1);
         // 1 hour, no live traffic is used
         EXPECT_EQ(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 3600, 3600), max_speed_);
       }
@@ -86,15 +86,15 @@ TEST_F(SmallRouteSpeedTest, FadingTraffic) {
         const uint64_t D = 2 * 60 * 60;
         const float E = 3;
         // 59 minutes
-        EXPECT_EQ(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 59*60, D, S, E), current_);
+        EXPECT_EQ(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 59 * 60, D, S, E), current_);
         // 2h
-        EXPECT_NEAR(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 2*60*60, D, S, E),
+        EXPECT_NEAR(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 2 * 60 * 60, D, S, E),
                     max_speed_ * 0.125 + current_ * 0.875, 1);
         // 2h 30m
-        EXPECT_NEAR(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 2.5*60*60, D, S, E),
+        EXPECT_NEAR(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 2.5 * 60 * 60, D, S, E),
                     max_speed_ * 0.421875 + current_ * 0.578125, 1);
         // 3h, no live traffic is used
-        EXPECT_EQ(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 3*60*60, D, S, E), max_speed_);
+        EXPECT_EQ(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 3 * 60 * 60, D, S, E), max_speed_);
       }
       {
         // full traffic usage and then hard cut at 3h
