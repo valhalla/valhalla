@@ -73,17 +73,13 @@ However, there are important limitations of the `/sources_to_targets` service's 
 
 ## Outputs of the matrix service
 
-If a matrix request has been named using the optional `&id=` input, then the name will be returned as a string `id`.
-
 These are the results of a request to the Time-Distance Matrix service.
 
 | Item | Description |
 | :---- | :----------- |
-| `sources_to_targets` | Returns an array of time and distance between the sources and the targets. The array is **row-ordered**. This means that the time and distance from the first location to all others forms the first row of the array, followed by the time and distance from the second source location to all target locations, etc. |
-| `distance` | The computed distance between each set of points. Distance will always be 0.00 for the first element of the time-distance array for `one_to_many`, the last element in a `many_to_one`, and the first and last elements of a `many_to_many`. |
-| `time` | The computed time between each set of points. Time will always be 0 for the first element of the time-distance array for `one_to_many`, the last element in a `many_to_one`, and the first and last elements of a `many_to_many`.  |
-| `to_index` | The destination index into the locations array. |
-| `from_index` | The origin index into the locations array. |
+| `id`                 | Name of the request. Included only if a matrix request has been named using the optional `&id=` input. |
+| `algorithm`          | The alogrihm used |
+| `sources_to_targets` | If using the <code>"verbose":false</code> output mode:<br>Returns an array of time and distance between the sources and the targets. The array is <b>row-ordered</b>. This means that the time and distance from the first location to all others forms the first row of the array, followed by the time and distance from the second source location to all target locations, etc.<br>The Object contained in the arrays contains the following fields:<ul><li><code>distance</code>: The computed distance between each set of points. Distance will always be 0.00 for the first element of the time-distance array for <code>one_to_many</code>, the last element in a <code>many_to_one</code>, and the first and last elements of a <code>many_to_many</code>.</li><li><code>time</code>: The computed time between each set of points. Time will always be 0 for the first element of the time-distance array for <code>one_to_many</code>, the last element in a <code>many_to_one</code>, and the first and last elements of a <code>many_to_many</code>.</li><li><code>to_index</code>: The destination index into the locations array.</li><li><code>from_index</code>: The origin index into the locations array.</li></ul><br>If using the concise output mode:<br>Returns an object with <code>durations</code> and <code>distances</code> as <b>row-ordered</b> contents of the values above. |
 | `date_time`  | (optional) If the date_time was valid for an origin, `date_time` will return the local time at the destination. |
 | `locations` | The specified array of lat/lngs from the input request.
 | `units` | Distance units for output. Allowable unit types are mi (miles) and km (kilometers). If no unit type is specified, the units default to kilometers. |
