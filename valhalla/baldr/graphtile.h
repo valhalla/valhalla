@@ -643,9 +643,9 @@ public:
                            bool is_truck = false,
                            uint8_t* flow_sources = nullptr,
                            const uint64_t seconds_from_now = 0,
-                           uint64_t traffic_fading_duration = 10800,
-                           uint64_t traffic_fading_start = 0,
-                           float traffic_fading_exponent = 1) const {
+                           const uint64_t traffic_fading_duration = 10800,
+                           const uint64_t traffic_fading_start = 0,
+                           const float traffic_fading_exponent = 1) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
@@ -661,10 +661,10 @@ public:
     } else if (seconds_from_now >= traffic_fading_start + traffic_fading_duration) {
       live_traffic_multiplier = 0;
     } else {
-      live_traffic_multiplier =
-          1 - std::pow(1 + ((seconds_from_now - traffic_fading_start - traffic_fading_duration) /
-                            traffic_fading_duration),
-                       traffic_fading_exponent);
+      int64_t numerator = seconds_from_now - traffic_fading_start - traffic_fading_duration;
+      float denominator = traffic_fading_duration;
+      float base = 1. + numerator / denominator;
+      live_traffic_multiplier = 1 - std::pow(base, traffic_fading_exponent);
     }
     // const double LIVE_SPEED_FADING = 1. / 3600.;
     // live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADING, 1.);

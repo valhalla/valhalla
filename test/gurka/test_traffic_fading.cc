@@ -61,13 +61,13 @@ TEST_F(SmallRouteSpeedTest, FadingTraffic) {
         // mix of live traffic and default edge speed
         auto flow_mask = baldr::kCurrentFlowMask;
         // 6 minutes
-        EXPECT_NEAR(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 360),
+        EXPECT_NEAR(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 360, 3600),
                     max_speed_ * 0.1 + current_ * 0.9, 1);
         // 40 minutes
-        EXPECT_NEAR(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 2400),
+        EXPECT_NEAR(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 2400, 3600),
                     max_speed_ * 0.666 + current_ * 0.333, 1);
         // 1 hour, no live traffic is used
-        EXPECT_EQ(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 3600), max_speed_);
+        EXPECT_EQ(tile->GetSpeed(&e, flow_mask, 0, false, nullptr, 3600, 3600), max_speed_);
       }
     }
   }
