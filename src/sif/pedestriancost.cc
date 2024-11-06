@@ -747,7 +747,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const EdgeLabel& pred) const {
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
-    return {pred.use() == Use::kSteps ? 0 : step_penalty_, 0.0f};
+    return {step_penalty_, 0.0f};
   }
   // fixed penalty for elevator
   if (edge->use() == Use::kElevator) {
@@ -873,7 +873,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options) {};
+  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options){};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;
