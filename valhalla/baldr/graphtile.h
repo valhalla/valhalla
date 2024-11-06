@@ -666,8 +666,6 @@ public:
       float base = 1. + numerator / denominator;
       live_traffic_multiplier = 1 - std::pow(base, traffic_fading_exponent);
     }
-    // const double LIVE_SPEED_FADING = 1. / 3600.;
-    // live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADING, 1.);
 
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
