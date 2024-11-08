@@ -398,10 +398,12 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const graph_tile_ptr& tile,
                               const baldr::TimeInfo& time_info,
                               uint8_t& flow_sources) const {
-  auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
-                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
-                                         &flow_sources, time_info.seconds_from_now)
-                        : fixed_speed_;
+  auto edge_speed =
+      fixed_speed_ == baldr::kDisableFixedSpeed
+          ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
+                           time_info.seconds_from_now, traffic_fading_duration_,
+                           traffic_fading_start_, traffic_fading_exponent_)
+          : fixed_speed_;
 
   auto final_speed = std::min(edge_speed, top_speed_);
 

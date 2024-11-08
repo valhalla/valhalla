@@ -430,12 +430,12 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) &&
+       (edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-      (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) || 
+      (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
-      (exclude_tolls_ && !pred.toll() && edge->toll()) ||
-      (edge->is_shortcut() && exclude_tunnels_)) {
+      (exclude_tolls_ && !pred.toll() && edge->toll()) || (edge->is_shortcut() && exclude_tunnels_)) {
     return false;
   }
 
@@ -461,12 +461,13 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) &&
+       (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
       (exclude_tolls_ && !pred.toll() && opp_edge->toll()) ||
-      (opp_edge->is_shortcut() &&  exclude_tunnels_)) {
+      (opp_edge->is_shortcut() && exclude_tunnels_)) {
     return false;
   }
 
@@ -494,10 +495,12 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const {
   // either the computed edge speed or optional top_speed
-  auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
-                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
-                                         &flow_sources, time_info.seconds_from_now)
-                        : fixed_speed_;
+  auto edge_speed =
+      fixed_speed_ == baldr::kDisableFixedSpeed
+          ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
+                           time_info.seconds_from_now, traffic_fading_duration_,
+                           traffic_fading_start_, traffic_fading_exponent_)
+          : fixed_speed_;
 
   auto final_speed = std::min(edge_speed, top_speed_);
 
@@ -805,12 +808,12 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) &&
+       (edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
-      (exclude_tolls_ && !pred.toll() && edge->toll()) ||
-      (edge->is_shortcut() && exclude_tunnels_)) {
+      (exclude_tolls_ && !pred.toll() && edge->toll()) || (edge->is_shortcut() && exclude_tunnels_)) {
     return false;
   }
 
@@ -836,7 +839,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) &&
+       (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
@@ -941,10 +945,12 @@ public:
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
-    auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
-                          ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
-                                           &flow_sources, time_info.seconds_from_now)
-                          : fixed_speed_;
+    auto edge_speed =
+        fixed_speed_ == baldr::kDisableFixedSpeed
+            ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
+                             time_info.seconds_from_now, traffic_fading_duration_,
+                             traffic_fading_start_, traffic_fading_exponent_)
+            : fixed_speed_;
     auto final_speed = std::min(edge_speed, top_speed_);
 
     float sec = (edge->length() * speedfactor_[final_speed]);
@@ -996,12 +1002,12 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) &&
+       (edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
-      (exclude_tolls_ && !pred.toll() && edge->toll()) ||
-      (edge->is_shortcut() && exclude_tunnels_)) {
+      (exclude_tolls_ && !pred.toll() && edge->toll()) || (edge->is_shortcut() && exclude_tunnels_)) {
     return false;
   }
 
@@ -1027,7 +1033,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) &&
+       (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||

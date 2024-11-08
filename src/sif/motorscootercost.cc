@@ -419,7 +419,8 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
                                 uint8_t& flow_sources) const {
   auto speed = fixed_speed_ == baldr::kDisableFixedSpeed
                    ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
-                                    time_info.seconds_from_now)
+                                    time_info.seconds_from_now, traffic_fading_duration_,
+                                    traffic_fading_start_, traffic_fading_exponent_)
                    : fixed_speed_;
 
   if (edge->use() == Use::kFerry) {
