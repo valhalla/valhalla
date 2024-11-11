@@ -7662,6 +7662,13 @@
       ]
     },
     {
+      "key": "smoothness",
+      "description": "Road smoothness.  Note that surface and tracktype keys have a higher priority than smoothness.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "taxi",
       "value": "no",
       "object_types": [
