@@ -373,6 +373,14 @@ Api get_request(const std::string& request_str, const Options::Action action) {
   return request;
 }
 
+Api get_http_request(const std::string& body, const prime_server::headers_t headers = prime_server::headers_t{}) {
+  Api api;
+  prime_server::http_request_t request(prime_server::method_t::POST, "/route", body, prime_server::query_t{}, headers);
+  ParseApi(request, api);
+  return api;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // test parsing methods
 std::string get_costing_str(Costing::Type costing) {
@@ -1641,6 +1649,21 @@ void test_closure_factor_parsing(const Costing::Type costing_type,
   validate(key, expected_value, options.closure_factor());
 }
 
+void test_language_parsing(const std::string expected_value,
+                           const std::string language_arg,
+                           const std::string language_header) {
+  const std::string key = "language";
+  auto req_body = language_arg.empty() ? "{}" : get_request_str(key, language_arg);
+
+  prime_server::headers_t headers{};
+  if (!language_header.empty()) {
+    headers.insert({"Accept-Language", language_header});
+  }
+
+  Api request = get_http_request(req_body, headers);
+  validate(key, expected_value, request.options().language());
+}
+
 // utility functions for testing disable_hierarchy_pruning
 // Create costing options (reference: /test/astar.cc)
 void create_costing_options(Options& options, Costing::Type type) {
@@ -2885,6 +2908,45 @@ INSTANTIATE_TEST_SUITE_P(disable_hierarchy_pruning,
                                            Costing::truck,
                                            Costing::motorcycle,
                                            Costing::taxi));
+
+TEST(ParseRequest, test_language_parsing) {
+  // The basics with the usual arg
+  test_language_parsing("en-US", "en-US", "");
+  test_language_parsing("et-EE", "et-EE", "");
+
+  // The header will be ignored when a language option is already set
+  test_language_parsing("en-GB", "en-GB", "en-US");
+
+  // Invalid/unsupported languages are ignored
+  test_language_parsing("en-US", "tlh", "");
+  test_language_parsing("en-US", "", "tlh");
+
+  // Header used as fallback when no option set
+  test_language_parsing("en-GB", "", "en-GB");
+
+  // We can even specify multiple languages, and it will pick the first supported one
+  test_language_parsing("et-EE", "", "tlh, et-EE, en-US");
+
+  // Unusual language
+  test_language_parsing("en-x-pirate", "en-x-pirate", "");
+  test_language_parsing("en-x-pirate", "", "en-x-pirate");
+
+  // q-values
+  test_language_parsing("et-EE", "", "et-EE;q=1.0, en-US");
+  test_language_parsing("et-EE", "", "et-EE;q=1, en-US");
+  test_language_parsing("en-US", "", "et-EE;q=0, en-US");
+  test_language_parsing("en-US", "", "et-EE;q=0.0, en-US");
+  test_language_parsing("en-US", "", "et-EE;q=0.8, en-US");
+  test_language_parsing("en-US", "", "et-EE;q=0.8, en-US;q=0.9");
+
+  // Invalid q-values will be parsed as the default (1)
+  test_language_parsing("en-US", "", "et-EE;q=0.8, en-US;q=x");
+  test_language_parsing("en-US", "", "et-EE;q=0.8, en-US;q=1.x");
+  test_language_parsing("en-US", "", "et-EE;q=0.8, en-US;q=1.");
+
+  // Invalid header
+  test_language_parsing("en-US", "", "x");
+}
 
 } // namespace
 

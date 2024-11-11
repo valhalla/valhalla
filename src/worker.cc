@@ -1,3 +1,4 @@
+#include <regex>
 #include <sstream>
 #include <typeinfo>
 #include <unordered_map>
@@ -1339,6 +1340,61 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& request)
   return body.str();
 }
 
+// Regex for matching components of an Accept-Language header.
+const std::regex language_re(R"(([a-zA-Z0-9\-]{2,}|\*)(?:;q=(\d(?:\.\d+)?))?)");
+
+std::string ParseAcceptLanguage(headers_t headers) {
+  auto accept_language_header = headers.find("Accept-Language");
+  if (accept_language_header != headers.end()) {
+    // Parse the list of languages.
+    // The final argument says we want to get groups 1 and 2 from each match.
+    std::sregex_token_iterator it(accept_language_header->second.begin(), accept_language_header->second.end(), language_re, {1, 2});
+    std::sregex_token_iterator end;
+
+    // Iterate through weighted matches
+    bool found_usable_language = false;
+    // Pre-allocate; ternary necessary because with no matches, length will segfault
+    std::vector<std::pair<float, std::string>> languages(it != end ? it->length() : 0);
+    while (it != end) {
+      std::string language = *it++;
+      float q_value = 1.0;
+
+      if (it != end && it->length() > 0) {
+          q_value = std::stof(*it);
+      }
+
+      // Check if it's a usable language first.
+      // In the case of headers, it's often implicit without the developer having to act,
+      // so we gracefully ignore any unsupported options and pick the best one.
+      // We do not currently consider things like falling back to a different variant
+      // of a supported language, but this could be considered in the future.
+      if (odin::get_locales().find(language) != odin::get_locales().end()) {
+        // If the quality is 1 (max) and we don't have any usable matches yet,
+        // we can skip further checks
+        if (q_value == 1.0 && !found_usable_language) {
+          return language;
+        }
+        found_usable_language = true;
+
+        languages.push_back(std::make_pair(q_value, language));
+      }
+
+      ++it;
+    }
+
+    auto max_it = std::max_element(languages.begin(), languages.end(),
+                                   [](const std::pair<float, std::string>& a, const std::pair<float, std::string>& b) {
+                                     return a.first < b.first;
+                                   });
+
+    if (max_it != languages.end()) {
+      return max_it->second;
+    }
+  }
+
+  return "";
+}
+
 void ParseApi(const std::string& request, Options::Action action, valhalla::Api& api) {
   // maybe parse some json
   auto document = from_string(request, valhalla_exception_t{100});
@@ -1412,6 +1468,13 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
       array.PushBack({value, allocator}, allocator);
     }
     document.AddMember({kv.first, allocator}, array, allocator);
+  }
+
+  if (!document.HasMember("language")) {
+    // Fall back to the Accept-Language header
+    auto language = ParseAcceptLanguage(request.headers);
+
+    document.AddMember({"language", allocator}, {language, allocator}, allocator);
   }
 
   // parse out the options
