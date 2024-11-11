@@ -2928,8 +2928,12 @@ TEST(ParseRequest, test_language_parsing) {
   test_language_parsing("et-EE", "", "tlh, et-EE, en-US");
 
   // Unusual language
-  test_language_parsing("en-x-pirate", "en-x-pirate", "");
-  test_language_parsing("en-x-pirate", "", "en-x-pirate");
+  test_language_parsing("en-US-x-pirate", "en-US-x-pirate", "");
+  test_language_parsing("en-US-x-pirate", "", "en-US-x-pirate");
+
+  // Aliases are accepted
+  test_language_parsing("en", "en", "");
+  test_language_parsing("en", "", "en");
 
   // q-values
   test_language_parsing("et-EE", "", "et-EE;q=1.0, en-US");
