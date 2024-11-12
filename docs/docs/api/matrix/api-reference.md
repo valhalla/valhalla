@@ -91,8 +91,8 @@ The following parameters are only present in `"verbose": true` mode:
 
 | Item | Description |
 | :---- | :----------- |
-| `sources` | the sources passed to the request |
-| `targets` | the targets passed to the request |
+| `sources` | The sources passed to the request. |
+| `targets` | The targets passed to the request. |
 | `sources_to_targets` | An array of time and distance between the sources and the targets.<br>The array is <b>row-ordered</b>. This means that the time and distance from the first location to all others forms the first row of the array, followed by the time and distance from the second source location to all target locations, etc.<br>The Object contained in the arrays contains the following fields:<ul><li><code>distance</code>: The computed distance between each set of points. Distance will always be 0.00 for the first element of the time-distance array for <code>one_to_many</code>, the last element in a <code>many_to_one</code>, and the first and last elements of a <code>many_to_many</code>.</li><li><code>time</code>: The computed time between each set of points. Time will always be 0 for the first element of the time-distance array for <code>one_to_many</code>, the last element in a <code>many_to_one</code>, and the first and last elements of a <code>many_to_many</code>.</li><li><code>to_index</code>: The destination index into the locations array.</li><li><code>from_index</code>: The origin index into the locations array.</li></ul> |
 
 ### Concise mode  (`"verbose": false`)
