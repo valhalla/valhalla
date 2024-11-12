@@ -372,6 +372,12 @@ public:
     return mutable_edge_->levels();
   }
 
+  bool traverses_levels() const {
+    return !mutable_edge_->levels().empty() &&
+           (mutable_edge_->levels().size() > 1 ||
+            mutable_edge_->levels()[0].start() != mutable_edge_->levels()[0].end());
+  }
+
   bool IsUnnamed() const;
 
   // Use
