@@ -316,6 +316,7 @@ message Costing {
     oneof has_hgv_no_access_penalty {
       float hgv_no_access_penalty = 85;
     }
+    float use_truck_route = 86;
   }
 
   oneof has_options {
@@ -378,6 +379,7 @@ message Options {
     edge_status = 3;
     edge_id = 4;
     pred_edge_id = 5;
+    expansion_type = 6;
   }
 
   Units units = 1;                                                 // kilometers or miles
@@ -494,5 +496,7 @@ message Options {
   bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
   float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
   bool voice_instructions = 57;                                    // Whether to return voiceInstructions in the OSRM serializer response
-  bool road_segments = 58;                                         // Whether to return full road segments for edges in the locate response 
+  bool road_segments = 92;                                         // Whether to return full road segments for edges in the locate response 
+  bool dedupe = 58;                                                // Keep track of edges and override their properties during expansion,
+                                                                   // ensuring that each edge appears in the output only once. [default = false]
 }

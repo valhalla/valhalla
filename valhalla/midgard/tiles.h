@@ -1,10 +1,8 @@
-
 #ifndef VALHALLA_MIDGARD_TILES_H_
 #define VALHALLA_MIDGARD_TILES_H_
 
 #include <cstdint>
 #include <functional>
-#include <list>
 #include <unordered_map>
 #include <unordered_set>
 

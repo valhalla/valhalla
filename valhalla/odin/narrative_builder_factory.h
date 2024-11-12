@@ -2,7 +2,6 @@
 #define VALHALLA_ODIN_NARRATIVE_BUILDER_FACTORY_H_
 
 #include <memory>
-#include <string>
 
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/markup_formatter.h>

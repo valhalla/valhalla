@@ -1,7 +1,6 @@
 #ifndef VALHALLA_BALDR_STREETNAMES_US_H_
 #define VALHALLA_BALDR_STREETNAMES_US_H_
 
-#include <list>
 #include <memory>
 
 #include <valhalla/baldr/streetname_us.h>

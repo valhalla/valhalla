@@ -18,8 +18,6 @@
 #include <ctime>
 #include <fstream>
 #include <iomanip>
-#include <iostream>
-#include <locale>
 #include <string>
 #include <thread>
 #include <utility>

@@ -1,10 +1,9 @@
 #include "mjolnir/elevationbuilder.h"
 
 #include <future>
+#include <random>
 #include <thread>
 #include <utility>
-
-#include <boost/format.hpp>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"

@@ -158,8 +158,7 @@ TEST(Shortcuts, ShortcutSpeed) {
 }
 
 TEST(Shortcuts, TruckSpeedNotSet) {
-  // When truck speed is not set normal speed is used to calculate shortcut truck speed, which
-  // is clamped at 90 KPH.
+  // When truck speed is not set normal speed is used to calculate shortcut truck speed
   // As a result it should be equal to normal shortcut speed.
   const std::string ascii_map = R"(A-----B\
                                            \C
@@ -199,8 +198,8 @@ TEST(Shortcuts, TruckSpeedNotSet) {
       if (!edge->is_shortcut() || !(edge->forwardaccess() & baldr::kAutoAccess))
         continue;
 
-      // truck speed should be smaller than the edge speed
-      EXPECT_GT(edge->speed(), edge->truck_speed());
+      // truck speed should be equal to edge speed by default
+      EXPECT_EQ(edge->speed(), edge->truck_speed());
       found_shortcut = true;
     }
   }

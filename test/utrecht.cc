@@ -6,7 +6,6 @@
 #include <cstdint>
 
 #include <boost/property_tree/ptree.hpp>
-#include <fstream>
 
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"

@@ -5,7 +5,6 @@
 #include "mjolnir/servicedays.h"
 
 #include <future>
-#include <queue>
 #include <thread>
 
 #include <boost/algorithm/string.hpp>

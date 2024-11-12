@@ -2,7 +2,6 @@
 #define VALHALLA_SIF_EDGELABEL_H_
 
 #include <cstdint>
-#include <limits>
 #include <string.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>

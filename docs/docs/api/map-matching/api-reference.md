@@ -14,6 +14,8 @@ The `trace_route` action takes the costing mode and a list of latitude,longitude
 
 By default a single trip leg is returned in a trace_route response. You can split the route response into multiple legs by setting `"type":"break"` on any of the input shape objects in the `shape` parameter of your query. The first and last locations should always have type break. Note that setting breaks is not supported for encoded_polyline input, and is only supported for `map_snap` mode of the trace_route endpoint.
 
+If the path contains one or more discontinuities (i.e. no path can be found between two locations), it is split into multiple paths. Any remaining paths from the first discontinuity onwards are stored as route alternates on the response.
+
 ## Trace attributes action
 
 The `trace_attributes` action takes the costing mode and a GPS trace or latitude,longitude positions and returns detailed attribution along the portion of the route. This includes details for each section of road along the path, as well as any intersections along the path. Some of the use cases for `trace_attributes` include getting:
@@ -39,9 +41,7 @@ Note that the attributes that are returned are Valhalla routing attributes, not 
 
 ### Costing models and other options
 
-Valhalla Map Matching uses the `auto`, `auto_shorter`, `bicycle`, `bus`, and `pedestrian` costing models available in the Valhalla route service. Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
-
-Costing for `multimodal` is not supported for map matching because it would be difficult to get favorable GPS traces.
+Valhalla Map Matching can use any costing model available in the Valhalla route service except for `multimodal` (it would be difficult to get a GPS trace and detect certain mode changes). Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 You can also set `directions_options` to specify output units, language, and whether or not to return directions in a narrative form. Refer to the [route options](../turn-by-turn/api-reference.md#directions-options) documentation for examples.
 
@@ -115,6 +115,8 @@ edge.density
 edge.speed_limit
 edge.truck_speed
 edge.truck_route
+edge.country_crossing
+edge.forward
 
 // Node filter keys
 node.intersecting_edge.begin_heading
@@ -218,7 +220,10 @@ Each `edge` may include:
 | `truck_speed` | Edge truck speed in the units specified. The default is kilometers per hour. |
 | `truck_route` | True if edge is part of a truck network/route. |
 | `end_node` | The node at the end of this edge. See the list of [end node items](#end-node-items) for details. |
-| `landmarks` | List of landmarks along the edge. They are used as direction support in navigation. |
+| `landmarks` | List of landmarks along the edge. They are used as direction support in navigation. |                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `country_crossing` | True if the edge is a country crossing. |                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `forward` | True if the edge is traversed forwards and False if it is traversed backwards with respect to the reference shape/geometry (ie. the direction in which it was digitized). |
+
 
 #### Sign items
 

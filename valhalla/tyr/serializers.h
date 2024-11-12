@@ -1,8 +1,6 @@
 #ifndef __VALHALLA_TYR_SERVICE_H__
 #define __VALHALLA_TYR_SERVICE_H__
 
-#include <iostream>
-#include <list>
 #include <string>
 #include <unordered_map>
 #include <vector>

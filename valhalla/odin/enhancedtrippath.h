@@ -422,7 +422,7 @@ public:
 
   std::vector<std::pair<std::string, bool>> GetNameList() const;
 
-  std::string GetLevelRef() const;
+  std::vector<std::string> GetLevelRef() const;
 
   float GetLength(const Options::Units& units);
 

@@ -79,6 +79,7 @@ std::string get_edge_shape(const DirectedEdge* de, GraphReader& reader) {
 
 json::MapPtr get_full_road_segment(const DirectedEdge* de,
                                    const std::shared_ptr<sif::DynamicCost>& costing,
+                                   const double percent_along,
                                    GraphReader& reader) {
   // first, find the beginning of the road segment
   // things we need: the opposing edge and its start node
@@ -267,11 +268,10 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   }
 
   double length = 0;
-
-  std::function<void(const PointLL&, const PointLL, double&)> shape_length;
-  shape_length = [&](const PointLL& from, const PointLL to, double& acc) {
-    acc += from.Distance(to);
-  };
+  double percent_along_total = 0;
+  bool past_correlated_edge = false;
+  std::function<double(const PointLL&, const PointLL)> segment_length;
+  segment_length = [&](const PointLL& from, const PointLL to) { return from.Distance(to); };
   // assemble the shape
   std::list<midgard::PointLL> concatenated_shape;
   for (auto e : edges) {
@@ -286,10 +286,15 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
     auto shape_itr = shape.begin();
     auto next_shape_itr = ++shape.begin();
 
-    uint32_t acc_;
+    double acc_ = 0;
     for (; next_shape_itr != shape.end(); ++shape_itr, ++next_shape_itr) {
-      shape_length(*shape_itr, *next_shape_itr, length);
+      auto dist = segment_length(*shape_itr, *next_shape_itr);
+      acc_ += dist;
     }
+    if (e == de) {
+      percent_along_total = length + (acc_ * percent_along);
+    }
+    length += acc_;
     concatenated_shape.insert(concatenated_shape.end(), shape.begin(), shape.end());
   }
 
@@ -331,8 +336,10 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   auto intersection = json::map({{"start_node", start_node_map}, {"end_node", end_node_map}});
   auto mid_point =
       json::map({{"lat", json::fixed_t{mid.lat(), 6}}, {"lon", json::fixed_t{mid.lng(), 6}}});
-  auto road_segments =
-      json::map({{"shape", shape}, {"intersections", intersection}, {"mid_point", mid_point}});
+  auto road_segments = json::map({{"shape", shape},
+                                  {"intersections", intersection},
+                                  {"mid_point", mid_point},
+                                  {"percent_along", json::fixed_t{percent_along_total / length, 5}}});
 
   return road_segments;
 }
@@ -392,7 +399,8 @@ json::ArrayPtr serialize_edges(const PathLocation& location,
         });
 
         if (intersections)
-          info->insert({"full_road_segment", get_full_road_segment(directed_edge, costing, reader)});
+          info->insert({"full_road_segment",
+                        get_full_road_segment(directed_edge, costing, edge.percent_along, reader)});
 
         array->emplace_back(info);
       } // they want it lean and mean
@@ -409,7 +417,8 @@ json::ArrayPtr serialize_edges(const PathLocation& location,
         });
 
         if (intersections)
-          info->insert({"full_road_segment", get_full_road_segment(directed_edge, costing, reader)});
+          info->insert({"full_road_segment",
+                        get_full_road_segment(directed_edge, costing, edge.percent_along, reader)});
 
         array->emplace_back(info);
       }

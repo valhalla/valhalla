@@ -69,6 +69,7 @@ const std::string kEdgeShoulder = "edge.shoulder";
 const std::string kEdgeSidewalk = "edge.sidewalk";
 const std::string kEdgeDensity = "edge.density";
 const std::string kEdgeSpeedLimit = "edge.speed_limit";
+const std::string kEdgeConditionalSpeedLimits = "edge.conditional_speed_limits";
 const std::string kEdgeTruckSpeed = "edge.truck_speed";
 const std::string kEdgeTruckRoute = "edge.truck_route";
 const std::string kEdgeDefaultSpeed = "edge.default_speed";
@@ -77,6 +78,8 @@ const std::string kEdgeIsUrban = "edge.is_urban";
 const std::string kEdgeTaggedValues = "edge.tagged_values";
 const std::string kEdgeIndoor = "edge.indoor";
 const std::string kEdgeLandmarks = "edge.landmarks";
+const std::string kEdgeCountryCrossing = "edge.country_crossing";
+const std::string kEdgeForward = "edge.forward";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
