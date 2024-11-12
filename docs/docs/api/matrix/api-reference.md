@@ -73,7 +73,7 @@ However, there are important limitations of the `/sources_to_targets` service's 
 
 ## Outputs of the matrix service
 
-Depending on the `verbose` request parameter, the result of the Time-Distance Matrix service is different.
+Depending on the `verbose` (default: `true`) request parameter, the result of the Time-Distance Matrix service is different.
 In both (`"verbose": true` and `"verbose": false`) cases, these parameters are present:
 
 | Item | Description |
@@ -87,7 +87,7 @@ See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-a
 
 ### Verbose mode (`"verbose": true`)
 
-The foollowing parameters are only present in `"verbose": true` mode:
+The following parameters are only present in `"verbose": true` mode:
 
 | Item | Description |
 | :---- | :----------- |
@@ -95,7 +95,7 @@ The foollowing parameters are only present in `"verbose": true` mode:
 | `targets` | the targets passed to the request |
 | `sources_to_targets` | An array of time and distance between the sources and the targets.<br>The array is <b>row-ordered</b>. This means that the time and distance from the first location to all others forms the first row of the array, followed by the time and distance from the second source location to all target locations, etc.<br>The Object contained in the arrays contains the following fields:<ul><li><code>distance</code>: The computed distance between each set of points. Distance will always be 0.00 for the first element of the time-distance array for <code>one_to_many</code>, the last element in a <code>many_to_one</code>, and the first and last elements of a <code>many_to_many</code>.</li><li><code>time</code>: The computed time between each set of points. Time will always be 0 for the first element of the time-distance array for <code>one_to_many</code>, the last element in a <code>many_to_one</code>, and the first and last elements of a <code>many_to_many</code>.</li><li><code>to_index</code>: The destination index into the locations array.</li><li><code>from_index</code>: The origin index into the locations array.</li></ul> |
 
-### Concice mode  (`"verbose": false`)
+### Concise mode  (`"verbose": false`)
 
 | Item | Description |
 | :---- | :----------- |
