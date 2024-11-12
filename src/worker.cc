@@ -1473,7 +1473,6 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
   if (!document.HasMember("language")) {
     // Fall back to the Accept-Language header
     auto language = ParseAcceptLanguage(request.headers);
-
     document.AddMember({"language", allocator}, {language, allocator}, allocator);
   }
 
