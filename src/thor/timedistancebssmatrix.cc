@@ -463,7 +463,7 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
     // Subtract the partial remaining cost and distance along the edge.
     float remainder = dest_edge->second;
     Cost newcost = pred.cost() - (pedestrian_costing_->EdgeCost(edge, tile) * remainder);
-    if (newcost.cost < dest.best_cost.cost) {
+    if (newcost.cost > 0 && newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);
     }
