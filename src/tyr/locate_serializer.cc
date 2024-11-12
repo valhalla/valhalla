@@ -286,23 +286,21 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
     auto shape_itr = shape.begin();
     auto next_shape_itr = ++shape.begin();
 
+    // get the edge length
     double acc_ = 0;
     for (; next_shape_itr != shape.end(); ++shape_itr, ++next_shape_itr) {
       auto dist = segment_length(*shape_itr, *next_shape_itr);
       acc_ += dist;
     }
+
+    // if this edge is the correlated edge, calculate
+    // the percent_along along the complete road segment
     if (e == de) {
       percent_along_total = length + (acc_ * percent_along);
     }
     length += acc_;
     concatenated_shape.insert(concatenated_shape.end(), shape.begin(), shape.end());
   }
-
-  // get the shape mid point
-  //   - walk the segments
-  //   - sum the length in meters
-  //   - when over 50% of total length, break
-  //   - get the current segment vector, and change its length accordingly to get to the mid point
 
   // walk the edge segments
   auto shape_itr = concatenated_shape.begin();
@@ -313,9 +311,10 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   for (; next_shape_itr != concatenated_shape.end(); ++shape_itr, ++next_shape_itr) {
     auto dist = (*shape_itr).Distance(*next_shape_itr);
     acc_ += dist;
+
+    // if we've passed the 50% threshold, stop and get the exact mid point
     if (acc_ / length > 0.5f) {
       auto missing_length_m = (length * 0.5f) - (acc_ - dist);
-
       mid = (*shape_itr).PointAlongSegment(*next_shape_itr, missing_length_m / dist);
       break;
     }
