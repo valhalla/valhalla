@@ -266,6 +266,12 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
     }
   }
 
+  double length = 0;
+
+  std::function<void(const PointLL&, const PointLL, double&)> shape_length;
+  shape_length = [&](const PointLL& from, const PointLL to, double& acc) {
+    acc += from.Distance(to);
+  };
   // assemble the shape
   std::list<midgard::PointLL> concatenated_shape;
   for (auto e : edges) {
@@ -276,7 +282,42 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       std::reverse(shape.begin(), shape.end());
     if (concatenated_shape.size())
       concatenated_shape.pop_back();
+    // walk the edge segments
+    auto shape_itr = shape.begin();
+    auto next_shape_itr = ++shape.begin();
+
+    uint32_t acc_;
+    for (; next_shape_itr != shape.end(); ++shape_itr, ++next_shape_itr) {
+      shape_length(*shape_itr, *next_shape_itr, length);
+    }
     concatenated_shape.insert(concatenated_shape.end(), shape.begin(), shape.end());
+  }
+
+  // get the shape mid point
+  //   - walk the segments
+  //   - sum the length in meters
+  //   - when over 50% of total length, break
+  //   - get the current segment vector, and change its length accordingly to get to the mid point
+
+  // walk the edge segments
+  auto shape_itr = concatenated_shape.begin();
+  auto next_shape_itr = ++concatenated_shape.begin();
+
+  double acc_;
+  PointLL mid;
+  for (; next_shape_itr != concatenated_shape.end(); ++shape_itr, ++next_shape_itr) {
+    auto dist = (*shape_itr).Distance(*next_shape_itr);
+    acc_ += dist;
+    if (acc_ / length > 0.5f) {
+      auto missing_length_m = (length * 0.5f) - (acc_ - dist);
+
+      mid = (*shape_itr).PointAlongSegment(*next_shape_itr, missing_length_m / dist);
+      break;
+    }
+  }
+
+  if (next_shape_itr == concatenated_shape.end()) {
+    LOG_ERROR("Unexpected end of shape.");
   }
 
   std::string shape = midgard::encode(concatenated_shape);
@@ -288,7 +329,10 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   auto end_node = end_tile->node(node_id);
   auto end_node_map = json::map({{"id", node_id.json()}, {"node", end_node->json(end_tile)}});
   auto intersection = json::map({{"start_node", start_node_map}, {"end_node", end_node_map}});
-  auto road_segments = json::map({{"shape", shape}, {"intersections", intersection}});
+  auto mid_point =
+      json::map({{"lat", json::fixed_t{mid.lat(), 6}}, {"lon", json::fixed_t{mid.lng(), 6}}});
+  auto road_segments =
+      json::map({{"shape", shape}, {"intersections", intersection}, {"mid_point", mid_point}});
 
   return road_segments;
 }
