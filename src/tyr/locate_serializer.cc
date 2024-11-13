@@ -141,7 +141,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
 
           allowed_cnt++;
           incoming_pred = incoming_edge;
-          outgoing_pred = outgoing_pred;
+          outgoing_pred = outgoing_edge;
         }
       }
 
