@@ -518,7 +518,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     float remainder = dest_edge->second;
     Cost newcost =
         pred.cost() - (costing_->EdgeCost(edge, tile, time_info, flow_sources) * remainder);
-    if (newcost.cost < dest.best_cost.cost) {
+    if (newcost.cost > 0 &&newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);
     }
