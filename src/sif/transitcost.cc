@@ -184,14 +184,18 @@ public:
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  edge  Directed edge (the to edge)
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  Predecessor edge information.
-   * @return  Returns the cost and time (seconds)
+   * @param  edge   Directed edge (the to edge)
+   * @param  node   Node (intersection) where transition occurs.
+   * @param  pred   Predecessor edge information.
+   * @param  tile   Pointer to the graph tile containing the to edge.
+   * @param  reader Grahpreader to get the tile containing the predecessor if needed
+   * @return Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const override;
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile,
+                              baldr::GraphReader& reader) const override;
 
   /**
    * Returns the transfer cost between 2 transit stops.
@@ -584,8 +588,10 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
-                                 const baldr::NodeInfo*,
-                                 const EdgeLabel& pred) const {
+                                 const baldr::NodeInfo* node,
+                                 const EdgeLabel& pred,
+                                 const graph_tile_ptr& tile,
+                                 baldr::GraphReader& reader) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?

@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -39,15 +39,17 @@ protected:
               |
               B
               |
-              C---------x--------y
-              |                  |
-    D----E----F----G----H----I---J--S--T--U
-    |         |
-    N         K
-    |         |
-    O         L
-              |
-              M
+              C---------x-------y
+              |                 |
+    D----E----F----G----H---I---J--S--T--U
+    |         |         |
+    N         K         |
+    |         |         |
+    O         L         P
+              |         |
+              M         |
+                        |
+                        Q
     )";
 
     const gurka::ways ways = {
@@ -81,11 +83,14 @@ protected:
         {"ZY", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "4"}}},
         {"YX", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "4;5"}}},
         {"XW", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "5"}}},
+        {"HP", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "2"}}},
+        {"PQ", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "17"}}},
     };
 
     const gurka::nodes nodes = {
         {"E", {{"entrance", "yes"}, {"indoor", "yes"}}},
         {"I", {{"highway", "elevator"}, {"indoor", "yes"}, {"level", "2;3"}}},
+        {"P", {{"highway", "elevator"}, {"indoor", "yes"}, {"level", "1-25"}}},
     };
 
     layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
@@ -353,6 +358,24 @@ TEST_F(Indoor, NodeElevatorLevelChanges) {
   doc.Parse(route_json.c_str());
 
   check_level_changes(doc, {{0, 2.f}, {1, 3.f}});
+}
+
+TEST_F(Indoor, NodeElevatorPenalty) {
+  // get a route via a node-modeled elevator and check the level changelog
+  std::string route_json;
+  auto result1 =
+      gurka::do_action(valhalla::Options::route, map, {"H", "J"}, "pedestrian", {}, {}, &route_json);
+  gurka::assert::raw::expect_path(result1, {"HI", "IJ"});
+
+  auto result2 =
+      gurka::do_action(valhalla::Options::route, map, {"H", "Q"}, "pedestrian", {}, {}, &route_json);
+  gurka::assert::raw::expect_path(result2, {"HP", "PQ"});
+
+  // compare cost
+  const auto& nodes1 = result1.trip().routes(0).legs(0).node();
+  const auto& nodes2 = result2.trip().routes(0).legs(0).node();
+  EXPECT_LT(nodes1.at(nodes1.size() - 1).cost().elapsed_cost().cost(),
+            nodes2.at(nodes2.size() - 1).cost().elapsed_cost().cost());
 }
 /****************************************************************************************/
 

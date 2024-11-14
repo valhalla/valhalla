@@ -114,9 +114,10 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     auto edge_cost = FORWARD ? current_costing->EdgeCost(directededge, tile)
                              : current_costing->EdgeCost(opp_edge, t2);
     auto transition_cost =
-        FORWARD ? current_costing->TransitionCost(directededge, nodeinfo, pred)
-                : current_costing->TransitionCostReverse(directededge->localedgeidx(), nodeinfo,
-                                                         opp_edge, opp_pred_edge);
+        FORWARD
+            ? current_costing->TransitionCost(directededge, nodeinfo, pred, tile, graphreader)
+            : current_costing->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                     opp_pred_edge, t2, pred.edgeid(), graphreader);
 
     Cost normalized_edge_cost = {edge_cost.cost * current_costing->GetModeFactor(), edge_cost.secs};
     // Compute the cost to the end of this edge

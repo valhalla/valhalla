@@ -119,8 +119,8 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
     : dest_only_penalty_{0.f, kDefaultDestinationOnlyPenalty, kMaxPenalty},
       maneuver_penalty_{0.f, kDefaultManeuverPenalty, kMaxPenalty},
       alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
-      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
-                                                                    kMaxPenalty},
+      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty},
+      gate_penalty_{0.f, kDefaultGatePenalty, kMaxPenalty},
       private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
       country_crossing_cost_{0.f, kDefaultCountryCrossingCost, kMaxPenalty},
       country_crossing_penalty_{0.f, kDefaultCountryCrossingPenalty, kMaxPenalty},
@@ -128,17 +128,15 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       toll_booth_penalty_{0.f, kDefaultTollBoothPenalty, kMaxPenalty},
       ferry_cost_{0.f, kDefaultFerryCost, kMaxPenalty}, use_ferry_{0.f, kDefaultUseFerry, 1.f},
       rail_ferry_cost_{0.f, kDefaultRailFerryCost, kMaxPenalty},
-      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f}, service_penalty_{0.f, kDefaultServicePenalty,
-                                                                        kMaxPenalty},
-      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
-                                                                                  kDefaultUseTracks,
-                                                                                  1.f},
+      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f},
+      service_penalty_{0.f, kDefaultServicePenalty, kMaxPenalty},
+      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor},
+      use_tracks_{0.f, kDefaultUseTracks, 1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
       closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_bridges_(false),
       exclude_tunnels_(false), exclude_tolls_(false), exclude_highways_(false),
-      exclude_ferries_(false), has_excludes_(false),
-      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
-                                                                                      false} {
+      exclude_ferries_(false), has_excludes_(false), exclude_cash_only_tolls_(false),
+      include_hot_{false}, include_hov2_{false}, include_hov3_{false} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -199,7 +197,11 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCost(const DirectedEdge*, const NodeInfo*, const EdgeLabel&) const {
+Cost DynamicCost::TransitionCost(const DirectedEdge*,
+                                 const NodeInfo*,
+                                 const EdgeLabel&,
+                                 const graph_tile_ptr&,
+                                 baldr::GraphReader&) const {
   return {0.0f, 0.0f};
 }
 
@@ -211,6 +213,9 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
                                         const baldr::DirectedEdge*,
+                                        const graph_tile_ptr&,
+                                        const baldr::GraphId&,
+                                        baldr::GraphReader&,
                                         const bool,
                                         const InternalTurn) const {
   return {0.0f, 0.0f};

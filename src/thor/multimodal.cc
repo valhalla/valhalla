@@ -462,7 +462,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       // transition_cost = {10.0f, 10.0f };
     } else {
       transition_cost =
-          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
+          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred,
+                                                                     tile, graphreader);
     }
     newcost += transition_cost;
 
@@ -733,7 +734,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     }
 
     // Get cost
-    auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+    auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile, graphreader);
     Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile) + transition_cost;
     uint32_t walking_distance = pred.path_distance() + directededge->length();
 
