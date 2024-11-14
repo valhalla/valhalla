@@ -275,7 +275,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   // assemble the shape
   std::list<midgard::PointLL> concatenated_shape;
   for (auto e : edges) {
-    auto tile = reader.GetGraphTile(e->endnode());
+    auto opp_de = get_opposing_edge(e, reader);
+    auto tile = reader.GetGraphTile(opp_de->endnode());
     auto edge_info = tile->edgeinfo(e);
     auto shape = edge_info.shape();
     if (!e->forward())
