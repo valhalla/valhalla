@@ -307,16 +307,19 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   auto shape_itr = concatenated_shape.begin();
   auto next_shape_itr = ++concatenated_shape.begin();
 
-  double acc_;
+  double acc_ = 0.f;
   PointLL mid;
   for (; next_shape_itr != concatenated_shape.end(); ++shape_itr, ++next_shape_itr) {
-    auto dist = (*shape_itr).Distance(*next_shape_itr);
+    auto dist = shape_itr->Distance(*next_shape_itr);
     acc_ += dist;
 
     // if we've passed the 50% threshold, stop and get the exact mid point
-    if (acc_ / length > 0.5f) {
+    if ((acc_ / length) > 0.5f) {
       auto missing_length_m = (length * 0.5f) - (acc_ - dist);
-      mid = (*shape_itr).PointAlongSegment(*next_shape_itr, missing_length_m / dist);
+      auto frac = missing_length_m / dist;
+      // LOG_ERROR("Frac=" + std::to_string(frac) + "|Dist=" + std::to_string(dist) +
+      //           "|Acc=" + std::to_string(acc_) + "|Length=" + std::to_string(length));
+      mid = shape_itr->PointAlongSegment(*next_shape_itr, frac);
       break;
     }
   }
