@@ -588,10 +588,10 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
-                                 const baldr::NodeInfo* node,
+                                 const baldr::NodeInfo* /*node*/,
                                  const EdgeLabel& pred,
-                                 const graph_tile_ptr& tile,
-                                 baldr::GraphReader& reader) const {
+                                 const graph_tile_ptr& /*tile*/,
+                                 baldr::GraphReader& /*reader*/) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?

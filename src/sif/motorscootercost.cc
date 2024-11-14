@@ -479,8 +479,8 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
 Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
                                       const baldr::NodeInfo* node,
                                       const EdgeLabel& pred,
-                                      const graph_tile_ptr& tile,
-                                      baldr::GraphReader& reader) const {
+                                      const graph_tile_ptr& /*tile*/,
+                                      baldr::GraphReader& /*reader*/) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -544,9 +544,9 @@ Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
                                              const baldr::NodeInfo* node,
                                              const baldr::DirectedEdge* pred,
                                              const baldr::DirectedEdge* edge,
-                                             const graph_tile_ptr& tile,
-                                             const GraphId& pred_id,
-                                             baldr::GraphReader& reader,
+                                             const graph_tile_ptr& /*tile*/,
+                                             const GraphId& /*pred_id*/,
+                                             baldr::GraphReader& /*reader*/,
                                              const bool has_measured_speed,
                                              const InternalTurn /*internal_turn*/) const {
 
