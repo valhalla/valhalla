@@ -8,6 +8,7 @@
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
    * ADDED: include level change info in `/route` response [#4942](https://github.com/valhalla/valhalla/pull/4942)
    * ADDED: steps and elevator maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
+   * ADDED: per level elevator penalty [#4973](https://github.com/valhalla/valhalla/pull/4973)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
