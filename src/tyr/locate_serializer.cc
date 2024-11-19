@@ -83,9 +83,11 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
                                    GraphReader& reader) {
   // first, find the beginning of the road segment
   // things we need: the opposing edge and its start node
+  if (de == nullptr)
+    return json::map({});
   auto opp_edge = get_opposing_edge(de, reader);
 
-  if (de->shortcut() || de->deadend() || opp_edge->deadend()) {
+  if (de->shortcut()) {
     return json::map({});
   }
   auto node_id = opp_edge->endnode();
@@ -110,8 +112,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       auto incoming_edge = get_opposing_edge(outgoing_edge, reader);
       if ((costing->Allowed(incoming_edge, reader.GetGraphTile(outgoing_edge->endnode()),
                             sif::kDisallowShortcut) ||
-           costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
-          !(incoming_edge->deadend() || outgoing_edge->deadend())) {
+           costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut))) {
 
         allowed_cnt++;
         outgoing_pred = outgoing_edge;
@@ -136,8 +137,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
 
         if ((costing->Allowed(incoming_edge, reader.GetGraphTile(outgoing_edge->endnode()),
                               sif::kDisallowShortcut) ||
-             costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
-            !(incoming_edge->deadend() || outgoing_edge->deadend())) {
+             costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut))) {
 
           allowed_cnt++;
           incoming_pred = incoming_edge;
@@ -161,7 +161,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
     }
 
     // if there's exactly one allowed incoming edge (except for the current opposing edge)
-    if (allowed_cnt == 1) {
+    if (allowed_cnt == 1 && incoming_pred->classification() == de->classification()) {
       // keep going back
       if (!(added_edges.insert(incoming_pred)).second) {
         LOG_WARN("Duplicate edge when finding beginning of road segment for edge.");
@@ -208,8 +208,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
         continue;
       if ((costing->Allowed(candidate_edge, tile, sif::kDisallowShortcut) ||
            costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
-                            sif::kDisallowShortcut)) &&
-          !(candidate_edge->deadend() || opp_candidate_edge->deadend())) {
+                            sif::kDisallowShortcut))) {
         allowed_cnt++;
         possible_next = candidate_edge;
       }
@@ -228,8 +227,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
         auto opp_candidate_edge = get_opposing_edge(candidate_edge, reader);
         if ((costing->Allowed(candidate_edge, tile, sif::kDisallowShortcut) ||
              costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
-                              sif::kDisallowShortcut)) &&
-            !(candidate_edge->deadend() || opp_candidate_edge->deadend())) {
+                              sif::kDisallowShortcut))) {
           allowed_cnt++;
           possible_next = candidate_edge;
         }
@@ -250,7 +248,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       expand_forw(trans->endnode(), false, trans->up());
     }
 
-    if (allowed_cnt == 1) {
+    if (allowed_cnt == 1 && possible_next->classification() == de->classification()) {
       // keep moving forwards
       if (!(added_edges.insert(possible_next)).second) {
         LOG_WARN("Duplicate edge when finding beginning of road segment for edge.");
