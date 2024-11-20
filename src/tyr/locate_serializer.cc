@@ -93,7 +93,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   auto node_id = opp_edge->endnode();
   auto node = reader.GetGraphTile(node_id)->node(node_id);
   auto edge = de;
-
+  bool is_deadend = false;
   std::unordered_set<const DirectedEdge*> added_edges;
   std::vector<const DirectedEdge*> edges;
   // crawl in reverse direction until we find a "true" intersection given the costing
@@ -176,6 +176,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       // we've found the start of the road segment
       // either because this is a valid intersection given the costing
       // or because there is no other edge to inspect
+      if (allowed_cnt == 0)
+        is_deadend = true;
       break;
     }
   }
@@ -261,6 +263,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       node_id = possible_next->endnode();
       node = reader.GetGraphTile(node_id)->node(node_id);
     } else {
+      if (allowed_cnt == 0)
+        is_deadend = true;
       break;
     }
   }
@@ -340,6 +344,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   auto road_segments = json::map({{"shape", shape},
                                   {"intersections", intersection},
                                   {"mid_point", mid_point},
+                                  {"deadend", is_deadend},
                                   {"percent_along", json::fixed_t{percent_along_total / length, 5}}});
 
   return road_segments;
