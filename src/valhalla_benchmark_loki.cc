@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
       ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>())
       ("b,batch", "Number of locations to group together per search", cxxopts::value<size_t>(batch)->default_value("1"))
       ("e,extrema", "Show the input locations of the extrema for a given statistic", cxxopts::value<bool>(extrema)->default_value("false"))
-      ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>(isolated)->default_value("1000"))
+      ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>(isolated)->default_value("50"))
       ("r,radius", "How many meters to search away from the input location", cxxopts::value<size_t>(radius)->default_value("0"))
       ("costing", "Which costing model to use.", cxxopts::value<std::string>(costing_str)->default_value("auto"))
       ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
