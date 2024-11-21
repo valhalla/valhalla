@@ -852,5 +852,64 @@ std::string decode64(const std::string& encoded) {
   return decoded;
 }
 
+template <class container_t> std::vector<float> get_bounding_circle(const container_t& shape) {
+  if (shape.empty()) {
+    return {};
+  }
+  // Make 1 pass through pts. Find the 4 pts with min_lat, max_lat, min_lng, max_lng
+  midgard::PointLL min_lat = shape.front();
+  midgard::PointLL min_lng = shape.front();
+  midgard::PointLL max_lat = shape.front();
+  midgard::PointLL max_lng = shape.front();
+  for (const auto& pt : shape) {
+    if (pt.lat() < min_lat.lat()) {
+      min_lat = pt;
+    } else if (pt.lat() > max_lat.lat()) {
+      max_lat = pt;
+    }
+    if (pt.lng() < min_lng.lng()) {
+      min_lng = pt;
+    } else if (pt.lng() > max_lng.lng()) {
+      max_lng = pt;
+    }
+  }
+
+  // Pick the pair with the largest distance between them. Use the
+  // midpoint of the pair as the center of the circle and the distance
+  // as the diameter
+  float radius;
+  midgard::PointLL center;
+  auto dlat = (max_lat - min_lat).Norm();
+  auto dlng = (max_lng - min_lng).Norm();
+  if (dlat >= dlng) {
+    center = min_lat + (max_lat - min_lat) * 0.5f;
+    radius = dlat * 0.5f;
+  } else {
+    center = min_lng + (max_lng - min_lng) * 0.5f;
+    radius = dlng * 0.5f;
+  }
+
+  // Make 2nd pass and check for vertices outside the circle. If any are outside,
+  // increase radius and shift the center to include the vertex and the "back-side"
+  // of the circle. This expansion should only be required for at most a few vertices.
+  float radius_sqr = radius * radius;
+  for (const auto& pt : shape) {
+    auto dv = pt - center;
+    float d2 = dv.NormSquared();
+    if (d2 > radius_sqr) {
+      // Vertex not in circle: expand circle to include the vertex.
+      // Increase radius and shift the center towards v
+      float d = sqrtf(d2);
+      radius = (radius + d) * 0.5f;
+      // TODO - why can't we use dv?
+      center = center + (pt - center) * ((d - radius) / d);
+    }
+  }
+  radius *= kMetersPerDegreeLat;
+  return {static_cast<float>(center.lat()), static_cast<float>(center.lng()), radius};
+}
+template std::vector<float> get_bounding_circle(const std::list<midgard::PointLL>& shape);
+template std::vector<float> get_bounding_circle(const std::vector<midgard::PointLL>& shape);
+
 } // namespace midgard
 } // namespace valhalla

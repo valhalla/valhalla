@@ -200,6 +200,14 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     }
     eib.set_encoded_shape(ei.encoded_shape());
 
+    // Add bounding circle
+    if (ei.has_bounding_circle()) {
+      auto bc = ei.bounding_circle();
+      if (bc) {
+        eib.set_bounding_circle({bc->lat_, bc->lng_, bc->radius_});
+      }
+    }
+
     // Add encoded elevation (if present)
     if (ei.has_elevation()) {
       auto length = edgemap.second;

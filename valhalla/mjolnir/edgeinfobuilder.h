@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include <valhalla/baldr/bounding_circle.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
@@ -95,6 +96,11 @@ public:
   void set_encoded_shape(const std::string& encoded_shape);
 
   /**
+   * Set the bounding circle of the shape.
+   */
+  void set_bounding_circle(const std::vector<float>& circle);
+
+  /**
    * Set encoded elevation.
    * @param  encoded_elevation  Encoded elevation
    */
@@ -137,6 +143,9 @@ protected:
 
   // List of name info (offsets, etc.)
   std::vector<baldr::NameInfo> name_info_list_;
+
+  // Bounding circle (lat,lng,radius)
+  std::vector<float> bounding_circle_;
 
   // Lat,lng shape of the edge
   std::string encoded_shape_;

@@ -18,6 +18,10 @@ using namespace valhalla::loki;
 
 namespace {
 
+// TODO - remove after testing
+uint32_t nSkipped = 0;
+uint32_t nSearched = 0;
+
 template <typename T> inline T square(T v) {
   return v * v;
 }
@@ -571,8 +575,30 @@ struct bin_handler_t {
       // of the shape which are on the same side of h that p is. to make this fast we would need a
       // a trivial half plane test as maybe a single dot product and comparison?
 
-      // get some shape of the edge
       auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
+
+      nSearched++;
+      auto bv = edge_info->bounding_circle();
+      if (bv) {
+        // Check if all locations are outside the bounding circle of the edge
+        bool all_outside = true;
+        for (p_itr = begin; p_itr != end; ++p_itr) {
+          // TODO - search cutoff defaults to 35km
+          // NOTE - if we use this for map-matching, the max search radius = 50
+          // float r = (bv->radius() + p_itr->location.search_cutoff_);
+          float r = bv->radius() + 50.0f;
+          if (p_itr->project.approx.DistanceSquared(bv->center()) < r * r) {
+            all_outside = false;
+            break;
+          }
+        }
+        if (all_outside) {
+          nSkipped++;
+          continue;
+        }
+      }
+
+      // get some shape of the edge
       auto shape = edge_info->lazy_shape();
       PointLL v;
       if (!shape.empty()) {
@@ -836,10 +862,14 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
   if (locations.empty())
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
 
+  nSkipped = nSearched = 0; // TODO - remove after testing
+
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, costing);
   // search over the bins doing multiple locations per bin
   handler.search();
+  // TODO - remove after testing
+  LOG_INFO("skipped " + std::to_string(nSkipped) + " out of " + std::to_string(nSearched));
   // turn each locations candidate set into path locations
   return handler.finalize();
 }
