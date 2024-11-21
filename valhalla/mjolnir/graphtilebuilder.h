@@ -304,6 +304,15 @@ public:
                          const std::vector<int8_t>& encoded_elevation);
 
   /**
+   * Set the bounds (boundign circle defined by lat,lng, radius) of the edge.
+   * This requires a serialized tile builder.
+   * @param offset Edge info offset.
+   * @param biunding_circle Bounding circle.
+   * @return Returns size of the updated EdgeInfo data.
+   */
+  uint32_t set_edge_bounds(const uint32_t offset, const std::vector<float>& bounding_circle);
+
+  /**
    * Add a name to the text list.
    * @param  name  Name/text to add.
    * @return  Returns offset (bytes) to the name.

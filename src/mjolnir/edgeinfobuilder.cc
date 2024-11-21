@@ -76,10 +76,6 @@ void EdgeInfoBuilder::AddNameInfo(const baldr::NameInfo& info) {
 // Set the shape of the edge. Encode the vector of lat,lng to a string.
 template <class shape_container_t> void EdgeInfoBuilder::set_shape(const shape_container_t& shape) {
   encoded_shape_ = midgard::encode7<shape_container_t>(shape);
-
-  // Set bounding circle (TODO - optional?)
-  auto bc = get_bounding_circle(shape);
-  set_bounding_circle(bc);
 }
 template void EdgeInfoBuilder::set_shape<std::vector<PointLL>>(const std::vector<PointLL>&);
 template void EdgeInfoBuilder::set_shape<std::list<PointLL>>(const std::list<PointLL>&);
