@@ -907,7 +907,7 @@ function filter_tags_generic(kv)
       kv[k] = v
     end
 
-    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
+    if kv["impassable"] == "yes" or kv["smoothness"] == "impassable" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -996,7 +996,7 @@ function filter_tags_generic(kv)
       default_val = tostring(rail)
     end
 
-    if ((ferry == false and rail == false) or kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+    if ((ferry == false and rail == false) or kv["impassable"] == "yes" or kv["smoothness"] == "impassable" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -1870,11 +1870,6 @@ function filter_tags_generic(kv)
   kv["bike_local_ref"] = lref
   kv["bike_network_mask"] = bike_mask
 
-  -- turn semicolon into colon due to challenges to store ";" in string
-  if kv["level"] ~= nil then
-    kv["level"] = kv["level"]:gsub(";", ":")
-  end
-
   -- Explicitly turn off access for construction type. It's done for backward compatibility
   -- of valhalla tiles and valhalla routing. In case we allow non-zero access then older
   -- versions of router will work with new tiles incorrectly. They would start to route
@@ -1936,7 +1931,7 @@ function nodes_proc (kv, nokeys)
   local initial_access = access[kv["access"]]
   local access = initial_access or "true"
 
-  if (kv["impassable"] == "yes" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+  if (kv["impassable"] == "yes" or kv["smoothness"] == "impassable" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
     access = "false"
   end
 

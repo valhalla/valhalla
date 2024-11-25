@@ -567,6 +567,77 @@ TEST(Standalone, ReclassifyOutboundOnly) {
   EXPECT_EQ(std::get<1>(inbound_service)->classification(), valhalla::baldr::RoadClass::kPrimary);
 }
 
+TEST(Standalone, ConsiderBlockedRoads) {
+  // Nodes that block the path should be considered when the fastest way from ferry to high class road
+  // is evaluated, as otherwise found shortest path might be not traversable
+
+  const std::string ascii_map = R"(
+    A-------B   M
+            |   |
+            |   |
+        D---C-1-N
+       /        |
+      E         |
+       \        |
+        F-------O
+                |
+                P
+
+  )";
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+
+      // shorter road that is blocked by block
+      {"C1N", {{"highway", "service"}}},
+
+      // longer unblocked road
+      {"BC", {{"highway", "service"}}},
+      {"CD", {{"highway", "service"}}},
+      {"DE", {{"highway", "service"}}},
+      {"EF", {{"highway", "service"}}},
+      {"FO", {{"highway", "service"}}},
+
+      {"MNOP", {{"highway", "primary"}}},
+  };
+
+  const gurka::nodes nodes = {
+      {"1",
+       {
+           {"barrier", "block"},
+           {"motor_vehicle", "no"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_reclassify_block");
+
+  // sanity check that the longer route is taken
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "M"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FO", "MNOP", "MNOP"});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // long not blocked road should be reclassified
+  for (const auto& name : {"BC", "CD", "DE", "EF", "FO"}) {
+    const auto way = gurka::findEdge(reader, layout, name, name + 1);
+    EXPECT_EQ(std::get<1>(way)->classification(), valhalla::baldr::RoadClass::kPrimary);
+  }
+
+  // short blocked route is not reclassified
+  auto blocked = gurka::findEdge(reader, layout, "C1N", "N");
+  EXPECT_EQ(std::get<1>(blocked)->classification(), valhalla::baldr::RoadClass::kServiceOther);
+}
+
 TEST(Standalone, ReclassifyNothingReclassified) {
   // Test to validate that if no edges are found with the target classification
   // nothing gets reclassified.
@@ -608,6 +679,55 @@ TEST(Standalone, ReclassifyNothingReclassified) {
   auto not_upclassed3 = gurka::findEdge(reader, layout, "CD", "D");
   EXPECT_TRUE(std::get<1>(not_upclassed3)->classification() == valhalla::baldr::RoadClass::kTertiary);
 }
+
+class ExcludeFerryTest : public ::testing::TestWithParam<std::string> {
+protected:
+  static gurka::map map;
+  static void SetUpTestSuite() {
+
+    const std::string ascii_map = R"(
+    A----1---B----C--D------E
+  )";
+
+    const gurka::ways ways = {
+        {"AB", {{"highway", "secondary"}}},
+        {"BC", {{"route", "ferry"}}},
+        {"CD", {{"highway", "secondary"}}},
+        {"DE", {{"highway", "secondary"}}},
+    };
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/exclude_ferry");
+    baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+  }
+};
+
+gurka::map ExcludeFerryTest::map = {};
+
+TEST_P(ExcludeFerryTest, ExcludeFerry) {
+  const auto default_result = gurka::do_action(valhalla::Options::route, map, {"1", "D"}, GetParam());
+  gurka::assert::raw::expect_path(default_result, {"AB", "BC", "CD"});
+
+  try {
+    const auto result =
+        gurka::do_action(valhalla::Options::route, map, {"1", "D"}, GetParam(),
+                         {{"/costing_options/" + GetParam() + "/exclude_ferries", "1"}});
+    FAIL() << "Expected no path to be found";
+  } catch (valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
+    FAIL() << "Failed with unexpected error code";
+  }
+}
+INSTANTIATE_TEST_SUITE_P(ExcludeFerry,
+                         ExcludeFerryTest,
+                         ::testing::Values("auto",
+                                           "truck",
+                                           "motor_scooter",
+                                           "pedestrian",
+                                           "bicycle",
+                                           "motorcycle",
+                                           "taxi",
+                                           "bus"));
 
 INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,
                          FerryTest,

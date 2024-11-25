@@ -2,7 +2,7 @@ name: OSX CI
 on:
   push:
     paths-ignore:
-      - '*.md'
+      - "*.md"
       - .circleci/
       - docs/
       - run_route_scripts/
@@ -11,7 +11,7 @@ on:
       - master
   pull_request:
     paths-ignore:
-      - '*.md'
+      - "*.md"
       - .circleci/
       - docs/
       - run_route_scripts/
@@ -22,7 +22,7 @@ on:
     inputs:
       debug_enabled:
         type: boolean
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
         required: false
         default: false
 
@@ -33,14 +33,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      
+
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12' 
-      
+          python-version: "3.12"
+
       - name: Install dependencies
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
+          export PATH="$(brew --prefix python)/libexec/bin:$PATH"
           sudo python -m pip install --break-system-packages requests shapely
           git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j$(sysctl -n hw.logicalcpu) && sudo make install
 
@@ -71,10 +72,10 @@ jobs:
         with:
           path: ~/Library/Caches/ccache
           key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
-          
+
       - name: Run Tests
         run: make -C build -j$(sysctl -n hw.logicalcpu) check
-      
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked or a previous job failed
@@ -82,4 +83,3 @@ jobs:
         with:
           detached: true
           timeout-minutes: 15
-          

@@ -5,12 +5,16 @@ on:
     branches:
       - master
     paths:
-      - .github/workflows
-      - 'src'
-      - 'valhalla'
-      - 'proto'
-      - 'scripts'
-      - 'lua'
+      - '.github/workflows/**'
+      - 'src/**'
+      - 'valhalla/**'
+      - 'proto/**'
+      - 'scripts/**'
+      - 'lua/**'
+      - 'cmake/**'
+      - 'third_party/**'
+      - 'locales/**'
+      - 'CMakeLists.txt'
   workflow_dispatch:
 
 jobs:

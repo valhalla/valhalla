@@ -317,27 +317,31 @@ message Costing {
       float hgv_no_access_penalty = 85;
     }
     float use_truck_route = 86;
+    oneof has_exclude_bridges {
+      bool exclude_bridges = 87;
+    }
     oneof has_exclude_tunnels {
-      bool exclude_tunnels = 87;
+      bool exclude_tunnels = 88;
     }
     oneof has_exclude_tolls {
-      bool exclude_tolls = 88;
+      bool exclude_tolls = 89;
     }
     oneof has_exclude_highways {
-      bool exclude_highways = 89;
+      bool exclude_highways = 90;
     }
     oneof has_exclude_ferries {
-      bool exclude_ferries = 90;
+      bool exclude_ferries = 91;
     }
     oneof has_traffic_fading_duration {
-      uint32 traffic_fading_duration = 91;
+      uint32 traffic_fading_duration = 92;
     }
     oneof has_traffic_fading_start {
-      uint32 traffic_fading_start = 92;
+      uint32 traffic_fading_start = 93;
     }
     oneof has_traffic_fading_exponent {
-      uint32 traffic_fading_exponent = 93;
+      uint32 traffic_fading_exponent = 94;
     }
+ 
   }
 
   oneof has_options {
@@ -519,4 +523,5 @@ message Options {
   bool voice_instructions = 57;                                    // Whether to return voiceInstructions in the OSRM serializer response
   bool dedupe = 58;                                                // Keep track of edges and override their properties during expansion,
                                                                    // ensuring that each edge appears in the output only once. [default = false]
+  bool admin_crossings = 59;                                     // Include administrative boundary crossings
 }

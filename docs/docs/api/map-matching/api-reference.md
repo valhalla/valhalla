@@ -116,6 +116,7 @@ edge.speed_limit
 edge.truck_speed
 edge.truck_route
 edge.country_crossing
+edge.forward
 
 // Node filter keys
 node.intersecting_edge.begin_heading
@@ -220,7 +221,8 @@ Each `edge` may include:
 | `truck_route` | True if edge is part of a truck network/route. |
 | `end_node` | The node at the end of this edge. See the list of [end node items](#end-node-items) for details. |
 | `landmarks` | List of landmarks along the edge. They are used as direction support in navigation. |                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `country_crossing` | True if the edge is a country crossing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `country_crossing` | True if the edge is a country crossing. |                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `forward` | True if the edge is traversed forwards and False if it is traversed backwards with respect to the reference shape/geometry (ie. the direction in which it was digitized). |
 
 
 #### Sign items

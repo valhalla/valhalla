@@ -1,8 +1,9 @@
 ####################################################################
-FROM ubuntu:23.04 as builder
+FROM ubuntu:24.04 as builder
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 ARG CONCURRENCY
+ARG ADDITIONAL_TARGETS
 
 # set paths
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
@@ -25,7 +26,7 @@ RUN rm -rf build && mkdir build
 WORKDIR /usr/local/src/valhalla/build
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
 RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_THREAD_SAFE_TILE_REF_COUNT=On
-RUN make all -j${CONCURRENCY:-$(nproc)}
+RUN make all ${ADDITIONAL_TARGETS} -j${CONCURRENCY:-$(nproc)}
 RUN make install
 
 # we wont leave the source around but we'll drop the commit hash we'll also keep the locales
@@ -43,7 +44,7 @@ RUN for f in valhalla/locales/*.json; do cat ${f} | python3 -c 'import sys; impo
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image
-FROM ubuntu:23.04 as runner
+FROM ubuntu:24.04 as runner
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 # basic paths
@@ -56,15 +57,15 @@ LABEL org.opencontainers.image.source = "https://github.com/valhalla/valhalla"
 
 # grab the builder stages artifacts
 COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
+COPY --from=builder /usr/local/lib/python3.12/dist-packages/valhalla/* /usr/local/lib/python3.12/dist-packages/valhalla/
 
 # we need to add back some runtime dependencies for binaries and scripts
 # install all the posix locales that we support
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
-      libcurl4 libczmq4 libluajit-5.1-2 libgdal32 \
+      libcurl4 libczmq4 libluajit-5.1-2 libgdal34 \
       libprotobuf-lite32 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
-      curl gdb locales parallel python3-minimal python3-distutils python-is-python3 \
+      curl gdb locales parallel python3-minimal python-is-python3 python3-shapely python3-requests \
       spatialite-bin unzip wget && rm -rf /var/lib/apt/lists/*
 RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
 

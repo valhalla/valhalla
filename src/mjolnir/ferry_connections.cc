@@ -114,6 +114,9 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
       // Expand all edges from this node
       auto expand_node_itr = nodes[expand_node_idx];
       auto expanded_bundle = collect_node_edges(expand_node_itr, nodes, edges);
+      if (!(expanded_bundle.node.access() & access_filter)) {
+        continue;
+      }
 
       // We are finished if node has RC <= rc and beyond first several edges.
       // Have seen cases where the immediate connections are high class roads
