@@ -21,6 +21,19 @@ namespace mjolnir {
 
 namespace {
 
+void SetMinimumBoundingCircle(GraphId& edge_id, const EdgeInfo& einfo, const PointLL& bin_center) {
+  if (!einfo.has_bounding_circle())
+    return;
+  const auto* bounding_circle = einfo.bounding_circle();
+  const auto radius_meters =
+      DistanceApproximator<PointLL>::LngScalePerLat(bounding_circle->center().lat()) *
+          bounding_circle->radius() +
+      kOffsetIncrement / 2;
+  const auto lng_offset = bounding_circle->center().lng() - bin_center.lng();
+  const auto lat_offset = bounding_circle->center().lat() - bin_center.lat();
+
+  // edge_id.set_bounding_circle(abc);
+}
 std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restrictions,
                                                                size_t restrictions_size) {
   std::vector<ComplexRestrictionBuilder> builders;
@@ -201,6 +214,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     eib.set_encoded_shape(ei.encoded_shape());
 
     // Add bounding circle
+
     if (ei.has_bounding_circle()) {
       auto bc = ei.bounding_circle();
       if (bc) {
@@ -890,8 +904,7 @@ uint32_t GraphTileBuilder::set_elevation(const uint32_t offset,
 
 // Set the bouding circle of an edge in the EdgeInfo given the edge
 // info offset. This requires a serialized tile builder.
-uint32_t GraphTileBuilder::set_edge_bounds(const uint32_t offset,
-                                           const std::vector<float>& bounds) {
+uint32_t GraphTileBuilder::set_edge_bounds(const uint32_t offset, const std::vector<float>& bounds) {
   auto e = edgeinfo_offset_map_.find(offset);
   if (e == edgeinfo_offset_map_.end()) {
     LOG_ERROR("set_edge_bounds - could not find the EdgeInfo index given the offset");
@@ -1088,6 +1101,7 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
 std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
                                                                        tweeners_t& tweeners) {
+  LOG_INFO("Binning edges");
   assert(tile);
   std::array<std::vector<GraphId>, kBinCount> bins;
   // we store these at the highest level
@@ -1099,7 +1113,6 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
   // is this the highest level
   auto max = tile->header()->graphid().level() == max_level;
   const auto& tiles = TileHierarchy::levels().back().tiles;
-
   // each edge please
   std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
   const auto* start_edge = tile->directededge(0);
@@ -1133,8 +1146,26 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
 
     // for each bin that got intersected
     auto intersection = tiles.Intersect(shape);
-    GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(),
-                    edge - start_edge);
+
+    // get the bin centers
+    std::unordered_map<uint32_t, std::unordered_map<unsigned int, DistanceApproximator<PointLL>>>
+        bin_centers;
+    for (auto i : intersection) {
+      auto tile_id = i.first;
+      auto minx = tiles.TileBounds(tile_id).minx();
+      auto miny = tiles.TileBounds(tile_id).miny();
+      for (auto bin : i.second) {
+        // get the center
+        auto lat_offset = (bin / kBinsDim) * tiles.SubdivisionSize();
+        auto lng_offset = (bin % kBinsDim) * tiles.SubdivisionSize();
+        PointLL center{minx + lng_offset, miny + lat_offset};
+        DistanceApproximator<PointLL> approx(center);
+        bin_centers[tile_id].insert({bin, approx});
+      }
+    }
+
+    DiscretizedBoundingCircle edge_id(tile->header()->graphid().tileid(),
+                                      tile->header()->graphid().level(), edge - start_edge);
     for (const auto& i : intersection) {
       // as per the rules above about when to add intersections
       auto originating = i.first == start_id;
@@ -1147,6 +1178,30 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
                              : tweeners.insert({GraphId(i.first, max_level, 0), {}}).first->second;
         // keep the edge id
         for (auto bin : i.second) {
+          // if we get here we write the bounding circle to the remaining ID bits.
+          // todo(chris): remember to also include tweeners now that we use the bin center as the
+          // offset
+          LOG_INFO("Setting circle");
+          if (info.has_bounding_circle()) {
+            auto res = bin_centers.find(i.first); //.at(bin);
+            DistanceApproximator<PointLL> approx({0, 0});
+            if (res != bin_centers.end()) {
+              auto bin_res = res->second.find(bin);
+              if (bin_res != res->second.end()) {
+                approx = bin_res->second;
+              }
+            }
+
+            const auto* bounding_circle = info.bounding_circle();
+            const auto radius_meters =
+                DistanceApproximator<PointLL>::LngScalePerLat(bounding_circle->center().lat()) *
+                    bounding_circle->radius() +
+                kOffsetIncrement / 2;
+            if (!edge_id.set(approx, approx.TestPoint(), bounding_circle->center(), radius_meters)) {
+              LOG_TRACE("Unable to store bounding circle; wayid=" + std::to_string(info.wayid()) +
+                        "|radius=" + std::to_string(radius_meters));
+            }
+          }
           out_bins[bin].push_back(edge_id);
         }
       }

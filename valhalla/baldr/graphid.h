@@ -7,6 +7,22 @@
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+
+namespace {
+
+constexpr std::array<int, 4> kBoundingCircleRadii = {17 * 17, 25 * 25, 120 * 120, 375 * 375};
+constexpr uint64_t kImpossibleBoundingCircle = 0xffff;
+// todo(chris): derive from tiles' subdivisions at runtime
+constexpr double kMaxRadius = 3931.5137 + 375;
+// bin size in meters at the equator (half that since we offset from center)
+constexpr double kMaxOffsetMeters = 5528.35 / 2;
+// in meters
+constexpr double kOffsetIncrement = kMaxOffsetMeters / 128;
+
+} // namespace
 
 namespace valhalla {
 namespace baldr {
@@ -225,6 +241,103 @@ public:
   friend std::ostream& operator<<(std::ostream& os, const GraphId& id);
 };
 
+/**
+ * Basically a GraphId that uses the 18 spare bits to store a coarse bounding circle that
+ * contains the geometry of the edge this GraphId refers to.
+ *
+ * It stores three additional pieces of information: the center lat/lon offsets and the radius.
+ * The 2 most significant bits represent an index into a fixed array of radii that were chosen based
+ * on the distribution of minimum bounding circle radii of all edges in a planet build.
+ *
+ * The remaing 2*8 bits are used to store offsets in meters relative to the center of the tile bin in
+ * which this structure is stored. One increment evaluates to roughly 21.6 meters, in order to support
+ * the maximum combination of the maximum distance from the bin center (half its size plus the max
+ * supported radius).
+ */
+struct DiscretizedBoundingCircle : public GraphId {
+  using GraphId::GraphId;
+
+  /**
+   * this is annoying, but to be backwards compatible with older graph tiles
+   * that have the 18 bits of the Graph IDs zero'ed, we need the  zero'ed version
+   * to be the sentinel value for an invalid circle, even though it's actually a valid
+   * bounding circle: it just means the center is less than kOffsetIncrement meters away
+   * from the bin center in both dimensions, and the radius is less than or equal to the
+   * minimum radius we support.
+   *
+   * Luckily, there are some combinations which are not valid: those where the radius is
+   * smaller than distance between the circle center and the bin boundaries. So we can use one
+   * of those "impossible" values to imply the valid zero'ed out value, and reserve the zero'ed
+   * out value to mean "invalid circle, go look at the shape".
+   */
+
+  bool set(const midgard::DistanceApproximator<midgard::PointLL>& bin_center_approx,
+           const midgard::PointLL& bin_center,
+           const midgard::PointLL& circle_center,
+           double radius) {
+    midgard::PointLL offset{circle_center.lng() - bin_center.lng(),
+                            circle_center.lat() - bin_center.lat()};
+
+    auto x_offset_meters = static_cast<uint64_t>(
+        ((offset.lng() * bin_center_approx.GetLngScale() * midgard::kMetersPerDegreeLat) + 0.5) /
+        kOffsetIncrement);
+    auto y_offset_meters = static_cast<uint64_t>(
+        ((offset.lat() * midgard::kMetersPerDegreeLat) + 0.5) / kOffsetIncrement);
+
+    // reconvert to lat/lon
+    auto discretized_lat =
+        bin_center.lat() +
+        (x_offset_meters / (bin_center_approx.GetLngScale() * midgard::kMetersPerDegreeLat));
+
+    auto discretized_lng = bin_center.lng() + (y_offset_meters / midgard::kMetersPerDegreeLat);
+
+    midgard::PointLL discretized_offset{discretized_lng, discretized_lat};
+    auto loss_of_precision = offset.Distance(discretized_offset);
+    radius += loss_of_precision;
+    auto radius_sq = radius * radius;
+
+    unsigned int index = kBoundingCircleRadii.size();
+    for (unsigned int i = 0; i < kBoundingCircleRadii.size(); ++i) {
+      auto radius = kBoundingCircleRadii[i];
+      if (radius_sq <= radius) {
+        index = i;
+        break;
+      }
+    }
+    if (index == kBoundingCircleRadii.size())
+      return false;
+
+    value &= (static_cast<uint64_t>(index) << 62) & (x_offset_meters << 54) & (y_offset_meters << 46);
+    return true;
+  }
+
+  bool operator()(const midgard::DistanceApproximator<midgard::PointLL>& approx,
+                  const double radius,
+                  const midgard::PointLL& bin_center) const {
+    // old data doesn't have this set, so this means go check the shape
+    auto bounding_circle = value & 0xffffc00000000000;
+    if (!bounding_circle) {
+      return true;
+    }
+
+    // for the case where we created a valid circle, but it happens to be at
+    // the bin's center and has the smallest radius
+    if (bounding_circle == kImpossibleBoundingCircle) {
+      bounding_circle = 0;
+    }
+    auto y_offset_meters =
+        (((bounding_circle & 0xff) / (1 << 8)) * kMaxOffsetMeters) - kMaxOffsetMeters / 2;
+    auto x_offset_meters =
+        ((((bounding_circle >> 8) & 0xff) / (1 << 8)) * kMaxOffsetMeters) - kMaxOffsetMeters / 2;
+    midgard::PointLL center{(x_offset_meters /
+                             (approx.GetLngScale() * midgard::kMetersPerDegreeLat)) +
+                                bin_center.lng(),
+                            y_offset_meters / midgard::kMetersPerDegreeLat + bin_center.lat()};
+
+    auto discretized_radius_sq = kBoundingCircleRadii[bounding_circle >> 16];
+    return approx.DistanceSquared(center) < discretized_radius_sq;
+  }
+};
 } // namespace baldr
 } // namespace valhalla
 

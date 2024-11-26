@@ -55,6 +55,10 @@ public:
     m_per_lng_degree_ = m_lng_scale_ * kMetersPerDegreeLat;
   }
 
+  PointT TestPoint() {
+    return PointT{centerlng_, centerlat_};
+  }
+
   /*
    * Getter for lng scale
    * @return the distance scale for lng at this points latitude
