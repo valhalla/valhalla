@@ -163,7 +163,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
     }
 
     // if there's exactly one allowed incoming edge (except for the current opposing edge)
-    if (allowed_cnt == 1 && incoming_pred->classification() == de->classification()) {
+    if (allowed_cnt == 1 && incoming_pred->classification() == de->classification() &&
+        incoming_pred->use() == de->use()) {
       // keep going back
       if (!(added_edges.insert(incoming_pred)).second) {
         LOG_WARN("Duplicate edge when finding beginning of road segment for edge.");
@@ -252,7 +253,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       expand_forw(trans->endnode(), false, trans->up());
     }
 
-    if (allowed_cnt == 1 && possible_next->classification() == de->classification()) {
+    if (allowed_cnt == 1 && possible_next->classification() == de->classification() &&
+        possible_next->use() == de->use()) {
       // keep moving forwards
       if (!(added_edges.insert(possible_next)).second) {
         LOG_WARN("Duplicate edge when finding beginning of road segment for edge.");
