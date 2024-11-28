@@ -114,6 +114,9 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
       // Expand all edges from this node
       auto expand_node_itr = nodes[expand_node_idx];
       auto expanded_bundle = collect_node_edges(expand_node_itr, nodes, edges);
+      if (!(expanded_bundle.node.access() & access_filter)) {
+        continue;
+      }
 
       // We are finished if node has RC <= rc and beyond first several edges.
       // Have seen cases where the immediate connections are high class roads
@@ -380,6 +383,18 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           if (ret2.second) {
             outbound_path_found = true;
           }
+
+          // Reclassify the first/start edge if a connection to higher class roads
+          // is found. Do this AFTER finding shortest path so we do not immediately
+          // determine we hit the specified classification
+          sequence<Edge>::iterator element = edges[edge.second];
+          auto update_edge = *element;
+          if (ret1.second && ret2.second && update_edge.attributes.importance > kFerryUpClass) {
+            update_edge.attributes.importance = kFerryUpClass;
+            update_edge.attributes.reclass_ferry = remove_destonly;
+            element = update_edge;
+            total_count++;
+          }
         } else {
           // Check if oneway inbound to the ferry
           bool inbound =
@@ -387,7 +402,19 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           auto ret = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
                                   inbound, remove_destonly);
           total_count += ret.first;
-          if (ret.second > 0) {
+          if (ret.second) {
+            // Reclassify the first/start edge if a connection to higher class roads
+            // is found. Do this AFTER finding shortest path so we do not immediately
+            // determine we hit the specified classification
+            sequence<Edge>::iterator element = edges[edge.second];
+            auto update_edge = *element;
+            if (update_edge.attributes.importance > kFerryUpClass) {
+              update_edge.attributes.importance = kFerryUpClass;
+              update_edge.attributes.reclass_ferry = remove_destonly;
+              element = update_edge;
+              total_count++;
+            }
+
             if (inbound) {
               inbound_path_found = true;
             } else {
@@ -396,19 +423,6 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           }
         }
         ferry_endpoint_count++;
-
-        // Reclassify the first/start edge if a connection to higher class roads
-        // is found. Do this AFTER finding shortest path so we do not immediately
-        // determine we hit the specified classification
-        sequence<Edge>::iterator element = edges[edge.second];
-        auto update_edge = *element;
-        if (inbound_path_found && outbound_path_found &&
-            update_edge.attributes.importance > kFerryUpClass) {
-          update_edge.attributes.importance = kFerryUpClass;
-          update_edge.attributes.reclass_ferry = remove_destonly;
-          element = update_edge;
-          total_count++;
-        }
       }
 
       // Log cases where reclassification fails

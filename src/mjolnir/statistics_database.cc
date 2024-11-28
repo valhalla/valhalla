@@ -1,8 +1,6 @@
 #include "statistics.h"
 #include <cstdint>
 
-#include <boost/property_tree/ptree.hpp>
-
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"

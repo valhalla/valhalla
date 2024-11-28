@@ -1,10 +1,7 @@
-#include <cstdint>
 #include <functional>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #include "midgard/constants.h"
 #include "midgard/logging.h"
@@ -85,7 +82,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" || kv.first == "skadi" || kv.first == "trace" ||
         kv.first == "isochrone" || kv.first == "centroid" || kv.first == "status" ||
-        kv.first == "max_distance_disable_hierarchy_culling") {
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions") {
       continue;
     }
 

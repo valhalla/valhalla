@@ -5,7 +5,6 @@
 #include <map>
 #include <memory>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>

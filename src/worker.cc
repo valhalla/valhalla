@@ -1,4 +1,3 @@
-#include <iostream>
 #include <sstream>
 #include <typeinfo>
 #include <unordered_map>
@@ -159,9 +158,12 @@ const std::unordered_map<int, std::string> warning_codes = {
   {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
   {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
   {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
-  // 3xx is used when costing options were specified but we had to change them internally for some reason
+  {208, R"(Hard exclusions are not allowed on this server, ignoring hard excludes)"},
+  // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
+  {302, R"("search_filter.level" was specified without a custom "search_cutoff", setting default default cutoff to )"},
+  {303, R"("search_cutoff" exceeds maximum allowed value due to "search_filter.level" being specified, clamping cutoff to )"},
   // 4xx is used when we do sneaky important things the user should be aware of
   {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
 };
@@ -406,9 +408,17 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_bridge
     location->mutable_search_filter()->set_exclude_bridge(
         rapidjson::get<bool>(*search_filter, "/exclude_bridge", false));
+    // search_filter.exclude_toll
+    location->mutable_search_filter()->set_exclude_toll(
+        rapidjson::get<bool>(*search_filter, "/exclude_toll", false));
     // search_filter.exclude_ramp
     location->mutable_search_filter()->set_exclude_ramp(
         rapidjson::get<bool>(*search_filter, "/exclude_ramp", false));
+    // search_filter.exclude_ferry
+    location->mutable_search_filter()->set_exclude_ferry(
+        rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
+    location->mutable_search_filter()->set_level(
+        rapidjson::get<float>(*search_filter, "/level", baldr::kMaxLevel));
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf
@@ -437,6 +447,8 @@ void parse_location(valhalla::Location* location,
   if (!location->search_filter().has_max_road_class_case()) {
     location->mutable_search_filter()->set_max_road_class(valhalla::kMotorway);
   }
+  if (!location->search_filter().has_level_case())
+    location->mutable_search_filter()->set_level(baldr::kMaxLevel);
 
   float waiting_secs = rapidjson::get<float>(r_loc, "/waiting", 0.f);
   switch (location->type()) {
@@ -867,6 +879,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
   if (linear_references) {
     options.set_linear_references(*linear_references);
+  }
+
+  auto admin_crossings = rapidjson::get_optional<bool>(doc, "/admin_crossings");
+  if (admin_crossings) {
+    options.set_admin_crossings(*admin_crossings);
   }
 
   // whatever our costing is, check to see if we are going to ignore_closures

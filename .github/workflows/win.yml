@@ -2,7 +2,7 @@ name: Windows CI
 on:
   push:
     paths-ignore:
-      - '*.md'
+      - "*.md"
       - .circleci/
       - docs/
       - run_route_scripts/
@@ -12,7 +12,7 @@ on:
       - master
   pull_request:
     paths-ignore:
-      - '*.md'
+      - "*.md"
       - .circleci/
       - docs/
       - run_route_scripts/
@@ -24,14 +24,14 @@ on:
     inputs:
       debug_enabled:
         type: boolean
-        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
         required: false
         default: false
 
 env:
   BUILD_TYPE: Release
-  MSVC_VERSION: '2022'
-  VCPKG_VERSION: '8040303'
+  MSVC_VERSION: "2022"
+  VCPKG_VERSION: "5e5d0e1"
   VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
   VCPKG_DISABLE_COMPILER_TRACKING: ON
 
@@ -123,18 +123,17 @@ jobs:
       - name: Build Valhalla
         run: |
           cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
-      
+
       - name: Test Executable
         shell: bash
         run: |
           set PATH=$PATH:${{ github.workspace }}/build/vcpkg_installed/$BUILD_TYPE/bin
           ./build/$BUILD_TYPE/valhalla_build_tiles.exe -c ./test/win/valhalla.json ./test/data/utrecht_netherlands.osm.pbf
           ./build/$BUILD_TYPE/valhalla_run_isochrone.exe --config ./test/win/valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
-      
+
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked or a previous job failed
         if: ${{ (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || failure() }}
         with:
           detached: true
-          

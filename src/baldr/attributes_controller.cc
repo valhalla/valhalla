@@ -73,6 +73,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeSidewalk, true},
     {kEdgeDensity, true},
     {kEdgeSpeedLimit, true},
+    {kEdgeConditionalSpeedLimits, true},
     {kEdgeTruckSpeed, true},
     {kEdgeTruckRoute, true},
     {kEdgeDefaultSpeed, true},
@@ -81,6 +82,9 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeTaggedValues, true},
     {kEdgeIndoor, true},
     {kEdgeLandmarks, true},
+    {kEdgeCountryCrossing, true},
+    {kEdgeForward, true},
+    {kEdgeLevels, true},
 
     // Node keys
     {kIncidents, false},

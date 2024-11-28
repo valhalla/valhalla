@@ -5,7 +5,6 @@
 #include <list>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>

@@ -2,7 +2,6 @@
 #define VALHALLA_MJOLNIR_STATISTICS_H_
 
 #include <map>
-#include <set>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

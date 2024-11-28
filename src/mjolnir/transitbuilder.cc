@@ -3,12 +3,10 @@
 
 #include <fstream>
 #include <future>
-#include <iostream>
 #include <list>
 #include <mutex>
 #include <thread>
 #include <tuple>
-#include <unordered_map>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
@@ -402,6 +400,7 @@ std::vector<OSMConnectionEdge> MakeConnections(const graph_tile_ptr& local_tile,
     if (!closest_edge) {
       LOG_WARN("Could not find connection point for in/egress near: " +
                std::to_string(egress_ll.second) + "," + std::to_string(egress_ll.first));
+      continue;
     }
 
     // TODO: if the point we found is further away than the tile edge then there could be a better

@@ -4,13 +4,10 @@
 #include <algorithm>
 #include <boost/functional/hash.hpp>
 #include <cstdint>
-#include <fstream>
-#include <iostream>
 #include <list>
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 
 #include <valhalla/baldr/admin.h>

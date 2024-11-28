@@ -189,6 +189,26 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeSpeed)) {
         writer("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
       }
+      if (controller(kEdgeCountryCrossing)) {
+        writer("country_crossing", static_cast<bool>(edge.country_crossing()));
+      }
+      if (controller(kEdgeForward)) {
+        writer("forward", static_cast<bool>(edge.forward()));
+      }
+      if (controller(kEdgeLevels)) {
+        if (edge.levels_size()) {
+          writer.start_array("levels");
+          writer.set_precision(edge.level_precision());
+          for (const auto& level : edge.levels()) {
+            writer.start_array();
+            writer(static_cast<float>(level.start()));
+            writer(static_cast<float>(level.end()));
+            writer.end_array();
+          }
+          writer.end_array();
+          writer.set_precision(3);
+        }
+      }
       if (controller(kEdgeLength)) {
         writer.set_precision(3);
         writer("length", edge.length_km() * scale);

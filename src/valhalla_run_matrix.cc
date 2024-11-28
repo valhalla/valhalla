@@ -7,7 +7,6 @@
 #include <vector>
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include "argparse_utils.h"
@@ -177,7 +176,7 @@ int main(int argc, char* argv[]) {
         kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
         kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
         kv.first == "status" || kv.first == "max_timedep_distance_matrix" ||
-        kv.first == "max_distance_disable_hierarchy_culling") {
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions") {
       continue;
     }
     max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +

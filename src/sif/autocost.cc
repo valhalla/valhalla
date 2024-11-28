@@ -46,6 +46,8 @@ constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse = 9.5f;
+constexpr float kTCRamp = 1.5f;
+constexpr float kTCRoundabout = 0.5f;
 
 // How much to favor taxi roads.
 constexpr float kTaxiFactor = 0.85f;
@@ -427,7 +429,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge)) {
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
+      CheckExclusions(edge, pred)) {
     return false;
   }
 
@@ -452,7 +455,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge)) {
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
+      CheckExclusions(opp_edge, pred)) {
     return false;
   }
 
@@ -567,9 +571,9 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
 
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
-      turn_cost += 1.5f;
+      turn_cost += kTCRamp;
       if (edge->roundabout())
-        turn_cost += 0.5f;
+        turn_cost += kTCRoundabout;
     }
 
     float seconds = turn_cost;
@@ -635,9 +639,9 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 
     if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
-      turn_cost += 1.5f;
+      turn_cost += kTCRamp;
       if (edge->roundabout())
-        turn_cost += 0.5f;
+        turn_cost += kTCRoundabout;
     }
 
     float seconds = turn_cost;
@@ -790,7 +794,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
+      CheckExclusions(edge, pred)) {
     return false;
   }
 
@@ -815,7 +820,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
+      CheckExclusions(opp_edge, pred)) {
     return false;
   }
 
@@ -969,7 +975,8 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
+      CheckExclusions(edge, pred)) {
     return false;
   }
 
@@ -994,7 +1001,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
+      CheckExclusions(opp_edge, pred)) {
     return false;
   }
   return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,

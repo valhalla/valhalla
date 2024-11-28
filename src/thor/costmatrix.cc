@@ -71,7 +71,7 @@ void CostMatrix::Clear() {
   if (check_reverse_connections_)
     sources_->clear();
 
-  // Clear all source adjacency lists, edge labels, and edge status
+  // Clear all adjacency lists, edge labels, and edge status
   // Resize and shrink_to_fit so all capacity is reduced.
   auto label_reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
   auto locs_reservation = clear_reserved_memory_ ? 0 : max_reserved_locations_count_;
@@ -105,6 +105,7 @@ void CostMatrix::Clear() {
     astar_heuristics_[is_fwd].clear();
   }
   best_connection_.clear();
+  set_not_thru_pruning(true);
   ignore_hierarchy_limits_ = false;
 }
 
@@ -269,10 +270,13 @@ bool CostMatrix::SourceToTarget(Api& request,
       auto dt_info =
           DateTime::offset_date(source_location_list[source_idx].date_time(),
                                 time_infos[source_idx].timezone_index,
-                                graphreader.GetTimezoneFromEdge(edgelabel_[MATRIX_REV][target_idx]
-                                                                    .front()
-                                                                    .edgeid(),
-                                                                tile),
+                                edgelabel_[MATRIX_REV][target_idx].empty()
+                                    ? 0
+                                    : graphreader
+                                          .GetTimezoneFromEdge(edgelabel_[MATRIX_REV][target_idx]
+                                                                   .front()
+                                                                   .edgeid(),
+                                                               tile),
                                 time);
       *matrix.mutable_date_times(connection_idx) = dt_info.date_time;
       *matrix.mutable_time_zone_offsets(connection_idx) = dt_info.time_zone_offset;
@@ -973,7 +977,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
       if (expansion_callback_) {
         auto prev_pred = rev_pred.predecessor() == kInvalidLabel
                              ? GraphId{}
-                             : edgelabel_[MATRIX_REV][source][rev_pred.predecessor()].edgeid();
+                             : edgelabel_[MATRIX_REV][target][rev_pred.predecessor()].edgeid();
         expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrix",
                             Expansion_EdgeStatus_connected, rev_pred.cost().secs,
                             rev_pred.path_distance(), rev_pred.cost().cost,
