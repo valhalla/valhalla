@@ -93,7 +93,9 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   auto node_id = opp_edge->endnode();
   auto node = reader.GetGraphTile(node_id)->node(node_id);
   auto edge = de;
-  bool is_deadend = false;
+  bool forward_deadend = false;
+  bool backward_deadend = false;
+
   std::unordered_set<const DirectedEdge*> added_edges;
   std::vector<const DirectedEdge*> edges;
   // crawl in reverse direction until we find a "true" intersection given the costing
@@ -177,7 +179,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       // either because this is a valid intersection given the costing
       // or because there is no other edge to inspect
       if (allowed_cnt == 0)
-        is_deadend = true;
+        backward_deadend = true;
       break;
     }
   }
@@ -264,7 +266,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       node = reader.GetGraphTile(node_id)->node(node_id);
     } else {
       if (allowed_cnt == 0)
-        is_deadend = true;
+        forward_deadend = true;
       break;
     }
   }
@@ -333,18 +335,19 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   std::string shape = midgard::encode(concatenated_shape);
   auto start_tile = reader.GetGraphTile(start_node_id);
   auto start_node = start_tile->node(start_node_id);
-  auto start_node_map =
-      json::map({{"id", start_node_id.json()}, {"node", start_node->json(start_tile)}});
+  auto start_node_map = json::map({{"id", start_node_id.json()},
+                                   {"node", start_node->json(start_tile)},
+                                   {"deadend", backward_deadend}});
   auto end_tile = reader.GetGraphTile(node_id);
   auto end_node = end_tile->node(node_id);
-  auto end_node_map = json::map({{"id", node_id.json()}, {"node", end_node->json(end_tile)}});
+  auto end_node_map = json::map(
+      {{"id", node_id.json()}, {"node", end_node->json(end_tile)}, {"deadend", forward_deadend}});
   auto intersection = json::map({{"start_node", start_node_map}, {"end_node", end_node_map}});
   auto mid_point =
       json::map({{"lat", json::fixed_t{mid.lat(), 6}}, {"lon", json::fixed_t{mid.lng(), 6}}});
   auto road_segments = json::map({{"shape", shape},
                                   {"intersections", intersection},
                                   {"mid_point", mid_point},
-                                  {"deadend", is_deadend},
                                   {"percent_along", json::fixed_t{percent_along_total / length, 5}}});
 
   return road_segments;
