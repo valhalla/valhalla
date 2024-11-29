@@ -924,7 +924,6 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
       if (rev_pred.predecessor() == kInvalidLabel && fwd_predidx == kInvalidLabel) {
         // bail if the edge wasn't allowed
         if (!fwd_label.path_id()) {
-          // if (!rev_pred.path_id()) {
           return;
         }
 

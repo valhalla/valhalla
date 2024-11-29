@@ -890,7 +890,7 @@ void check_trivial_matrix(const gurka::map& map, gurka::nodelayout& layout) {
     EXPECT_EQ(matrix.matrix().shapes(0), encode_shape({"1", "A", "B", "C", "D", "3"}, layout));
   }
 
-  // A -> B,C
+  // 1 -> 2,3
   {
     auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2", "3"},
                                    "auto", options);
@@ -900,7 +900,7 @@ void check_trivial_matrix(const gurka::map& map, gurka::nodelayout& layout) {
     EXPECT_EQ(matrix.matrix().shapes(1), encode_shape({"1", "A", "B", "C", "D", "3"}, layout));
   }
 
-  // A -> C,B
+  // 1 -> 3,2
   {
     auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"3", "2"},
                                    "auto", options);
