@@ -92,7 +92,7 @@ protected:
                             {{"service_limits.max_timedep_distance_matrix", "50000"},
                              {"mjolnir.traffic_extract",
                               "test/data/matrix_traffic_allowed/traffic.tar"},
-                             {"mjolnir.timezone", "test/data/tz.sqlite"},
+                             {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                              {"thor.costmatrix_check_reverse_connection", "1"}});
 
     // verify shortcut edges being built
@@ -582,7 +582,7 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-8.5755, 42.1079});
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_matrix_no_tz");
     map_tz = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_matrix",
-                               {{"mjolnir.timezone", "test/data/tz.sqlite"},
+                               {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                                 {"service_limits.max_timedep_distance_matrix", "50000"}});
   }
 };
