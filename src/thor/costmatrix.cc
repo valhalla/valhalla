@@ -55,9 +55,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -815,7 +815,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       // can't connect on this edge
       if (find_correlated_edge(options.sources(source), fwd_pred.edgeid()).percent_along() >
           find_correlated_edge(options.targets(target), fwd_pred.edgeid()).percent_along()) {
-        return;
+        continue;
       }
 
       // remember: transition_cost is abused in SetSources/Targets: cost is secs, secs is length
@@ -923,7 +923,8 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
       // Special case - common edge for source and target are both initial edges
       if (rev_pred.predecessor() == kInvalidLabel && fwd_predidx == kInvalidLabel) {
         // bail if the edge wasn't allowed
-        if (!rev_pred.path_id()) {
+        if (!fwd_label.path_id()) {
+          // if (!rev_pred.path_id()) {
           return;
         }
 
