@@ -216,7 +216,7 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
   spatialite_singleton_t::get_instance();
   void* conn = spatialite_alloc_connection();
   spatialite_init_ex(handle, conn, 0);
-  return {conn, [](void* c) { spatialite_cleanup_ex(c); }};
+  return std::make_shared<void>(conn, [](void* c) { spatialite_cleanup_ex(c); });
 }
 
 bool build_tile_set(const boost::property_tree::ptree& original_config,
