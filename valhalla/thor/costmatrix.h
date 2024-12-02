@@ -145,7 +145,7 @@ protected:
   std::array<std::vector<LocationStatus>, 2> locs_status_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each location
-  std::array<std::vector<std::vector<sif::HierarchyLimits>>, 2> hierarchy_limits_;
+  std::array<std::vector<std::vector<HierarchyLimits>>, 2> hierarchy_limits_;
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
@@ -338,12 +338,14 @@ protected:
     // they can be lowered.
     // Decrease distance thresholds only for arterial roads for now
     for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
-      if (hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 2.f;
+      auto& hl = hierarchy_limits_[MATRIX_FORW][source][1];
+      if (hl.max_up_transitions() != kUnlimitedTransitions)
+        hl.set_expansion_within_dist(hl.expansion_within_dist() / 2.f);
     }
     for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
-      if (hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
+      auto& hl = hierarchy_limits_[MATRIX_REV][target][1];
+      if (hl.max_up_transitions() != kUnlimitedTransitions)
+        hl.set_expansion_within_dist(hl.expansion_within_dist() / 2.f);
     }
   };
 

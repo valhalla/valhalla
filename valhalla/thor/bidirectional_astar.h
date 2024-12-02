@@ -95,8 +95,8 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   // Hierarchy limits
-  std::vector<sif::HierarchyLimits> hierarchy_limits_forward_;
-  std::vector<sif::HierarchyLimits> hierarchy_limits_reverse_;
+  std::vector<HierarchyLimits> hierarchy_limits_forward_;
+  std::vector<HierarchyLimits> hierarchy_limits_reverse_;
   bool ignore_hierarchy_limits_;
 
   // A* heuristic

@@ -273,6 +273,13 @@ config = {
         'max_alternates': 2,
         'max_exclude_polygons_length': 10000,
         'max_distance_disable_hierarchy_culling': 0,
+        'hierarchy_limits': {
+            'allow_modification': False,
+            'max_allowed_up_transitions': [0, 400, 100, 0, 0, 0, 0, 0],
+            'max_expansion_within_dist': [None, 100000, 5000, 0, 0, 0.0, 0, 0],
+            'default_up_transitions': [0, 400, 100, 0, 0, 0, 0, 0],
+            'default_expansion_within_dist': [None, 100000, 5000, 0, 0, 0.0, 0, 0],
+        },
         'allow_hard_exclusions': False,
     },
     'statsd': {

@@ -117,12 +117,13 @@ bool UnidirectionalAStar<expansion_direction, FORWARD>::Expand(GraphReader& grap
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() &&
-           hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) ||
+           StopExpanding(hierarchy_limits_[trans->endnode().level()], pred.distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
       // setup for expansion at this level
-      hierarchy_limits_[node.level()].up_transition_count += trans->up();
+      hierarchy_limits_[node.level()].set_up_transition_count(
+          hierarchy_limits_[node.level()].up_transition_count() + trans->up());
       const auto* trans_node = trans_tile->node(trans->endnode());
       EdgeMetadata trans_meta =
           EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus_);
@@ -536,7 +537,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
 
     // Do not expand based on hierarchy level based on number of upward
     // transitions and distance to the destination
-    if (hierarchy_limits_[pred.endnode().level()].StopExpanding(dist2dest)) {
+    if (StopExpanding(hierarchy_limits_[pred.endnode().level()], dist2dest)) {
       continue;
     }
 
@@ -603,6 +604,9 @@ template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
     const float dist,
     const uint32_t /*density*/) {
+
+  if (!costing_->DefaultHierarchyLimits())
+    return;
   // TODO - default distance below which we increase expansion within
   // distance. This is somewhat temporary to address route quality on shorter
   // routes - hopefully we will mark the data somehow to indicate how to
@@ -623,7 +627,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
     factor *= f;
   }*/
   // TODO - just arterial for now...investigate whether to alter local as well
-  hierarchy_limits_[1].expansion_within_dist *= factor;
+  hierarchy_limits_[1].set_expansion_within_dist(hierarchy_limits_[1].expansion_within_dist() *
+                                                 factor);
 }
 
 // Add an edge at the origin to the adjacency list

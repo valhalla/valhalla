@@ -106,8 +106,10 @@ protected:
   bool allow_verbose;
   bool allow_hard_exclusions;
 
-  // add max_distance_disable_hierarchy_culling
+  // hierarchy limits
   float max_distance_disable_hierarchy_culling;
+  bool allow_hierarchy_limits_modifications;
+  uint32_t max_allowed_up_transitions; // ignored if allow_hierarchy_limits_modifications is false
 
 private:
   std::string service_name() const override {

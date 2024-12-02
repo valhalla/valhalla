@@ -10,6 +10,7 @@
 #include "midgard/logging.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
+#include "sif/hierarchylimits.h"
 #include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/pedestriancost.h"
@@ -90,6 +91,26 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   // using the costing we can determine what type of edge filtering to use
   if (!allow_none && options.costing_type() == Costing::none_) {
     throw valhalla_exception_t{124};
+  }
+
+  // validate hierarchy limits
+  for (auto& pair : *options.mutable_costings()) {
+    auto opts = pair.second.options();
+    if (opts.hierarchy_limits_size() == 0) {
+      // user wants default behavior
+      // TODO: where do we make sure the needed levels were set?
+      continue;
+    }
+    if (!allow_hierarchy_limits_modifications) {
+      opts.clear_hierarchy_limits();
+      continue;
+    }
+
+    // something was set so make sure it's in the allowed range
+    for (auto [level, hl] : *opts.mutable_hierarchy_limits()) {
+      hl.set_max_up_transitions(std::min(hl.max_up_transitions(), max_allowed_up_transitions));
+      hl.set_expansion_within_dist(std::min(hl.expansion_within_dist(), max_allowed_up_transitions));
+    }
   }
 
   if (!allow_hard_exclusions) {
@@ -203,7 +224,12 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")),
-      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)) {
+      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)),
+      allow_hierarchy_limits_modifications(
+          config.get<bool>("service_limits.hierarchy_limits.allow_modification", false)),
+      max_allowed_up_transitions(
+          config.get<unsigned int>("service_limits.hierarchy_limits.max_allowed_up_transitions",
+                                   kDefaultMaxAllowedTransitions)) {
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -227,7 +253,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
-        kv.first == "status" || kv.first == "allow_hard_exclusions") {
+        kv.first == "status" || kv.first == "allow_hard_exclusions" ||
+        kv.first == "hierarchy_limits") {
       continue;
     }
     if (kv.first != "trace") {

@@ -974,6 +974,10 @@ public:
     return speed_penalty;
   }
 
+  bool DefaultHierarchyLimits() {
+    return default_hierarchy_limits;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
@@ -1077,6 +1081,7 @@ protected:
   bool exclude_highways_{false};
   bool exclude_ferries_{false};
   bool has_excludes_{false};
+  bool default_hierarchy_limits{true};
 
   bool exclude_cash_only_tolls_{false};
 
@@ -1185,6 +1190,7 @@ protected:
     has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
                     exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
+    default_hierarchy_limits = costing_options.hierarchy_limits_size() == 0;
   }
 
   /**
@@ -1297,7 +1303,8 @@ struct BaseCostingOptionsConfig {
   bool exclude_tolls_;
   bool exclude_highways_;
   bool exclude_ferries_;
-  bool has_excludes_;
+  bool has_excludes_; // TODO(chris): do we need this?
+  bool default_hierarchy_limits;
 
   bool exclude_cash_only_tolls_ = false;
 

@@ -68,6 +68,25 @@ message AvoidEdge {
   }
 }
 
+/**
+ * Hierarchy limits controls expansion and transitions between hierarchy
+ * levels. It allows limiting expansion on hierarchy levels once
+ * some number of "upward" transitions have been made (e.g. from the local
+ * level to the arterial level). Expansion on a level is allowed within some
+ * distance from the destination location. This also allows control of where
+ * upward and downward transitions are allowed based on distance from the
+ * destination.
+ */
+message HierarchyLimits {
+ uint32 up_transition_count = 1;   // Keep track of # of upward transitions
+                                   // Remember to clear on incoming protobuf requests
+ uint32 max_up_transitions = 2;    // Maximum number of upward transitions before 
+                                   // expansion is stopped on a level.
+ uint32 expansion_within_dist = 3; // Distance (m) to destination within which
+                                   // expansion of a hierarchy level is
+                                   // always allowed. Used for A*.
+}
+
 message Costing {
   enum Type {
     none_ = 0;
@@ -322,6 +341,7 @@ message Costing {
     bool exclude_tolls = 89;
     bool exclude_highways = 90;
     bool exclude_ferries = 91;
+    map<uint32, HierarchyLimits> hierarchy_limits = 92;
   }
 
   oneof has_options {
