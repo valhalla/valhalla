@@ -164,7 +164,7 @@ TEST(Standalone, SmoothnessAccess) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.1079374, 52.0887174});
 
-  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/exclude_unpaved");
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/smoothness_access");
 
   const std::string sqlite = {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"};
   boost::property_tree::ptree& pt = map.config;
