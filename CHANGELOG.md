@@ -4,6 +4,7 @@
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
    * FIXED: Fix valhalla_benchmark_loki benchmark application. [#4981](https://github.com/valhalla/valhalla/pull/4981)
+   * FIXED: update CircleCI runners to Ubuntu 24.04 [#5002](https://github.com/valhalla/valhalla/pull/5002)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
