@@ -209,14 +209,14 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     uint8_t flow_sources;
 
     if (FORWARD) {
-      transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
+      transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred, tile, graphreader);
       newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time, flow_sources) +
                 transition_cost;
     } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                          opp_pred_edge, pred.has_measured_speed(),
-                                          pred.internal_turn());
+                                          opp_pred_edge, t2, pred.edgeid(), graphreader,
+                                          pred.has_measured_speed(), pred.internal_turn());
       newcost =
           pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources) + transition_cost;
     }
@@ -636,7 +636,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       // transition_cost = { 10.0f, 10.0f };
     } else {
       transition_cost =
-          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
+          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred,
+                                                                     tile, graphreader);
     }
     newcost += transition_cost;
 

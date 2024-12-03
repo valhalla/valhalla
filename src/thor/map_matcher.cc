@@ -247,7 +247,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // get the cost of traversing the node, there is no turn cost the first time
     Cost transition_cost{};
     if (elapsed.secs > 0) {
-      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+      transition_cost =
+          costing->TransitionCost(directededge, nodeinfo, pred, tile, matcher->graphreader());
       elapsed += transition_cost;
     }
 
