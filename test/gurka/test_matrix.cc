@@ -587,8 +587,10 @@ void check_date_times(const Api& request,
                       const rapidjson::Document& res,
                       const std::vector<std::string>& target_offsets,
                       const std::vector<std::string>& target_timezones) {
-  for (size_t source_idx = 0; source_idx < request.options().sources().size(); source_idx++) {
-    for (size_t target_idx = 0; target_idx < request.options().targets().size(); target_idx++) {
+  for (size_t source_idx = 0; source_idx < static_cast<size_t>(request.options().sources().size());
+       source_idx++) {
+    for (size_t target_idx = 0; target_idx < static_cast<size_t>(request.options().targets().size());
+         target_idx++) {
 
       ASSERT_TRUE(res["sources_to_targets"]
                       .GetArray()[source_idx]
