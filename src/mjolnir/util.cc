@@ -216,7 +216,17 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
   spatialite_singleton_t::get_instance();
   void* conn = spatialite_alloc_connection();
   spatialite_init_ex(handle, conn, 0);
-  return {conn, [](void* c) { spatialite_cleanup_ex(c); }};
+
+  // Sadly, `spatialite_cleanup_ex` calls `xmlCleanupParser()` (via `free_internal_cache()`) which is
+  // not thread-safe and may cause a crash on double-free if called from multiple threads.
+  // This static mutex works around the issue until the spatialite library is fixed:
+  // - https://www.gaia-gis.it/fossil/libspatialite/tktview/855ef62a68b9ac6e500b54883707b2876c390c01
+  // For full "double free" issue details follow https://github.com/valhalla/valhalla/issues/4904
+  static std::mutex spatialite_mutex;
+  return std::shared_ptr<void>(conn, [](void* c) {
+    std::lock_guard<std::mutex> lock(spatialite_mutex);
+    spatialite_cleanup_ex(c);
+  });
 }
 
 bool build_tile_set(const boost::property_tree::ptree& original_config,
