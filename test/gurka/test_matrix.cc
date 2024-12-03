@@ -868,6 +868,7 @@ TEST(StandAlone, HGVNoAccessPenalty) {
 
 std::string encode_shape(const std::vector<std::string>& nodes, valhalla::gurka::nodelayout& layout) {
   std::vector<PointLL> shape;
+  shape.reserve(nodes.size());
   for (auto& node : nodes) {
     shape.push_back(layout[node]);
   }
