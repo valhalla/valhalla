@@ -59,6 +59,22 @@ struct valhalla_exception_t : public std::runtime_error {
  *                      already filled out, it will be validated and the json will be ignored
  */
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
+
+/**
+ * Parse hierarchy limits from config.
+ *
+ * @param config         the property tree to read from.
+ * @param path           path within the property tree to the section that has the 'hierarchy_limits'
+ * child member
+ * @param uses_dist      if true, also parses values for "expansion within distance"
+ * @param service_limits set to true if the service limits are parsed from service limits section,
+ *                       which uses slightly different key names
+ */
+std::unordered_map<uint32_t, HierarchyLimits>
+parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
+                                   const std::string& path,
+                                   const bool uses_dist,
+                                   const bool service_limits = false);
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request

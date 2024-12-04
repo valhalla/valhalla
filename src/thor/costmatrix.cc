@@ -58,7 +58,7 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
       locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
       sources_{new ReachedMap} {
-  default_hierarchy_limits_ = parse_default_hierarchy_limits(config, "cost_matrix", false);
+  default_hierarchy_limits_ = parse_hierarchy_limits_from_config(config, "cost_matrix", false);
 }
 
 CostMatrix::~CostMatrix() {

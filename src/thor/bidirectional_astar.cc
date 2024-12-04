@@ -7,6 +7,7 @@
 #include "sif/edgelabel.h"
 #include "sif/recost.h"
 #include "thor/alternates.h"
+#include "worker.h"
 #include <algorithm>
 
 using namespace valhalla::midgard;
@@ -62,7 +63,7 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
-  default_hierarchy_limits_ = parse_default_hierarchy_limits(config, "bidirectional_astar", true);
+  default_hierarchy_limits_ = parse_hierarchy_limits_from_config(config, "bidirectional_astar", true);
 }
 
 // Destructor

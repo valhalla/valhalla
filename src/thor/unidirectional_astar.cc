@@ -3,6 +3,7 @@
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "worker.h"
 #include <algorithm>
 
 using namespace valhalla::baldr;
@@ -20,7 +21,8 @@ UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
                                          kInitialEdgeLabelCountAstar),
                     config.get<bool>("clear_reserved_memory", false)),
       mode_(travel_mode_t::kDrive), travel_type_(0), access_mode_(kAutoAccess) {
-  default_hierarchy_limits_ = parse_default_hierarchy_limits(config, "unidirectional_astar", true);
+  default_hierarchy_limits_ =
+      parse_hierarchy_limits_from_config(config, "unidirectional_astar", true);
 }
 
 // Default constructor

@@ -298,6 +298,9 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
 
+  // load the maximum hierarchy limits from config
+  max_hierarchy_limits = parse_hierarchy_limits_from_config(config, "service_limits", true, true);
+
   // signal that the worker started successfully
   started();
 }

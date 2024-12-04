@@ -18,35 +18,6 @@ namespace thor {
 constexpr uint32_t kBucketCount = 20000;
 constexpr size_t kInterruptIterationsInterval = 5000;
 
-inline std::unordered_map<uint32_t, HierarchyLimits>
-parse_default_hierarchy_limits(const boost::property_tree::ptree& config,
-                               const std::string& path,
-                               const bool uses_dist) {
-  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits;
-  hierarchy_limits.reserve(baldr::TileHierarchy::levels().size() - 1);
-
-  // get the default values for each level from which up transitions are possible (i.e. not 0)
-  for (auto it = ++baldr::TileHierarchy::levels().begin(); it != baldr::TileHierarchy::levels().end();
-       ++it) {
-    HierarchyLimits hl;
-
-    auto max_up_transitions =
-        config.get_child(path + ".hierarchy_limits.max_up_transitions." + std::to_string(it->level));
-    hl.set_max_up_transitions(max_up_transitions.get_value<uint32_t>());
-
-    // if the algorithm relax hierarchy limits based on distance, set that property as well
-    if (uses_dist) {
-      auto expand_within_dist = config.get_child(path + ".hierarchy_limits.expand_within_distance." +
-                                                 std::to_string(it->level));
-      hl.set_expansion_within_dist(expand_within_dist.get_value<float>());
-    }
-
-    hierarchy_limits.insert({it->level, hl});
-  }
-
-  return hierarchy_limits;
-};
-
 enum class ExpansionType { forward = 0, reverse = 1, multimodal = 2 };
 
 /**
