@@ -27,10 +27,10 @@ public:
   virtual ~NarrativeBuilder() = default;
 
   NarrativeBuilder(NarrativeBuilder&&) = default;
-  NarrativeBuilder& operator=(NarrativeBuilder&&) = default;
+  NarrativeBuilder& operator=(NarrativeBuilder&&) = delete;
 
   NarrativeBuilder(const NarrativeBuilder&) = default;
-  NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
+  NarrativeBuilder& operator=(const NarrativeBuilder&) = delete;
 
   void Build(std::list<Maneuver>& maneuvers);
 

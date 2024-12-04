@@ -531,6 +531,58 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     }
 
     writer.start_object("summary");
+
+    // Does the user want admin info?
+    if (api.options().admin_crossings()) {
+      // write the admin array
+      writer.start_array("admins");
+      for (const auto& admin : trip_leg_itr->admin()) {
+        writer.start_object();
+        writer("country_code", admin.country_code());
+        writer("country_text", admin.country_text());
+        writer("state_code", admin.state_code());
+        writer("state_text", admin.state_text());
+        writer.end_object();
+      }
+      writer.end_array();
+
+      if (trip_leg_itr->admin_size() > 1) {
+        // write the admin crossings
+        auto node_itr = trip_leg_itr->node().begin();
+        auto next_node_itr = trip_leg_itr->node().begin();
+        next_node_itr++;
+        writer.start_array("admin_crossings");
+
+        while (next_node_itr != trip_leg_itr->node().end()) {
+          if (next_node_itr->admin_index() != node_itr->admin_index()) {
+            writer.start_object();
+            writer("from_admin_index", static_cast<uint64_t>(node_itr->admin_index()));
+            writer("to_admin_index", static_cast<uint64_t>(next_node_itr->admin_index()));
+            writer("begin_shape_index", static_cast<uint64_t>(node_itr->edge().begin_shape_index()));
+            writer("end_shape_index", static_cast<uint64_t>(node_itr->edge().end_shape_index()));
+            writer.end_object();
+          }
+          ++node_itr;
+          ++next_node_itr;
+        }
+        writer.end_array();
+      }
+    }
+
+    // are there any level changes along the leg
+    if (directions_leg.level_changes().size() > 0) {
+      writer.start_array("level_changes");
+      for (auto& level_change : directions_leg.level_changes()) {
+        writer.start_array();
+        writer(static_cast<int64_t>(level_change.shape_index()));
+        writer.set_precision(std::max(level_change.precision(), static_cast<uint32_t>(1)));
+        writer(level_change.level());
+        writer.set_precision(3);
+        writer.end_array();
+      }
+      writer.end_array();
+    }
+
     writer("has_time_restrictions", has_time_restrictions);
     writer("has_toll", has_toll);
     writer("has_highway", has_highway);

@@ -43,11 +43,11 @@ class Actor(_Actor):
 
     @dict_or_str
     def trace_route(self, req: Union[str, dict]):
-        return super().traceRoute(req)
+        return super().trace_route(req)
 
     @dict_or_str
     def trace_attributes(self, req: Union[str, dict]):
-        return super().traceAttributes(req)
+        return super().trace_attributes(req)
 
     @dict_or_str
     def height(self, req: Union[str, dict]):

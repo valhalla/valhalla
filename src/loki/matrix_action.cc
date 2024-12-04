@@ -60,11 +60,11 @@ void loki_worker_t::init_matrix(Api& request) {
   // we require sources and targets
   auto& options = *request.mutable_options();
   if (options.action() == Options::sources_to_targets || options.action() == Options::expansion) {
-    parse_locations(options.mutable_sources(), valhalla_exception_t{112});
-    parse_locations(options.mutable_targets(), valhalla_exception_t{112});
+    parse_locations(options.mutable_sources(), request, valhalla_exception_t{112});
+    parse_locations(options.mutable_targets(), request, valhalla_exception_t{112});
   } // optimized route uses locations but needs to do a matrix
   else {
-    parse_locations(options.mutable_locations(), valhalla_exception_t{112});
+    parse_locations(options.mutable_locations(), request, valhalla_exception_t{112});
     if (options.locations_size() < 2) {
       throw valhalla_exception_t{120};
     };

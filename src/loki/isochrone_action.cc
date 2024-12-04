@@ -33,7 +33,7 @@ void loki_worker_t::init_isochrones(Api& request) {
   auto& options = *request.mutable_options();
 
   // strip off unused information
-  parse_locations(options.mutable_locations());
+  parse_locations(options.mutable_locations(), request);
   if (options.locations_size() < 1) {
     throw valhalla_exception_t{120};
   };

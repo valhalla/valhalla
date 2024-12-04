@@ -290,6 +290,27 @@ public:
                               uint8_t& restriction_idx) const = 0;
 
   /**
+   * Checks if any edge exclusion is present.
+   * This checks if bridges, tolls, tunnels, ferries
+   * or highways are excluded in the request.
+   * @param  edge           Pointer to a directed edge.
+   * @param  pred           Predecessor edge information.
+   * @return Returns true if edge should be excluded.
+   */
+  inline bool CheckExclusions(const baldr::DirectedEdge* edge, const EdgeLabel& pred) const {
+    return has_excludes_ &&
+           ((exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
+            (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
+            (exclude_tolls_ && !pred.toll() && edge->toll()) ||
+            (exclude_highways_ && pred.classification() != baldr::RoadClass::kMotorway &&
+             edge->classification() == baldr::RoadClass::kMotorway) ||
+            (exclude_ferries_ &&
+             !(pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry) &&
+             (edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry)) ||
+            (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_)));
+  }
+
+  /**
    * Checks if access is allowed for the provided node. Node access can
    * be restricted if bollards are present.
    * @param   node  Pointer to node information.
@@ -1050,6 +1071,12 @@ protected:
   bool penalize_uturns_;
 
   bool exclude_unpaved_{false};
+  bool exclude_bridges_{false};
+  bool exclude_tunnels_{false};
+  bool exclude_tolls_{false};
+  bool exclude_highways_{false};
+  bool exclude_ferries_{false};
+  bool has_excludes_{false};
 
   bool exclude_cash_only_tolls_{false};
 
@@ -1150,7 +1177,13 @@ protected:
         fixed_speed_ == baldr::kDisableFixedSpeed ? costing_options.top_speed() : fixed_speed_;
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
-
+    exclude_bridges_ = costing_options.exclude_bridges();
+    exclude_tunnels_ = costing_options.exclude_tunnels();
+    exclude_tolls_ = costing_options.exclude_tolls();
+    exclude_highways_ = costing_options.exclude_highways();
+    exclude_ferries_ = costing_options.exclude_ferries();
+    has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
+                    exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
   }
 
@@ -1259,6 +1292,12 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> closure_factor_;
 
   bool exclude_unpaved_;
+  bool exclude_bridges_;
+  bool exclude_tunnels_;
+  bool exclude_tolls_;
+  bool exclude_highways_;
+  bool exclude_ferries_;
+  bool has_excludes_;
 
   bool exclude_cash_only_tolls_ = false;
 

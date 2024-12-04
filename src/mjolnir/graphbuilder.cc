@@ -6,6 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
+#include "baldr/conditional_speed_limit.h"
 #include "filesystem.h"
 
 #include "baldr/datetime.h"
@@ -859,8 +860,19 @@ void BuildTileSet(const std::string& ways_file,
             w.GetTaggedValues(osmdata.name_offset_map, pronunciationMap, langMap, default_languages,
                               tunnel_index, tunnel_lang_index, names.size(), tagged_values,
                               linguistics, type, diff_names);
-            // Update bike_network type
 
+            // Append conditional limits as tagged values
+            const auto cond_limits_range = osmdata.conditional_speeds.equal_range(w.way_id());
+            for (auto it = cond_limits_range.first; it != cond_limits_range.second; ++it) {
+              std::string value;
+              value.reserve(1 + sizeof(ConditionalSpeedLimit));
+              value += static_cast<std::string::value_type>(TaggedValue::kConditionalSpeedLimits);
+              value.append(reinterpret_cast<const std::string::value_type*>(&it->second),
+                           sizeof(ConditionalSpeedLimit));
+              tagged_values.push_back(std::move(value));
+            }
+
+            // Update bike_network type
             if (bike_network) {
               bike_network |= w.bike_network();
             } else {

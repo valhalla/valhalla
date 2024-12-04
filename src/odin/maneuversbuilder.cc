@@ -1157,7 +1157,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
 
   // Set the end level ref
   if (curr_edge && !curr_edge->GetLevelRef().empty()) {
-    maneuver.set_end_level_ref(curr_edge->GetLevelRef());
+    if (curr_edge->GetLevelRef().size() > 1) {
+      maneuver.set_end_level_ref("");
+    } else {
+      maneuver.set_end_level_ref(curr_edge->GetLevelRef()[0]);
+    }
   }
 
   // Elevator
@@ -1287,6 +1291,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
       LOG_TRACE("ManeuverType=TRANSIT_CONNECTION_DESTINATION");
     }
   }
+
+  // only set steps to true if it involves a level change or the steps are long enough to
+  // not be considered trivial
+  maneuver.set_steps(prev_edge->use() == TripLeg_Use_kStepsUse &&
+                     (prev_edge->traverses_levels() || prev_edge->length_km() >= 0.003));
 
   if (maneuver.pedestrian_type() == PedestrianType::kBlind) {
     if (prev_edge->use() == TripLeg_Use_kStepsUse)
@@ -1450,9 +1459,14 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // Set elevator
   if (node->IsElevator()) {
     maneuver.set_elevator(true);
+    maneuver.set_node_type(node->type());
     // Set the end level ref
     if (curr_edge && !curr_edge->GetLevelRef().empty()) {
-      maneuver.set_end_level_ref(curr_edge->GetLevelRef());
+      if (curr_edge->GetLevelRef().size() > 1) {
+        maneuver.set_end_level_ref("");
+      } else {
+        maneuver.set_end_level_ref(curr_edge->GetLevelRef()[0]);
+      }
     }
   }
 
@@ -1800,7 +1814,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=ELEVATOR");
   }
   // Process steps
-  else if (maneuver.indoor_steps()) {
+  else if (maneuver.indoor_steps() || maneuver.is_steps()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kStepsEnter);
     LOG_TRACE("ManeuverType=STEPS");
   }
@@ -4006,10 +4020,12 @@ void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& m
 
     for (auto node = man->begin_node_index(); node < man->end_node_index(); ++node) {
       auto curr_edge = trip_path_->GetCurrEdge(node);
-      // multipoint routes with `through` or `via` types can have consecutive copies of the same edge
+      // multipoint routes with `through` or `via` types can have consecutive copies of the same
+      // edge
       if (curr_edge != trip_path_->GetCurrEdge(node + 1)) {
         // every time we are about to leave an edge, collect all landmarks in it
-        // and reset distance of each landmark to the distance from the landmark to the maneuver point
+        // and reset distance of each landmark to the distance from the landmark to the maneuver
+        // point
         auto curr_landmarks = curr_edge->landmarks();
         for (auto& l : curr_landmarks) {
           double new_distance =

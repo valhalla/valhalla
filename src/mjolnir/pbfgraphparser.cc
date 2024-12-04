@@ -946,6 +946,41 @@ public:
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
+    tag_handlers_["maxspeed:conditional"] = [this]() {
+      std::vector<std::string> tokens = GetTagTokens(tag_.second, '@');
+      if (tokens.size() < 2) {
+        return; // just ignore bad entries
+      }
+
+      uint8_t speed;
+      if (tokens.at(0) == "no" || tokens.at(0) == "none") {
+        // Handle autobahns that have unlimited speed during smaller part of the day
+        speed = kUnlimitedSpeedLimit;
+      } else {
+        try {
+          const float parsed = std::stof(tokens.at(0));
+          if (parsed > kMaxAssumedSpeed) {
+            // LOG_WARN("Ignoring maxspeed:conditional that exceedes max for way id: " +
+            //          std::to_string(osmid_));
+            return;
+          }
+          speed = static_cast<uint8_t>(parsed + 0.5f);
+        } catch (const std::invalid_argument&) {
+          return; // ignore strange things like 'walk @...'
+        }
+      }
+
+      std::vector<std::string> conditions = GetTagTokens(tokens.at(1), ';');
+      for (const auto& c : conditions) {
+        std::vector<uint64_t> values = get_time_range(c);
+        for (const auto& v : values) {
+          ConditionalSpeedLimit limit = {};
+          limit.td_ = TimeDomain(v);
+          limit.speed_ = speed;
+          osmdata_.conditional_speeds.emplace(osmid_, limit);
+        }
+      }
+    };
     tag_handlers_["truck_route"] = [this]() {
       way_.set_truck_route(tag_.second == "true" ? true : false);
     };
@@ -1444,6 +1479,28 @@ public:
         // We have to set a flag as surface may come before Road classes and Uses
       } else {
         has_surface_ = false;
+      }
+    };
+
+    // surface and tracktype tag should win over smoothness.
+    tag_handlers_["smoothness"] = [this]() {
+      if (!has_surface_tag_ && !has_tracktype_tag_) {
+        has_surface_ = true;
+        if (tag_.second == "excellent" || tag_.second == "good") {
+          way_.set_surface(Surface::kPavedSmooth);
+        } else if (tag_.second == "intermediate") {
+          way_.set_surface(Surface::kPavedRough);
+        } else if (tag_.second == "bad") {
+          way_.set_surface(Surface::kCompacted);
+        } else if (tag_.second == "very_bad") {
+          way_.set_surface(Surface::kDirt);
+        } else if (tag_.second == "horrible") {
+          way_.set_surface(Surface::kGravel);
+        } else if (tag_.second == "very_horrible") {
+          way_.set_surface(Surface::kPath);
+        } else {
+          has_surface_ = false;
+        }
       }
     };
     // surface tag should win over tracktype.
@@ -2445,6 +2502,9 @@ public:
     if (!has_surface_tag_) {
       has_surface_ = false;
     }
+
+    const auto& tracktype_exists = results.find("tracktype");
+    has_tracktype_tag_ = (tracktype_exists != results.end());
 
     way_.set_drive_on_right(true); // default
 
@@ -4787,7 +4847,7 @@ public:
   bool has_default_speed_ = false, has_max_speed_ = false;
   bool has_average_speed_ = false, has_advisory_speed_ = false;
   bool has_surface_ = true;
-  bool has_surface_tag_ = true;
+  bool has_surface_tag_ = true, has_tracktype_tag_ = true;
   OSMAccess osm_access_;
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> pronunciationMap;
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> langMap;
