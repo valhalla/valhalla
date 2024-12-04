@@ -270,10 +270,13 @@ bool CostMatrix::SourceToTarget(Api& request,
       auto dt_info =
           DateTime::offset_date(source_location_list[source_idx].date_time(),
                                 time_infos[source_idx].timezone_index,
-                                graphreader.GetTimezoneFromEdge(edgelabel_[MATRIX_REV][target_idx]
-                                                                    .front()
-                                                                    .edgeid(),
-                                                                tile),
+                                edgelabel_[MATRIX_REV][target_idx].empty()
+                                    ? 0
+                                    : graphreader
+                                          .GetTimezoneFromEdge(edgelabel_[MATRIX_REV][target_idx]
+                                                                   .front()
+                                                                   .edgeid(),
+                                                               tile),
                                 time);
       *matrix.mutable_date_times(connection_idx) = dt_info.date_time;
       *matrix.mutable_time_zone_offsets(connection_idx) = dt_info.time_zone_offset;
