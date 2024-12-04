@@ -91,7 +91,7 @@ protected:
   std::unordered_set<uint32_t> processed_tiles_;
 
   // Hierarchy limits.
-  std::vector<HierarchyLimits> hierarchy_limits_;
+  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits_;
 
   // A* heuristic
   AStarHeuristic astarheuristic_;

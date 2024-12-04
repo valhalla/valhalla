@@ -163,8 +163,9 @@ DynamicCost::DynamicCost(const Costing& costing,
   default_hierarchy_limits = static_cast<bool>(costing.options().hierarchy_limits_size());
   // if user provided hierarchy limits, set them; the defaults need to be set by the algorithms
   if (!default_hierarchy_limits) {
-    std::copy(costing.options().hierarchy_limits().begin(),
-              costing.options().hierarchy_limits().end(), hierarchy_limits_.begin());
+    for (const auto& [level, hierarchy] : costing.options().hierarchy_limits()) {
+      hierarchy_limits_[level] = hierarchy;
+    }
   }
 
   // Add avoid edges to internal set
@@ -257,7 +258,7 @@ float DynamicCost::GetModeFactor() {
 }
 
 // Gets the hierarchy limits.
-std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
+std::unordered_map<uint32_t, HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;
 }
 
@@ -267,7 +268,7 @@ void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   const float relax_factor = using_bidirectional ? 8.f : 16.f;
   const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
 
-  for (auto& hierarchy : hierarchy_limits_) {
+  for (auto& [level, hierarchy] : hierarchy_limits_) {
     sif::RelaxHierarchyLimits(hierarchy, relax_factor, expansion_within_factor);
   }
 }

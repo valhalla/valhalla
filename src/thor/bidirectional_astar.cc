@@ -142,10 +142,9 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   auto& hierarchy_limits =
       costing_->DefaultHierarchyLimits() ? default_hierarchy_limits_ : costing_->GetHierarchyLimits();
   ignore_hierarchy_limits_ =
-      std::all_of(hierarchy_limits.begin() + 1,
-                  hierarchy_limits.begin() + TileHierarchy::levels().size(),
-                  [](const HierarchyLimits& limits) {
-                    return limits.max_up_transitions() == kUnlimitedTransitions;
+      std::all_of(hierarchy_limits.begin(), hierarchy_limits.end(),
+                  [](const std::pair<uint32_t, HierarchyLimits>& hl) {
+                    return hl.second.max_up_transitions() == kUnlimitedTransitions;
                   });
   hierarchy_limits_forward_ = hierarchy_limits;
   hierarchy_limits_reverse_ = hierarchy_limits;

@@ -438,8 +438,8 @@ BicycleCost::BicycleCost(const Costing& costing)
   const auto& costing_options = costing.options();
 
   // Set hierarchy to allow unlimited transitions
-  for (auto& h : hierarchy_limits_) {
-    h.set_max_up_transitions(kUnlimitedTransitions);
+  for (auto& [level, hierarchy] : hierarchy_limits_) {
+    hierarchy.set_max_up_transitions(kUnlimitedTransitions);
   }
 
   // Get the base costs

@@ -5,6 +5,7 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
@@ -17,15 +18,16 @@ namespace thor {
 constexpr uint32_t kBucketCount = 20000;
 constexpr size_t kInterruptIterationsInterval = 5000;
 
-inline std::vector<HierarchyLimits>
+inline std::unordered_map<uint32_t, HierarchyLimits>
 parse_default_hierarchy_limits(const boost::property_tree::ptree& config,
                                const std::string& path,
                                const bool uses_dist) {
-  std::vector<HierarchyLimits> hierarchy_limits;
-  hierarchy_limits.reserve(TileHierarchy::levels().size() - 1);
+  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits;
+  hierarchy_limits.reserve(baldr::TileHierarchy::levels().size() - 1);
 
   // get the default values for each level from which up transitions are possible (i.e. not 0)
-  for (auto it = ++TileHierarchy::levels().begin(); it != TileHierarchy::levels().end(); ++it) {
+  for (auto it = ++baldr::TileHierarchy::levels().begin(); it != baldr::TileHierarchy::levels().end();
+       ++it) {
     HierarchyLimits hl;
 
     auto max_up_transitions =
@@ -39,7 +41,7 @@ parse_default_hierarchy_limits(const boost::property_tree::ptree& config,
       hl.set_expansion_within_dist(expand_within_dist.get_value<float>());
     }
 
-    hierarchy_limits.push_back(hl);
+    hierarchy_limits.insert({it->level, hl});
   }
 
   return hierarchy_limits;

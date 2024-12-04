@@ -382,15 +382,17 @@ void loki_worker_t::check_hierarchy_limits(Api& api) {
     // make sure they are within the allowed range
     for (auto [level, hl] : *opts.mutable_hierarchy_limits()) {
       hl.set_up_transition_count(0);
-      hl.set_max_up_transitions(std::min(hl.max_up_transitions(), max_allowed_up_transitions));
-      hl.set_expansion_within_dist(std::min(hl.expansion_within_dist(), max_allowed_up_transitions));
+      hl.set_max_up_transitions(
+          std::min(hl.max_up_transitions(), max_hierarchy_limits[level].max_up_transitions()));
+      hl.set_expansion_within_dist(
+          std::min(hl.expansion_within_dist(), max_hierarchy_limits[level].expansion_within_dist()));
     }
 
     // and check all levels except highest are set
     bool hl_invalid = std::any_of(++TileHierarchy::levels().begin(), TileHierarchy::levels().end(),
                                   [&](const TileLevel& level) {
-                                    return *opts.hierarchy_limits().find(level.level) ==
-                                           *opts.hierarchy_limits().end();
+                                    return opts.hierarchy_limits().find(level.level) ==
+                                           opts.hierarchy_limits().end();
                                   });
     if (hl_invalid) {
       throw valhalla_exception_t{172};

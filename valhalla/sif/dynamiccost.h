@@ -864,7 +864,7 @@ public:
    * Gets the hierarchy limits.
    * @return  Returns the hierarchy limits.
    */
-  std::vector<HierarchyLimits>& GetHierarchyLimits();
+  std::unordered_map<uint32_t, HierarchyLimits>& GetHierarchyLimits();
 
   /**
    * Relax hierarchy limits using pre-defined algorithm-cased factors.
