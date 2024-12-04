@@ -103,6 +103,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {170, {170, "Locations are in unconnected regions. Go check/edit the map at osm.org", 400, HTTP_400, OSRM_NO_ROUTE, "impossible_route"}},
     {171, {171, "No suitable edges near location", 400, HTTP_400, OSRM_NO_SEGMENT, "no_edges_near"}},
     {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
+    {173, {173, "Invalid hierarchy limits", 400, HTTP_400, OSRM_INVALID_VALUE, "invalid_hierarchy_limits"}},
     {199, {199, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
@@ -159,6 +160,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
   {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
   {208, R"(Hard exclusions are not allowed on this server, ignoring hard excludes)"},
+  {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},

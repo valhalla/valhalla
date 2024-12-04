@@ -97,6 +97,7 @@ protected:
   // Hierarchy limits
   std::vector<HierarchyLimits> hierarchy_limits_forward_;
   std::vector<HierarchyLimits> hierarchy_limits_reverse_;
+  std::vector<HierarchyLimits> default_hierarchy_limits_;
   bool ignore_hierarchy_limits_;
 
   // A* heuristic

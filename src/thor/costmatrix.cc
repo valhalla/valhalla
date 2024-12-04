@@ -58,6 +58,7 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
       locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
       sources_{new ReachedMap} {
+  default_hierarchy_limits_ = parse_default_hierarchy_limits(config, "cost_matrix", false);
 }
 
 CostMatrix::~CostMatrix() {
@@ -309,11 +310,13 @@ void CostMatrix::Initialize(
   astar_heuristics_[MATRIX_FORW].resize(target_locations.size());
   astar_heuristics_[MATRIX_REV].resize(source_locations.size());
 
-  const auto& hlimits = costing_->GetHierarchyLimits();
+  // if costing has no hierarchy limits set, fall back to the defaults passed via the config
+  const auto& hlimits =
+      costing_->DefaultHierarchyLimits() ? default_hierarchy_limits_ : costing_->GetHierarchyLimits();
   ignore_hierarchy_limits_ =
-      std::all_of(hlimits.begin() + 1, hlimits.begin() + TileHierarchy::levels().size(),
-                  [](const HierarchyLimits& limits) {
-                    return limits.max_up_transitions() == kUnlimitedTransitions;
+      std::all_of(hlimits.begin(), hlimits.end(),
+                  [](const std::pair<uint32_t, HierarchyLimits>& limits) {
+                    return limits.second.max_up_transitions() == kUnlimitedTransitions;
                   });
 
   const uint32_t bucketsize = costing_->UnitSize();

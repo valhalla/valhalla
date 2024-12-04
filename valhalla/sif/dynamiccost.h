@@ -1017,7 +1017,7 @@ protected:
   uint32_t access_mask_;
 
   // Hierarchy limits.
-  std::vector<HierarchyLimits> hierarchy_limits_;
+  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits_;
 
   // User specified edges to avoid with percent along (for avoiding PathEdges of locations)
   std::unordered_map<baldr::GraphId, float> user_exclude_edges_;

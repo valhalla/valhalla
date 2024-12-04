@@ -118,11 +118,43 @@ config = {
         'max_reserved_labels_count_bidir_astar': 1000000,
         'max_reserved_labels_count_dijkstras': 4000000,
         'max_reserved_labels_count_bidir_dijkstras': 2000000,
-        'costmatrix_check_reverse_connection': False,
-        'costmatrix_allow_second_pass': False,
-        'max_reserved_locations_costmatrix': 25,
         'clear_reserved_memory': False,
         'extended_search': False,
+        'costmatrix': {
+            'check_reverse_connections': False,
+            'allow_second_pass': False,
+            'max_reserved_locations': 25,
+            'hierarchy_limits': {
+                'max_up_transitions': {
+                    '1': 0,
+                    '2': 0,
+                }, 
+            }
+        },
+        'bidirectional_astar': {
+            'hierarchy_limits': {
+                'max_up_transitions':  {
+                    '1': 80,
+                    '2': 20,
+                } ,
+                'expand_within_distance': {
+                    '1': 2000,
+                    '2': 1000
+                }, 
+            }
+        },
+        'unidirectional_astar': {
+            'hierarchy_limits': {
+                'max_up_transitions':  {
+                    '1': 80,
+                    '2': 20,
+                } ,
+                'expand_within_distance': {
+                    '1': 2000,
+                    '2': 1000
+                }, 
+            }
+        }, 
     },
     'odin': {
         'logging': {'type': 'std_out', 'color': True, 'file_name': 'path_to_some_file.log'},
@@ -275,10 +307,14 @@ config = {
         'max_distance_disable_hierarchy_culling': 0,
         'hierarchy_limits': {
             'allow_modification': False,
-            'max_allowed_up_transitions': [0, 400, 100, 0, 0, 0, 0, 0],
-            'max_expansion_within_dist': [None, 100000, 5000, 0, 0, 0.0, 0, 0],
-            'default_up_transitions': [0, 400, 100, 0, 0, 0, 0, 0],
-            'default_expansion_within_dist': [None, 100000, 5000, 0, 0, 0.0, 0, 0],
+            'max_allowed_up_transitions':  {
+                    '1': 80,
+                    '2': 20,
+            } ,
+           'max_expand_within_distance': {
+                    '1': 2000,
+                    '2': 1000
+            }, 
         },
         'allow_hard_exclusions': False,
     },

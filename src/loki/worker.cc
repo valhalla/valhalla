@@ -93,25 +93,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     throw valhalla_exception_t{124};
   }
 
-  // validate hierarchy limits
-  for (auto& pair : *options.mutable_costings()) {
-    auto opts = pair.second.options();
-    if (opts.hierarchy_limits_size() == 0) {
-      // user wants default behavior
-      // TODO: where do we make sure the needed levels were set?
-      continue;
-    }
-    if (!allow_hierarchy_limits_modifications) {
-      opts.clear_hierarchy_limits();
-      continue;
-    }
-
-    // something was set so make sure it's in the allowed range
-    for (auto [level, hl] : *opts.mutable_hierarchy_limits()) {
-      hl.set_max_up_transitions(std::min(hl.max_up_transitions(), max_allowed_up_transitions));
-      hl.set_expansion_within_dist(std::min(hl.expansion_within_dist(), max_allowed_up_transitions));
-    }
-  }
+  check_hierarchy_limits(api);
 
   if (!allow_hard_exclusions) {
     bool exclusion_detected = false;
@@ -226,10 +208,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       min_resample(config.get<float>("service_limits.skadi.min_resample")),
       allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)),
       allow_hierarchy_limits_modifications(
-          config.get<bool>("service_limits.hierarchy_limits.allow_modification", false)),
-      max_allowed_up_transitions(
-          config.get<unsigned int>("service_limits.hierarchy_limits.max_allowed_up_transitions",
-                                   kDefaultMaxAllowedTransitions)) {
+          config.get<bool>("service_limits.hierarchy_limits.allow_modification", false)) {
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -381,6 +360,45 @@ void loki_worker_t::check_hierarchy_distance(Api& request) {
     add_warning(request, 205);
     costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
   }
+}
+void loki_worker_t::check_hierarchy_limits(Api& api) {
+  bool denied_custom_hierarchy_limits = false;
+  auto& options = *api.mutable_options();
+  for (auto& pair : *options.mutable_costings()) {
+    auto opts = pair.second.options();
+    // user wants default behavior
+    if (opts.hierarchy_limits_size() == 0) {
+      continue;
+    }
+
+    // user passed custom hierarchy limits but the service disallows this
+    if (!allow_hierarchy_limits_modifications) {
+      opts.clear_hierarchy_limits();
+      denied_custom_hierarchy_limits = true;
+      continue;
+    }
+
+    // user passed custom hierarchy limits and the service allows this
+    // make sure they are within the allowed range
+    for (auto [level, hl] : *opts.mutable_hierarchy_limits()) {
+      hl.set_up_transition_count(0);
+      hl.set_max_up_transitions(std::min(hl.max_up_transitions(), max_allowed_up_transitions));
+      hl.set_expansion_within_dist(std::min(hl.expansion_within_dist(), max_allowed_up_transitions));
+    }
+
+    // and check all levels except highest are set
+    bool hl_invalid = std::any_of(++TileHierarchy::levels().begin(), TileHierarchy::levels().end(),
+                                  [&](const TileLevel& level) {
+                                    return *opts.hierarchy_limits().find(level.level) ==
+                                           *opts.hierarchy_limits().end();
+                                  });
+    if (hl_invalid) {
+      throw valhalla_exception_t{172};
+    }
+  }
+
+  if (denied_custom_hierarchy_limits)
+    add_warning(api, 209);
 }
 
 #ifdef ENABLE_SERVICES

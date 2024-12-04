@@ -145,7 +145,8 @@ protected:
   std::array<std::vector<LocationStatus>, 2> locs_status_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each location
-  std::array<std::vector<std::vector<HierarchyLimits>>, 2> hierarchy_limits_;
+  std::array<std::vector<std::vector<valhalla::HierarchyLimits>>, 2> hierarchy_limits_;
+  std::vector<valhalla::HierarchyLimits> default_hierarchy_limits_;
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;

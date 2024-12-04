@@ -62,6 +62,7 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
+  default_hierarchy_limits_ = parse_default_hierarchy_limits(config, "bidirectional_astar", true);
 }
 
 // Destructor
@@ -136,7 +137,10 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   cost_threshold_ = std::numeric_limits<float>::max();
   iterations_threshold_ = std::numeric_limits<uint32_t>::max();
 
-  auto& hierarchy_limits = costing_->GetHierarchyLimits();
+  // Get hierarchy limits from the costing if the user passed hierarchy limits, else
+  // fall back to the defaults from the config
+  auto& hierarchy_limits =
+      costing_->DefaultHierarchyLimits() ? default_hierarchy_limits_ : costing_->GetHierarchyLimits();
   ignore_hierarchy_limits_ =
       std::all_of(hierarchy_limits.begin() + 1,
                   hierarchy_limits.begin() + TileHierarchy::levels().size(),

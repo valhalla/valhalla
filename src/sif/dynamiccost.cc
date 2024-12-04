@@ -159,23 +159,14 @@ DynamicCost::DynamicCost(const Costing& costing,
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
 
-  // TODO - get the number of levels
-  uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
-  auto hl = costing.options().hierarchy_limits();
+  // save info on whether we're dealing with custom hierarchy limits
   default_hierarchy_limits = static_cast<bool>(costing.options().hierarchy_limits_size());
-  for (uint32_t level = 0; level < n_levels; level++) {
-    auto res = hl.find(level);
-    if (res == hl.end()) {
-      // nothing for this level, get the default
-      HierarchyLimits hl;
-      hl.set_expansion_within_dist(kDefaultExpansionWithinDist[level]);
-      hl.set_max_up_transitions(kDefaultMaxUpTransitions[level]);
-      hierarchy_limits_.emplace_back(hl);
-    } else {
-      // we have already validated the value, so we can just place it
-      hierarchy_limits_.emplace_back(res->second);
-    }
+  // if user provided hierarchy limits, set them; the defaults need to be set by the algorithms
+  if (!default_hierarchy_limits) {
+    std::copy(costing.options().hierarchy_limits().begin(),
+              costing.options().hierarchy_limits().end(), hierarchy_limits_.begin());
   }
+
   // Add avoid edges to internal set
   for (auto& edge : costing.options().exclude_edges()) {
     user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
