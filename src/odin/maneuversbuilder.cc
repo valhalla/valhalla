@@ -1459,6 +1459,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // Set elevator
   if (node->IsElevator()) {
     maneuver.set_elevator(true);
+    maneuver.set_node_type(node->type());
     // Set the end level ref
     if (curr_edge && !curr_edge->GetLevelRef().empty()) {
       if (curr_edge->GetLevelRef().size() > 1) {
