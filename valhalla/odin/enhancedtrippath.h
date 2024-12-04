@@ -80,6 +80,10 @@ public:
     return trip_path_.leg_count();
   }
 
+  const ::google::protobuf::RepeatedPtrField<::valhalla::LevelChange>& level_changes() const {
+    return trip_path_.level_changes();
+  }
+
   const ::google::protobuf::RepeatedPtrField<::valhalla::Location>& location() const {
     return trip_path_.location();
   }
@@ -362,6 +366,16 @@ public:
 
   bool indoor() const {
     return mutable_edge_->indoor();
+  }
+
+  const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Edge_Level>& levels() const {
+    return mutable_edge_->levels();
+  }
+
+  bool traverses_levels() const {
+    return !mutable_edge_->levels().empty() &&
+           (mutable_edge_->levels().size() > 1 ||
+            mutable_edge_->levels()[0].start() != mutable_edge_->levels()[0].end());
   }
 
   bool IsUnnamed() const;

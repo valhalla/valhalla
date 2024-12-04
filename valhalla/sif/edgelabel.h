@@ -38,7 +38,7 @@ public:
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
         origin_(0), destination_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0),
         closure_pruning_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
-        has_measured_speed_(0), hgv_access_(0), cost_(0, 0), sortcost_(0) {
+        has_measured_speed_(0), hgv_access_(0), bridge_(0), tunnel_(0), cost_(0, 0), sortcost_(0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -87,8 +87,8 @@ public:
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
         internal_turn_(static_cast<uint8_t>(internal_turn)), unpaved_(edge->unpaved()),
-        has_measured_speed_(has_measured_speed), hgv_access_(hgv_access), cost_(cost),
-        sortcost_(sortcost) {
+        has_measured_speed_(has_measured_speed), hgv_access_(hgv_access), bridge_(edge->bridge()),
+        tunnel_(edge->tunnel()), cost_(cost), sortcost_(sortcost) {
     dest_only_ = destonly ? destonly : edge->destonly();
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -374,6 +374,21 @@ public:
   }
 
   /**
+   * Get the bridge flag.
+   * @return Returns true if the edge is a bridge, otherwise false.
+   */
+  bool bridge() const {
+    return bridge_;
+  }
+
+  /**
+   * Get the tunnel flag.
+   * @return Returns true if the edge is a tunnel, otherwise false.
+   */
+  bool tunnel() const {
+    return tunnel_;
+  }
+  /**
    * Does it have HGV access?
    * @return Returns true if the (opposing) edge had HGV access
    */
@@ -443,9 +458,15 @@ protected:
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
   uint32_t has_measured_speed_ : 1;
+
   // Flag if this edge had HGV access
   uint32_t hgv_access_ : 1;
-  uint32_t spare : 12;
+  // Flag indicating edge is a bridge.
+  uint32_t bridge_ : 1;
+  // Flag indicating edge is a tunnel.
+  uint32_t tunnel_ : 1;
+
+  uint32_t spare : 10;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.

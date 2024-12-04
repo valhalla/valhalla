@@ -61,6 +61,12 @@ message SearchFilter {
   oneof has_exclude_closures {
     bool exclude_closures = 6;// whether to exclude roads marked as closed due to traffic [default = true]
   }
+  bool exclude_toll = 7; // whether to exclude toll routes from loki results [default = false]
+  bool exclude_ferry = 8; // whether to exclude ferry routes from loki results [default = false]
+
+  oneof has_level {
+    float level = 9; // level to filter edges by
+  }
 }
 
 message PathEdge {
@@ -403,3 +409,10 @@ message Summary {
   bool has_ferry = 6;
   bool has_highway = 7;
 }
+
+message LevelChange {
+  uint32 shape_index = 1;
+  float level = 2; 
+  uint32 precision = 3;
+}
+
