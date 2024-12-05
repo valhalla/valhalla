@@ -383,7 +383,7 @@ void loki_worker_t::check_hierarchy_limits(Api& api) {
 
     // user passed custom hierarchy limits and the service allows this
     // make sure they are within the allowed range
-    for (auto [level, hl] : *opts.mutable_hierarchy_limits()) {
+    for (const auto& [level, hl] : *opts.mutable_hierarchy_limits()) {
       // this property is for internal use only
       hl.set_up_transition_count(0);
 

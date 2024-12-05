@@ -128,35 +128,27 @@ config = {
                 'max_up_transitions': {
                     '1': 400,
                     '2': 100,
-                }, 
-            }
+                },
+            },
         },
         'bidirectional_astar': {
             'hierarchy_limits': {
-                'max_up_transitions':  {
+                'max_up_transitions': {
                     '1': 80,
                     '2': 20,
-                } ,
-                'expand_within_distance': {
-                    '0': 1e8,
-                    '1': 2000,
-                    '2': 1000
-                }, 
+                },
+                'expand_within_distance': {'0': 1e8, '1': 2000, '2': 1000},
             }
         },
         'unidirectional_astar': {
             'hierarchy_limits': {
-                'max_up_transitions':  {
+                'max_up_transitions': {
                     '1': 80,
                     '2': 20,
-                } ,
-                'expand_within_distance': {
-                    '0': 1e8,
-                    '1': 2000,
-                    '2': 1000
-                }, 
+                },
+                'expand_within_distance': {'0': 1e8, '1': 2000, '2': 1000},
             }
-        }, 
+        },
     },
     'odin': {
         'logging': {'type': 'std_out', 'color': True, 'file_name': 'path_to_some_file.log'},
@@ -309,15 +301,11 @@ config = {
         'max_distance_disable_hierarchy_culling': 0,
         'hierarchy_limits': {
             'allow_modification': False,
-            'max_allowed_up_transitions':  {
-                    '1': 80,
-                    '2': 20,
-            } ,
-           'max_expand_within_distance': {
-                    '0': 1e8,
-                    '1': 2000,
-                    '2': 1000
-            }, 
+            'max_allowed_up_transitions': {
+                '1': 80,
+                '2': 20,
+            },
+            'max_expand_within_distance': {'0': 1e8, '1': 2000, '2': 1000},
         },
         'allow_hard_exclusions': False,
     },
@@ -431,37 +419,37 @@ help_text = {
             'max_reserved_locations': 'Maximum amount of locations allowed to to keep reserved between requests for CostMatrix',
             'hierarchy_limits': {
                 'max_up_transitions': {
-                    '1': 'The default maximum up transitions for level 1 in CostMatrix', 
-                    '2': 'The default maximum up transitions for level 2 in CostMatrix', 
+                    '1': 'The default maximum up transitions for level 1 in CostMatrix',
+                    '2': 'The default maximum up transitions for level 2 in CostMatrix',
                 }
-            }
+            },
         },
         'bidirectional_astar': {
             'hierarchy_limits': {
                 'max_up_transitions': {
-                    '1': 'The default maximum up transitions for level 1 in CostMatrix', 
-                    '2': 'The default maximum up transitions for level 2 in CostMatrix', 
+                    '1': 'The default maximum up transitions for level 1 in CostMatrix',
+                    '2': 'The default maximum up transitions for level 2 in CostMatrix',
                 },
                 'expand_within_distance': {
-                    '0': 'The default distance within which expansion is allowed from the origin/destination on level 0 in bidirectional astar', 
-                    '1': 'The default distance within which expansion is allowed from the origin/destination on level 1 in bidirectional astar', 
-                    '2': 'The default distance within which expansion is allowed from the origin/destination on level 2 in bidirectional astar', 
-                }
+                    '0': 'The default distance within which expansion is allowed from the origin/destination on level 0 in bidirectional astar',
+                    '1': 'The default distance within which expansion is allowed from the origin/destination on level 1 in bidirectional astar',
+                    '2': 'The default distance within which expansion is allowed from the origin/destination on level 2 in bidirectional astar',
+                },
             }
         },
         'unidirectional_astar': {
             'hierarchy_limits': {
                 'max_up_transitions': {
-                    '1': 'The default maximum up transitions for level 1 in CostMatrix', 
-                    '2': 'The default maximum up transitions for level 2 in CostMatrix', 
+                    '1': 'The default maximum up transitions for level 1 in CostMatrix',
+                    '2': 'The default maximum up transitions for level 2 in CostMatrix',
                 },
                 'expand_within_distance': {
-                    '0': 'The default distance within which expansion is allowed from the origin/destination on level 0 in bidirectional astar', 
-                    '1': 'The default distance within which expansion is allowed from the origin/destination on level 1 in bidirectional astar', 
-                    '2': 'The default distance within which expansion is allowed from the origin/destination on level 2 in bidirectional astar', 
-                }
+                    '0': 'The default distance within which expansion is allowed from the origin/destination on level 0 in bidirectional astar',
+                    '1': 'The default distance within which expansion is allowed from the origin/destination on level 1 in bidirectional astar',
+                    '2': 'The default distance within which expansion is allowed from the origin/destination on level 2 in bidirectional astar',
+                },
             }
-        }, 
+        },
     },
     'odin': {
         'logging': {
@@ -635,13 +623,13 @@ help_text = {
             'allow_modification': 'Whether hierarchy limits can be modified via the request',
             'max_allowed_up_transitions': {
                 '1': 'The maximum up transitions for level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
-                '2': 'The maximum up transitions for level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.'
+                '2': 'The maximum up transitions for level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
             },
             'max_expand_within_distance': {
-                '0': 'The maximum distance in meters from which the origin/destination will be expanded on level 0. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.', 
-                '1': 'The maximum distance in meters from which the origin/destination will be expanded on level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.', 
-                '2': 'The maximum distance in meters from which the origin/destination will be expanded on level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.'
-            }, 
+                '0': 'The maximum distance in meters from which the origin/destination will be expanded on level 0. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                '1': 'The maximum distance in meters from which the origin/destination will be expanded on level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                '2': 'The maximum distance in meters from which the origin/destination will be expanded on level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+            },
         },
         'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_highways or exclude_ferries are allowed on this server',
     },
