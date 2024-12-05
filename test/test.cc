@@ -296,6 +296,18 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 200000.0,
           "max_locations": 5
         },
+        "hierarchy_limits": {
+            "allow_modification": false,
+            "max_allowed_up_transitions": {
+                    "1": 80,
+                    "2": 20
+            },
+           "max_expand_within_distance": {
+                    "0": 1e8,
+                    "1": 2000,
+                    "2": 1000
+            } 
+        },
         "isochrone": {
           "max_contours": 4,
           "max_distance": 25000.0,
@@ -379,7 +391,44 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "service": {
           "proxy": "ipc://%%/thor"
         },
-        "source_to_target_algorithm": "select_optimal"
+        "source_to_target_algorithm": "select_optimal",
+        "costmatrix": {
+            "check_reverse_connections": false,
+            "allow_second_pass": false,
+            "max_reserved_locations": 25,
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                } 
+            }
+        },
+        "bidirectional_astar": {
+            "hierarchy_limits": {
+                "max_up_transitions":  {
+                    "1": 80,
+                    "2": 20
+                },
+                "expand_within_distance": {
+                    "0": 1e8,
+                    "1": 2000,
+                    "2": 1000
+                } 
+            }
+        },
+        "unidirectional_astar": {
+            "hierarchy_limits": {
+                "max_up_transitions":  {
+                    "1": 80,
+                    "2": 20
+                },
+                "expand_within_distance": {
+                    "0": 1e8,
+                    "1": 2000,
+                    "2": 1000
+                } 
+            }
+        } 
       }
     }
   )";

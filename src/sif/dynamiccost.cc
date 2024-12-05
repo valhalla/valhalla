@@ -399,10 +399,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
       rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
 
   // hierarchy limits
-  uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
   if (json.HasMember("hierarchy_limits")) {
-    for (uint32_t level = 0; level < n_levels; level++) {
-      std::string hierarchy_limits_path = "/hierarchy_limits/" + std::to_string(level);
+    for (const auto& level : TileHierarchy::levels()) {
+      std::string hierarchy_limits_path = "/hierarchy_limits/" + std::to_string(level.level);
 
       unsigned int max_up_transitions =
           rapidjson::get<decltype(max_up_transitions)>(json,
@@ -422,7 +421,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
       hierarchylimits.set_max_up_transitions(max_up_transitions);
       hierarchylimits.set_expansion_within_dist(expand_within_distance);
 
-      co->mutable_hierarchy_limits()->insert({level, hierarchylimits});
+      co->mutable_hierarchy_limits()->insert({level.level, hierarchylimits});
     }
   }
 

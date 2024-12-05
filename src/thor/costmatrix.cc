@@ -53,12 +53,12 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
       max_reserved_locations_count_(
-          config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
-      check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
+          config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
+      check_reverse_connections_(config.get<bool>("costmatrix.check_reverse_connection", false)),
       access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
       locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
       sources_{new ReachedMap} {
-  default_hierarchy_limits_ = parse_hierarchy_limits_from_config(config, "cost_matrix", false);
+  default_hierarchy_limits_ = parse_hierarchy_limits_from_config(config, "costmatrix", false);
 }
 
 CostMatrix::~CostMatrix() {

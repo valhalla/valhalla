@@ -1350,29 +1350,29 @@ void ParseApi(const std::string& request, Options::Action action, valhalla::Api&
 std::unordered_map<uint32_t, HierarchyLimits>
 parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
                                    const std::string& path,
-                                   const bool uses_dist,
-                                   const bool service_limits) {
+                                   const bool uses_dist) {
   std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits;
   hierarchy_limits.reserve(baldr::TileHierarchy::levels().size() - 1);
 
-  // get the default values for each level from which up transitions are possible (i.e. not 0)
-  for (auto it = ++baldr::TileHierarchy::levels().begin(); it != baldr::TileHierarchy::levels().end();
+  // get the default values for each level
+  for (auto it = baldr::TileHierarchy::levels().begin(); it != baldr::TileHierarchy::levels().end();
        ++it) {
     HierarchyLimits hl;
 
-    auto max_up_transitions =
-        config.get_child(path +
-                         (service_limits ? ".hierarchy_limits.max_allowed_up_transitions."
-                                         : ".hierarchy_limits.max_up_transitions.") +
-                         std::to_string(it->level));
-    hl.set_max_up_transitions(max_up_transitions.get_value<uint32_t>());
+    auto max_up_transitions = config.get_child_optional(
+        path +
+        (path == "service_limits" ? ".hierarchy_limits.max_allowed_up_transitions."
+                                  : ".hierarchy_limits.max_up_transitions.") +
+        std::to_string(it->level));
+    hl.set_max_up_transitions(it->level == 0 ? 0 : max_up_transitions->get_value<uint32_t>());
 
-    // if the algorithm relax hierarchy limits based on distance, set that property as well
+    // if the algorithm uses distance to decide whether to expand a given level, set that property as
+    // well
     if (uses_dist) {
       auto expand_within_dist =
           config.get_child(path +
-                           (service_limits ? ".hierarchy_limits.max_expand_within_distance."
-                                           : ".hierarchy_limits.expand_within_distance.") +
+                           (path == "service_limits" ? ".hierarchy_limits.max_expand_within_distance."
+                                                     : ".hierarchy_limits.expand_within_distance.") +
                            std::to_string(it->level));
       hl.set_expansion_within_dist(expand_within_dist.get_value<float>());
     }

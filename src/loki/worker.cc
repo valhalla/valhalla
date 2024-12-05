@@ -299,7 +299,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
 
   // load the maximum hierarchy limits from config
-  max_hierarchy_limits = parse_hierarchy_limits_from_config(config, "service_limits", true, true);
+  max_hierarchy_limits = parse_hierarchy_limits_from_config(config, "service_limits", true);
 
   // signal that the worker started successfully
   started();
@@ -384,14 +384,16 @@ void loki_worker_t::check_hierarchy_limits(Api& api) {
     // user passed custom hierarchy limits and the service allows this
     // make sure they are within the allowed range
     for (auto [level, hl] : *opts.mutable_hierarchy_limits()) {
+      // this property is for internal use only
       hl.set_up_transition_count(0);
+
       hl.set_max_up_transitions(
           std::min(hl.max_up_transitions(), max_hierarchy_limits[level].max_up_transitions()));
       hl.set_expansion_within_dist(
           std::min(hl.expansion_within_dist(), max_hierarchy_limits[level].expansion_within_dist()));
     }
 
-    // and check all levels except highest are set
+    // and check all levels except level 0 are set
     bool hl_invalid = std::any_of(++TileHierarchy::levels().begin(), TileHierarchy::levels().end(),
                                   [&](const TileLevel& level) {
                                     return opts.hierarchy_limits().find(level.level) ==

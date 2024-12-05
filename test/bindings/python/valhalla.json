@@ -93,7 +93,44 @@
     "max_reserved_labels_count_bidir_astar": 1000000,
     "max_reserved_labels_count_dijkstras": 4000000,
     "max_reserved_labels_count_bidir_dijkstras": 2000000,
-    "extended_search": false
+    "extended_search": false,
+    "costmatrix": {
+      "check_reverse_connections": false,
+      "allow_second_pass": false,
+      "max_reserved_locations": 25,
+      "hierarchy_limits": {
+        "max_up_transitions": {
+          "1": 400,
+          "2": 100
+        }
+      }
+    },
+    "bidirectional_astar": {
+      "hierarchy_limits": {
+        "max_up_transitions": {
+          "1": 80,
+          "2": 20
+        },
+        "expand_within_distance": {
+          "0": 1e8,
+          "1": 2000,
+          "2": 1000
+        }
+      }
+    },
+    "unidirectional_astar": {
+      "hierarchy_limits": {
+        "max_up_transitions": {
+          "1": 80,
+          "2": 20
+        },
+        "expand_within_distance": {
+          "0": 1e8,
+          "1": 2000,
+          "2": 1000
+        }
+      }
+    }
   },
   "odin": {
     "logging": {
@@ -275,6 +312,17 @@
     "max_alternates": 2,
     "max_exclude_polygons_length": 10000,
     "max_distance_disable_hierarchy_culling": 0,
+    "hierarchy_limits": {
+      "allow_modification": false,
+      "max_allowed_up_transitions": {
+        "1": 80,
+        "2": 20
+      },
+      "max_expand_within_distance": {
+        "1": 2000,
+        "2": 1000
+      }
+    },
     "allow_hard_exclusions": false
   },
   "statsd": {
