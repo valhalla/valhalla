@@ -197,8 +197,10 @@ TEST_F(Indoor, ElevatorManeuver) {
   // Verify elevator as a node instructions
   maneuver_index += 2;
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Take the elevator to Level 3.", "", "",
-                                                            "", "");
+                                                            "Take the elevator to Level 3.", "",
+                                                            "Take the elevator to Level 3.",
+                                                            "Take the elevator to Level 3.",
+                                                            "Continue for 400 meters.");
 }
 
 TEST_F(Indoor, IndoorStepsManeuver) {
@@ -353,6 +355,60 @@ TEST_F(Indoor, NodeElevatorLevelChanges) {
   doc.Parse(route_json.c_str());
 
   check_level_changes(doc, {{0, 2.f}, {1, 3.f}});
+}
+
+TEST(Standalone, ElevatorMultiCueInstructions) {
+  constexpr double gridsize_metres = 1;
+
+  const std::string ascii_map = R"(
+             E 
+             |
+             |
+      A---B--C---D
+             |
+             |
+             F
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "0"}}},
+      {"BC", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+      {"CD", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+      {"CE", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+      {"CF", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
+  };
+
+  const gurka::nodes nodes = {
+      {"B", {{"highway", "elevator"}, {"indoor", "yes"}}},
+  };
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+  auto map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_access_psv_way", build_config);
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "pedestrian",
+                                 {
+                                     {"/locations/0/node_snap_tolerance", "0"},
+                                     {"/locations/1/node_snap_tolerance", "0"},
+                                     {"/locations/0/radius", "1"},
+                                     {"/locations/1/radius", "1"},
+                                 });
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CF"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kElevatorEnter,
+                                                DirectionsLeg_Maneuver_Type_kRight,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify steps instructions
+  int maneuver_index = 1;
+  gurka::assert::raw::
+      expect_instructions_at_maneuver_index(result, maneuver_index, "Take the elevator to Level 3.",
+                                            "", "Take the elevator to Level 3.",
+                                            "Take the elevator to Level 3. Then Turn right onto CF.",
+                                            "Continue for less than 10 meters.");
 }
 /****************************************************************************************/
 
