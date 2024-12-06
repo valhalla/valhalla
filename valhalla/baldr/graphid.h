@@ -24,7 +24,7 @@ constexpr uint64_t kInvalidGraphId = 0x3fffffffffff;
 // Value used to increment an Id by 1
 constexpr uint64_t kIdIncrement = 1 << 25;
 
-constexpr std::array<int, 4> kBoundingCircleRadii = {17 * 17, 25 * 25, 120 * 120, 375 * 375};
+constexpr std::array<int, 4> kBoundingCircleRadii = {25 * 25, 75 * 75, 150 * 150, 375 * 375};
 constexpr uint64_t kImpossibleBoundingCircle = 0xffff;
 
 // bin size in meters at the equator (half that since we offset from center)
@@ -238,7 +238,7 @@ public:
 };
 
 /**
- * Basically a GraphId that uses the 18 spare bits to store a coarse bounding circle that
+ * A derived class of GraphId that uses the 18 spare bits to store a coarse bounding circle that
  * contains the geometry of the edge this GraphId refers to.
  *
  * It stores three additional pieces of information: the center lat/lon offsets and the radius.
@@ -247,8 +247,8 @@ public:
  *
  * The remaing 2*8 bits are used to store offsets in meters relative to the center of the tile bin in
  * which this structure is stored. One increment evaluates to roughly 21.6 meters, in order to support
- * the maximum combination of the maximum distance from the bin center (half its size plus the max
- * supported radius).
+ * the maximum combination of the maximum distance from the bin center (half its size at the equator
+ * plus the max supported radius).
  */
 struct DiscretizedBoundingCircle : public GraphId {
   using GraphId::GraphId;
@@ -267,27 +267,44 @@ struct DiscretizedBoundingCircle : public GraphId {
    * out value to mean "invalid circle, go look at the shape".
    */
 
-  bool set(const midgard::DistanceApproximator<midgard::PointLL>& bin_center_approx,
-           const midgard::PointLL& bin_center,
-           const midgard::PointLL& circle_center,
-           double radius) {
+  /**
+   * Set the bounding circle.
+   *
+   * @param bin_center_approx distance approximator for the current bin's center point
+   * @param bin_center        the current bin's center point
+   * @param circle_center     the bounding circle's center point
+   * @param radius            the bounding circle's radius in meters
+   * @return the index of the radius used, or the max radius index + 1 if it was too large
+   */
+  size_t set(const midgard::DistanceApproximator<midgard::PointLL>& bin_center_approx,
+             const midgard::PointLL& bin_center,
+             const midgard::PointLL& circle_center,
+             double radius) {
     // reset if it was previously set
     value |= (value & kInvalidGraphId);
+
     midgard::PointLL offset{circle_center.lng() - bin_center.lng(),
                             circle_center.lat() - bin_center.lat()};
 
-    auto x_meters = offset.lng() * bin_center_approx.GetLngScale() * midgard::kMetersPerDegreeLat;
-    auto y_meters = offset.lat() * midgard::kMetersPerDegreeLat;
+    double x_meters = offset.lng() * bin_center_approx.GetLngScale() * midgard::kMetersPerDegreeLat;
+    double y_meters = offset.lat() * midgard::kMetersPerDegreeLat;
 
+    unsigned int index = kBoundingCircleRadii.size();
+
+    // if any of the offsets is larger than the largest value we support bail
     if (std::abs(x_meters) >= kMaxOffsetMeters - 0.5 || std::abs(y_meters) >= kMaxOffsetMeters - 0.5)
-      return false;
+      return index;
 
+    // this gives us the offset values we store
     uint64_t x_offset_increments =
         static_cast<uint64_t>((x_meters + kMaxOffsetMeters) / kOffsetIncrement + 0.5);
 
     uint64_t y_offset_increments =
         static_cast<uint64_t>((y_meters + kMaxOffsetMeters) / kOffsetIncrement + 0.5);
 
+    // but we're not done yet, we need to account for the loss of precision
+    // and resize the radius accordingly so that the bounding circle is
+    // still guaranteed to cover the edge shape
     double discretized_y_offset =
         ((static_cast<double>(y_offset_increments) / static_cast<double>(1 << 8)) * kMaxOffsetMeters *
          2) -
@@ -296,6 +313,7 @@ struct DiscretizedBoundingCircle : public GraphId {
         ((static_cast<double>(x_offset_increments) / static_cast<double>(1 << 8)) * kMaxOffsetMeters *
          2) -
         kMaxOffsetMeters;
+
     midgard::PointLL discretized_center{(discretized_x_offset / (bin_center_approx.GetLngScale() *
                                                                  midgard::kMetersPerDegreeLat)) +
                                             bin_center.lng(),
@@ -306,7 +324,6 @@ struct DiscretizedBoundingCircle : public GraphId {
     radius += loss_of_precision;
     auto radius_sq = radius * radius;
 
-    unsigned int index = kBoundingCircleRadii.size();
     for (unsigned int i = 0; i < kBoundingCircleRadii.size(); ++i) {
       auto r = kBoundingCircleRadii[i];
       if (radius_sq <= r) {
@@ -314,26 +331,31 @@ struct DiscretizedBoundingCircle : public GraphId {
         break;
       }
     }
-    if (index == kBoundingCircleRadii.size())
-      return false;
+    // only set the value if radius doesn't exceed the max radius we support
+    if (!index == kBoundingCircleRadii.size())
+      value |= (static_cast<uint64_t>(index) << 62) | (x_offset_increments << 54) |
+               (y_offset_increments << 46);
 
-    value |= (static_cast<uint64_t>(index) << 62) | (x_offset_increments << 54) |
-             (y_offset_increments << 46);
-    return true;
+    return index;
   }
 
+  /**
+   * Set the bounding circle from another discretized bounding circle
+   * (useful for opposing edge pairs).
+   */
   void set_from_other(const DiscretizedBoundingCircle& other) {
     value = (value & kInvalidGraphId) | (other.value & 0xffffc00000000000);
   }
 
-  bool operator()(const midgard::DistanceApproximator<midgard::PointLL>& approx,
-                  const midgard::DistanceApproximator<midgard::PointLL>& loc_approx,
-                  const double radius_sq,
-                  const midgard::PointLL& bin_center) const {
+  // TODO(chris): remove after testing
+  std::pair<midgard::PointLL, double>
+  get(const midgard::DistanceApproximator<midgard::PointLL>& approx,
+      const midgard::PointLL& bin_center) {
+
     // old data doesn't have this set, so this means go check the shape
     auto bounding_circle = value >> 46;
     if (!bounding_circle) {
-      return true;
+      return {{0, 0}, 0.};
     }
 
     // for the case where we created a valid circle, but it happens to be at
@@ -346,6 +368,47 @@ struct DiscretizedBoundingCircle : public GraphId {
          kMaxOffsetMeters * 2) -
         kMaxOffsetMeters;
     auto x_offset_meters =
+        ((static_cast<double>((bounding_circle >> 8) & 0xff) / static_cast<double>(1 << 8)) *
+         kMaxOffsetMeters * 2) -
+        kMaxOffsetMeters;
+    midgard::PointLL center{(x_offset_meters / (approx.GetMetersPerLngDegree())) + bin_center.lng(),
+                            y_offset_meters / midgard::kMetersPerDegreeLat + bin_center.lat()};
+
+    auto discretized_radius_sq = kBoundingCircleRadii[bounding_circle >> 16];
+    return {center, std::sqrt(discretized_radius_sq)};
+  }
+
+  /**
+   * This is the actual test whether the edge is within a given radius to a
+   * location.
+   *
+   * @param approx the bin center distance approximator.
+   * @param loc_approx the bin center point.
+   * @param radius_sq the squared search radius of the location
+   * @param approx the bin center point.
+   *
+   * @return false if the edge is not within the given radius to the edge, else true
+   */
+  bool operator()(const midgard::DistanceApproximator<midgard::PointLL>& approx,
+                  const midgard::DistanceApproximator<midgard::PointLL>& loc_approx,
+                  const double radius_sq,
+                  const midgard::PointLL& bin_center) const {
+    // old data doesn't have this set, so this means go check the shape
+    auto bounding_circle = value >> 46;
+    if (!bounding_circle) {
+      return true;
+    }
+
+    // for the case where we created a valid circle, but it happens to be at
+    // the bin's center and has the smallest radius
+    if (bounding_circle == kImpossibleBoundingCircle)
+      bounding_circle = 0;
+
+    double y_offset_meters =
+        ((static_cast<double>(bounding_circle & 0xff) / static_cast<double>(1 << 8)) *
+         kMaxOffsetMeters * 2) -
+        kMaxOffsetMeters;
+    double x_offset_meters =
         ((static_cast<double>((bounding_circle >> 8) & 0xff) / static_cast<double>(1 << 8)) *
          kMaxOffsetMeters * 2) -
         kMaxOffsetMeters;

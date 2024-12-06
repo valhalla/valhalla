@@ -11,7 +11,8 @@ using namespace valhalla::baldr;
 namespace {
 
 struct testable_graphtile : public valhalla::baldr::GraphTile {
-  testable_graphtile(const uint32_t (&offsets)[kBinCount], std::vector<GraphId>& bins) {
+  testable_graphtile(const uint32_t (&offsets)[kBinCount],
+                     std::vector<DiscretizedBoundingCircle>& bins) {
     header_ = new GraphTileHeader();
     header_->set_edge_bin_offsets(offsets);
     edge_bins_ = bins.data();
@@ -66,7 +67,7 @@ TEST(Graphtile, Bin) {
   uint32_t offsets[kBinCount] = {1, 2, 3, 0, 1, 2, 3, 1, 1, 2, 3, 2, 1,
                                  2, 3, 3, 1, 2, 3, 4, 1, 2, 3, 5, 1};
   std::vector<uint32_t> offs = {0};
-  std::vector<GraphId> bins;
+  std::vector<DiscretizedBoundingCircle> bins;
   uint32_t offset = 0;
   for (size_t i = 0, j = 0; i < kBinCount; ++i) {
     offset += offsets[i];
@@ -77,7 +78,8 @@ TEST(Graphtile, Bin) {
   }
   testable_graphtile t(offsets, bins);
   for (size_t i = 0; i < kBinCount; ++i) {
-    valhalla::midgard::iterable_t<GraphId> itr(bins.data() + offs[i], bins.data() + offs[i + 1]);
+    valhalla::midgard::iterable_t<DiscretizedBoundingCircle> itr(bins.data() + offs[i],
+                                                                 bins.data() + offs[i + 1]);
     auto idx_itr = t.GetBin(i);
     auto rc_itr = t.GetBin(i % kBinsDim, i / kBinsDim);
 

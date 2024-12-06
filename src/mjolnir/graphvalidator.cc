@@ -29,6 +29,18 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
+struct validate_result_t {
+  validate_result_t(std::vector<uint32_t>& id,
+                    std::vector<std::vector<float>>& d,
+                    tweeners_t& tw,
+                    std::array<size_t, 5>& stats)
+      : duplicates(id), densities(d), tweeners(tw), bounding_circle_stats(stats) {
+  }
+  std::vector<uint32_t> duplicates;
+  std::vector<std::vector<float>> densities;
+  tweeners_t tweeners;
+  std::array<size_t, 5> bounding_circle_stats;
+};
 
 struct HGVRestrictionTypes {
   bool hazmat;
@@ -240,12 +252,10 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
   return opp_index;
 }
 
-void validate(
-    const boost::property_tree::ptree& pt,
-    std::deque<GraphId>& tilequeue,
-    std::mutex& lock,
-    std::promise<std::tuple<std::vector<uint32_t>, std::vector<std::vector<float>>, tweeners_t>>&
-        result) {
+void validate(const boost::property_tree::ptree& pt,
+              std::deque<GraphId>& tilequeue,
+              std::mutex& lock,
+              std::promise<validate_result_t>& result) {
   // Our local copy of edges binned to tiles that they pass through (dont start or end in)
   tweeners_t tweeners;
   // Local Graphreader
@@ -262,6 +272,8 @@ void validate(
 
   // Vector to hold problem ways
   std::set<uint32_t> problem_ways;
+  std::array<size_t, 5> stats;
+  stats.fill(0);
 
   // Check for more tiles
   while (true) {
@@ -447,7 +459,7 @@ void validate(
     tilebuilder.header_builder().set_density(relative_density);
 
     // Bin the edges
-    auto bins = GraphTileBuilder::BinEdges(tile, tweeners);
+    auto bins = GraphTileBuilder::BinEdges(tile, tweeners, stats);
 
     // Write the new tile
     lock.lock();
@@ -475,7 +487,8 @@ void validate(
       }*/
 
   // Fill promise with return data
-  result.set_value(std::make_tuple(std::move(duplicates), std::move(densities), std::move(tweeners)));
+  validate_result_t r(duplicates, densities, tweeners, stats);
+  result.set_value(std::move(r));
 }
 
 // take tweeners from different tiles' perspectives and merge into a single tweener
@@ -561,9 +574,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
 
   // Setup promises
-  std::list<
-      std::promise<std::tuple<std::vector<uint32_t>, std::vector<std::vector<float>>, tweeners_t>>>
-      results;
+  std::list<std::promise<validate_result_t>> results;
 
   // Spawn the threads
   for (auto& thread : threads) {
@@ -580,17 +591,23 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   std::vector<uint32_t> duplicates(TileHierarchy::levels().size(), 0);
   std::vector<std::vector<float>> densities(3);
   tweeners_t tweeners;
+  std::array<size_t, 5> bounding_circle_stats;
+  bounding_circle_stats.fill(0);
   for (auto& result : results) {
     auto data = result.get_future().get();
     // Total up duplicates for each level
     for (uint8_t i = 0; i < TileHierarchy::levels().size(); ++i) {
-      duplicates[i] += std::get<0>(data)[i];
-      for (auto& d : std::get<1>(data)[i]) {
+      duplicates[i] += data.duplicates[i];
+      for (auto& d : data.densities[i]) {
         densities[i].push_back(d);
       }
     }
     // keep track of tweeners
-    merge(std::get<2>(data), tweeners);
+    merge(data.tweeners, tweeners);
+
+    for (size_t i = 0; i < data.bounding_circle_stats.size(); ++i) {
+      bounding_circle_stats[i] += data.bounding_circle_stats[i];
+    }
   }
   LOG_INFO("Finished");
 
@@ -628,6 +645,15 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     }
     LOG_DEBUG("Average density = " + std::to_string(sum / densities[level].size()) +
               " max = " + std::to_string(max_density));
+    LOG_DEBUG("Bounding circle distribution:");
+    for (size_t i = 0; i < bounding_circle_stats.size(); ++i) {
+      if (i < kBoundingCircleRadii.size()) {
+        LOG_DEBUG(std::to_string(kBoundingCircleRadii[i]) + ": " +
+                  std::to_string(bounding_circle_stats[i]));
+      } else {
+        LOG_DEBUG("Too large: " + std::to_string(bounding_circle_stats[i]));
+      }
+    }
 #endif
   }
 }

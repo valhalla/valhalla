@@ -1069,7 +1069,9 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 
 // return this tiles' edges' bins and its edges' tweeners' bins
 // using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile, tweeners_t& tweeners) {
+bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
+                                  tweeners_t& tweeners,
+                                  std::array<size_t, 5>& stats) {
   LOG_INFO("Binning edges");
   assert(tile);
   bins_t bins;
@@ -1142,22 +1144,17 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile, tweeners_t& tweene
           PointLL center{minx + lng_offset, miny + lat_offset};
           DistanceApproximator<PointLL> approx(center);
 
-          // TODO(chris) remove
-          auto prev_tile = edge_id.tileid();
-          auto prev_level = edge_id.level();
-          auto prev_id = edge_id.id();
-          if (!edge_id.set(approx, approx.TestPoint(), std::get<0>(bounding_circle),
-                           std::get<1>(bounding_circle))) {
+          size_t radius_idx;
+          if (!(radius_idx = edge_id.set(approx, approx.TestPoint(), std::get<0>(bounding_circle),
+                                         std::get<1>(bounding_circle))) ==
+              kBoundingCircleRadii.size()) {
             LOG_TRACE("Unable to store bounding circle; wayid=" + std::to_string(info.wayid()) +
                       "|radius=" + std::to_string(std::get<1>(bounding_circle)));
           } else {
             LOG_TRACE("Stored bounding circle; wayid=" + std::to_string(info.wayid()) +
                       "|radius=" + std::to_string(std::get<1>(bounding_circle)));
           }
-          if (prev_tile != edge_id.tileid() || prev_level != edge_id.level() ||
-              prev_id != edge_id.id()) {
-            LOG_ERROR("Setting went wrong");
-          }
+          stats[radius_idx]++;
           out_bins[bin].push_back(edge_id);
         }
       }

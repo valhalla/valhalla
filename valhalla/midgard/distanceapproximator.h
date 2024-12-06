@@ -56,7 +56,7 @@ public:
   }
 
   PointT TestPoint() {
-    return PointT{centerlng_, centerlat_};
+    return PointT(centerlng_, centerlat_);
   }
 
   /*
@@ -65,6 +65,14 @@ public:
    */
   typename PointT::first_type GetLngScale() const {
     return m_lng_scale_;
+  }
+
+  /*
+   * Getter for lng scale
+   * @return the distance scale for lng at this points latitude
+   */
+  typename PointT::first_type GetMetersPerLngDegree() const {
+    return m_per_lng_degree_;
   }
 
   /**

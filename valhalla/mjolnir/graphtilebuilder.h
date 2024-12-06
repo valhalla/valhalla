@@ -441,7 +441,8 @@ public:
    * @param tile       the tile whose edges need the binned
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
-  static bins_t BinEdges(const graph_tile_ptr& tile, tweeners_t& tweeners);
+  static bins_t
+  BinEdges(const graph_tile_ptr& tile, tweeners_t& tweeners, std::array<size_t, 5>& stats);
 
   /**
    * Adds to the bins the tile already has, only modifies the header to reflect the new counts

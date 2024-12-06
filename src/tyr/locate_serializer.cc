@@ -9,6 +9,52 @@ using namespace valhalla::baldr;
 
 namespace {
 
+// TODO(chris) remove after testing
+json::MapPtr get_bounding_circle(const baldr::PathLocation::PathEdge& loc,
+                                 graph_tile_ptr tile,
+                                 GraphReader& reader,
+                                 const EdgeInfo& edge_info) {
+  const auto opp_edge_id = reader.GetOpposingEdgeId(loc.id);
+  auto map = json::map({});
+  // it's going to be either one
+  auto tiles = TileHierarchy::levels().back().tiles;
+
+  auto intersect = tiles.Intersect(edge_info.shape());
+  for (const auto i : intersect) {
+    GraphId iid(i.first, 2, 0);
+    auto local_tile = reader.GetGraphTile(iid);
+    if (!local_tile)
+      continue;
+    for (const auto bin : i.second) {
+      auto minx = tiles.TileBounds(i.first).minx();
+      auto miny = tiles.TileBounds(i.first).miny();
+      auto lat_offset = (bin / kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      auto lng_offset = (bin % kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      PointLL center{minx + lng_offset, miny + lat_offset};
+      DistanceApproximator<PointLL> approx(center);
+
+      for (auto bc : local_tile->GetBin(bin)) {
+        bool a = loc.id.value == (bc.value & kInvalidGraphId);
+        bool b = opp_edge_id.value == (bc.value & kInvalidGraphId);
+        if (a || b) {
+          LOG_ERROR("a:" + std::to_string(a) + "|b:" + std::to_string(b));
+          // found it
+          std::pair<PointLL, double> circle = bc.get(approx, center);
+          if (circle.second == 0) {
+            LOG_INFO("Found but radius 0");
+          } else {
+            map->insert({"lon", json::fixed_t{circle.first.lng(), 6}});
+            map->insert({"lat", json::fixed_t{circle.first.lat(), 6}});
+            map->insert({"radius", json::fixed_t{circle.second, 6}});
+            return map;
+          }
+        }
+      }
+    }
+  }
+  LOG_INFO("Not found");
+  return map;
+}
 OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de) {
   if (de->classification() == valhalla::baldr::RoadClass::kMotorway)
     return OpenLR::LocationReferencePoint::MOTORWAY;
@@ -108,6 +154,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
             {"linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info)},
             {"predicted_speeds", predicted_speeds},
             {"live_speed", live_speed},
+            {"bounding_circle", get_bounding_circle(edge, tile, reader, edge_info)},
             {"access_restrictions", get_access_restrictions(tile, edge.id.id())},
         }));
       } // they want it lean and mean

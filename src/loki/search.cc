@@ -543,14 +543,15 @@ struct bin_handler_t {
       const DirectedEdge* opp_edge = nullptr;
       graph_tile_ptr opp_tile = tile;
       DiscretizedBoundingCircle opp_edgeid;
+      GraphId opp_id;
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
       if (!costing->Allowed(edge, tile, kDisallowShortcut)) {
         // but if we couldnt get it or its filtered too then we move on
-        auto opp = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&opp);
-        if (!(opp) || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
+        opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&opp_id);
+        if (!(opp_id) || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
           continue;
         opp_edgeid.set_from_other(edge_id);
         // if we will continue with the opposing edge lets swap it in
@@ -569,14 +570,16 @@ struct bin_handler_t {
         c_itr->sq_distance = std::numeric_limits<double>::max();
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
-        auto oppid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&oppid);
-        opp_edgeid.set_from_other(edge_id);
+        opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&opp_id);
+        // opp_edgeid.set_from_other(edge_id);
         c_itr->prefiltered =
             search_filter(edge, *costing, tile, p_itr->location.search_filter_) && opp_edgeid &&
             search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_);
         // set to false if even one candidate was not filtered
-        all_prefiltered = all_prefiltered && c_itr->prefiltered;
+        all_prefiltered = all_prefiltered && c_itr->prefiltered &&
+                          edge_id(p_itr->bin_center_approximator, p_itr->project.approx,
+                                  p_itr->sq_radius, p_itr->bin_center);
       }
 
       // short-circuit if all candidates were prefiltered
@@ -592,20 +595,20 @@ struct bin_handler_t {
       // of the shape which are on the same side of h that p is. to make this fast we would need a
       // a trivial half plane test as maybe a single dot product and comparison?
 
-      nSearched++;
-      // Check if all locations are outside the bounding circle of the edge
-      bool all_outside = true;
-      for (p_itr = begin; p_itr != end; ++p_itr) {
-        if (edge_id(p_itr->bin_center_approximator, p_itr->project.approx, p_itr->sq_radius,
-                    p_itr->bin_center)) {
-          all_outside = false;
-          break;
-        }
-      }
-      if (all_outside) {
-        nSkipped++;
-        continue;
-      }
+      // nSearched++;
+      // // Check if all locations are outside the bounding circle of the edge
+      // bool all_outside = true;
+      // for (p_itr = begin; p_itr != end; ++p_itr) {
+      //   if (edge_id(p_itr->bin_center_approximator, p_itr->project.approx, p_itr->sq_radius,
+      //               p_itr->bin_center)) {
+      //     all_outside = false;
+      //     break;
+      //   }
+      // }
+      // if (all_outside) {
+      //   nSkipped++;
+      //   continue;
+      // }
 
       // get some shape of the edge
       auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
@@ -673,7 +676,7 @@ struct bin_handler_t {
         // if its empty append
         if (batch->empty()) {
           c_itr->edge = edge;
-          c_itr->edge_id = edge_id;
+          c_itr->edge_id = GraphId(edge_id & kInvalidGraphId);
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           batch->emplace_back(std::move(*c_itr));
@@ -695,7 +698,7 @@ struct bin_handler_t {
         // it has to either be better or in the radius to move on
         if (in_radius || better) {
           c_itr->edge = edge;
-          c_itr->edge_id = edge_id;
+          c_itr->edge_id = GraphId(edge_id & kInvalidGraphId);
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           // the last one wasnt in the radius so replace it with this one because its better or is
@@ -873,14 +876,15 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
   if (locations.empty())
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
 
-  nSkipped = nSearched = 0; // TODO - remove after testing
+  nSkipped = 0; // TODO - remove after testing
+  nSearched = 0;
 
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, costing);
   // search over the bins doing multiple locations per bin
   handler.search();
   // TODO - remove after testing
-  LOG_INFO("skipped " + std::to_string(nSkipped) + " out of " + std::to_string(nSearched));
+  // LOG_INFO("skipped " + std::to_string(nSkipped) + " out of " + std::to_string(nSearched));
   // turn each locations candidate set into path locations
   return handler.finalize();
 }
