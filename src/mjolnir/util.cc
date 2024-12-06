@@ -434,13 +434,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     ElevationBuilder::Build(config);
   }
 
-  LOG_INFO("Start building edge bounds");
-  // Add edge bounds to the tiles
-  if (start_stage <= BuildStage::kEdgeBounds && BuildStage::kEdgeBounds <= end_stage) {
-    EdgeBoundsBuilder::Build(config);
-  }
-  LOG_INFO("Finished building edge bounds");
-
   // Build the Complex Restrictions
   // ComplexRestrictions must be done after edge bounds and elevation. The reason is that building
   // these data into the tiles reads each tile and serializes the data to "builders"

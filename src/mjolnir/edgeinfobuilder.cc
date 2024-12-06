@@ -85,11 +85,6 @@ void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
   std::copy(encoded_shape.begin(), encoded_shape.end(), back_inserter(encoded_shape_));
 }
 
-// Set the bounding circle of the encoded shape.
-void EdgeInfoBuilder::set_bounding_circle(const std::vector<float>& circle) {
-  bounding_circle_ = circle;
-}
-
 // Set the encoded elevation vector.
 void EdgeInfoBuilder::set_encoded_elevation(const std::vector<int8_t>& encoded_elevation) {
   if (!encoded_elevation.empty()) {
@@ -100,7 +95,6 @@ void EdgeInfoBuilder::set_encoded_elevation(const std::vector<int8_t>& encoded_e
 // Get the size of the edge info (including name offsets and shape string)
 std::size_t EdgeInfoBuilder::BaseSizeOf() const {
   std::size_t size = sizeof(EdgeInfo::EdgeInfoInner);
-  size += bounding_circle_.size() * sizeof(float);
   size += (name_info_list_.size() * sizeof(NameInfo));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
   size += ei_.extended_wayid_size_;
@@ -142,15 +136,8 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   // Set the has_elevation flag if encoded_elevation vector is not empty
   ei.has_elevation_ = !eib.encoded_elevation_.empty();
 
-  // Set the has_bounding_circle flag if bounding circle data is not empty
-  ei.has_bounding_circle_ = !eib.bounding_circle_.empty();
-
   // Write out the bytes
   os.write(reinterpret_cast<const char*>(&ei), sizeof(ei));
-  if (ei.has_bounding_circle_) {
-    os.write(reinterpret_cast<const char*>(eib.bounding_circle_.data()),
-             (eib.bounding_circle_.size() * sizeof(float)));
-  }
   os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
            (name_count * sizeof(NameInfo)));
   os << eib.encoded_shape_;

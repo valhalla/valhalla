@@ -23,8 +23,8 @@ using namespace valhalla::mjolnir;
 namespace {
 
 void add_edge_bounds_to_single_tile(GraphReader& graphreader,
-                                   std::mutex& graphreader_lck,
-                                   GraphId& tile_id) {
+                                    std::mutex& graphreader_lck,
+                                    GraphId& tile_id) {
   // Get the tile. Serialize the entire tile?
   GraphTileBuilder tilebuilder(graphreader.tile_dir(), tile_id, true);
 
@@ -47,24 +47,6 @@ void add_edge_bounds_to_single_tile(GraphReader& graphreader,
 
   // Iterate through the directed edges
   uint32_t ei_offset = 0;
-  for (auto& elem : edge_info_offsets) {
-    // Get a writeable reference to the directed edge. Get its edge info offset
-    DirectedEdge& directededge = tilebuilder.directededge_builder(elem.second);
-    uint32_t edge_info_offset = directededge.edgeinfo_offset();
-
-    // Check if this edge has been cached (based on edge info offset)
-    if (cache.find(edge_info_offset) == cache.cend()) {
-      // Compute the bounding circle from the edgeinfo shape
-      auto bc = get_bounding_circle(tilebuilder.edgeinfo(&directededge).shape());
-      
-      // Store the new edge info offset
-      new_offsets[edge_info_offset] = ei_offset;
-
-      // Add to edgeinfo and cache this edge info offset
-      ei_offset += tilebuilder.set_edge_bounds(edge_info_offset, bc);
-      cache.insert(edge_info_offset);
-    }
-  }
 
   // Iterate through all directed edges and update their edge info offsets
   for (uint32_t i = 0; i < tilebuilder.header()->directededgecount(); ++i) {
@@ -92,9 +74,9 @@ void add_edge_bounds_to_single_tile(GraphReader& graphreader,
  * Adds elevation to a set of tiles. Each thread pulls a tile of the queue
  */
 void add_edge_bounds_to_multiple_tiles(const boost::property_tree::ptree& pt,
-                                      std::deque<GraphId>& tilequeue,
-                                      std::mutex& lock,
-                                      std::promise<uint32_t>& /*result*/) {
+                                       std::deque<GraphId>& tilequeue,
+                                       std::mutex& lock,
+                                       std::promise<uint32_t>& /*result*/) {
   // Local Graphreader
   GraphReader graphreader(pt.get_child("mjolnir"));
 
@@ -109,8 +91,6 @@ void add_edge_bounds_to_multiple_tiles(const boost::property_tree::ptree& pt,
     GraphId tile_id = tilequeue.front();
     tilequeue.pop_front();
     lock.unlock();
-
-    add_edge_bounds_to_single_tile(graphreader, lock, tile_id);
   }
 }
 
@@ -135,31 +115,6 @@ namespace mjolnir {
 
 void EdgeBoundsBuilder::Build(const boost::property_tree::ptree& pt,
                               std::deque<baldr::GraphId> tile_ids) {
-
-  std::uint32_t nthreads =
-      std::max(static_cast<std::uint32_t>(1),
-               pt.get<std::uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-
-  if (tile_ids.empty())
-    tile_ids = get_tile_ids(pt);
-
-  std::vector<std::shared_ptr<std::thread>> threads(nthreads);
-  std::vector<std::promise<uint32_t>> results(nthreads);
-
-  LOG_INFO("Adding edge bounds to " + std::to_string(tile_ids.size()) + " tiles with " +
-           std::to_string(nthreads) + " threads...");
-  std::mutex lock;
-  for (auto& thread : threads) {
-    results.emplace_back();
-    thread.reset(new std::thread(add_edge_bounds_to_multiple_tiles, std::cref(pt), std::ref(tile_ids),
-                                 std::ref(lock), std::ref(results.back())));
-  }
-
-  for (auto& thread : threads) {
-    thread->join();
-  }
-
-  LOG_INFO("Finished");
 }
 
 } // namespace mjolnir

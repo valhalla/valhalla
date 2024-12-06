@@ -187,7 +187,8 @@ struct candidate_t {
 struct projector_wrapper {
   projector_wrapper(const Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_)), location(location),
-        sq_radius(square(double(location.radius_))), project(location.latlng_) {
+        sq_radius(square(double(location.radius_))), project(location.latlng_),
+        bin_center_approximator(bin_center) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
     reachable.reserve(64);
@@ -237,8 +238,18 @@ struct projector_wrapper {
       }
 
       // grab the tile the lat, lon is in
-      auto tile_id = GraphId(tile_index, TileHierarchy::levels().back().level, 0);
-      reader.GetGraphTile(tile_id, cur_tile);
+      auto tile = GraphId(tile_index, TileHierarchy::levels().back().level, 0);
+      const auto& tiles = TileHierarchy::levels().back().tiles;
+      auto minx = tiles.TileBounds(tile.tileid()).minx();
+      auto miny = tiles.TileBounds(tile.tileid()).miny();
+      auto lat_offset =
+          (bin_index / kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      auto lng_offset =
+          (bin_index % kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      bin_center = {minx + lng_offset, miny + lat_offset};
+      bin_center_approximator = DistanceApproximator<PointLL>(bin_center);
+
+      reader.GetGraphTile(tile, cur_tile);
     } while (!cur_tile);
   }
 
@@ -246,6 +257,8 @@ struct projector_wrapper {
   graph_tile_ptr cur_tile;
   Location location;
   unsigned short bin_index = 0;
+  PointLL bin_center;
+  DistanceApproximator<PointLL> bin_center_approximator;
   double sq_radius;
   std::vector<candidate_t> unreachable;
   std::vector<candidate_t> reachable;
@@ -529,15 +542,17 @@ struct bin_handler_t {
       // lots of places below where we might like to know about the opp edge
       const DirectedEdge* opp_edge = nullptr;
       graph_tile_ptr opp_tile = tile;
-      GraphId opp_edgeid;
+      DiscretizedBoundingCircle opp_edgeid;
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
       if (!costing->Allowed(edge, tile, kDisallowShortcut)) {
         // but if we couldnt get it or its filtered too then we move on
-        if (!(opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) ||
-            !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
+        auto opp = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&opp);
+        if (!(opp) || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
           continue;
+        opp_edgeid.set_from_other(edge_id);
         // if we will continue with the opposing edge lets swap it in
         std::swap(edge, opp_edge);
         std::swap(tile, opp_tile);
@@ -554,9 +569,11 @@ struct bin_handler_t {
         c_itr->sq_distance = std::numeric_limits<double>::max();
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
+        auto oppid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&oppid);
+        opp_edgeid.set_from_other(edge_id);
         c_itr->prefiltered =
-            search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
-            (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
+            search_filter(edge, *costing, tile, p_itr->location.search_filter_) && opp_edgeid &&
             search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_);
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
@@ -575,30 +592,23 @@ struct bin_handler_t {
       // of the shape which are on the same side of h that p is. to make this fast we would need a
       // a trivial half plane test as maybe a single dot product and comparison?
 
-      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
-
       nSearched++;
-      auto bv = edge_info->bounding_circle();
-      if (bv) {
-        // Check if all locations are outside the bounding circle of the edge
-        bool all_outside = true;
-        for (p_itr = begin; p_itr != end; ++p_itr) {
-          // TODO - search cutoff defaults to 35km
-          // NOTE - if we use this for map-matching, the max search radius = 50
-          // float r = (bv->radius() + p_itr->location.search_cutoff_);
-          float r = bv->radius() + 50.0f;
-          if (p_itr->project.approx.DistanceSquared(bv->center()) < r * r) {
-            all_outside = false;
-            break;
-          }
+      // Check if all locations are outside the bounding circle of the edge
+      bool all_outside = true;
+      for (p_itr = begin; p_itr != end; ++p_itr) {
+        if (edge_id(p_itr->bin_center_approximator, p_itr->project.approx, p_itr->sq_radius,
+                    p_itr->bin_center)) {
+          all_outside = false;
+          break;
         }
-        if (all_outside) {
-          nSkipped++;
-          continue;
-        }
+      }
+      if (all_outside) {
+        nSkipped++;
+        continue;
       }
 
       // get some shape of the edge
+      auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
       auto shape = edge_info->lazy_shape();
       PointLL v;
       if (!shape.empty()) {
@@ -642,8 +652,9 @@ struct bin_handler_t {
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
-        if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
+        auto oppid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&oppid);
+        if (!reachable && opp_edgeid && costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
             !search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_)) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&

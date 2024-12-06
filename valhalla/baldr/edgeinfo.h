@@ -155,14 +155,6 @@ public:
   }
 
   /**
-   * Does this EdgeInfo have a bounding circle.
-   * @return Returns true if the EdgeInfo record has a bounding circle for the edge.
-   */
-  bool has_bounding_circle() const {
-    return ei_.has_bounding_circle_;
-  }
-
-  /**
    * Does this EdgeInfo have elevation data.
    * @return Returns true if the EdgeInfo record has elevation along the edge.
    */
@@ -273,14 +265,6 @@ public:
   std::string encoded_shape() const;
 
   /**
-   * Returns the bounding circle containing this edge.
-   * @return  Returns the bounding circle of the edge.
-   */
-  const BoundingCircle* bounding_circle() const {
-    return bounding_circle_;
-  }
-
-  /**
    * Returns the encoded elevation along the edge. The sampling interval is uniform
    * (based on the length of the edge). The sampling interval is returned via argument.
    * @param  length  Length of the edge. Used to determine sampling interval.
@@ -345,7 +329,6 @@ public:
     uint32_t extended_wayid1_ : 8;     // Next next byte of the way id
     uint32_t extended_wayid_size_ : 2; // How many more bytes the way id is stored in
     uint32_t has_elevation_ : 1;       // Does the edgeinfo have elevation?
-    uint32_t has_bounding_circle_ : 1; // Does the edgeinfo include a bounding circle?
   };
 
 protected:
@@ -354,9 +337,6 @@ protected:
 
   // List of name information (offsets, etc.)
   const NameInfo* name_info_list_;
-
-  // Bounding circle enclosing the shape
-  const BoundingCircle* bounding_circle_;
 
   // The encoded shape of the edge
   const char* encoded_shape_;

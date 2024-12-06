@@ -732,7 +732,8 @@ template <typename numeric_t> bool is_valid(numeric_t value) {
  * Find the bounding circle for a container of lat,lng vertices.
  * @return  Returns a vector with the center lat,lng and radius (meters).
  */
-template <class container_t> std::vector<float> get_bounding_circle(const container_t& shape);
+template <class container_t>
+std::tuple<PointLL, double> get_bounding_circle(const container_t& shape);
 
 } // namespace midgard
 } // namespace valhalla

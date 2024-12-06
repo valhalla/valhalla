@@ -144,9 +144,6 @@ protected:
   // List of name info (offsets, etc.)
   std::vector<baldr::NameInfo> name_info_list_;
 
-  // Bounding circle (lat,lng,radius)
-  std::vector<float> bounding_circle_;
-
   // Lat,lng shape of the edge
   std::string encoded_shape_;
 

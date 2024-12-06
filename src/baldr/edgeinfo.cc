@@ -129,14 +129,6 @@ EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_le
   ei_ = *reinterpret_cast<EdgeInfoInner*>(ptr);
   ptr += sizeof(EdgeInfoInner);
 
-  // Set bounding circle (if set)
-  if (ei_.has_bounding_circle_) {
-    bounding_circle_ = reinterpret_cast<BoundingCircle*>(ptr);
-    ptr += sizeof(BoundingCircle);
-  } else {
-    bounding_circle_ = nullptr;
-  }
-
   // Set name info list pointer
   name_info_list_ = reinterpret_cast<NameInfo*>(ptr);
   ptr += (name_count() * sizeof(NameInfo));

@@ -32,6 +32,8 @@ namespace valhalla {
 namespace mjolnir {
 
 using edge_tuple = std::tuple<uint32_t, baldr::GraphId, baldr::GraphId>;
+using bins_t = std::array<std::vector<DiscretizedBoundingCircle>, kBinCount>;
+using tweeners_t = std::unordered_map<GraphId, bins_t>;
 
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
@@ -304,15 +306,6 @@ public:
                          const std::vector<int8_t>& encoded_elevation);
 
   /**
-   * Set the bounds (boundign circle defined by lat,lng, radius) of the edge.
-   * This requires a serialized tile builder.
-   * @param offset Edge info offset.
-   * @param biunding_circle Bounding circle.
-   * @return Returns size of the updated EdgeInfo data.
-   */
-  uint32_t set_edge_bounds(const uint32_t offset, const std::vector<float>& bounding_circle);
-
-  /**
    * Add a name to the text list.
    * @param  name  Name/text to add.
    * @return  Returns offset (bytes) to the name.
@@ -448,9 +441,7 @@ public:
    * @param tile       the tile whose edges need the binned
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
-  using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const graph_tile_ptr& tile,
-                                                              tweeners_t& tweeners);
+  static bins_t BinEdges(const graph_tile_ptr& tile, tweeners_t& tweeners);
 
   /**
    * Adds to the bins the tile already has, only modifies the header to reflect the new counts
@@ -459,9 +450,8 @@ public:
    * @param tile       the tile that needs the bins added
    * @param more_bins  the extra bin data to append to the tile
    */
-  static void AddBins(const std::string& tile_dir,
-                      const graph_tile_ptr& tile,
-                      const std::array<std::vector<GraphId>, kBinCount>& more_bins);
+  static void
+  AddBins(const std::string& tile_dir, const graph_tile_ptr& tile, const bins_t& more_bins);
 
   /**
    * Get the turn lane builder at the specified index.

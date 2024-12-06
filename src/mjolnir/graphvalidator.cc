@@ -240,7 +240,6 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
   return opp_index;
 }
 
-using tweeners_t = GraphTileBuilder::tweeners_t;
 void validate(
     const boost::property_tree::ptree& pt,
     std::deque<GraphId>& tilequeue,

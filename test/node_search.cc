@@ -65,9 +65,7 @@ vj::GraphTileBuilder& graph_writer::builder(vb::GraphId tile_id) {
 }
 
 void graph_writer::write_tiles() {
-  using vj::GraphTileBuilder;
-
-  GraphTileBuilder::tweeners_t all_tweeners;
+  valhalla::mjolnir::tweeners_t all_tweeners;
 
   for (auto& entry : m_builders) {
     auto tile_id = entry.first;
@@ -84,10 +82,10 @@ void graph_writer::write_tiles() {
     tile.reset();
 
     // write the bin data
-    GraphTileBuilder::tweeners_t tweeners;
+    valhalla::mjolnir::tweeners_t tweeners;
     auto reloaded = GraphTile::Create(test_tile_dir, tile_id);
-    auto bins = GraphTileBuilder::BinEdges(reloaded, tweeners);
-    GraphTileBuilder::AddBins(test_tile_dir, reloaded, bins);
+    auto bins = valhalla::mjolnir::GraphTileBuilder::BinEdges(reloaded, tweeners);
+    valhalla::mjolnir::GraphTileBuilder::AddBins(test_tile_dir, reloaded, bins);
 
     // merge tweeners into global
     for (const auto& entry : tweeners) {

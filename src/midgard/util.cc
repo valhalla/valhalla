@@ -852,7 +852,8 @@ std::string decode64(const std::string& encoded) {
   return decoded;
 }
 
-template <class container_t> std::vector<float> get_bounding_circle(const container_t& shape) {
+template <class container_t>
+std::tuple<PointLL, double> get_bounding_circle(const container_t& shape) {
   if (shape.empty()) {
     return {};
   }
@@ -877,7 +878,7 @@ template <class container_t> std::vector<float> get_bounding_circle(const contai
   // Pick the pair with the largest distance between them. Use the
   // midpoint of the pair as the center of the circle and the distance
   // as the diameter
-  float radius;
+  double radius;
   midgard::PointLL center;
   auto dlat = (max_lat - min_lat).Norm();
   auto dlng = (max_lng - min_lng).Norm();
@@ -892,24 +893,24 @@ template <class container_t> std::vector<float> get_bounding_circle(const contai
   // Make 2nd pass and check for vertices outside the circle. If any are outside,
   // increase radius and shift the center to include the vertex and the "back-side"
   // of the circle. This expansion should only be required for at most a few vertices.
-  float radius_sqr = radius * radius;
+  double radius_sqr = radius * radius;
   for (const auto& pt : shape) {
     auto dv = pt - center;
-    float d2 = dv.NormSquared();
+    double d2 = dv.NormSquared();
     if (d2 > radius_sqr) {
       // Vertex not in circle: expand circle to include the vertex.
       // Increase radius and shift the center towards v
-      float d = sqrtf(d2);
+      double d = std::sqrt(d2);
       radius = (radius + d) * 0.5f;
       // TODO - why can't we use dv?
       center = center + (pt - center) * ((d - radius) / d);
     }
   }
   radius *= kMetersPerDegreeLat;
-  return {static_cast<float>(center.lat()), static_cast<float>(center.lng()), radius};
+  return {center, radius};
 }
-template std::vector<float> get_bounding_circle(const std::list<midgard::PointLL>& shape);
-template std::vector<float> get_bounding_circle(const std::vector<midgard::PointLL>& shape);
+template std::tuple<PointLL, double> get_bounding_circle(const std::list<midgard::PointLL>& shape);
+template std::tuple<PointLL, double> get_bounding_circle(const std::vector<midgard::PointLL>& shape);
 
 } // namespace midgard
 } // namespace valhalla
