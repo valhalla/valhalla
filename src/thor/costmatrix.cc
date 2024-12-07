@@ -814,7 +814,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       // can't connect on this edge
       if (find_correlated_edge(options.sources(source), fwd_pred.edgeid()).percent_along() >
           find_correlated_edge(options.targets(target), fwd_pred.edgeid()).percent_along()) {
-        return;
+        continue;
       }
 
       // remember: transition_cost is abused in SetSources/Targets: cost is secs, secs is length
@@ -928,7 +928,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
 
         if (find_correlated_edge(options.sources(source), fwd_label.edgeid()).percent_along() >
             find_correlated_edge(options.targets(target), fwd_label.edgeid()).percent_along()) {
-          return;
+          continue;
         }
 
         // remember: transition_cost is abused in SetSources/Targets: cost is secs, secs is length
@@ -1163,7 +1163,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                              !opp_dir_edge->not_thru(), !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
-                             static_cast<uint8_t>(costing_->Allowed(opp_dir_edge, opp_tile)),
+                             static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()),
                              directededge->forwardaccess() & kTruckAccess);

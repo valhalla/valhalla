@@ -6,6 +6,7 @@
    * FIXED: Fix valhalla_benchmark_loki benchmark application. [#4981](https://github.com/valhalla/valhalla/pull/4981)
    * FIXED: Double free crash during tiles build inside libxml2 on concurrent `spatialite_cleanup_ex()` calls [#5005](https://github.com/valhalla/valhalla/pull/5005)
    * FIXED: update CircleCI runners to Ubuntu 24.04 [#5002](https://github.com/valhalla/valhalla/pull/5002)
+   * FIXED: More trivial cases in `CostMatrix` [#5001](https://github.com/valhalla/valhalla/pull/5001)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
