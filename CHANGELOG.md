@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
+   * FIXED: Fixed a typo in the (previously undocumented) matrix-APIs responses `algorithm` field: `timedistancbssematrix` is now `timedistancebssmatrix`.
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
    * FIXED: Fix valhalla_benchmark_loki benchmark application. [#4981](https://github.com/valhalla/valhalla/pull/4981)
    * FIXED: Double free crash during tiles build inside libxml2 on concurrent `spatialite_cleanup_ex()` calls [#5005](https://github.com/valhalla/valhalla/pull/5005)
