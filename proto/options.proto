@@ -79,10 +79,10 @@ message AvoidEdge {
  */
 message HierarchyLimits {
  uint32 up_transition_count = 1;   // Keep track of # of upward transitions
-                                   // Remember to clear on incoming protobuf requests
+                                   // Internal use only, remember to clear on incoming requests
  uint32 max_up_transitions = 2;    // Maximum number of upward transitions before 
                                    // expansion is stopped on a level.
- uint32 expansion_within_dist = 3; // Distance (m) to destination within which
+ float expansion_within_dist = 3; // Distance (m) to destination within which
                                    // expansion of a hierarchy level is
                                    // always allowed. Used for A*.
 }

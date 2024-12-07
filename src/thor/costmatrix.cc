@@ -55,9 +55,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix.check_reverse_connection", false)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
   default_hierarchy_limits_ = parse_hierarchy_limits_from_config(config, "costmatrix", false);
 }
 
@@ -142,10 +142,6 @@ bool CostMatrix::SourceToTarget(Api& request,
   // TODO: for now we only allow depart_at/current date_time
   SetSources(graphreader, source_location_list, time_infos);
   SetTargets(graphreader, target_location_list);
-
-  // Update hierarchy limits
-  if (!ignore_hierarchy_limits_)
-    ModifyHierarchyLimits();
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search

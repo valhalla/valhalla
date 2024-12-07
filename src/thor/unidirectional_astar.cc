@@ -47,6 +47,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   destinations_.clear();
   adjacencylist_.clear();
   edgestatus_.clear();
+  hierarchy_limits_.clear();
 
   // Set the ferry flag to false
   has_ferry_ = false;

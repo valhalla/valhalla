@@ -383,22 +383,38 @@ void loki_worker_t::check_hierarchy_limits(Api& api) {
 
     // user passed custom hierarchy limits and the service allows this
     // make sure they are within the allowed range
-    for (const auto& [level, hl] : *opts.mutable_hierarchy_limits()) {
-      // this property is for internal use only
-      hl.set_up_transition_count(0);
+    bool hl_invalid = false;
+    for (auto it = TileHierarchy::levels().begin(); it != TileHierarchy::levels().end(); ++it) {
+      // level 0 is a bit of a special case: only the expansion distance might be used
+      // and the default is unlimited
+      auto found = opts.mutable_hierarchy_limits()->find(it->level);
+      if (it->level == 0) {
+        if (found == opts.hierarchy_limits().end()) {
+          HierarchyLimits limits;
+          limits.set_expansion_within_dist(kMaxDistance);
+          opts.mutable_hierarchy_limits()->insert({0, limits});
+          continue;
+        }
+      }
 
-      hl.set_max_up_transitions(
-          std::min(hl.max_up_transitions(), max_hierarchy_limits[level].max_up_transitions()));
-      hl.set_expansion_within_dist(
-          std::min(hl.expansion_within_dist(), max_hierarchy_limits[level].expansion_within_dist()));
+      // check all levels except level 0 are set by the user
+      if (found == opts.hierarchy_limits().end()) {
+        hl_invalid = true;
+        break;
+      }
+
+      // this property is for internal use only
+      found->second.set_up_transition_count(0);
+
+      // clamp to max values defined in service_limits
+      found->second.set_max_up_transitions(
+          std::min(found->second.max_up_transitions(),
+                   max_hierarchy_limits[it->level].max_up_transitions()));
+      found->second.set_expansion_within_dist(
+          std::min(found->second.expansion_within_dist(),
+                   max_hierarchy_limits[it->level].expansion_within_dist()));
     }
 
-    // and check all levels except level 0 are set
-    bool hl_invalid = std::any_of(++TileHierarchy::levels().begin(), TileHierarchy::levels().end(),
-                                  [&](const TileLevel& level) {
-                                    return opts.hierarchy_limits().find(level.level) ==
-                                           opts.hierarchy_limits().end();
-                                  });
     if (hl_invalid) {
       throw valhalla_exception_t{172};
     }

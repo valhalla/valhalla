@@ -335,22 +335,6 @@ protected:
     return infos;
   };
 
-  void ModifyHierarchyLimits() {
-    // Distance threshold optimized for unidirectional search. For bidirectional case
-    // they can be lowered.
-    // Decrease distance thresholds only for arterial roads for now
-    for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
-      auto& hl = hierarchy_limits_[MATRIX_FORW][source][1];
-      if (hl.max_up_transitions() != kUnlimitedTransitions)
-        hl.set_expansion_within_dist(hl.expansion_within_dist() / 2.f);
-    }
-    for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
-      auto& hl = hierarchy_limits_[MATRIX_REV][target][1];
-      if (hl.max_up_transitions() != kUnlimitedTransitions)
-        hl.set_expansion_within_dist(hl.expansion_within_dist() / 2.f);
-    }
-  };
-
   /**
    * Get the minimum AStar heuristic for a given source/target, i.e. for a source we get
    * the minimum heuristic of all targets for the forward expansion, so that we direct

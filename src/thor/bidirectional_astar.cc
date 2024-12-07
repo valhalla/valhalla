@@ -97,6 +97,8 @@ void BidirectionalAStar::Clear() {
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
+  hierarchy_limits_forward_.clear();
+  hierarchy_limits_reverse_.clear();
 }
 
 // Initialize the A* heuristic and adjacency lists for both the forward
@@ -545,10 +547,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // points to may be harder to find
   SetOrigin(graphreader, origin, forward_time_info);
   SetDestination(graphreader, destination, reverse_time_info);
-
-  // Update hierarchy limits
-  if (!ignore_hierarchy_limits_)
-    ModifyHierarchyLimits();
 
   // Find shortest path. Switch between a forward direction and a reverse
   // direction search based on the current costs. Alternating like this
@@ -1336,23 +1334,6 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   }
   // give back the paths
   return paths;
-}
-
-void BidirectionalAStar::ModifyHierarchyLimits() {
-  // If the user wants their own limits, let them
-  if (!costing_->DefaultHierarchyLimits())
-    return;
-
-  // Distance threshold optimized for unidirectional search. For bidirectional case
-  // they can be lowered.
-  // Decrease distance thresholds only for arterial roads for now
-  if (hierarchy_limits_forward_[1].max_up_transitions() != kUnlimitedTransitions)
-    hierarchy_limits_forward_[1].set_expansion_within_dist(
-        hierarchy_limits_forward_[1].expansion_within_dist() / 5.f);
-
-  if (hierarchy_limits_reverse_[1].max_up_transitions() != kUnlimitedTransitions)
-    hierarchy_limits_reverse_[1].set_expansion_within_dist(
-        hierarchy_limits_reverse_[1].expansion_within_dist() / 5.f);
 }
 
 bool IsBridgingEdgeRestricted(GraphReader& graphreader,

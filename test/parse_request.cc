@@ -1670,8 +1670,8 @@ protected:
 
     // Check hierarchy limits
     auto& hierarchy_limits = mode_costing[int(travel_mode)]->GetHierarchyLimits();
-    for (auto& hierarchy : hierarchy_limits) {
-      EXPECT_EQ(hierarchy.max_up_transitions, kUnlimitedTransitions);
+    for (auto& [_, hierarchy] : hierarchy_limits) {
+      EXPECT_EQ(hierarchy.max_up_transitions(), kUnlimitedTransitions);
     }
   }
 };
