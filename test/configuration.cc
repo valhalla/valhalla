@@ -44,13 +44,6 @@ TEST(Configuration, OneInstanceExisting) {
   EXPECT_EQ(conf1, conf2);
 }
 
-// TEST(Configuration, parse_default_hierarchy_limits) {
-//   using namespace valhalla;
-//   auto pt = test::make_config("fake_path");
-//   auto hierarchy_limits =
-//       valhalla::parse_hierarchy_limits_from_config(pt.get_child("thor"), "costmatrix", false);
-// }
-
 } // namespace
 
 int main(int argc, char* argv[]) {

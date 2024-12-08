@@ -1639,7 +1639,7 @@ TEST(BiDiAstar, test_recost_path) {
   {
     auto& hierarchy_limits =
         mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
-    for (auto& hierarchy : hierarchy_limits) {
+    for (auto& [_, hierarchy] : hierarchy_limits) {
       sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
     }
   }
@@ -1729,7 +1729,7 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   {
     auto& hierarchy_limits =
         mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
-    for (auto& hierarchy : hierarchy_limits) {
+    for (auto& [_, hierarchy] : hierarchy_limits) {
       sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
     }
   }
