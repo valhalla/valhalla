@@ -3,6 +3,7 @@
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "worker.h"
 #include <algorithm>
 
 using namespace valhalla::baldr;
@@ -20,6 +21,8 @@ UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
                                          kInitialEdgeLabelCountAstar),
                     config.get<bool>("clear_reserved_memory", false)),
       mode_(travel_mode_t::kDrive), travel_type_(0), access_mode_(kAutoAccess) {
+  default_hierarchy_limits_ =
+      parse_hierarchy_limits_from_config(config, "unidirectional_astar", true);
 }
 
 // Default constructor
@@ -44,6 +47,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   destinations_.clear();
   adjacencylist_.clear();
   edgestatus_.clear();
+  hierarchy_limits_.clear();
 
   // Set the ferry flag to false
   has_ferry_ = false;
@@ -117,12 +121,13 @@ bool UnidirectionalAStar<expansion_direction, FORWARD>::Expand(GraphReader& grap
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() &&
-           hierarchy_limits_[trans->endnode().level()].StopExpanding(pred.distance())) ||
+           StopExpanding(hierarchy_limits_[trans->endnode().level()], pred.distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
       // setup for expansion at this level
-      hierarchy_limits_[node.level()].up_transition_count += trans->up();
+      hierarchy_limits_[node.level()].set_up_transition_count(
+          hierarchy_limits_[node.level()].up_transition_count() + trans->up());
       const auto* trans_node = trans_tile->node(trans->endnode());
       EdgeMetadata trans_meta =
           EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus_);
@@ -536,7 +541,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
 
     // Do not expand based on hierarchy level based on number of upward
     // transitions and distance to the destination
-    if (hierarchy_limits_[pred.endnode().level()].StopExpanding(dist2dest)) {
+    if (StopExpanding(hierarchy_limits_[pred.endnode().level()], dist2dest)) {
       continue;
     }
 
@@ -590,9 +595,10 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::Poin
   adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
-  // Get hierarchy limits from the costing. Get a copy since we increment
-  // transition counts (i.e., this is not a const reference).
-  hierarchy_limits_ = costing_->GetHierarchyLimits();
+  // Get hierarchy limits from the costing if the user passed hierarchy limits, else
+  // fall back to the defaults from the config
+  hierarchy_limits_ =
+      costing_->DefaultHierarchyLimits() ? default_hierarchy_limits_ : costing_->GetHierarchyLimits();
 }
 
 // Modulate the hierarchy expansion within distance based on density at
@@ -603,6 +609,9 @@ template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
     const float dist,
     const uint32_t /*density*/) {
+
+  if (!costing_->DefaultHierarchyLimits())
+    return;
   // TODO - default distance below which we increase expansion within
   // distance. This is somewhat temporary to address route quality on shorter
   // routes - hopefully we will mark the data somehow to indicate how to
@@ -623,7 +632,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
     factor *= f;
   }*/
   // TODO - just arterial for now...investigate whether to alter local as well
-  hierarchy_limits_[1].expansion_within_dist *= factor;
+  hierarchy_limits_[1].set_expansion_within_dist(hierarchy_limits_[1].expansion_within_dist() *
+                                                 factor);
 }
 
 // Add an edge at the origin to the adjacency list

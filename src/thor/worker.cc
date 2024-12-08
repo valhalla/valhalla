@@ -82,7 +82,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" || kv.first == "skadi" || kv.first == "trace" ||
         kv.first == "isochrone" || kv.first == "centroid" || kv.first == "status" ||
-        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions") {
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions" ||
+        kv.first == "hierarchy_limits") {
       continue;
     }
 
@@ -225,6 +226,7 @@ std::string thor_worker_t::parse_costing(const Api& request) {
   auto costing = options.costing_type();
   auto costing_str = Costing_Enum_Name(costing);
   mode_costing = factory.CreateModeCosting(options, mode);
+
   return costing_str;
 }
 

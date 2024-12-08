@@ -864,7 +864,7 @@ public:
    * Gets the hierarchy limits.
    * @return  Returns the hierarchy limits.
    */
-  std::vector<HierarchyLimits>& GetHierarchyLimits();
+  std::unordered_map<uint32_t, HierarchyLimits>& GetHierarchyLimits();
 
   /**
    * Relax hierarchy limits using pre-defined algorithm-cased factors.
@@ -974,6 +974,10 @@ public:
     return speed_penalty;
   }
 
+  bool DefaultHierarchyLimits() {
+    return default_hierarchy_limits;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
@@ -1013,7 +1017,7 @@ protected:
   uint32_t access_mask_;
 
   // Hierarchy limits.
-  std::vector<HierarchyLimits> hierarchy_limits_;
+  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits_;
 
   // User specified edges to avoid with percent along (for avoiding PathEdges of locations)
   std::unordered_map<baldr::GraphId, float> user_exclude_edges_;
@@ -1077,6 +1081,7 @@ protected:
   bool exclude_highways_{false};
   bool exclude_ferries_{false};
   bool has_excludes_{false};
+  bool default_hierarchy_limits{true};
 
   bool exclude_cash_only_tolls_{false};
 
@@ -1185,6 +1190,7 @@ protected:
     has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
                     exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
+    default_hierarchy_limits = costing_options.hierarchy_limits_size() == 0;
   }
 
   /**
@@ -1297,7 +1303,8 @@ struct BaseCostingOptionsConfig {
   bool exclude_tolls_;
   bool exclude_highways_;
   bool exclude_ferries_;
-  bool has_excludes_;
+  bool has_excludes_; // TODO(chris): do we need this?
+  bool default_hierarchy_limits;
 
   bool exclude_cash_only_tolls_ = false;
 
