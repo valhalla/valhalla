@@ -416,7 +416,7 @@ void loki_worker_t::check_hierarchy_limits(Api& api) {
     }
 
     if (hl_invalid) {
-      throw valhalla_exception_t{172};
+      throw valhalla_exception_t{173};
     }
   }
 

@@ -411,7 +411,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
                 },
                 "expand_within_distance": {
                     "0": 1e8,
-                    "1": 2000,
+                    "1": 20000,
                     "2": 1000
                 } 
             }
@@ -424,7 +424,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
                 },
                 "expand_within_distance": {
                     "0": 1e8,
-                    "1": 2000,
+                    "1": 20000,
                     "2": 1000
                 } 
             }

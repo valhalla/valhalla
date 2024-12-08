@@ -160,7 +160,7 @@ DynamicCost::DynamicCost(const Costing& costing,
       penalize_uturns_(penalize_uturns) {
 
   // save info on whether we're dealing with custom hierarchy limits
-  default_hierarchy_limits = static_cast<bool>(costing.options().hierarchy_limits_size());
+  default_hierarchy_limits = costing.options().hierarchy_limits().size() == 0;
   // if user provided hierarchy limits, set them; the defaults need to be set by the algorithms
   if (!default_hierarchy_limits) {
     for (const auto& [level, hierarchy] : costing.options().hierarchy_limits()) {

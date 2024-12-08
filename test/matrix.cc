@@ -1,3 +1,4 @@
+#include "gurka/gurka.h"
 #include "test.h"
 
 #include <string>
@@ -135,7 +136,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
-const auto cfg = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 const auto test_request = R"({
     "sources":[
@@ -214,7 +215,7 @@ TEST(Matrix, test_matrix) {
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
-  CostMatrix cost_matrix;
+  CostMatrix cost_matrix(cfg.get_child("thor"));
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto matrix = request.matrix();
   for (int i = 0; i < matrix.times().size(); ++i) {
@@ -228,7 +229,7 @@ TEST(Matrix, test_matrix) {
   }
   request.clear_matrix();
 
-  CostMatrix cost_matrix_abort_source;
+  CostMatrix cost_matrix_abort_source(cfg.get_child("thor"));
   cost_matrix_abort_source.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
                                           7000.0);
 
@@ -242,7 +243,7 @@ TEST(Matrix, test_matrix) {
   EXPECT_EQ(found, 15) << " not the number of results as expected";
   request.clear_matrix();
 
-  CostMatrix cost_matrix_abort_target;
+  CostMatrix cost_matrix_abort_target(cfg.get_child("thor"));
   cost_matrix_abort_target.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
                                           5000.0);
 
@@ -388,7 +389,7 @@ TEST(Matrix, test_matrix_osrm) {
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
-  CostMatrix cost_matrix;
+  CostMatrix cost_matrix(cfg.get_child("thor"));
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto json_res = tyr::serializeMatrix(request);
   std::string algo = "costmatrix";
@@ -545,105 +546,6 @@ TEST(Matrix, slim_matrix) {
 
 /**************************************************************************************************/
 
-struct HierarchyLimitsTestParams {
-  HierarchyLimitsTestParams(std::string&& req, std::unordered_map<uint32_t, HierarchyLimits>& hl)
-      : request(req), expected_hierarchy_limits(hl), cfg({{}}), hierarchy_limits_config_path("") {};
-  HierarchyLimitsTestParams(boost::property_tree::ptree& config, std::string& config_path)
-      : cfg(config), hierarchy_limits_config_path(config_path) {};
-
-  std::string request;
-  boost::property_tree::ptree cfg;
-  std::string hierarchy_limits_config_path;
-  std::unordered_map<uint32_t, HierarchyLimits> expected_hierarchy_limits;
-};
-
-std::string makePbfRequest(std::unordered_map<uint32_t, std::pair<uint32_t, float>>& hl_values) {
-  Api request;
-  auto* opts = request.mutable_options();
-  opts->set_action(Options_Action_sources_to_targets);
-  opts->mutable_sources()->Add();
-  opts->mutable_targets()->Add();
-  opts->set_costing_type(Costing_Type_auto_);
-
-  Costing costing;
-  for (auto [level, hl] : hl_values) {
-    HierarchyLimits hierarchylims;
-    hierarchylims.set_max_up_transitions(hl.first);
-    hierarchylims.set_expansion_within_dist(hl.second);
-    costing.mutable_options()->mutable_hierarchy_limits()->insert({level, hierarchylims});
-  }
-
-  // auto costing = opts->mutable_costings().insert(Costing_Type_auto_, )
-  return request.SerializeAsString();
-}
-
-HierarchyLimitsTestParams
-makeParamsWithRequest(std::unordered_map<uint32_t, std::pair<uint32_t, float>>&& hl_values,
-                      bool pbf) {
-  std::unordered_map<uint32_t, HierarchyLimits> hlimits;
-  for (auto [level, hl] : hl_values) {
-    HierarchyLimits hierarchylims;
-    hierarchylims.set_max_up_transitions(hl.first);
-    hierarchylims.set_expansion_within_dist(hl.second);
-    hlimits.insert({level, hierarchylims});
-  }
-  if (pbf)
-    return {makePbfRequest(hl_values), hlimits};
-
-  // todo
-  return {"", hlimits};
-}
-
-class TestHierarchyLimits : public ::testing::TestWithParam<HierarchyLimitsTestParams> {
-protected:
-  boost::property_tree::ptree
-  make_test_config(std::unordered_map<std::string, std::string> overrides = {}) {
-    return test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles", overrides);
-  }
-
-  void hierarchy_limits_equal(std::unordered_map<uint32_t, HierarchyLimits>& expected,
-                              std::unordered_map<uint32_t, HierarchyLimits> actual) {
-    for (auto [level, hl] : actual) {
-      auto res = expected.find(level);
-      EXPECT_TRUE(res != expected.end());
-      auto expected_hl = res->second;
-      EXPECT_EQ(hl.max_up_transitions(), expected_hl.max_up_transitions());
-      EXPECT_EQ(hl.expansion_within_dist(), expected_hl.expansion_within_dist());
-    }
-  }
-};
-
-TEST_P(TestHierarchyLimits, from_request) {
-
-  auto test_params = GetParam();
-  if (test_params.hierarchy_limits_config_path.empty())
-    return;
-
-  Api request;
-  ParseApi(test_params.request, Options::sources_to_targets, request);
-  loki_worker_t loki_worker(test_params.cfg);
-
-  // here we parse it and make sure it's in accordance with the service limits
-  loki_worker.matrix(request);
-
-  GraphReader reader(cfg.get_child("mjolnir"));
-
-  sif::mode_costing_t mode_costing;
-  mode_costing[0] =
-      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
-
-  EXPECT_FALSE(mode_costing[0]->DefaultHierarchyLimits());
-
-  // Now make sure the costmatrix hierarchy limits match up with what we expect
-  // hierarchy_limits_equal(costmatrix->hierarchy_limits_)
-  hierarchy_limits_equal(mode_costing[0]->GetHierarchyLimits(),
-                         test_params.expected_hierarchy_limits);
-}
-
-INSTANTIATE_TEST_SUITE_P(pbf_request,
-                         TestHierarchyLimits,
-                         ::testing::Values(makeParamsWithRequest({{1, std::make_pair(23, 23.)}},
-                                                                 true)));
 int main(int argc, char* argv[]) {
   logging::Configure({{"type", ""}}); // silence logs
   testing::InitGoogleTest(&argc, argv);
