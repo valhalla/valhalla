@@ -61,7 +61,12 @@ namespace vr = valhalla::tyr;
 
 namespace {
 
-boost::property_tree::ptree conf = test::make_config("");
+void print_hierarchy_limits(std::unordered_map<uint32_t, HierarchyLimits>& hl) {
+  for (const auto [level, l] : hl) {
+    std::cerr << "Level: " << level << ", max_up_tr: " << l.max_up_transitions()
+              << ", exp_within_dist: " << l.expansion_within_dist() << "\n";
+  }
+}
 
 // ph34r the ASCII art diagram:
 //
@@ -130,8 +135,8 @@ gurka::nodelayout node_locations;
 const std::string test_dir = VALHALLA_BUILD_DIR "test/data/fake_tiles_astar";
 const auto fake_conf =
     test::make_config(test_dir,
-                      {{"mjolnir.admin", VALHALLA_BUILD_DIR "test/data/netherlands_admin.sqlite"},
-                       {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/not_needed.sqlite"},
+                      {{"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"},
+                       {"mjolnir.timezone", "test/data/not_needed.sqlite"},
                        {"mjolnir.hierarchy", "false"},
                        {"mjolnir.shortcuts", "false"}});
 
@@ -204,8 +209,9 @@ void make_tile() {
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 
-void create_costing_options(Options& options, Costing::Type costing) {
+void create_costing_options(Options& options, Costing::Type costing, bool hierarchy_limits = true) {
   const rapidjson::Document doc;
+
   options.set_costing_type(costing);
   sif::ParseCosting(doc, "/costing_options", options);
 }
@@ -231,12 +237,10 @@ enum class TrivialPathTest {
 
 std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
   // make the config file
-  std::stringstream json;
-  json << "{ \"tile_dir\": \"" << tile_dir << "\" }";
-  bpt::ptree conf;
-  rapidjson::read_json(json, conf);
+  bpt::ptree config = test::make_config("");
+  config.put<std::string>("mjolnir.tile_dir", tile_dir);
 
-  std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
+  std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(config.get_child("mjolnir")));
   auto tile = reader->GetGraphTile(tile_id);
 
   EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run successfully?";
@@ -331,12 +335,12 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
 }
 
 TEST(Astar, TestTrivialPathForward) {
-  vt::TimeDepForward astar(conf.get_child("thor"));
+  vt::TimeDepForward astar(fake_conf.get_child("thor"));
   TestTrivialPath(astar);
 }
 
 TEST(Astar, TestTrivialPathReverse) {
-  vt::TimeDepReverse astar(conf.get_child("thor"));
+  vt::TimeDepReverse astar(fake_conf.get_child("thor"));
   TestTrivialPath(astar);
 }
 
@@ -370,7 +374,7 @@ TEST(Astar, TestTrivialPathTriangle) {
   // TODO This fails with graphindex out of bounds for Reverse direction, is this
   // related to why we short-circuit trivial routes to AStarPathAlgorithm in route_action.cc?
   //
-  vt::TimeDepForward astar(conf.get_child("thor"));
+  vt::TimeDepForward astar(fake_conf.get_child("thor"));
   // this should go along the path from E to F
   assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 4231,
                          vs::TravelMode::kPedestrian);
@@ -412,14 +416,12 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
 }
 
 TEST(Astar, TestPartialDurationForward) {
-  boost::property_tree::ptree conf = test::make_config("");
-  vt::TimeDepForward astar(conf.get_child("thor"));
+  vt::TimeDepForward astar(fake_conf.get_child("thor"));
   TestPartialDuration(astar);
 }
 
 TEST(Astar, TestPartialDurationReverse) {
-  boost::property_tree::ptree conf = test::make_config("");
-  vt::TimeDepReverse astar(conf.get_child("thor"));
+  vt::TimeDepReverse astar(fake_conf.get_child("thor"));
   TestPartialDuration(astar);
 }
 
@@ -435,8 +437,8 @@ TEST(Astar, TestTrivialPathNoUturns) {
 
 struct route_tester {
   route_tester(const boost::property_tree::ptree& _conf)
-      : conf(_conf), reader(new GraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
-        thor_worker(conf, reader), odin_worker(conf) {
+      : conf(_conf), reader(new GraphReader(_conf.get_child("mjolnir"))), loki_worker(_conf, reader),
+        thor_worker(_conf, reader), odin_worker(_conf) {
   }
   Api test(const std::string& request_json) {
     Api request;
@@ -1051,7 +1053,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   options.mutable_locations(0)->set_date_time("2019-11-21T13:05");
 
   {
-    vt::TimeDepForward astar(conf.get_child("thor"));
+    vt::TimeDepForward astar(fake_conf.get_child("thor"));
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                   *reader, costs, mode)
@@ -1060,7 +1062,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     verify_paths(paths);
   }
   {
-    vt::TimeDepReverse astar(conf.get_child("thor"));
+    vt::TimeDepReverse astar(fake_conf.get_child("thor"));
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                   *reader, costs, mode)
@@ -1069,7 +1071,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     verify_paths(paths);
   }
   {
-    vt::BidirectionalAStar astar(conf.get_child("thor"));
+    vt::BidirectionalAStar astar(fake_conf.get_child("thor"));
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                   *reader, costs, mode)
@@ -1551,7 +1553,7 @@ TEST(Astar, BiDirTrivial) {
         << "fail_invalid_origin";
   }
 
-  vt::BidirectionalAStar astar(conf.get_child("thor"));
+  vt::BidirectionalAStar astar(fake_conf.get_child("thor"));
   auto path = astar
                   .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                graph_reader, mode_costing, mode)
@@ -1629,6 +1631,16 @@ TEST(BiDiAstar, test_recost_path) {
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode travel_mode = vs::TravelMode::kDrive;
+  // hack hierarchy limits to allow to go through the shortcut
+  Costing cost;
+  auto* hl_opts = cost.mutable_options()->mutable_hierarchy_limits();
+  for (auto level : TileHierarchy::levels()) {
+    HierarchyLimits hl;
+    hl.set_expansion_within_dist(0);
+    hl.set_max_up_transitions(0);
+    hl_opts->insert({level.level, std::move(hl)});
+  }
+  (*options.mutable_costings())[Costing::auto_] = cost;
   const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
 
   std::vector<vb::Location> locations;
@@ -1637,17 +1649,18 @@ TEST(BiDiAstar, test_recost_path) {
   // set destination location
   locations.push_back({nodes["2"]});
   auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
+  // auto size = mode_costing[int(travel_mode)]->GetHierarchyLimits().size();
+  ASSERT_FALSE(mode_costing[int(travel_mode)]->DefaultHierarchyLimits());
 
-  vt::BidirectionalAStar astar(conf.get_child("thor"));
+  vt::BidirectionalAStar astar(fake_conf.get_child("thor"));
 
-  // hack hierarchy limits to allow to go through the shortcut
-  {
-    auto& hierarchy_limits =
-        mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
-    for (auto& [_, hierarchy] : hierarchy_limits) {
-      sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
-    }
-  }
+  // {
+  //   auto& hierarchy_limits =
+  //       mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
+  //   for (auto& [_, hierarchy] : hierarchy_limits) {
+  //     sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
+  //   }
+  // }
   const auto path =
       astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
           .front();
