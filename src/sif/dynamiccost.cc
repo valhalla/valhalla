@@ -119,8 +119,8 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
     : dest_only_penalty_{0.f, kDefaultDestinationOnlyPenalty, kMaxPenalty},
       maneuver_penalty_{0.f, kDefaultManeuverPenalty, kMaxPenalty},
       alley_penalty_{0.f, kDefaultAlleyPenalty, kMaxPenalty},
-      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty}, gate_penalty_{0.f, kDefaultGatePenalty,
-                                                                    kMaxPenalty},
+      gate_cost_{0.f, kDefaultGateCost, kMaxPenalty},
+      gate_penalty_{0.f, kDefaultGatePenalty, kMaxPenalty},
       private_access_penalty_{0.f, kDefaultPrivateAccessPenalty, kMaxPenalty},
       country_crossing_cost_{0.f, kDefaultCountryCrossingCost, kMaxPenalty},
       country_crossing_penalty_{0.f, kDefaultCountryCrossingPenalty, kMaxPenalty},
@@ -128,17 +128,16 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       toll_booth_penalty_{0.f, kDefaultTollBoothPenalty, kMaxPenalty},
       ferry_cost_{0.f, kDefaultFerryCost, kMaxPenalty}, use_ferry_{0.f, kDefaultUseFerry, 1.f},
       rail_ferry_cost_{0.f, kDefaultRailFerryCost, kMaxPenalty},
-      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f}, service_penalty_{0.f, kDefaultServicePenalty,
-                                                                        kMaxPenalty},
-      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
-                                                                                  kDefaultUseTracks,
-                                                                                  1.f},
+      use_rail_ferry_{0.f, kDefaultUseRailFerry, 1.f},
+      service_penalty_{0.f, kDefaultServicePenalty, kMaxPenalty},
+      service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor},
+      use_tracks_{0.f, kDefaultUseTracks, 1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
       closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_bridges_(false),
       exclude_tunnels_(false), exclude_tolls_(false), exclude_highways_(false),
-      exclude_ferries_(false), has_excludes_(false),
-      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
-                                                                                      false} {
+      exclude_ferries_(false), has_excludes_(false), exclude_cash_only_tolls_(false),
+      include_hot_{false}, include_hov2_{false}, include_hov3_{false},
+      default_hierarchy_limits(true) {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -159,16 +158,14 @@ DynamicCost::DynamicCost(const Costing& costing,
       top_speed_(costing.options().top_speed()), fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
-  // Parse property tree to get hierarchy limits
-  // TODO - get the number of levels
-  uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
-  for (uint32_t level = 0; level < n_levels; level++) {
-    auto h = HierarchyLimits(level);
-    // Set max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning
-    if (costing.options().disable_hierarchy_pruning()) {
-      h.max_up_transitions = kUnlimitedTransitions;
+
+  // save info on whether we're dealing with custom hierarchy limits
+  default_hierarchy_limits = costing.options().hierarchy_limits().size() == 0;
+  // if user provided hierarchy limits, set them; the defaults need to be set by the algorithms
+  if (!default_hierarchy_limits) {
+    for (const auto& [level, hierarchy] : costing.options().hierarchy_limits()) {
+      hierarchy_limits_[level] = hierarchy;
     }
-    hierarchy_limits_.emplace_back(h);
   }
 
   // Add avoid edges to internal set
@@ -261,7 +258,7 @@ float DynamicCost::GetModeFactor() {
 }
 
 // Gets the hierarchy limits.
-std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
+std::unordered_map<uint32_t, HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;
 }
 
@@ -271,8 +268,8 @@ void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   const float relax_factor = using_bidirectional ? 8.f : 16.f;
   const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
 
-  for (auto& hierarchy : hierarchy_limits_) {
-    hierarchy.Relax(relax_factor, expansion_within_factor);
+  for (auto& [level, hierarchy] : hierarchy_limits_) {
+    sif::RelaxHierarchyLimits(hierarchy, relax_factor, expansion_within_factor);
   }
 }
 
@@ -400,6 +397,35 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // disable hierarchy pruning
   co->set_disable_hierarchy_pruning(
       rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
+
+  // hierarchy limits
+  for (const auto& level : TileHierarchy::levels()) {
+    std::string hierarchy_limits_path = "/hierarchy_limits/" + std::to_string(level.level);
+
+    unsigned int max_up_transitions =
+        rapidjson::get<decltype(max_up_transitions)>(json,
+                                                     std::string(hierarchy_limits_path +
+                                                                 "/max_up_transitions")
+                                                         .c_str(),
+                                                     kUnlimitedTransitions);
+    float expand_within_distance =
+        rapidjson::get<decltype(expand_within_distance)>(json,
+                                                         std::string(hierarchy_limits_path +
+                                                                     "/expand_within_distance")
+                                                             .c_str(),
+                                                         kMaxDistance);
+
+    // don't set anything on the protobuf if the user sent nothing
+    if (max_up_transitions == kUnlimitedTransitions && expand_within_distance == kMaxDistance)
+      continue;
+
+    // set on protobuf
+    HierarchyLimits hierarchylimits;
+    hierarchylimits.set_max_up_transitions(max_up_transitions);
+    hierarchylimits.set_expansion_within_dist(expand_within_distance);
+
+    co->mutable_hierarchy_limits()->insert({level.level, hierarchylimits});
+  }
 
   // destination only penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",

@@ -52,21 +52,11 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
   return lls;
 }
 
-/**
- * build a valhalla json request body
- *
- * @param location_types vector of locations or shape, sources, targets
- * @param waypoints      all pointll sequences for all location types
- * @param costing        which costing name to use, defaults to auto
- * @param options        overrides parts of the request, supports rapidjson pointer semantics
- * @param stop_type      break, through, via, break_through
- * @return json string
- */
 std::string build_valhalla_request(const std::vector<std::string>& location_types,
                                    const std::vector<std::vector<midgard::PointLL>>& waypoints,
-                                   const std::string& costing = "auto",
-                                   const std::unordered_map<std::string, std::string>& options = {},
-                                   const std::string& stop_type = "break") {
+                                   const std::string& costing,
+                                   const std::unordered_map<std::string, std::string>& options,
+                                   const std::string& stop_type) {
   assert(location_types.size() == waypoints.size());
 
   rapidjson::Document doc;
