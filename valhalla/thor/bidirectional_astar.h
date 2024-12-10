@@ -80,6 +80,7 @@ public:
    * Clear the temporary information generated during path construction.
    */
   void Clear() override;
+  void RelaxHierarchyLimits() override;
 
 protected:
   // Access mode used by the costing method

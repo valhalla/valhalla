@@ -125,6 +125,7 @@ protected:
    * @param   density  Relative road density near the destination.
    */
   void ModifyHierarchyLimits(const float dist, const uint32_t density);
+  void RelaxHierarchyLimits() override;
 
   /**
    * Add edges at the origin to the adjacency list.

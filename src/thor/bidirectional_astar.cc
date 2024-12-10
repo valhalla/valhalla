@@ -33,6 +33,8 @@ constexpr float kAlternativeCostExtend = 1.2f;
 // may lead to a significant increase in the number of iterations (~time). So, we should limit
 // iterations in order no to drop performance too much.
 constexpr uint32_t kAlternativeIterationsDelta = 100000;
+constexpr uint32_t kTransitionsFactor = 8;
+constexpr float kExpandWithinFactor = 2.f;
 
 inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
   for (const auto& e : location.correlation().edges()) {
@@ -140,17 +142,21 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   cost_threshold_ = std::numeric_limits<float>::max();
   iterations_threshold_ = std::numeric_limits<uint32_t>::max();
 
-  // Get hierarchy limits from the costing if the user passed hierarchy limits, else
-  // fall back to the defaults from the config
-  auto& hierarchy_limits =
-      costing_->DefaultHierarchyLimits() ? default_hierarchy_limits_ : costing_->GetHierarchyLimits();
-  ignore_hierarchy_limits_ =
-      std::all_of(hierarchy_limits.begin(), hierarchy_limits.end(),
-                  [](const std::pair<uint32_t, HierarchyLimits>& hl) {
-                    return hl.second.max_up_transitions() == kUnlimitedTransitions;
-                  });
-  hierarchy_limits_forward_ = hierarchy_limits;
-  hierarchy_limits_reverse_ = hierarchy_limits;
+  // only assign hierarchy limits if the current ones have been cleared
+  // to allow using the current ones in a second pass
+  if (hierarchy_limits_forward_.empty() && hierarchy_limits_reverse_.empty()) {
+    // Get hierarchy limits from the costing if the user passed hierarchy limits, else
+    // fall back to the defaults from the config
+    auto& hierarchy_limits = costing_->DefaultHierarchyLimits() ? default_hierarchy_limits_
+                                                                : costing_->GetHierarchyLimits();
+    ignore_hierarchy_limits_ =
+        std::all_of(hierarchy_limits.begin(), hierarchy_limits.end(),
+                    [](const std::pair<uint32_t, HierarchyLimits>& hl) {
+                      return hl.second.max_up_transitions() == kUnlimitedTransitions;
+                    });
+    hierarchy_limits_forward_ = hierarchy_limits;
+    hierarchy_limits_reverse_ = hierarchy_limits;
+  }
 }
 
 // Runs in the inner loop of `Expand`, essentially evaluating if
@@ -1446,5 +1452,13 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
   return false;
 }
 
+void BidirectionalAStar::RelaxHierarchyLimits() {
+  for (auto& [level, hierarchy] : hierarchy_limits_forward_) {
+    sif::RelaxHierarchyLimits(hierarchy, kTransitionsFactor, kExpandWithinFactor);
+  }
+  for (auto& [level, hierarchy] : hierarchy_limits_reverse_) {
+    sif::RelaxHierarchyLimits(hierarchy, kTransitionsFactor, kExpandWithinFactor);
+  }
+}
 } // namespace thor
 } // namespace valhalla

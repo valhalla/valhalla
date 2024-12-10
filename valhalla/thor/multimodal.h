@@ -72,6 +72,11 @@ public:
    */
   void Clear() override;
 
+  /**
+   * Clear the temporary information generated during path construction.
+   */
+  void RelaxHierarchyLimits() override;
+
 protected:
   uint32_t max_walking_dist_;
   sif::TravelMode mode_; // Current travel mode

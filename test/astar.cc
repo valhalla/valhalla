@@ -1649,30 +1649,10 @@ TEST(BiDiAstar, test_recost_path) {
   // set destination location
   locations.push_back({nodes["2"]});
   auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
-  // auto size = mode_costing[int(travel_mode)]->GetHierarchyLimits().size();
   ASSERT_FALSE(mode_costing[int(travel_mode)]->DefaultHierarchyLimits());
-  auto config =
-      test::make_config("",
-                        {
-                            {"thor.bidirectional_astar.hierarchy_limits.0.max_up_transitions", "0"},
-                            {"thor.bidirectional_astar.hierarchy_limits.1.max_up_transitions", "0"},
-                            {"thor.bidirectional_astar.hierarchy_limits.2.max_up_transitions", "0"},
-                            {"thor.bidirectional_astar.hierarchy_limits.0.expand_within_distance",
-                             "0"},
-                            {"thor.bidirectional_astar.hierarchy_limits.1.expand_within_distance",
-                             "0"},
-                            {"thor.bidirectional_astar.hierarchy_limits.2.expand_within_distance",
-                             "0"},
-                        });
+  auto config = test::make_config("");
   vt::BidirectionalAStar astar;
 
-  // {
-  //   auto& hierarchy_limits =
-  //       mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
-  //   for (auto& [_, hierarchy] : hierarchy_limits) {
-  //     sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
-  //   }
-  // }
   const auto path =
       astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
           .front();

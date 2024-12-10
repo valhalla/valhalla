@@ -9,6 +9,11 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
+namespace {
+constexpr uint32_t kTransitionsFactor = 16;
+constexpr float kExpandWithinFactor = 4.f;
+} // namespace
+
 namespace valhalla {
 namespace thor {
 // Number of iterations to allow with no convergence to the destination
@@ -634,6 +639,13 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
   // TODO - just arterial for now...investigate whether to alter local as well
   hierarchy_limits_[1].set_expansion_within_dist(hierarchy_limits_[1].expansion_within_dist() *
                                                  factor);
+}
+
+template <const ExpansionType expansion_direction, const bool FORWARD>
+void UnidirectionalAStar<expansion_direction, FORWARD>::RelaxHierarchyLimits() {
+  for (auto& [level, hierarchy] : hierarchy_limits_) {
+    sif::RelaxHierarchyLimits(hierarchy, kTransitionsFactor, kExpandWithinFactor);
+  }
 }
 
 // Add an edge at the origin to the adjacency list

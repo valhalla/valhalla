@@ -364,6 +364,11 @@ void loki_worker_t::check_hierarchy_distance(Api& request) {
     costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
   }
 }
+
+/**
+ * Make sure the passed hierarchy limits are within
+ * the allowed ranges
+ */
 void loki_worker_t::check_hierarchy_limits(Api& api) {
   bool denied_custom_hierarchy_limits = false;
   auto& options = *api.mutable_options();

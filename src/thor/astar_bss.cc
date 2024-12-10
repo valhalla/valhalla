@@ -539,5 +539,7 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
   return path;
 }
 
+void AStarBSSAlgorithm::RelaxHierarchyLimits() {
+}
 } // namespace thor
 } // namespace valhalla
