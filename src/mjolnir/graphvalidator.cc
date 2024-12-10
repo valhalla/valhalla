@@ -648,7 +648,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     LOG_DEBUG("Bounding circle distribution:");
     for (size_t i = 0; i < bounding_circle_stats.size(); ++i) {
       if (i < kBoundingCircleRadii.size()) {
-        LOG_DEBUG(std::to_string(kBoundingCircleRadii[i]) + ": " +
+        LOG_DEBUG(std::to_string(std::sqrt(kBoundingCircleRadii[i])) + ": " +
                   std::to_string(bounding_circle_stats[i]));
       } else {
         LOG_DEBUG("Too large: " + std::to_string(bounding_circle_stats[i]));

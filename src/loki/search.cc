@@ -18,9 +18,7 @@ using namespace valhalla::loki;
 
 namespace {
 
-// TODO - remove after testing
-uint32_t nSkipped = 0;
-uint32_t nSearched = 0;
+constexpr double kTestRadiusSq = 50 * 50;
 
 template <typename T> inline T square(T v) {
   return v * v;
@@ -276,6 +274,8 @@ struct bin_handler_t {
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
   Reach reach_finder;
+  uint32_t nSearched;
+  uint32_t nSkipped;
 
   // keep track of edges whose reachability we've already computed
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
@@ -284,7 +284,7 @@ struct bin_handler_t {
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
                 const std::shared_ptr<DynamicCost>& costing)
-      : reader(reader), costing(costing) {
+      : reader(reader), costing(costing), nSearched(0), nSkipped(0) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(uniq_locations.size());
@@ -530,10 +530,33 @@ struct bin_handler_t {
   // handle a bin for the range of candidates that share it
   void handle_bin(std::vector<projector_wrapper>::iterator begin,
                   std::vector<projector_wrapper>::iterator end) {
+    nSearched = 0;
+    nSkipped = 0;
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
     for (auto edge_id : edges) {
+      nSearched++;
+      // Check if all locations are outside the bounding circle of the edge
+      bool all_outside = true;
+      auto c_itr = bin_candidates.begin();
+      decltype(begin) p_itr;
+      auto circle = edge_id.get_circle(begin->bin_center_approximator, begin->bin_center);
+      if (circle.second == 0) {
+        all_outside = false;
+      }
+      for (p_itr = begin; p_itr != end; ++p_itr) {
+        // if (edge_id(p_itr->bin_center_approximator, p_itr->project.approx, kTestRadiusSq,
+        //             p_itr->bin_center)) {
+        if (p_itr->project.approx.DistanceSquared(circle.first) < circle.second + kTestRadiusSq) {
+          all_outside = false;
+          break;
+        }
+      }
+      if (all_outside) {
+        nSkipped++;
+        continue;
+      }
       // get the tile and edge
       if (!reader.GetGraphTile(edge_id, tile)) {
         continue;
@@ -563,8 +586,6 @@ struct bin_handler_t {
       // initialize candidates vector:
       // - reset sq_distance to max so we know the best point along the edge
       // - apply prefilters based on user's SearchFilter request options
-      auto c_itr = bin_candidates.begin();
-      decltype(begin) p_itr;
       bool all_prefiltered = true;
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
@@ -577,9 +598,9 @@ struct bin_handler_t {
             search_filter(edge, *costing, tile, p_itr->location.search_filter_) && opp_edgeid &&
             search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_);
         // set to false if even one candidate was not filtered
-        all_prefiltered = all_prefiltered && c_itr->prefiltered &&
-                          edge_id(p_itr->bin_center_approximator, p_itr->project.approx,
-                                  p_itr->sq_radius, p_itr->bin_center);
+        all_prefiltered = all_prefiltered && c_itr->prefiltered;
+        // && edge_id(p_itr->bin_center_approximator, p_itr->project.approx,
+        //         p_itr->sq_radius, p_itr->bin_center);
       }
 
       // short-circuit if all candidates were prefiltered
@@ -594,21 +615,6 @@ struct bin_handler_t {
       // so that its orthogonal to the ray from p to n. using h, we only need to test segments
       // of the shape which are on the same side of h that p is. to make this fast we would need a
       // a trivial half plane test as maybe a single dot product and comparison?
-
-      // nSearched++;
-      // // Check if all locations are outside the bounding circle of the edge
-      // bool all_outside = true;
-      // for (p_itr = begin; p_itr != end; ++p_itr) {
-      //   if (edge_id(p_itr->bin_center_approximator, p_itr->project.approx, p_itr->sq_radius,
-      //               p_itr->bin_center)) {
-      //     all_outside = false;
-      //     break;
-      //   }
-      // }
-      // if (all_outside) {
-      //   nSkipped++;
-      //   continue;
-      // }
 
       // get some shape of the edge
       auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
@@ -876,15 +882,13 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
   if (locations.empty())
     return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
 
-  nSkipped = 0; // TODO - remove after testing
-  nSearched = 0;
-
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, costing);
   // search over the bins doing multiple locations per bin
   handler.search();
   // TODO - remove after testing
-  // LOG_INFO("skipped " + std::to_string(nSkipped) + " out of " + std::to_string(nSearched));
+  // LOG_INFO("skipped " + std::to_string(handler.nSkipped) + " out of " +
+  //          std::to_string(handler.nSearched));
   // turn each locations candidate set into path locations
   return handler.finalize();
 }

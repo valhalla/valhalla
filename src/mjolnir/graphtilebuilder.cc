@@ -1145,14 +1145,16 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
           DistanceApproximator<PointLL> approx(center);
 
           size_t radius_idx;
-          if (!(radius_idx = edge_id.set(approx, approx.TestPoint(), std::get<0>(bounding_circle),
-                                         std::get<1>(bounding_circle))) ==
+          if ((radius_idx = edge_id.set(approx, approx.TestPoint(), std::get<0>(bounding_circle),
+                                        std::get<1>(bounding_circle))) ==
               kBoundingCircleRadii.size()) {
             LOG_TRACE("Unable to store bounding circle; wayid=" + std::to_string(info.wayid()) +
-                      "|radius=" + std::to_string(std::get<1>(bounding_circle)));
+                      "|radius=" + std::to_string(std::get<1>(bounding_circle)) +
+                      "|idx=" + std::to_string(radius_idx));
           } else {
             LOG_TRACE("Stored bounding circle; wayid=" + std::to_string(info.wayid()) +
-                      "|radius=" + std::to_string(std::get<1>(bounding_circle)));
+                      "|radius=" + std::to_string(std::get<1>(bounding_circle)) +
+                      "|idx=" + std::to_string(radius_idx));
           }
           stats[radius_idx]++;
           out_bins[bin].push_back(edge_id);

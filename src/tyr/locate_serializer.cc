@@ -16,7 +16,6 @@ json::MapPtr get_bounding_circle(const baldr::PathLocation::PathEdge& loc,
                                  const EdgeInfo& edge_info) {
   const auto opp_edge_id = reader.GetOpposingEdgeId(loc.id);
   auto map = json::map({});
-  // it's going to be either one
   auto tiles = TileHierarchy::levels().back().tiles;
 
   auto intersect = tiles.Intersect(edge_info.shape());
@@ -37,7 +36,6 @@ json::MapPtr get_bounding_circle(const baldr::PathLocation::PathEdge& loc,
         bool a = loc.id.value == (bc.value & kInvalidGraphId);
         bool b = opp_edge_id.value == (bc.value & kInvalidGraphId);
         if (a || b) {
-          LOG_ERROR("a:" + std::to_string(a) + "|b:" + std::to_string(b));
           // found it
           std::pair<PointLL, double> circle = bc.get(approx, center);
           if (circle.second == 0) {
