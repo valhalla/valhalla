@@ -1353,7 +1353,7 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
                                    const bool uses_dist) {
   std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits;
   hierarchy_limits.reserve(baldr::TileHierarchy::levels().size() - 1);
-
+  bool found = true;
   // get the default values for each level
   for (auto it = baldr::TileHierarchy::levels().begin(); it != baldr::TileHierarchy::levels().end();
        ++it) {
@@ -1364,21 +1364,31 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
         (path == "service_limits" ? ".hierarchy_limits.max_allowed_up_transitions."
                                   : ".hierarchy_limits.max_up_transitions.") +
         std::to_string(it->level));
-    hl.set_max_up_transitions(it->level == 0 ? 0 : max_up_transitions->get_value<uint32_t>());
+    found = found && ((it->level == 0) || max_up_transitions);
+    hl.set_max_up_transitions(max_up_transitions ? max_up_transitions->get_value<uint32_t>(
+                                                       kDefaultMaxUpTransitions[it->level])
+                                                 : kDefaultMaxUpTransitions[it->level]);
 
     // if the algorithm uses distance to decide whether to expand a given level, set that property as
     // well
     if (uses_dist) {
-      auto expand_within_dist =
-          config.get_child(path +
-                           (path == "service_limits" ? ".hierarchy_limits.max_expand_within_distance."
-                                                     : ".hierarchy_limits.expand_within_distance.") +
-                           std::to_string(it->level));
-      hl.set_expansion_within_dist(expand_within_dist.get_value<float>());
+      auto expand_within_dist = config.get_child_optional(
+          path +
+          (path == "service_limits" ? ".hierarchy_limits.max_expand_within_distance."
+                                    : ".hierarchy_limits.expand_within_distance.") +
+          std::to_string(it->level));
+      found = found && expand_within_dist;
+      hl.set_expansion_within_dist(expand_within_dist ? expand_within_dist->get_value<float>(
+                                                            kDefaultExpansionWithinDist[it->level])
+                                                      : kDefaultExpansionWithinDist[it->level]);
     }
 
     hierarchy_limits.insert({it->level, hl});
   }
+
+  if (!found)
+    LOG_WARN("Incomplete config for hierarchy limits found for " + path +
+             ". Falling back to defaults");
 
   return hierarchy_limits;
 };

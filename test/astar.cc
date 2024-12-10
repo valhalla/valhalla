@@ -335,12 +335,12 @@ void TestTrivialPath(vt::PathAlgorithm& astar) {
 }
 
 TEST(Astar, TestTrivialPathForward) {
-  vt::TimeDepForward astar(fake_conf.get_child("thor"));
+  vt::TimeDepForward astar;
   TestTrivialPath(astar);
 }
 
 TEST(Astar, TestTrivialPathReverse) {
-  vt::TimeDepReverse astar(fake_conf.get_child("thor"));
+  vt::TimeDepReverse astar;
   TestTrivialPath(astar);
 }
 
@@ -374,7 +374,7 @@ TEST(Astar, TestTrivialPathTriangle) {
   // TODO This fails with graphindex out of bounds for Reverse direction, is this
   // related to why we short-circuit trivial routes to AStarPathAlgorithm in route_action.cc?
   //
-  vt::TimeDepForward astar(fake_conf.get_child("thor"));
+  vt::TimeDepForward astar;
   // this should go along the path from E to F
   assert_is_trivial_path(astar, origin, dest, 1, TrivialPathTest::DurationEqualTo, 4231,
                          vs::TravelMode::kPedestrian);
@@ -416,12 +416,12 @@ void TestPartialDuration(vt::PathAlgorithm& astar) {
 }
 
 TEST(Astar, TestPartialDurationForward) {
-  vt::TimeDepForward astar(fake_conf.get_child("thor"));
+  vt::TimeDepForward astar;
   TestPartialDuration(astar);
 }
 
 TEST(Astar, TestPartialDurationReverse) {
-  vt::TimeDepReverse astar(fake_conf.get_child("thor"));
+  vt::TimeDepReverse astar;
   TestPartialDuration(astar);
 }
 
@@ -1053,7 +1053,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   options.mutable_locations(0)->set_date_time("2019-11-21T13:05");
 
   {
-    vt::TimeDepForward astar(fake_conf.get_child("thor"));
+    vt::TimeDepForward astar;
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                   *reader, costs, mode)
@@ -1062,7 +1062,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     verify_paths(paths);
   }
   {
-    vt::TimeDepReverse astar(fake_conf.get_child("thor"));
+    vt::TimeDepReverse astar;
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                   *reader, costs, mode)
@@ -1071,7 +1071,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     verify_paths(paths);
   }
   {
-    vt::BidirectionalAStar astar(fake_conf.get_child("thor"));
+    vt::BidirectionalAStar astar;
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                   *reader, costs, mode)
@@ -1286,7 +1286,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
   // Test Bidirectional both for forward and reverse expansion
   boost::property_tree::ptree conf = test::make_config("");
-  vt::BidirectionalAStar astar(conf.get_child("thor"));
+  vt::BidirectionalAStar astar;
 
   // Two tests where start and end lives on a partial complex restriction
   //      Under this circumstance the restriction should _not_ trigger
@@ -1553,7 +1553,7 @@ TEST(Astar, BiDirTrivial) {
         << "fail_invalid_origin";
   }
 
-  vt::BidirectionalAStar astar(fake_conf.get_child("thor"));
+  vt::BidirectionalAStar astar;
   auto path = astar
                   .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                graph_reader, mode_costing, mode)
@@ -1651,8 +1651,20 @@ TEST(BiDiAstar, test_recost_path) {
   auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
   // auto size = mode_costing[int(travel_mode)]->GetHierarchyLimits().size();
   ASSERT_FALSE(mode_costing[int(travel_mode)]->DefaultHierarchyLimits());
-
-  vt::BidirectionalAStar astar(fake_conf.get_child("thor"));
+  auto config =
+      test::make_config("",
+                        {
+                            {"thor.bidirectional_astar.hierarchy_limits.0.max_up_transitions", "0"},
+                            {"thor.bidirectional_astar.hierarchy_limits.1.max_up_transitions", "0"},
+                            {"thor.bidirectional_astar.hierarchy_limits.2.max_up_transitions", "0"},
+                            {"thor.bidirectional_astar.hierarchy_limits.0.expand_within_distance",
+                             "0"},
+                            {"thor.bidirectional_astar.hierarchy_limits.1.expand_within_distance",
+                             "0"},
+                            {"thor.bidirectional_astar.hierarchy_limits.2.expand_within_distance",
+                             "0"},
+                        });
+  vt::BidirectionalAStar astar;
 
   // {
   //   auto& hierarchy_limits =
@@ -1741,8 +1753,7 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   locations.push_back({nodes["2"]});
   auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
 
-  boost::property_tree::ptree conf = test::make_config("");
-  vt::BidirectionalAStar astar(conf.get_child("thor"));
+  vt::BidirectionalAStar astar;
 
   // hack hierarchy limits to allow to go through the shortcut
   {
@@ -1792,7 +1803,7 @@ TEST(BiDiAstar, test_clear_reserved_memory) {
   boost::property_tree::ptree config = test::make_config("");
   config.put("thor.clear_reserved_memory", true);
 
-  BiAstarTest astar(config.get_child("thor"));
+  BiAstarTest astar;
   astar.Clear();
 }
 
@@ -1800,7 +1811,7 @@ TEST(BiDiAstar, test_max_reserved_labels_count) {
   boost::property_tree::ptree config = test::make_config("");
   config.put("thor.max_reserved_labels_count_bidir_astar", 10);
 
-  BiAstarTest astar(config.get_child("thor"));
+  BiAstarTest astar;
   astar.Clear();
 }
 

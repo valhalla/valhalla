@@ -61,11 +61,12 @@ struct valhalla_exception_t : public std::runtime_error {
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
 
 /**
- * Parse hierarchy limits from config.
+ * Parse hierarchy limits from config. Falls back to default values if none are found at the
+ * given path.
  *
  * @param config         the property tree to read from.
  * @param path           path within the property tree to the section that has the 'hierarchy_limits'
- * child member
+ *                       child member
  * @param uses_dist      if true, also parses values for 'expansion within distance'
  */
 std::unordered_map<uint32_t, HierarchyLimits>

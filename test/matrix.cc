@@ -215,7 +215,7 @@ TEST(Matrix, test_matrix) {
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
-  CostMatrix cost_matrix(cfg.get_child("thor"));
+  CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto matrix = request.matrix();
   for (int i = 0; i < matrix.times().size(); ++i) {
@@ -229,7 +229,7 @@ TEST(Matrix, test_matrix) {
   }
   request.clear_matrix();
 
-  CostMatrix cost_matrix_abort_source(cfg.get_child("thor"));
+  CostMatrix cost_matrix_abort_source;
   cost_matrix_abort_source.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
                                           7000.0);
 
@@ -243,7 +243,7 @@ TEST(Matrix, test_matrix) {
   EXPECT_EQ(found, 15) << " not the number of results as expected";
   request.clear_matrix();
 
-  CostMatrix cost_matrix_abort_target(cfg.get_child("thor"));
+  CostMatrix cost_matrix_abort_target;
   cost_matrix_abort_target.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
                                           5000.0);
 
@@ -389,7 +389,7 @@ TEST(Matrix, test_matrix_osrm) {
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
-  CostMatrix cost_matrix(cfg.get_child("thor"));
+  CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto json_res = tyr::serializeMatrix(request);
   std::string algo = "costmatrix";
