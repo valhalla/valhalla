@@ -8,12 +8,6 @@
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
-
-namespace {
-constexpr uint32_t kTransitionsFactor = 16;
-constexpr float kExpandWithinFactor = 4.f;
-} // namespace
-
 namespace valhalla {
 namespace thor {
 // Number of iterations to allow with no convergence to the destination
@@ -50,7 +44,6 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   destinations_.clear();
   adjacencylist_.clear();
   edgestatus_.clear();
-  hierarchy_limits_.clear();
 
   // Set the ferry flag to false
   has_ferry_ = false;
@@ -598,8 +591,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::Poin
   adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
 
-  // Get hierarchy limits from the costing if the user passed hierarchy limits, else
-  // fall back to the defaults from the config
+  // Get hierarchy limits from the costing. Get a copy since we increment
+  // transition counts (i.e., this is not a const reference).
   hierarchy_limits_ = costing_->GetMutableHierarchyLimits();
 }
 

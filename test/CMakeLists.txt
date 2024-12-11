@@ -34,8 +34,7 @@ endif()
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
-  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal hierarchylimits 
-  instructions json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
+  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll pointtileindex
   polyline2 predictedspeeds queue routing sample sequence sign signs statsd streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
@@ -45,7 +44,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller configurati
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
-    graphtilebuilder graphreader  isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
+    graphtilebuilder graphreader hierarchylimits isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
     names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban tar_index
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
@@ -338,6 +337,7 @@ endif()
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
   add_dependencies(run-mapmatch utrecht_tiles)
+  add_dependencies(run-hierarchylimits utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
   add_dependencies(run-matrix_bss paris_bss_tiles)

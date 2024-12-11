@@ -33,8 +33,6 @@ constexpr float kAlternativeCostExtend = 1.2f;
 // may lead to a significant increase in the number of iterations (~time). So, we should limit
 // iterations in order no to drop performance too much.
 constexpr uint32_t kAlternativeIterationsDelta = 100000;
-constexpr uint32_t kTransitionsFactor = 8;
-constexpr float kExpandWithinFactor = 2.f;
 
 inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
   for (const auto& e : location.correlation().edges()) {
@@ -138,20 +136,6 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // the threshold is set.
   cost_threshold_ = std::numeric_limits<float>::max();
   iterations_threshold_ = std::numeric_limits<uint32_t>::max();
-
-  // only assign hierarchy limits if the current ones have been cleared
-  // to allow using the current ones in a second pass
-  if (hierarchy_limits_forward_.empty() && hierarchy_limits_reverse_.empty()) {
-    // Get hierarchy limits from the costing if the user passed hierarchy limits, else
-    // fall back to the defaults from the config
-    auto& hierarchy_limits = costing_->GetMutableHierarchyLimits();
-    ignore_hierarchy_limits_ =
-        std::all_of(hierarchy_limits.begin(), hierarchy_limits.end(), [](const HierarchyLimits& hl) {
-          return hl.max_up_transitions() == kUnlimitedTransitions;
-        });
-    hierarchy_limits_forward_ = hierarchy_limits;
-    hierarchy_limits_reverse_ = hierarchy_limits;
-  }
 }
 
 // Runs in the inner loop of `Expand`, essentially evaluating if
