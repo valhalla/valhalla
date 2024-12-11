@@ -131,6 +131,20 @@ TEST(GraphId, TestOpEqualTo) {
   TryOpEqualTo(GraphId(5, 1, 50), GraphId(5, 1, 50));
 }
 
+TEST(GraphId, TestDiscretizedBoundingCircle) {
+  DiscretizedBoundingCircle bc(0, 0, 0);
+  PointLL bin_center(0.025, 0.025);
+  std::vector<PointLL> shape({{0.01, 0.00001}, {0.01, 0.00002}});
+  auto const circle = get_bounding_circle(shape);
+  DistanceApproximator<PointLL> bin_approx(bin_center);
+  auto i = bc.set(bin_approx, bin_center, std::get<0>(circle), std::get<1>(circle));
+  ASSERT_LT(i, kBoundingCircleRadii.size());
+
+  auto returned_circle = bc.get_circle(bin_approx, bin_center);
+  auto circle_distance = returned_circle.first.Distance(std::get<0>(circle));
+  ASSERT_TRUE(circle_distance <= kOffsetIncrement) << "Distance is " << circle_distance;
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

@@ -600,14 +600,14 @@ public:
    * @param  row the bin's row
    * @return iterable container of graphids contained in the bin
    */
-  midgard::iterable_t<GraphId> GetBin(size_t column, size_t row) const;
+  midgard::iterable_t<DiscretizedBoundingCircle> GetBin(size_t column, size_t row) const;
 
   /**
    * Get an iterable list of GraphIds given a bin in the tile
    * @param  index the bin's index in the row major array
    * @return iterable container of graphids contained in the bin
    */
-  midgard::iterable_t<GraphId> GetBin(size_t index) const;
+  midgard::iterable_t<DiscretizedBoundingCircle> GetBin(size_t index) const;
 
   /**
    * Get lane connections ending on this edge.
@@ -872,7 +872,7 @@ protected:
 
   // List of edge graph ids. The list is broken up in bins which have
   // indices in the tile header.
-  GraphId* edge_bins_{};
+  DiscretizedBoundingCircle* edge_bins_{};
 
   // Lane connectivity data.
   LaneConnectivity* lane_connectivity_{};

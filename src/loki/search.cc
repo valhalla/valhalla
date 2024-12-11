@@ -18,6 +18,8 @@ using namespace valhalla::loki;
 
 namespace {
 
+constexpr double kTestRadiusSq = 50 * 50;
+
 template <typename T> inline T square(T v) {
   return v * v;
 }
@@ -183,7 +185,8 @@ struct candidate_t {
 struct projector_wrapper {
   projector_wrapper(const Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_)), location(location),
-        sq_radius(square(double(location.radius_))), project(location.latlng_) {
+        sq_radius(square(double(location.radius_))), project(location.latlng_),
+        bin_center_approximator(bin_center) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
     reachable.reserve(64);
@@ -233,8 +236,18 @@ struct projector_wrapper {
       }
 
       // grab the tile the lat, lon is in
-      auto tile_id = GraphId(tile_index, TileHierarchy::levels().back().level, 0);
-      reader.GetGraphTile(tile_id, cur_tile);
+      auto tile = GraphId(tile_index, TileHierarchy::levels().back().level, 0);
+      const auto& tiles = TileHierarchy::levels().back().tiles;
+      auto minx = tiles.TileBounds(tile.tileid()).minx();
+      auto miny = tiles.TileBounds(tile.tileid()).miny();
+      auto lat_offset =
+          (bin_index / kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      auto lng_offset =
+          (bin_index % kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      bin_center = {minx + lng_offset, miny + lat_offset};
+      bin_center_approximator = DistanceApproximator<PointLL>(bin_center);
+
+      reader.GetGraphTile(tile, cur_tile);
     } while (!cur_tile);
   }
 
@@ -242,6 +255,8 @@ struct projector_wrapper {
   graph_tile_ptr cur_tile;
   Location location;
   unsigned short bin_index = 0;
+  PointLL bin_center;
+  DistanceApproximator<PointLL> bin_center_approximator;
   double sq_radius;
   std::vector<candidate_t> unreachable;
   std::vector<candidate_t> reachable;
@@ -259,6 +274,8 @@ struct bin_handler_t {
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
   Reach reach_finder;
+  uint32_t nSearched;
+  uint32_t nSkipped;
 
   // keep track of edges whose reachability we've already computed
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
@@ -267,7 +284,7 @@ struct bin_handler_t {
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
                 const std::shared_ptr<DynamicCost>& costing)
-      : reader(reader), costing(costing) {
+      : reader(reader), costing(costing), nSearched(0), nSkipped(0) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(uniq_locations.size());
@@ -513,10 +530,33 @@ struct bin_handler_t {
   // handle a bin for the range of candidates that share it
   void handle_bin(std::vector<projector_wrapper>::iterator begin,
                   std::vector<projector_wrapper>::iterator end) {
+    nSearched = 0;
+    nSkipped = 0;
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
     for (auto edge_id : edges) {
+      nSearched++;
+      // Check if all locations are outside the bounding circle of the edge
+      bool all_outside = true;
+      auto c_itr = bin_candidates.begin();
+      decltype(begin) p_itr;
+      auto circle = edge_id.get_circle(begin->bin_center_approximator, begin->bin_center);
+      if (circle.second == 0) {
+        all_outside = false;
+      }
+      for (p_itr = begin; p_itr != end; ++p_itr) {
+        // if (edge_id(p_itr->bin_center_approximator, p_itr->project.approx, kTestRadiusSq,
+        //             p_itr->bin_center)) {
+        if (p_itr->project.approx.DistanceSquared(circle.first) < circle.second + kTestRadiusSq) {
+          all_outside = false;
+          break;
+        }
+      }
+      if (all_outside) {
+        nSkipped++;
+        continue;
+      }
       // get the tile and edge
       if (!reader.GetGraphTile(edge_id, tile)) {
         continue;
@@ -525,15 +565,18 @@ struct bin_handler_t {
       // lots of places below where we might like to know about the opp edge
       const DirectedEdge* opp_edge = nullptr;
       graph_tile_ptr opp_tile = tile;
-      GraphId opp_edgeid;
+      DiscretizedBoundingCircle opp_edgeid;
+      GraphId opp_id;
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
       if (!costing->Allowed(edge, tile, kDisallowShortcut)) {
         // but if we couldnt get it or its filtered too then we move on
-        if (!(opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) ||
-            !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
+        opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&opp_id);
+        if (!(opp_id) || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
           continue;
+        opp_edgeid.set_from_other(edge_id);
         // if we will continue with the opposing edge lets swap it in
         std::swap(edge, opp_edge);
         std::swap(tile, opp_tile);
@@ -543,19 +586,21 @@ struct bin_handler_t {
       // initialize candidates vector:
       // - reset sq_distance to max so we know the best point along the edge
       // - apply prefilters based on user's SearchFilter request options
-      auto c_itr = bin_candidates.begin();
-      decltype(begin) p_itr;
       bool all_prefiltered = true;
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
+        opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&opp_id);
+        // opp_edgeid.set_from_other(edge_id);
         c_itr->prefiltered =
-            search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
-            (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
+            search_filter(edge, *costing, tile, p_itr->location.search_filter_) && opp_edgeid &&
             search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_);
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
+        // && edge_id(p_itr->bin_center_approximator, p_itr->project.approx,
+        //         p_itr->sq_radius, p_itr->bin_center);
       }
 
       // short-circuit if all candidates were prefiltered
@@ -616,8 +661,9 @@ struct bin_handler_t {
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
-        if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
+        auto oppid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&oppid);
+        if (!reachable && opp_edgeid && costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
             !search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_)) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
@@ -636,7 +682,7 @@ struct bin_handler_t {
         // if its empty append
         if (batch->empty()) {
           c_itr->edge = edge;
-          c_itr->edge_id = edge_id;
+          c_itr->edge_id = GraphId(edge_id & kInvalidGraphId);
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           batch->emplace_back(std::move(*c_itr));
@@ -658,7 +704,7 @@ struct bin_handler_t {
         // it has to either be better or in the radius to move on
         if (in_radius || better) {
           c_itr->edge = edge;
-          c_itr->edge_id = edge_id;
+          c_itr->edge_id = GraphId(edge_id & kInvalidGraphId);
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           // the last one wasnt in the radius so replace it with this one because its better or is
@@ -840,6 +886,9 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
   bin_handler_t handler(locations, reader, costing);
   // search over the bins doing multiple locations per bin
   handler.search();
+  // TODO - remove after testing
+  // LOG_INFO("skipped " + std::to_string(handler.nSkipped) + " out of " +
+  //          std::to_string(handler.nSearched));
   // turn each locations candidate set into path locations
   return handler.finalize();
 }

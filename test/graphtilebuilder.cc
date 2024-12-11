@@ -328,7 +328,7 @@ TEST(GraphTileBuilder, TestBinEdges) {
   graph_tile_ptr fake{new fake_tile(encoded_shape5)};
   auto info = fake->edgeinfo(fake->directededge(0));
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
-  GraphTileBuilder::tweeners_t tweeners;
+  tweeners_t tweeners;
   auto bins = GraphTileBuilder::BinEdges(fake, tweeners);
   EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";
 }

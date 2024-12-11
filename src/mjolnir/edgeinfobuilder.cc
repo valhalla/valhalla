@@ -5,6 +5,7 @@
 #include "baldr/graphconstants.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "mjolnir/edgeinfobuilder.h"
 
 namespace valhalla {
