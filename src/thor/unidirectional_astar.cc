@@ -26,8 +26,6 @@ UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
                                          kInitialEdgeLabelCountAstar),
                     config.get<bool>("clear_reserved_memory", false)),
       mode_(travel_mode_t::kDrive), travel_type_(0), access_mode_(kAutoAccess) {
-  default_hierarchy_limits_ =
-      parse_hierarchy_limits_from_config(config, "unidirectional_astar", true);
 }
 
 // Default constructor
@@ -602,8 +600,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::Poin
 
   // Get hierarchy limits from the costing if the user passed hierarchy limits, else
   // fall back to the defaults from the config
-  hierarchy_limits_ =
-      costing_->DefaultHierarchyLimits() ? default_hierarchy_limits_ : costing_->GetHierarchyLimits();
+  hierarchy_limits_ = costing_->GetMutableHierarchyLimits();
 }
 
 // Modulate the hierarchy expansion within distance based on density at
@@ -639,13 +636,6 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
   // TODO - just arterial for now...investigate whether to alter local as well
   hierarchy_limits_[1].set_expansion_within_dist(hierarchy_limits_[1].expansion_within_dist() *
                                                  factor);
-}
-
-template <const ExpansionType expansion_direction, const bool FORWARD>
-void UnidirectionalAStar<expansion_direction, FORWARD>::RelaxHierarchyLimits() {
-  for (auto& [level, hierarchy] : hierarchy_limits_) {
-    sif::RelaxHierarchyLimits(hierarchy, kTransitionsFactor, kExpandWithinFactor);
-  }
 }
 
 // Add an edge at the origin to the adjacency list

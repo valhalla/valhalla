@@ -125,7 +125,6 @@ protected:
    * @param   density  Relative road density near the destination.
    */
   void ModifyHierarchyLimits(const float dist, const uint32_t density);
-  void RelaxHierarchyLimits() override;
 
   /**
    * Add edges at the origin to the adjacency list.
@@ -161,8 +160,7 @@ protected:
   uint8_t travel_type_;  // Current travel type
 
   // Hierarchy limits.
-  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits_;
-  std::unordered_map<uint32_t, HierarchyLimits> default_hierarchy_limits_;
+  std::vector<HierarchyLimits> hierarchy_limits_;
 
   // A* heuristic
   AStarHeuristic astarheuristic_;

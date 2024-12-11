@@ -134,19 +134,19 @@ config = {
         'bidirectional_astar': {
             'hierarchy_limits': {
                 'max_up_transitions': {
-                    '1': 80,
-                    '2': 20,
+                    '1': 400,
+                    '2': 100,
                 },
-                'expand_within_distance': {'0': 1e8, '1': 2000, '2': 1000},
+                'expand_within_distance': {'0': 1e8, '1': 20000, '2': 5000},
             }
         },
         'unidirectional_astar': {
             'hierarchy_limits': {
                 'max_up_transitions': {
-                    '1': 80,
-                    '2': 20,
+                    '1': 400,
+                    '2': 100,
                 },
-                'expand_within_distance': {'0': 1e8, '1': 2000, '2': 1000},
+                'expand_within_distance': {'0': 1e8, '1': 100000, '2': 5000},
             }
         },
     },
@@ -301,11 +301,26 @@ config = {
         'max_distance_disable_hierarchy_culling': 0,
         'hierarchy_limits': {
             'allow_modification': False,
-            'max_allowed_up_transitions': {
-                '1': 80,
-                '2': 20,
+            'costmatrix': {
+                'max_allowed_up_transitions': {
+                    '1': 400,
+                    '2': 100,
+                },
             },
-            'max_expand_within_distance': {'0': 1e8, '1': 2000, '2': 1000},
+            'unidirectional_astar': {
+                'max_allowed_up_transitions': {
+                    '1': 400,
+                    '2': 100,
+                },
+                'max_expand_within_distance': {'0': 1e8, '1': 100000, '2': 5000},
+            },
+            'bidirectional_astar': {
+                'max_allowed_up_transitions': {
+                    '1': 400,
+                    '2': 100,
+                },
+                'max_expand_within_distance': {'0': 1e8, '1': 20000, '2': 5000},
+            },
         },
         'allow_hard_exclusions': False,
     },
@@ -621,14 +636,38 @@ help_text = {
         'max_distance_disable_hierarchy_culling': 'Maximum search distance allowed with hierarchy culling disabled',
         'hierarchy_limits': {
             'allow_modification': 'Whether hierarchy limits can be modified via the request',
-            'max_allowed_up_transitions': {
-                '1': 'The maximum up transitions for level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
-                '2': 'The maximum up transitions for level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+            'costmatrix': {
+                'max_allowed_up_transitions': {
+                    '1': 'The maximum up transitions for level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum up transitions for level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+                'max_expand_within_distance': {
+                    '0': 'The maximum distance in meters from which the origin/destination will be expanded on level 0. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '1': 'The maximum distance in meters from which the origin/destination will be expanded on level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum distance in meters from which the origin/destination will be expanded on level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
             },
-            'max_expand_within_distance': {
-                '0': 'The maximum distance in meters from which the origin/destination will be expanded on level 0. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
-                '1': 'The maximum distance in meters from which the origin/destination will be expanded on level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
-                '2': 'The maximum distance in meters from which the origin/destination will be expanded on level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+            'bidirectional_astar': {
+                'max_allowed_up_transitions': {
+                    '1': 'The maximum up transitions for level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum up transitions for level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+                'max_expand_within_distance': {
+                    '0': 'The maximum distance in meters from which the origin/destination will be expanded on level 0. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '1': 'The maximum distance in meters from which the origin/destination will be expanded on level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum distance in meters from which the origin/destination will be expanded on level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+            },
+            'unidirectional_astar': {
+                'max_allowed_up_transitions': {
+                    '1': 'The maximum up transitions for level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum up transitions for level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+                'max_expand_within_distance': {
+                    '0': 'The maximum distance in meters from which the origin/destination will be expanded on level 0. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '1': 'The maximum distance in meters from which the origin/destination will be expanded on level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum distance in meters from which the origin/destination will be expanded on level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
             },
         },
         'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_highways or exclude_ferries are allowed on this server',

@@ -55,7 +55,6 @@ protected:
   void parse_costing(Api& request, bool allow_none = false);
   void locations_from_shape(Api& request);
   void check_hierarchy_distance(Api& request);
-  void check_hierarchy_limits(Api& api);
 
   void init_locate(Api& request);
   void init_route(Api& request);
@@ -109,10 +108,6 @@ protected:
 
   // hierarchy limits
   float max_distance_disable_hierarchy_culling;
-  bool allow_hierarchy_limits_modifications;
-  // ignored if allow_hierarchy_limits_modifications is false
-  // reuse the actual hierarchy limits class for this
-  std::unordered_map<uint32_t, HierarchyLimits> max_hierarchy_limits;
 
 private:
   std::string service_name() const override {

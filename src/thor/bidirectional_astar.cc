@@ -65,7 +65,6 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
-  default_hierarchy_limits_ = parse_hierarchy_limits_from_config(config, "bidirectional_astar", true);
 }
 
 // Destructor
@@ -99,8 +98,6 @@ void BidirectionalAStar::Clear() {
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
-  hierarchy_limits_forward_.clear();
-  hierarchy_limits_reverse_.clear();
 }
 
 // Initialize the A* heuristic and adjacency lists for both the forward
@@ -147,13 +144,11 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   if (hierarchy_limits_forward_.empty() && hierarchy_limits_reverse_.empty()) {
     // Get hierarchy limits from the costing if the user passed hierarchy limits, else
     // fall back to the defaults from the config
-    auto& hierarchy_limits = costing_->DefaultHierarchyLimits() ? default_hierarchy_limits_
-                                                                : costing_->GetHierarchyLimits();
+    auto& hierarchy_limits = costing_->GetMutableHierarchyLimits();
     ignore_hierarchy_limits_ =
-        std::all_of(hierarchy_limits.begin(), hierarchy_limits.end(),
-                    [](const std::pair<uint32_t, HierarchyLimits>& hl) {
-                      return hl.second.max_up_transitions() == kUnlimitedTransitions;
-                    });
+        std::all_of(hierarchy_limits.begin(), hierarchy_limits.end(), [](const HierarchyLimits& hl) {
+          return hl.max_up_transitions() == kUnlimitedTransitions;
+        });
     hierarchy_limits_forward_ = hierarchy_limits;
     hierarchy_limits_reverse_ = hierarchy_limits;
   }
@@ -1452,13 +1447,5 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
   return false;
 }
 
-void BidirectionalAStar::RelaxHierarchyLimits() {
-  for (auto& [level, hierarchy] : hierarchy_limits_forward_) {
-    sif::RelaxHierarchyLimits(hierarchy, kTransitionsFactor, kExpandWithinFactor);
-  }
-  for (auto& [level, hierarchy] : hierarchy_limits_reverse_) {
-    sif::RelaxHierarchyLimits(hierarchy, kTransitionsFactor, kExpandWithinFactor);
-  }
-}
 } // namespace thor
 } // namespace valhalla

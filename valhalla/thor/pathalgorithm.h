@@ -135,10 +135,6 @@ public:
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }
-  /**
-   * Relax hierarchy limits by a fixed factor.
-   */
-  virtual void RelaxHierarchyLimits() = 0;
 
 protected:
   const std::function<void()>* interrupt;

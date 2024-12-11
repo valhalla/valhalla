@@ -854,8 +854,5 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
   std::reverse(path.begin(), path.end());
   return path;
 }
-void MultiModalPathAlgorithm::RelaxHierarchyLimits() {
-}
-
 } // namespace thor
 } // namespace valhalla

@@ -10,6 +10,7 @@
 #include "filesystem.h"
 #include "loki/search.h"
 #include "loki/worker.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 #include "mjolnir/graphbuilder.h"
@@ -30,6 +31,7 @@
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
+#include "worker.h"
 
 #include "gurka.h"
 
@@ -60,13 +62,6 @@ namespace vr = valhalla::tyr;
 #include "mjolnir/graphtilebuilder.h"
 
 namespace {
-
-void print_hierarchy_limits(std::unordered_map<uint32_t, HierarchyLimits>& hl) {
-  for (const auto [level, l] : hl) {
-    std::cerr << "Level: " << level << ", max_up_tr: " << l.max_up_transitions()
-              << ", exp_within_dist: " << l.expansion_within_dist() << "\n";
-  }
-}
 
 // ph34r the ASCII art diagram:
 //
@@ -139,7 +134,15 @@ const auto fake_conf =
                        {"mjolnir.timezone", "test/data/not_needed.sqlite"},
                        {"mjolnir.hierarchy", "false"},
                        {"mjolnir.shortcuts", "false"}});
+const auto hl_config = parse_hierarchy_limits_from_config(fake_conf, "unidirectional_astar", true);
+const auto hl_config_bd = parse_hierarchy_limits_from_config(fake_conf, "bidirectional_astar", true);
+// hierarchy limits are managed by thor's worker, since we call the algorithms directly here,
+// we have to do this manually
 
+void set_hierarchy_limits(vs::cost_ptr_t cost, bool bdir) {
+  check_hierarchy_limits(cost->GetMutableHierarchyLimits(), cost, bdir ? hl_config_bd : hl_config,
+                         false);
+}
 void make_tile() {
 
   if (filesystem::exists(test_dir))
@@ -269,6 +272,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
   auto costing = mode == vs::TravelMode::kPedestrian ? Costing::pedestrian : Costing::auto_;
   create_costing_options(options, costing);
   auto mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
+  set_hierarchy_limits(mode_costing[int(mode)], true);
   ASSERT_TRUE(bool(mode_costing[int(mode)]));
 
   auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode);
@@ -1011,6 +1015,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   vs::TravelMode mode;
   auto costs = vs::CostFactory().CreateModeCosting(options, mode);
   ASSERT_TRUE(bool(costs[int(mode)]));
+  set_hierarchy_limits(costs[int(mode)], true);
 
   auto reader = get_graph_reader(test_dir);
 
@@ -1267,6 +1272,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   vs::TravelMode mode;
   auto costs = vs::CostFactory().CreateModeCosting(options, mode);
   ASSERT_TRUE(bool(costs[int(mode)]));
+  set_hierarchy_limits(costs[int(mode)], true);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["n"]});
@@ -1542,6 +1548,7 @@ TEST(Astar, BiDirTrivial) {
   vs::TravelMode mode;
   auto mode_costing = vs::CostFactory().CreateModeCosting(options, mode);
   auto cost = mode_costing[int(mode)];
+  set_hierarchy_limits(cost, true);
 
   // Loki
   const auto projections = vk::Search(locations, graph_reader, cost);
@@ -1649,7 +1656,6 @@ TEST(BiDiAstar, test_recost_path) {
   // set destination location
   locations.push_back({nodes["2"]});
   auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
-  ASSERT_FALSE(mode_costing[int(travel_mode)]->DefaultHierarchyLimits());
   auto config = test::make_config("");
   vt::BidirectionalAStar astar;
 
@@ -1738,8 +1744,8 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   // hack hierarchy limits to allow to go through the shortcut
   {
     auto& hierarchy_limits =
-        mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
-    for (auto& [_, hierarchy] : hierarchy_limits) {
+        mode_costing[int(travel_mode)]->GetMutableHierarchyLimits(); // access mutable limits
+    for (auto& hierarchy : hierarchy_limits) {
       sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
     }
   }
@@ -1805,6 +1811,7 @@ public:
 } // anonymous namespace
 
 int main(int argc, char* argv[]) {
+  logging::Configure({{"type", ""}});
   testing::AddGlobalTestEnvironment(new AstarTestEnv);
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

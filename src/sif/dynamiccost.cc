@@ -102,6 +102,10 @@ constexpr float kDefaultServiceFactor = 1.0f;
 // Default penalty factor for avoiding closures (increases the cost of an edge as if its being
 // traversed at kMinSpeedKph)
 constexpr float kDefaultClosureFactor = 9.0f;
+
+// Max level for which hierarchy limits are considered
+constexpr unsigned int kHierarchyLimitsMaxLevel = 2;
+
 // Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not
 // penalize closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the
 // non-closure end
@@ -159,12 +163,19 @@ DynamicCost::DynamicCost(const Costing& costing,
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
 
-  // save info on whether we're dealing with custom hierarchy limits
-  default_hierarchy_limits = costing.options().hierarchy_limits().size() == 0;
-  // if user provided hierarchy limits, set them; the defaults need to be set by the algorithms
-  if (!default_hierarchy_limits) {
-    for (const auto& [level, hierarchy] : costing.options().hierarchy_limits()) {
-      hierarchy_limits_[level] = hierarchy;
+  hierarchy_limits_.resize(TileHierarchy::levels().size());
+  for (const auto& level : TileHierarchy::levels()) {
+    const auto& res = costing.options().hierarchy_limits().find(level.level);
+    if (res == costing.options().hierarchy_limits().end()) {
+      HierarchyLimits hl;
+      hl.set_expansion_within_dist(kMaxDistance);
+      hl.set_max_up_transitions(0); // kUnlimitedDistance is already taken as sentinel value
+      hierarchy_limits_[level.level] = std::move(hl);
+    } else {
+      hierarchy_limits_[level.level] = res->second;
+
+      // for internal use only
+      hierarchy_limits_[level.level].set_up_transition_count(0);
     }
   }
 
@@ -258,8 +269,18 @@ float DynamicCost::GetModeFactor() {
 }
 
 // Gets the hierarchy limits.
-std::unordered_map<uint32_t, HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
+std::vector<HierarchyLimits> DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;
+}
+
+// Gets mutable hierarchy limits.
+std::vector<HierarchyLimits>& DynamicCost::GetMutableHierarchyLimits() {
+  return hierarchy_limits_;
+}
+
+// Sets mutable hierarchy limits.
+void DynamicCost::SetHierarchyLimits(const std::vector<HierarchyLimits> hierarchy_limits) {
+  hierarchy_limits_ = hierarchy_limits;
 }
 
 // Relax hierarchy limits.
@@ -268,7 +289,7 @@ void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   const float relax_factor = using_bidirectional ? 8.f : 16.f;
   const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
 
-  for (auto& [level, hierarchy] : hierarchy_limits_) {
+  for (auto& hierarchy : hierarchy_limits_) {
     sif::RelaxHierarchyLimits(hierarchy, relax_factor, expansion_within_factor);
   }
 }

@@ -80,7 +80,6 @@ public:
    * Clear the temporary information generated during path construction.
    */
   void Clear() override;
-  void RelaxHierarchyLimits() override;
 
 protected:
   // Access mode used by the costing method
@@ -96,9 +95,8 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   // Hierarchy limits
-  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits_forward_;
-  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits_reverse_;
-  std::unordered_map<uint32_t, HierarchyLimits> default_hierarchy_limits_;
+  std::vector<HierarchyLimits> hierarchy_limits_forward_;
+  std::vector<HierarchyLimits> hierarchy_limits_reverse_;
   bool ignore_hierarchy_limits_;
 
   // A* heuristic

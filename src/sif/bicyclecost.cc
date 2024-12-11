@@ -438,7 +438,7 @@ BicycleCost::BicycleCost(const Costing& costing)
   const auto& costing_options = costing.options();
 
   // Set hierarchy to allow unlimited transitions
-  for (auto& [level, hierarchy] : hierarchy_limits_) {
+  for (auto& hierarchy : hierarchy_limits_) {
     hierarchy.set_max_up_transitions(kUnlimitedTransitions);
   }
 
@@ -896,7 +896,7 @@ namespace {
 
 class TestBicycleCost : public BicycleCost {
 public:
-  TestBicycleCost(const Costing& costing_options) : BicycleCost(costing_options){};
+  TestBicycleCost(const Costing& costing_options) : BicycleCost(costing_options) {};
 
   using BicycleCost::alley_penalty_;
   using BicycleCost::country_crossing_cost_;

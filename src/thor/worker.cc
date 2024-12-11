@@ -71,7 +71,9 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
-      matcher_factory(config, reader), controller{} {
+      matcher_factory(config, reader), controller{},
+      allow_hierarchy_limits_modifications(
+          config.get<bool>("service_limits.hierarchy_limits.allow_modification", false)) {
 
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
@@ -103,6 +105,13 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
 
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
+
+  hierarchy_limits_config_costmatrix =
+      parse_hierarchy_limits_from_config(config, "costmatrix", false);
+  hierarchy_limits_config_astar =
+      parse_hierarchy_limits_from_config(config, "unidirectional_astar", true);
+  hierarchy_limits_config_bidirectional_astar =
+      parse_hierarchy_limits_from_config(config, "bidirectional_astar", true);
 
   // signal that the worker started successfully
   started();

@@ -862,9 +862,20 @@ public:
 
   /**
    * Gets the hierarchy limits.
+   * @return  Returns mutable hierarchy limits.
+   */
+  std::vector<HierarchyLimits>& GetMutableHierarchyLimits();
+
+  /**
+   * Gets the hierarchy limits.
    * @return  Returns the hierarchy limits.
    */
-  std::unordered_map<uint32_t, HierarchyLimits>& GetHierarchyLimits();
+  std::vector<HierarchyLimits> GetHierarchyLimits();
+
+  /**
+   * Sets the hierarchy limits.
+   */
+  void SetHierarchyLimits(const std::vector<HierarchyLimits> hierarchy_limits);
 
   /**
    * Relax hierarchy limits using pre-defined algorithm-cased factors.
@@ -978,6 +989,10 @@ public:
     return default_hierarchy_limits;
   }
 
+  void SetDefaultHierarchyLimits(bool default_) {
+    default_hierarchy_limits = default_;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
@@ -1017,7 +1032,7 @@ protected:
   uint32_t access_mask_;
 
   // Hierarchy limits.
-  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits_;
+  std::vector<HierarchyLimits> hierarchy_limits_;
 
   // User specified edges to avoid with percent along (for avoiding PathEdges of locations)
   std::unordered_map<baldr::GraphId, float> user_exclude_edges_;
@@ -1042,8 +1057,8 @@ protected:
   // Penalties that all costing methods support
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
   float alley_penalty_;            // Penalty (seconds) to use a alley
-  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, parking aisle or
-                                   // destination only road
+  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, parking aisle
+                                   // or destination only road
   float living_street_penalty_;    // Penalty (seconds) to use a living street
   float track_penalty_;            // Penalty (seconds) to use tracks
   float service_penalty_;          // Penalty (seconds) to use a generic service road

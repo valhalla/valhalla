@@ -576,7 +576,7 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   const auto& costing_options = costing.options();
 
   // Set hierarchy to allow unlimited transitions
-  for (auto& [level, hierarchy] : hierarchy_limits_) {
+  for (auto& hierarchy : hierarchy_limits_) {
     hierarchy.set_max_up_transitions(kUnlimitedTransitions);
   }
 
@@ -873,7 +873,7 @@ namespace {
 
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options){};
+  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options) {};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;

@@ -298,15 +298,26 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         },
         "hierarchy_limits": {
             "allow_modification": false,
-            "max_allowed_up_transitions": {
-                    "1": 80,
-                    "2": 20
+            "costmatrix": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                }
             },
-           "max_expand_within_distance": {
-                    "0": 1e8,
-                    "1": 2000,
-                    "2": 1000
-            } 
+            "unidirectional_astar": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
+            },
+            "bidirectional_astar": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000}
+            }
         },
         "isochrone": {
           "max_contours": 4,
@@ -400,35 +411,27 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
                 "max_up_transitions": {
                     "1": 400,
                     "2": 100
-                } 
+                }
             }
         },
         "bidirectional_astar": {
             "hierarchy_limits": {
-                "max_up_transitions":  {
-                    "1": 80,
-                    "2": 20
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
                 },
-                "expand_within_distance": {
-                    "0": 1e8,
-                    "1": 20000,
-                    "2": 1000
-                } 
+                "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000}
             }
         },
         "unidirectional_astar": {
             "hierarchy_limits": {
-                "max_up_transitions":  {
-                    "1": 80,
-                    "2": 20
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
                 },
-                "expand_within_distance": {
-                    "0": 1e8,
-                    "1": 20000,
-                    "2": 1000
-                } 
+                "expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
             }
-        } 
+        }
       }
     }
   )";

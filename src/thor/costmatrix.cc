@@ -58,7 +58,6 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
       locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
       sources_{new ReachedMap} {
-  default_hierarchy_limits_ = parse_hierarchy_limits_from_config(config, "costmatrix", false);
 }
 
 CostMatrix::~CostMatrix() {
@@ -307,13 +306,11 @@ void CostMatrix::Initialize(
   astar_heuristics_[MATRIX_REV].resize(source_locations.size());
 
   // if costing has no hierarchy limits set, fall back to the defaults passed via the config
-  const auto& hlimits =
-      costing_->DefaultHierarchyLimits() ? default_hierarchy_limits_ : costing_->GetHierarchyLimits();
+  const auto& hlimits = costing_->GetMutableHierarchyLimits();
   ignore_hierarchy_limits_ =
-      std::all_of(hlimits.begin(), hlimits.end(),
-                  [](const std::pair<uint32_t, HierarchyLimits>& limits) {
-                    return limits.second.max_up_transitions() == kUnlimitedTransitions;
-                  });
+      std::all_of(hlimits.begin(), hlimits.end(), [](const HierarchyLimits& limits) {
+        return limits.max_up_transitions() == kUnlimitedTransitions;
+      });
 
   const uint32_t bucketsize = costing_->UnitSize();
   const float range = kBucketCount * bucketsize;

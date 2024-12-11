@@ -6,6 +6,7 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/proto/api.pb.h>
+#include <valhalla/sif/dynamiccost.h>
 #include <valhalla/valhalla.h>
 
 #ifdef ENABLE_SERVICES
@@ -16,6 +17,11 @@
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
+
+struct hierarchy_limits_config_t {
+  std::vector<HierarchyLimits> max_limits;
+  std::vector<HierarchyLimits> default_limits;
+};
 
 /**
  * Project specific error messages and codes that can be converted to http responses
@@ -69,10 +75,15 @@ void ParseApi(const std::string& json_request, Options::Action action, Api& api)
  *                       child member
  * @param uses_dist      if true, also parses values for 'expansion within distance'
  */
-std::unordered_map<uint32_t, HierarchyLimits>
+hierarchy_limits_config_t
 parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
                                    const std::string& path,
                                    const bool uses_dist);
+
+bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
+                            sif::cost_ptr_t& cost,
+                            const hierarchy_limits_config_t& config,
+                            const bool allow_modifications);
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request

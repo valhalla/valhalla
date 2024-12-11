@@ -1347,51 +1347,117 @@ void ParseApi(const std::string& request, Options::Action action, valhalla::Api&
   from_json(document, action, api);
 }
 
-std::unordered_map<uint32_t, HierarchyLimits>
+hierarchy_limits_config_t
 parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
-                                   const std::string& path,
+                                   const std::string& algorithm,
                                    const bool uses_dist) {
-  std::unordered_map<uint32_t, HierarchyLimits> hierarchy_limits;
-  hierarchy_limits.reserve(baldr::TileHierarchy::levels().size() - 1);
+  std::vector<HierarchyLimits> max_hierarchy_limits;
+  std::vector<HierarchyLimits> default_hierarchy_limits;
+  default_hierarchy_limits.reserve(baldr::TileHierarchy::levels().size());
+  max_hierarchy_limits.reserve(baldr::TileHierarchy::levels().size());
   bool found = true;
-  // get the default values for each level
+  // get the default and max allowed values for each level
   for (auto it = baldr::TileHierarchy::levels().begin(); it != baldr::TileHierarchy::levels().end();
        ++it) {
-    HierarchyLimits hl;
 
-    auto max_up_transitions = config.get_child_optional(
-        path +
-        (path == "service_limits" ? ".hierarchy_limits.max_allowed_up_transitions."
-                                  : ".hierarchy_limits.max_up_transitions.") +
-        std::to_string(it->level));
-    found = found && ((it->level == 0) || max_up_transitions);
-    hl.set_max_up_transitions(max_up_transitions ? max_up_transitions->get_value<uint32_t>(
-                                                       kDefaultMaxUpTransitions[it->level])
-                                                 : kDefaultMaxUpTransitions[it->level]);
+    // get the service limits
+    HierarchyLimits max_hl;
+    auto max_allowed_up_transitions =
+        config.get_child_optional("service_limits.hierarchy_limits." + algorithm +
+                                  ".max_allowed_up_transitions." + std::to_string(it->level));
+    found = found && ((it->level == 0) || max_allowed_up_transitions);
+    max_hl.set_max_up_transitions(
+        max_allowed_up_transitions
+            ? max_allowed_up_transitions->get_value<uint32_t>(kDefaultMaxUpTransitions[it->level])
+            : kDefaultMaxUpTransitions[it->level]);
 
     // if the algorithm uses distance to decide whether to expand a given level, set that property as
     // well
     if (uses_dist) {
-      auto expand_within_dist = config.get_child_optional(
-          path +
-          (path == "service_limits" ? ".hierarchy_limits.max_expand_within_distance."
-                                    : ".hierarchy_limits.expand_within_distance.") +
-          std::to_string(it->level));
-      found = found && expand_within_dist;
-      hl.set_expansion_within_dist(expand_within_dist ? expand_within_dist->get_value<float>(
-                                                            kDefaultExpansionWithinDist[it->level])
-                                                      : kDefaultExpansionWithinDist[it->level]);
+      auto max_expand_within_dist =
+          config.get_child_optional("service_limits.hierarchy_limits." + algorithm +
+                                    ".max_expand_within_distance." + std::to_string(it->level));
+      found = found && (algorithm == "costmatrix" || max_expand_within_dist);
+      max_hl.set_expansion_within_dist(
+          max_expand_within_dist
+              ? max_expand_within_dist->get_value<float>(kDefaultExpansionWithinDist[it->level])
+              : kDefaultExpansionWithinDist[it->level]);
     }
+    max_hierarchy_limits.push_back(max_hl);
 
-    hierarchy_limits.insert({it->level, hl});
+    // now the defaults
+    HierarchyLimits default_hl;
+    auto default_max_up_transitions = config.get_child_optional(
+        "thor." + algorithm + ".hierarchy_limits.max_up_transitions." + std::to_string(it->level));
+    found = found && ((it->level == 0) || default_max_up_transitions);
+    default_hl.set_max_up_transitions(
+        default_max_up_transitions
+            ? default_max_up_transitions->get_value<uint32_t>(kDefaultMaxUpTransitions[it->level])
+            : kDefaultMaxUpTransitions[it->level]);
+
+    // if the algorithm uses distance to decide whether to expand a given level, set that property
+    // as well
+    if (uses_dist) {
+      auto default_expand_within_dist = config.get_child_optional(
+          "thor." + algorithm + ".hierarchy_limits.expand_within_distance." +
+          std::to_string(it->level));
+      found = found && (algorithm == "costmatrix" || default_expand_within_dist);
+      default_hl.set_expansion_within_dist(
+          default_expand_within_dist
+              ? default_expand_within_dist->get_value<float>(kDefaultExpansionWithinDist[it->level])
+              : kDefaultExpansionWithinDist[it->level]);
+    }
+    default_hierarchy_limits.push_back(default_hl);
   }
 
   if (!found)
-    LOG_WARN("Incomplete config for hierarchy limits found for " + path +
+    LOG_WARN("Incomplete config for hierarchy limits found for " + algorithm +
              ". Falling back to defaults");
 
-  return hierarchy_limits;
+  return {max_hierarchy_limits, default_hierarchy_limits};
 };
+
+bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
+                            sif::cost_ptr_t& cost,
+                            const hierarchy_limits_config_t& config,
+                            const bool allow_modifications) {
+
+  // keep track whether we need to mess with user provided limits
+  bool add_warning = true;
+
+  // for backwards compatibility, we need to track if the defaults are used. This matters in
+  // unidirectional astar, where hierarchy limits are modified based on the astar heuristic
+  bool default_limits = true;
+  for (size_t i = 0; i < hierarchy_limits.size(); ++i) {
+    HierarchyLimits& limits = hierarchy_limits[i];
+
+    // use defaults if modification is not allowed by the service or if user did not specify any
+    // limits;
+    if (!allow_modifications ||
+        (limits.max_up_transitions() == 0 && limits.expansion_within_dist() == kMaxDistance)) {
+      add_warning &=
+          limits.max_up_transitions() != 0 && limits.expansion_within_dist() != kMaxDistance;
+      limits.set_max_up_transitions(config.default_limits[i].max_up_transitions());
+      limits.set_expansion_within_dist(config.default_limits[i].expansion_within_dist());
+      continue;
+    }
+    default_limits = false;
+    // clamp to max values defined in service_limits
+    if (limits.max_up_transitions() > config.max_limits[i].max_up_transitions()) {
+      limits.set_max_up_transitions(config.max_limits[i].max_up_transitions());
+      add_warning = false;
+    }
+
+    if (limits.expansion_within_dist() > config.max_limits[i].expansion_within_dist()) {
+      limits.set_expansion_within_dist(config.max_limits[i].expansion_within_dist());
+      add_warning = false;
+    }
+  }
+
+  cost->SetDefaultHierarchyLimits(default_limits);
+
+  return add_warning;
+}
 
 #ifdef ENABLE_SERVICES
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
