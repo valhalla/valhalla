@@ -79,7 +79,7 @@ In both (`"verbose": true` and `"verbose": false`) cases, these parameters are p
 | Item | Description |
 | :---- | :----------- |
 | `id`                 | Name of the request. Included only if a matrix request has been named using the optional `id` input. |
-| `algorithm`          | The algorithm used to compute the results. Can be `"timedistancematrix"`, `"costmatrix"` or `"timedistancbssematrix"` |
+| `algorithm`          | The algorithm used to compute the results. Can be `"timedistancematrix"`, `"costmatrix"` or `"timedistancebssmatrix"` |
 | `units` | Distance units for output. Allowable unit types are `"miles"` and `"kilometers"`. If no unit type is specified in the input, the units default to `"kilometers"`. |
 | `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. |
 
