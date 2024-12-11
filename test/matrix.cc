@@ -1,3 +1,4 @@
+#include "gurka/gurka.h"
 #include "test.h"
 
 #include <string>
@@ -135,7 +136,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
-const auto cfg = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 const auto test_request = R"({
     "sources":[
@@ -542,6 +543,8 @@ TEST(Matrix, slim_matrix) {
   EXPECT_FALSE(json.HasMember("targets"));
   EXPECT_TRUE(json.HasMember("units"));
 }
+
+/**************************************************************************************************/
 
 int main(int argc, char* argv[]) {
   logging::Configure({{"type", ""}}); // silence logs

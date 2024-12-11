@@ -135,6 +135,13 @@ protected:
   baldr::AttributesController controller;
   Centroid centroid_gen;
 
+  // Hierarchy limits
+  bool allow_hierarchy_limits_modifications;
+  // ignored if allow_hierarchy_limits_modifications is false
+  hierarchy_limits_config_t hierarchy_limits_config_astar;
+  hierarchy_limits_config_t hierarchy_limits_config_bidirectional_astar;
+  hierarchy_limits_config_t hierarchy_limits_config_costmatrix;
+
 private:
   std::string service_name() const override {
     return "thor";

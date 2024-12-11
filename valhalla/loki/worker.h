@@ -106,7 +106,7 @@ protected:
   bool allow_verbose;
   bool allow_hard_exclusions;
 
-  // add max_distance_disable_hierarchy_culling
+  // hierarchy limits
   float max_distance_disable_hierarchy_culling;
 
 private:
