@@ -41,7 +41,7 @@ void check_matrix(const rapidjson::Document& result,
                         std::to_string(i % origin_td.Size());
       EXPECT_NEAR(v.GetObject()["distance"].GetFloat(), exp_dists[i], 0.01) << msg;
       if (valid_traffic) {
-        EXPECT_TRUE(v.GetObject().HasMember("date_time")) << msg;
+        ASSERT_TRUE(v.GetObject().HasMember("date_time")) << msg;
         EXPECT_TRUE(v.GetObject()["date_time"] != "") << msg;
       }
       i++;
@@ -92,7 +92,7 @@ protected:
                             {{"service_limits.max_timedep_distance_matrix", "50000"},
                              {"mjolnir.traffic_extract",
                               "test/data/matrix_traffic_allowed/traffic.tar"},
-                             {"mjolnir.timezone", "test/data/tz.sqlite"},
+                             {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                              {"thor.costmatrix_check_reverse_connection", "1"}});
 
     // verify shortcut edges being built
@@ -157,9 +157,6 @@ TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
   check_matrix(res_doc, {0.0f, 2.8f, 3.2f, 0.0f}, false, Matrix::TimeDistanceMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
-  // TODO: there's still a bug in CostMatrix which chooses the wrong correlated edges:
-  // https://github.com/valhalla/valhalla/issues/3803
-  // this should really take the longer route since it's not using traffic here for TDMatrix
   res.erase();
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"L"}, "auto", options,
                             nullptr, &res);
@@ -238,9 +235,6 @@ TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  // TODO: there's still a bug in CostMatrix which chooses the wrong correlated edges:
-  // https://github.com/valhalla/valhalla/issues/3803
-  // this should really take the longer route since it's not using traffic here
   check_matrix(res_doc, {0.0f, 2.8f}, false, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 1);
   ASSERT_EQ(result.info().warnings(0).code(), 206);
@@ -582,13 +576,42 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-8.5755, 42.1079});
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_matrix_no_tz");
     map_tz = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_matrix",
-                               {{"mjolnir.timezone", "test/data/tz.sqlite"},
+                               {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                                 {"service_limits.max_timedep_distance_matrix", "50000"}});
   }
 };
 gurka::map DateTimeTest::map = {};
 gurka::map DateTimeTest::map_tz = {};
 
+void check_date_times(const Api& request,
+                      const rapidjson::Document& res,
+                      const std::vector<std::string>& target_offsets,
+                      const std::vector<std::string>& target_timezones) {
+  for (size_t source_idx = 0; source_idx < static_cast<size_t>(request.options().sources().size());
+       source_idx++) {
+    for (size_t target_idx = 0; target_idx < static_cast<size_t>(request.options().targets().size());
+         target_idx++) {
+
+      ASSERT_TRUE(res["sources_to_targets"]
+                      .GetArray()[source_idx]
+                      .GetArray()[target_idx]
+                      .GetObject()
+                      .HasMember("date_time"));
+      EXPECT_EQ(res["sources_to_targets"]
+                    .GetArray()[source_idx]
+                    .GetArray()[target_idx]
+                    .GetObject()["time_zone_offset"]
+                    .GetString(),
+                target_offsets[target_idx]);
+      EXPECT_EQ(res["sources_to_targets"]
+                    .GetArray()[source_idx]
+                    .GetArray()[target_idx]
+                    .GetObject()["time_zone_name"]
+                    .GetString(),
+                target_timezones[target_idx]);
+    }
+  }
+}
 TEST_F(DateTimeTest, DepartAtCostMatrix) {
   rapidjson::Document res_doc;
   std::string res;
@@ -604,45 +627,7 @@ TEST_F(DateTimeTest, DepartAtCostMatrix) {
 
     // sanity check
     EXPECT_EQ(api.matrix().algorithm(), Matrix::CostMatrix);
-
-    EXPECT_TRUE(
-        res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember("date_time"));
-
-    EXPECT_EQ(res_doc["sources_to_targets"]
-                  .GetArray()[0]
-                  .GetArray()[0]
-                  .GetObject()["time_zone_offset"],
-              "+01:00");
-
-    EXPECT_EQ(res_doc["sources_to_targets"]
-                  .GetArray()[0]
-                  .GetArray()[1]
-                  .GetObject()["time_zone_offset"],
-              "+00:00");
-
-    EXPECT_EQ(res_doc["sources_to_targets"]
-                  .GetArray()[1]
-                  .GetArray()[0]
-                  .GetObject()["time_zone_offset"],
-              "+01:00");
-
-    EXPECT_EQ(res_doc["sources_to_targets"]
-                  .GetArray()[1]
-                  .GetArray()[1]
-                  .GetObject()["time_zone_offset"],
-              "+00:00");
-
-    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["time_zone_name"],
-              "Europe/Madrid");
-
-    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[1].GetObject()["time_zone_name"],
-              "Europe/Lisbon");
-
-    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[0].GetObject()["time_zone_name"],
-              "Europe/Madrid");
-
-    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[1].GetObject()["time_zone_name"],
-              "Europe/Lisbon");
+    check_date_times(api, res_doc, {"+01:00", "+00:00"}, {"Europe/Madrid", "Europe/Lisbon"});
   }
 }
 
@@ -658,46 +643,8 @@ TEST_F(DateTimeTest, DepartAtTimeDistanceMatrix) {
     res_doc.Parse(res.c_str());
 
     // sanity check
-    EXPECT_EQ(api.matrix().algorithm(), Matrix::TimeDistanceMatrix);
-
-    EXPECT_TRUE(
-        res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember("date_time"));
-
-    EXPECT_EQ(res_doc["sources_to_targets"]
-                  .GetArray()[0]
-                  .GetArray()[0]
-                  .GetObject()["time_zone_offset"],
-              "+01:00");
-
-    EXPECT_EQ(res_doc["sources_to_targets"]
-                  .GetArray()[0]
-                  .GetArray()[1]
-                  .GetObject()["time_zone_offset"],
-              "+00:00");
-
-    EXPECT_EQ(res_doc["sources_to_targets"]
-                  .GetArray()[1]
-                  .GetArray()[0]
-                  .GetObject()["time_zone_offset"],
-              "+01:00");
-
-    EXPECT_EQ(res_doc["sources_to_targets"]
-                  .GetArray()[1]
-                  .GetArray()[1]
-                  .GetObject()["time_zone_offset"],
-              "+00:00");
-
-    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["time_zone_name"],
-              "Europe/Madrid");
-
-    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[1].GetObject()["time_zone_name"],
-              "Europe/Lisbon");
-
-    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[0].GetObject()["time_zone_name"],
-              "Europe/Madrid");
-
-    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[1].GetObject()["time_zone_name"],
-              "Europe/Lisbon");
+    ASSERT_EQ(api.matrix().algorithm(), Matrix::TimeDistanceMatrix);
+    check_date_times(api, res_doc, {"+01:00", "+00:00"}, {"Europe/Madrid", "Europe/Lisbon"});
   }
 }
 
@@ -915,4 +862,77 @@ TEST(StandAlone, HGVNoAccessPenalty) {
       EXPECT_NEAR(matrix.matrix().distances(0), 3000, 2);
     }
   }
+}
+
+/************************************************************************ */
+
+std::string encode_shape(const std::vector<std::string>& nodes, valhalla::gurka::nodelayout& layout) {
+  std::vector<PointLL> shape;
+  shape.reserve(nodes.size());
+  for (auto& node : nodes) {
+    shape.push_back(layout[node]);
+  }
+  return encode<std::vector<PointLL>>(shape, 1e6);
+}
+
+void check_trivial_matrix(const gurka::map& map, gurka::nodelayout& layout) {
+  std::unordered_map<std::string, std::string> options = {{"/shape_format", "polyline6"}};
+  // 1 -> 2
+  {
+    auto matrix =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 300);
+    EXPECT_EQ(matrix.matrix().shapes(0), encode_shape({"1", "2"}, layout));
+  }
+
+  // 1 -> 3
+  {
+    auto matrix =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"3"}, "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 3300);
+    EXPECT_EQ(matrix.matrix().shapes(0), encode_shape({"1", "A", "B", "C", "D", "3"}, layout));
+  }
+
+  // 1 -> 2,3
+  {
+    auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2", "3"},
+                                   "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 300);
+    EXPECT_EQ(matrix.matrix().shapes(0), encode_shape({"1", "2"}, layout));
+    EXPECT_EQ(matrix.matrix().distances(1), 3300);
+    EXPECT_EQ(matrix.matrix().shapes(1), encode_shape({"1", "A", "B", "C", "D", "3"}, layout));
+  }
+
+  // 1 -> 3,2
+  {
+    auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"3", "2"},
+                                   "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 3300);
+    EXPECT_EQ(matrix.matrix().shapes(0), encode_shape({"1", "A", "B", "C", "D", "3"}, layout));
+    EXPECT_EQ(matrix.matrix().distances(1), 300);
+    EXPECT_EQ(matrix.matrix().shapes(1), encode_shape({"1", "2"}, layout));
+  }
+}
+
+TEST(StandAlone, MultipleTrivialRoutes) {
+  const std::string ascii_map = R"(
+    B-------------C
+    |             |
+    |             |
+    |             |
+    A---2--1--3---D
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}, {"oneway", "yes"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"DA", {{"highway", "residential"}, {"oneway", "yes"}}},
+  };
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_fail", {});
+  check_trivial_matrix(map, layout);
+  // ensure consistent behavior regardless of whether we do the reverse connection check
+  map.config.put("thor.costmatrix_check_reverse_connection", "1");
+  check_trivial_matrix(map, layout);
 }
