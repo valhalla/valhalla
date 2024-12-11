@@ -102,10 +102,6 @@ constexpr float kDefaultServiceFactor = 1.0f;
 // Default penalty factor for avoiding closures (increases the cost of an edge as if its being
 // traversed at kMinSpeedKph)
 constexpr float kDefaultClosureFactor = 9.0f;
-
-// Max level for which hierarchy limits are considered
-constexpr unsigned int kHierarchyLimitsMaxLevel = 2;
-
 // Default range of closure factor to use for closed edges. Min is set to 1.0, which means do not
 // penalize closed edges. The max is set to 10.0 in order to limit how much expansion occurs from the
 // non-closure end

@@ -112,6 +112,12 @@ std::string thor_worker_t::matrix(Api& request) {
   }
 
   auto* algo = get_matrix_algorithm(request, has_time, costing);
+  if (check_hierarchy_limits(mode_costing[int(mode)]->GetMutableHierarchyLimits(),
+                             mode_costing[int(mode)], hierarchy_limits_config_costmatrix,
+                             allow_hierarchy_limits_modifications)) {
+    // maybe warn if we needed to change user provided hierarchy limits
+    add_warning(request, 209);
+  }
   LOG_INFO("matrix::" + std::string(algo->name()));
 
   // TODO(nils): TDMatrix doesn't care about either destonly or no_thru
