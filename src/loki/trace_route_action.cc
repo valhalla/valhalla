@@ -158,7 +158,8 @@ void loki_worker_t::init_trace(Api& request) {
   }
 
   // Set locations after parsing the shape
-  locations_from_shape(request);
+  // TODO - do we need to set any values set by this method in the first and last location?
+  // locations_from_shape(request);
 }
 
 void loki_worker_t::trace(Api& request) {
@@ -169,6 +170,26 @@ void loki_worker_t::trace(Api& request) {
   if (request.options().costing_type() == Costing::multimodal) {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(request.options().action())};
   };
+
+  auto t1 = std::chrono::high_resolution_clock::now();
+  auto& options = *request.mutable_options();
+  const auto& costing_name = Costing_Enum_Name(options.costing_type());
+
+  // Convert shape to Locations
+  std::vector<baldr::Location> locations;
+  for (const auto ll : options.shape()) {
+    locations.push_back(PathLocation::fromPBF(ll));
+  }
+
+  // Search then add projections to pbf locations
+  const auto projections = loki::Search(locations, *reader, costing);
+  options.clear_locations();
+  for (const auto loc : locations) {
+    PathLocation::toPBF(projections.at(loc), options.mutable_locations()->Add(), *reader);
+  }
+  auto t2 = std::chrono::high_resolution_clock::now();
+  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  LOG_INFO("TIMING using loki for trace_route took " + std::to_string(msecs) + " ms");
 }
 
 // TODO: remove this, it was a hack to support display_ll for map matching, what we can do is

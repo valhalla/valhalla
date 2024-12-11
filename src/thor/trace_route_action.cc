@@ -183,7 +183,7 @@ thor_worker_t::map_match(Api& request) {
   int topk = request.options().action() == Options::trace_attributes
                  ? request.options().alternates() + 1
                  : 1;
-  auto topk_match_results = matcher->OfflineMatch(trace, topk);
+  auto topk_match_results = matcher->OfflineMatch(trace, options.locations(), topk);
 
   // Process each score/match result
   std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>> map_match_results;

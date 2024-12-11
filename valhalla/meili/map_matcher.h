@@ -65,8 +65,10 @@ public:
     return mode_costing_[static_cast<size_t>(travelmode_)];
   }
 
-  std::vector<MatchResults> OfflineMatch(const std::vector<Measurement>& measurements,
-                                         uint32_t k = 1);
+  std::vector<MatchResults>
+  OfflineMatch(const std::vector<Measurement>& measurements,
+               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+               uint32_t k = 1);
 
   /**
    * Set a callback that will throw when the map-matching should be aborted
@@ -79,9 +81,12 @@ public:
 
 private:
   std::unordered_map<StateId::Time, std::vector<Measurement>>
-  AppendMeasurements(const std::vector<Measurement>& measurements);
+  AppendMeasurements(const std::vector<Measurement>& measurements,
+                     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
-  StateId::Time AppendMeasurement(const Measurement& measurement, const float sq_max_search_radius);
+  StateId::Time AppendMeasurement(const Measurement& measurement,
+                                  const valhalla::Location& location,
+                                  const float sq_max_search_radius);
 
   void RemoveRedundancies(const std::vector<StateId>& result,
                           const std::vector<MatchResult>& results);

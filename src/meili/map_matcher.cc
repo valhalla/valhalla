@@ -685,8 +685,10 @@ or
   }
 }*/
 
-std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements,
-                                                   uint32_t k) {
+std::vector<MatchResults>
+MapMatcher::OfflineMatch(const std::vector<Measurement>& measurements,
+                         const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                         uint32_t k) {
   if (k <= 0) {
     throw std::invalid_argument("expect k to be positive but got " + std::to_string(k));
   }
@@ -706,7 +708,7 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   bool found_discontinuity = false;
 
   // Separate the measurements we are using for matching from the ones we'll just interpolate
-  auto interpolated = AppendMeasurements(measurements);
+  auto interpolated = AppendMeasurements(measurements, locations);
   // Without minimum number of edge candidates, throw a 443 - NoSegment error code.
   if (!container_.HasMinimumCandidates()) {
     throw valhalla_exception_t{443};
@@ -820,19 +822,28 @@ std::vector<MatchResults> MapMatcher::OfflineMatch(const std::vector<Measurement
   return best_paths;
 }
 
-std::unordered_map<StateId::Time, std::vector<Measurement>>
-MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
+std::unordered_map<StateId::Time, std::vector<Measurement>> MapMatcher::AppendMeasurements(
+    const std::vector<Measurement>& measurements,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   const float sq_max_search_radius = config_.candidate_search.max_search_radius_meters *
                                      config_.candidate_search.max_search_radius_meters;
   const float sq_interpolation_distance =
       config_.routing.interpolation_distance_meters * config_.routing.interpolation_distance_meters;
   std::unordered_map<StateId::Time, std::vector<Measurement>> interpolated;
 
+  // Check that size of measurements and locations are equal
+  if (measurements.size() != locations.size()) {
+    LOG_ERROR("TIMING measurements and locations are not the same size!");
+    // TODO throw an exception
+  }
+
   // Always match the first measurement
   auto last = measurements.cbegin();
-  auto time = AppendMeasurement(*last, sq_max_search_radius);
+  auto last_loc = locations.cbegin();
+  auto loc = std::next(last_loc);
+  auto time = AppendMeasurement(*last, *last_loc, sq_max_search_radius);
   double interpolated_epoch_time = -1;
-  for (auto m = std::next(last); m != measurements.end(); ++m) {
+  for (auto m = std::next(last); m != measurements.end(); ++m, ++loc) {
     const auto sq_distance = GreatCircleDistanceSquared(*last, *m);
     // Always match the last measurement and if its far enough away
     if (sq_interpolation_distance < sq_distance || std::next(m) == measurements.end()) {
@@ -849,7 +860,7 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
         }
       }
       // This one isnt interpolated so we make room for its state
-      time = AppendMeasurement(*m, sq_max_search_radius);
+      time = AppendMeasurement(*m, *loc, sq_max_search_radius);
       last = m;
       interpolated_epoch_time = -1;
     } // TODO: if its the last measurement and it wants to be interpolated
@@ -867,15 +878,17 @@ MapMatcher::AppendMeasurements(const std::vector<Measurement>& measurements) {
 }
 
 StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
+                                            const valhalla::Location& location,
                                             const float sq_max_search_radius) {
   // Test interrupt
   if (interrupt_) {
     (*interrupt_)();
   }
 
+  // TODO - replace with loki Search (info stored in pbf locations)
+  /*
   auto sq_radius = std::min(sq_max_search_radius,
                             std::max(measurement.sq_search_radius(), measurement.sq_gps_accuracy()));
-
   const auto& candidates =
       candidatequery_.Query(measurement.lnglat(), measurement.stop_type(), sq_radius, costing());
 
@@ -885,7 +898,12 @@ StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
     const auto& stateid = container_.AppendCandidate(candidate);
     vs_.AddStateId(stateid);
   }
+  */
 
+  // Use PathLocations from loki Search
+  const auto time = container_.AppendMeasurement(measurement);
+  const auto& stateid = container_.AppendCandidate(baldr::PathLocation::fromPBF(location));
+  vs_.AddStateId(stateid);
   return time;
 }
 
