@@ -902,7 +902,19 @@ StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
 
   // Use PathLocations from loki Search
   const auto time = container_.AppendMeasurement(measurement);
-  const auto& stateid = container_.AppendCandidate(baldr::PathLocation::fromPBF(location));
+  auto candidate = baldr::PathLocation(baldr::PathLocation::fromPBF(location));
+  for (const auto& edge : location.correlation().edges()) {
+    // Convert correlated edge to PathEdge
+    midgard::PointLL ll(edge.ll().lng(), edge.ll().lat());
+    auto sos = baldr::PathLocation::LEFT;
+    baldr::PathLocation::PathEdge path_edge(baldr::GraphId(edge.graph_id()), edge.percent_along(), ll,
+                                            1.0, sos, edge.outbound_reach(), edge.inbound_reach(),
+                                            edge.heading());
+    candidate.edges.push_back(std::move(path_edge));
+  }
+
+  // TODO - what if candidate has no correlated edges - is this an issue?
+  const auto& stateid = container_.AppendCandidate(candidate);
   vs_.AddStateId(stateid);
   return time;
 }
