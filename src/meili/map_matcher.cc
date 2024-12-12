@@ -901,9 +901,12 @@ StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
   */
 
   // Use PathLocations from loki Search
+  // TODO: Seems to only work with separate candidates for each edge
   const auto time = container_.AppendMeasurement(measurement);
   auto candidate = baldr::PathLocation(baldr::PathLocation::fromPBF(location));
   for (const auto& edge : location.correlation().edges()) {
+    candidate.edges.clear();
+
     // Convert correlated edge to PathEdge
     midgard::PointLL ll(edge.ll().lng(), edge.ll().lat());
     auto sos = baldr::PathLocation::LEFT;
@@ -911,11 +914,9 @@ StateId::Time MapMatcher::AppendMeasurement(const Measurement& measurement,
                                             1.0, sos, edge.outbound_reach(), edge.inbound_reach(),
                                             edge.heading());
     candidate.edges.push_back(std::move(path_edge));
+    const auto& stateid = container_.AppendCandidate(candidate);
+    vs_.AddStateId(stateid);
   }
-
-  // TODO - what if candidate has no correlated edges - is this an issue?
-  const auto& stateid = container_.AppendCandidate(candidate);
-  vs_.AddStateId(stateid);
   return time;
 }
 

@@ -102,6 +102,8 @@ protected:
   skadi::sample sample;
   size_t max_elevation_shape;
   float min_resample;
+  float default_trace_gps_accuracy;
+  float default_trace_search_radius;
   unsigned int max_alternates;
   bool allow_verbose;
   bool allow_hard_exclusions;

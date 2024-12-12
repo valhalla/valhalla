@@ -292,6 +292,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
   allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
 
+  // Defaults for trace
+  default_trace_gps_accuracy = config.get<float>("meili.default.gps_accuracy");
+  default_trace_search_radius = config.get<float>("meili.default.search_radius");
+
   // signal that the worker started successfully
   started();
 }

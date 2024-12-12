@@ -175,17 +175,31 @@ void loki_worker_t::trace(Api& request) {
   auto& options = *request.mutable_options();
   const auto& costing_name = Costing_Enum_Name(options.costing_type());
 
+  // Search cutoff and radius from the request
+  auto gps_accuracy =
+      (options.has_gps_accuracy_case()) ? options.gps_accuracy() : default_trace_gps_accuracy;
+  auto search_radius =
+      (options.has_search_radius_case()) ? options.search_radius() : default_trace_search_radius;
+
   // Convert shape to Locations
   std::vector<baldr::Location> locations;
   for (const auto ll : options.shape()) {
-    locations.push_back(PathLocation::fromPBF(ll));
+    auto location = PathLocation::fromPBF(ll);
+    location.radius_ = gps_accuracy;
+    location.search_cutoff_ = search_radius;
+    locations.push_back(location);
   }
 
   // Search then add projections to pbf locations
   const auto projections = loki::Search(locations, *reader, costing);
   options.clear_locations();
   for (const auto loc : locations) {
-    PathLocation::toPBF(projections.at(loc), options.mutable_locations()->Add(), *reader);
+    auto itr = projections.find(loc);
+    if (itr != projections.end()) {
+      PathLocation::toPBF(itr->second, options.mutable_locations()->Add(), *reader);
+    } else {
+      PathLocation::toPBF(loc, options.mutable_locations()->Add(), *reader);
+    }
   }
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
