@@ -332,10 +332,15 @@ struct DiscretizedBoundingCircle : public GraphId {
       }
     }
     // only set the value if radius doesn't exceed the max radius we support
-    if (!index == kBoundingCircleRadii.size())
-      value |= (static_cast<uint64_t>(index) << 62) | (x_offset_increments << 54) |
-               (y_offset_increments << 46);
-
+    if (index != kBoundingCircleRadii.size()) {
+      uint64_t bounding_circle =
+          (static_cast<uint64_t>(index) << 16) | (x_offset_increments << 8) | (y_offset_increments);
+      if (bounding_circle == 0) {
+        bounding_circle = kImpossibleBoundingCircle;
+        LOG_WARN("Found 0'ed bounding circle, swapping to impossible combination");
+      }
+      value |= (bounding_circle << 46);
+    }
     return index;
   }
 
@@ -384,7 +389,7 @@ struct DiscretizedBoundingCircle : public GraphId {
     // old data doesn't have this set, so this means go check the shape
     auto bounding_circle = value >> 46;
     if (!bounding_circle) {
-      return std::make_pair(midgard::PointLL{}, 0.);
+      return std::make_pair(midgard::PointLL{0, 0}, 0.);
     }
 
     // for the case where we created a valid circle, but it happens to be at

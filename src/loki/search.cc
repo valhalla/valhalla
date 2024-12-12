@@ -530,33 +530,18 @@ struct bin_handler_t {
   // handle a bin for the range of candidates that share it
   void handle_bin(std::vector<projector_wrapper>::iterator begin,
                   std::vector<projector_wrapper>::iterator end) {
-    nSearched = 0;
-    nSkipped = 0;
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
-    for (auto edge_id : edges) {
+    for (auto edgeid : edges) {
       nSearched++;
-      // Check if all locations are outside the bounding circle of the edge
-      bool all_outside = true;
-      auto c_itr = bin_candidates.begin();
-      decltype(begin) p_itr;
-      auto circle = edge_id.get_circle(begin->bin_center_approximator, begin->bin_center);
-      if (circle.second == 0) {
-        all_outside = false;
-      }
-      for (p_itr = begin; p_itr != end; ++p_itr) {
-        // if (edge_id(p_itr->bin_center_approximator, p_itr->project.approx, kTestRadiusSq,
-        //             p_itr->bin_center)) {
-        if (p_itr->project.approx.DistanceSquared(circle.first) < circle.second + kTestRadiusSq) {
-          all_outside = false;
-          break;
-        }
-      }
-      if (all_outside) {
+      if (!edgeid(begin->bin_center_approximator, begin->project.approx, kTestRadiusSq,
+                  begin->bin_center)) {
         nSkipped++;
         continue;
       }
+      GraphId edge_id = *reinterpret_cast<GraphId*>(&edgeid);
+      edge_id.value &= kInvalidGraphId;
       // get the tile and edge
       if (!reader.GetGraphTile(edge_id, tile)) {
         continue;
@@ -565,18 +550,15 @@ struct bin_handler_t {
       // lots of places below where we might like to know about the opp edge
       const DirectedEdge* opp_edge = nullptr;
       graph_tile_ptr opp_tile = tile;
-      DiscretizedBoundingCircle opp_edgeid;
-      GraphId opp_id;
+      GraphId opp_edgeid;
 
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
       if (!costing->Allowed(edge, tile, kDisallowShortcut)) {
         // but if we couldnt get it or its filtered too then we move on
-        opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&opp_id);
-        if (!(opp_id) || !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
+        if (!(opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) ||
+            !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
           continue;
-        opp_edgeid.set_from_other(edge_id);
         // if we will continue with the opposing edge lets swap it in
         std::swap(edge, opp_edge);
         std::swap(tile, opp_tile);
@@ -586,21 +568,19 @@ struct bin_handler_t {
       // initialize candidates vector:
       // - reset sq_distance to max so we know the best point along the edge
       // - apply prefilters based on user's SearchFilter request options
+      auto c_itr = bin_candidates.begin();
+      decltype(begin) p_itr;
       bool all_prefiltered = true;
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
-        opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&opp_id);
-        // opp_edgeid.set_from_other(edge_id);
         c_itr->prefiltered =
-            search_filter(edge, *costing, tile, p_itr->location.search_filter_) && opp_edgeid &&
+            search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
+            (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
             search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_);
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
-        // && edge_id(p_itr->bin_center_approximator, p_itr->project.approx,
-        //         p_itr->sq_radius, p_itr->bin_center);
       }
 
       // short-circuit if all candidates were prefiltered
@@ -661,9 +641,8 @@ struct bin_handler_t {
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
-        auto oppid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-        opp_edgeid = *reinterpret_cast<DiscretizedBoundingCircle*>(&oppid);
-        if (!reachable && opp_edgeid && costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
+        if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
+            costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
             !search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_)) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
@@ -682,7 +661,7 @@ struct bin_handler_t {
         // if its empty append
         if (batch->empty()) {
           c_itr->edge = edge;
-          c_itr->edge_id = GraphId(edge_id & kInvalidGraphId);
+          c_itr->edge_id = edge_id;
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           batch->emplace_back(std::move(*c_itr));
@@ -704,7 +683,7 @@ struct bin_handler_t {
         // it has to either be better or in the radius to move on
         if (in_radius || better) {
           c_itr->edge = edge;
-          c_itr->edge_id = GraphId(edge_id & kInvalidGraphId);
+          c_itr->edge_id = edge_id;
           c_itr->edge_info = edge_info;
           c_itr->tile = tile;
           // the last one wasnt in the radius so replace it with this one because its better or is

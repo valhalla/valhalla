@@ -33,7 +33,6 @@ set(sources
   dataquality.cc
   directededgebuilder.cc
   edgeinfobuilder.cc
-  edgeboundsbuilder.cc
   elevationbuilder.cc
   ferry_connections.cc
   graphbuilder.cc
