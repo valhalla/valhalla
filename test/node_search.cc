@@ -84,7 +84,9 @@ void graph_writer::write_tiles() {
     // write the bin data
     valhalla::mjolnir::tweeners_t tweeners;
     auto reloaded = GraphTile::Create(test_tile_dir, tile_id);
-    auto bins = valhalla::mjolnir::GraphTileBuilder::BinEdges(reloaded, tweeners);
+    std::array<long unsigned int, 5> stats;
+    stats.fill(0);
+    auto bins = valhalla::mjolnir::GraphTileBuilder::BinEdges(reloaded, tweeners, stats);
     valhalla::mjolnir::GraphTileBuilder::AddBins(test_tile_dir, reloaded, bins);
 
     // merge tweeners into global

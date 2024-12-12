@@ -161,7 +161,9 @@ void make_tile() {
   // write the bin data
   tweeners_t tweeners;
   auto reloaded = GraphTile::Create(tile_dir, tile_id);
-  auto bins = GraphTileBuilder::BinEdges(reloaded, tweeners);
+  std::array<long unsigned int, 5> stats;
+  stats.fill(0);
+  auto bins = GraphTileBuilder::BinEdges(reloaded, tweeners, stats);
   GraphTileBuilder::AddBins(tile_dir, reloaded, bins);
 
   {
