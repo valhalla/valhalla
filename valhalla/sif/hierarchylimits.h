@@ -44,7 +44,7 @@ namespace sif {
  */
 inline bool StopExpanding(const valhalla::HierarchyLimits& hierarchy_limits, const float dist) {
   return (hierarchy_limits.up_transition_count() > hierarchy_limits.max_up_transitions() &&
-          dist > hierarchy_limits.expansion_within_dist());
+          dist > hierarchy_limits.expand_within_dist());
 }
 
 /**
@@ -70,8 +70,8 @@ inline void RelaxHierarchyLimits(valhalla::HierarchyLimits& hierarchy_limits,
 
   if (hierarchy_limits.max_up_transitions() != kUnlimitedTransitions) {
     hierarchy_limits.set_max_up_transitions(hierarchy_limits.max_up_transitions() * factor);
-    hierarchy_limits.set_expansion_within_dist(hierarchy_limits.expansion_within_dist() *
-                                               expansion_within_factor);
+    hierarchy_limits.set_expand_within_dist(hierarchy_limits.expand_within_dist() *
+                                            expansion_within_factor);
   }
 }
 } // namespace sif

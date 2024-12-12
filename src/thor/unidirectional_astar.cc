@@ -627,8 +627,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::ModifyHierarchyLimits(
     factor *= f;
   }*/
   // TODO - just arterial for now...investigate whether to alter local as well
-  hierarchy_limits_[1].set_expansion_within_dist(hierarchy_limits_[1].expansion_within_dist() *
-                                                 factor);
+  hierarchy_limits_[1].set_expand_within_dist(hierarchy_limits_[1].expand_within_dist() * factor);
 }
 
 // Add an edge at the origin to the adjacency list

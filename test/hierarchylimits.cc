@@ -36,7 +36,7 @@ struct HierarchyLimitsTestParams {
   };
   HierarchyLimitsTestParams(std::unordered_map<std::string, std::string> overrides,
                             std::string& config_path)
-      : cfg(make_test_config(overrides)), hierarchy_limits_config_path(config_path){};
+      : cfg(make_test_config(overrides)), hierarchy_limits_config_path(config_path) {};
 
   std::string request;
   boost::property_tree::ptree cfg;
@@ -80,7 +80,7 @@ std::string makePbfRequest(std::vector<std::pair<uint32_t, std::optional<float>>
     auto& hl = hl_values[i];
     hierarchylims.set_max_up_transitions(hl.first);
     if (hl.second)
-      hierarchylims.set_expansion_within_dist(*hl.second);
+      hierarchylims.set_expand_within_dist(*hl.second);
     costing.mutable_options()->mutable_hierarchy_limits()->insert({i, hierarchylims});
   }
   opts->mutable_costings()->insert({valhalla::Costing::auto_, costing});
@@ -95,7 +95,7 @@ makeParamsWithRequest(std::vector<std::pair<uint32_t, std::optional<float>>>&& h
     auto& hl = hl_values[i];
     hierarchylims.set_max_up_transitions(hl.first);
     if (hl.second)
-      hierarchylims.set_expansion_within_dist(*hl.second);
+      hierarchylims.set_expand_within_dist(*hl.second);
     hlimits.push_back(hierarchylims);
   }
   if (pbf)
@@ -117,7 +117,7 @@ protected:
       auto actual_hl = actual[i];
       auto expected_hl = expected[i];
       EXPECT_EQ(actual_hl.max_up_transitions(), expected_hl.max_up_transitions());
-      EXPECT_EQ(actual_hl.expansion_within_dist(), expected_hl.expansion_within_dist());
+      EXPECT_EQ(actual_hl.expand_within_dist(), expected_hl.expand_within_dist());
     }
   }
 };

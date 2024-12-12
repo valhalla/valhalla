@@ -1643,7 +1643,7 @@ TEST(BiDiAstar, test_recost_path) {
   auto* hl_opts = cost.mutable_options()->mutable_hierarchy_limits();
   for (auto level : TileHierarchy::levels()) {
     HierarchyLimits hl;
-    hl.set_expansion_within_dist(0);
+    hl.set_expand_within_dist(0);
     hl.set_max_up_transitions(0);
     hl_opts->insert({level.level, std::move(hl)});
   }

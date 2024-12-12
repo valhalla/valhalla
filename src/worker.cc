@@ -1377,7 +1377,7 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
           config.get_child_optional("service_limits.hierarchy_limits." + algorithm +
                                     ".max_expand_within_distance." + std::to_string(it->level));
       found = found && (algorithm == "costmatrix" || max_expand_within_dist);
-      max_hl.set_expansion_within_dist(
+      max_hl.set_expand_within_dist(
           max_expand_within_dist
               ? max_expand_within_dist->get_value<float>(kDefaultExpansionWithinDist[it->level])
               : kDefaultExpansionWithinDist[it->level]);
@@ -1401,7 +1401,7 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
           "thor." + algorithm + ".hierarchy_limits.expand_within_distance." +
           std::to_string(it->level));
       found = found && (algorithm == "costmatrix" || default_expand_within_dist);
-      default_hl.set_expansion_within_dist(
+      default_hl.set_expand_within_dist(
           default_expand_within_dist
               ? default_expand_within_dist->get_value<float>(kDefaultExpansionWithinDist[it->level])
               : kDefaultExpansionWithinDist[it->level]);
@@ -1433,11 +1433,10 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
     // use defaults if modification is not allowed by the service or if user did not specify any
     // limits;
     if (!allow_modifications ||
-        (limits.max_up_transitions() == 0 && limits.expansion_within_dist() == kMaxDistance)) {
-      add_warning &=
-          limits.max_up_transitions() != 0 && limits.expansion_within_dist() != kMaxDistance;
+        (limits.max_up_transitions() == 0 && limits.expand_within_dist() == kMaxDistance)) {
+      add_warning &= limits.max_up_transitions() != 0 && limits.expand_within_dist() != kMaxDistance;
       limits.set_max_up_transitions(config.default_limits[i].max_up_transitions());
-      limits.set_expansion_within_dist(config.default_limits[i].expansion_within_dist());
+      limits.set_expand_within_dist(config.default_limits[i].expand_within_dist());
       continue;
     }
     default_limits = false;
@@ -1447,8 +1446,8 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
       add_warning = false;
     }
 
-    if (limits.expansion_within_dist() > config.max_limits[i].expansion_within_dist()) {
-      limits.set_expansion_within_dist(config.max_limits[i].expansion_within_dist());
+    if (limits.expand_within_dist() > config.max_limits[i].expand_within_dist()) {
+      limits.set_expand_within_dist(config.max_limits[i].expand_within_dist());
       add_warning = false;
     }
   }

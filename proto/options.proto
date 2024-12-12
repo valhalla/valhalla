@@ -82,7 +82,7 @@ message HierarchyLimits {
                                    // Internal use only, remember to clear on incoming requests
  uint32 max_up_transitions = 2;    // Maximum number of upward transitions before 
                                    // expansion is stopped on a level.
- float expansion_within_dist = 3; // Distance (m) to destination within which
+ float expand_within_dist = 3; // Distance (m) to destination within which
                                    // expansion of a hierarchy level is
                                    // always allowed. Used for A*.
 }
