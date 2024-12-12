@@ -160,19 +160,18 @@ DynamicCost::DynamicCost(const Costing& costing,
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
 
-  hierarchy_limits_.resize(TileHierarchy::levels().size());
   for (const auto& level : TileHierarchy::levels()) {
     const auto& res = costing.options().hierarchy_limits().find(level.level);
     if (res == costing.options().hierarchy_limits().end()) {
       HierarchyLimits hl;
       hl.set_expansion_within_dist(kMaxDistance);
       hl.set_max_up_transitions(0); // kUnlimitedDistance is already taken as sentinel value
-      hierarchy_limits_[level.level] = std::move(hl);
+      hl.set_up_transition_count(0);
+      hierarchy_limits_.push_back(hl);
     } else {
-      hierarchy_limits_[level.level] = res->second;
-
+      hierarchy_limits_.push_back(res->second);
       // for internal use only
-      hierarchy_limits_[level.level].set_up_transition_count(0);
+      hierarchy_limits_.back().set_up_transition_count(0);
     }
   }
 
