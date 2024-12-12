@@ -10,7 +10,6 @@
 #include "midgard/logging.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
-#include "sif/hierarchylimits.h"
 #include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/pedestriancost.h"

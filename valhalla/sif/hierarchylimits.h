@@ -33,12 +33,47 @@ constexpr unsigned int kDefaultMaxAllowedTransitions = 400;
 namespace valhalla {
 namespace sif {
 
-bool StopExpanding(const valhalla::HierarchyLimits& hierarchy_limits, const float dist);
-bool StopExpanding(const valhalla::HierarchyLimits& hierarchy_limits);
-void RelaxHierarchyLimits(valhalla::HierarchyLimits& hierarchy_limits,
-                          const float factor,
-                          const float expansion_within_factor);
+/**
+ * Determine if expansion of a hierarchy level should be stopped once
+ * the number of upward transitions has been exceeded. Allows expansion
+ * within the specified distance from the destination regardless of
+ * count.
+ * @param hierarchy_limits Hierarchy limits.
+ * @param dist             Distance (meters) from the destination.
+ * @return                 Returns true if expansion at this hierarchy level should stop.
+ */
+inline bool StopExpanding(const valhalla::HierarchyLimits& hierarchy_limits, const float dist) {
+  return (hierarchy_limits.up_transition_count() > hierarchy_limits.max_up_transitions() &&
+          dist > hierarchy_limits.expansion_within_dist());
+}
 
+/**
+ * Determine if expansion of a hierarchy level should be stopped once
+ * the number of upward transitions has been exceeded. This is used in
+ * the bidirectional method where distance from the destination does not
+ * matter.
+ * @param hierarchy_limits Hierarchy limits.
+ * @return                 Returns true if expansion at this hierarchy level should stop.
+ */
+inline bool StopExpanding(const valhalla::HierarchyLimits& hierarchy_limits) {
+  return hierarchy_limits.up_transition_count() > hierarchy_limits.max_up_transitions();
+}
+
+/**
+ * Relax hierarchy limits to try to find a route when initial attempt fails.
+ * Do not relax limits if they are unlimited (bicycle and pedestrian for
+ * example).
+ */
+inline void RelaxHierarchyLimits(valhalla::HierarchyLimits& hierarchy_limits,
+                                 const float factor,
+                                 const float expansion_within_factor) {
+
+  if (hierarchy_limits.max_up_transitions() != kUnlimitedTransitions) {
+    hierarchy_limits.set_max_up_transitions(hierarchy_limits.max_up_transitions() * factor);
+    hierarchy_limits.set_expansion_within_dist(hierarchy_limits.expansion_within_dist() *
+                                               expansion_within_factor);
+  }
+}
 } // namespace sif
 } // namespace valhalla
 
