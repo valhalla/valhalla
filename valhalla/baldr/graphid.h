@@ -24,7 +24,7 @@ constexpr uint64_t kInvalidGraphId = 0x3fffffffffff;
 // Value used to increment an Id by 1
 constexpr uint64_t kIdIncrement = 1 << 25;
 
-constexpr std::array<int, 4> kBoundingCircleRadii = {25 * 25, 50 * 50, 100 * 100, 300 * 300};
+constexpr std::array<int, 4> kBoundingCircleRadii = {25 * 25, 50 * 50, 100 * 100, 375 * 375};
 constexpr uint64_t kImpossibleBoundingCircle = 0xffff;
 
 // bin size in meters at the equator (half that since we offset from center)
@@ -245,7 +245,7 @@ public:
  * The 2 most significant bits represent an index into a fixed array of radii that were chosen based
  * on the distribution of minimum bounding circle radii of all edges in a planet build.
  *
- * The remaing 2*8 bits are used to store offsets in meters relative to the center of the tile bin in
+ * The remainig 2*8 bits are used to store offsets in meters relative to the center of the tile bin in
  * which this structure is stored. One increment evaluates to roughly 21.6 meters, in order to support
  * the maximum combination of the maximum distance from the bin center (half its size at the equator
  * plus the max supported radius).

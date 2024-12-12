@@ -7,7 +7,6 @@
 #include <tuple>
 #include <vector>
 
-#include <valhalla/baldr/bounding_circle.h>
 #include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
@@ -329,6 +328,7 @@ public:
     uint32_t extended_wayid1_ : 8;     // Next next byte of the way id
     uint32_t extended_wayid_size_ : 2; // How many more bytes the way id is stored in
     uint32_t has_elevation_ : 1;       // Does the edgeinfo have elevation?
+    uint32_t spare0_ : 1;              // not used
   };
 
 protected:

@@ -21,8 +21,6 @@ namespace mjolnir {
 
 namespace {
 
-void SetMinimumBoundingCircle(GraphId& edge_id, const EdgeInfo& einfo, const PointLL& bin_center) {
-}
 std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restrictions,
                                                                size_t restrictions_size) {
   std::vector<ComplexRestrictionBuilder> builders;
