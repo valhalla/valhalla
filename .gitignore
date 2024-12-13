@@ -58,6 +58,7 @@ CMakeLists.txt.user
 /.vs*/
 /*build*/
 /CMakeSettings.json
+/CMakeUserPresets.json
 .idea
 /.tidytmp
 vcpkg*/
