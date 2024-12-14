@@ -1811,7 +1811,7 @@ public:
 } // anonymous namespace
 
 int main(int argc, char* argv[]) {
-  logging::Configure({{"type", ""}});
+  // logging::Configure({{"type", ""}});
   testing::AddGlobalTestEnvironment(new AstarTestEnv);
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
