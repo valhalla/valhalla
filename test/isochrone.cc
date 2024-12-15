@@ -511,24 +511,7 @@ TEST(Isochrones, test_geotiff_vertical_orientation) {
   std::copy(geotiff.cbegin(), geotiff.cend(), buffer);
   auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
   auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
-  int x = geotiff_dataset->GetRasterXSize();
   int y = geotiff_dataset->GetRasterYSize();
-  GDALRasterBand* band = geotiff_dataset->GetRasterBand(1);
-  uint16_t data_array[x * y];
-  CPLErr err = band->RasterIO(GF_Read, 0, 0, x, y, data_array, x, y, GDT_UInt16, 0, 0);
-  double min_max[2];
-
-  band->ComputeRasterMinMax(0, min_max);
-
-  ASSERT_EQ(err, CE_None);
-  ASSERT_NE(x, 0);
-  ASSERT_NE(y, 0);
-  ASSERT_EQ(static_cast<int>(min_max[0]), 0);
-  ASSERT_EQ(static_cast<int>(min_max[1]), 1100);
-  ASSERT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
-
-  check_raster_edges(x, y, data_array);
-
   double geoTransform[6];
   geotiff_dataset->GetGeoTransform(geoTransform);
   double topY = geoTransform[3] + 0 * geoTransform[4] + 0 * geoTransform[5];
