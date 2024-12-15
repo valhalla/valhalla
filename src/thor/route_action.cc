@@ -379,12 +379,12 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     path_algorithm->Clear();
 
     // once we know which algorithm will be used, set the hierarchy limits accordingly
-    auto& hierarchy_limits = path_algorithm->name() == "bidirectional_a*" ? hierarchy_limits_bidir
-                                                                          : hierarchy_limits_unidir;
+    auto& hierarchy_limits =
+        path_algorithm == &bidir_astar ? hierarchy_limits_bidir : hierarchy_limits_unidir;
     add_hierarchy_limits_warning &=
         check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
                                costing_options,
-                               path_algorithm->name() == "bidirectional_a*"
+                               path_algorithm == &bidir_astar
                                    ? hierarchy_limits_config_bidirectional_astar
                                    : hierarchy_limits_config_astar,
                                allow_hierarchy_limits_modifications);
@@ -594,12 +594,12 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
     // once we know which algorithm will be used, set the hierarchy limits accordingly
-    auto& hierarchy_limits = path_algorithm->name() == "bidirectional_a*" ? hierarchy_limits_bidir
-                                                                          : hierarchy_limits_unidir;
+    auto& hierarchy_limits =
+        path_algorithm == &bidir_astar ? hierarchy_limits_bidir : hierarchy_limits_unidir;
     add_hierarchy_limits_warning &=
         check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
                                costing_options,
-                               path_algorithm->name() == "bidirectional_a*"
+                               path_algorithm == &bidir_astar
                                    ? hierarchy_limits_config_bidirectional_astar
                                    : hierarchy_limits_config_astar,
                                allow_hierarchy_limits_modifications);
