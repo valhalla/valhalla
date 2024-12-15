@@ -1318,8 +1318,7 @@ struct BaseCostingOptionsConfig {
   bool exclude_tolls_;
   bool exclude_highways_;
   bool exclude_ferries_;
-  bool has_excludes_; // TODO(chris): do we need this?
-  bool default_hierarchy_limits;
+  bool has_excludes_;
 
   bool exclude_cash_only_tolls_ = false;
 

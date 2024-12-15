@@ -113,10 +113,16 @@ std::string thor_worker_t::matrix(Api& request) {
 
   auto* algo = get_matrix_algorithm(request, has_time, costing);
   if (check_hierarchy_limits(mode_costing[int(mode)]->GetMutableHierarchyLimits(),
-                             mode_costing[int(mode)], hierarchy_limits_config_costmatrix,
+                             mode_costing[int(mode)],
+                             options.costings().find(options.costing_type())->second.options(),
+                             hierarchy_limits_config_costmatrix,
                              allow_hierarchy_limits_modifications)) {
     // maybe warn if we needed to change user provided hierarchy limits
     add_warning(request, 209);
+  }
+  for (auto& hl : mode_costing[int(mode)]->GetMutableHierarchyLimits()) {
+    auto mut = hl.max_up_transitions();
+    auto exp = hl.expand_within_dist();
   }
   LOG_INFO("matrix::" + std::string(algo->name()));
 

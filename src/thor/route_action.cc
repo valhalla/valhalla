@@ -359,6 +359,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
+  const Costing_Options& costing_options =
+      options.costings().find(options.costing_type())->second.options();
   valhalla::Trip& trip = *api.mutable_trip();
   trip.mutable_routes()->Reserve(options.alternates() + 1);
 
@@ -381,6 +383,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
                                                                           : hierarchy_limits_unidir;
     add_hierarchy_limits_warning &=
         check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
+                               costing_options,
                                path_algorithm->name() == "bidirectional_a*"
                                    ? hierarchy_limits_config_bidirectional_astar
                                    : hierarchy_limits_config_astar,
@@ -570,6 +573,8 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
+  const Costing_Options& costing_options =
+      options.costings().find(options.costing_type())->second.options();
   valhalla::Trip& trip = *api.mutable_trip();
   trip.mutable_routes()->Reserve(options.alternates() + 1);
 
@@ -593,6 +598,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
                                                                           : hierarchy_limits_unidir;
     add_hierarchy_limits_warning &=
         check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
+                               costing_options,
                                path_algorithm->name() == "bidirectional_a*"
                                    ? hierarchy_limits_config_bidirectional_astar
                                    : hierarchy_limits_config_astar,

@@ -82,6 +82,7 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
 
 bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             sif::cost_ptr_t& cost,
+                            const valhalla::Costing_Options& options,
                             const hierarchy_limits_config_t& config,
                             const bool allow_modifications);
 #ifdef ENABLE_SERVICES

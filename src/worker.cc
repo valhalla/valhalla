@@ -1418,17 +1418,24 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
 
 bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             sif::cost_ptr_t& cost,
+                            const valhalla::Costing_Options& options,
                             const hierarchy_limits_config_t& config,
                             const bool allow_modifications) {
 
   // keep track whether we need to mess with user provided limits
-  bool add_warning = true;
+  bool add_warning = false;
 
   // for backwards compatibility, we need to track if the defaults are used. This matters in
   // unidirectional astar, where hierarchy limits are modified based on the astar heuristic
   bool default_limits = true;
   for (size_t i = 0; i < hierarchy_limits.size(); ++i) {
     HierarchyLimits& limits = hierarchy_limits[i];
+
+    // special case: hierarchy culling option is enabled (checked in loki)
+    if (options.disable_hierarchy_pruning()) {
+      limits.set_max_up_transitions(kUnlimitedTransitions);
+      continue;
+    }
 
     // use defaults if modification is not allowed by the service or if user did not specify any
     // limits;
@@ -1443,12 +1450,12 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
     // clamp to max values defined in service_limits
     if (limits.max_up_transitions() > config.max_limits[i].max_up_transitions()) {
       limits.set_max_up_transitions(config.max_limits[i].max_up_transitions());
-      add_warning = false;
+      add_warning = true;
     }
 
     if (limits.expand_within_dist() > config.max_limits[i].expand_within_dist()) {
       limits.set_expand_within_dist(config.max_limits[i].expand_within_dist());
-      add_warning = false;
+      add_warning = true;
     }
   }
 

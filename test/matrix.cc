@@ -142,7 +142,8 @@ const auto hl_config = parse_hierarchy_limits_from_config(cfg, "costmatrix", tru
 // hierarchy limits are managed by thor's worker, since we call the algorithms directly here,
 // we have to do this manually
 void set_hierarchy_limits(sif::cost_ptr_t cost) {
-  check_hierarchy_limits(cost->GetMutableHierarchyLimits(), cost, hl_config, false);
+  Costing_Options opts;
+  check_hierarchy_limits(cost->GetMutableHierarchyLimits(), cost, opts, hl_config, false);
 }
 
 const auto test_request = R"({

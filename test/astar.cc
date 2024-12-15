@@ -140,8 +140,9 @@ const auto hl_config_bd = parse_hierarchy_limits_from_config(fake_conf, "bidirec
 // we have to do this manually
 
 void set_hierarchy_limits(vs::cost_ptr_t cost, bool bdir) {
-  check_hierarchy_limits(cost->GetMutableHierarchyLimits(), cost, bdir ? hl_config_bd : hl_config,
-                         false);
+  Costing_Options opts;
+  check_hierarchy_limits(cost->GetMutableHierarchyLimits(), cost, opts,
+                         bdir ? hl_config_bd : hl_config, false);
 }
 void make_tile() {
 
@@ -1639,15 +1640,17 @@ TEST(BiDiAstar, test_recost_path) {
   create_costing_options(options, Costing::auto_);
   vs::TravelMode travel_mode = vs::TravelMode::kDrive;
   // hack hierarchy limits to allow to go through the shortcut
-  Costing cost;
-  auto* hl_opts = cost.mutable_options()->mutable_hierarchy_limits();
+  auto hl = options.mutable_costings()
+                ->find(Costing::auto_)
+                ->second.mutable_options()
+                ->mutable_hierarchy_limits();
   for (auto level : TileHierarchy::levels()) {
-    HierarchyLimits hl;
-    hl.set_expand_within_dist(0);
-    hl.set_max_up_transitions(0);
-    hl_opts->insert({level.level, std::move(hl)});
+    HierarchyLimits lims;
+    lims.set_expand_within_dist(0);
+    lims.set_max_up_transitions(0);
+    hl->insert({level.level, lims});
   }
-  (*options.mutable_costings())[Costing::auto_] = cost;
+
   const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
 
   std::vector<vb::Location> locations;
