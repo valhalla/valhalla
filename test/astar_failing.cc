@@ -151,16 +151,16 @@ TEST(BiDiAstar, test_recost_path) {
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode travel_mode = vs::TravelMode::kDrive;
-  // hack hierarchy limits to allow to go through the shortcut
-  Costing cost;
-  auto* hl_opts = cost.mutable_options()->mutable_hierarchy_limits();
-  for (auto level : TileHierarchy::levels()) {
-    HierarchyLimits hl;
-    hl.set_expand_within_dist(0);
-    hl.set_max_up_transitions(0);
-    hl_opts->insert({level.level, std::move(hl)});
-  }
-  (*options.mutable_costings())[Costing::auto_] = cost;
+  // // hack hierarchy limits to allow to go through the shortcut
+  // Costing cost;
+  // auto* hl_opts = cost.mutable_options()->mutable_hierarchy_limits();
+  // for (auto level : TileHierarchy::levels()) {
+  //   HierarchyLimits hl;
+  //   hl.set_expand_within_dist(0);
+  //   hl.set_max_up_transitions(0);
+  //   hl_opts->insert({level.level, std::move(hl)});
+  // }
+  // (*options.mutable_costings())[Costing::auto_] = cost;
   const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
 
   std::vector<vb::Location> locations;
