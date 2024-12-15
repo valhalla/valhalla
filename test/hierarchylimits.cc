@@ -43,7 +43,7 @@ struct HierarchyLimitsTestParams {
   };
   HierarchyLimitsTestParams(std::unordered_map<std::string, std::string> overrides,
                             std::string& config_path)
-      : cfg(make_test_config(overrides)), hierarchy_limits_config_path(config_path){};
+      : cfg(make_test_config(overrides)), hierarchy_limits_config_path(config_path) {};
 
   std::string request;
   boost::property_tree::ptree cfg;
@@ -88,7 +88,8 @@ std::string makePbfRequest(std::vector<std::pair<uint32_t, std::optional<float>>
     hierarchylims.set_max_up_transitions(hl.first);
     if (hl.second)
       hierarchylims.set_expand_within_dist(*hl.second);
-    costing.mutable_options()->mutable_hierarchy_limits()->insert({i, hierarchylims});
+    costing.mutable_options()->mutable_hierarchy_limits()->insert(
+        {static_cast<unsigned int>(i), hierarchylims});
   }
   opts->mutable_costings()->insert({valhalla::Costing::auto_, costing});
   return request.SerializeAsString();
