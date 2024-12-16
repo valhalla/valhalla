@@ -213,7 +213,7 @@ void make_tile() {
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 
-void create_costing_options(Options& options, Costing::Type costing, bool hierarchy_limits = true) {
+void create_costing_options(Options& options, Costing::Type costing) {
   const rapidjson::Document doc;
 
   options.set_costing_type(costing);
