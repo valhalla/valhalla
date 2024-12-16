@@ -38,9 +38,8 @@ struct HierarchyLimitsTestParams {
                             std::vector<HierarchyLimits>& hl,
                             bool use_pbf,
                             std::unordered_map<std::string, std::string> overrides = {})
-      : request(req), expected_hierarchy_limits(hl), hierarchy_limits_config_path(""), pbf(use_pbf) {
-    cfg = make_test_config(overrides);
-  };
+      : request(req), cfg(make_test_config(overrides)), hierarchy_limits_config_path(""),
+        expected_hierarchy_limits(hl), pbf(use_pbf){};
   HierarchyLimitsTestParams(std::unordered_map<std::string, std::string> overrides,
                             std::string& config_path)
       : cfg(make_test_config(overrides)), hierarchy_limits_config_path(config_path){};
