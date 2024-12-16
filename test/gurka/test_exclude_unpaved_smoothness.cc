@@ -179,11 +179,16 @@ TEST(Standalone, SmoothnessAccess) {
     const DirectedEdge* edge_2 = nullptr;
 
     std::tie(edge_id_1, edge_1, edge_id_2, edge_2) = findEdge(*graph_reader, map.nodes, "AB", "B");
-    // no access due to smoothness = impassable and are therefore tossed.
+    // ped only access due to smoothness = impassable.
     // edge_1 = AB
     // edge_2 = BA
-    EXPECT_EQ(edge_1, nullptr);
-    EXPECT_EQ(edge_2, nullptr);
+    EXPECT_NE(edge_1->forwardaccess(), baldr::kPedestrianAccess);
+    EXPECT_NE(edge_1->reverseaccess(), baldr::kPedestrianAccess);
+    EXPECT_NE(edge_2->forwardaccess(), baldr::kPedestrianAccess);
+    EXPECT_NE(edge_2->reverseaccess(), baldr::kPedestrianAccess);
+
+    EXPECT_NE(edge_1->surface(), baldr::Surface::kPavedSmooth);
+    EXPECT_NE(edge_2->surface(), baldr::Surface::kPavedSmooth);
 
     std::tie(edge_id_1, edge_1, edge_id_2, edge_2) = findEdge(*graph_reader, map.nodes, "B1C", "C");
     // edge_1 = B1C
@@ -194,10 +199,13 @@ TEST(Standalone, SmoothnessAccess) {
     EXPECT_NE(edge_2->forwardaccess(), 0);
     EXPECT_NE(edge_2->reverseaccess(), 0);
 
+    EXPECT_NE(edge_1->surface(), baldr::Surface::kImpassable);
+    EXPECT_NE(edge_2->surface(), baldr::Surface::kImpassable);
+
     auto node_id = gurka::findNode(*graph_reader, map.nodes, "1");
     const auto* node = graph_reader->nodeinfo(node_id);
-    // no access due to smoothness = impassable
-    EXPECT_EQ(node->access(), 0);
+    // ped only access due to smoothness = impassable
+    EXPECT_EQ(node->access(),baldr::kPedestrianAccess);
   }
 }
 
