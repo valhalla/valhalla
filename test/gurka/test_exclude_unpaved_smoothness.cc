@@ -182,13 +182,13 @@ TEST(Standalone, SmoothnessAccess) {
     // ped only access due to smoothness = impassable.
     // edge_1 = AB
     // edge_2 = BA
-    EXPECT_NE(edge_1->forwardaccess(), baldr::kPedestrianAccess);
-    EXPECT_NE(edge_1->reverseaccess(), baldr::kPedestrianAccess);
-    EXPECT_NE(edge_2->forwardaccess(), baldr::kPedestrianAccess);
-    EXPECT_NE(edge_2->reverseaccess(), baldr::kPedestrianAccess);
+    EXPECT_EQ(edge_1->forwardaccess(), (baldr::kWheelchairAccess | baldr::kPedestrianAccess));
+    EXPECT_EQ(edge_1->reverseaccess(), (baldr::kWheelchairAccess | baldr::kPedestrianAccess));
+    EXPECT_EQ(edge_2->forwardaccess(), (baldr::kWheelchairAccess | baldr::kPedestrianAccess));
+    EXPECT_EQ(edge_2->reverseaccess(), (baldr::kWheelchairAccess | baldr::kPedestrianAccess));
 
-    EXPECT_NE(edge_1->surface(), baldr::Surface::kPavedSmooth);
-    EXPECT_NE(edge_2->surface(), baldr::Surface::kPavedSmooth);
+    EXPECT_EQ(edge_1->surface(), baldr::Surface::kImpassable);
+    EXPECT_EQ(edge_2->surface(), baldr::Surface::kImpassable);
 
     std::tie(edge_id_1, edge_1, edge_id_2, edge_2) = findEdge(*graph_reader, map.nodes, "B1C", "C");
     // edge_1 = B1C
@@ -199,8 +199,8 @@ TEST(Standalone, SmoothnessAccess) {
     EXPECT_NE(edge_2->forwardaccess(), 0);
     EXPECT_NE(edge_2->reverseaccess(), 0);
 
-    EXPECT_NE(edge_1->surface(), baldr::Surface::kImpassable);
-    EXPECT_NE(edge_2->surface(), baldr::Surface::kImpassable);
+    EXPECT_EQ(edge_1->surface(), baldr::Surface::kPavedSmooth);
+    EXPECT_EQ(edge_2->surface(), baldr::Surface::kPavedSmooth);
 
     auto node_id = gurka::findNode(*graph_reader, map.nodes, "1");
     const auto* node = graph_reader->nodeinfo(node_id);
