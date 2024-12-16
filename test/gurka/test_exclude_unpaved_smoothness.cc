@@ -205,7 +205,7 @@ TEST(Standalone, SmoothnessAccess) {
     auto node_id = gurka::findNode(*graph_reader, map.nodes, "1");
     const auto* node = graph_reader->nodeinfo(node_id);
     // ped only access due to smoothness = impassable
-    EXPECT_EQ(node->access(),baldr::kPedestrianAccess);
+    EXPECT_EQ(node->access(), baldr::kPedestrianAccess);
   }
 }
 
