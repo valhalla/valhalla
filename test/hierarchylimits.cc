@@ -43,7 +43,7 @@ struct HierarchyLimitsTestParams {
   };
   HierarchyLimitsTestParams(std::unordered_map<std::string, std::string> overrides,
                             std::string& config_path)
-      : cfg(make_test_config(overrides)), hierarchy_limits_config_path(config_path) {};
+      : cfg(make_test_config(overrides)), hierarchy_limits_config_path(config_path){};
 
   std::string request;
   boost::property_tree::ptree cfg;
