@@ -182,10 +182,10 @@ TEST(Standalone, SmoothnessAccess) {
     // ped only access due to smoothness = impassable.
     // edge_1 = AB
     // edge_2 = BA
-    EXPECT_EQ(edge_1->forwardaccess(), (baldr::kWheelchairAccess | baldr::kPedestrianAccess));
-    EXPECT_EQ(edge_1->reverseaccess(), (baldr::kWheelchairAccess | baldr::kPedestrianAccess));
-    EXPECT_EQ(edge_2->forwardaccess(), (baldr::kWheelchairAccess | baldr::kPedestrianAccess));
-    EXPECT_EQ(edge_2->reverseaccess(), (baldr::kWheelchairAccess | baldr::kPedestrianAccess));
+    EXPECT_EQ(edge_1->forwardaccess(), baldr::kPedestrianAccess);
+    EXPECT_EQ(edge_1->reverseaccess(), baldr::kPedestrianAccess);
+    EXPECT_EQ(edge_2->forwardaccess(), baldr::kPedestrianAccess);
+    EXPECT_EQ(edge_2->reverseaccess(), baldr::kPedestrianAccess);
 
     EXPECT_EQ(edge_1->surface(), baldr::Surface::kImpassable);
     EXPECT_EQ(edge_2->surface(), baldr::Surface::kImpassable);
