@@ -15,6 +15,7 @@
    * ADDED: steps maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
    * ADDED: instruction improvements for node-based elevators [#4988](https://github.com/valhalla/valhalla/pull/4988)
    * ADDED: increased precision in route lengths [#5020](https://github.com/valhalla/valhalla/pull/5020)
+   * ADDED: Add maneuver bearings in route json response [#5024](https://github.com/valhalla/valhalla/pull/5024)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
