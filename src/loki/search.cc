@@ -535,11 +535,24 @@ struct bin_handler_t {
     auto edges = tile->GetBin(begin->bin_index);
     for (auto edgeid : edges) {
       nSearched++;
-      if (!edgeid(begin->bin_center_approximator, begin->project.approx, kTestRadiusSq,
-                  begin->bin_center)) {
+      bool all_prefiltered = true;
+      auto circle = edgeid.get_circle(begin->bin_center_approximator, begin->bin_center);
+
+      auto c_itr = bin_candidates.begin();
+      decltype(begin) p_itr;
+      for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
+        if (!p_itr->project.approx.DistanceSquared(circle.first) <
+            circle.second + p_itr->location.search_cutoff_) {
+          all_prefiltered = false;
+          break;
+        }
+      }
+      if (all_prefiltered) {
         nSkipped++;
         continue;
       }
+      // reset for search filter further down
+      all_prefiltered = true;
       GraphId edge_id = *reinterpret_cast<GraphId*>(&edgeid);
       edge_id.value &= kInvalidGraphId;
       // get the tile and edge
@@ -568,9 +581,7 @@ struct bin_handler_t {
       // initialize candidates vector:
       // - reset sq_distance to max so we know the best point along the edge
       // - apply prefilters based on user's SearchFilter request options
-      auto c_itr = bin_candidates.begin();
-      decltype(begin) p_itr;
-      bool all_prefiltered = true;
+      c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
         // for traffic closures we may have only one direction disabled so we must also check opp
