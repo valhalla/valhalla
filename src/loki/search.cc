@@ -540,16 +540,24 @@ struct bin_handler_t {
 
       auto c_itr = bin_candidates.begin();
       decltype(begin) p_itr;
-      for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
-        if (p_itr->project.approx.DistanceSquared(circle.first) <
-            circle.second + p_itr->location.search_cutoff_) {
-          all_prefiltered = false;
-          break;
+      // TODO(chris): we can probably skip this entirely if the search cutoff is larger than
+      // some value (e.g. half the bin size)
+      // radius = 0 means no circle
+      if (circle.second != 0) {
+        // go through all of the candidate relevant to this bin
+        for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
+          // if the distance squared to the circle center is smaller than the circle square radius
+          // plus the square search cutoff, we need to look at the edge
+          if (p_itr->project.approx.DistanceSquared(circle.first) <
+              circle.second + (p_itr->location.search_cutoff_ * p_itr->location.search_cutoff_)) {
+            all_prefiltered = false;
+            break;
+          }
         }
-      }
-      if (all_prefiltered) {
-        nSkipped++;
-        continue;
+        if (all_prefiltered) {
+          nSkipped++;
+          continue;
+        }
       }
       // reset for search filter further down
       all_prefiltered = true;
@@ -877,8 +885,8 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
   // search over the bins doing multiple locations per bin
   handler.search();
   // TODO - remove after testing
-  // LOG_INFO("skipped " + std::to_string(handler.nSkipped) + " out of " +
-  //          std::to_string(handler.nSearched));
+  LOG_INFO("skipped " + std::to_string(handler.nSkipped) + " out of " +
+           std::to_string(handler.nSearched));
   // turn each locations candidate set into path locations
   return handler.finalize();
 }
