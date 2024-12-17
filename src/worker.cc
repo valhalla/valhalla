@@ -1250,6 +1250,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   options.set_voice_instructions(
       rapidjson::get<bool>(doc, "/voice_instructions", options.voice_instructions()));
 
+  options.set_turn_lane_info(
+      rapidjson::get<bool>(doc, "/turn_lane_info", options.turn_lane_info()));
+
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =
       rapidjson::get<bool>(doc, "/roundabout_exits",
