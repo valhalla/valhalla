@@ -541,7 +541,7 @@ struct bin_handler_t {
       auto c_itr = bin_candidates.begin();
       decltype(begin) p_itr;
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
-        if (!p_itr->project.approx.DistanceSquared(circle.first) <
+        if (p_itr->project.approx.DistanceSquared(circle.first) <
             circle.second + p_itr->location.search_cutoff_) {
           all_prefiltered = false;
           break;
