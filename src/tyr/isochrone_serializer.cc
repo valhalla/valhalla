@@ -197,10 +197,9 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
   double geo_transform[6] = {isogrid->TileBounds(isogrid->TileId(box[0], box[1])).minx(), // minx
                              isogrid->TileSize(),
                              0,
-                             isogrid->TileBounds(isogrid->TileId(box[0], box[1])).miny(), // miny
+                             isogrid->TileBounds(isogrid->TileId(box[0], box[3])).maxy(), // maxy
                              0,
-                             isogrid->TileSize()};
-
+                             -isogrid->TileSize()};
   geotiff_dataset->SetGeoTransform(geo_transform);
   geotiff_dataset->SetSpatialRef(const_cast<OGRSpatialReference*>(&spatial_ref));
 
@@ -214,10 +213,11 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
     for (int32_t i = 0; i < ext_y; ++i) {
       for (int32_t j = 0; j < ext_x; ++j) {
         auto tileid = isogrid->TileId(j + box[0], i + box[1]);
-        data[i * ext_x + j] =
+        data[(ext_y - 1 - i) * ext_x + j] =
             static_cast<uint16_t>(isogrid->DataAt(tileid, metric_idx) * scale_factor);
       }
     }
+
     auto band = geotiff_dataset->GetRasterBand(nbands == 2 ? (metric_idx + 1) : 1);
     band->SetNoDataValue(std::numeric_limits<uint16_t>::max());
     band->SetDescription(metric_idx == 0 ? "Time (seconds)" : "Distance (10m)");
