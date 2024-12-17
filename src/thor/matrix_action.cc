@@ -118,7 +118,7 @@ std::string thor_worker_t::matrix(Api& request) {
                              hierarchy_limits_config_costmatrix,
                              allow_hierarchy_limits_modifications)) {
     // maybe warn if we needed to change user provided hierarchy limits
-    add_warning(request, 209);
+    add_warning(request, allow_hierarchy_limits_modifications ? 210 : 209);
   }
   LOG_INFO("matrix::" + std::string(algo->name()));
 

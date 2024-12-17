@@ -160,6 +160,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
   {208, R"(Hard exclusions are not allowed on this server, ignoring hard excludes)"},
   {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
+  {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
@@ -1439,9 +1440,10 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
 
     // use defaults if modification is not allowed by the service or if user did not specify any
     // limits;
-    if (!allow_modifications ||
-        (limits.max_up_transitions() == 0 && limits.expand_within_dist() == kMaxDistance)) {
-      add_warning &= limits.max_up_transitions() != 0 && limits.expand_within_dist() != kMaxDistance;
+    if (!allow_modifications || (limits.max_up_transitions() == kUnlimitedTransitions &&
+                                 limits.expand_within_dist() == kMaxDistance)) {
+      add_warning = add_warning || limits.max_up_transitions() != kUnlimitedTransitions &&
+                                       limits.expand_within_dist() != kMaxDistance;
       limits.set_max_up_transitions(config.default_limits[i].max_up_transitions());
       limits.set_expand_within_dist(config.default_limits[i].expand_within_dist());
       continue;
@@ -1453,7 +1455,8 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
       add_warning = true;
     }
 
-    if (limits.expand_within_dist() > config.max_limits[i].expand_within_dist()) {
+    if (limits.expand_within_dist() < 0 || // float might be negative
+        limits.expand_within_dist() > config.max_limits[i].expand_within_dist()) {
       limits.set_expand_within_dist(config.max_limits[i].expand_within_dist());
       add_warning = true;
     }
