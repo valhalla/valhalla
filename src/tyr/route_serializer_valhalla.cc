@@ -280,14 +280,14 @@ void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writ
       // Set bearings
       // absolute bearing (degrees from north, clockwise) before and after the maneuver.
       bool depart_maneuver = (maneuver_index == 0);
-      bool arrive_maneuver = (maneuver_index == directions_leg.maneuver_size() -1);
+      bool arrive_maneuver = (maneuver_index == directions_leg.maneuver_size() - 1);
       if (!depart_maneuver) {
-          uint32_t in_brg = etp.GetPrevEdge(maneuver_index)->end_heading();
-          writer("bearing_before", static_cast<uint64_t>(in_brg));
+        uint32_t in_brg = etp.GetPrevEdge(maneuver_index)->end_heading();
+        writer("bearing_before", static_cast<uint64_t>(in_brg));
       }
       if (!arrive_maneuver) {
-          uint32_t out_brg = maneuver.begin_heading();
-          writer("bearing_after", static_cast<uint64_t>(out_brg));
+        uint32_t out_brg = maneuver.begin_heading();
+        writer("bearing_after", static_cast<uint64_t>(out_brg));
       }
 
       // Time, length, cost, and shape indexes
