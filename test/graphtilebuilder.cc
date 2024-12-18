@@ -30,7 +30,7 @@ public:
 void assert_tile_equalish(const GraphTile& a,
                           const GraphTile& b,
                           size_t difference,
-                          const std::array<std::vector<GraphId>, kBinCount>& bins,
+                          const std::array<std::vector<DiscretizedBoundingCircle>, kBinCount>& bins,
                           const std::string& /*msg*/) {
   // expected size
   ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
@@ -227,7 +227,7 @@ TEST(GraphTileBuilder, TestAddBins) {
     std::string bin_dir = "test/data/bin_tiles/bin";
 
     // send blank bins
-    std::array<std::vector<GraphId>, kBinCount> bins;
+    std::array<std::vector<DiscretizedBoundingCircle>, kBinCount> bins;
     GraphTileBuilder::AddBins(bin_dir, t, bins);
 
     // check the new tile is the same as the old one
@@ -328,8 +328,10 @@ TEST(GraphTileBuilder, TestBinEdges) {
   graph_tile_ptr fake{new fake_tile(encoded_shape5)};
   auto info = fake->edgeinfo(fake->directededge(0));
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
-  GraphTileBuilder::tweeners_t tweeners;
-  auto bins = GraphTileBuilder::BinEdges(fake, tweeners);
+  tweeners_t tweeners;
+  std::array<long unsigned int, 5> stats;
+  stats.fill(0);
+  auto bins = GraphTileBuilder::BinEdges(fake, tweeners, stats);
   EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";
 }
 

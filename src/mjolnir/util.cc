@@ -7,6 +7,7 @@
 #include "midgard/point2.h"
 #include "midgard/polyline2.h"
 #include "mjolnir/bssbuilder.h"
+#include "mjolnir/edgeboundsbuilder.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
@@ -386,6 +387,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
                         cr_to_bin, linguistic_node_bin, tiles);
   }
 
+  LOG_INFO("Finish graph build");
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
@@ -443,8 +445,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   }
 
   // Build the Complex Restrictions
-  // ComplexRestrictions must be done after elevation. The reason is that building
-  // elevation into the tiles reads each tile and serializes the data to "builders"
+  // ComplexRestrictions must be done after edge bounds and elevation. The reason is that building
+  // these data into the tiles reads each tile and serializes the data to "builders"
   // within the tile. However, there is no serialization currently available for complex restrictions.
   if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
     RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);

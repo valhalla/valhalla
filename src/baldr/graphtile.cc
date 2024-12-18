@@ -329,7 +329,7 @@ void GraphTile::Initialize(const GraphId& graphid) {
   ptr += header_->admincount() * sizeof(Admin);
 
   // Set a pointer to the edge bin list
-  edge_bins_ = reinterpret_cast<GraphId*>(ptr);
+  edge_bins_ = reinterpret_cast<DiscretizedBoundingCircle*>(ptr);
 
   // Start of forward restriction information and its size
   complex_restriction_forward_ = tile_ptr + header_->complex_restriction_forward_offset();
@@ -1226,14 +1226,16 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
 }
 
 // Get the array of graphids for this bin
-midgard::iterable_t<GraphId> GraphTile::GetBin(size_t column, size_t row) const {
+midgard::iterable_t<DiscretizedBoundingCircle> GraphTile::GetBin(size_t column, size_t row) const {
   auto offsets = header_->bin_offset(column, row);
-  return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+  return iterable_t<DiscretizedBoundingCircle>{edge_bins_ + offsets.first,
+                                               edge_bins_ + offsets.second};
 }
 
-midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
+midgard::iterable_t<DiscretizedBoundingCircle> GraphTile::GetBin(size_t index) const {
   auto offsets = header_->bin_offset(index);
-  return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+  return iterable_t<DiscretizedBoundingCircle>{edge_bins_ + offsets.first,
+                                               edge_bins_ + offsets.second};
 }
 
 // Get turn lanes for this edge.
