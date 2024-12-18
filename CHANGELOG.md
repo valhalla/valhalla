@@ -8,6 +8,7 @@
    * FIXED: update CircleCI runners to Ubuntu 24.04 [#5002](https://github.com/valhalla/valhalla/pull/5002)
    * FIXED: Fixed a typo in the (previously undocumented) matrix-APIs responses `algorithm` field: `timedistancbssematrix` is now `timedistancebssmatrix` [#5000](https://github.com/valhalla/valhalla/pull/5000).
    * FIXED: More trivial cases in `CostMatrix` [#5001](https://github.com/valhalla/valhalla/pull/5001)
+   * FIXED: Tag smoothness=impassable breaks pedestrian routing [#5023](https://github.com/valhalla/valhalla/pull/5023)
    * FIXED: Make isochrone geotiff serialization use "north up" geotransform [#5019](https://github.com/valhalla/valhalla/pull/5019)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
