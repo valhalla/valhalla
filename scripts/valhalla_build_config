@@ -118,11 +118,37 @@ config = {
         'max_reserved_labels_count_bidir_astar': 1000000,
         'max_reserved_labels_count_dijkstras': 4000000,
         'max_reserved_labels_count_bidir_dijkstras': 2000000,
-        'costmatrix_check_reverse_connection': False,
-        'costmatrix_allow_second_pass': False,
-        'max_reserved_locations_costmatrix': 25,
         'clear_reserved_memory': False,
         'extended_search': False,
+        'costmatrix': {
+            'check_reverse_connections': False,
+            'allow_second_pass': False,
+            'max_reserved_locations': 25,
+            'hierarchy_limits': {
+                'max_up_transitions': {
+                    '1': 400,
+                    '2': 100,
+                },
+            },
+        },
+        'bidirectional_astar': {
+            'hierarchy_limits': {
+                'max_up_transitions': {
+                    '1': 400,
+                    '2': 100,
+                },
+                'expand_within_distance': {'0': 1e8, '1': 20000, '2': 5000},
+            }
+        },
+        'unidirectional_astar': {
+            'hierarchy_limits': {
+                'max_up_transitions': {
+                    '1': 400,
+                    '2': 100,
+                },
+                'expand_within_distance': {'0': 1e8, '1': 100000, '2': 5000},
+            }
+        },
     },
     'odin': {
         'logging': {'type': 'std_out', 'color': True, 'file_name': 'path_to_some_file.log'},
@@ -273,6 +299,29 @@ config = {
         'max_alternates': 2,
         'max_exclude_polygons_length': 10000,
         'max_distance_disable_hierarchy_culling': 0,
+        'hierarchy_limits': {
+            'allow_modification': False,
+            'costmatrix': {
+                'max_allowed_up_transitions': {
+                    '1': 400,
+                    '2': 100,
+                },
+            },
+            'unidirectional_astar': {
+                'max_allowed_up_transitions': {
+                    '1': 400,
+                    '2': 100,
+                },
+                'max_expand_within_distance': {'0': 1e8, '1': 100000, '2': 5000},
+            },
+            'bidirectional_astar': {
+                'max_allowed_up_transitions': {
+                    '1': 400,
+                    '2': 100,
+                },
+                'max_expand_within_distance': {'0': 1e8, '1': 20000, '2': 5000},
+            },
+        },
         'allow_hard_exclusions': False,
     },
     'statsd': {
@@ -371,8 +420,6 @@ help_text = {
             'long_request': 'Value used in processing to determine whether it took too long',
         },
         'source_to_target_algorithm': 'Which matrix algorithm should be used, one of "timedistancematrix" or "costmatrix". If blank, the optimal will be selected.',
-        'costmatrix_check_reverse_connection': 'Whether to check for expansion connections on the reverse tree, which has an adverse effect on performance',
-        'costmatrix_allow_second_pass': "Whether to allow a second pass for unfound CostMatrix connections, where we turn off destination-only, relax hierarchies and expand into 'semi-islands'b",
         'service': {'proxy': 'IPC linux domain socket file location'},
         'max_reserved_labels_count_astar': 'Maximum capacity allowed to keep reserved for unidirectional A*.',
         'max_reserved_labels_count_bidir_astar': 'Maximum capacity allowed to keep reserved for bidirectional A*.',
@@ -381,6 +428,43 @@ help_text = {
         'max_reserved_locations_costmatrix': 'Maximum amount of locations allowed to to keep reserved between requests for CostMatrix',
         'clear_reserved_memory': 'If True clean reserved memory in path algorithms',
         'extended_search': 'If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge',
+        'costmatrix': {
+            'check_reverse_connections': 'Whether to check for expansion connections on the reverse tree, which has an adverse effect on performance',
+            'allow_second_pass': 'Whether to allow a second pass for unfound CostMatrix connections, where we turn off destination-only, relax hierarchies and expand into "semi-islands"',
+            'max_reserved_locations': 'Maximum amount of locations allowed to to keep reserved between requests for CostMatrix',
+            'hierarchy_limits': {
+                'max_up_transitions': {
+                    '1': 'The default maximum up transitions for level 1 in CostMatrix',
+                    '2': 'The default maximum up transitions for level 2 in CostMatrix',
+                }
+            },
+        },
+        'bidirectional_astar': {
+            'hierarchy_limits': {
+                'max_up_transitions': {
+                    '1': 'The default maximum up transitions for level 1 in CostMatrix',
+                    '2': 'The default maximum up transitions for level 2 in CostMatrix',
+                },
+                'expand_within_distance': {
+                    '0': 'The default distance within which expansion is allowed from the origin/destination on level 0 in bidirectional astar',
+                    '1': 'The default distance within which expansion is allowed from the origin/destination on level 1 in bidirectional astar',
+                    '2': 'The default distance within which expansion is allowed from the origin/destination on level 2 in bidirectional astar',
+                },
+            }
+        },
+        'unidirectional_astar': {
+            'hierarchy_limits': {
+                'max_up_transitions': {
+                    '1': 'The default maximum up transitions for level 1 in CostMatrix',
+                    '2': 'The default maximum up transitions for level 2 in CostMatrix',
+                },
+                'expand_within_distance': {
+                    '0': 'The default distance within which expansion is allowed from the origin/destination on level 0 in bidirectional astar',
+                    '1': 'The default distance within which expansion is allowed from the origin/destination on level 1 in bidirectional astar',
+                    '2': 'The default distance within which expansion is allowed from the origin/destination on level 2 in bidirectional astar',
+                },
+            }
+        },
     },
     'odin': {
         'logging': {
@@ -550,6 +634,42 @@ help_text = {
         'max_alternates': 'Maximum number of alternate routes to allow in a request',
         'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters',
         'max_distance_disable_hierarchy_culling': 'Maximum search distance allowed with hierarchy culling disabled',
+        'hierarchy_limits': {
+            'allow_modification': 'Whether hierarchy limits can be modified via the request',
+            'costmatrix': {
+                'max_allowed_up_transitions': {
+                    '1': 'The maximum up transitions for level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum up transitions for level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+                'max_expand_within_distance': {
+                    '0': 'The maximum distance in meters from which the origin/destination will be expanded on level 0. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '1': 'The maximum distance in meters from which the origin/destination will be expanded on level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum distance in meters from which the origin/destination will be expanded on level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+            },
+            'bidirectional_astar': {
+                'max_allowed_up_transitions': {
+                    '1': 'The maximum up transitions for level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum up transitions for level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+                'max_expand_within_distance': {
+                    '0': 'The maximum distance in meters from which the origin/destination will be expanded on level 0. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '1': 'The maximum distance in meters from which the origin/destination will be expanded on level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum distance in meters from which the origin/destination will be expanded on level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+            },
+            'unidirectional_astar': {
+                'max_allowed_up_transitions': {
+                    '1': 'The maximum up transitions for level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum up transitions for level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+                'max_expand_within_distance': {
+                    '0': 'The maximum distance in meters from which the origin/destination will be expanded on level 0. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '1': 'The maximum distance in meters from which the origin/destination will be expanded on level 1. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                    '2': 'The maximum distance in meters from which the origin/destination will be expanded on level 2. Values set via request parameters that exceed this value are clamped. Ignored if "allow_modifications" is set to false.',
+                },
+            },
+        },
         'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_highways or exclude_ferries are allowed on this server',
     },
     'statsd': {
