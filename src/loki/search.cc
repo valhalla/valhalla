@@ -240,6 +240,7 @@ struct projector_wrapper {
       const auto& tiles = TileHierarchy::levels().back().tiles;
       auto minx = tiles.TileBounds(tile.tileid()).minx();
       auto miny = tiles.TileBounds(tile.tileid()).miny();
+      // get the center of the current bin
       auto lat_offset =
           (bin_index / kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
       auto lng_offset =

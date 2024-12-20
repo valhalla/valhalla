@@ -10,12 +10,12 @@ using namespace valhalla::baldr;
 namespace {
 
 // TODO(chris) remove after testing
-json::MapPtr get_bounding_circle(const baldr::PathLocation::PathEdge& loc,
-                                 graph_tile_ptr tile,
-                                 GraphReader& reader,
-                                 const EdgeInfo& edge_info) {
+json::ArrayPtr get_bounding_circle(const baldr::PathLocation::PathEdge& loc,
+                                   graph_tile_ptr tile,
+                                   GraphReader& reader,
+                                   const EdgeInfo& edge_info) {
   const auto opp_edge_id = reader.GetOpposingEdgeId(loc.id);
-  auto map = json::map({});
+  auto array = json::array({});
   auto tiles = TileHierarchy::levels().back().tiles;
 
   auto intersect = tiles.Intersect(edge_info.shape());
@@ -37,21 +37,20 @@ json::MapPtr get_bounding_circle(const baldr::PathLocation::PathEdge& loc,
         bool b = opp_edge_id.value == (bc.value & kInvalidGraphId);
         if (a || b) {
           // found it
-          std::pair<PointLL, double> circle = bc.get(approx, center);
-          if (circle.second == 0) {
-            LOG_INFO("Found but radius 0");
-          } else {
+          std::pair<PointLL, double> circle = bc.get_circle(approx, center);
+          if (circle.second > 0) {
+            auto map = json::map({});
             map->insert({"lon", json::fixed_t{circle.first.lng(), 6}});
             map->insert({"lat", json::fixed_t{circle.first.lat(), 6}});
-            map->insert({"radius", json::fixed_t{circle.second, 6}});
-            return map;
+            map->insert({"radius", json::fixed_t{std::sqrt(circle.second), 6}});
+            map->insert({"bin", json::fixed_t{static_cast<double>(bin), 0}});
+            array->push_back(map);
           }
         }
       }
     }
   }
-  LOG_INFO("Not found");
-  return map;
+  return array;
 }
 OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de) {
   if (de->classification() == valhalla::baldr::RoadClass::kMotorway)

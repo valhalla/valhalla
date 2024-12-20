@@ -27,7 +27,8 @@ constexpr uint64_t kIdIncrement = 1 << 25;
 constexpr std::array<int, 4> kBoundingCircleRadii = {25 * 25, 50 * 50, 100 * 100, 375 * 375};
 constexpr uint64_t kImpossibleBoundingCircle = 0xffff;
 
-// bin size in meters at the equator (half that since we offset from center)
+// bin size in meters at the equator (half that since we offset from center) plus the largest
+// radius we support
 const double kMaxOffsetMeters =
     0.05 * midgard::kMetersPerDegreeLat / 2 + std::sqrt(kBoundingCircleRadii.back());
 // in meters
@@ -281,7 +282,7 @@ struct DiscretizedBoundingCircle : public GraphId {
              const midgard::PointLL& circle_center,
              double radius) {
     // reset if it was previously set
-    value |= (value & kInvalidGraphId);
+    value &= kInvalidGraphId;
 
     midgard::PointLL offset{circle_center.lng() - bin_center.lng(),
                             circle_center.lat() - bin_center.lat()};
