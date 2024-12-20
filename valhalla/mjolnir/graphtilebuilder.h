@@ -32,6 +32,8 @@ namespace valhalla {
 namespace mjolnir {
 
 using edge_tuple = std::tuple<uint32_t, baldr::GraphId, baldr::GraphId>;
+using bins_t = std::array<std::vector<DiscretizedBoundingCircle>, kBinCount>;
+using tweeners_t = std::unordered_map<GraphId, bins_t>;
 
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
@@ -439,9 +441,8 @@ public:
    * @param tile       the tile whose edges need the binned
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
-  using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const graph_tile_ptr& tile,
-                                                              tweeners_t& tweeners);
+  static bins_t
+  BinEdges(const graph_tile_ptr& tile, tweeners_t& tweeners, std::array<size_t, 5>& stats);
 
   /**
    * Adds to the bins the tile already has, only modifies the header to reflect the new counts
@@ -450,9 +451,8 @@ public:
    * @param tile       the tile that needs the bins added
    * @param more_bins  the extra bin data to append to the tile
    */
-  static void AddBins(const std::string& tile_dir,
-                      const graph_tile_ptr& tile,
-                      const std::array<std::vector<GraphId>, kBinCount>& more_bins);
+  static void
+  AddBins(const std::string& tile_dir, const graph_tile_ptr& tile, const bins_t& more_bins);
 
   /**
    * Get the turn lane builder at the specified index.

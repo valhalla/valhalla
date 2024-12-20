@@ -18,6 +18,8 @@ using namespace valhalla::loki;
 
 namespace {
 
+constexpr double kTestRadiusSq = 50 * 50;
+
 template <typename T> inline T square(T v) {
   return v * v;
 }
@@ -183,7 +185,8 @@ struct candidate_t {
 struct projector_wrapper {
   projector_wrapper(const Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_)), location(location),
-        sq_radius(square(double(location.radius_))), project(location.latlng_) {
+        sq_radius(square(double(location.radius_))), project(location.latlng_),
+        bin_center_approximator(bin_center) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
     reachable.reserve(64);
@@ -233,8 +236,19 @@ struct projector_wrapper {
       }
 
       // grab the tile the lat, lon is in
-      auto tile_id = GraphId(tile_index, TileHierarchy::levels().back().level, 0);
-      reader.GetGraphTile(tile_id, cur_tile);
+      auto tile = GraphId(tile_index, TileHierarchy::levels().back().level, 0);
+      const auto& tiles = TileHierarchy::levels().back().tiles;
+      auto minx = tiles.TileBounds(tile.tileid()).minx();
+      auto miny = tiles.TileBounds(tile.tileid()).miny();
+      // get the center of the current bin
+      auto lat_offset =
+          (bin_index / kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      auto lng_offset =
+          (bin_index % kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+      bin_center = {minx + lng_offset, miny + lat_offset};
+      bin_center_approximator = DistanceApproximator<PointLL>(bin_center);
+
+      reader.GetGraphTile(tile, cur_tile);
     } while (!cur_tile);
   }
 
@@ -242,6 +256,8 @@ struct projector_wrapper {
   graph_tile_ptr cur_tile;
   Location location;
   unsigned short bin_index = 0;
+  PointLL bin_center;
+  DistanceApproximator<PointLL> bin_center_approximator;
   double sq_radius;
   std::vector<candidate_t> unreachable;
   std::vector<candidate_t> reachable;
@@ -259,6 +275,8 @@ struct bin_handler_t {
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
   Reach reach_finder;
+  uint32_t nSearched;
+  uint32_t nSkipped;
 
   // keep track of edges whose reachability we've already computed
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
@@ -267,7 +285,7 @@ struct bin_handler_t {
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
                 const std::shared_ptr<DynamicCost>& costing)
-      : reader(reader), costing(costing) {
+      : reader(reader), costing(costing), nSearched(0), nSkipped(0) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(uniq_locations.size());
@@ -516,7 +534,36 @@ struct bin_handler_t {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
-    for (auto edge_id : edges) {
+    for (auto edgeid : edges) {
+      nSearched++;
+      bool all_prefiltered = true;
+      auto circle = edgeid.get_circle(begin->bin_center_approximator, begin->bin_center);
+
+      auto c_itr = bin_candidates.begin();
+      decltype(begin) p_itr;
+      // TODO(chris): we can probably skip this entirely if the search cutoff is larger than
+      // some value (e.g. half the bin size)
+      // radius = 0 means no circle
+      if (circle.second != 0) {
+        // go through all of the candidate relevant to this bin
+        for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
+          // if the distance squared to the circle center is smaller than the circle square radius
+          // plus the square search cutoff, we need to look at the edge
+          if (p_itr->project.approx.DistanceSquared(circle.first) <
+              circle.second + (p_itr->location.search_cutoff_ * p_itr->location.search_cutoff_)) {
+            all_prefiltered = false;
+            break;
+          }
+        }
+        if (all_prefiltered) {
+          nSkipped++;
+          continue;
+        }
+      }
+      // reset for search filter further down
+      all_prefiltered = true;
+      GraphId edge_id = *reinterpret_cast<GraphId*>(&edgeid);
+      edge_id.value &= kInvalidGraphId;
       // get the tile and edge
       if (!reader.GetGraphTile(edge_id, tile)) {
         continue;
@@ -543,9 +590,7 @@ struct bin_handler_t {
       // initialize candidates vector:
       // - reset sq_distance to max so we know the best point along the edge
       // - apply prefilters based on user's SearchFilter request options
-      auto c_itr = bin_candidates.begin();
-      decltype(begin) p_itr;
-      bool all_prefiltered = true;
+      c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
         // for traffic closures we may have only one direction disabled so we must also check opp
@@ -840,6 +885,9 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
   bin_handler_t handler(locations, reader, costing);
   // search over the bins doing multiple locations per bin
   handler.search();
+  // TODO - remove after testing
+  LOG_INFO("skipped " + std::to_string(handler.nSkipped) + " out of " +
+           std::to_string(handler.nSearched));
   // turn each locations candidate set into path locations
   return handler.finalize();
 }

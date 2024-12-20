@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include <valhalla/baldr/bounding_circle.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/pointll.h>
@@ -93,6 +94,11 @@ public:
    * @param  encoded_shape  Encoded shape string
    */
   void set_encoded_shape(const std::string& encoded_shape);
+
+  /**
+   * Set the bounding circle of the shape.
+   */
+  void set_bounding_circle(const std::vector<float>& circle);
 
   /**
    * Set encoded elevation.

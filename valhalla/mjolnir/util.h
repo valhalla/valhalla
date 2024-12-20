@@ -39,10 +39,11 @@ enum class BuildStage : int8_t {
   kBss = 9,
   kHierarchy = 10,
   kShortcuts = 11,
-  kRestrictions = 12,
-  kElevation = 13,
-  kValidate = 14,
-  kCleanup = 15
+  kElevation = 12,
+  kEdgeBounds = 13,
+  kRestrictions = 14,
+  kValidate = 15,
+  kCleanup = 16
 };
 
 constexpr uint8_t kMinor = 1;
@@ -64,8 +65,9 @@ inline BuildStage string_to_buildstage(const std::string& s) {
        {"bss", BuildStage::kBss},
        {"hierarchy", BuildStage::kHierarchy},
        {"shortcuts", BuildStage::kShortcuts},
-       {"restrictions", BuildStage::kRestrictions},
        {"elevation", BuildStage::kElevation},
+       {"edgebounds", BuildStage::kEdgeBounds},
+       {"restrictions", BuildStage::kRestrictions},
        {"validate", BuildStage::kValidate},
        {"cleanup", BuildStage::kCleanup}};
 
