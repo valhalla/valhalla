@@ -2,6 +2,7 @@
 #include <atomic>
 #include <fstream>
 #include <future>
+#include <iostream>
 #include <list>
 #include <set>
 #include <string>
@@ -18,6 +19,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "sif/costfactory.h"
+#include "tyr/serializers.h"
 #include "worker.h"
 
 #include "argparse_utils.h"
@@ -48,6 +50,7 @@ struct result_t {
   bool pass;
   job_t job;
   bool cached;
+  std::unordered_map<valhalla::baldr::Location, valhalla::baldr::PathLocation> path_locations;
   bool operator<(const result_t& other) const {
     if (cached < other.cached) {
       return true;
@@ -93,11 +96,10 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
     for (auto* r : {&result.first, &result.second}) {
       auto start = std::chrono::high_resolution_clock::now();
       try {
-        // TODO: actually save the result
-        auto result = valhalla::loki::Search(job, reader, costing);
+        auto path_locations = valhalla::loki::Search(job, reader, costing);
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), true, job,
-                        cached};
+                        cached, path_locations};
       } catch (...) {
         auto end = std::chrono::high_resolution_clock::now();
         (*r) = result_t{std::chrono::duration_cast<std::chrono::milliseconds>(end - start), false,
@@ -127,6 +129,7 @@ int main(int argc, char** argv) {
   size_t batch, isolated, radius, search_cutoff;
   bool extrema = false;
   std::vector<std::string> input_files;
+  std::string file;
   boost::property_tree::ptree config;
 
   try {
@@ -149,6 +152,7 @@ int main(int argc, char** argv) {
       ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>(isolated)->default_value("50"))
       ("r,radius", "How many meters to search away from the input location", cxxopts::value<size_t>(radius)->default_value("0"))
       ("s,search_cutoff", "Search cutoff in meters from the input locations", cxxopts::value<size_t>(search_cutoff)->default_value("35000"))
+      ("f,file", "File to write json output from calling loki Search to", cxxopts::value<std::string>(file))
       ("costing", "Which costing model to use.", cxxopts::value<std::string>(costing_str)->default_value("auto"))
       ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
     // clang-format on
@@ -313,5 +317,26 @@ int main(int argc, char** argv) {
     LOG_INFO("--------------------------------\n\n");
   }
 
+  if (!file.empty()) {
+    valhalla::Api request;
+    // request.mutable_options()->set_verbose(true);
+    valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+    std::unordered_map<valhalla::baldr::Location, valhalla::baldr::PathLocation> path_locations;
+    std::vector<valhalla::baldr::Location> ls;
+    for (auto& result : results) {
+      path_locations.insert(result.path_locations.begin(), result.path_locations.end());
+      for (auto& [location, path_location] : result.path_locations) {
+        ls.emplace_back(location);
+      }
+    }
+    valhalla::midgard::DistanceApproximator<valhalla::midgard::PointLL> approx({0, 0});
+    std::sort(ls.begin(), ls.end(),
+              [&](const valhalla::baldr::Location& a, const valhalla::baldr::Location& b) {
+                return approx.DistanceSquared(a.latlng_) < approx.DistanceSquared(b.latlng_);
+              });
+    LOG_ERROR(std::to_string(path_locations.size()));
+    std::ofstream file_handle(file);
+    file_handle << valhalla::tyr::serializeLocate(request, ls, path_locations, reader) << "\n";
+  }
   return EXIT_SUCCESS;
 }

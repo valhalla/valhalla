@@ -538,19 +538,27 @@ struct bin_handler_t {
       nSearched++;
       bool all_prefiltered = true;
       auto circle = edgeid.get_circle(begin->bin_center_approximator, begin->bin_center);
+      auto radius = std::sqrt(circle.second);
 
       auto c_itr = bin_candidates.begin();
       decltype(begin) p_itr;
-      // TODO(chris): we can probably skip this entirely if the search cutoff is larger than
-      // some value (e.g. half the bin size)
+
       // radius = 0 means no circle
       if (circle.second != 0) {
-        // go through all of the candidate relevant to this bin
+        // if (false) {
+        // go through all of the candidates relevant to this bin
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
-          // if the distance squared to the circle center is smaller than the circle square radius
-          // plus the square search cutoff, we need to look at the edge
-          if (p_itr->project.approx.DistanceSquared(circle.first) <
-              circle.second + (p_itr->location.search_cutoff_ * p_itr->location.search_cutoff_)) {
+          auto distance = std::sqrt(p_itr->project.approx.DistanceSquared(circle.first));
+          //  a candidate can be prefiltered if:
+          //  1. there's a location radius and the bounding circle of the edge falls outside it
+          //  2. there's no location radius but the best candidate we have is closer than any
+          //  candidate we can get from this edge (based on the bounding circle)
+          // c_itr->sq_distance = p_itr->reachable.empty() ? std::numeric_limits<double>::max()
+          //                                               : p_itr->reachable.back().sq_distance;
+          c_itr->prefiltered =
+              (p_itr->sq_radius > 0 && distance - radius >= std::sqrt(p_itr->sq_radius)) ||
+              (p_itr->sq_radius == 0 && distance - radius >= c_itr->sq_distance);
+          if (!c_itr->prefiltered) {
             all_prefiltered = false;
             break;
           }
@@ -596,9 +604,10 @@ struct bin_handler_t {
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
-            search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
-            (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_);
+            c_itr->prefiltered ||
+            (search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
+             (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
+             search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_));
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
       }
