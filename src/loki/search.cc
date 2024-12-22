@@ -540,8 +540,13 @@ struct bin_handler_t {
       auto circle = edgeid.get_circle(begin->bin_center_approximator, begin->bin_center);
       auto radius = std::sqrt(circle.second);
 
-      auto c_itr = bin_candidates.begin();
+      // reset the prefiltered flag, in order to not carry over information
+      // from the previous edge, because we might bail the first pre-filtered
+      // check early
+      std::for_each(bin_candidates.begin(), bin_candidates.end(),
+                    [](candidate_t& c) { c.prefiltered = false; });
       decltype(begin) p_itr;
+      auto c_itr = bin_candidates.begin();
 
       // radius = 0 means no circle
       if (circle.second != 0) {
@@ -553,8 +558,8 @@ struct bin_handler_t {
           //  1. there's a location radius and the bounding circle of the edge falls outside it
           //  2. there's no location radius but the best candidate we have is closer than any
           //  candidate we can get from this edge (based on the bounding circle)
-          // c_itr->sq_distance = p_itr->reachable.empty() ? std::numeric_limits<double>::max()
-          //                                               : p_itr->reachable.back().sq_distance;
+          c_itr->sq_distance = p_itr->reachable.empty() ? std::numeric_limits<double>::max()
+                                                        : p_itr->reachable.back().sq_distance;
           c_itr->prefiltered =
               (p_itr->sq_radius > 0 && distance - radius >= std::sqrt(p_itr->sq_radius)) ||
               (p_itr->sq_radius == 0 && distance - radius >= c_itr->sq_distance);
