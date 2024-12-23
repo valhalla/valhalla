@@ -862,15 +862,9 @@ public:
 
   /**
    * Gets the hierarchy limits.
-   * @return  Returns mutable hierarchy limits.
-   */
-  std::vector<HierarchyLimits>& GetMutableHierarchyLimits();
-
-  /**
-   * Gets the hierarchy limits.
    * @return  Returns the hierarchy limits.
    */
-  std::vector<HierarchyLimits> GetHierarchyLimits();
+  std::vector<HierarchyLimits>& GetHierarchyLimits();
 
   /**
    * Sets the hierarchy limits.

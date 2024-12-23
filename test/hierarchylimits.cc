@@ -143,7 +143,7 @@ TEST_P(TestHierarchyLimits, from_request) {
 
   // Now make sure the costmatrix hierarchy limits match up with what we expect
   hierarchy_limits_equal(test_params.expected_hierarchy_limits,
-                         mode_costing[0]->GetMutableHierarchyLimits());
+                         mode_costing[0]->GetHierarchyLimits());
 }
 
 INSTANTIATE_TEST_SUITE_P(pbf_request,
@@ -189,14 +189,14 @@ TEST(StandAlone, ClampHierarchyLimitsMatrix) {
   hierarchy_limits_config_t config_matrix =
       parse_hierarchy_limits_from_config(test_params.cfg, "costmatrix", false);
 
-  EXPECT_TRUE(check_hierarchy_limits(mode_costing[0]->GetMutableHierarchyLimits(), mode_costing[0],
-                                     opts, config_matrix, true));
+  EXPECT_TRUE(check_hierarchy_limits(mode_costing[0]->GetHierarchyLimits(), mode_costing[0], opts,
+                                     config_matrix, true));
 
   EXPECT_FALSE(mode_costing[0]->DefaultHierarchyLimits());
 
   std::vector<HierarchyLimits> expected_hl = {makeHierarchyLimits(0, 0), makeHierarchyLimits(400, 0),
                                               makeHierarchyLimits(100, 0)};
-  hierarchy_limits_equal(expected_hl, mode_costing[0]->GetMutableHierarchyLimits());
+  hierarchy_limits_equal(expected_hl, mode_costing[0]->GetHierarchyLimits());
 }
 
 TEST(StandAlone, ClampHierarchyLimitsBidirAStar) {
@@ -219,15 +219,15 @@ TEST(StandAlone, ClampHierarchyLimitsBidirAStar) {
   hierarchy_limits_config_t config_bidir =
       parse_hierarchy_limits_from_config(test_params.cfg, "bidirectional_astar", true);
 
-  EXPECT_TRUE(check_hierarchy_limits(mode_costing[0]->GetMutableHierarchyLimits(), mode_costing[0],
-                                     opts, config_bidir, true));
+  EXPECT_TRUE(check_hierarchy_limits(mode_costing[0]->GetHierarchyLimits(), mode_costing[0], opts,
+                                     config_bidir, true));
 
   EXPECT_FALSE(mode_costing[0]->DefaultHierarchyLimits());
 
   std::vector<HierarchyLimits> expected_hl = {makeHierarchyLimits(0, 1e8),
                                               makeHierarchyLimits(400, 20000),
                                               makeHierarchyLimits(100, 5000)};
-  hierarchy_limits_equal(expected_hl, mode_costing[0]->GetMutableHierarchyLimits());
+  hierarchy_limits_equal(expected_hl, mode_costing[0]->GetHierarchyLimits());
 }
 
 TEST(StandAlone, ClampHierarchyLimitsUnidirAStar) {
@@ -250,15 +250,15 @@ TEST(StandAlone, ClampHierarchyLimitsUnidirAStar) {
   hierarchy_limits_config_t config_bidir =
       parse_hierarchy_limits_from_config(test_params.cfg, "unidirectional_astar", true);
 
-  EXPECT_TRUE(check_hierarchy_limits(mode_costing[0]->GetMutableHierarchyLimits(), mode_costing[0],
-                                     opts, config_bidir, true));
+  EXPECT_TRUE(check_hierarchy_limits(mode_costing[0]->GetHierarchyLimits(), mode_costing[0], opts,
+                                     config_bidir, true));
 
   EXPECT_FALSE(mode_costing[0]->DefaultHierarchyLimits());
 
   std::vector<HierarchyLimits> expected_hl = {makeHierarchyLimits(0, 1e8),
                                               makeHierarchyLimits(400, 100000),
                                               makeHierarchyLimits(100, 5000)};
-  hierarchy_limits_equal(expected_hl, mode_costing[0]->GetMutableHierarchyLimits());
+  hierarchy_limits_equal(expected_hl, mode_costing[0]->GetHierarchyLimits());
 }
 int main(int argc, char* argv[]) {
   logging::Configure({{"type", ""}}); // silence logs

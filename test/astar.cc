@@ -141,8 +141,8 @@ const auto hl_config_bd = parse_hierarchy_limits_from_config(fake_conf, "bidirec
 
 void set_hierarchy_limits(vs::cost_ptr_t cost, bool bdir) {
   Costing_Options opts;
-  check_hierarchy_limits(cost->GetMutableHierarchyLimits(), cost, opts,
-                         bdir ? hl_config_bd : hl_config, false);
+  check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, bdir ? hl_config_bd : hl_config,
+                         false);
 }
 void make_tile() {
 
@@ -1747,7 +1747,7 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   // hack hierarchy limits to allow to go through the shortcut
   {
     auto& hierarchy_limits =
-        mode_costing[int(travel_mode)]->GetMutableHierarchyLimits(); // access mutable limits
+        mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
     for (auto& hierarchy : hierarchy_limits) {
       sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
     }

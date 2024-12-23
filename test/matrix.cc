@@ -143,7 +143,7 @@ const auto hl_config = parse_hierarchy_limits_from_config(cfg, "costmatrix", tru
 // we have to do this manually
 void set_hierarchy_limits(sif::cost_ptr_t cost) {
   Costing_Options opts;
-  check_hierarchy_limits(cost->GetMutableHierarchyLimits(), cost, opts, hl_config, false);
+  check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, hl_config, false);
 }
 
 const auto test_request = R"({

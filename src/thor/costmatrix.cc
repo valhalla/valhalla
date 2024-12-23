@@ -306,7 +306,7 @@ void CostMatrix::Initialize(
   astar_heuristics_[MATRIX_REV].resize(source_locations.size());
 
   // if costing has no hierarchy limits set, fall back to the defaults passed via the config
-  const auto& hlimits = costing_->GetMutableHierarchyLimits();
+  const auto& hlimits = costing_->GetHierarchyLimits();
   ignore_hierarchy_limits_ =
       std::all_of(hlimits.begin(), hlimits.end(), [](const HierarchyLimits& limits) {
         return limits.max_up_transitions() == kUnlimitedTransitions;

@@ -268,12 +268,7 @@ float DynamicCost::GetModeFactor() {
 }
 
 // Gets the hierarchy limits.
-std::vector<HierarchyLimits> DynamicCost::GetHierarchyLimits() {
-  return hierarchy_limits_;
-}
-
-// Gets mutable hierarchy limits.
-std::vector<HierarchyLimits>& DynamicCost::GetMutableHierarchyLimits() {
+std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;
 }
 

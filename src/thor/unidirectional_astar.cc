@@ -593,7 +593,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::Poin
 
   // Get hierarchy limits from the costing. Get a copy since we increment
   // transition counts (i.e., this is not a const reference).
-  hierarchy_limits_ = costing_->GetMutableHierarchyLimits();
+  hierarchy_limits_ = costing_->GetHierarchyLimits();
 }
 
 // Modulate the hierarchy expansion within distance based on density at

@@ -368,8 +368,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
   // get the user provided hierarchy limits and store one for each path algorithm
   // because we may use them interchangeably
-  auto hierarchy_limits_bidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
-  auto hierarchy_limits_unidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+  std::vector<HierarchyLimits> hierarchy_limits_bidir =
+      mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+  std::vector<HierarchyLimits> hierarchy_limits_unidir =
+      mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
   bool add_hierarchy_limits_warning = false;
 
   auto route_two_locations = [&](auto& origin, auto& destination) -> bool {

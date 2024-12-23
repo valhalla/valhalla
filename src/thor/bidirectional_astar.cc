@@ -136,7 +136,7 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // the threshold is set.
   cost_threshold_ = std::numeric_limits<float>::max();
   iterations_threshold_ = std::numeric_limits<uint32_t>::max();
-  auto& hierarchy_limits = costing_->GetMutableHierarchyLimits();
+  auto& hierarchy_limits = costing_->GetHierarchyLimits();
   ignore_hierarchy_limits_ =
       std::all_of(hierarchy_limits.begin() + 1,
                   hierarchy_limits.begin() + TileHierarchy::levels().size(),
