@@ -39,10 +39,10 @@ struct HierarchyLimitsTestParams {
                             bool use_pbf,
                             std::unordered_map<std::string, std::string> overrides = {})
       : request(req), cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(""),
-        expected_hierarchy_limits(hl), pbf(use_pbf) {};
+        expected_hierarchy_limits(hl), pbf(use_pbf){};
   HierarchyLimitsTestParams(std::unordered_map<std::string, std::string> overrides,
                             std::string& config_path)
-      : cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(config_path) {};
+      : cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(config_path){};
 
   std::string request;
   boost::property_tree::ptree cfg;
