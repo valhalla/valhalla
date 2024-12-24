@@ -1644,7 +1644,7 @@ TEST(BiDiAstar, test_recost_path) {
                 ->find(Costing::auto_)
                 ->second.mutable_options()
                 ->mutable_hierarchy_limits();
-  for (auto level : TileHierarchy::levels()) {
+  for (const auto& level : TileHierarchy::levels()) {
     HierarchyLimits lims;
     lims.set_expand_within_dist(0);
     lims.set_max_up_transitions(0);

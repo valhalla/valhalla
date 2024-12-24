@@ -22,7 +22,7 @@ using namespace valhalla::midgard;
 using namespace valhalla::tyr;
 
 boost::property_tree::ptree
-make_test_config(std::unordered_map<std::string, std::string> overrides = {}) {
+make_test_config(const std::unordered_map<std::string, std::string>& overrides = {}) {
   return test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles", overrides);
 }
 
@@ -38,11 +38,11 @@ struct HierarchyLimitsTestParams {
                             std::vector<HierarchyLimits>& hl,
                             bool use_pbf,
                             std::unordered_map<std::string, std::string> overrides = {})
-      : request(req), cfg(make_test_config(overrides)), hierarchy_limits_config_path(""),
-        expected_hierarchy_limits(hl), pbf(use_pbf){};
+      : request(req), cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(""),
+        expected_hierarchy_limits(hl), pbf(use_pbf) {};
   HierarchyLimitsTestParams(std::unordered_map<std::string, std::string> overrides,
                             std::string& config_path)
-      : cfg(make_test_config(overrides)), hierarchy_limits_config_path(config_path){};
+      : cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(config_path) {};
 
   std::string request;
   boost::property_tree::ptree cfg;
