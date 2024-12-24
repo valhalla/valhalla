@@ -869,7 +869,7 @@ public:
   /**
    * Sets the hierarchy limits.
    */
-  void SetHierarchyLimits(const std::vector<HierarchyLimits> hierarchy_limits);
+  void SetHierarchyLimits(const std::vector<HierarchyLimits>& hierarchy_limits);
 
   /**
    * Relax hierarchy limits using pre-defined algorithm-cased factors.
