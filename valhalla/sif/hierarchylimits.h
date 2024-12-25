@@ -24,10 +24,6 @@ constexpr uint32_t kDefaultMaxUpTransitions[] = {0, 400, 100, 0, 0, 0, 0, 0};
 // bidirectional search.
 constexpr float kDefaultExpansionWithinDist[] = {kMaxDistance, 100000.0f, 5000.0f, 0.0f,
                                                  0.0f,         0.0f,      0.0f,    0.0f};
-
-// Default number of transitions allowed. Requests with higher values will be clamped to this default
-// if no other value is specified in the config.
-constexpr unsigned int kDefaultMaxAllowedTransitions = 400;
 } // namespace
 
 namespace valhalla {

@@ -71,8 +71,7 @@ void ParseApi(const std::string& json_request, Options::Action action, Api& api)
  * given path.
  *
  * @param config         the property tree to read from.
- * @param path           path within the property tree to the section that has the 'hierarchy_limits'
- *                       child member
+ * @param hierarchy      name of the algorithm to parse from the right config section
  * @param uses_dist      if true, also parses values for 'expansion within distance'
  */
 hierarchy_limits_config_t
@@ -80,6 +79,17 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
                                    const std::string& path,
                                    const bool uses_dist);
 
+/**
+ * See if the user supplied custom hierarchy limits and possible override with defaults or clamp
+ * to max allowed values.
+ *
+ * @param hierarchy_limits    user supplied hierarchy limits
+ * @param cost                mode costing
+ * @param config              the max allowed/default hierarchy limits
+ * @param allow_modifications whether modifications are allowed
+ *
+ * @return true if the user passed hierarchy limits but they needed to be tampered with
+ */
 bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             sif::cost_ptr_t& cost,
                             const valhalla::Costing_Options& options,
