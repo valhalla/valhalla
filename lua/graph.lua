@@ -907,7 +907,7 @@ function filter_tags_generic(kv)
       kv[k] = v
     end
 
-    if kv["impassable"] == "yes" or kv["smoothness"] == "impassable" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
+    if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -926,7 +926,7 @@ function filter_tags_generic(kv)
       kv["motorcycle_backward"] = "false"
       kv["pedestrian_backward"] = "false"
       kv["bike_backward"] = "false"
-    elseif kv["vehicle"] == "no" then --don't change ped access.
+    elseif kv["smoothness"] == "impassable" or kv["vehicle"] == "no" then --don't change ped access.
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
       kv["bus_forward"] = "false"
@@ -996,7 +996,7 @@ function filter_tags_generic(kv)
       default_val = tostring(rail)
     end
 
-    if ((ferry == false and rail == false) or kv["impassable"] == "yes" or kv["smoothness"] == "impassable" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+    if ((ferry == false and rail == false) or kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
 
       kv["auto_forward"] = "false"
       kv["truck_forward"] = "false"
@@ -1018,7 +1018,7 @@ function filter_tags_generic(kv)
 
     else
       local ped_val = default_val
-      if kv["vehicle"] == "no" then --don't change ped access.
+      if kv["smoothness"] == "impassable" or kv["vehicle"] == "no" then --don't change ped access.
         default_val = "false"
       end
       --check for auto_forward overrides
@@ -1931,7 +1931,7 @@ function nodes_proc (kv, nokeys)
   local initial_access = access[kv["access"]]
   local access = initial_access or "true"
 
-  if (kv["impassable"] == "yes" or kv["smoothness"] == "impassable" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
+  if (kv["impassable"] == "yes" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
     access = "false"
   end
 
@@ -2029,7 +2029,7 @@ function nodes_proc (kv, nokeys)
   local motorcycle = motorcycle_tag or 1024
 
   --if access = false use tag if exists, otherwise no access for that mode.
-  if (access == "false" or kv["vehicle"] == "no" or kv["hov"] == "designated") then
+  if (access == "false" or kv["vehicle"] == "no" or kv["smoothness"] == "impassable" or kv["hov"] == "designated") then
     auto = auto_tag or 0
     truck = truck_tag or 0
     bus = bus_tag or 0
