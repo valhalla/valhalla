@@ -164,6 +164,7 @@ TEST(GraphId, TestBoundingCircleEquality) {
   EXPECT_EQ(id.id(), bc.id());
   EXPECT_EQ(id.Tile_Base(), bc.Tile_Base());
   EXPECT_EQ(id.level(), bc.level());
+  EXPECT_NE(bc.value >> 46, 0);
 
   bc.value &= kInvalidGraphId;
   // after resetting circle
