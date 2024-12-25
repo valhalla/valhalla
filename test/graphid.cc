@@ -145,6 +145,33 @@ TEST(GraphId, TestDiscretizedBoundingCircle) {
   ASSERT_NE(returned_circle.second, 0);
   ASSERT_TRUE(circle_distance <= kOffsetIncrement) << "Distance is " << circle_distance;
 }
+TEST(GraphId, TestBoundingCircleEquality) {
+  DiscretizedBoundingCircle bc(0, 0, 0);
+  GraphId id(0, 0, 0);
+
+  // before setting circle
+  EXPECT_EQ(id.id(), bc.id());
+  EXPECT_EQ(id.Tile_Base(), bc.Tile_Base());
+  EXPECT_EQ(id.level(), bc.level());
+
+  PointLL bin_center(0.025, 0.025);
+  std::vector<PointLL> shape({{0.01, 0.011}, {0.01, 0.0112}});
+  const auto circle = get_bounding_circle(shape);
+  DistanceApproximator<PointLL> bin_approx(bin_center);
+  bc.set(bin_approx, bin_center, std::get<0>(circle), std::get<1>(circle));
+
+  // after setting circle
+  EXPECT_EQ(id.id(), bc.id());
+  EXPECT_EQ(id.Tile_Base(), bc.Tile_Base());
+  EXPECT_EQ(id.level(), bc.level());
+
+  bc.value &= kInvalidGraphId;
+  // after resetting circle
+  EXPECT_EQ(id.id(), bc.id());
+  EXPECT_EQ(id.Tile_Base(), bc.Tile_Base());
+  EXPECT_EQ(id.level(), bc.level());
+  EXPECT_EQ(bc.value >> 46, 0);
+}
 
 } // namespace
 
