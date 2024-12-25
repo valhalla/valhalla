@@ -323,7 +323,7 @@ int main(int argc, char** argv) {
 
   if (!file.empty()) {
     valhalla::Api request;
-    request.mutable_options()->set_verbose(true);
+    // request.mutable_options()->set_verbose(true);
     valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
     std::unordered_map<valhalla::baldr::Location, valhalla::baldr::PathLocation> path_locations;
     std::vector<valhalla::baldr::Location> ls;
