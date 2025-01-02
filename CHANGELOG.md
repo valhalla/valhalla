@@ -33,6 +33,7 @@
    * ADDED: Support multiple levels and level ranges [#4879](https://github.com/valhalla/valhalla/pull/4879)
    * ADDED: Level location search filter [#4926](https://github.com/valhalla/valhalla/pull/4926)
    * ADDED: `ignore_constructions` allows routing on ways with construction tag
+   * ADDED: `ignore_constructions` allows routing on ways with construction tag [#5030](https://github.com/valhalla/valhalla/pull/5030)
 
 ## Release Date: 2024-08-21 Valhalla 3.5.0
 * **Removed**
