@@ -361,11 +361,11 @@ public:
     // you have forward access for the mode you care about
     // you dont care about what mode has access so long as its forward
     // you dont care about the direction the mode has access to
-    return ((edge->forwardaccess() & access_mask_) ||
-            (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
-            (ignore_oneways_ && (edge->reverseaccess() & access_mask_)) ||
-            ignore_constructions_ && edge->use() == baldr::Use::kConstruction) &&
-           (edge->use() != baldr::Use::kConstruction || ignore_constructions_);
+    return (((edge->forwardaccess() & access_mask_) ||
+             (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
+             (ignore_oneways_ && (edge->reverseaccess() & access_mask_))) &&
+            (edge->use() != baldr::Use::kConstruction)) ||
+           ignore_constructions_ && edge->use() == baldr::Use::kConstruction;
   }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
