@@ -272,7 +272,7 @@ std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;
 }
 
-// Sets mutable hierarchy limits.
+// Sets hierarchy limits.
 void DynamicCost::SetHierarchyLimits(const std::vector<HierarchyLimits>& hierarchy_limits) {
   hierarchy_limits_ = hierarchy_limits;
 }
