@@ -1356,6 +1356,7 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
   default_hierarchy_limits.reserve(baldr::TileHierarchy::levels().size());
   max_hierarchy_limits.reserve(baldr::TileHierarchy::levels().size());
   bool found = true;
+  bool is_bidir = algorithm != "unidirectional_astar";
   // get the default and max allowed values for each level
   for (auto it = baldr::TileHierarchy::levels().begin(); it != baldr::TileHierarchy::levels().end();
        ++it) {
@@ -1381,7 +1382,8 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
       max_hl.set_expand_within_dist(
           max_expand_within_dist
               ? max_expand_within_dist->get_value<float>(kDefaultExpansionWithinDist[it->level])
-              : kDefaultExpansionWithinDist[it->level]);
+          : is_bidir ? kDefaultExpansionWithinDistBidir[it->level]
+                     : kDefaultExpansionWithinDist[it->level]);
     }
     max_hierarchy_limits.push_back(max_hl);
 
@@ -1405,7 +1407,8 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
       default_hl.set_expand_within_dist(
           default_expand_within_dist
               ? default_expand_within_dist->get_value<float>(kDefaultExpansionWithinDist[it->level])
-              : kDefaultExpansionWithinDist[it->level]);
+          : is_bidir ? kDefaultExpansionWithinDistBidir[it->level]
+                     : kDefaultExpansionWithinDist[it->level]);
     }
     default_hierarchy_limits.push_back(default_hl);
   }

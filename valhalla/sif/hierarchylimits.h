@@ -24,6 +24,8 @@ constexpr uint32_t kDefaultMaxUpTransitions[] = {0, 400, 100, 0, 0, 0, 0, 0};
 // bidirectional search.
 constexpr float kDefaultExpansionWithinDist[] = {kMaxDistance, 100000.0f, 5000.0f, 0.0f,
                                                  0.0f,         0.0f,      0.0f,    0.0f};
+constexpr float kDefaultExpansionWithinDistBidir[] = {kMaxDistance, 20000.0f, 5000.0f, 0.0f,
+                                                      0.0f,         0.0f,     0.0f,    0.0f};
 } // namespace
 
 namespace valhalla {

@@ -391,9 +391,6 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
                                    ? hierarchy_limits_config_bidirectional_astar
                                    : hierarchy_limits_config_astar,
                                allow_hierarchy_limits_modifications);
-    for (size_t i = 0; i < hierarchy_limits.size(); ++i) {
-      auto hl = hierarchy_limits[i];
-    }
     mode_costing[static_cast<uint32_t>(mode)]->SetHierarchyLimits(hierarchy_limits);
 
     algorithms.push_back(path_algorithm->name());
