@@ -17,6 +17,7 @@
    * ADDED: steps maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
    * ADDED: instruction improvements for node-based elevators [#4988](https://github.com/valhalla/valhalla/pull/4988)
    * ADDED: increased precision in route lengths [#5020](https://github.com/valhalla/valhalla/pull/5020)
+   * ADDED: `ignore_constructions` allows routing on ways with construction tag [#5030](https://github.com/valhalla/valhalla/pull/5030)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
@@ -32,8 +33,6 @@
    * ADDED: Provide conditional speed limits from "maxspeed:conditional" in `/locate` and proto `/route` responses [#4851](https://github.com/valhalla/valhalla/pull/4851)
    * ADDED: Support multiple levels and level ranges [#4879](https://github.com/valhalla/valhalla/pull/4879)
    * ADDED: Level location search filter [#4926](https://github.com/valhalla/valhalla/pull/4926)
-   * ADDED: `ignore_constructions` allows routing on ways with construction tag
-   * ADDED: `ignore_constructions` allows routing on ways with construction tag [#5030](https://github.com/valhalla/valhalla/pull/5030)
 
 ## Release Date: 2024-08-21 Valhalla 3.5.0
 * **Removed**
