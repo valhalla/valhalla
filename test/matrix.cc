@@ -108,7 +108,8 @@ public:
   bool Allowed(const baldr::DirectedEdge* edge, const graph_tile_ptr&, uint16_t) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
-                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask) ||
+                       (ignore_constructions_ && edge->use() == baldr::Use::kConstruction));
     if (edge->is_shortcut() || !accessible)
       return 0.0f;
     else {
