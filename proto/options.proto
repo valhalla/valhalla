@@ -322,9 +322,7 @@ message Costing {
     bool exclude_tolls = 89;
     bool exclude_highways = 90;
     bool exclude_ferries = 91;
-    oneof has_ignore_construction {
-      bool ignore_construction = 92;
-    }
+    bool ignore_construction = 92;
   }
 
   oneof has_options {
