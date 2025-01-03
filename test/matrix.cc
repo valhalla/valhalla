@@ -109,7 +109,7 @@ public:
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask) ||
-                       (ignore_constructions_ && edge->use() == baldr::Use::kConstruction));
+                       (ignore_construction_ && edge->use() == baldr::Use::kConstruction));
     if (edge->is_shortcut() || !accessible)
       return 0.0f;
     else {

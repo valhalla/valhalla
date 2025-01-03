@@ -347,7 +347,7 @@ public:
         ((disallow_mask & kDisallowShortcut) && edge->is_shortcut());
     return accessible && !assumed_restricted &&
            (edge->use() != baldr::Use::kConstruction ||
-            (ignore_constructions_ && edge->use() == baldr::Use::kConstruction));
+            (ignore_construction_ && edge->use() == baldr::Use::kConstruction));
   }
 
   /**
@@ -365,7 +365,7 @@ public:
              (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
              (ignore_oneways_ && (edge->reverseaccess() & access_mask_))) &&
             (edge->use() != baldr::Use::kConstruction)) ||
-           (ignore_constructions_ && edge->use() == baldr::Use::kConstruction);
+           (ignore_construction_ && edge->use() == baldr::Use::kConstruction);
   }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
@@ -1065,7 +1065,7 @@ protected:
   bool ignore_oneways_{false};
   bool ignore_access_{false};
   bool ignore_closures_{false};
-  bool ignore_constructions_{false};
+  bool ignore_construction_{false};
   uint32_t top_speed_;
   uint32_t fixed_speed_;
   // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false

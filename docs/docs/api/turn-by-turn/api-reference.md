@@ -137,7 +137,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `ignore_oneways` | If set to `true`, ignores one-way restrictions. Especially useful for matching GPS traces to the road network ignoring uni-directional traffic rules. Not included in `ignore_restrictions` option. Default is `false`. |
 | `ignore_non_vehicular_restrictions` | Similar to `ignore_restrictions`, but will respect restrictions that impact vehicle safety, such as weight and size restrictions. |
 | `ignore_access` | Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions. Default is `false`. |
-| `ignore_constructions` | Will ignore construction tags. Only works when the `include_construction` option is set before building the graph. Useful for planning future routes. Default is `false`. |
+| `ignore_construction` | Will ignore construction tags. Only works when the `include_construction` option is set before building the graph. Useful for planning future routes. Default is `false`. |
 | `speed_types` | Will determine which speed sources are used, if available. A list of strings with the following possible values: <ul><li><code>freeflow</code></li><li><code>constrained</code></li><li><code>predicted</code></li><li><code>current</code></li></ul> Default is all sources (again, only if available). |
 
 ###### Other costing options
