@@ -1,6 +1,7 @@
 #include "gurka/gurka.h"
 #include "test.h"
 
+#include <boost/format.hpp>
 #include <string>
 #include <vector>
 
@@ -259,6 +260,142 @@ TEST(StandAlone, ClampHierarchyLimitsUnidirAStar) {
                                               makeHierarchyLimits(400, 100000),
                                               makeHierarchyLimits(100, 5000)};
   hierarchy_limits_equal(expected_hl, mode_costing[0]->GetHierarchyLimits());
+}
+
+TEST(StandAlone, Warnings) {
+  // test whether warnings are only added when
+  //  a) modification is not allowed by the server and user tried to pass custom limits
+  //  b) modification is allowed and user passed invalid limits
+
+  const std::string ascii_map = R"(
+      A---B---C---D
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+      {"CD", {{"highway", "primary"}}},
+  };
+
+  constexpr double gridsize = 100;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.1079374, 52.0887174});
+  auto map_no_mod =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/hierarchylimits_no_mod");
+
+  // single leg route, no customization
+  auto result = gurka::do_action(valhalla::Options::route, map_no_mod, {"A", "D"}, "auto");
+  EXPECT_EQ(result.info().warnings().size(), 0);
+
+  // single leg route, disallowed customization
+  std::string req = R"({
+      "locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],
+      "costing": "auto",
+      "costing_options":{"auto":{"hierarchy_limits":{"1":{"max_up_transitions": 1000}}}}
+    })";
+
+  std::string from = "A";
+  std::string via = "B";
+  std::string to = "C";
+  req =
+      (boost::format(req) % std::to_string(map_no_mod.nodes.at(from).lat()) %
+       std::to_string(map_no_mod.nodes.at(from).lng()) %
+       std::to_string(map_no_mod.nodes.at(to).lat()) % std::to_string(map_no_mod.nodes.at(to).lng()))
+          .str();
+  result = gurka::do_action(valhalla::Options::route, map_no_mod, req);
+  EXPECT_EQ(result.info().warnings().size(), 1);
+
+  // double leg route, disallowed customization
+  req = R"({
+      "locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],
+      "costing": "auto",
+      "costing_options":{"auto":{"hierarchy_limits":{"1":{"max_up_transitions": 1000}}}}
+    })";
+
+  req =
+      (boost::format(req) % std::to_string(map_no_mod.nodes.at(from).lat()) %
+       std::to_string(map_no_mod.nodes.at(from).lng()) %
+       std::to_string(map_no_mod.nodes.at(via).lat()) %
+       std::to_string(map_no_mod.nodes.at(via).lng()) %
+       std::to_string(map_no_mod.nodes.at(to).lat()) % std::to_string(map_no_mod.nodes.at(to).lng()))
+          .str();
+  result = gurka::do_action(valhalla::Options::route, map_no_mod, req);
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 209);
+
+  // double leg route, no customization
+  result = gurka::do_action(valhalla::Options::route, map_no_mod, {"A", "B", "D"}, "auto");
+  EXPECT_EQ(result.info().warnings().size(), 0);
+
+  // single leg route, customization allowed but nothing passed
+  auto map_mod =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/hierarchylimits_mod",
+                        {{"service_limits.hierarchy_limits.allow_modification", "1"}});
+  result = gurka::do_action(valhalla::Options::route, map_mod, {"A", "B"}, "auto");
+  EXPECT_EQ(result.info().warnings().size(), 0);
+
+  // double leg route, customization allowed but nothing passed
+  result = gurka::do_action(valhalla::Options::route, map_mod, {"A", "B", "D"}, "auto");
+  EXPECT_EQ(result.info().warnings().size(), 0);
+
+  // single leg route, clamped customization
+  req = R"({
+      "locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],
+      "costing": "auto",
+      "costing_options":{"auto":{"hierarchy_limits":{"1":{"max_up_transitions": 100000}}}}
+    })";
+
+  req = (boost::format(req) % std::to_string(map_mod.nodes.at(from).lat()) %
+         std::to_string(map_mod.nodes.at(from).lng()) % std::to_string(map_mod.nodes.at(to).lat()) %
+         std::to_string(map_mod.nodes.at(to).lng()))
+            .str();
+  result = gurka::do_action(valhalla::Options::route, map_mod, req);
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 210);
+
+  // double leg route, clamped customization
+  req = R"({
+      "locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],
+      "costing": "auto",
+      "costing_options":{"auto":{"hierarchy_limits":{"1":{"max_up_transitions": 1000}}}}
+    })";
+
+  req = (boost::format(req) % std::to_string(map_mod.nodes.at(from).lat()) %
+         std::to_string(map_mod.nodes.at(from).lng()) % std::to_string(map_mod.nodes.at(via).lat()) %
+         std::to_string(map_mod.nodes.at(via).lng()) % std::to_string(map_mod.nodes.at(to).lat()) %
+         std::to_string(map_mod.nodes.at(to).lng()))
+            .str();
+  result = gurka::do_action(valhalla::Options::route, map_mod, req);
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 210);
+
+  // single leg route, allowed customization
+  req = R"({
+      "locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],
+      "costing": "auto",
+      "costing_options":{"auto":{"hierarchy_limits":{"1":{"max_up_transitions": 10, "expand_within_distance": 10}}}}
+    })";
+
+  req = (boost::format(req) % std::to_string(map_mod.nodes.at(from).lat()) %
+         std::to_string(map_mod.nodes.at(from).lng()) % std::to_string(map_mod.nodes.at(to).lat()) %
+         std::to_string(map_mod.nodes.at(to).lng()))
+            .str();
+  result = gurka::do_action(valhalla::Options::route, map_mod, req);
+  EXPECT_EQ(result.info().warnings().size(), 0);
+
+  // double leg route, allowed customization
+  req = R"({
+      "locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],
+      "costing": "auto",
+      "costing_options":{"auto":{"hierarchy_limits":{"1":{"max_up_transitions": 10, "expand_within_distance": 10}}}}
+    })";
+
+  req = (boost::format(req) % std::to_string(map_mod.nodes.at(from).lat()) %
+         std::to_string(map_mod.nodes.at(from).lng()) % std::to_string(map_mod.nodes.at(via).lat()) %
+         std::to_string(map_mod.nodes.at(via).lng()) % std::to_string(map_mod.nodes.at(to).lat()) %
+         std::to_string(map_mod.nodes.at(to).lng()))
+            .str();
+  result = gurka::do_action(valhalla::Options::route, map_mod, req);
+  EXPECT_EQ(result.info().warnings().size(), 0);
 }
 int main(int argc, char* argv[]) {
   logging::Configure({{"type", ""}}); // silence logs

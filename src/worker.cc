@@ -1445,7 +1445,7 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
     // limits;
     if (!allow_modifications || (limits.max_up_transitions() == kUnlimitedTransitions &&
                                  limits.expand_within_dist() == kMaxDistance)) {
-      add_warning = add_warning || (limits.max_up_transitions() != kUnlimitedTransitions &&
+      add_warning = add_warning || (limits.max_up_transitions() != kUnlimitedTransitions ||
                                     limits.expand_within_dist() != kMaxDistance);
       limits.set_max_up_transitions(config.default_limits[i].max_up_transitions());
       limits.set_expand_within_dist(config.default_limits[i].expand_within_dist());
