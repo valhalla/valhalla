@@ -391,13 +391,13 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
     // only check hierarchy limits if not already done for the current algorithm
     add_hierarchy_limits_warning =
-        (is_bidir ? (!used_bidir) : (!used_unidir)) &&
-            check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
-                                   costing_options,
-                                   path_algorithm == &bidir_astar
-                                       ? hierarchy_limits_config_bidirectional_astar
-                                       : hierarchy_limits_config_astar,
-                                   allow_hierarchy_limits_modifications) ||
+        (!(is_bidir ? used_bidir : used_unidir) &&
+         check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
+                                costing_options,
+                                path_algorithm == &bidir_astar
+                                    ? hierarchy_limits_config_bidirectional_astar
+                                    : hierarchy_limits_config_astar,
+                                allow_hierarchy_limits_modifications)) ||
         add_hierarchy_limits_warning;
 
     // ..and mark hierarchy limits for this algorithm as checked
@@ -615,7 +615,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
     // only check hierarchy limits if not already done for the current algorithm
     add_hierarchy_limits_warning =
-        ((is_bidir ? !used_bidir : !used_unidir) &&
+        (!(is_bidir ? used_bidir : used_unidir) &&
          check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
                                 costing_options,
                                 path_algorithm == &bidir_astar
