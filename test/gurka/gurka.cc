@@ -121,8 +121,16 @@ std::string build_valhalla_request(const std::vector<std::string>& location_type
 
   // we do this last so that options are additive/overwrite
   for (const auto& kv : options) {
-    rapidjson::Pointer(kv.first).Set(doc, kv.second);
+    // Check if the value is "true" or "false" and set as bool
+    if (kv.second == "true") {
+      rapidjson::Pointer(kv.first).Set(doc, true);
+    } else if (kv.second == "false") {
+      rapidjson::Pointer(kv.first).Set(doc, false);
+    } else {
+      rapidjson::Pointer(kv.first).Set(doc, kv.second);
+    }
   }
+
 
   // TODO: allow selecting this
   // for map matching for now we just want to do real map matching rather than fast

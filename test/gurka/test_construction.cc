@@ -141,6 +141,15 @@ protected:
 
 gurka::map ConstructionRoutingTest::map = {};
 
+TEST_F(ConstructionRoutingTest, IgnoreConstructions) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto",
+                                 {{"/costing_options/auto/ignore_construction", "true"},
+                                  {"/costing_options/auto/shortest", "true"}});
+
+  // road under construction "BC" should be used
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
+}
+
 TEST_P(ConstructionRoutingTest, CheckAvoidRoadsUnderConstruction) {
   const auto costing = GetParam();
 
@@ -149,7 +158,7 @@ TEST_P(ConstructionRoutingTest, CheckAvoidRoadsUnderConstruction) {
   gurka::assert::raw::expect_path(result, {"AB", "BE", "EF", "FC", "CD"});
 
   result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, costing,
-                            {{"/costing_options/" + costing + "/ignore_access", "1"}});
+                            {{"/costing_options/" + costing + "/ignore_access", "true"}});
   // road under construction "BC" should be avoided despite of ignore_access=true
   gurka::assert::raw::expect_path(result, {"AB", "BE", "EF", "FC", "CD"});
 }
