@@ -859,7 +859,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
   // convert string to enum, set ranges and defaults based on enum
   BicycleType type;
-  const std::string& bicycle_type = co->transport_type();
+  std::string& bicycle_type = co->transport_type();
   bicycle_type[0] = std::tolower(bicycle_type[0]);
   if (bicycle_type == "cross") {
     type = BicycleType::kCross;
