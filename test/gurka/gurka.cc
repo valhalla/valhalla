@@ -131,7 +131,6 @@ std::string build_valhalla_request(const std::vector<std::string>& location_type
     }
   }
 
-
   // TODO: allow selecting this
   // for map matching for now we just want to do real map matching rather than fast
   doc.AddMember("shape_match", "map_snap", allocator);
