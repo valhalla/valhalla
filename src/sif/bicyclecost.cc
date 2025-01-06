@@ -8,7 +8,6 @@
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include <cassert>
-#include <cctype>
 
 #ifdef INLINE_TEST
 #include "test.h"

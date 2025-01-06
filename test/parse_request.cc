@@ -1,7 +1,7 @@
-#include <cctype>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cctype>
 
 #include "proto/options.pb.h"
 #include "proto_conversions.h"
