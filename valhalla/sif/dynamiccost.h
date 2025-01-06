@@ -346,7 +346,7 @@ public:
         ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions()) ||
         ((disallow_mask & kDisallowShortcut) && edge->is_shortcut());
     return accessible && !assumed_restricted &&
-           (edge->use() != baldr::Use::kConstruction || ignore_construction_);
+           ((edge->use() != baldr::Use::kConstruction) || ignore_construction_);
   }
 
   /**
@@ -366,7 +366,7 @@ public:
               (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
               (ignore_oneways_ && (edge->reverseaccess() & access_mask_))) &&
              (edge->use() != baldr::Use::kConstruction)) ||
-            (ignore_construction_ && edge->use() == baldr::Use::kConstruction));
+            (ignore_construction_ && (edge->use() == baldr::Use::kConstruction)));
   }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
