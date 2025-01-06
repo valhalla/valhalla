@@ -452,7 +452,7 @@ BicycleCost::BicycleCost(const Costing& costing)
     type_ = BicycleType::kCross;
   } else if (bicycle_type == "road" || bicycle_type == "Road") {
     type_ = BicycleType::kRoad;
-  } else if (bicycle_type == "mountain" || Bicycle_type == "Mountain") {
+  } else if (bicycle_type == "mountain" || bicycle_type == "Mountain") {
     type_ = BicycleType::kMountain;
   } else {
     type_ = BicycleType::kHybrid;
