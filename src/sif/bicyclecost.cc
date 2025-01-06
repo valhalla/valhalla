@@ -447,7 +447,7 @@ BicycleCost::BicycleCost(const Costing& costing)
   get_base_costs(costing);
 
   // Get the bicycle type - enter as string and convert to enum
-  const std::string& bicycle_type = costing_options.transport_type();
+  std::string& bicycle_type = costing_options.transport_type();
   bicycle_type[0] = std::tolower(bicycle_type[0]);
   if (bicycle_type == "cross") {
     type_ = BicycleType::kCross;
