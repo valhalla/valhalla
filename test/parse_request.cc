@@ -1795,7 +1795,7 @@ TEST(ParseRequest, test_transport_type) {
   for (const auto& transport_type_value : {"road", "cross", "hybrid", "mountain"}) {
     test_transport_type_parsing(costing, transport_type_key, transport_type_value,
                                 transport_type_value);
-    auto uppercased_transport_type_value{transport_type_value};
+    std::string uppercased_transport_type_value{transport_type_value};
     uppercased_transport_type_value[0] = std::toupper(uppercased_transport_type_value[0]);
     test_transport_type_parsing(costing, transport_type_key, uppercased_transport_type_value,
                                 transport_type_value);
