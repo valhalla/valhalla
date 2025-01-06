@@ -2662,7 +2662,7 @@ TEST(ParseRequest, test_avoid_bad_surfaces) {
 TEST(ParseRequest, test_cycling_speed) {
   Costing::Type costing = Costing::bicycle;
 
-  std::string transport_type = "Road";
+  std::string transport_type = "road";
   float default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kRoad)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
@@ -2671,7 +2671,7 @@ TEST(ParseRequest, test_cycling_speed) {
   test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
   test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
 
-  transport_type = "Cross";
+  transport_type = "cross";
   default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kCross)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
@@ -2689,7 +2689,7 @@ TEST(ParseRequest, test_cycling_speed) {
   test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
   test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
 
-  transport_type = "Mountain";
+  transport_type = "mountain";
   default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kMountain)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
