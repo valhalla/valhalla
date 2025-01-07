@@ -17,7 +17,11 @@
       "name": "dirent",
       "platform": "windows"
     },
-    "gdal",
+    {
+      "name": "gdal",
+      "default-features": false,
+      "features": ["recommended-features"]
+    },
     "geos",
     "libspatialite",
     "pkgconf",

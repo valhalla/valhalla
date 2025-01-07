@@ -16,6 +16,7 @@
    * ADDED: include level change info in `/route` response [#4942](https://github.com/valhalla/valhalla/pull/4942)
    * ADDED: steps maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
    * ADDED: instruction improvements for node-based elevators [#4988](https://github.com/valhalla/valhalla/pull/4988)
+   * ADDED: customizable hierarchy limits [#5010](https://github.com/valhalla/valhalla/pull/5010)
    * ADDED: increased precision in route lengths [#5020](https://github.com/valhalla/valhalla/pull/5020)
    * ADDED: Allow specifying custom `graph.lua` file name via `valhalla_build_config` [#5036](https://github.com/valhalla/valhalla/pull/5036)
 
