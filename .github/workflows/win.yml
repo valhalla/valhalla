@@ -124,6 +124,12 @@ jobs:
         run: |
           cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
 
+      - name: Build Tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
+
+      - name: Run Tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) check
+
       - name: Test Executable
         shell: bash
         run: |
