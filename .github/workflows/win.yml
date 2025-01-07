@@ -103,7 +103,7 @@ jobs:
             -DENABLE_TOOLS=ON \
             -DENABLE_PYTHON_BINDINGS=ON \
             -DENABLE_HTTP=ON \
-            -DENABLE_TESTS=OFF \
+            -DENABLE_TESTS=ON \
             -DENABLE_CCACHE=OFF \
             -DENABLE_SERVICES=OFF \
             -DPREFER_EXTERNAL_DEPS=ON \
