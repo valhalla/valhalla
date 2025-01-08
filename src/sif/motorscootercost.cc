@@ -252,11 +252,11 @@ public:
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  edge   Directed edge (the to edge)
-   * @param  node   Node (intersection) where transition occurs.
-   * @param  pred   Predecessor edge information.
-   * @param  tile   Pointer to the graph tile containing the to edge.
-   * @param  reader Grahpreader to get the tile containing the predecessor if needed
+   * @param  edge          Directed edge (the to edge)
+   * @param  node          Node (intersection) where transition occurs.
+   * @param  pred          Predecessor edge information.
+   * @param  tile          Pointer to the graph tile containing the to edge.
+   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return Returns the cost and time (seconds)
    */
   virtual Cost
@@ -275,7 +275,8 @@ public:
    * @param  edge               the opposing predecessor in the reverse tree
    * @param  tile               Graphtile that contains the node and the opp_edge
    * @param  edge_id            Graph ID of opp_pred_edge to get its tile if needed
-   * @param  reader             Graphreader to optionally get the tile containing the "to" edge.
+   * @param  reader_getter      Functor that facilitates access to a limited version of the graph
+   * reader
    * @param  has_measured_speed Do we have any of the measured speed types set?
    * @param  internal_turn      Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)

@@ -184,11 +184,11 @@ public:
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  edge   Directed edge (the to edge)
-   * @param  node   Node (intersection) where transition occurs.
-   * @param  pred   Predecessor edge information.
-   * @param  tile   Pointer to the graph tile containing the to edge.
-   * @param  reader Grahpreader to get the tile containing the predecessor if needed
+   * @param  edge          Directed edge (the to edge)
+   * @param  node          Node (intersection) where transition occurs.
+   * @param  pred          Predecessor edge information.
+   * @param  tile          Pointer to the graph tile containing the to edge.
+   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return Returns the cost and time (seconds)
    */
   virtual Cost
