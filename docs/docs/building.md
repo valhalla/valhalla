@@ -42,7 +42,7 @@ git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout <some-tag>
 ./vcpkg/bootstrap-vcpkg.sh
 # windows: cmd.exe /c bootstrap-vcpkg.bat
 # only build Release versions of dependencies, not Debug
-echo "set(VCPKG_BUILD_TYPE release)" >> vcpkg/triplets/x64-linux.cmake
+echo "set(VCPKG_BUILD_TYPE Release)" >> vcpkg/triplets/x64-linux.cmake
 # windows: echo.set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
 # osx: echo "set(VCPKG_BUILD_TYPE release)" >> vcpkg/triplets/arm64-osx.cmake
 
@@ -114,7 +114,7 @@ It's recommended to work with the following toolset:
 ```
 git -C C:\path\to\vcpkg checkout f330a32
 # only build release versions for vcpkg packages
-echo.set(VCPKG_BUILD_TYPE release)>> path\to\vcpkg\triplets\x64-windows.cmake
+echo.set(VCPKG_BUILD_TYPE Release)>> path\to\vcpkg\triplets\x64-windows.cmake
 cd C:\path\to\valhalla
 C:\path\to\vcpkg.exe install --triplet x64-windows
 ```

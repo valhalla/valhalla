@@ -16,7 +16,7 @@ commands:
 jobs:
   lint-build-debug:
     docker:
-      - image: ubuntu:23.04
+      - image: ubuntu:24.04
     resource_class: xlarge
     steps:
       - checkout
@@ -56,7 +56,7 @@ jobs:
 
   build-release:
     docker:
-      - image: ubuntu:23.04
+      - image: ubuntu:24.04
     resource_class: xlarge
     steps:
       - checkout
@@ -89,7 +89,7 @@ jobs:
 
   build-arm-release:
     docker:
-      - image: arm64v8/ubuntu:23.04
+      - image: arm64v8/ubuntu:24.04
     resource_class: arm.xlarge
     steps:
       - checkout
