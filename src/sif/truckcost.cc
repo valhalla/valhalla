@@ -240,11 +240,12 @@ public:
    * @param  reader Grahpreader to get the tile containing the predecessor if needed
    * @return Returns the cost and time (seconds)
    */
-  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
-                              const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const graph_tile_ptr& tile,
-                              baldr::GraphReader& reader) const override;
+  virtual Cost
+  TransitionCost(const baldr::DirectedEdge* edge,
+                 const baldr::NodeInfo* node,
+                 const EdgeLabel& pred,
+                 const graph_tile_ptr& tile,
+                 const std::function<LimitedGraphReader()>& reader_getter) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -266,7 +267,7 @@ public:
                                      const baldr::DirectedEdge* edge,
                                      const graph_tile_ptr& tile,
                                      const GraphId& pred_id,
-                                     baldr::GraphReader& reader,
+                                     const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed,
                                      const InternalTurn internal_turn) const override;
 
@@ -573,7 +574,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
                                const EdgeLabel& pred,
                                const graph_tile_ptr& /*tile*/,
-                               baldr::GraphReader& /*reader*/) const {
+                               const std::function<LimitedGraphReader()>& /*reader_getter*/) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -649,7 +650,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                                       const baldr::DirectedEdge* edge,
                                       const graph_tile_ptr& /*tile*/,
                                       const GraphId& /*pred_id*/,
-                                      baldr::GraphReader& /*reader*/,
+                                      const std::function<LimitedGraphReader()>& /*reader_getter*/,
                                       const bool has_measured_speed,
                                       const InternalTurn internal_turn) const {
 

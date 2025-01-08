@@ -203,7 +203,7 @@ Cost DynamicCost::TransitionCost(const DirectedEdge*,
                                  const NodeInfo*,
                                  const EdgeLabel&,
                                  const graph_tile_ptr&,
-                                 baldr::GraphReader&) const {
+                                 const std::function<baldr::LimitedGraphReader()>&) const {
   return {0.0f, 0.0f};
 }
 
@@ -217,7 +217,7 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::DirectedEdge*,
                                         const graph_tile_ptr&,
                                         const baldr::GraphId&,
-                                        baldr::GraphReader&,
+                                        const std::function<baldr::LimitedGraphReader()>&,
                                         const bool,
                                         const InternalTurn) const {
   return {0.0f, 0.0f};

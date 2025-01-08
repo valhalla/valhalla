@@ -159,7 +159,7 @@ public:
                               const baldr::NodeInfo*,
                               const EdgeLabel&,
                               const baldr::graph_tile_ptr&,
-                              baldr::GraphReader&) const override {
+                              const std::function<baldr::LimitedGraphReader()>&) const override {
     return {};
   }
 
@@ -183,7 +183,7 @@ public:
                                      const baldr::DirectedEdge*,
                                      const graph_tile_ptr&,
                                      const GraphId&,
-                                     baldr::GraphReader&,
+                                     const std::function<baldr::LimitedGraphReader()>&,
                                      const bool,
                                      const InternalTurn) const override {
     return {};

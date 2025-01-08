@@ -208,11 +208,12 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   uint8_t flow_sources;
   auto edge_cost = FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
                            : costing_->EdgeCost(opp_edge, endtile, time_info, flow_sources);
+  auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
 
   sif::Cost transition_cost =
-      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, graphreader)
+      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter)
               : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, endtile, pred.edgeid(), graphreader,
+                                                opp_pred_edge, endtile, pred.edgeid(), reader_getter,
                                                 0 != (flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
 

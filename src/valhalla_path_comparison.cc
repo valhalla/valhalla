@@ -63,7 +63,9 @@ void print_edge(GraphReader& reader,
                          kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
-    Cost trans_cost = costing->TransitionCost(edge, node, pred_label, tile, reader);
+
+    auto reader_getter = [&]() { return baldr::LimitedGraphReader(reader); };
+    Cost trans_cost = costing->TransitionCost(edge, node, pred_label, tile, reader_getter);
     trans_total += trans_cost;
     std::cout << "TransitionCost cost: " << trans_cost.cost;
     std::cout << " secs: " << trans_cost.secs << "\n";

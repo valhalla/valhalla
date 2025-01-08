@@ -377,11 +377,12 @@ public:
    * @param  reader Grahpreader to get the tile containing the predecessor if needed
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
-                              const baldr::NodeInfo* node,
-                              const EdgeLabel& pred,
-                              const graph_tile_ptr& tile,
-                              baldr::GraphReader& reader) const override;
+  virtual Cost
+  TransitionCost(const baldr::DirectedEdge* edge,
+                 const baldr::NodeInfo* node,
+                 const EdgeLabel& pred,
+                 const graph_tile_ptr& tile,
+                 const std::function<LimitedGraphReader()>& reader_getter) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -405,7 +406,7 @@ public:
                                      const baldr::DirectedEdge* edge,
                                      const graph_tile_ptr& tile,
                                      const GraphId& edge_id,
-                                     baldr::GraphReader& reader,
+                                     const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool /*has_measured_speed*/,
                                      const InternalTurn /*internal_turn*/) const override;
 
@@ -756,7 +757,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const baldr::NodeInfo* node,
                                     const EdgeLabel& pred,
                                     const graph_tile_ptr& tile,
-                                    baldr::GraphReader& reader) const {
+                                    const std::function<LimitedGraphReader()>& reader_getter) const {
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return {step_penalty_, 0.0f};
@@ -768,6 +769,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // fixed per level penalty for elevator
   if (node->type() == NodeType::kElevator) {
+    auto reader = reader_getter();
     auto pred_tile = reader.GetGraphTile(pred.edgeid());
     auto levels = tile->edgeinfo(edge).levels();
     auto other_de = pred_tile->directededge(pred.edgeid());
@@ -804,7 +806,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::DirectedEdge* edge,
                                            const graph_tile_ptr& tile,
                                            const GraphId& edge_id,
-                                           baldr::GraphReader& reader,
+                                           const std::function<LimitedGraphReader()>& reader_getter,
                                            const bool /*has_measured_speed*/,
                                            const InternalTurn /*internal_turn*/) const {
 
@@ -823,6 +825,8 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
 
   // per level penalty for elevator node
   if (node->type() == NodeType::kElevator) {
+    // call functor to get limited access to reader
+    baldr::LimitedGraphReader reader = reader_getter();
     auto to_tile = reader.GetGraphTile(edge_id);
     auto levels = tile->edgeinfo(pred).levels();
     auto prev_levels = to_tile->edgeinfo(edge).levels();
