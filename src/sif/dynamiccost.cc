@@ -160,16 +160,23 @@ DynamicCost::DynamicCost(const Costing& costing,
       top_speed_(costing.options().top_speed()), fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
-  // Parse property tree to get hierarchy limits
-  // TODO - get the number of levels
-  uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
-  for (uint32_t level = 0; level < n_levels; level++) {
-    auto h = HierarchyLimits(level);
-    // Set max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning
-    if (costing.options().disable_hierarchy_pruning()) {
-      h.max_up_transitions = kUnlimitedTransitions;
+
+  // set user supplied hierarchy limits if present, fill the other
+  // required levels up with sentinel values (clamping to config supplied limits/defaults is handled
+  // by thor worker)
+  for (const auto& level : TileHierarchy::levels()) {
+    const auto& res = costing.options().hierarchy_limits().find(level.level);
+    if (res == costing.options().hierarchy_limits().end()) {
+      HierarchyLimits hl;
+      hl.set_expand_within_dist(kMaxDistance);
+      hl.set_max_up_transitions(kUnlimitedTransitions);
+      hl.set_up_transition_count(0);
+      hierarchy_limits_.push_back(hl);
+    } else {
+      hierarchy_limits_.push_back(res->second);
+      // for internal use only
+      hierarchy_limits_.back().set_up_transition_count(0);
     }
-    hierarchy_limits_.emplace_back(h);
   }
 
   // Add avoid edges to internal set
@@ -266,6 +273,11 @@ std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;
 }
 
+// Sets hierarchy limits.
+void DynamicCost::SetHierarchyLimits(const std::vector<HierarchyLimits>& hierarchy_limits) {
+  hierarchy_limits_ = hierarchy_limits;
+}
+
 // Relax hierarchy limits.
 void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   // since bidirectional A* does about half the expansion we can do half the relaxation here
@@ -273,7 +285,7 @@ void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
 
   for (auto& hierarchy : hierarchy_limits_) {
-    hierarchy.Relax(relax_factor, expansion_within_factor);
+    sif::RelaxHierarchyLimits(hierarchy, relax_factor, expansion_within_factor);
   }
 }
 
@@ -402,6 +414,32 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // disable hierarchy pruning
   co->set_disable_hierarchy_pruning(
       rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
+
+  // hierarchy limits
+  for (const auto& level : TileHierarchy::levels()) {
+    std::string hierarchy_limits_path = "/hierarchy_limits/" + std::to_string(level.level);
+
+    unsigned int max_up_transitions = rapidjson::get<decltype(
+        max_up_transitions)>(json, std::string(hierarchy_limits_path + "/max_up_transitions").c_str(),
+                             kUnlimitedTransitions);
+    float expand_within_distance =
+        rapidjson::get<decltype(expand_within_distance)>(json,
+                                                         std::string(hierarchy_limits_path +
+                                                                     "/expand_within_distance")
+                                                             .c_str(),
+                                                         kMaxDistance);
+
+    // don't set anything on the protobuf if the user sent nothing
+    if (max_up_transitions == kUnlimitedTransitions && expand_within_distance == kMaxDistance)
+      continue;
+
+    // set on protobuf
+    HierarchyLimits hierarchylimits;
+    hierarchylimits.set_max_up_transitions(max_up_transitions);
+    hierarchylimits.set_expand_within_dist(expand_within_distance);
+
+    co->mutable_hierarchy_limits()->insert({level.level, hierarchylimits});
+  }
 
   // destination only penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",
