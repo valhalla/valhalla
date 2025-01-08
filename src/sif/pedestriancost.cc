@@ -589,7 +589,7 @@ PedestrianCost::PedestrianCost(const Costing& costing)
 
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
-    h.max_up_transitions = kUnlimitedTransitions;
+    h.set_max_up_transitions(kUnlimitedTransitions);
   }
 
   allow_transit_connections_ = false;

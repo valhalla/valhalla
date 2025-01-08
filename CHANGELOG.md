@@ -6,11 +6,19 @@
    * FIXED: Fix valhalla_benchmark_loki benchmark application. [#4981](https://github.com/valhalla/valhalla/pull/4981)
    * FIXED: Double free crash during tiles build inside libxml2 on concurrent `spatialite_cleanup_ex()` calls [#5005](https://github.com/valhalla/valhalla/pull/5005)
    * FIXED: update CircleCI runners to Ubuntu 24.04 [#5002](https://github.com/valhalla/valhalla/pull/5002)
+   * FIXED: Fixed a typo in the (previously undocumented) matrix-APIs responses `algorithm` field: `timedistancbssematrix` is now `timedistancebssmatrix` [#5000](https://github.com/valhalla/valhalla/pull/5000).
+   * FIXED: More trivial cases in `CostMatrix` [#5001](https://github.com/valhalla/valhalla/pull/5001)
+   * FIXED: Tag smoothness=impassable breaks pedestrian routing [#5023](https://github.com/valhalla/valhalla/pull/5023)
+   * FIXED: Make isochrone geotiff serialization use "north up" geotransform [#5019](https://github.com/valhalla/valhalla/pull/5019)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
    * ADDED: include level change info in `/route` response [#4942](https://github.com/valhalla/valhalla/pull/4942)
-   * ADDED: steps and elevator maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
+   * ADDED: steps maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
+   * ADDED: instruction improvements for node-based elevators [#4988](https://github.com/valhalla/valhalla/pull/4988)
+   * ADDED: customizable hierarchy limits [#5010](https://github.com/valhalla/valhalla/pull/5010)
+   * ADDED: increased precision in route lengths [#5020](https://github.com/valhalla/valhalla/pull/5020)
+   * ADDED: Allow specifying custom `graph.lua` file name via `valhalla_build_config` [#5036](https://github.com/valhalla/valhalla/pull/5036)
    * ADDED: per level elevator penalty [#4973](https://github.com/valhalla/valhalla/pull/4973)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
