@@ -528,9 +528,11 @@ TEST(TimeParsing, TestConditionalMaxspeed) {
   TryConditionalRestrictions("(Jun 1-Aug 31 00:00-24:00)", 0, 0, 0, {6, 1, 0, 0, 0},
                              {8, 31, 0, 0, 0});
 
-  // non-standard seasons that are not supported
-  EXPECT_TRUE(get_time_range("summer").empty());
-  EXPECT_TRUE(get_time_range("winter").empty());
+  TryConditionalRestrictions("(Oct-May)", 0, 0, 0, {10, 0, 0, 0, 0}, {5, 0, 0, 0, 0});
+
+  // non-standard seasons are supported as well
+  TryConditionalRestrictions("summer", 0, 0, 0, {6, 0, 0, 0, 0}, {8, 0, 0, 0, 0});
+  TryConditionalRestrictions("winter", 0, 0, 0, {12, 0, 0, 0, 0}, {2, 0, 0, 0, 0});
 }
 
 int main(int argc, char* argv[]) {

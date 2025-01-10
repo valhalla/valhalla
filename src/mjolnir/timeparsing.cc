@@ -231,6 +231,9 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     // rm white space at both ends
     boost::algorithm::trim(condition);
 
+    boost::algorithm::replace_all(condition, "winter", "Dec-Feb");
+    boost::algorithm::replace_all(condition, "summer", "Jun-Aug");
+
     // Holidays and school hours skip for now
     if (boost::algorithm::starts_with(condition, "PH") ||
         boost::algorithm::starts_with(condition, "SH")) {
