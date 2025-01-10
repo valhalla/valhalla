@@ -252,7 +252,7 @@ template <bool Maximize> StateId NaiveViterbiSearch<Maximize>::SearchWinner(Stat
       winner = FindWinner(labels);
     }
     winner_by_time.push_back(winner);
-    history_.push_back(move(labels));
+    history_.push_back(std::move(labels));
   }
 
   return winner_by_time[target];
