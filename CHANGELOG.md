@@ -19,6 +19,7 @@
    * ADDED: customizable hierarchy limits [#5010](https://github.com/valhalla/valhalla/pull/5010)
    * ADDED: increased precision in route lengths [#5020](https://github.com/valhalla/valhalla/pull/5020)
    * ADDED: Allow specifying custom `graph.lua` file name via `valhalla_build_config` [#5036](https://github.com/valhalla/valhalla/pull/5036)
+   * ADDED: Support `"access:conditional"="no @ winter"` and other `"access:conditional"` restrictions [#5048](https://github.com/valhalla/valhalla/pull/5048)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
