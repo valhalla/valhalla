@@ -2,6 +2,7 @@
 #include <string>
 
 #include "config.h"
+#include <valhalla/worker.h>
 
 namespace {
 

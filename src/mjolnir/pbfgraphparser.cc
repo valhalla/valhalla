@@ -1498,6 +1498,8 @@ public:
           way_.set_surface(Surface::kGravel);
         } else if (tag_.second == "very_horrible") {
           way_.set_surface(Surface::kPath);
+        } else if (tag_.second == "impassable") {
+          way_.set_surface(Surface::kImpassable);
         } else {
           has_surface_ = false;
         }
