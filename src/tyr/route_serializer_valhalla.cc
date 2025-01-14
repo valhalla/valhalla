@@ -2,6 +2,7 @@
 
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
+#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
@@ -219,12 +220,13 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
   writer.end_array();
 }
 
-void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
+void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("legs");
   const auto& directions_legs = api.directions().routes(route_index).legs();
   unsigned int length_prec = api.options().units() == Options::miles ? 4 : 3;
-  auto trip_leg_itr = api.trip().routes(route_index).legs().begin();
+  auto trip_leg_itr = api.mutable_trip()->mutable_routes(route_index)->mutable_legs()->begin();
   for (const auto& directions_leg : directions_legs) {
+    valhalla::odin::EnhancedTripLeg etp(*trip_leg_itr);
     writer.start_object(); // leg
     bool has_time_restrictions = false;
     bool has_toll = false;
@@ -234,6 +236,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     if (directions_leg.maneuver_size())
       writer.start_array("maneuvers");
 
+    int maneuver_index = 0;
     for (const auto& maneuver : directions_leg.maneuver()) {
       writer.start_object();
 
@@ -272,6 +275,19 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
           writer(maneuver.begin_street_name(i).value());
         }
         writer.end_array();
+      }
+
+      // Set bearings
+      // absolute bearing (degrees from north, clockwise) before and after the maneuver.
+      bool depart_maneuver = (maneuver_index == 0);
+      bool arrive_maneuver = (maneuver_index == directions_leg.maneuver_size() - 1);
+      if (!depart_maneuver) {
+        uint32_t in_brg = etp.GetPrevEdge(maneuver_index)->end_heading();
+        writer("bearing_before", static_cast<uint64_t>(in_brg));
+      }
+      if (!arrive_maneuver) {
+        uint32_t out_brg = maneuver.begin_heading();
+        writer("bearing_after", static_cast<uint64_t>(out_brg));
       }
 
       // Time, length, cost, and shape indexes
@@ -515,6 +531,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       // “checkFerryInfoNote” : “<checkFerryInfoNote>”
 
       writer.end_object(); // maneuver
+      maneuver_index++;
     }
     if (directions_leg.maneuver_size()) {
       writer.end_array(); // maneuvers
@@ -621,7 +638,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
   writer.end_array(); // legs
 }
 
-std::string serialize(const Api& api) {
+std::string serialize(Api& api) {
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);
 
