@@ -207,16 +207,16 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // Compute the cost and path distance to the end of this edge
     Cost transition_cost, newcost;
     uint8_t flow_sources;
-
+    auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
     if (FORWARD) {
-      transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
+      transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
       newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time, flow_sources) +
                 transition_cost;
     } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                          opp_pred_edge, pred.has_measured_speed(),
-                                          pred.internal_turn());
+                                          opp_pred_edge, t2, pred.edgeid(), reader_getter,
+                                          pred.has_measured_speed(), pred.internal_turn());
       newcost =
           pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources) + transition_cost;
     }
@@ -635,8 +635,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       // a transit line (assume the wait time is the cost)
       // transition_cost = { 10.0f, 10.0f };
     } else {
+      auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
       transition_cost =
-          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
+          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred,
+                                                                     tile, reader_getter);
     }
     newcost += transition_cost;
 

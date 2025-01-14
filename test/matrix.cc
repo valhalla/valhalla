@@ -89,7 +89,10 @@ public:
 
   Cost TransitionCost(const DirectedEdge* /*edge*/,
                       const NodeInfo* /*node*/,
-                      const EdgeLabel& /*pred*/) const override {
+                      const EdgeLabel& /*pred*/,
+                      const graph_tile_ptr& /*tile*/,
+                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/
+  ) const override {
     return {5.0f, 5.0f};
   }
 
@@ -97,6 +100,9 @@ public:
                              const NodeInfo* /*node*/,
                              const DirectedEdge* /*opp_edge*/,
                              const DirectedEdge* /*opp_pred_edge*/,
+                             const graph_tile_ptr& /*tile*/,
+                             const baldr::GraphId& /*edge_id*/,
+                             const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                              const bool /*has_measured_speed*/,
                              const InternalTurn /*internal_turn*/) const override {
     return {5.0f, 5.0f};

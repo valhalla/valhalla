@@ -1027,6 +1027,10 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
   return {itile, begin_index, end_index};
 }
 
+graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
+  return reader_.GetGraphTile(graphid);
+}
+
 const valhalla::IncidentsTile::Metadata&
 getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
                     const valhalla::IncidentsTile::Location& incident_location) {
