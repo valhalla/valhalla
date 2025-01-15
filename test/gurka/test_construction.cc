@@ -141,7 +141,7 @@ protected:
 
 gurka::map ConstructionRoutingTest::map = {};
 
-TEST_F(ConstructionRoutingTest, IgnoreConstructions) {
+TEST_F(ConstructionRoutingTest, IgnoreConstruction) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "auto",
                                  {{"/costing_options/auto/ignore_construction", "1"},
                                   {"/costing_options/auto/shortest", "1"}});
