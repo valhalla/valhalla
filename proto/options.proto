@@ -342,6 +342,7 @@ message Costing {
     bool exclude_highways = 90;
     bool exclude_ferries = 91;
     map<uint32, HierarchyLimits> hierarchy_limits = 92;
+    bool ignore_construction = 93;
   }
 
   oneof has_options {
