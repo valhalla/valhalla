@@ -65,10 +65,6 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& destll,
   float range = kBucketCount * bucketsize;
   adjacencylist_.reuse(0.0f, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
-
-  // Get hierarchy limits from the costing. Get a copy since we increment
-  // transition counts (i.e., this is not a const reference).
-  hierarchy_limits_ = costing->GetHierarchyLimits();
 }
 
 // Clear the temporary information generated during path construction.
@@ -858,6 +854,5 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
   std::reverse(path.begin(), path.end());
   return path;
 }
-
 } // namespace thor
 } // namespace valhalla

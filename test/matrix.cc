@@ -1,3 +1,4 @@
+#include "gurka/gurka.h"
 #include "test.h"
 
 #include <string>
@@ -135,7 +136,15 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
-const auto cfg = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+const auto hl_config = parse_hierarchy_limits_from_config(cfg, "costmatrix", true);
+
+// hierarchy limits are managed by thor's worker, since we call the algorithms directly here,
+// we have to do this manually
+void set_hierarchy_limits(sif::cost_ptr_t cost) {
+  Costing_Options opts;
+  check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, hl_config, false);
+}
 
 const auto test_request = R"({
     "sources":[
@@ -213,7 +222,7 @@ TEST(Matrix, test_matrix) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
-
+  set_hierarchy_limits(mode_costing[0]);
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto matrix = request.matrix();
@@ -299,6 +308,7 @@ TEST(Matrix, test_timedistancematrix_forward) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
@@ -350,6 +360,7 @@ TEST(Matrix, test_timedistancematrix_reverse) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
@@ -387,6 +398,7 @@ TEST(Matrix, test_matrix_osrm) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
 
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
@@ -428,6 +440,7 @@ TEST(Matrix, partial_matrix) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
@@ -542,6 +555,8 @@ TEST(Matrix, slim_matrix) {
   EXPECT_FALSE(json.HasMember("targets"));
   EXPECT_TRUE(json.HasMember("units"));
 }
+
+/**************************************************************************************************/
 
 int main(int argc, char* argv[]) {
   logging::Configure({{"type", ""}}); // silence logs
