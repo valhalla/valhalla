@@ -213,7 +213,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Timing with CostMatrix
-  CostMatrix matrix;
+  CostMatrix matrix(config.get_child("thor"));
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
