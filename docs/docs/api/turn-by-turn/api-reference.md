@@ -137,6 +137,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `ignore_oneways` | If set to `true`, ignores one-way restrictions. Especially useful for matching GPS traces to the road network ignoring uni-directional traffic rules. Not included in `ignore_restrictions` option. Default is `false`. |
 | `ignore_non_vehicular_restrictions` | Similar to `ignore_restrictions`, but will respect restrictions that impact vehicle safety, such as weight and size restrictions. |
 | `ignore_access` | Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions. Default is `false`. |
+| `ignore_construction` | Will ignore construction tags. Only works when the `include_construction` option is set before building the graph. Useful for planning future routes. Default is `false`. |
 | `speed_types` | Will determine which speed sources are used, if available. A list of strings with the following possible values: <ul><li><code>freeflow</code></li><li><code>constrained</code></li><li><code>predicted</code></li><li><code>current</code></li></ul> Default is all sources (again, only if available). |
 | `hierarchy_limits` (**beta**) | Pass custom hierarchy limits along with this request (read more about the tile hierarchy [here](../../tiles.md#hierarchieslevels)). Needs to be an object with mandatory keys `1` and `2`, each value is another object containing numerical values for `max_up_transitions` and `expand_within_distance`. The service may either clamp these values or disallow modifying hierarchy limits via the request parameters entirely. |
 
@@ -439,6 +440,8 @@ Each maneuver includes:
 | `travel_mode` | Travel mode.<ul><li>"drive"</li><li>"pedestrian"</li><li>"bicycle"</li><li>"transit"</li></ul>|
 | `travel_type` | Travel type for drive.<ul><li>"car"</li></ul>Travel type for pedestrian.<ul><li>"foot"</li></ul>Travel type for bicycle.<ul><li>"road"</li></ul>Travel type for transit.<ul><li>Tram or light rail = "tram"</li><li>Metro or subway = "metro"</li><li>Rail = "rail"</li><li>Bus = "bus"</li><li>Ferry = "ferry"</li><li>Cable car = "cable_car"</li><li>Gondola = "gondola"</li><li>Funicular = "funicular"</li></ul>|
 | `bss_maneuver_type` | Used when `travel_mode` is `bikeshare`. Describes bike share maneuver. The default value is "NoneAction <ul><li>"NoneAction"</li><li>"RentBikeAtBikeShare"</li><li>"ReturnBikeAtBikeShare"</li></ul> |
+| `bearing_before` | The clockwise angle from true north to the direction of travel immediately before the maneuver. |
+| `bearing_after` | The clockwise angle from true north to the direction of travel immediately after the maneuver. |
 
 For the maneuver `type`, the following are available:
 
