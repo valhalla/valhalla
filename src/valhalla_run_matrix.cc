@@ -227,7 +227,7 @@ int main(int argc, char* argv[]) {
   LogResults(optimize, options, request.matrix(), log_details);
 
   // Run with TimeDistanceMatrix
-  TimeDistanceMatrix tdm;
+  TimeDistanceMatrix tdm(config.get_child("thor"));
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
     tdm.SourceToTarget(request, reader, mode_costing, mode, max_distance);
