@@ -34,7 +34,7 @@ constexpr float kDefaultBssPenalty = 0.0f;    // Seconds
 constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
 constexpr float kDefaultAvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
-const std::string kDefaultBicycleType = "Hybrid"; // Bicycle type
+const std::string kDefaultBicycleType = "hybrid"; // Bicycle type
 
 // Default turn costs - modified by the stop impact.
 constexpr float kTCStraight = 0.15f;
@@ -447,11 +447,11 @@ BicycleCost::BicycleCost(const Costing& costing)
 
   // Get the bicycle type - enter as string and convert to enum
   const std::string& bicycle_type = costing_options.transport_type();
-  if (bicycle_type == "Cross") {
+  if (bicycle_type == "cross" || bicycle_type == "Cross") {
     type_ = BicycleType::kCross;
-  } else if (bicycle_type == "Road") {
+  } else if (bicycle_type == "road" || bicycle_type == "Road") {
     type_ = BicycleType::kRoad;
-  } else if (bicycle_type == "Mountain") {
+  } else if (bicycle_type == "mountain" || bicycle_type == "Mountain") {
     type_ = BicycleType::kMountain;
   } else {
     type_ = BicycleType::kHybrid;
@@ -857,11 +857,12 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
   // convert string to enum, set ranges and defaults based on enum
   BicycleType type;
-  if (co->transport_type() == "Cross") {
+  const std::string& bicycle_type = co->transport_type();
+  if (bicycle_type == "cross" || bicycle_type == "Cross") {
     type = BicycleType::kCross;
-  } else if (co->transport_type() == "Road") {
+  } else if (bicycle_type == "road" || bicycle_type == "Road") {
     type = BicycleType::kRoad;
-  } else if (co->transport_type() == "Mountain") {
+  } else if (bicycle_type == "mountain" || bicycle_type == "Mountain") {
     type = BicycleType::kMountain;
   } else {
     type = BicycleType::kHybrid;
