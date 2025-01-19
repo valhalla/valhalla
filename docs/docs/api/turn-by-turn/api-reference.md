@@ -137,7 +137,9 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `ignore_oneways` | If set to `true`, ignores one-way restrictions. Especially useful for matching GPS traces to the road network ignoring uni-directional traffic rules. Not included in `ignore_restrictions` option. Default is `false`. |
 | `ignore_non_vehicular_restrictions` | Similar to `ignore_restrictions`, but will respect restrictions that impact vehicle safety, such as weight and size restrictions. |
 | `ignore_access` | Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions. Default is `false`. |
+| `ignore_construction` | Will ignore construction tags. Only works when the `include_construction` option is set before building the graph. Useful for planning future routes. Default is `false`. |
 | `speed_types` | Will determine which speed sources are used, if available. A list of strings with the following possible values: <ul><li><code>freeflow</code></li><li><code>constrained</code></li><li><code>predicted</code></li><li><code>current</code></li></ul> Default is all sources (again, only if available). |
+| `hierarchy_limits` (**beta**) | Pass custom hierarchy limits along with this request (read more about the tile hierarchy [here](../../tiles.md#hierarchieslevels)). Needs to be an object with mandatory keys `1` and `2`, each value is another object containing numerical values for `max_up_transitions` and `expand_within_distance`. The service may either clamp these values or disallow modifying hierarchy limits via the request parameters entirely. |
 
 ###### Other costing options
 The following options are available for `auto`, `bus`, `taxi`, and `truck` costing methods.
@@ -244,7 +246,7 @@ These options are available for pedestrian costing methods.
 | `max_distance` | Sets the maximum total walking distance of a route. Default is 100 km (~62 miles). |
 | `transit_start_end_max_distance` | A pedestrian option that can be added to the request to extend the defaults (2145 meters or approximately 1.5 miles). This is the maximum walking distance at the beginning or end of a route.|
 | `transit_transfer_max_distance` | A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.|
-| `type` | If set to `blind`, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. Default `foot` |
+| `type` | <ul><li>If set to `blind`, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes.</li><li>If set to `wheelchair`, changes the defaults for `max_distance`, `walking_speed`, and `step_penalty` to be better aligned to the needs of wheelchair users.</li></ul> These two options are mutually exclusive. In case you want to combine them, please use `blind` and pass the options adjusted for `wheelchair` users manually. Default `foot` |
 | `mode_factor` | A factor which the cost of a pedestrian edge will be multiplied with on multimodal request, e.g. `bss` or `multimodal/transit`. Default is a factor of 1.5, i.e. avoiding walking.
 
 ##### Transit costing options
@@ -438,6 +440,8 @@ Each maneuver includes:
 | `travel_mode` | Travel mode.<ul><li>"drive"</li><li>"pedestrian"</li><li>"bicycle"</li><li>"transit"</li></ul>|
 | `travel_type` | Travel type for drive.<ul><li>"car"</li></ul>Travel type for pedestrian.<ul><li>"foot"</li></ul>Travel type for bicycle.<ul><li>"road"</li></ul>Travel type for transit.<ul><li>Tram or light rail = "tram"</li><li>Metro or subway = "metro"</li><li>Rail = "rail"</li><li>Bus = "bus"</li><li>Ferry = "ferry"</li><li>Cable car = "cable_car"</li><li>Gondola = "gondola"</li><li>Funicular = "funicular"</li></ul>|
 | `bss_maneuver_type` | Used when `travel_mode` is `bikeshare`. Describes bike share maneuver. The default value is "NoneAction <ul><li>"NoneAction"</li><li>"RentBikeAtBikeShare"</li><li>"ReturnBikeAtBikeShare"</li></ul> |
+| `bearing_before` | The clockwise angle from true north to the direction of travel immediately before the maneuver. |
+| `bearing_after` | The clockwise angle from true north to the direction of travel immediately after the maneuver. |
 
 For the maneuver `type`, the following are available:
 

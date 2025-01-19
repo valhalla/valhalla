@@ -345,7 +345,8 @@ public:
         ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
         ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions()) ||
         ((disallow_mask & kDisallowShortcut) && edge->is_shortcut());
-    return accessible && !assumed_restricted && (edge->use() != baldr::Use::kConstruction);
+    return accessible && !assumed_restricted &&
+           ((edge->use() != baldr::Use::kConstruction) || ignore_construction_);
   }
 
   /**
@@ -359,10 +360,11 @@ public:
     // you have forward access for the mode you care about
     // you dont care about what mode has access so long as its forward
     // you dont care about the direction the mode has access to
-    return ((edge->forwardaccess() & access_mask_) ||
-            (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
-            (ignore_oneways_ && (edge->reverseaccess() & access_mask_))) &&
-           (edge->use() != baldr::Use::kConstruction);
+    return (edge->forwardaccess() & access_mask_) ||
+           (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
+           (ignore_oneways_ && (edge->reverseaccess() & access_mask_)) ||
+           // OR it is under construction but you choose to ignore that
+           (ignore_construction_ && edge->use() == baldr::Use::kConstruction);
   }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
@@ -867,6 +869,11 @@ public:
   std::vector<HierarchyLimits>& GetHierarchyLimits();
 
   /**
+   * Sets the hierarchy limits.
+   */
+  void SetHierarchyLimits(const std::vector<HierarchyLimits>& hierarchy_limits);
+
+  /**
    * Relax hierarchy limits using pre-defined algorithm-cased factors.
    */
   void RelaxHierarchyLimits(const bool using_bidirectional);
@@ -974,6 +981,14 @@ public:
     return speed_penalty;
   }
 
+  bool DefaultHierarchyLimits() {
+    return default_hierarchy_limits;
+  }
+
+  void SetDefaultHierarchyLimits(bool default_) {
+    default_hierarchy_limits = default_;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
@@ -1038,8 +1053,8 @@ protected:
   // Penalties that all costing methods support
   float maneuver_penalty_;         // Penalty (seconds) when inconsistent names
   float alley_penalty_;            // Penalty (seconds) to use a alley
-  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, parking aisle or
-                                   // destination only road
+  float destination_only_penalty_; // Penalty (seconds) using private road, driveway, parking aisle
+                                   // or destination only road
   float living_street_penalty_;    // Penalty (seconds) to use a living street
   float track_penalty_;            // Penalty (seconds) to use tracks
   float service_penalty_;          // Penalty (seconds) to use a generic service road
@@ -1062,6 +1077,7 @@ protected:
   bool ignore_oneways_{false};
   bool ignore_access_{false};
   bool ignore_closures_{false};
+  bool ignore_construction_{false};
   uint32_t top_speed_;
   uint32_t fixed_speed_;
   // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
@@ -1077,6 +1093,7 @@ protected:
   bool exclude_highways_{false};
   bool exclude_ferries_{false};
   bool has_excludes_{false};
+  bool default_hierarchy_limits{true};
 
   bool exclude_cash_only_tolls_{false};
 
@@ -1185,6 +1202,7 @@ protected:
     has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
                     exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
+    default_hierarchy_limits = costing_options.hierarchy_limits_size() == 0;
   }
 
   /**
