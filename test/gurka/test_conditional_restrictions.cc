@@ -318,13 +318,11 @@ TEST_F(ConditionalRestrictions, AccessConditional) {
                                {"/costing_options/" + costing + "/ignore_restrictions", "1"}});
     gurka::assert::raw::expect_path(result, expected_path, costing);
 
-    // 'access' vs 'restriction' might be difficult to articulate.
-    // As per
+    // 'access' vs 'restriction' might be difficult to articulate. As per
     // https://wiki.openstreetmap.org/wiki/Key:access#Access_time_and_other_conditional_restrictions,
     // the `access:conditional` falls under the 'conditional restrictions' category, so
     // `ignore_access` doesn't apply (and also because it is implemented via conditional
     // restrictions).
-    // time inside of restriction - no path
     EXPECT_THROW(
         {
           try {
