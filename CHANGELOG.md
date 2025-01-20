@@ -21,7 +21,7 @@
    * ADDED: Add maneuver bearings in route json response [#5024](https://github.com/valhalla/valhalla/pull/5024)
    * ADDED: Allow specifying custom `graph.lua` file name via `valhalla_build_config` [#5036](https://github.com/valhalla/valhalla/pull/5036)
    * ADDED: `ignore_construction` allows routing on ways with construction tag [#5030](https://github.com/valhalla/valhalla/pull/5030)
-   * ADDED: Support `"access:conditional"="no @ winter"` and other `"access:conditional"` restrictions [#5048](https://github.com/valhalla/valhalla/pull/5048)
+   * ADDED: Support `"access:conditional"` conditional restrictions like `"access:conditional"="no @ (Oct-May)"` [#5048](https://github.com/valhalla/valhalla/pull/5048)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
