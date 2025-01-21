@@ -269,7 +269,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
                              : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
 
-  auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
+  auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
   // Separate out transition cost.
   sif::Cost transition_cost =
       FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter)

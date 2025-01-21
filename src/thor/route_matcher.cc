@@ -184,7 +184,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
 
         // get the cost of traversing the node and the edge
         auto& costing = mode_costing[static_cast<int>(mode)];
-        auto reader_getter = [&]() { return LimitedGraphReader(reader); };
+        auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
         auto transition_cost =
             costing->TransitionCost(de, nodeinfo, prev_edge_label, tile, reader_getter);
         uint8_t flow_sources;
@@ -474,7 +474,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           // get the cost of traversing the node and the remaining part of the edge
           auto& costing = mode_costing[static_cast<int>(mode)];
           nodeinfo = end_edge_tile->node(n->first);
-          auto reader_getter = [&]() { return LimitedGraphReader(reader); };
+          auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
           auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label,
                                                          end_edge_tile, reader_getter);
           uint8_t flow_sources;

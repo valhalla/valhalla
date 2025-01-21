@@ -493,7 +493,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   uint8_t flow_sources;
   Cost newcost = pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
                                         : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
-  auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
+  auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
   sif::Cost tc =
       FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter)
               : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
