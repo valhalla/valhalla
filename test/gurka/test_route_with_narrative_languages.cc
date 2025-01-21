@@ -61,6 +61,7 @@ const std::vector<std::pair<std::string, std::string>> RouteWithNarrativeLanguag
      {"el", "Στρίψτε δεξιά στη Main Street."},
      {"el-GR", "Στρίψτε δεξιά στη Main Street."},
      {"en-AU", "Turn right onto Main Street."},
+     {"au", "Turn right onto Main Street."},
      {"en-GB", "Turn right onto Main Street."},
      {"en", "Turn right onto Main Street."},
      {"en-US", "Turn right onto Main Street."},
