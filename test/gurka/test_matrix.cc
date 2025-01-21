@@ -693,7 +693,7 @@ TEST(StandAlone, MatrixSecondPass) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
   const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_second_pass",
-                                     {{"thor.costmatrix_allow_second_pass", "1"}});
+                                     {{"thor.costmatrix.allow_second_pass", "1"}});
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
   // Make sure the relevant edges are actually built as no-thru
