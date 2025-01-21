@@ -2267,7 +2267,7 @@
         ]
       }
     },
-    "lift": {
+    "elevator": {
       "phrases": {
         "0": "Take the lift.",
         "1": "Take the lift to <LEVEL>."
