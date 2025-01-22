@@ -21,6 +21,7 @@
    * ADDED: increased precision in route lengths [#5020](https://github.com/valhalla/valhalla/pull/5020)
    * ADDED: Add maneuver bearings in route json response [#5024](https://github.com/valhalla/valhalla/pull/5024)
    * ADDED: Allow specifying custom `graph.lua` file name via `valhalla_build_config` [#5036](https://github.com/valhalla/valhalla/pull/5036)
+   * ADDED: per level elevator penalty [#4973](https://github.com/valhalla/valhalla/pull/4973)
    * ADDED: `ignore_construction` allows routing on ways with construction tag [#5030](https://github.com/valhalla/valhalla/pull/5030)
    * ADDED: Australian English language translations [#5057](https://github.com/valhalla/valhalla/pull/5057)
 
