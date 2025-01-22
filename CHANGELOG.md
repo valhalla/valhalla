@@ -23,6 +23,7 @@
    * ADDED: Allow specifying custom `graph.lua` file name via `valhalla_build_config` [#5036](https://github.com/valhalla/valhalla/pull/5036)
    * ADDED: per level elevator penalty [#4973](https://github.com/valhalla/valhalla/pull/4973)
    * ADDED: `ignore_construction` allows routing on ways with construction tag [#5030](https://github.com/valhalla/valhalla/pull/5030)
+   * ADDED: Australian English language translations [#5057](https://github.com/valhalla/valhalla/pull/5057)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
