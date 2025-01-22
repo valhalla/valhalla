@@ -457,8 +457,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       // a transit line (assume the wait time is the cost)
       // transition_cost = {10.0f, 10.0f };
     } else {
+      auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
       transition_cost =
-          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
+          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred,
+                                                                     tile, reader_getter);
     }
     newcost += transition_cost;
 
@@ -729,7 +731,8 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     }
 
     // Get cost
-    auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
+    auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
     Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile) + transition_cost;
     uint32_t walking_distance = pred.path_distance() + directededge->length();
 
