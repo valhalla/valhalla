@@ -4009,11 +4009,9 @@ public:
       uint32_t to_way_id = 0;
       for (const auto& member : members) {
         // from and to must be of type 1(way).
-        if (member.role == "from" &&
-            member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        if (member.role == "from" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           from_way_id = member.member_id;
-        } else if (member.role == "to" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        } else if (member.role == "to" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           to_way_id = member.member_id;
         }
       }
@@ -4032,22 +4030,18 @@ public:
       for (const auto& member : members) {
 
         // from and to must be of type 1(way).  via must be of type 0(node)
-        if (member.role == "from" &&
-            member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        if (member.role == "from" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           from_way_id = member.member_id;
-        } else if (member.role == "to" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        } else if (member.role == "to" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           if (!restriction.to())
             restriction.set_to(member.member_id);
-        } else if (member.role == "via" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE) {
+        } else if (member.role == "via" && member.member_type == OSMPBF::Relation::MemberType::NODE) {
           if (vias.size()) { // mix of nodes and ways.  Not supported yet.
             from_way_id = 0;
             break;
           }
           restriction.set_via(member.member_id);
-        } else if (member.role == "via" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        } else if (member.role == "via" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           if (restriction.via()) { // mix of nodes and ways.  Not supported yet.
             from_way_id = 0;
             break;
@@ -4145,7 +4139,7 @@ public:
                   return; // should not make it here; has to be bad data.
                 }
               } // else
-            }   // if (condition.empty())
+            } // if (condition.empty())
 
             std::vector<std::string> conditions = GetTagTokens(condition, ';');
 
@@ -4172,7 +4166,7 @@ public:
             }
             return;
           } // if (isConditional)
-        }   // end turning into complex restriction
+        } // end turning into complex restriction
 
         restriction.set_modes(modes);
 
@@ -5063,29 +5057,19 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
   callback.reset(new sequence<OSMWay>(ways_file, true),
                  new sequence<OSMWayNode>(way_nodes_file, true),
                  new sequence<OSMAccess>(access_file, true), nullptr, nullptr, nullptr, nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
-  for (auto& file_handle : file_handles) {
+  for (auto& file : input_files) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+    OSMPBF::parse(file,
+                  static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
+                                                OSMPBF::Interest::CHANGESETS),
+                  callback);
   }
 
   // Clarifies types of loop roads and saves fixed ways.
@@ -5130,29 +5114,19 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
 
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
   callback.reset(nullptr, nullptr, nullptr,
                  new sequence<OSMRestriction>(complex_restriction_from_file, true),
                  new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr, nullptr);
 
   // Parse relations.
   LOG_INFO("Parsing relations...");
-  for (auto& file_handle : file_handles) {
+  for (auto& file : input_files) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+    OSMPBF::parse(file,
+                  static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
+                                                OSMPBF::Interest::CHANGESETS),
+                  callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) +
            " simple turn restrictions");
@@ -5201,28 +5175,17 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));
 
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
   if (pt.get<bool>("import_bike_share_stations", false)) {
     LOG_INFO("Parsing bss nodes...");
 
     bool create = true;
-    for (auto& file_handle : file_handles) {
+    for (auto& file : input_files) {
       callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
           callback.last_relation_ = 0;
       // we send a null way_nodes file so that only the bike share stations are parsed
       callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
                      new sequence<OSMNode>(bss_nodes_file, create), nullptr);
-      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
-                            callback);
+      OSMPBF::parse(file, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES), callback);
       create = false;
     }
     // Since the sequence must be flushed before reading it...
@@ -5246,17 +5209,17 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
   LOG_INFO("Parsing nodes...");
-  for (auto& file_handle : file_handles) {
+  for (auto& file : input_files) {
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
                    nullptr, nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, true));
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+    OSMPBF::parse(file,
+                  static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
+                                                OSMPBF::Interest::CHANGESETS),
+                  callback);
   }
   uint64_t max_osm_id = callback.last_node_;
   callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
