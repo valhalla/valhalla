@@ -2024,7 +2024,8 @@ public:
 
     // Get tags if not already available.  Don't bother calling Lua if there
     // are no OSM tags to process.
-    Tags results = tags.empty() ? empty_node_results_ : lua_.Transform(OSMType::kNode, osmid, tags);
+    const Tags results =
+        tags.empty() ? empty_node_results_ : lua_.Transform(OSMType::kNode, osmid, tags);
 
     const auto highway = results.find("highway");
     bool is_highway_junction =
@@ -2059,7 +2060,7 @@ public:
         name_jeita_ = ref_jeita_ = {};
 
     for (const auto& tag : results) {
-      tag_ = tag;
+      tag_ = {tag.first, tag.second};
 
       bool is_lang_pronunciation = false;
       std::size_t found = tag_.first.find(":pronunciation");
@@ -2500,7 +2501,7 @@ public:
     way_.set_drive_on_right(true); // default
 
     for (const auto& kv : results) {
-      tag_ = kv;
+      tag_ = {kv.first, kv.second};
 
       bool is_lang_pronunciation = false;
       std::size_t found = tag_.first.find(":pronunciation");
