@@ -1957,19 +1957,13 @@ public:
     last_node_ = osmid;
 
     // Handle bike share stations separately
-    std::optional<Tags> results = std::nullopt;
     if (bss_nodes_) {
       // Get tags - do't bother with Lua callout if the taglist is empty
-      if (tags.size() > 0) {
-        results = lua_.Transform(OSMType::kNode, osmid, tags);
-      } else {
-        results = empty_node_results_;
-      }
+      Tags results = tags.empty() ? empty_node_results_ : lua_.Transform(OSMType::kNode, osmid, tags);
 
       // bail if there is nothing bike related
-      Tags::const_iterator found;
-      if (!results || (found = results->find("amenity")) == results->end() ||
-          found->second != "bicycle_rental") {
+      Tags::const_iterator found = results.find("amenity");
+      if (found == results.end() || found->second != "bicycle_rental") {
         return;
       }
 
@@ -1979,7 +1973,7 @@ public:
       n.set_type(NodeType::kBikeShare);
       valhalla::BikeShareStationInfo bss_info;
 
-      for (auto& key_value : *results) {
+      for (auto& key_value : results) {
         if (key_value.first == "name") {
           bss_info.set_name(key_value.second);
         } else if (key_value.first == "network") {
@@ -2030,28 +2024,24 @@ public:
 
     // Get tags if not already available.  Don't bother calling Lua if there
     // are no OSM tags to process.
-    if (tags.size() > 0) {
-      results = results ? results : lua_.Transform(OSMType::kNode, osmid, tags);
-    } else {
-      results = results ? results : empty_node_results_;
-    }
+    Tags results = tags.empty() ? empty_node_results_ : lua_.Transform(OSMType::kNode, osmid, tags);
 
-    const auto highway = results->find("highway");
+    const auto highway = results.find("highway");
     bool is_highway_junction =
-        ((highway != results->end()) && (highway->second == "motorway_junction"));
+        ((highway != results.end()) && (highway->second == "motorway_junction"));
 
-    const auto junction = results->find("junction");
+    const auto junction = results.find("junction");
     bool maybe_named_junction =
-        junction != results->end() && (junction->second == "named" || junction->second == "yes");
+        junction != results.end() && (junction->second == "named" || junction->second == "yes");
     bool named_junction = false;
 
-    const auto barrier_toll_booth = results->find("barrier");
+    const auto barrier_toll_booth = results.find("barrier");
     bool is_barrier_toll_booth =
-        (barrier_toll_booth != results->end()) && (barrier_toll_booth->second == "toll_booth");
+        (barrier_toll_booth != results.end()) && (barrier_toll_booth->second == "toll_booth");
 
-    const auto highway_toll_gantry = results->find("highway");
+    const auto highway_toll_gantry = results.find("highway");
     bool is_highway_toll_gantry =
-        (highway_toll_gantry != results->end()) && (highway_toll_gantry->second == "toll_gantry");
+        (highway_toll_gantry != results.end()) && (highway_toll_gantry->second == "toll_gantry");
 
     bool is_toll_node = is_barrier_toll_booth || is_highway_toll_gantry;
     bool named_toll_node = false;
@@ -2068,7 +2058,7 @@ public:
     name_ipa_ = ref_ipa_ = name_nt_sampa_ = ref_nt_sampa_ = name_katakana_ = ref_katakana_ =
         name_jeita_ = ref_jeita_ = {};
 
-    for (const auto& tag : *results) {
+    for (const auto& tag : results) {
       tag_ = tag;
 
       bool is_lang_pronunciation = false;
@@ -2335,9 +2325,8 @@ public:
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    Tags results =
-        tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid_, tags);
-    if (results.size() == 0) {
+    Tags results = tags.empty() ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid_, tags);
+    if (results.empty()) {
       return;
     }
 
@@ -2377,7 +2366,7 @@ public:
 
       // Check whether the node is on a part of a way doubling back on itself
       OSMNode osm_node{node};
-      auto inserted = loop_nodes_.insert(std::make_pair(node, i));
+      auto inserted = loop_nodes_.emplace(node, i);
       bool flattening = inserted.first->second > 0 && i < nodes.size() - 1 &&
                         nodes[i + 1] == nodes[inserted.first->second - 1];
       bool unflattening = i > 0 && inserted.first->second < nodes.size() - 1 &&
@@ -4993,7 +4982,7 @@ public:
   // this lets us only have to iterate over the whole set once
   size_t current_way_node_index_;
   uint64_t last_node_, last_way_, last_relation_;
-  std::unordered_map<uint64_t, size_t> loop_nodes_;
+  robin_hood::unordered_map<uint64_t, size_t> loop_nodes_;
 
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;
