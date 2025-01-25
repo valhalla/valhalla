@@ -45,7 +45,7 @@ struct Member {
 
 // pure virtual interface for consumers to implement
 struct Callback {
-  virtual ~Callback() {};
+  virtual ~Callback(){};
   virtual void
   node_callback(const uint64_t osmid, const double lng, const double lat, const Tags& tags) = 0;
   virtual void
