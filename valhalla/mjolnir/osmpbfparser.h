@@ -1,8 +1,9 @@
 #ifndef __OSMPBFPARSER__
 #define __OSMPBFPARSER__
 
+#include <robin_hood.h>
+
 #include <string>
-#include <unordered_map>
 
 // extend the protobuf osmpbf namespace
 namespace OSMPBF {
@@ -26,7 +27,7 @@ enum class MemberType : uint8_t {
 }
 
 // Represents the key/values of an object
-using Tags = std::unordered_map<std::string, std::string>;
+using Tags = robin_hood::unordered_map<std::string, std::string>;
 
 // Member of a relation
 struct Member {
@@ -37,7 +38,7 @@ struct Member {
   Member(const Relation::MemberType type, const uint64_t id, const std::string& role)
       : member_type(type), member_id(id), role(role) {
   }
-  Member(Member&& other)
+  Member(Member&& other) noexcept
       : member_type(other.member_type), member_id(other.member_id), role(std::move(other.role)) {
   }
 };

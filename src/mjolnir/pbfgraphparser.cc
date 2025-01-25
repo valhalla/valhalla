@@ -4387,7 +4387,7 @@ public:
     }
   }
 
-  void ProcessNameTag(const std::pair<std::string, std::string>& tag,
+  void ProcessNameTag(const robin_hood::pair<std::string, std::string>& tag,
                       std::string& name_w_lang,
                       std::string& language,
                       bool is_lang_pronunciation = false) {
@@ -4449,7 +4449,7 @@ public:
     }
   }
 
-  void ProcessLeftRightNameTag(const std::pair<std::string, std::string>& tag,
+  void ProcessLeftRightNameTag(const robin_hood::pair<std::string, std::string>& tag,
                                std::string& name_left_right_w_lang,
                                std::string& lang_left_right,
                                bool is_lang_pronunciation = false) {
@@ -4830,7 +4830,7 @@ public:
   std::unordered_map<std::string, TagHandler> tag_handlers_;
   // Tag handlers capture these fields
   OSMWay way_;
-  std::pair<std::string, std::string> tag_;
+  robin_hood::pair<std::string, std::string> tag_;
   uint64_t osmid_;
 
   const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
