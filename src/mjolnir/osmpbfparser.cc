@@ -29,8 +29,10 @@ OSMPBF::Relation::MemberType convert_member_type(const osmium::item_type type) {
 
 struct Adapter : public osmium::handler::Handler {
   Callback& callback;
+  bool read_changesets;
 
-  Adapter(Callback& callback) : callback(callback) {
+  Adapter(Callback& callback, bool read_changesets)
+      : callback(callback), read_changesets(read_changesets) {
   }
 
   void way(const osmium::Way& way) {
@@ -40,11 +42,19 @@ struct Adapter : public osmium::handler::Handler {
       nodes.push_back(node.ref());
     }
     callback.way_callback(way.id(), convert_tags(way.tags()), nodes);
+
+    if (read_changesets) {
+      callback.changeset_callback(way.changeset());
+    }
   }
 
   void node(const osmium::Node& node) {
     callback.node_callback(node.id(), node.location().lon(), node.location().lat(),
                            convert_tags(node.tags()));
+
+    if (read_changesets) {
+      callback.changeset_callback(node.changeset());
+    }
   }
 
   void relation(const osmium::Relation& relation) {
@@ -54,6 +64,10 @@ struct Adapter : public osmium::handler::Handler {
       members.emplace_back(convert_member_type(member.type()), member.ref(), member.role());
     }
     callback.relation_callback(relation.id(), convert_tags(relation.tags()), members);
+
+    if (read_changesets) {
+      callback.changeset_callback(relation.changeset());
+    }
   }
 
   void changeset(const osmium::Changeset& changeset) {
@@ -78,7 +92,8 @@ void parse(const std::string& file, const Interest interest, Callback& callback)
 
   osmium::io::Reader reader(file, read_types);
 
-  Adapter adapter(callback);
+  const bool read_changesets = (interest & Interest::CHANGESETS) == Interest::CHANGESETS;
+  Adapter adapter(callback, read_changesets);
   osmium::apply(reader, adapter);
 
   // Explicit close might throw an exception in case of an error.
