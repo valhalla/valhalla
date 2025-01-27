@@ -156,7 +156,9 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
     auto edge_cost = current_costing->EdgeCost(directededge, tile);
     Cost normalized_edge_cost = {edge_cost.cost * current_costing->GetModeFactor(), edge_cost.secs};
-    auto transition_cost = current_costing->TransitionCost(directededge, nodeinfo, pred);
+    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
+    auto transition_cost =
+        current_costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
 
     // Compute the cost to the end of this edge
     Cost newcost = pred.cost() + normalized_edge_cost + transition_cost;
