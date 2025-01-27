@@ -5082,7 +5082,8 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
+    OSMPBF::Parser parser(4);
+    parser.parse(file_handle,
                           static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
@@ -5149,7 +5150,8 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   for (auto& file_handle : file_handles) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
+    OSMPBF::Parser parser(4);
+    parser.parse(file_handle,
                           static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
@@ -5221,7 +5223,8 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
       // we send a null way_nodes file so that only the bike share stations are parsed
       callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
                      new sequence<OSMNode>(bss_nodes_file, create), nullptr);
-      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
+      OSMPBF::Parser parser(4);
+      parser.parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                             callback);
       create = false;
     }
@@ -5253,7 +5256,8 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                    nullptr, nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, true));
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
+    OSMPBF::Parser parser(4);
+    parser.parse(file_handle,
                           static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);

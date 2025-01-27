@@ -161,7 +161,8 @@ OSMAdminData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
   // Parse each input file for relations
   LOG_INFO("Parsing relations...");
   for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle,
+    OSMPBF::Parser parser(4);
+    parser.parse(file_handle,
                           static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
@@ -172,7 +173,8 @@ OSMAdminData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
   // Parse the ways.
   LOG_INFO("Parsing ways...");
   for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle,
+    OSMPBF::Parser parser(4);
+    parser.parse(file_handle,
                           static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
@@ -184,7 +186,8 @@ OSMAdminData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
   // being used in a way.
   LOG_INFO("Parsing nodes...");
   for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle,
+    OSMPBF::Parser parser(4);
+    parser.parse(file_handle,
                           static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
