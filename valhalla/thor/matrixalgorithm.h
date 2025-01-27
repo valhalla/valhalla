@@ -17,6 +17,7 @@ namespace thor {
 
 // Default for time distance matrix is to find all locations
 constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
+constexpr float kInvalidHeading = std::numeric_limits<float>::max();
 constexpr float kMaxCost = 99999999.9999f;
 
 /**
@@ -175,12 +176,13 @@ protected:
         *shape = "";
       }
       if (verbose) {
-        matrix.mutable_begin_heading()->Resize(size, 0U);
-        matrix.mutable_end_heading()->Resize(size, 0U);
-        matrix.mutable_begin_lat()->Resize(size, 0U);
-        matrix.mutable_begin_lon()->Resize(size, 0U);
-        matrix.mutable_end_lat()->Resize(size, 0U);
-        matrix.mutable_end_lon()->Resize(size, 0U);
+        // fill with sentinel values meaning "no data"
+        matrix.mutable_begin_heading()->Resize(size, kInvalidHeading);
+        matrix.mutable_end_heading()->Resize(size, kInvalidHeading);
+        matrix.mutable_begin_lat()->Resize(size, INVALID_LL);
+        matrix.mutable_begin_lon()->Resize(size, INVALID_LL);
+        matrix.mutable_end_lat()->Resize(size, INVALID_LL);
+        matrix.mutable_end_lon()->Resize(size, INVALID_LL);
       }
     }
   }

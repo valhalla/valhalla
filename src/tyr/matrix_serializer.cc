@@ -162,12 +162,25 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
         map->emplace("time_zone_name", time_zone_name);
       }
 
-      map->emplace("begin_heading", json::fixed_t{begin_heading, 0});
-      map->emplace("end_heading", json::fixed_t{end_heading, 0});
-      map->emplace("begin_lat", json::fixed_t{begin_lat, 6});
-      map->emplace("begin_lon", json::fixed_t{begin_lon, 6});
-      map->emplace("end_lat", json::fixed_t{end_lat, 6});
-      map->emplace("end_lon", json::fixed_t{end_lon, 6});
+      if (begin_heading != kInvalidHeading) {
+        map->emplace("begin_heading", json::fixed_t{begin_heading, 0});
+      }
+
+      if (end_heading != kInvalidHeading) {
+        map->emplace("end_heading", json::fixed_t{end_heading, 0});
+      }
+      if (begin_lat != INVALID_LL) {
+        map->emplace("begin_lat", json::fixed_t{begin_lat, 6});
+      }
+      if (begin_lon != INVALID_LL) {
+        map->emplace("begin_lon", json::fixed_t{begin_lon, 6});
+      }
+      if (end_lat != INVALID_LL) {
+        map->emplace("end_lat", json::fixed_t{end_lat, 6});
+      }
+      if (end_lon != INVALID_LL) {
+        map->emplace("end_lon", json::fixed_t{end_lon, 6});
+      }
       if (matrix.shapes().size() && shape_format != no_shape) {
         // TODO(nils): tdmatrices don't have "shape" support yet
         if (!matrix.shapes()[i].empty()) {
