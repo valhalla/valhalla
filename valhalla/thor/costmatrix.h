@@ -305,13 +305,14 @@ protected:
    */
   std::string RecostFormPath(baldr::GraphReader& graphreader,
                              BestCandidate& connection,
-                             const valhalla::Location& source,
-                             const valhalla::Location& target,
-                             const uint32_t source_idx,
-                             const uint32_t target_idx,
                              const baldr::TimeInfo& time_info,
                              const bool invariant,
-                             const ShapeFormat shape_format);
+                             const ShapeFormat shape_format,
+                             const std::vector<baldr::GraphId>& path_edges,
+                             const PathEdge& source_edge,
+                             const PathEdge& target_edge,
+                             const double source_pct,
+                             const double target_pct);
 
   /**
    * Sets the date_time on the origin locations.

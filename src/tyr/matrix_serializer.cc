@@ -139,6 +139,12 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
     const auto& date_time = matrix.date_times()[i];
     const auto& time_zone_offset = matrix.time_zone_offsets()[i];
     const auto& time_zone_name = matrix.time_zone_names()[i];
+    const auto& begin_lat = matrix.begin_lat()[i];
+    const auto& begin_lon = matrix.begin_lon()[i];
+    const auto& end_lat = matrix.end_lat()[i];
+    const auto& end_lon = matrix.end_lon()[i];
+    const auto& begin_heading = matrix.begin_heading()[i];
+    const auto& end_heading = matrix.end_heading()[i];
     if (time != kMaxCost) {
       map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
                        {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
@@ -156,6 +162,12 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
         map->emplace("time_zone_name", time_zone_name);
       }
 
+      map->emplace("begin_heading", json::fixed_t{begin_heading, 0});
+      map->emplace("end_heading", json::fixed_t{end_heading, 0});
+      map->emplace("begin_lat", json::fixed_t{begin_lat, 6});
+      map->emplace("begin_lon", json::fixed_t{begin_lon, 6});
+      map->emplace("end_lat", json::fixed_t{end_lat, 6});
+      map->emplace("end_lon", json::fixed_t{end_lon, 6});
       if (matrix.shapes().size() && shape_format != no_shape) {
         // TODO(nils): tdmatrices don't have "shape" support yet
         if (!matrix.shapes()[i].empty()) {

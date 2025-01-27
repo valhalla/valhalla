@@ -151,7 +151,8 @@ protected:
   bool clear_reserved_memory_;
 
   // on first pass, resizes all PBF sequences and defaults to 0 or ""
-  inline static void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size, uint32_t pass = 0) {
+  inline static void
+  reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size, bool verbose, uint32_t pass = 0) {
     if (pass == 0) {
       matrix.mutable_from_indices()->Resize(size, 0U);
       matrix.mutable_to_indices()->Resize(size, 0U);
@@ -172,6 +173,14 @@ protected:
         *time_zone_name = "";
         auto* shape = matrix.mutable_shapes()->Add();
         *shape = "";
+      }
+      if (verbose) {
+        matrix.mutable_begin_heading()->Resize(size, 0U);
+        matrix.mutable_end_heading()->Resize(size, 0U);
+        matrix.mutable_begin_lat()->Resize(size, 0U);
+        matrix.mutable_begin_lon()->Resize(size, 0U);
+        matrix.mutable_end_lat()->Resize(size, 0U);
+        matrix.mutable_end_lon()->Resize(size, 0U);
       }
     }
   }
