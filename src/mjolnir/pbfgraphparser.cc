@@ -1957,19 +1957,13 @@ public:
     last_node_ = osmid;
 
     // Handle bike share stations separately
-    std::optional<Tags> results = std::nullopt;
     if (bss_nodes_) {
       // Get tags - do't bother with Lua callout if the taglist is empty
-      if (tags.size() > 0) {
-        results = lua_.Transform(OSMType::kNode, osmid, tags);
-      } else {
-        results = empty_node_results_;
-      }
+      Tags results = tags.empty() ? empty_node_results_ : lua_.Transform(OSMType::kNode, osmid, tags);
 
       // bail if there is nothing bike related
-      Tags::const_iterator found;
-      if (!results || (found = results->find("amenity")) == results->end() ||
-          found->second != "bicycle_rental") {
+      Tags::const_iterator found = results.find("amenity");
+      if (found == results.end() || found->second != "bicycle_rental") {
         return;
       }
 
@@ -1979,7 +1973,7 @@ public:
       n.set_type(NodeType::kBikeShare);
       valhalla::BikeShareStationInfo bss_info;
 
-      for (auto& key_value : *results) {
+      for (auto& key_value : results) {
         if (key_value.first == "name") {
           bss_info.set_name(key_value.second);
         } else if (key_value.first == "network") {
@@ -2030,28 +2024,25 @@ public:
 
     // Get tags if not already available.  Don't bother calling Lua if there
     // are no OSM tags to process.
-    if (tags.size() > 0) {
-      results = results ? results : lua_.Transform(OSMType::kNode, osmid, tags);
-    } else {
-      results = results ? results : empty_node_results_;
-    }
+    const Tags results =
+        tags.empty() ? empty_node_results_ : lua_.Transform(OSMType::kNode, osmid, tags);
 
-    const auto highway = results->find("highway");
+    const auto highway = results.find("highway");
     bool is_highway_junction =
-        ((highway != results->end()) && (highway->second == "motorway_junction"));
+        ((highway != results.end()) && (highway->second == "motorway_junction"));
 
-    const auto junction = results->find("junction");
+    const auto junction = results.find("junction");
     bool maybe_named_junction =
-        junction != results->end() && (junction->second == "named" || junction->second == "yes");
+        junction != results.end() && (junction->second == "named" || junction->second == "yes");
     bool named_junction = false;
 
-    const auto barrier_toll_booth = results->find("barrier");
+    const auto barrier_toll_booth = results.find("barrier");
     bool is_barrier_toll_booth =
-        (barrier_toll_booth != results->end()) && (barrier_toll_booth->second == "toll_booth");
+        (barrier_toll_booth != results.end()) && (barrier_toll_booth->second == "toll_booth");
 
-    const auto highway_toll_gantry = results->find("highway");
+    const auto highway_toll_gantry = results.find("highway");
     bool is_highway_toll_gantry =
-        (highway_toll_gantry != results->end()) && (highway_toll_gantry->second == "toll_gantry");
+        (highway_toll_gantry != results.end()) && (highway_toll_gantry->second == "toll_gantry");
 
     bool is_toll_node = is_barrier_toll_booth || is_highway_toll_gantry;
     bool named_toll_node = false;
@@ -2068,8 +2059,8 @@ public:
     name_ipa_ = ref_ipa_ = name_nt_sampa_ = ref_nt_sampa_ = name_katakana_ = ref_katakana_ =
         name_jeita_ = ref_jeita_ = {};
 
-    for (const auto& tag : *results) {
-      tag_ = tag;
+    for (const auto& tag : results) {
+      tag_ = {tag.first, tag.second};
 
       bool is_lang_pronunciation = false;
       std::size_t found = tag_.first.find(":pronunciation");
@@ -2335,9 +2326,8 @@ public:
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    Tags results =
-        tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid_, tags);
-    if (results.size() == 0) {
+    Tags results = tags.empty() ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid_, tags);
+    if (results.empty()) {
       return;
     }
 
@@ -2377,7 +2367,7 @@ public:
 
       // Check whether the node is on a part of a way doubling back on itself
       OSMNode osm_node{node};
-      auto inserted = loop_nodes_.insert(std::make_pair(node, i));
+      auto inserted = loop_nodes_.emplace(node, i);
       bool flattening = inserted.first->second > 0 && i < nodes.size() - 1 &&
                         nodes[i + 1] == nodes[inserted.first->second - 1];
       bool unflattening = i > 0 && inserted.first->second < nodes.size() - 1 &&
@@ -2511,7 +2501,7 @@ public:
     way_.set_drive_on_right(true); // default
 
     for (const auto& kv : results) {
-      tag_ = kv;
+      tag_ = {kv.first, kv.second};
 
       bool is_lang_pronunciation = false;
       std::size_t found = tag_.first.find(":pronunciation");
@@ -4012,11 +4002,9 @@ public:
       uint32_t to_way_id = 0;
       for (const auto& member : members) {
         // from and to must be of type 1(way).
-        if (member.role == "from" &&
-            member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        if (member.role == "from" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           from_way_id = member.member_id;
-        } else if (member.role == "to" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        } else if (member.role == "to" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           to_way_id = member.member_id;
         }
       }
@@ -4035,22 +4023,18 @@ public:
       for (const auto& member : members) {
 
         // from and to must be of type 1(way).  via must be of type 0(node)
-        if (member.role == "from" &&
-            member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        if (member.role == "from" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           from_way_id = member.member_id;
-        } else if (member.role == "to" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        } else if (member.role == "to" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           if (!restriction.to())
             restriction.set_to(member.member_id);
-        } else if (member.role == "via" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE) {
+        } else if (member.role == "via" && member.member_type == OSMPBF::Relation::MemberType::NODE) {
           if (vias.size()) { // mix of nodes and ways.  Not supported yet.
             from_way_id = 0;
             break;
           }
           restriction.set_via(member.member_id);
-        } else if (member.role == "via" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        } else if (member.role == "via" && member.member_type == OSMPBF::Relation::MemberType::WAY) {
           if (restriction.via()) { // mix of nodes and ways.  Not supported yet.
             from_way_id = 0;
             break;
@@ -4396,7 +4380,7 @@ public:
     }
   }
 
-  void ProcessNameTag(const std::pair<std::string, std::string>& tag,
+  void ProcessNameTag(const robin_hood::pair<std::string, std::string>& tag,
                       std::string& name_w_lang,
                       std::string& language,
                       bool is_lang_pronunciation = false) {
@@ -4458,7 +4442,7 @@ public:
     }
   }
 
-  void ProcessLeftRightNameTag(const std::pair<std::string, std::string>& tag,
+  void ProcessLeftRightNameTag(const robin_hood::pair<std::string, std::string>& tag,
                                std::string& name_left_right_w_lang,
                                std::string& lang_left_right,
                                bool is_lang_pronunciation = false) {
@@ -4839,7 +4823,7 @@ public:
   std::unordered_map<std::string, TagHandler> tag_handlers_;
   // Tag handlers capture these fields
   OSMWay way_;
-  std::pair<std::string, std::string> tag_;
+  robin_hood::pair<std::string, std::string> tag_;
   uint64_t osmid_;
 
   const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
@@ -5002,7 +4986,7 @@ public:
   // this lets us only have to iterate over the whole set once
   size_t current_way_node_index_;
   uint64_t last_node_, last_way_, last_relation_;
-  std::unordered_map<uint64_t, size_t> loop_nodes_;
+  robin_hood::unordered_map<uint64_t, size_t> loop_nodes_;
 
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;
@@ -5066,29 +5050,19 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
   callback.reset(new sequence<OSMWay>(ways_file, true),
                  new sequence<OSMWayNode>(way_nodes_file, true),
                  new sequence<OSMAccess>(access_file, true), nullptr, nullptr, nullptr, nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
-  for (auto& file_handle : file_handles) {
+  for (auto& file : input_files) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+    OSMPBF::parse(file,
+                  static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
+                                                OSMPBF::Interest::CHANGESETS),
+                  callback);
   }
 
   // Clarifies types of loop roads and saves fixed ways.
@@ -5133,29 +5107,19 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
 
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
   callback.reset(nullptr, nullptr, nullptr,
                  new sequence<OSMRestriction>(complex_restriction_from_file, true),
                  new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr, nullptr);
 
   // Parse relations.
   LOG_INFO("Parsing relations...");
-  for (auto& file_handle : file_handles) {
+  for (auto& file : input_files) {
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+    OSMPBF::parse(file,
+                  static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
+                                                OSMPBF::Interest::CHANGESETS),
+                  callback);
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) +
            " simple turn restrictions");
@@ -5204,28 +5168,17 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));
 
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
   if (pt.get<bool>("import_bike_share_stations", false)) {
     LOG_INFO("Parsing bss nodes...");
 
     bool create = true;
-    for (auto& file_handle : file_handles) {
+    for (auto& file : input_files) {
       callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
           callback.last_relation_ = 0;
       // we send a null way_nodes file so that only the bike share stations are parsed
       callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
                      new sequence<OSMNode>(bss_nodes_file, create), nullptr);
-      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
-                            callback);
+      OSMPBF::parse(file, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES), callback);
       create = false;
     }
     // Since the sequence must be flushed before reading it...
@@ -5249,17 +5202,17 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
   LOG_INFO("Parsing nodes...");
-  for (auto& file_handle : file_handles) {
+  for (auto& file : input_files) {
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
                    nullptr, nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, true));
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+    OSMPBF::parse(file,
+                  static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
+                                                OSMPBF::Interest::CHANGESETS),
+                  callback);
   }
   uint64_t max_osm_id = callback.last_node_;
   callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);

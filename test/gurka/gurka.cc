@@ -463,7 +463,7 @@ map buildtiles(const nodelayout& layout,
   midgard::logging::Configure({{"type", ""}});
 
   mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate, false);
+                          mjolnir::BuildStage::kValidate);
 
   return result;
 }
