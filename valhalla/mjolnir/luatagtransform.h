@@ -9,13 +9,14 @@ extern "C" {
 
 #include <valhalla/mjolnir/osmdata.h>
 
+#include <robin_hood.h>
+
 #include <string>
-#include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
 
-using Tags = std::unordered_map<std::string, std::string>;
+using Tags = robin_hood::unordered_map<std::string, std::string>;
 
 /**
  */
