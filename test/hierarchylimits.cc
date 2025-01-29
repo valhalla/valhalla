@@ -191,7 +191,7 @@ TEST(StandAlone, ClampHierarchyLimitsMatrix) {
       parse_hierarchy_limits_from_config(test_params.cfg, "costmatrix", false);
 
   EXPECT_TRUE(check_hierarchy_limits(mode_costing[0]->GetHierarchyLimits(), mode_costing[0], opts,
-                                     config_matrix, true));
+                                     config_matrix, true, true));
 
   EXPECT_FALSE(mode_costing[0]->DefaultHierarchyLimits());
 
@@ -221,7 +221,7 @@ TEST(StandAlone, ClampHierarchyLimitsBidirAStar) {
       parse_hierarchy_limits_from_config(test_params.cfg, "bidirectional_astar", true);
 
   EXPECT_TRUE(check_hierarchy_limits(mode_costing[0]->GetHierarchyLimits(), mode_costing[0], opts,
-                                     config_bidir, true));
+                                     config_bidir, true, true));
 
   EXPECT_FALSE(mode_costing[0]->DefaultHierarchyLimits());
 
@@ -252,7 +252,7 @@ TEST(StandAlone, ClampHierarchyLimitsUnidirAStar) {
       parse_hierarchy_limits_from_config(test_params.cfg, "unidirectional_astar", true);
 
   EXPECT_TRUE(check_hierarchy_limits(mode_costing[0]->GetHierarchyLimits(), mode_costing[0], opts,
-                                     config_bidir, true));
+                                     config_bidir, true, true));
 
   EXPECT_FALSE(mode_costing[0]->DefaultHierarchyLimits());
 
