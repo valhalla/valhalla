@@ -639,6 +639,8 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
     grade_penalty[i] = avoid_hills * kAvoidHillsStrength[i];
   }
+
+  use_hierarchy_limits = false;
 }
 
 // Check if access is allowed on the specified edge. Disallow if no

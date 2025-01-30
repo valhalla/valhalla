@@ -311,21 +311,9 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
   const std::string db_name = pt.get<std::string>("landmarks", "");
   landmark_callback callback(db_name);
 
-  LOG_INFO("Parsing files...");
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
   LOG_INFO("Parsing nodes and storing landmarks...");
-  for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
-                          callback);
+  for (auto& file : input_files) {
+    OSMPBF::parse(file, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES), callback);
   }
 
   LOG_INFO("Successfully built landmark database from PBF");

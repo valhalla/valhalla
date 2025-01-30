@@ -1000,6 +1000,10 @@ public:
     default_hierarchy_limits = default_;
   }
 
+  bool UseHierarchyLimits() {
+    return use_hierarchy_limits;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
@@ -1105,6 +1109,7 @@ protected:
   bool exclude_ferries_{false};
   bool has_excludes_{false};
   bool default_hierarchy_limits{true};
+  bool use_hierarchy_limits{true};
 
   bool exclude_cash_only_tolls_{false};
 
