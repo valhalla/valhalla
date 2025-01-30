@@ -7,6 +7,7 @@ set(sources
   costmatrix.cc
   dijkstras.cc
   matrix_action.cc
+  matrixalgorithm.cc
   multimodal.cc
   route_action.cc
   timedistancebssmatrix.cc

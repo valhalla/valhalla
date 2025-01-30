@@ -98,9 +98,6 @@ protected:
   // List of destinations
   std::vector<Destination> destinations_;
 
-  // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
-
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
   std::unordered_map<uint64_t, std::vector<uint32_t>> dest_edges_;
@@ -267,8 +264,9 @@ protected:
                               const bool forward,
                               const uint32_t origin_index,
                               const std::string& origin_dt,
-                              const uint64_t& origin_tz,
-                              std::unordered_map<uint32_t, baldr::GraphId>& edge_ids);
+                              const baldr::TimeInfo& time_info,
+                              std::unordered_map<uint32_t, baldr::GraphId>& edge_ids,
+                              bool invariant);
 };
 
 } // namespace thor

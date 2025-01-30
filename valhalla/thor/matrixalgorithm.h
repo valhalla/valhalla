@@ -9,6 +9,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
 // TODO(nils): should abstract more so we don't pull this in
+#include <valhalla/sif/dynamiccost.h>
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/worker.h>
 
@@ -140,6 +141,9 @@ protected:
   // whether time was specified
   bool has_time_;
 
+  // Current costing mode
+  std::shared_ptr<sif::DynamicCost> costing_;
+
   // Indicates whether to allow access into a not-thru region.
   bool not_thru_pruning_;
 
@@ -186,7 +190,42 @@ protected:
       }
     }
   }
+
+  std::string FormShape(baldr::GraphReader& graphreader,
+                        Api& request,
+                        const std::vector<baldr::GraphId> path_edges,
+                        const PathEdge& source_edge,
+                        const PathEdge& target_edge,
+                        float source_pct,
+                        float target_pct);
+
+  /**
+   * Forms the path for the given location pair.
+   */
+  template <typename LabelType>
+  void FormPath(baldr::GraphReader& graphreader,
+                Api& request,
+                uint32_t source_idx,
+                uint32_t target_idx,
+                const baldr::TimeInfo& time_info,
+                const bool invariant,
+                sif::Cost connection_cost,
+                const uint32_t distance,
+                const std::vector<LabelType>& forward_labels = {},
+                uint32_t forward_connection = baldr::kInvalidLabel,
+                const std::vector<LabelType>& reverse_labels = {},
+                uint32_t reverse_connection = baldr::kInvalidLabel);
 };
+
+inline const valhalla::PathEdge& find_correlated_edge(const valhalla::Location& location,
+                                                      const baldr::GraphId& edge_id) {
+  for (const auto& e : location.correlation().edges()) {
+    if (e.graph_id() == edge_id)
+      return e;
+  }
+
+  throw std::logic_error("Could not find candidate edge used for label");
+}
 
 // Structure to hold information about each destination.
 struct Destination {

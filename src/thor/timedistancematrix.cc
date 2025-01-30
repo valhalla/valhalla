@@ -238,7 +238,7 @@ bool TimeDistanceMatrix::ComputeMatrix(Api& request,
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
         FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
-                               time_info.timezone_index, dest_edge_ids);
+                               time_info, dest_edge_ids, invariant);
         break;
       }
 
@@ -267,7 +267,7 @@ bool TimeDistanceMatrix::ComputeMatrix(Api& request,
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred, time_info,
                                matrix_locations)) {
           FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
-                                 time_info.timezone_index, dest_edge_ids);
+                                 time_info, dest_edge_ids, invariant);
           break;
         }
       }
@@ -275,7 +275,7 @@ bool TimeDistanceMatrix::ComputeMatrix(Api& request,
       // Terminate when we are beyond the cost threshold
       if (pred.cost().cost > current_cost_threshold_) {
         FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
-                               time_info.timezone_index, dest_edge_ids);
+                               time_info, dest_edge_ids, invariant);
         break;
       }
 
@@ -566,27 +566,34 @@ void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
                                                 const bool forward,
                                                 const uint32_t origin_index,
                                                 const std::string& origin_dt,
-                                                const uint64_t& origin_tz,
-                                                std::unordered_map<uint32_t, GraphId>& edge_ids) {
+                                                const TimeInfo& time_info,
+                                                std::unordered_map<uint32_t, GraphId>& edge_ids,
+                                                bool invariant) {
   // when it's forward, origin_index will be the source_index
   // when it's reverse, origin_index will be the target_index
   valhalla::Matrix& matrix = *request.mutable_matrix();
   graph_tile_ptr tile;
-  for (uint32_t i = 0; i < destinations_.size(); i++) {
-    auto& dest = destinations_[i];
-    auto pbf_idx = forward ? (origin_index * request.options().targets().size()) + i
-                           : (i * request.options().targets().size()) + origin_index;
-    matrix.mutable_from_indices()->Set(pbf_idx, forward ? origin_index : i);
-    matrix.mutable_to_indices()->Set(pbf_idx, forward ? i : origin_index);
+  for (uint32_t target_idx = 0; target_idx < destinations_.size(); target_idx++) {
+    auto& dest = destinations_[target_idx];
+    auto pbf_idx = forward ? (origin_index * request.options().targets().size()) + target_idx
+                           : (target_idx * request.options().targets().size()) + origin_index;
+    matrix.mutable_from_indices()->Set(pbf_idx, forward ? origin_index : target_idx);
+    matrix.mutable_to_indices()->Set(pbf_idx, forward ? target_idx : origin_index);
     matrix.mutable_distances()->Set(pbf_idx, dest.distance);
     matrix.mutable_times()->Set(pbf_idx, dest.best_cost.secs);
 
-    auto dt_info =
-        DateTime::offset_date(origin_dt, origin_tz, reader.GetTimezoneFromEdge(edge_ids[i], tile),
-                              static_cast<uint64_t>(dest.best_cost.secs));
+    auto dt_info = DateTime::offset_date(origin_dt, time_info.timezone_index,
+                                         reader.GetTimezoneFromEdge(edge_ids[target_idx], tile),
+                                         static_cast<uint64_t>(dest.best_cost.secs));
     *matrix.mutable_date_times(pbf_idx) = dt_info.date_time;
     *matrix.mutable_time_zone_names(pbf_idx) = dt_info.time_zone_name;
     *matrix.mutable_time_zone_offsets(pbf_idx) = dt_info.time_zone_offset;
+    FormPath(reader, request, forward ? origin_index : target_idx,
+             forward ? target_idx : origin_index, time_info, invariant, dest.best_cost, dest.distance,
+             forward ? edgelabels_ : decltype(edgelabels_){},
+             forward ? edgestatus_.Get(edge_ids[target_idx]).index() : kInvalidLabel,
+             forward ? decltype(edgelabels_){} : edgelabels_,
+             forward ? kInvalidLabel : edgestatus_.Get(edge_ids[target_idx]).index());
   }
 }
 

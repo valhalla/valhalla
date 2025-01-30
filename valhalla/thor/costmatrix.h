@@ -129,9 +129,6 @@ protected:
   // Current travel mode
   sif::TravelMode mode_;
 
-  // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
-
   // TODO(nils): instead of these array based structures, rather do this:
   // https://github.com/valhalla/valhalla/pull/4372#discussion_r1402163444
   // Number of source and target locations that can be expanded

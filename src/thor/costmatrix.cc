@@ -30,16 +30,6 @@ bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
   return a.has_lat_case() == b.has_lat_case() && a.has_lng_case() == b.has_lng_case() &&
          (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
 }
-
-inline const valhalla::PathEdge& find_correlated_edge(const valhalla::Location& location,
-                                                      const GraphId& edge_id) {
-  for (const auto& e : location.correlation().edges()) {
-    if (e.graph_id() == edge_id)
-      return e;
-  }
-
-  throw std::logic_error("Could not find candidate edge used for label");
-}
 } // namespace
 
 namespace valhalla {
@@ -55,9 +45,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix.check_reverse_connection", false)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -256,106 +246,6 @@ bool CostMatrix::SourceToTarget(Api& request,
     uint32_t target_idx = connection_idx % target_location_list.size();
     uint32_t source_idx = connection_idx / target_location_list.size();
 
-    std::string shape;
-
-    // walk the path if (a) it's a time dependent request, (b) the user requested shapes or
-    // (c) the user requested verbose mode
-    if ((has_time_ || shape_format != no_shape || request.options().verbose()) &&
-        best_connection.cost.secs != 0.f && best_connection.distance != kMaxCost) {
-      // walk the path
-      // Get the indices where the connection occurs.
-      uint32_t connedge_idx1 =
-          edgestatus_[MATRIX_FORW][source_idx].Get(best_connection.edgeid).index();
-      uint32_t connedge_idx2 =
-          edgestatus_[MATRIX_REV][target_idx].Get(best_connection.opp_edgeid).index();
-
-      // set of edges recovered from shortcuts (excluding shortcut's start edges)
-      std::unordered_set<GraphId> recovered_inner_edges;
-
-      // A place to keep the path
-      std::vector<GraphId> path_edges;
-
-      // Work backwards on the forward path
-      graph_tile_ptr tile;
-      for (auto edgelabel_index = connedge_idx1; edgelabel_index != kInvalidLabel;
-           edgelabel_index = edgelabel_[MATRIX_FORW][source_idx][edgelabel_index].predecessor()) {
-        const BDEdgeLabel& edgelabel = edgelabel_[MATRIX_FORW][source_idx][edgelabel_index];
-
-        const DirectedEdge* edge = graphreader.directededge(edgelabel.edgeid(), tile);
-        if (edge == nullptr) {
-          throw tile_gone_error_t("CostMatrix::RecostPaths failed", edgelabel.edgeid());
-        }
-
-        if (edge->is_shortcut()) {
-          auto superseded = graphreader.RecoverShortcut(edgelabel.edgeid());
-          recovered_inner_edges.insert(superseded.begin() + 1, superseded.end());
-          std::move(superseded.rbegin(), superseded.rend(), std::back_inserter(path_edges));
-        } else
-          path_edges.push_back(edgelabel.edgeid());
-      }
-
-      // Reverse the list
-      std::reverse(path_edges.begin(), path_edges.end());
-
-      // Append the reverse path from the destination - use opposing edges
-      // The first edge on the reverse path is the same as the last on the forward
-      // path, so get the predecessor.
-      auto& target_edgelabels = edgelabel_[MATRIX_REV][target_idx];
-      for (auto edgelabel_index = target_edgelabels[connedge_idx2].predecessor();
-           edgelabel_index != kInvalidLabel;
-           edgelabel_index = target_edgelabels[edgelabel_index].predecessor()) {
-        const BDEdgeLabel& edgelabel = target_edgelabels[edgelabel_index];
-        const DirectedEdge* opp_edge = nullptr;
-        GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgelabel.edgeid(), opp_edge, tile);
-        if (opp_edge == nullptr) {
-          throw tile_gone_error_t("CostMatrix::RecostPaths failed", edgelabel.edgeid());
-        }
-
-        if (opp_edge->is_shortcut()) {
-          auto superseded = graphreader.RecoverShortcut(opp_edge_id);
-          recovered_inner_edges.insert(superseded.begin() + 1, superseded.end());
-          std::move(superseded.begin(), superseded.end(), std::back_inserter(path_edges));
-        } else
-          path_edges.emplace_back(std::move(opp_edge_id));
-      }
-
-      const auto& source_edge =
-          find_correlated_edge(source_location_list[source_idx], path_edges.front());
-      const auto& target_edge =
-          find_correlated_edge(target_location_list[target_idx], path_edges.back());
-      float source_pct = static_cast<float>(source_edge.percent_along());
-      float target_pct = static_cast<float>(target_edge.percent_along());
-
-      if (request.options().verbose()) {
-        matrix.mutable_begin_lat()->Set(connection_idx, source_edge.ll().lat());
-        matrix.mutable_begin_lon()->Set(connection_idx, source_edge.ll().lng());
-        matrix.mutable_end_lat()->Set(connection_idx, source_edge.ll().lat());
-        matrix.mutable_end_lon()->Set(connection_idx, source_edge.ll().lng());
-
-        // get begin/end heading using the path's begin/end edge shapes
-        const DirectedEdge* start_edge =
-            graphreader.directededge(static_cast<GraphId>(source_edge.graph_id()), tile);
-        std::vector<PointLL> shp = tile->edgeinfo(start_edge).shape();
-        if (!start_edge->forward())
-          std::reverse(shp.begin(), shp.end());
-        matrix.mutable_begin_heading()->Set(connection_idx,
-                                            PointLL::HeadingAlongPolyline(shp, start_edge->length() *
-                                                                                   source_pct));
-        const DirectedEdge* end_edge =
-            graphreader.directededge(static_cast<GraphId>(target_edge.graph_id()), tile);
-        shp = tile->edgeinfo(end_edge).shape();
-        if (!end_edge->forward())
-          std::reverse(shp.begin(), shp.end());
-        matrix.mutable_end_heading()->Set(connection_idx,
-                                          PointLL::HeadingAlongPolyline(shp, end_edge->length() *
-                                                                                 target_pct));
-      }
-
-      shape =
-          RecostFormPath(graphreader, best_connection, time_infos[source_idx], invariant,
-                         shape_format, path_edges, source_edge, target_edge, source_pct, target_pct);
-    }
-
     float time = best_connection.cost.secs;
     if (time < kMaxCost && request.options().verbose()) {
       auto dt_info =
@@ -378,11 +268,16 @@ bool CostMatrix::SourceToTarget(Api& request,
       connection_failed = true;
     }
 
+    FormPath(graphreader, request, source_idx, target_idx, time_infos[source_idx], invariant,
+             best_connection.cost, best_connection.distance, edgelabel_[MATRIX_FORW][source_idx],
+             edgestatus_[MATRIX_FORW][source_idx].Get(best_connection.edgeid).index(),
+             edgelabel_[MATRIX_REV][target_idx],
+             edgestatus_[MATRIX_REV][target_idx].Get(best_connection.opp_edgeid).index());
+
     matrix.mutable_from_indices()->Set(connection_idx, source_idx);
     matrix.mutable_to_indices()->Set(connection_idx, target_idx);
     matrix.mutable_distances()->Set(connection_idx, best_connection.distance);
     matrix.mutable_times()->Set(connection_idx, time);
-    *matrix.mutable_shapes(connection_idx) = shape;
   }
 
   return !connection_failed;
