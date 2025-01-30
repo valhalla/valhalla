@@ -256,10 +256,8 @@ bool CostMatrix::SourceToTarget(Api& request,
     uint32_t target_idx = connection_idx % target_location_list.size();
     uint32_t source_idx = connection_idx / target_location_list.size();
 
-    std::string shape;
-
-    shape = RecostFormPath(graphreader, best_connection, request, source_idx, target_idx,
-                           connection_idx, time_infos[source_idx], invariant);
+    std::string shape = RecostFormPath(graphreader, best_connection, request, source_idx, target_idx,
+                                       connection_idx, time_infos[source_idx], invariant);
 
     float time = best_connection.cost.secs;
     if (time < kMaxCost && request.options().verbose()) {
