@@ -142,7 +142,7 @@ const auto hl_config_bd = parse_hierarchy_limits_from_config(fake_conf, "bidirec
 void set_hierarchy_limits(vs::cost_ptr_t cost, bool bdir) {
   Costing_Options opts;
   check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, bdir ? hl_config_bd : hl_config,
-                         false);
+                         false, true);
 }
 void make_tile() {
 
@@ -182,11 +182,9 @@ void make_tile() {
   }
 
   {
-    constexpr bool release_osmpbf_memory = false;
     mjolnir::build_tile_set(fake_conf,
                             {test_dir + "/map1.pbf", test_dir + "/map2.pbf", test_dir + "/map3.pbf"},
-                            mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                            release_osmpbf_memory);
+                            mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
     /** Set the freeflow and constrained flow speeds manually on all edges */
     vj::GraphTileBuilder tile_builder(test_dir, tile_id, false);
     std::vector<DirectedEdge> directededges;
