@@ -118,7 +118,6 @@ bool CostMatrix::SourceToTarget(Api& request,
                                 const float max_matrix_distance) {
   request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
   bool invariant = request.options().date_time_type() == Options::invariant;
-  auto shape_format = request.options().shape_format();
 
   // Set the mode and costing
   mode_ = mode;
