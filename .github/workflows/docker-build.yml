@@ -2,13 +2,13 @@ name: Publish Docker image
 on:
   push:
     branches:
-      - 'master'
+      - "master"
     tags:
-      - '*'
+      - "*"
     paths-ignore:
-      - '.gitignore'
-      - '**.md'
-      - 'test/'
+      - ".gitignore"
+      - "**.md"
+      - "test/"
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
@@ -17,7 +17,7 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v3
         with:
-          submodules: 'recursive'
+          submodules: "recursive"
           fetch-depth: 0
       - name: Extract tag name
         if: startsWith(github.ref, 'refs/tags/')
@@ -29,23 +29,25 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build tag image
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and push latest
         if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          sudo apt update --yes
-          sudo apt install --yes --quiet binfmt-support qemu-user-static qemu-system
-          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          docker buildx create --name mybuilder
-          docker buildx use mybuilder
-          docker buildx inspect --bootstrap
-          docker buildx build --push --platform linux/amd64,linux/arm64 --tag ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }} .
-      - name: Build latest image
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build and push tag
         if: github.ref == 'refs/heads/master'
-        run: |
-          sudo apt update --yes
-          sudo apt install --yes --quiet binfmt-support qemu-user-static qemu-system
-          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          docker buildx create --name mybuilder
-          docker buildx use mybuilder
-          docker buildx inspect --bootstrap
-          docker buildx build --push --platform linux/amd64,linux/arm64 --tag ghcr.io/valhalla/valhalla:latest .
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/valhalla/valhalla:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
