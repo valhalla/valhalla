@@ -221,33 +221,35 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
 }
 
 // Serialize turn lane information
-void turn_lanes(const TripLeg& leg, const DirectionsLeg_Maneuver& maneuver, rapidjson::writer_wrapper_t& writer) {
-  
+void turn_lanes(const TripLeg& leg,
+                const DirectionsLeg_Maneuver& maneuver,
+                rapidjson::writer_wrapper_t& writer) {
+
   // Read edge from a trip leg
   if (maneuver.begin_path_index() == 0 || maneuver.begin_path_index() >= leg.node_size())
     return;
 
   auto prev_index = maneuver.begin_path_index() - 1;
   const auto& prev_edge = leg.node(prev_index).edge();
-    
+
   if (prev_edge.turn_lanes_size() > 1) {
     writer.start_array("lanes");
-    
+
     for (const auto& turn_lane : prev_edge.turn_lanes()) {
       writer.start_object();
-            
+
       // Directions as a bit mask
       writer("directions", static_cast<uint64_t>(turn_lane.directions_mask()));
-      
+
       if (turn_lane.state() == TurnLane::kActive) {
         writer("active", static_cast<uint64_t>(turn_lane.active_direction()));
       } else if (turn_lane.state() == TurnLane::kValid) {
         writer("valid", static_cast<uint64_t>(turn_lane.active_direction()));
       }
-      
+
       writer.end_object();
     }
-    
+
     writer.end_array();
   }
 }
@@ -564,7 +566,7 @@ void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writ
 
       // Add Line info if enabled
       if (api.options().turn_lane_info()) {
-        turn_lanes(*trip_leg_itr, maneuver, writer); 
+        turn_lanes(*trip_leg_itr, maneuver, writer);
       }
 
       writer.end_object(); // maneuver
