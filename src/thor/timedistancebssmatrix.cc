@@ -181,8 +181,10 @@ bool TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
 
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
+
   // reserve the PBF vectors
-  reserve_pbf_arrays(*request.mutable_matrix(), origins.size() * destinations.size());
+  reserve_pbf_arrays(*request.mutable_matrix(), origins.size() * destinations.size(),
+                     request.options().verbose());
 
   for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
     edgelabels_.reserve(max_reserved_labels_count_);
