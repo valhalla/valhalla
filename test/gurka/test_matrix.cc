@@ -864,6 +864,106 @@ TEST(StandAlone, HGVNoAccessPenalty) {
   }
 }
 
+TEST(StandAlone, VerboseResponse) {
+
+  const std::string ascii_map = R"(
+    A-1-------B----C----D----E--2-------F
+                   |    |
+                   J----K
+                   |    |             
+                   |    |             
+                   3    4             
+                   |    |
+                   L----M
+           )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}}, {"DE", {{"highway", "residential"}}},
+      {"FE", {{"highway", "residential"}}}, {"CJ", {{"highway", "residential"}}},
+      {"JK", {{"highway", "residential"}}}, {"JLMK", {{"highway", "residential"}}},
+      {"KD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_verbose_response",
+                                     {{"service_limits.max_timedep_distance_matrix", "50000"}});
+  rapidjson::Document res_doc;
+  std::string res;
+  {
+    auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1", "2", "3", "4"},
+                                {"1", "2", "3", "4"}, "auto", {{"/prioritize_bidirectional", "1"}},
+                                nullptr, &res);
+
+    res_doc.Parse(res.c_str());
+
+    // sanity check
+    EXPECT_EQ(api.matrix().algorithm(), Matrix::CostMatrix);
+
+    for (size_t i = 0; i < 4; ++i) {
+      for (size_t j = 0; j < 4; ++j) {
+        bool key_should_exist = true;
+        if (i == j)
+          key_should_exist = false;
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "begin_heading"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "end_heading"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "begin_lat"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "begin_lon"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "end_lat"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "end_lon"),
+                  key_should_exist);
+      }
+    }
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[1]
+                  .GetObject()["begin_heading"]
+                  .GetDouble(),
+              90);
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[1]
+                  .GetObject()["end_heading"]
+                  .GetDouble(),
+              90);
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[1]
+                  .GetArray()[0]
+                  .GetObject()["begin_heading"]
+                  .GetDouble(),
+              270);
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[1]
+                  .GetArray()[0]
+                  .GetObject()["end_heading"]
+                  .GetDouble(),
+              270);
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[2]
+                  .GetObject()["begin_heading"]
+                  .GetDouble(),
+              90);
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[2]
+                  .GetObject()["end_heading"]
+                  .GetDouble(),
+              180);
+  }
+}
+
 /************************************************************************ */
 
 std::string encode_shape(const std::vector<std::string>& nodes, valhalla::gurka::nodelayout& layout) {

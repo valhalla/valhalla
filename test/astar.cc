@@ -142,7 +142,7 @@ const auto hl_config_bd = parse_hierarchy_limits_from_config(fake_conf, "bidirec
 void set_hierarchy_limits(vs::cost_ptr_t cost, bool bdir) {
   Costing_Options opts;
   check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, bdir ? hl_config_bd : hl_config,
-                         false);
+                         false, true);
 }
 void make_tile() {
 

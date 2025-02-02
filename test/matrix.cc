@@ -149,7 +149,7 @@ const auto hl_config = parse_hierarchy_limits_from_config(cfg, "costmatrix", tru
 // we have to do this manually
 void set_hierarchy_limits(sif::cost_ptr_t cost) {
   Costing_Options opts;
-  check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, hl_config, false);
+  check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, hl_config, false, true);
 }
 
 const auto test_request = R"({
@@ -486,13 +486,19 @@ TEST(Matrix, default_matrix) {
 
   EXPECT_TRUE(json.HasMember("sources_to_targets"));
 
-  // contains 4 keys i.e, "distance", "time", "to_index" and "from_index"
-  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 4);
+  // contains 10 keys
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 10);
 
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("distance"));
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("time"));
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("to_index"));
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("from_index"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("begin_heading"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("end_heading"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("begin_lat"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("begin_lon"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("end_lat"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("end_lon"));
 
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].IsObject());
 

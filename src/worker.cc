@@ -1426,7 +1426,8 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             sif::cost_ptr_t& cost,
                             const valhalla::Costing_Options& options,
                             const hierarchy_limits_config_t& config,
-                            const bool allow_modifications) {
+                            const bool allow_modifications,
+                            const bool use_hierarchy_limits) {
 
   // keep track whether we need to mess with user provided limits
   bool add_warning = false;
@@ -1449,8 +1450,10 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                                  limits.expand_within_dist() == kMaxDistance)) {
       add_warning = add_warning || (limits.max_up_transitions() != kUnlimitedTransitions ||
                                     limits.expand_within_dist() != kMaxDistance);
-      limits.set_max_up_transitions(config.default_limits[i].max_up_transitions());
-      limits.set_expand_within_dist(config.default_limits[i].expand_within_dist());
+      if (use_hierarchy_limits) {
+        limits.set_max_up_transitions(config.default_limits[i].max_up_transitions());
+        limits.set_expand_within_dist(config.default_limits[i].expand_within_dist());
+      }
       continue;
     }
     default_limits = false;
