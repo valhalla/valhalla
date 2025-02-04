@@ -56,6 +56,7 @@ jobs:
         if: github.ref == 'refs/heads/cb-gha-docker-build-caching'
         uses: docker/build-push-action@v6
         with:
+          context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/valhalla/valhalla:debug-action
