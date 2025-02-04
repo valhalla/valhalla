@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - "master"
+      - "cb-gha-docker-build-caching"
     tags:
       - "*"
     paths-ignore:
@@ -34,7 +35,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Build and push latest
-        if: startsWith(github.ref, 'refs/tags/')
+        if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm64
@@ -43,11 +44,20 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Build and push tag
-        if: github.ref == 'refs/heads/master'
+        if: startsWith(github.ref, 'refs/tags/')
         uses: docker/build-push-action@v6
         with:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ghcr.io/valhalla/valhalla:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Try it out (TODO remove me)
+        if: github.ref == 'refs/heads/cb-gha-docker-build-caching'
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ghcr.io/valhalla/valhalla:debug-action
           cache-from: type=gha
           cache-to: type=gha,mode=max
