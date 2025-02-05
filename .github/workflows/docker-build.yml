@@ -12,7 +12,7 @@ on:
       - "test/"
 jobs:
   build_and_publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: ${{ github.repository_owner == 'valhalla' }}
     steps:
       - name: Check out the repo
