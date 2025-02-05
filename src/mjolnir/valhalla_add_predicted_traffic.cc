@@ -125,6 +125,18 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
                 try {
                   // Decode the base64 predicted speeds
                   traffic->second.coefficients = decode_compressed_speeds(t);
+
+                  // Look at the decompressed speeds warn about possible outlier values.
+                  // The reason we do this is previously these outlier speeds were
+                  // discarded during path finding, but now the user bears responsiblity
+                  // for handling outliers in their data.
+                  // (see https://github.com/valhalla/valhalla/pull/5087)
+                  for (size_t i = 0; i < kBucketsPerWeek; ++i) {
+                    float speed = decompress_speed_bucket((*traffic->second.coefficients).data(), i);
+                    if (speed < kMinSpeedKph || speed > kMaxAssumedSpeed) {
+                      LOG_WARN("Detected possible speed outlier: " + std::to_string(speed) + ".");
+                    }
+                  }
                   stat.compressed_count++;
                 } catch (std::exception& e) {
                   LOG_WARN("Invalid compressed speeds in file: " + full_filename + " line number " +
