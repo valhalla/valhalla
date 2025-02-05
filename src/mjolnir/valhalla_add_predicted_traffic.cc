@@ -128,7 +128,7 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
 
                   // Look at the decompressed speeds warn about possible outlier values.
                   // The reason we do this is previously these outlier speeds were
-                  // discarded during path finding, but now the user bears responsiblity
+                  // discarded during path finding, but now the user bears responsibility
                   // for handling outliers in their data.
                   // (see https://github.com/valhalla/valhalla/pull/5087)
                   for (size_t i = 0; i < kBucketsPerWeek; ++i) {
