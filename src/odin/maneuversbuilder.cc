@@ -3132,10 +3132,23 @@ bool ManeuversBuilder::AreRampManeuversCombinable(std::list<Maneuver>::iterator 
 bool ManeuversBuilder::IsNextManeuverObvious(const std::list<Maneuver>& maneuvers,
                                              std::list<Maneuver>::const_iterator curr_man,
                                              std::list<Maneuver>::const_iterator next_man) const {
-  // The next maneuver must be a continue maneuver
-  if ((next_man->type() == DirectionsLeg_Maneuver_Type_kContinue)) {
+  // The next maneuver must be a continue maneuver or a slight turn
+  if (next_man->type() == DirectionsLeg_Maneuver_Type_kContinue ||
+      next_man->type() == DirectionsLeg_Maneuver_Type_kSlightLeft ||
+      next_man->type() == DirectionsLeg_Maneuver_Type_kSlightRight) {
     // Get the node between the the current and next maneuver
     auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
+
+    // Slight turn maneuvers may be obvious ONLY if there are no other forward intersecting edges.
+    // It does not matter if the forward edge is traversable;
+    // multiple forward paths of travel are not obvious
+    // (e.g. a slight left to stay on a road,
+    // when another "straight" road from the intersection is one way or otherwise non-traversable).
+    if (node &&
+        next_man->type() != DirectionsLeg_Maneuver_Type_kContinue &&
+        node->HasForwardIntersectingEdge(curr_man->end_heading())) {
+      return false;
+    }
 
     // Return true if there are no traversable intersecting edges
     if (node && !node->HasTraversableIntersectingEdge(next_man->travel_mode())) {
