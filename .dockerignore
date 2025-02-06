@@ -81,9 +81,6 @@ Dockerfile
 
 # docs etc
 docs/
-README.md
 CONTRIBUTING.md
-COPYING
-LICENSE.md
 NEWS 
 taginfo.json
