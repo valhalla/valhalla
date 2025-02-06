@@ -72,11 +72,12 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          provenance: false # needed to be able to converge into one image
           platforms: ${{ matrix.platform }}
           push: true
           tags: ghcr.io/valhalla/valhalla:debug-action-${{ matrix.tagsuffix }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
 
   create-manifests:
     runs-on: ubuntu-latest
