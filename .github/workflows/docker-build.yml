@@ -52,7 +52,7 @@ jobs:
           tags: ghcr.io/valhalla/valhalla:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Try it out (TODO remove me )
+      - name: Try it out (TODO remove me)
         if: github.ref == 'refs/heads/cb-gha-docker-build-caching'
         uses: docker/build-push-action@v6
         with:
