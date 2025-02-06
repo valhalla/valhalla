@@ -205,7 +205,8 @@ bool TimeDistanceMatrix::ComputeMatrix(Api& request,
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
   // reserve the PBF vectors
-  reserve_pbf_arrays(*request.mutable_matrix(), num_elements, costing_->pass());
+  reserve_pbf_arrays(*request.mutable_matrix(), num_elements, request.options().verbose(),
+                     costing_->pass());
 
   for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
     // reserve some space for the next dijkstras (will be cleared at the end of the loop)
