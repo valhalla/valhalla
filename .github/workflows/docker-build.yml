@@ -12,14 +12,15 @@ on:
       - "test/"
 jobs:
   build_and_publish:
-    matrix:
-      include:
-        - os: ubuntu-latest
-          platform: linux/amd64
-          tagsuffix: amd64
-        - os: ubuntu-24.04-arm
-          platform: linux/arm64
-          tagsuffix: arm64
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux/amd64
+            tagsuffix: amd64
+          - os: ubuntu-24.04-arm
+            platform: linux/arm64
+            tagsuffix: arm64
 
     if: ${{ github.repository_owner == 'valhalla' }}
     runs-on: ${{ matrix.os }}
