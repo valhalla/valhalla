@@ -95,5 +95,5 @@ jobs:
           docker manifest create \
             ghcr.io/valhalla/valhalla:debug-action \
             --amend ghcr.io/valhalla/valhalla:debug-action-amd64 \
-            --amend ghcr.io/valhalla/valhalla:debug-action-arm64 \
+            --amend ghcr.io/valhalla/valhalla:debug-action-arm64 
           docker manifest push ghcr.io/valhalla/valhalla:debug-action
