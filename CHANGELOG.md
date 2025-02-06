@@ -28,6 +28,7 @@
    * ADDED: Australian English language translations [#5057](https://github.com/valhalla/valhalla/pull/5057)
    * ADDED: Support `"access:conditional"` conditional restrictions like `"access:conditional"="no @ (Oct-May)"` [#5048](https://github.com/valhalla/valhalla/pull/5048)
    * CHANGED: Speed up pbf parsing by using libosmium [#5070](https://github.com/valhalla/valhalla/pull/5070)
+   * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082) 
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
