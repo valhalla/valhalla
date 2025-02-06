@@ -44,6 +44,7 @@ libvalhalla.la
 date_time_zonespec.csv
 mason/
 mason_packages/
+.DS_Store
 
 # scripts
 scripts/gdal-2.0.0/
@@ -65,14 +66,8 @@ vcpkg-configuration.json
 run_route_scripts/
 test_requests/
 
-# documentation
-site/
-
-.DS_Store
-
 # docker
 Dockerfile
-.dockerignore
 
 # CI
 .github/
@@ -80,7 +75,9 @@ Dockerfile
 .pre-commit-config.yaml
 
 # docs etc
+site/
 docs/
 CONTRIBUTING.md
 NEWS 
 taginfo.json
+CHANGELOG.md
