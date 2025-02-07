@@ -2,6 +2,7 @@
 
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
+#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
@@ -142,7 +143,9 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
   writer("max_lon", bbox.maxx());
   writer.set_precision(3);
   writer("time", route_time);
+  writer.set_precision(api.options().units() == Options::miles ? 4 : 3);
   writer("length", route_length);
+  writer.set_precision(3);
   writer("cost", route_cost);
   auto recost_itr = api.options().recostings().begin();
   for (auto recost : recost_times) {
@@ -217,11 +220,13 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
   writer.end_array();
 }
 
-void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
+void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("legs");
   const auto& directions_legs = api.directions().routes(route_index).legs();
-  auto trip_leg_itr = api.trip().routes(route_index).legs().begin();
+  unsigned int length_prec = api.options().units() == Options::miles ? 4 : 3;
+  auto trip_leg_itr = api.mutable_trip()->mutable_routes(route_index)->mutable_legs()->begin();
   for (const auto& directions_leg : directions_legs) {
+    valhalla::odin::EnhancedTripLeg etp(*trip_leg_itr);
     writer.start_object(); // leg
     bool has_time_restrictions = false;
     bool has_toll = false;
@@ -231,6 +236,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     if (directions_leg.maneuver_size())
       writer.start_array("maneuvers");
 
+    int maneuver_index = 0;
     for (const auto& maneuver : directions_leg.maneuver()) {
       writer.start_object();
 
@@ -271,6 +277,19 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
         writer.end_array();
       }
 
+      // Set bearings
+      // absolute bearing (degrees from north, clockwise) before and after the maneuver.
+      bool depart_maneuver = (maneuver_index == 0);
+      bool arrive_maneuver = (maneuver_index == directions_leg.maneuver_size() - 1);
+      if (!depart_maneuver) {
+        uint32_t in_brg = etp.GetPrevEdge(maneuver_index)->end_heading();
+        writer("bearing_before", static_cast<uint64_t>(in_brg));
+      }
+      if (!arrive_maneuver) {
+        uint32_t out_brg = maneuver.begin_heading();
+        writer("bearing_after", static_cast<uint64_t>(out_brg));
+      }
+
       // Time, length, cost, and shape indexes
       const auto& end_node = trip_leg_itr->node(maneuver.end_path_index());
       const auto& begin_node = trip_leg_itr->node(maneuver.begin_path_index());
@@ -278,7 +297,9 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
 
       writer.set_precision(3);
       writer("time", maneuver.time());
+      writer.set_precision(length_prec);
       writer("length", maneuver.length());
+      writer.set_precision(3);
       writer("cost", cost);
       writer("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
       writer("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
@@ -510,6 +531,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       // “checkFerryInfoNote” : “<checkFerryInfoNote>”
 
       writer.end_object(); // maneuver
+      maneuver_index++;
     }
     if (directions_leg.maneuver_size()) {
       writer.end_array(); // maneuvers
@@ -594,7 +616,9 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     writer("max_lon", directions_leg.summary().bbox().max_ll().lng());
     writer.set_precision(3);
     writer("time", directions_leg.summary().time());
+    writer.set_precision(length_prec);
     writer("length", directions_leg.summary().length());
+    writer.set_precision(3);
     writer("cost", trip_leg_itr->node().rbegin()->cost().elapsed_cost().cost());
     auto recost_itr = api.options().recostings().begin();
     for (const auto& recost : trip_leg_itr->node().rbegin()->recosts()) {
@@ -614,7 +638,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
   writer.end_array(); // legs
 }
 
-std::string serialize(const Api& api) {
+std::string serialize(Api& api) {
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);
 

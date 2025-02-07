@@ -387,9 +387,6 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // relations are defined within the PBFParser class
   OSMAdminData admin_data = PBFAdminParser::Parse(pt, input_files);
 
-  // done with the protobuffer library, cant use it again after this
-  OSMPBF::Parser::free();
-
   if (filesystem::exists(*database)) {
     filesystem::remove(*database);
   }
