@@ -30,7 +30,7 @@ public:
 void assert_tile_equalish(const GraphTile& a,
                           const GraphTile& b,
                           size_t difference,
-                          const std::array<std::vector<GraphId>, kBinCount>& bins,
+                          const bins_t& bins,
                           const std::string& /*msg*/) {
   // expected size
   ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
@@ -227,7 +227,7 @@ TEST(GraphTileBuilder, TestAddBins) {
     std::string bin_dir = "test/data/bin_tiles/bin";
 
     // send blank bins
-    std::array<std::vector<GraphId>, kBinCount> bins;
+    bins_t bins;
     GraphTileBuilder::AddBins(bin_dir, t, bins);
 
     // check the new tile is the same as the old one

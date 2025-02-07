@@ -331,6 +331,10 @@ void GraphTile::Initialize(const GraphId& graphid) {
   // Set a pointer to the edge bin list
   edge_bins_ = reinterpret_cast<GraphId*>(ptr);
 
+  // Sneak in bounding circles; end of the last bin is first
+  ptr += header_->bin_offset(kBinCount - 1).second * sizeof(GraphId);
+  bounding_circles_ = reinterpret_cast<DiscretizedBoundingCircle*>(ptr);
+
   // Start of forward restriction information and its size
   complex_restriction_forward_ = tile_ptr + header_->complex_restriction_forward_offset();
   complex_restriction_forward_size_ =
@@ -1234,6 +1238,26 @@ midgard::iterable_t<GraphId> GraphTile::GetBin(size_t column, size_t row) const 
 midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
   auto offsets = header_->bin_offset(index);
   return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+}
+
+// Get the array of bounding circles for the given bin
+midgard::iterable_t<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t column,
+                                                                             size_t row) const {
+  if (!header_->has_bounding_circles()) {
+    return iterable_t<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
+  }
+  auto offsets = header_->bin_offset(column, row);
+  return iterable_t<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
+                                               bounding_circles_ + offsets.second};
+}
+
+midgard::iterable_t<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t index) const {
+  if (!header_->has_bounding_circles()) {
+    return iterable_t<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
+  }
+  auto offsets = header_->bin_offset(index);
+  return iterable_t<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
+                                               bounding_circles_ + offsets.second};
 }
 
 // Get turn lanes for this edge.

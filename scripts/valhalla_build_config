@@ -69,6 +69,7 @@ config = {
             'use_urban_tag': False,
             'use_rest_area': False,
             'scan_tar': False,
+            'build_bounding_circles': True,
         },
         'logging': {'type': 'std_out', 'color': True, 'file_name': 'path_to_some_file.log'},
     },
@@ -383,6 +384,7 @@ help_text = {
             'use_urban_tag': 'bool indicating whether or not to use the urban area tag on the ways or to utilize the getDensity function within the graph enhancer phase',
             'use_rest_area': 'bool indicating whether or not to use the rest/service area tag on the ways',
             'scan_tar': 'bool indicating whether or not to pre-scan the tar ball(s) when loading an extract with an index file, to warm up the OS page cache.',
+            'build_bounding_circles': 'bool indicating whether to store 32-bit bounding circles for edges analogous to the edge bins inside level 2 graph tiles.',
         },
         'logging': {
             'type': 'Type of logger either std_out or file',

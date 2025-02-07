@@ -516,7 +516,11 @@ struct bin_handler_t {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
     auto edges = tile->GetBin(begin->bin_index);
-    for (auto edge_id : edges) {
+    auto bounding_circles = tile->GetBoundingCircles(begin->bin_index);
+    auto bounding_circle = bounding_circles.begin();
+    bool use_bounding_circle = tile->header()->has_bounding_circles();
+    for (auto* edge_it = edges.begin(); edge_it != edges.end(); edge_it++, bounding_circle++) {
+      auto edge_id = *edge_it;
       // get the tile and edge
       if (!reader.GetGraphTile(edge_id, tile)) {
         continue;

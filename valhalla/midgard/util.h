@@ -579,8 +579,8 @@ polygon_t to_boundary(const std::unordered_set<uint32_t>& region, const Tiles<Po
  * both loki and in meili
  * */
 struct projector_t {
-  projector_t(const PointLL& ll)
-      : lon_scale(cos(ll.lat() * kRadPerDegD)), lat(ll.lat()), lng(ll.lng()), approx(ll) {
+  projector_t(const PointLL& ll) : lat(ll.lat()), lng(ll.lng()), approx(ll) {
+    lon_scale = approx.GetLngScale();
   }
 
   // non default constructible and move only type
@@ -681,7 +681,7 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
 
 template <typename T> struct Finally {
   T t;
-  explicit Finally(T t) : t(t){};
+  explicit Finally(T t) : t(t) {};
   Finally() = delete;
   Finally(Finally&& f) = default;
   Finally(const Finally&) = delete;
@@ -727,6 +727,13 @@ template <typename numeric_t> bool is_invalid(numeric_t value) {
 template <typename numeric_t> bool is_valid(numeric_t value) {
   return value != invalid<numeric_t>();
 }
+
+/**
+ * Find the bounding circle for a container of lat,lng vertices.
+ * @return  Returns a vector with the center lat,lng and radius (meters).
+ */
+template <class container_t>
+std::tuple<PointLL, double> get_bounding_circle(const container_t& shape);
 
 } // namespace midgard
 } // namespace valhalla
