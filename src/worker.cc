@@ -1348,7 +1348,8 @@ std::string ParseAcceptLanguage(headers_t headers) {
   if (accept_language_header != headers.end()) {
     // Parse the list of languages.
     // The final argument says we want to get groups 1 and 2 from each match.
-    std::sregex_token_iterator it(accept_language_header->second.begin(), accept_language_header->second.end(), language_re, {1, 2});
+    std::sregex_token_iterator it(accept_language_header->second.begin(),
+                                  accept_language_header->second.end(), language_re, {1, 2});
     std::sregex_token_iterator end;
 
     // Iterate through weighted matches
@@ -1360,7 +1361,7 @@ std::string ParseAcceptLanguage(headers_t headers) {
       float q_value = 1.0;
 
       if (it != end && it->length() > 0) {
-          q_value = std::stof(*it);
+        q_value = std::stof(*it);
       }
 
       // Check if it's a usable language first.
@@ -1382,10 +1383,10 @@ std::string ParseAcceptLanguage(headers_t headers) {
       ++it;
     }
 
-    auto max_it = std::max_element(languages.begin(), languages.end(),
-                                   [](const std::pair<float, std::string>& a, const std::pair<float, std::string>& b) {
-                                     return a.first < b.first;
-                                   });
+    auto max_it =
+        std::max_element(languages.begin(), languages.end(),
+                         [](const std::pair<float, std::string>& a,
+                            const std::pair<float, std::string>& b) { return a.first < b.first; });
 
     if (max_it != languages.end()) {
       return max_it->second;
@@ -1408,6 +1409,14 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
     throw valhalla_exception_t{101};
   };
 
+  // Sets the request document language parameter from the Accept-Language header
+  auto with_accept_language = [request](rapidjson::Document& document) {
+    auto language = ParseAcceptLanguage(request.headers);
+    auto& allocator = document.GetAllocator();
+
+    document.AddMember({"language", allocator}, {language, allocator}, allocator);
+  };
+
   // this is a service request
   api.Clear();
   api.mutable_info()->set_is_service(true);
@@ -1424,9 +1433,13 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
       throw valhalla_exception_t{103};
     }
     // validate the options
-    rapidjson::Document dummy;
-    dummy.SetObject();
-    from_json(dummy, action, api);
+    rapidjson::Document document;
+    document.SetObject();
+    if (api.options().language().empty()) {
+      // Fall back to the header if options.language is not set
+      with_accept_language(document);
+    }
+    from_json(document, action, api);
     return;
   }
 
@@ -1471,9 +1484,7 @@ void ParseApi(const http_request_t& request, valhalla::Api& api) {
   }
 
   if (!document.HasMember("language")) {
-    // Fall back to the Accept-Language header
-    auto language = ParseAcceptLanguage(request.headers);
-    document.AddMember({"language", allocator}, {language, allocator}, allocator);
+    with_accept_language(document);
   }
 
   // parse out the options

@@ -373,13 +373,14 @@ Api get_request(const std::string& request_str, const Options::Action action) {
   return request;
 }
 
-Api get_http_request(const std::string& body, const prime_server::headers_t headers = prime_server::headers_t{}) {
+Api get_http_request(const std::string& body,
+                     const prime_server::headers_t headers = prime_server::headers_t{}) {
   Api api;
-  prime_server::http_request_t request(prime_server::method_t::POST, "/route", body, prime_server::query_t{}, headers);
+  prime_server::http_request_t request(prime_server::method_t::POST, "/route", body,
+                                       prime_server::query_t{}, headers);
   ParseApi(request, api);
   return api;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // test parsing methods
