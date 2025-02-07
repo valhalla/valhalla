@@ -3144,8 +3144,7 @@ bool ManeuversBuilder::IsNextManeuverObvious(const std::list<Maneuver>& maneuver
     // multiple forward paths of travel are not obvious
     // (e.g. a slight left to stay on a road,
     // when another "straight" road from the intersection is one way or otherwise non-traversable).
-    if (node &&
-        next_man->type() != DirectionsLeg_Maneuver_Type_kContinue &&
+    if (node && next_man->type() != DirectionsLeg_Maneuver_Type_kContinue &&
         node->HasForwardIntersectingEdge(curr_man->end_heading())) {
       return false;
     }
