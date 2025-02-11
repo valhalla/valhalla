@@ -703,7 +703,7 @@ public:
       if (valid_speed(speed)) {
         *flow_sources |= kPredictedFlowMask;
         return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
-                                     (1 - partial_live_pct) * (speed + 0.5f));
+                                     (1 - partial_live_pct) * (std::max(speed, 0.5f) + 0.5f));
       }
 #ifdef LOGGING_LEVEL_TRACE
       else
