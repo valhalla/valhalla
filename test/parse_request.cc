@@ -374,7 +374,7 @@ Api get_request(const std::string& request_str, const Options::Action action) {
 }
 
 Api get_http_request(const std::string& body,
-                     const prime_server::headers_t headers = prime_server::headers_t{}) {
+                     const prime_server::headers_t& headers = prime_server::headers_t{}) {
   Api api;
   prime_server::http_request_t request(prime_server::method_t::POST, "/route", body,
                                        prime_server::query_t{}, headers);
@@ -1650,9 +1650,9 @@ void test_closure_factor_parsing(const Costing::Type costing_type,
   validate(key, expected_value, options.closure_factor());
 }
 
-void test_language_parsing(const std::string expected_value,
-                           const std::string language_arg,
-                           const std::string language_header) {
+void test_language_parsing(const std::string& expected_value,
+                           const std::string& language_arg,
+                           const std::string& language_header) {
   const std::string key = "language";
   auto req_body = language_arg.empty() ? "{}" : get_request_str(key, language_arg);
 

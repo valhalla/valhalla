@@ -1345,7 +1345,7 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& request)
 // Regex for matching components of an Accept-Language header.
 const std::regex language_re(R"(([a-zA-Z0-9\-]{2,}|\*)(?:;q=(\d(?:\.\d+)?))?)");
 
-std::string ParseAcceptLanguage(headers_t headers) {
+std::string ParseAcceptLanguage(const headers_t& headers) {
   auto accept_language_header = headers.find("Accept-Language");
   if (accept_language_header != headers.end()) {
     // Parse the list of languages.
