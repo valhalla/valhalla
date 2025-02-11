@@ -288,6 +288,8 @@ void validate(
 
     // Get the tile
     GraphTileBuilder tilebuilder(graph_reader.tile_dir(), tile_id, false);
+    // Are we writing bounding circles?
+    tilebuilder.header_builder().set_has_bounding_circles(build_bounding_circles);
 
     // Update nodes and directed edges as needed
     std::vector<NodeInfo> nodes;
@@ -449,6 +451,10 @@ void validate(
       relative_density = static_cast<uint32_t>(density * 2.0f);
     }
     tilebuilder.header_builder().set_density(relative_density);
+    tilebuilder.header_builder().set_has_bounding_circles(build_bounding_circles);
+
+    LOG_WARN("Set has_bc to " + std::to_string(build_bounding_circles) +
+             " for tile = " + std::to_string(level) + "/" + std::to_string(tile_id));
 
     // Bin the edges
     auto bins = GraphTileBuilder::BinEdges(tile, tweeners, build_bounding_circles);
@@ -541,7 +547,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   LOG_INFO("Validating, finishing and binning tiles...");
   auto hierarchy_properties = pt.get_child("mjolnir");
   std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");
-  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles");
+  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", false);
 
   // Create a randomized queue of tiles (at all levels) to work from
   std::deque<GraphId> tilequeue;

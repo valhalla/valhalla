@@ -8,6 +8,20 @@ PathLocation::PathEdge::PathEdge(const GraphId& id,
                                  const double percent_along,
                                  const midgard::PointLL& projected,
                                  const double score,
+                                 const std::pair<midgard::PointLL, uint16_t>& bounding_circle,
+                                 const SideOfStreet sos,
+                                 const unsigned int outbound_reach,
+                                 const unsigned int inbound_reach,
+                                 const float projected_heading)
+    : id(id), percent_along(percent_along), projected(projected), bounding_circle(bounding_circle),
+      sos(sos), distance(score), outbound_reach(outbound_reach), inbound_reach(inbound_reach),
+      projected_heading(projected_heading) {
+}
+
+PathLocation::PathEdge::PathEdge(const GraphId& id,
+                                 const double percent_along,
+                                 const midgard::PointLL& projected,
+                                 const double score,
                                  const SideOfStreet sos,
                                  const unsigned int outbound_reach,
                                  const unsigned int inbound_reach,
@@ -15,6 +29,7 @@ PathLocation::PathEdge::PathEdge(const GraphId& id,
     : id(id), percent_along(percent_along), projected(projected), sos(sos), distance(score),
       outbound_reach(outbound_reach), inbound_reach(inbound_reach),
       projected_heading(projected_heading) {
+  bounding_circle = std::make_pair(midgard::PointLL{0, 0}, 0.f);
 }
 bool PathLocation::PathEdge::begin_node() const {
   return percent_along == 0.f;

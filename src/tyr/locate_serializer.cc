@@ -34,6 +34,15 @@ json::ArrayPtr get_access_restrictions(const graph_tile_ptr& tile, uint32_t edge
   return arr;
 }
 
+json::MapPtr bounding_circle(const baldr::PathLocation::PathEdge& edge) {
+  auto map = json::map({});
+
+  map->emplace("lat", json::fixed_t{edge.bounding_circle.first.lat(), 6});
+  map->emplace("lon", json::fixed_t{edge.bounding_circle.first.lng(), 6});
+  map->emplace("radius", static_cast<int64_t>(edge.bounding_circle.second));
+  return map;
+}
+
 std::string
 linear_reference(const baldr::DirectedEdge* de, float percent_along, const EdgeInfo& edgeinfo) {
   const auto fow = get_fow(de);
@@ -93,6 +102,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
         array->emplace_back(json::map({
             {"correlated_lat", json::fixed_t{edge.projected.lat(), 6}},
             {"correlated_lon", json::fixed_t{edge.projected.lng(), 6}},
+            {"bounding_circle", bounding_circle(edge)},
             {"side_of_street",
              edge.sos == PathLocation::LEFT
                  ? std::string("left")

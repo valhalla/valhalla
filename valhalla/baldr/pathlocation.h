@@ -31,6 +31,16 @@ public:
              const double percent_along,
              const midgard::PointLL& projected,
              const double score,
+             const std::pair<midgard::PointLL, uint16_t>& bounding_circle,
+             const SideOfStreet sos = NONE,
+             const unsigned int outbound_reach = 0,
+             const unsigned int inbound_reach = 0,
+             const float projected_heading = -1);
+
+    PathEdge(const GraphId& id,
+             const double percent_along,
+             const midgard::PointLL& projected,
+             const double score,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
              const unsigned int inbound_reach = 0,
@@ -57,6 +67,7 @@ public:
     unsigned int inbound_reach;
     // the heading of the projected point
     float projected_heading;
+    std::pair<midgard::PointLL, uint16_t> bounding_circle;
   };
 
   // list of edges this location appears on within the graph
@@ -153,6 +164,10 @@ public:
         edge->mutable_names()->Add()->assign(n);
       }
       edge->set_heading(e.projected_heading);
+
+      edge->mutable_bounding_circle()->set_radius(e.bounding_circle.second);
+      edge->mutable_ll()->set_lat(e.bounding_circle.first.lat());
+      edge->mutable_ll()->set_lng(e.bounding_circle.first.lng());
     }
 
     auto* filtered_edges = l->mutable_correlation()->mutable_filtered_edges();

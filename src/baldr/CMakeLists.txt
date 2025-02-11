@@ -47,6 +47,7 @@ set(sources
     accessrestriction.cc
     admin.cc
     attributes_controller.cc
+    boundingcircle.cc
     compression_utils.cc
     connectivity_map.cc
     curler.cc

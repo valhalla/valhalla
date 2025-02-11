@@ -439,7 +439,7 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Write the header
-    file.write(reinterpret_cast<const char*>(header_), sizeof(GraphTileHeader));
+    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
     // Write the updated nodes. Make sure node count matches.
     if (nodes.size() != header_->nodecount()) {
@@ -1085,6 +1085,11 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
   const auto* start_edge = tile->directededge(0);
   for (const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount();
        ++edge) {
+    GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(),
+                    edge - start_edge);
+
+    if (edge_id.value == 7214463569 || edge_id.value == 7113800273)
+      LOG_WARN("AT EDGE");
     // dont bin these
     if (edge->use() == Use::kTransitConnection || edge->use() == Use::kPlatformConnection ||
         edge->use() == Use::kEgressConnection) {
@@ -1114,8 +1119,6 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
     std::tuple<PointLL, double> bounding_circle = get_bounding_circle(shape);
     // for each bin that got intersected
     auto intersection = tiles.Intersect(shape);
-    GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(),
-                    edge - start_edge);
     for (const auto& i : intersection) {
       // as per the rules above about when to add intersections
       auto originating = i.first == start_id;
@@ -1140,6 +1143,13 @@ bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
             DistanceApproximator<PointLL> approx(center);
             circle = baldr::DiscretizedBoundingCircle(approx, center, std::get<0>(bounding_circle),
                                                       std::get<1>(bounding_circle));
+            uint16_t radius;
+            PointLL ll;
+            std::tie(ll, radius) = circle.get(approx, center);
+            if (edge_id.value == 7214463569 || edge_id.value == 7113800273) {
+              LOG_WARN("CIRCLE IS R=" + std::to_string(radius) +
+                       ", LL = " + std::to_string(ll.lat()) + ", " + std::to_string(ll.lng()));
+            }
           }
           out_bins[bin].push_back(std::make_pair(edge_id, circle));
         }
@@ -1187,7 +1197,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   // update header offsets
   // NOTE: if format changes to add more things here we need to make a change here as well
   GraphTileHeader header = *tile->header();
-  header.set_has_bounding_circles(build_bounding_circles);
+  LOG_WARN("HASBC " + std::to_string(header.has_bounding_circles()));
   header.set_edge_bin_offsets(offsets);
   header.set_complex_restriction_forward_offset(header.complex_restriction_forward_offset() + shift);
   header.set_complex_restriction_reverse_offset(header.complex_restriction_reverse_offset() + shift);
