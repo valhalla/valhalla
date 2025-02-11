@@ -35,7 +35,7 @@ struct DiscretizedBoundingCircle {
   /**
    * Default constructor
    */
-  DiscretizedBoundingCircle() : radius_index(0), x_offset(0), y_offset(0) {};
+  DiscretizedBoundingCircle() : radius_index(0), x_offset(0), y_offset(0){};
 
   /**
    * Constructor.

@@ -453,9 +453,6 @@ void validate(
     tilebuilder.header_builder().set_density(relative_density);
     tilebuilder.header_builder().set_has_bounding_circles(build_bounding_circles);
 
-    LOG_WARN("Set has_bc to " + std::to_string(build_bounding_circles) +
-             " for tile = " + std::to_string(level) + "/" + std::to_string(tile_id));
-
     // Bin the edges
     auto bins = GraphTileBuilder::BinEdges(tile, tweeners, build_bounding_circles);
 

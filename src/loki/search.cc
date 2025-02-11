@@ -18,8 +18,6 @@ using namespace valhalla::loki;
 
 namespace {
 
-constexpr double kTestRadiusSq = 50 * 50;
-
 template <typename T> inline T square(T v) {
   return v * v;
 }
@@ -120,7 +118,7 @@ struct candidate_t {
   double sq_distance{};
   PointLL point;
   size_t index{};
-  std::pair<PointLL, double> bounding_circle;
+  std::pair<PointLL, uint16_t> bounding_circle;
   bool prefiltered{};
 
   GraphId edge_id;
@@ -561,9 +559,6 @@ struct bin_handler_t {
     for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
       auto edge_id = *edge_it;
 
-      if (edge_id.value == 2046836560 || edge_id.value == 2617261904) {
-        LOG_WARN("FOUND CIRCLE");
-      }
       nSearched++;
       bool all_prefiltered = true;
       std::pair<PointLL, uint16_t> circle({0, 0}, 0);
