@@ -95,18 +95,15 @@ The `resample_distance` parameter is a numeric value specifying the distance at 
 
 ## Outputs of the elevation service
 
-If an elevation request has been named using the optional `&id=` input, then the name will be returned as a string `id`.
-
-The profile results are returned with the form of shape (shape points or encoded polylines) that was supplied in the request, along with a 2D array representing the x and y of each input point in the elevation profile.
+The profile results are returned with the form of shape (`shape` points or `encoded_ polyline`) that was supplied in the request, along with an array representing the x and y of each input point in the elevation profile.
 
 | Item | Description |
 | :---- | :----------- |
+| `id` | Name your route request. If `id` is specified, the naming will be sent thru to the response. |
 | `shape` | The specified shape coordinates from the input request. |
 | `encoded_polyline` | The specified encoded polyline, with six degrees of precision, coordinates from the input request. |
-| `range_height` | The 2D array of range (x) and height (y) per input latitude, longitude coordinate. |
-| `x coordinate` | The range or distance along the input locations. It is the cumulative distance along the previous latitiude, longitude coordinates up to the current coordinate. The x-value for the first coordinate in the shape will always be 0. |
-| `y coordinate` | The height or elevation of the associated latitude, longitude pair. The height is returned as `null` if no height data exists for a given location. |
-| `height` | An array of height for the associated latitude, longitude coordinates. |
+| `range_height` | (Present if `range`=`true`)<br>The 2D array of range (x) and height (y) per input latitude, longitude coordinate:<ul><li>x coordinate (first index):<br>The range or distance along the input locations. It is the cumulative distance along the previous latitiude, longitude coordinates up to the current coordinate. The x-value for the first coordinate in the shape will always be 0.</li><li>y coordinate (second index):<br>The height or elevation of the associated latitude, longitude pair. Returned as `null` if no height data exists for a given location.</li></ul> |
+| `height` | (Present if `range`=`false` or not present)<br>An array of height for the associated latitude, longitude coordinates. Returned as `null` if no height data exists for a given location. |
 | `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 
