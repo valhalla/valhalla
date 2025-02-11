@@ -53,8 +53,8 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
       max_reserved_locations_count_(
-          config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
-      check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
+          config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
+      check_reverse_connections_(config.get<bool>("costmatrix.check_reverse_connection", false)),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
       current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
@@ -118,7 +118,6 @@ bool CostMatrix::SourceToTarget(Api& request,
                                 const float max_matrix_distance) {
   request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
   bool invariant = request.options().date_time_type() == Options::invariant;
-  auto shape_format = request.options().shape_format();
 
   // Set the mode and costing
   mode_ = mode;
@@ -141,10 +140,6 @@ bool CostMatrix::SourceToTarget(Api& request,
   // TODO: for now we only allow depart_at/current date_time
   SetSources(graphreader, source_location_list, time_infos);
   SetTargets(graphreader, target_location_list);
-
-  // Update hierarchy limits
-  if (!ignore_hierarchy_limits_)
-    ModifyHierarchyLimits();
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -246,7 +241,7 @@ bool CostMatrix::SourceToTarget(Api& request,
 
   // resize/reserve all properties of Matrix on first pass only
   valhalla::Matrix& matrix = *request.mutable_matrix();
-  reserve_pbf_arrays(matrix, best_connection_.size(), costing_->pass());
+  reserve_pbf_arrays(matrix, best_connection_.size(), request.options().verbose(), costing_->pass());
 
   // Form the matrix PBF output
   graph_tile_ptr tile;
@@ -260,13 +255,11 @@ bool CostMatrix::SourceToTarget(Api& request,
     uint32_t target_idx = connection_idx % target_location_list.size();
     uint32_t source_idx = connection_idx / target_location_list.size();
 
-    // first recost and form the path, if desired (either time and/or geometry requested)
-    const auto shape = RecostFormPath(graphreader, best_connection, source_location_list[source_idx],
-                                      target_location_list[target_idx], source_idx, target_idx,
-                                      time_infos[source_idx], invariant, shape_format);
+    std::string shape = RecostFormPath(graphreader, best_connection, request, source_idx, target_idx,
+                                       connection_idx, time_infos[source_idx], invariant);
 
     float time = best_connection.cost.secs;
-    if (time < kMaxCost) {
+    if (time < kMaxCost && request.options().verbose()) {
       auto dt_info =
           DateTime::offset_date(source_location_list[source_idx].date_time(),
                                 time_infos[source_idx].timezone_index,
@@ -281,11 +274,12 @@ bool CostMatrix::SourceToTarget(Api& request,
       *matrix.mutable_date_times(connection_idx) = dt_info.date_time;
       *matrix.mutable_time_zone_offsets(connection_idx) = dt_info.time_zone_offset;
       *matrix.mutable_time_zone_names(connection_idx) = dt_info.time_zone_name;
-    } else {
+    } else if (time == kMaxCost) {
       // let's try a second pass for this connection
       matrix.mutable_second_pass()->Set(connection_idx, true);
       connection_failed = true;
     }
+
     matrix.mutable_from_indices()->Set(connection_idx, source_idx);
     matrix.mutable_to_indices()->Set(connection_idx, target_idx);
     matrix.mutable_distances()->Set(connection_idx, best_connection.distance);
@@ -309,12 +303,12 @@ void CostMatrix::Initialize(
   astar_heuristics_[MATRIX_FORW].resize(target_locations.size());
   astar_heuristics_[MATRIX_REV].resize(source_locations.size());
 
+  // if costing has no hierarchy limits set, fall back to the defaults passed via the config
   const auto& hlimits = costing_->GetHierarchyLimits();
   ignore_hierarchy_limits_ =
-      std::all_of(hlimits.begin() + 1, hlimits.begin() + TileHierarchy::levels().size(),
-                  [](const HierarchyLimits& limits) {
-                    return limits.max_up_transitions == kUnlimitedTransitions;
-                  });
+      std::all_of(hlimits.begin(), hlimits.end(), [](const HierarchyLimits& limits) {
+        return limits.max_up_transitions() == kUnlimitedTransitions;
+      });
 
   const uint32_t bucketsize = costing_->UnitSize();
   const float range = kBucketCount * bucketsize;
@@ -440,7 +434,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
     // edge superseded by a shortcut.
-    if (hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1].StopExpanding()) {
+    if (StopExpanding(hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1])) {
       shortcuts |= meta.edge->shortcut();
     } else {
       return false;
@@ -497,10 +491,11 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   uint8_t flow_sources;
   Cost newcost = pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
                                         : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
+  auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
   sif::Cost tc =
-      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
+      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter)
               : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge,
+                                                opp_pred_edge, t2, pred.edgeid(), reader_getter,
                                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
   newcost += tc;
@@ -635,8 +630,7 @@ bool CostMatrix::Expand(const uint32_t index,
   // Prune path if predecessor is not a through edge or if the maximum
   // number of upward transitions has been exceeded on this hierarchy level.
   if ((pred.not_thru() && pred.not_thru_pruning()) ||
-      (!ignore_hierarchy_limits_ &&
-       hierarchy_limits_[FORWARD][index][node.level()].StopExpanding())) {
+      (!ignore_hierarchy_limits_ && StopExpanding(hierarchy_limits_[FORWARD][index][node.level()]))) {
     return false;
   }
 
@@ -714,13 +708,14 @@ bool CostMatrix::Expand(const uint32_t index,
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() && !ignore_hierarchy_limits_ &&
-           hierarchy_limits[trans->endnode().level()].StopExpanding()) ||
+           StopExpanding(hierarchy_limits[trans->endnode().level()])) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
 
       // setup for expansion at this level
-      hierarchy_limits[node.level()].up_transition_count += trans->up();
+      hierarchy_limits[node.level()].set_up_transition_count(
+          hierarchy_limits[node.level()].up_transition_count() + trans->up());
       const auto* trans_node = trans_tile->node(trans->endnode());
       EdgeMetadata trans_meta =
           EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus);
@@ -1193,16 +1188,15 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
 // Form the path from the edfge labels and optionally return the shape
 std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
                                        BestCandidate& connection,
-                                       const valhalla::Location& source,
-                                       const valhalla::Location& target,
+                                       Api& request,
                                        const uint32_t source_idx,
                                        const uint32_t target_idx,
+                                       const uint32_t connection_idx,
                                        const baldr::TimeInfo& time_info,
-                                       const bool invariant,
-                                       const ShapeFormat shape_format) {
+                                       const bool invariant) {
   // no need to look at source == target or missing connectivity
-  if ((!has_time_ && shape_format == no_shape) || connection.cost.secs == 0.f ||
-      connection.distance == kMaxCost) {
+  if ((!has_time_ && request.options().shape_format() == no_shape && !request.options().verbose()) ||
+      connection.cost.secs == 0.f || connection.distance == kMaxCost) {
     return "";
   }
 
@@ -1260,8 +1254,10 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
       path_edges.emplace_back(std::move(opp_edge_id));
   }
 
-  const auto& source_edge = find_correlated_edge(source, path_edges.front());
-  const auto& target_edge = find_correlated_edge(target, path_edges.back());
+  const auto& source_edge =
+      find_correlated_edge(request.options().sources(source_idx), path_edges.front());
+  const auto& target_edge =
+      find_correlated_edge(request.options().targets(target_idx), path_edges.back());
   float source_pct = static_cast<float>(source_edge.percent_along());
   float target_pct = static_cast<float>(target_edge.percent_along());
 
@@ -1287,9 +1283,34 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
     // update the existing best_connection cost
     connection.cost = new_cost;
   }
+  if (request.options().verbose()) {
+
+    request.mutable_matrix()->mutable_begin_lat()->Set(connection_idx, source_edge.ll().lat());
+    request.mutable_matrix()->mutable_begin_lon()->Set(connection_idx, source_edge.ll().lng());
+    request.mutable_matrix()->mutable_end_lat()->Set(connection_idx, source_edge.ll().lat());
+    request.mutable_matrix()->mutable_end_lon()->Set(connection_idx, source_edge.ll().lng());
+
+    // get begin/end heading using the path's begin/end edge shapes
+    const DirectedEdge* start_edge =
+        graphreader.directededge(static_cast<GraphId>(source_edge.graph_id()), tile);
+    std::vector<PointLL> shp = tile->edgeinfo(start_edge).shape();
+    if (!start_edge->forward())
+      std::reverse(shp.begin(), shp.end());
+    request.mutable_matrix()
+        ->mutable_begin_heading()
+        ->Set(connection_idx, PointLL::HeadingAlongPolyline(shp, start_edge->length() * source_pct));
+    const DirectedEdge* end_edge =
+        graphreader.directededge(static_cast<GraphId>(target_edge.graph_id()), tile);
+    shp = tile->edgeinfo(end_edge).shape();
+    if (!end_edge->forward())
+      std::reverse(shp.begin(), shp.end());
+    request.mutable_matrix()
+        ->mutable_end_heading()
+        ->Set(connection_idx, PointLL::HeadingAlongPolyline(shp, end_edge->length() * target_pct));
+  }
 
   // bail if no shape was requested
-  if (shape_format == no_shape)
+  if (request.options().shape_format() == no_shape)
     return "";
 
   auto source_vertex = PointLL{source_edge.ll().lng(), source_edge.ll().lat()};
@@ -1328,7 +1349,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
   }
 
   // encode to 6 precision for geojson as well, which the serializer expects
-  return encode<decltype(points)>(points, shape_format != polyline5 ? 1e6 : 1e5);
+  return encode<decltype(points)>(points, request.options().shape_format() != polyline5 ? 1e6 : 1e5);
 }
 
 template <const MatrixExpansionType expansion_direction, const bool FORWARD>

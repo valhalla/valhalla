@@ -147,8 +147,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
   pt.put("additional_data.elevation", workdir);
 
   std::vector<std::string> input_files = {pbf_filename};
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   // try a bunch of routes
   for (const auto& waypoints : std::vector<std::vector<std::string>>{

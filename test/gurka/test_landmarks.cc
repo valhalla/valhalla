@@ -70,10 +70,10 @@ void BuildPBF() {
 
 void BuildPBFAddLandmarksToTiles() {
   const std::string ascii_map = R"(
-      A B               E   
+      A B               E
       a------b-----c----d         K
       |        C   | D
-  F   |            |  
+  F   |            |
       |            |
       |            |
       |      G     |
@@ -311,7 +311,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
   mjolnir::build_tile_set(landmark_map.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate, false);
+                          mjolnir::BuildStage::kValidate);
 
   // load one of the graphtiles
   GraphId tile_id("2/519119/0");
@@ -407,7 +407,7 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
   mjolnir::build_tile_set(landmark_map_tile_test.config, {pbf_filename_tile_test},
-                          mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate, false);
+                          mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   // build landmark database and parse landmarks
   EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"),
@@ -443,7 +443,7 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
   mjolnir::build_tile_set(landmark_map_tile_test.config, {pbf_filename_tile_test},
-                          mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate, false);
+                          mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   // build landmark database and parse landmarks
   EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"),
@@ -464,7 +464,7 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
 
 TEST(LandmarkTest, TestLandmarksInManeuvers) {
   const std::string ascii_map = R"(
-    A B           C         D 
+    A B           C         D
     a-------b-------c------d
           E |    F  |G
             |       |
@@ -524,7 +524,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
 
   // build regular graph tiles from the pbf, and add landmarks to it
   mjolnir::build_tile_set(map.config, {pbf}, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate, false);
+                          mjolnir::BuildStage::kValidate);
   // build landmark database and import landmarks to it
   EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
   // add landmarks to graphtile from the landmark database
