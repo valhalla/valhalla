@@ -642,20 +642,17 @@ void parse_recostings(const rapidjson::Document& doc,
  * override anything this is in the options object
  * @param doc      the rapidjson request doc
  * @param action   which request action will be performed
- * @param options  the options to fill out or validate if they are already filled out
+ * @param api      the API request to merge with the JSON doc + validate
  */
 void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // if its a pbf request we want to keep the options and clear the rest
   bool pbf = false;
-  if (api.has_options() && doc.ObjectEmpty()) {
+  if (api.has_options()) {
     api.clear_trip();
     api.clear_directions();
     api.clear_status();
     api.clear_info();
     pbf = true;
-  } // when its json we start with a blank slate and fill it all in
-  else {
-    api.Clear();
   }
 
   // set the action
