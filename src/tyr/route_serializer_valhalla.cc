@@ -565,7 +565,7 @@ void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writ
       // “checkFerryInfoNote” : “<checkFerryInfoNote>”
 
       // Add Line info if enabled
-      if (api.options().turn_lane_info()) {
+      if (api.options().turn_lanes()) {
         turn_lanes(*trip_leg_itr, maneuver, writer);
       }
 

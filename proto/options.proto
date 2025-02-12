@@ -525,5 +525,5 @@ message Options {
   bool dedupe = 58;                                                // Keep track of edges and override their properties during expansion,
                                                                    // ensuring that each edge appears in the output only once. [default = false]
   bool admin_crossings = 59;                                       // Include administrative boundary crossings
-  bool turn_lane_info = 60;                                        // Include turn lane information into Valhalla serializer response.
+  bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
 }
