@@ -86,6 +86,18 @@ void BuildPBFAddLandmarksToTiles() {
       I                           J
     )";
 
+  const gurka::ways ways = {
+      {"ae", // length 55, associated with ABFI
+       {{"highway", "primary"}, {"name", "G999"}, {"driving_side", "right"}, {"maxspeed", "120"}}},
+      {"ab", // length 35, associated with ABCFG
+       {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}},
+      {"bc", // length 30, associated with CDG
+       {{"highway", "secondary"}, {"name", "S2"}, {"lanes", "2"}, {"driving_side", "right"}}},
+      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 25, associated with CDEK
+      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 55, associated with CDH
+      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 65, associated with I
+  };
+
   const gurka::nodes nodes = {
       {"A", {{"name", "lv_mo_li"}, {"amenity", "bar"}}},
       {"B", {{"name", "hai_di_lao"}, {"amenity", "restaurant"}}},
@@ -107,17 +119,7 @@ void BuildPBFAddLandmarksToTiles() {
       {"f", {{"name", "gong_ce"}, {"amenity", "toilets"}}},
   };
 
-  const gurka::ways ways = {
-      {"ae", // length 55, associated with ABFI
-       {{"highway", "primary"}, {"name", "G999"}, {"driving_side", "right"}, {"maxspeed", "120"}}},
-      {"ab", // length 35, associated with ABCFG
-       {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}},
-      {"bc", // length 30, associated with CDG
-       {{"highway", "secondary"}, {"name", "S2"}, {"lanes", "2"}, {"driving_side", "right"}}},
-      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 25, associated with CDEK
-      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 55, associated with CDH
-      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 65, associated with I
-  };
+
 
   constexpr double gridsize = 5;
   landmark_map_tile_test.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {0, 0});
@@ -306,7 +308,7 @@ TEST(LandmarkTest, TestParseLandmarks) {
 TEST(LandmarkTest, TestTileStoreLandmarks) {
   BuildPBF();
   landmark_map.config =
-      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+      test::make_config(workdir, {{"mjolnir.landmarks", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
@@ -402,23 +404,35 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
   BuildPBFAddLandmarksToTiles();
 
   landmark_map_tile_test.config =
-      test::make_config(workdir_tiles, {{"mjolnir.landmarks_db", db_path_tile_test}},
+      test::make_config(workdir_tiles, {{"mjolnir.landmarks", db_path_tile_test}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
   mjolnir::build_tile_set(landmark_map_tile_test.config, {pbf_filename_tile_test},
                           mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
+  // grab the initial tile sizes
+  GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
+  std::unordered_map<GraphId, uint32_t> sizes;
+  for (const auto& graph_id : gr.GetTileSet()){
+    sizes[graph_id] = gr.GetGraphTile(graph_id)->header()->end_offset();
+  }
+
   // build landmark database and parse landmarks
   EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"),
                                    {pbf_filename_tile_test}));
 
   // add landmarks from db to tiles
-  AddLandmarks(landmark_map_tile_test.config);
+  AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
 
-  // check data
-  GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
+  // all of the tiles should have gotten larger
+  gr.Clear();
+  for (const auto& graph_id : gr.GetTileSet()){
+    auto new_size = gr.GetGraphTile(graph_id)->header()->end_offset();
+    ASSERT_GE(new_size, sizes[graph_id]);
+  }
 
+  // make sure to get fresh tiles
   CheckLandmarksInTiles(gr, GraphId("0/002025/0"));
   CheckLandmarksInTiles(gr, GraphId("1/032220/0"));
   CheckLandmarksInTiles(gr, GraphId("2/517680/0"));
@@ -438,7 +452,7 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
   BuildPBFAddLandmarksToTiles();
 
   landmark_map_tile_test.config =
-      test::make_config(workdir_tiles, {{"mjolnir.landmarks_db", db_path_tile_test}},
+      test::make_config(workdir_tiles, {{"mjolnir.landmarks", db_path_tile_test}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
@@ -450,9 +464,9 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
                                    {pbf_filename_tile_test}));
 
   // add landmarks from db to tiles
-  AddLandmarks(landmark_map_tile_test.config);
+  AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
   // add again, but this will result in errors
-  AddLandmarks(landmark_map_tile_test.config);
+  AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
 
   // check data (cannot reach here yet)
   GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
@@ -519,7 +533,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
   detail::build_pbf(map.nodes, ways, nodes, {}, pbf, 0, false);
 
   map.config =
-      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+      test::make_config(workdir, {{"mjolnir.landmarks", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf, and add landmarks to it
@@ -527,8 +541,9 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
                           mjolnir::BuildStage::kValidate);
   // build landmark database and import landmarks to it
   EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
+
   // add landmarks to graphtile from the landmark database
-  AddLandmarks(map.config);
+  AddLandmarks(map.config.get_child("mjolnir"));
 
   // get routing result from point a to g
   auto result = gurka::do_action(valhalla::Options::route, map, {"a", "g"}, "auto");
@@ -625,4 +640,14 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
       EXPECT_EQ(result_landmarks[i], expected->second[i]);
     }
   }
+
+  // check narrative generation
+  const std::vector<std::string> expected_narrative =
+      {"Drive east on S1.", "Turn right onto cf at the theatre ju_yuan.",
+       "Turn left onto fg at the post office you_zheng.", "You have arrived at your destination."};
+  std::vector<std::string> narrative{};
+  for (const auto& man : directions_leg.maneuver()) {
+    narrative.push_back(man.text_instruction());
+  }
+  EXPECT_EQ(narrative, expected_narrative);
 }
