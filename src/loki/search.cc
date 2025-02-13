@@ -562,7 +562,7 @@ struct bin_handler_t {
       nSearched++;
       bool all_prefiltered = true;
       std::pair<PointLL, uint16_t> circle({0, 0}, 0);
-      if (tile->header()->has_bounding_circles())
+      if (tile->header()->has_bounding_circles() && bounding_circle->is_valid())
         circle = bounding_circle->get(begin->bin_center_approximator, begin->bin_center);
       double radius = circle.second;
 

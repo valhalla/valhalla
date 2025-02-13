@@ -34,8 +34,12 @@ struct DiscretizedBoundingCircle {
 
   /**
    * Default constructor
+   *
+   * Creates an impossible bounding circle where the radius is smaller than the distance
+   * to the bin (i.e. this edge cannot be possibly be intersecting the bin)
    */
-  DiscretizedBoundingCircle() : radius_index(0), x_offset(0), y_offset(0){};
+  DiscretizedBoundingCircle()
+      : y_offset(kMaxOffsetValue), x_offset(kMaxOffsetValue), radius_index(0){};
 
   /**
    * Constructor.
@@ -57,6 +61,14 @@ struct DiscretizedBoundingCircle {
   std::pair<midgard::PointLL, uint16_t>
   get(const midgard::DistanceApproximator<midgard::PointLL>& approx,
       const midgard::PointLL& bin_center);
+
+  bool operator==(const DiscretizedBoundingCircle& rhs) const {
+    return y_offset == rhs.y_offset && x_offset == rhs.x_offset && radius_index == rhs.radius_index;
+  }
+
+  inline bool is_valid() const {
+    return x_offset != kMaxOffsetValue && y_offset != kMaxOffsetValue && radius_index != 0;
+  }
 
 protected:
   uint32_t y_offset : kCoordinateBits; // y offset in meters from the bin center

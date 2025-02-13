@@ -79,9 +79,11 @@ void assert_tile_equalish(const GraphTile& a,
     // check that the bins contain what was just added to them
     for (size_t i = 0; i < bins.size(); ++i) {
       auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
+      auto circle_bin = b.GetBoundingCircles(i % kBinsDim, i / kBinsDim);
       auto offset = bin.size() - bins[i].size();
       for (size_t j = 0; j < bins[i].size(); ++j) {
-        ASSERT_EQ(bin[j + offset], bins[i][j]);
+        ASSERT_EQ(bin[j + offset], bins[i][j].first);
+        ASSERT_EQ(circle_bin[j + offset], bins[i][j].second);
       }
     }
   } else {
@@ -246,9 +248,9 @@ TEST(GraphTileBuilder, TestAddBins) {
 
     // send fake bins, we'll throw one in each bin
     for (auto& bin : bins)
-      bin.emplace_back(test_tile.second, 2, 0);
+      bin.push_back(std::make_pair(GraphId(test_tile.second, 2, 0), DiscretizedBoundingCircle()));
     GraphTileBuilder::AddBins(bin_dir, t, bins, true);
-    auto increase = bins.size() * sizeof(GraphId) + sizeof(DiscretizedBoundingCircle);
+    auto increase = bins.size() * (sizeof(GraphId) + sizeof(DiscretizedBoundingCircle));
 
     // check the new tile isnt broken and is exactly the right size bigger
     assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
@@ -256,7 +258,7 @@ TEST(GraphTileBuilder, TestAddBins) {
 
     // append some more
     for (auto& bin : bins)
-      bin.emplace_back(test_tile.second, 2, 1);
+      bin.push_back(std::make_pair(GraphId(test_tile.second, 2, 1), DiscretizedBoundingCircle()));
     GraphTileBuilder::AddBins(bin_dir, t, bins, true);
     increase = bins.size() * (sizeof(GraphId) + sizeof(DiscretizedBoundingCircle)) * 2;
 
@@ -289,6 +291,7 @@ public:
     header_ = new GraphTileHeader();
     header_->set_graphid(id);
     header_->set_directededgecount(1 + (id.tileid() == o_id.tileid()) * 1);
+    header_->set_has_bounding_circles(true);
 
     auto ei_size = sizeof(EdgeInfo::EdgeInfoInner) + e.size();
     edgeinfo_ = new char[ei_size];
