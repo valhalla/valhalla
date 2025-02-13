@@ -106,20 +106,10 @@ constexpr uint32_t kMaxAssumedTruckSpeed = 120; // ~75 MPH
 // stretch, its unlikely to be good signal below this value
 constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
 
-constexpr uint32_t kNoSpeed = 0;
-
 // Default Fixed Speed. This is the default fixed speed that is assumed.
 // Unless otherwised specified no fixed speed will be assumed and speed will be
 // calculated from costing algorithm.
 constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
-
-/**
- * Checks whether a given speed obtained from historical speed data is valid (i.e. predicted, freeflow
- * or constrained). A speed is valid if it is not negative and not zero.
- */
-inline bool valid_speed(float speed) {
-  return speed > kNoSpeed;
-}
 
 // Maximum ferry speed
 constexpr uint32_t kMaxFerrySpeedKph = 40; // 21 knots

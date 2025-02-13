@@ -700,15 +700,12 @@ public:
       seconds %= midgard::kSecondsPerWeek;
       uint32_t idx = de - directededges_;
       float speed = predictedspeeds_.speed(idx, seconds);
-      if (valid_speed(speed)) {
-        *flow_sources |= kPredictedFlowMask;
-        return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
-                                     (1 - partial_live_pct) * (std::max(speed, 0.5f) + 0.5f));
-      }
+      *flow_sources |= kPredictedFlowMask;
+      return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
+                                   (1 - partial_live_pct) * (std::max(speed, 0.5f) + 0.5f));
 #ifdef LOGGING_LEVEL_TRACE
-      else
-        LOG_TRACE("Predicted speed = " + std::to_string(speed) + " for edge index: " +
-                  std::to_string(idx) + " of tile: " + std::to_string(header_->graphid()));
+      else LOG_TRACE("Predicted speed = " + std::to_string(speed) + " for edge index: " +
+                     std::to_string(idx) + " of tile: " + std::to_string(header_->graphid()));
 #endif
     }
 
@@ -717,8 +714,7 @@ public:
     // kInvalidSecondsOfWeek %= midgard::kSecondsPerDay = 12.1
     seconds %= midgard::kSecondsPerDay;
     auto is_daytime = (25200 < seconds && seconds < 68400);
-    if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask) &&
-        valid_speed(de->constrained_flow_speed())) {
+    if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask)) {
       *flow_sources |= kConstrainedFlowMask;
       return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
                                    (1 - partial_live_pct) * de->constrained_flow_speed());
@@ -732,8 +728,7 @@ public:
 
     // fallback to freeflow if time of week is not within 7am to 7pm (or if no time was passed in) and
     // the edge has freeflow speed
-    if ((invalid_time || !is_daytime) && (flow_mask & kFreeFlowMask) &&
-        valid_speed(de->free_flow_speed())) {
+    if ((invalid_time || !is_daytime) && (flow_mask & kFreeFlowMask)) {
       *flow_sources |= kFreeFlowMask;
       return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
                                    (1 - partial_live_pct) * de->free_flow_speed());
