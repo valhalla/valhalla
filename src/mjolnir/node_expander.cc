@@ -3,9 +3,9 @@
 namespace valhalla {
 namespace mjolnir {
 
-node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
-                               sequence<Node>& nodes,
-                               sequence<Edge>& edges) {
+node_bundle collect_node_edges(const valhalla::midgard::sequence<Node>::iterator& node_itr,
+                               valhalla::midgard::sequence<Node>& nodes,
+                               valhalla::midgard::sequence<Edge>& edges) {
   // copy out the first nodes attributes (as they are the correctly merged one)
   auto itr = node_itr;
   node_bundle bundle(*itr);
