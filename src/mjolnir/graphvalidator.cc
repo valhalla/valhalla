@@ -256,7 +256,7 @@ void validate(
   auto transit_level = TileHierarchy::GetTransitLevel().level;
 
   // default to false if the config does not contain any value
-  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", false);
+  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
 
   // vector to hold densities for each level
   std::vector<std::vector<float>> densities(numLevels);
@@ -544,7 +544,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   LOG_INFO("Validating, finishing and binning tiles...");
   auto hierarchy_properties = pt.get_child("mjolnir");
   std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");
-  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", false);
+  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
 
   // Create a randomized queue of tiles (at all levels) to work from
   std::deque<GraphId> tilequeue;
