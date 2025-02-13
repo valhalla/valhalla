@@ -228,7 +228,7 @@ TEST(GraphTileBuilder, TestAddBins) {
 
     // send blank bins
     bins_t bins;
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t, bins, true);
 
     // check the new tile is the same as the old one
     {
@@ -247,8 +247,8 @@ TEST(GraphTileBuilder, TestAddBins) {
     // send fake bins, we'll throw one in each bin
     for (auto& bin : bins)
       bin.emplace_back(test_tile.second, 2, 0);
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
-    auto increase = bins.size() * sizeof(GraphId);
+    GraphTileBuilder::AddBins(bin_dir, t, bins, true);
+    auto increase = bins.size() * sizeof(GraphId) + sizeof(DiscretizedBoundingCircle);
 
     // check the new tile isnt broken and is exactly the right size bigger
     assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
@@ -257,8 +257,8 @@ TEST(GraphTileBuilder, TestAddBins) {
     // append some more
     for (auto& bin : bins)
       bin.emplace_back(test_tile.second, 2, 1);
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
-    increase = bins.size() * sizeof(GraphId) * 2;
+    GraphTileBuilder::AddBins(bin_dir, t, bins, true);
+    increase = bins.size() * (sizeof(GraphId) + sizeof(DiscretizedBoundingCircle)) * 2;
 
     // check the new tile isnt broken and is exactly the right size bigger
     assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
@@ -266,7 +266,7 @@ TEST(GraphTileBuilder, TestAddBins) {
 
     // check that appending works
     t = GraphTile::Create(bin_dir, id);
-    GraphTileBuilder::AddBins(bin_dir, t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t, bins, true);
     for (auto& bin : bins)
       bin.insert(bin.end(), bin.begin(), bin.end());
 
@@ -329,7 +329,7 @@ TEST(GraphTileBuilder, TestBinEdges) {
   auto info = fake->edgeinfo(fake->directededge(0));
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
   GraphTileBuilder::tweeners_t tweeners;
-  auto bins = GraphTileBuilder::BinEdges(fake, tweeners);
+  auto bins = GraphTileBuilder::BinEdges(fake, tweeners, true);
   EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";
 }
 
