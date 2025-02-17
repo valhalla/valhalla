@@ -6,7 +6,6 @@
 #include "filesystem.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/adminconstants.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 

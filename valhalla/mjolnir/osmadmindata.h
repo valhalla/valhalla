@@ -45,7 +45,6 @@ struct OSMAdmin {
  * Populated by the PBF admin parser and sent into valhalla_build_admins.
  */
 struct OSMAdminData {
-  uint64_t max_changeset_id_; // The largest/newest changeset id encountered when parsing OSM data
   size_t osm_node_count;      // Count of osm nodes
   size_t osm_way_count;       // Count of osm ways
   size_t node_count;          // Count of all nodes
