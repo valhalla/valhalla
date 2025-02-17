@@ -413,6 +413,8 @@ protected:
   float subdivision_size_;
 };
 
+int tile_to_hilbert(size_t row, size_t col, size_t order);
+
 } // namespace midgard
 } // namespace valhalla
 

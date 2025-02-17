@@ -495,5 +495,97 @@ Tiles<Point2>::Intersect(const std::vector<Point2>&) const;
 template class std::unordered_map<int32_t, std::unordered_set<unsigned short>>
 Tiles<PointLL>::Intersect(const std::vector<PointLL>&) const;
 
+/**
+ * Possible variations of an order 1 hilbert curve
+ *
+ * A:
+ *
+ *  +-------+-------+
+ *  |       |       |
+ *  |   1   |   2   |
+ *  |       |       |
+ *  +-------+-------+
+ *  |       |       |
+ *  |   0   |   3   |
+ *  |       |       |
+ *  +-------+-------+
+ *
+ * B:
+ *
+ *  +-------+-------+
+ *  |       |       |
+ *  |   3   |   2   |
+ *  |       |       |
+ *  +-------+-------+
+ *  |       |       |
+ *  |   0   |   1   |
+ *  |       |       |
+ *  +-------+-------+
+ *
+ * C:
+ *
+ *  +-------+-------+
+ *  |       |       |
+ *  |   1   |   0   |
+ *  |       |       |
+ *  +-------+-------+
+ *  |       |       |
+ *  |   2   |   3   |
+ *  |       |       |
+ *  +-------+-------+
+ *
+ * D:
+ *
+ *  +-------+-------+
+ *  |       |       |
+ *  |   3   |   0   |
+ *  |       |       |
+ *  +-------+-------+
+ *  |       |       |
+ *  |   2   |   1   |
+ *  |       |       |
+ *  +-------+-------+
+ */
+enum class HilbertVariant { A = 0, B, C, D };
+
+struct Hilbert {
+  size_t order;
+  HilbertVariant var;
+
+  constexpr Hilbert(int order, int var) : order(order), var(static_cast<HilbertVariant>(var)) {};
+};
+// clang-format off
+
+// One combination for each variant. Indices into the arrays are row major quadrant indices.
+// For each quadrant we store: 
+//   1. the order in which it is visited
+//   2. the hilbert variant that applies to this quadrant (if it is subdivided) 
+constexpr std::array<std::array<Hilbert, 4>, 4> kHilbertMap = {{
+   {{Hilbert{1, 0}, Hilbert{2, 0}, Hilbert{0, 1}, Hilbert{3, 2}}},
+   {{Hilbert{3, 3}, Hilbert{2, 1}, Hilbert{0, 0}, Hilbert{1, 1}}},
+   {{Hilbert{1, 2}, Hilbert{0, 3}, Hilbert{2, 2}, Hilbert{3, 0}}},
+   {{Hilbert{3, 1}, Hilbert{0, 2}, Hilbert{2, 3}, Hilbert{1, 3}}}
+}};
+// clang-format on
+
+/**
+ * Convert tile row/column to its position along a Hilbert curve.
+ */
+int tile_to_hilbert(size_t row, size_t col, size_t order) {
+  HilbertVariant current_variant = HilbertVariant::A;
+  int position = 0;
+
+  for (int i = order - 1; i >= 0; --i) {
+    position = position << 2;
+    size_t quad_x = col & (1 << i) ? 1 : 0;
+    size_t quad_y = row & (1 << i) ? 1 : 0;
+    Hilbert hilbert = kHilbertMap[int(current_variant)][quad_y * 2 + quad_x];
+    current_variant = hilbert.var;
+    position |= hilbert.order;
+  }
+
+  return position;
+}
+
 } // namespace midgard
 } // namespace valhalla
