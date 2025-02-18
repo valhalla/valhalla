@@ -116,6 +116,8 @@ std::function<std::tuple<int32_t, unsigned short, double>()> make_binner(const P
 // Model a segment (2 consecutive points in an edge in a bin).
 struct candidate_t {
   double sq_distance{};
+  // TODO: get rid of this if possible
+  double distance{};
   PointLL point;
   size_t index{};
   std::pair<PointLL, uint16_t> bounding_circle;
@@ -575,15 +577,14 @@ struct bin_handler_t {
       auto c_itr = bin_candidates.begin();
 
       // radius = 0 means no circle
-      if (circle.second != 0) {
-        // if (false) {
+      // if (circle.second != 0) {
+      if (false) {
         // go through all of the candidates relevant to this bin
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           auto distance = std::sqrt(p_itr->project.approx.DistanceSquared(circle.first));
           // this is the distance to the best candidate so far
-          c_itr->sq_distance = p_itr->reachable.empty()
-                                   ? std::numeric_limits<double>::max()
-                                   : std::sqrt(p_itr->reachable.back().sq_distance);
+          c_itr->distance = p_itr->reachable.empty() ? std::numeric_limits<double>::max()
+                                                     : p_itr->reachable.back().distance;
 
           // the point on the edge closest to the candidate point will be at least this far away
           auto min_distance = distance - radius;
@@ -611,7 +612,6 @@ struct bin_handler_t {
       }
       // reset for search filter further down
       all_prefiltered = true;
-      edge_id.value &= kInvalidGraphId;
       // get the tile and edge
       if (!reader.GetGraphTile(edge_id, tile)) {
         continue;
@@ -641,6 +641,7 @@ struct bin_handler_t {
       c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
+        c_itr->distance = std::numeric_limits<double>::max();
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
@@ -690,6 +691,7 @@ struct bin_handler_t {
           // do we want to keep it
           if (sq_distance < c_itr->sq_distance) {
             c_itr->sq_distance = sq_distance;
+            c_itr->distance = std::sqrt(sq_distance);
             c_itr->point = std::move(point);
             c_itr->index = i;
           }
