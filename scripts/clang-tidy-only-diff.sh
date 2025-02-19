@@ -4,7 +4,7 @@
 set -o errexit -o pipefail -o nounset
 
 readonly base=$(git merge-base refs/remotes/origin/master HEAD)
-readonly build_dir=build/cb-bounding-circles-2/Debug
+readonly build_dir=build
 
 readonly CLANG_TIDY_VERSION=7.0.0
 
