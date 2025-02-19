@@ -255,6 +255,9 @@ void validate(
   auto numLevels = TileHierarchy::levels().size() + 1; // To account for transit
   auto transit_level = TileHierarchy::GetTransitLevel().level;
 
+  // default to false if the config does not contain any value
+  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
+
   // vector to hold densities for each level
   std::vector<std::vector<float>> densities(numLevels);
 
@@ -285,6 +288,8 @@ void validate(
 
     // Get the tile
     GraphTileBuilder tilebuilder(graph_reader.tile_dir(), tile_id, false);
+    // Are we writing bounding circles?
+    tilebuilder.header_builder().set_has_bounding_circles(build_bounding_circles);
 
     // Update nodes and directed edges as needed
     std::vector<NodeInfo> nodes;
@@ -446,9 +451,10 @@ void validate(
       relative_density = static_cast<uint32_t>(density * 2.0f);
     }
     tilebuilder.header_builder().set_density(relative_density);
+    tilebuilder.header_builder().set_has_bounding_circles(build_bounding_circles);
 
     // Bin the edges
-    auto bins = GraphTileBuilder::BinEdges(tile, tweeners);
+    auto bins = GraphTileBuilder::BinEdges(tile, tweeners, build_bounding_circles);
 
     // Write the new tile
     lock.lock();
@@ -457,7 +463,7 @@ void validate(
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
       auto reloaded = GraphTile::Create(graph_reader.tile_dir(), tile_id);
-      GraphTileBuilder::AddBins(graph_reader.tile_dir(), reloaded, bins);
+      GraphTileBuilder::AddBins(graph_reader.tile_dir(), reloaded, bins, build_bounding_circles);
     }
 
     // Check if we need to clear the tile cache
@@ -501,7 +507,8 @@ void bin_tweeners(const std::string& tile_dir,
                   tweeners_t::iterator& start,
                   const tweeners_t::iterator& end,
                   uint64_t dataset_id,
-                  std::mutex& lock) {
+                  std::mutex& lock,
+                  bool build_bounding_circles) {
   // go while we have tiles to update
   while (true) {
     lock.lock();
@@ -525,7 +532,7 @@ void bin_tweeners(const std::string& tile_dir,
     }
 
     // keep the extra binned edges
-    GraphTileBuilder::AddBins(tile_dir, tile, tile_bin.second);
+    GraphTileBuilder::AddBins(tile_dir, tile, tile_bin.second, build_bounding_circles);
   }
 }
 } // namespace
@@ -537,6 +544,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   LOG_INFO("Validating, finishing and binning tiles...");
   auto hierarchy_properties = pt.get_child("mjolnir");
   std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");
+  bool build_bounding_circles = pt.get<bool>("mjolnir.data_processing.build_bounding_circles", true);
 
   // Create a randomized queue of tiles (at all levels) to work from
   std::deque<GraphId> tilequeue;
@@ -601,7 +609,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   auto end = tweeners.end();
   for (auto& thread : threads) {
     thread.reset(new std::thread(bin_tweeners, std::cref(tile_dir), std::ref(start), std::cref(end),
-                                 dataset_id, std::ref(lock)));
+                                 dataset_id, std::ref(lock), build_bounding_circles));
   }
   for (auto& thread : threads) {
     thread->join();
