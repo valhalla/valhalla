@@ -10,6 +10,15 @@ ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && apt install -y sudo
 
+# install blackduck scan deps
+RUN apt-get update \
+    && apt-get -y --no-install-recommends install \
+    pipx \
+    default-jdk \
+    && pipx install blackduck-c-cpp \
+    && pipx ensurepath 
+ENV PATH=/root/.local/bin:$PATH
+
 # install deps
 WORKDIR /usr/local/src/valhalla
 COPY ./scripts/install-linux-deps.sh /usr/local/src/valhalla/scripts/install-linux-deps.sh
