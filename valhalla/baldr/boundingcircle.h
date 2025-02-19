@@ -1,5 +1,4 @@
-#ifndef VALHALLA_BALDR_BOUNDING_CIRCLE_H_
-#define VALHALLA_BALDR_BOUNDING_CIRCLE_H_
+#pragma once
 
 #include <array>
 #include <cstdint>
@@ -28,7 +27,7 @@ constexpr std::array<uint16_t, kRadiiCount> kBoundingCircleRadii =
 
 constexpr double kMaxOffsetMeters =
     0.05 * midgard::kMetersPerDegreeLat / 2 + kBoundingCircleRadii.back();
-const double kOffsetIncrement = kMaxOffsetMeters / (1 << (kCoordinateBits - 1));
+constexpr double kOffsetIncrement = kMaxOffsetMeters / (1 << (kCoordinateBits - 1));
 
 struct DiscretizedBoundingCircle {
 
@@ -39,7 +38,7 @@ struct DiscretizedBoundingCircle {
    * to the bin (i.e. this edge cannot be possibly be intersecting the bin)
    */
   DiscretizedBoundingCircle()
-      : y_offset(kMaxOffsetValue), x_offset(kMaxOffsetValue), radius_index(0){};
+      : y_offset(kMaxOffsetValue), x_offset(kMaxOffsetValue), radius_index(0) {};
 
   /**
    * Constructor.
@@ -77,5 +76,3 @@ protected:
 };
 } // namespace baldr
 } // namespace valhalla
-
-#endif // VALHALLA_BALDR_GRAPHID_H_

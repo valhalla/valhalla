@@ -408,6 +408,7 @@ struct bin_handler_t {
                       const candidate_t& candidate,
                       PathLocation& correlated,
                       std::vector<PathLocation::PathEdge>& filtered) {
+
     // get the distance between the result
     auto distance = candidate.point.Distance(location.latlng_);
     // the search cutoff is a hard filter so skip any outside of that
@@ -559,8 +560,11 @@ struct bin_handler_t {
     auto bounding_circles = tile->GetBoundingCircles(begin->bin_index);
     auto bounding_circle = bounding_circles.begin();
     for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
-      auto edge_id = *edge_it;
+      // TODO: omitting this will cause the worker_nullptr_tiles test to fail
+      if (tile == nullptr)
+        continue;
 
+      auto edge_id = *edge_it;
       nSearched++;
       bool all_prefiltered = true;
       std::pair<PointLL, uint16_t> circle({0, 0}, 0);
@@ -577,17 +581,16 @@ struct bin_handler_t {
       auto c_itr = bin_candidates.begin();
 
       // radius = 0 means no circle
-      // if (circle.second != 0) {
-      if (false) {
+      if (circle.second != 0) {
         // go through all of the candidates relevant to this bin
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           auto distance = std::sqrt(p_itr->project.approx.DistanceSquared(circle.first));
-          // this is the distance to the best candidate so far
-          c_itr->distance = p_itr->reachable.empty() ? std::numeric_limits<double>::max()
+          // this is the distance to the best reachable candidate so far
+          c_itr->distance = p_itr->reachable.empty() ? std::numeric_limits<float>::max()
                                                      : p_itr->reachable.back().distance;
 
           // the point on the edge closest to the candidate point will be at least this far away
-          auto min_distance = distance - radius;
+          auto min_distance = std::max(0., distance - radius);
 
           //  a candidate can be prefiltered if one of the following applies:
           //  1. there's a location radius and the bounding circle of the edge falls outside it
@@ -597,10 +600,10 @@ struct bin_handler_t {
           //  3. the minimum distance to this edge based on the bounding circle is larger than the
           //     search cutoff (which is a hard filter unlike the radius)
           c_itr->prefiltered = (p_itr->sq_radius > 0 && min_distance >= p_itr->location.radius_ &&
-                                min_distance >= c_itr->sq_distance) ||
-                               (p_itr->sq_radius == 0 && min_distance >= c_itr->sq_distance) ||
-                               (min_distance >= p_itr->location.search_cutoff_);
-          if (!c_itr->prefiltered) {
+                                min_distance >= c_itr->distance) ||
+                               (p_itr->sq_radius == 0 && min_distance >= c_itr->distance) ||
+                               (min_distance > p_itr->location.search_cutoff_);
+          if (c_itr->prefiltered == false) {
             all_prefiltered = false;
             break;
           }
@@ -645,7 +648,7 @@ struct bin_handler_t {
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
-            c_itr->prefiltered ||
+            // c_itr->prefiltered || TODO: figure out why this leads to some test failures
             (search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
              (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
              search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_));

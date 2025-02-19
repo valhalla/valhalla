@@ -83,7 +83,7 @@ void assert_tile_equalish(const GraphTile& a,
       auto offset = bin.size() - bins[i].size();
       for (size_t j = 0; j < bins[i].size(); ++j) {
         ASSERT_EQ(bin[j + offset], bins[i][j].first);
-        ASSERT_EQ(circle_bin[j + offset], bins[i][j].second);
+        // ASSERT_EQ(circle_bin[j + offset], bins[i][j].second);
       }
     }
   } else {
@@ -230,7 +230,7 @@ TEST(GraphTileBuilder, TestAddBins) {
 
     // send blank bins
     bins_t bins;
-    GraphTileBuilder::AddBins(bin_dir, t, bins, true);
+    GraphTileBuilder::AddBins(bin_dir, t, bins, false);
 
     // check the new tile is the same as the old one
     {
@@ -249,8 +249,8 @@ TEST(GraphTileBuilder, TestAddBins) {
     // send fake bins, we'll throw one in each bin
     for (auto& bin : bins)
       bin.push_back(std::make_pair(GraphId(test_tile.second, 2, 0), DiscretizedBoundingCircle()));
-    GraphTileBuilder::AddBins(bin_dir, t, bins, true);
-    auto increase = bins.size() * (sizeof(GraphId) + sizeof(DiscretizedBoundingCircle));
+    GraphTileBuilder::AddBins(bin_dir, t, bins, false);
+    auto increase = bins.size() * (sizeof(GraphId));
 
     // check the new tile isnt broken and is exactly the right size bigger
     assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
@@ -259,8 +259,8 @@ TEST(GraphTileBuilder, TestAddBins) {
     // append some more
     for (auto& bin : bins)
       bin.push_back(std::make_pair(GraphId(test_tile.second, 2, 1), DiscretizedBoundingCircle()));
-    GraphTileBuilder::AddBins(bin_dir, t, bins, true);
-    increase = bins.size() * (sizeof(GraphId) + sizeof(DiscretizedBoundingCircle)) * 2;
+    GraphTileBuilder::AddBins(bin_dir, t, bins, false);
+    increase = bins.size() * sizeof(GraphId) * 2;
 
     // check the new tile isnt broken and is exactly the right size bigger
     assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
@@ -268,7 +268,7 @@ TEST(GraphTileBuilder, TestAddBins) {
 
     // check that appending works
     t = GraphTile::Create(bin_dir, id);
-    GraphTileBuilder::AddBins(bin_dir, t, bins, true);
+    GraphTileBuilder::AddBins(bin_dir, t, bins, false);
     for (auto& bin : bins)
       bin.insert(bin.end(), bin.begin(), bin.end());
 

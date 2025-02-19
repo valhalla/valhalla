@@ -440,7 +440,6 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
   if (file.is_open()) {
     // Write the header
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
-
     // Write the updated nodes. Make sure node count matches.
     if (nodes.size() != header_->nodecount()) {
       throw std::runtime_error("GraphTileBuilder::Update - node count has changed");
@@ -1189,6 +1188,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   // NOTE: if format changes to add more things here we need to make a change here as well
   GraphTileHeader header = *tile->header();
   header.set_edge_bin_offsets(offsets);
+  header.set_has_bounding_circles(build_bounding_circles);
   header.set_complex_restriction_forward_offset(header.complex_restriction_forward_offset() + shift);
   header.set_complex_restriction_reverse_offset(header.complex_restriction_reverse_offset() + shift);
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);

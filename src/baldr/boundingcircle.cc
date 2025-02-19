@@ -84,8 +84,6 @@ std::pair<midgard::PointLL, uint16_t>
 DiscretizedBoundingCircle::get(const midgard::DistanceApproximator<midgard::PointLL>& approx,
                                const midgard::PointLL& bin_center) {
 
-  // for the case where we created a valid circle, but it happens to be at
-  // the bin's center and has the smallest radius
   auto y_offset_meters =
       ((static_cast<double>(y_offset) / static_cast<double>(1 << kCoordinateBits)) *
        kMaxOffsetMeters * 2) -
