@@ -590,7 +590,7 @@ struct bin_handler_t {
                                                      : p_itr->reachable.back().distance;
 
           // the point on the edge closest to the candidate point will be at least this far away
-          auto min_distance = std::max(0., distance - radius);
+          auto min_distance = distance - radius;
 
           //  a candidate can be prefiltered if one of the following applies:
           //  1. there's a location radius and the bounding circle of the edge falls outside it
@@ -648,7 +648,7 @@ struct bin_handler_t {
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
-            // c_itr->prefiltered || TODO: figure out why this leads to some test failures
+            // c_itr->prefiltered || // TODO: figure out why this leads to some test failures
             (search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
              (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
              search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_));
