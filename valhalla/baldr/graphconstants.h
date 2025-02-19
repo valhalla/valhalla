@@ -111,10 +111,6 @@ constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
 // calculated from costing algorithm.
 constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
 
-inline bool valid_speed(float speed) {
-  return speed > kMinSpeedKph && speed < kMaxAssumedSpeed;
-}
-
 // Maximum ferry speed
 constexpr uint32_t kMaxFerrySpeedKph = 40; // 21 knots
 
