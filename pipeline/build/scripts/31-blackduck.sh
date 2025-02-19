@@ -1,8 +1,5 @@
 #!/bin/bash
 
-apt-get update        
-apt-get -y --no-install-recommends install default-jdk
-
 # Set environment variables
 export SCAN_CLI_OPTS=" -Duser.language=en -Duser.country=US"
 export DETECT_JAR_DOWNLOAD_DIR=$HOME
@@ -32,31 +29,14 @@ if test $BLACKDUCK_SCAN_COUNT -ge 10; then
     fi
 fi
 
-# Run Synopsys Detect with specified options
-curl -s https://detect.synopsys.com/detect9.sh | bash -s - \
-    --blackduck.url="${BLACKDUCK_PLATFORM}" \
-    --blackduck.api.token="${BLACKDUCK_TOKEN}" \
-    --detect.project.name="${BLACKDUCK_PREFIX}${BLACKDUCK_PROJECT}" \
-    --detect.project.version.name="${BLACKDUCK_NAME}_$(date --utc +%Y-%m-%d_%H:%M:%S)" \
-    --detect.project.version.phase="${BLACKDUCK_PHASE}" \
-    --detect.policy.check.fail.on.severities="BLOCKER,CRITICAL,MAJOR" \
-    --blackduck.trust.cert=true \
-    --blackduck.hub.auto.import.cert=true \
-    --detect.timeout=3600 \
-    --detect.source.path="${BLACKDUCK_SOURCE}" \
-    --detect.included.detector.types=ALL \
-    --detect.excluded.directories="${BLACKDUCK_EXCLUDE}" \
-    --detect.detector.search.depth=5 \
-    --detect.blackduck.signature.scanner.snippet.matching="SNIPPET_MATCHING" \
-    --detect.blackduck.signature.scanner.license.search=true \
-    --detect.blackduck.signature.scanner.upload.source.mode=true \
-    --detect.blackduck.signature.scanner.copyright.search=true \
-    --detect.cleanup=true \
-    --detect.blackduck.scan.mode="INTELLIGENT" \
-    --detect.conan.include.build.dependencies=true \
-    --detect.accuracy.required=NONE \
-    --detect.wait.for.results=false \
-    --detect.excluded.detector.types="PIP,SETUPTOOLS"
+blackduck-c-cpp \
+    -d "${BLACKDUCK_SOURCE}" \
+    -bc "cd ${BLACKDUCK_SOURCE} && cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_THREAD_SAFE_TILE_REF_COUNT=On && make all" \
+    -proj "${BLACKDUCK_PREFIX}${BLACKDUCK_PROJECT}" \
+    -vers "${BLACKDUCK_NAME}_$(date --utc +%Y-%m-%d_%H:%M:%S)" \
+    -bd "${BLACKDUCK_PLATFORM}" \
+    -a "${BLACKDUCK_TOKEN}" \
+    -sh
 
 # Capture the exit code
 SCAN_EXIT_CODE=$?
@@ -80,6 +60,5 @@ else
 fi
 
 #Cleanup Blackduck sources
-rm /root/synopsys-detect*
-rm -rf /root/blackduck
+rm -rf /root/.synopsys
 echo "Blackduck CleanUp done."
