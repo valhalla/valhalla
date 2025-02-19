@@ -48,10 +48,9 @@ then
     --env BLACKDUCK_PREFIX=$BLACKDUCK_PREFIX \
     --env BLACKDUCK_PROJECT=$APP_NAME \
     --env BLACKDUCK_NAME=$APP_VERSION \
-    --env BLACKDUCK_SOURCE=/usr/local/src/valhalla/ \
+    --env BLACKDUCK_SOURCE=/usr/local/src/valhalla/build \
     --env BLACKDUCK_PHASE=$BLACKDUCK_PHASE \
     --env BLACKDUCK_TOKEN=$BLACKDUCK_TOKEN \
-    --env BLACKDUCK_EXCLUDE=third_party \
     ${SHARE_REGISTRY_URL}/${APP_NAME}:builder \
     /workspace/build/blackduck.sh \
   || exit 4
