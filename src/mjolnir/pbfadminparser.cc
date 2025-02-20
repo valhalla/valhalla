@@ -66,7 +66,7 @@ struct admin_parser {
       shape_.set(node);
     }
 
-    osm_admin_data_.way_map.emplace(way.id(), node_ids);
+    osm_admin_data_.way_map.emplace(way.id(), std::move(node_ids));
   }
 
   void relation(const osmium::Relation& relation) {
