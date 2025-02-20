@@ -2058,6 +2058,9 @@ struct graph_parser {
         name_jeita_ = ref_jeita_ = {};
 
     for (const auto& tag : tags) {
+      // To make `ProcessNameTag` function below happy.
+      tag_ = {tag.first, tag.second};
+
       bool is_lang_pronunciation = false;
       std::size_t found = tag.first.find(":pronunciation");
       if (found != std::string::npos)
@@ -2181,11 +2184,11 @@ struct graph_parser {
       } else if (!is_lang_pronunciation) {
         if (boost::algorithm::starts_with(tag.first, "name:") &&
             (is_highway_junction || maybe_named_junction || is_toll_node) && hasTag) {
-          ProcessNameTag(tag, name_w_lang_, language_);
+          ProcessNameTag(tag_, name_w_lang_, language_);
           ++osmdata_.node_name_count;
           named_junction = maybe_named_junction;
         } else if (boost::algorithm::starts_with(tag.first, "ref:")) {
-          ProcessNameTag(tag, ref_w_lang_, ref_language_);
+          ProcessNameTag(tag_, ref_w_lang_, ref_language_);
           ++osmdata_.node_ref_count;
         }
       } else {
