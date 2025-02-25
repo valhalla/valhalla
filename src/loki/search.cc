@@ -589,14 +589,8 @@ struct bin_handler_t {
           } else {
             c_itr->distance = p_itr->reachable.empty() ? std::numeric_limits<float>::max()
                                                        : p_itr->reachable.back().distance;
-            // c_itr->sq_distance = p_itr->reachable.empty() ? std::numeric_limits<float>::max()
-            //                                               : p_itr->reachable.back().sq_distance;
             auto distance = std::sqrt(p_itr->project.approx.DistanceSquared(circle.first));
             auto min_distance = distance - radius;
-            // the added candidate search radius + circle center radius squared
-            // auto r_sq = std::pow(p_itr->location.radius_ + radius, 2);
-            // r1 + r2 > distance to circle center
-            // auto out_of_radius = dsqr > r_sq;
 
             //  a candidate can be prefiltered if one of the following applies:
             //  1. there's a location radius and the bounding circle of the edge falls outside it
@@ -605,8 +599,6 @@ struct bin_handler_t {
             //     candidate we can get from this edge
             //  3. the minimum distance to this edge based on the bounding circle is larger than the
             //     search cutoff (which is a hard filter unlike the radius)
-            // c_itr->prefiltered =
-            //     dsqr >= c_itr->sq_distance && (p_itr->sq_radius > 0 && out_of_radius);
             c_itr->prefiltered = (p_itr->sq_radius > 0 && min_distance >= p_itr->location.radius_ &&
                                   min_distance >= c_itr->distance) ||
                                  (p_itr->sq_radius == 0 && min_distance >= c_itr->distance);
@@ -748,6 +740,8 @@ struct bin_handler_t {
           c_itr->tile = tile;
           c_itr->bounding_circle = std::move(circle);
           batch->emplace_back(std::move(*c_itr));
+          if (reachable && c_itr->sq_distance < p_itr->closest_external_reachable)
+            p_itr->closest_external_reachable = c_itr->sq_distance;
           continue;
         }
 
