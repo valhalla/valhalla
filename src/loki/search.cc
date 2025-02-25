@@ -648,7 +648,7 @@ struct bin_handler_t {
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
-            // c_itr->prefiltered || // TODO: figure out why this leads to some test failures
+            c_itr->prefiltered || // TODO: figure out why this leads to some test failures
             (search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
              (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
              search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_));
