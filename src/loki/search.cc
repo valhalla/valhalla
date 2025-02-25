@@ -558,16 +558,16 @@ struct bin_handler_t {
                   std::vector<projector_wrapper>::iterator end) {
     // iterate over the edges in the bin
     auto tile = begin->cur_tile;
+    bool has_bounding_circles = tile->header()->has_bounding_circles();
     auto edges = tile->GetBin(begin->bin_index);
     auto bounding_circles = tile->GetBoundingCircles(begin->bin_index);
     auto bounding_circle = bounding_circles.begin();
     for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
-
       auto edge_id = *edge_it;
       nSearched++;
       bool all_prefiltered = true;
       std::pair<PointLL, uint16_t> circle({0, 0}, 0);
-      if (tile->header()->has_bounding_circles() && bounding_circle->is_valid())
+      if (has_bounding_circles && bounding_circle->is_valid())
         circle = bounding_circle->get(begin->bin_center_approximator, begin->bin_center);
       double radius = circle.second;
 
@@ -587,12 +587,16 @@ struct bin_handler_t {
           if (dsqr > p_itr->sq_cutoff) {
             c_itr->prefiltered = true;
           } else {
-            c_itr->sq_distance = p_itr->reachable.empty() ? std::numeric_limits<float>::max()
-                                                          : p_itr->reachable.back().sq_distance;
+            c_itr->distance = p_itr->reachable.empty() ? std::numeric_limits<float>::max()
+                                                       : p_itr->reachable.back().distance;
+            // c_itr->sq_distance = p_itr->reachable.empty() ? std::numeric_limits<float>::max()
+            //                                               : p_itr->reachable.back().sq_distance;
+            auto distance = std::sqrt(p_itr->project.approx.DistanceSquared(circle.first));
+            auto min_distance = distance - radius;
             // the added candidate search radius + circle center radius squared
-            auto r_sq = square(p_itr->location.radius_ + radius);
+            // auto r_sq = std::pow(p_itr->location.radius_ + radius, 2);
             // r1 + r2 > distance to circle center
-            auto out_of_radius = dsqr > r_sq;
+            // auto out_of_radius = dsqr > r_sq;
 
             //  a candidate can be prefiltered if one of the following applies:
             //  1. there's a location radius and the bounding circle of the edge falls outside it
@@ -601,9 +605,11 @@ struct bin_handler_t {
             //     candidate we can get from this edge
             //  3. the minimum distance to this edge based on the bounding circle is larger than the
             //     search cutoff (which is a hard filter unlike the radius)
-            c_itr->prefiltered =
-                (dsqr >= c_itr->sq_distance && (p_itr->sq_radius > 0 && out_of_radius)) ||
-                (dsqr > p_itr->sq_cutoff);
+            // c_itr->prefiltered =
+            //     dsqr >= c_itr->sq_distance && (p_itr->sq_radius > 0 && out_of_radius);
+            c_itr->prefiltered = (p_itr->sq_radius > 0 && min_distance >= p_itr->location.radius_ &&
+                                  min_distance >= c_itr->distance) ||
+                                 (p_itr->sq_radius == 0 && min_distance >= c_itr->distance);
             if (c_itr->prefiltered == false) {
               all_prefiltered = false;
               break;
@@ -646,6 +652,7 @@ struct bin_handler_t {
       c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
+        c_itr->distance = std::numeric_limits<double>::max();
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
@@ -695,6 +702,7 @@ struct bin_handler_t {
           // do we want to keep it
           if (sq_distance < c_itr->sq_distance) {
             c_itr->sq_distance = sq_distance;
+            c_itr->distance = std::sqrt(sq_distance);
             c_itr->point = std::move(point);
             c_itr->index = i;
           }
