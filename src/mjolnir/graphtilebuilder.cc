@@ -1227,7 +1227,8 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   in_mem.write(begin, end - begin);
 
   // Sanity check for the end offset
-  int32_t curr = static_cast<int32_t>(in_mem.tellp()) + static_cast<int32_t>(sizeof(GraphTileHeader));
+  uint32_t curr =
+      static_cast<uint32_t>(in_mem.tellp()) + static_cast<uint32_t>(sizeof(GraphTileHeader));
   if (header.end_offset() != curr) {
     LOG_ERROR("Mismatch in end offset " + std::to_string(header.end_offset()) + " vs in_mem stream " +
               std::to_string(curr));
