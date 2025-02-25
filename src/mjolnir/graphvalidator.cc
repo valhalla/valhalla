@@ -288,8 +288,6 @@ void validate(
 
     // Get the tile
     GraphTileBuilder tilebuilder(graph_reader.tile_dir(), tile_id, false);
-    // Are we writing bounding circles?
-    tilebuilder.header_builder().set_has_bounding_circles(build_bounding_circles);
 
     // Update nodes and directed edges as needed
     std::vector<NodeInfo> nodes;
@@ -451,7 +449,6 @@ void validate(
       relative_density = static_cast<uint32_t>(density * 2.0f);
     }
     tilebuilder.header_builder().set_density(relative_density);
-    tilebuilder.header_builder().set_has_bounding_circles(build_bounding_circles);
 
     // Bin the edges
     auto bins = GraphTileBuilder::BinEdges(tile, tweeners, build_bounding_circles);

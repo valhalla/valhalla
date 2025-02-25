@@ -71,6 +71,5 @@ vcpkg*/
 
 # documentation
 site/
-*.gph
 
 .DS_Store

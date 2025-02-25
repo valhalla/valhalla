@@ -332,8 +332,9 @@ void GraphTile::Initialize(const GraphId& graphid) {
   edge_bins_ = reinterpret_cast<GraphId*>(ptr);
 
   // Sneak in bounding circles; end of the last bin is first
-  ptr += header_->bin_offset(kBinCount - 1).second * sizeof(GraphId);
-  bounding_circles_ = reinterpret_cast<DiscretizedBoundingCircle*>(ptr);
+  // ptr += header_->bin_offset(kBinCount - 1).second * sizeof(GraphId);
+  bounding_circles_ =
+      reinterpret_cast<DiscretizedBoundingCircle*>(tile_ptr + header_->bounding_circle_offset());
 
   // Start of forward restriction information and its size
   complex_restriction_forward_ = tile_ptr + header_->complex_restriction_forward_offset();

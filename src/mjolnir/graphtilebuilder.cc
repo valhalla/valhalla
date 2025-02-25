@@ -1157,9 +1157,10 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
                                bool build_bounding_circles) {
   assert(tile);
   // read bins and append and keep track of how much is appended
-  std::vector<GraphId> bins[kBinCount];
-  std::vector<DiscretizedBoundingCircle> circles[kBinCount];
+  std::array<std::vector<GraphId>, kBinCount> bins;
+  std::array<std::vector<DiscretizedBoundingCircle>, kBinCount> circles;
   uint32_t shift = 0;
+  bool added_bounding_circles = false;
   for (size_t i = 0; i < kBinCount; ++i) {
     auto bin = tile->GetBin(i % kBinsDim, i / kBinsDim);
     auto circle_bin = tile->GetBoundingCircles(i % kBinsDim, i / kBinsDim);
@@ -1173,8 +1174,10 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
     // append new ones
     for (size_t j = 0; j < more_bins[i].size(); ++j) {
       bins[i].push_back(more_bins[i][j].first);
-      if (build_bounding_circles)
+      if (build_bounding_circles) {
+        added_bounding_circles = true;
         circles[i].push_back(more_bins[i][j].second);
+      }
     }
     shift += more_bins[i].size();
   }
@@ -1188,7 +1191,6 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   // NOTE: if format changes to add more things here we need to make a change here as well
   GraphTileHeader header = *tile->header();
   header.set_edge_bin_offsets(offsets);
-  header.set_has_bounding_circles(build_bounding_circles);
   header.set_complex_restriction_forward_offset(header.complex_restriction_forward_offset() + shift);
   header.set_complex_restriction_reverse_offset(header.complex_restriction_reverse_offset() + shift);
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
@@ -1196,6 +1198,42 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
+  std::stringstream in_mem;
+
+  // a bunch of stuff between header and bins
+  const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
+  const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin());
+  in_mem.write(begin, end - begin);
+  // the updated bins
+  for (const auto& bin : bins) {
+    in_mem.write(reinterpret_cast<const char*>(bin.data()), bin.size() * sizeof(GraphId));
+  }
+  header.set_bounding_circle_offset(
+      added_bounding_circles ? (sizeof(GraphTileHeader) + in_mem.tellp()) : 0);
+
+  // the updated bounding circles
+  for (const auto& circle : circles) {
+    in_mem.write(reinterpret_cast<const char*>(circle.data()),
+                 circle.size() * sizeof(DiscretizedBoundingCircle));
+  }
+  // the rest of the stuff after circles if it had any
+  if (tile->header()->has_bounding_circles()) {
+    begin = reinterpret_cast<const char*>(tile->GetBoundingCircles(kBinsDim - 1, kBinsDim - 1).end());
+  } else {
+    // or after the bins
+    begin = reinterpret_cast<const char*>(tile->GetBin(kBinsDim - 1, kBinsDim - 1).end());
+  }
+  end = reinterpret_cast<const char*>(tile->header()) + tile->header()->end_offset();
+  in_mem.write(begin, end - begin);
+
+  // Sanity check for the end offset
+  int32_t curr = static_cast<int32_t>(in_mem.tellp()) + static_cast<int32_t>(sizeof(GraphTileHeader));
+  if (header.end_offset() != curr) {
+    LOG_ERROR("Mismatch in end offset " + std::to_string(header.end_offset()) + " vs in_mem stream " +
+              std::to_string(curr));
+  }
+
+  // write to file
   filesystem::path filename =
       tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(header.graphid());
   if (!filesystem::exists(filename.parent_path())) {
@@ -1206,25 +1244,9 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   if (file.is_open()) {
     // new header
     file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
-    // a bunch of stuff between header and bins
-    const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
-    const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin());
-    file.write(begin, end - begin);
-    // the updated bins
-    for (const auto& bin : bins) {
-      file.write(reinterpret_cast<const char*>(bin.data()), bin.size() * sizeof(GraphId));
-    }
-    // the updated bounding circles
-    if (build_bounding_circles) {
-      for (const auto& circle : circles) {
-        file.write(reinterpret_cast<const char*>(circle.data()),
-                   circle.size() * sizeof(DiscretizedBoundingCircle));
-      }
-    }
-    // the rest of the stuff after circles
-    begin = reinterpret_cast<const char*>(tile->GetBoundingCircles(kBinsDim - 1, kBinsDim - 1).end());
-    end = reinterpret_cast<const char*>(tile->header()) + tile->header()->end_offset();
-    file.write(begin, end - begin);
+    // everything else
+    file << in_mem.rdbuf();
+    file.close();
   } // failed
   else {
     throw std::runtime_error("Failed to open file " + filename.string());
