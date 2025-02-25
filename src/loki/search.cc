@@ -186,7 +186,8 @@ struct candidate_t {
 struct projector_wrapper {
   projector_wrapper(const Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_)), location(location),
-        sq_radius(square(double(location.radius_))), project(location.latlng_),
+        sq_radius(square(double(location.radius_))),
+        sq_cutoff(square(double(location.search_cutoff_))), project(location.latlng_),
         bin_center_approximator(bin_center) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
@@ -263,6 +264,7 @@ struct projector_wrapper {
   std::vector<candidate_t> unreachable;
   std::vector<candidate_t> reachable;
   double closest_external_reachable = std::numeric_limits<double>::max();
+  double sq_cutoff;
 
   // critical data
   projector_t project;
@@ -560,9 +562,6 @@ struct bin_handler_t {
     auto bounding_circles = tile->GetBoundingCircles(begin->bin_index);
     auto bounding_circle = bounding_circles.begin();
     for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
-      // TODO: omitting this will cause the worker_nullptr_tiles test to fail
-      if (tile == nullptr)
-        continue;
 
       auto edge_id = *edge_it;
       nSearched++;
@@ -584,28 +583,31 @@ struct bin_handler_t {
       if (circle.second != 0) {
         // go through all of the candidates relevant to this bin
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
-          auto distance = std::sqrt(p_itr->project.approx.DistanceSquared(circle.first));
-          // this is the distance to the best reachable candidate so far
-          c_itr->distance = p_itr->reachable.empty() ? std::numeric_limits<float>::max()
-                                                     : p_itr->reachable.back().distance;
+          auto dsqr = p_itr->project.approx.DistanceSquared(circle.first);
+          if (dsqr > p_itr->sq_cutoff) {
+            c_itr->prefiltered = true;
+          } else {
+            c_itr->sq_distance = p_itr->reachable.empty() ? std::numeric_limits<float>::max()
+                                                          : p_itr->reachable.back().sq_distance;
+            // the added candidate search radius + circle center radius squared
+            auto r_sq = square(p_itr->location.radius_ + radius);
+            // r1 + r2 > distance to circle center
+            auto out_of_radius = dsqr > r_sq;
 
-          // the point on the edge closest to the candidate point will be at least this far away
-          auto min_distance = distance - radius;
-
-          //  a candidate can be prefiltered if one of the following applies:
-          //  1. there's a location radius and the bounding circle of the edge falls outside it
-          //     and the best candidate is closer than any candidate we can get from this edge
-          //  2. there's no location radius but the best candidate we have is closer than any
-          //     candidate we can get from this edge
-          //  3. the minimum distance to this edge based on the bounding circle is larger than the
-          //     search cutoff (which is a hard filter unlike the radius)
-          c_itr->prefiltered = (p_itr->sq_radius > 0 && min_distance >= p_itr->location.radius_ &&
-                                min_distance >= c_itr->distance) ||
-                               (p_itr->sq_radius == 0 && min_distance >= c_itr->distance) ||
-                               (min_distance > p_itr->location.search_cutoff_);
-          if (c_itr->prefiltered == false) {
-            all_prefiltered = false;
-            break;
+            //  a candidate can be prefiltered if one of the following applies:
+            //  1. there's a location radius and the bounding circle of the edge falls outside it
+            //     and the best candidate is closer than any candidate we can get from this edge
+            //  2. there's no location radius but the best candidate we have is closer than any
+            //     candidate we can get from this edge
+            //  3. the minimum distance to this edge based on the bounding circle is larger than the
+            //     search cutoff (which is a hard filter unlike the radius)
+            c_itr->prefiltered =
+                (dsqr >= c_itr->sq_distance && (p_itr->sq_radius > 0 && out_of_radius)) ||
+                (dsqr > p_itr->sq_cutoff);
+            if (c_itr->prefiltered == false) {
+              all_prefiltered = false;
+              break;
+            }
           }
         }
         if (all_prefiltered) {
@@ -644,11 +646,10 @@ struct bin_handler_t {
       c_itr = bin_candidates.begin();
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
-        c_itr->distance = std::numeric_limits<double>::max();
         // for traffic closures we may have only one direction disabled so we must also check opp
         // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
-            c_itr->prefiltered || // TODO: figure out why this leads to some test failures
+            c_itr->prefiltered ||
             (search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
              (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
              search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_));
@@ -694,7 +695,6 @@ struct bin_handler_t {
           // do we want to keep it
           if (sq_distance < c_itr->sq_distance) {
             c_itr->sq_distance = sq_distance;
-            c_itr->distance = std::sqrt(sq_distance);
             c_itr->point = std::move(point);
             c_itr->index = i;
           }
