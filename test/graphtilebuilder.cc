@@ -45,10 +45,10 @@ void assert_tile_equalish(const GraphTile& a,
             0);
 
   // check the stuff after the bins
-  // ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + a.header()->edgeinfo_offset(),
-  //                  reinterpret_cast<const char*>(b.header()) + b.header()->edgeinfo_offset(),
-  //                  b.header()->end_offset() - b.header()->edgeinfo_offset()),
-  //           0);
+  ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + a.header()->edgeinfo_offset(),
+                   reinterpret_cast<const char*>(b.header()) + b.header()->edgeinfo_offset(),
+                   b.header()->end_offset() - b.header()->edgeinfo_offset()),
+            0);
 
   // if the header is as expected
   const auto *ah = a.header(), *bh = b.header();
