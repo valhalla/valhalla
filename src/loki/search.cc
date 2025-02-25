@@ -584,24 +584,33 @@ struct bin_handler_t {
         // go through all of the candidates relevant to this bin
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           auto dsqr = p_itr->project.approx.DistanceSquared(circle.first);
+
+          // we can ignore this edge if it's outside of the search cutoff
+          // since it's a hard filter
           if (dsqr > p_itr->sq_cutoff) {
             c_itr->prefiltered = true;
           } else {
-            c_itr->distance = p_itr->reachable.empty() ? std::numeric_limits<float>::max()
-                                                       : p_itr->reachable.back().distance;
-            auto distance = std::sqrt(p_itr->project.approx.DistanceSquared(circle.first));
-            auto min_distance = distance - radius;
+            // if we don't have any reachable candidates yet, we can't reject any edge within
+            // the cutoff distance
+            if (p_itr->reachable.empty()) {
+              all_prefiltered = false;
+              break;
+            }
+            // we can also ignore this edge if we have something in radius but this edge is entirely
+            // out of radius
+            if (p_itr->reachable.back().sq_distance < p_itr->sq_radius && dsqr > p_itr->sq_radius) {
+              c_itr->prefiltered = true;
+            } else {
+              // finally we have at least one in-radius candidate and the best candidate
+              // we can get from this edge will also be in-radius, so we dig a little deeper
+              // and compare the worst distance we can get from this edge to the distance
+              // to the current best one that's in radius
+              c_itr->distance = p_itr->reachable.back().distance;
+              auto distance = std::sqrt(p_itr->project.approx.DistanceSquared(circle.first));
+              auto min_distance = distance - radius;
 
-            //  a candidate can be prefiltered if one of the following applies:
-            //  1. there's a location radius and the bounding circle of the edge falls outside it
-            //     and the best candidate is closer than any candidate we can get from this edge
-            //  2. there's no location radius but the best candidate we have is closer than any
-            //     candidate we can get from this edge
-            //  3. the minimum distance to this edge based on the bounding circle is larger than the
-            //     search cutoff (which is a hard filter unlike the radius)
-            c_itr->prefiltered = (p_itr->sq_radius > 0 && min_distance >= p_itr->location.radius_ &&
-                                  min_distance >= c_itr->distance) ||
-                                 (p_itr->sq_radius == 0 && min_distance >= c_itr->distance);
+              c_itr->prefiltered = min_distance >= c_itr->distance;
+            }
             if (c_itr->prefiltered == false) {
               all_prefiltered = false;
               break;
