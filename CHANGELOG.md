@@ -31,6 +31,7 @@
    * CHANGED: Speed up pbf parsing by using libosmium [#5070](https://github.com/valhalla/valhalla/pull/5070)
    * ADDED: headings and correlated ll's in verbose matrix output [#5072](https://github.com/valhalla/valhalla/pull/5072)
    * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082) 
+   * ADDED: Bounding circles for faster loki [#5103](https://github.com/valhalla/valhalla/pull/5103)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
