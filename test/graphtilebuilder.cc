@@ -33,8 +33,10 @@ void assert_tile_equalish(const GraphTile& a,
                           const bins_t& bins,
                           const bool bounding_circles,
                           const std::string& /*msg*/) {
+  bool padded = difference % 8 == 0 ? false : true;
+
   // expected size
-  ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
+  ASSERT_EQ(a.header()->end_offset() + difference + (padded ? 4 : 0), b.header()->end_offset());
 
   // check the first chunk after the header
   ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + sizeof(GraphTileHeader),
@@ -47,57 +49,60 @@ void assert_tile_equalish(const GraphTile& a,
   // check the stuff after the bins
   ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + a.header()->edgeinfo_offset(),
                    reinterpret_cast<const char*>(b.header()) + b.header()->edgeinfo_offset(),
-                   b.header()->end_offset() - b.header()->edgeinfo_offset()),
+                   a.header()->end_offset() - a.header()->edgeinfo_offset()),
             0);
 
   // if the header is as expected
   const auto *ah = a.header(), *bh = b.header();
-  if (ah->access_restriction_count() == bh->access_restriction_count() &&
-      ah->admincount() == bh->admincount() &&
-      ah->complex_restriction_forward_offset() + difference ==
-          bh->complex_restriction_forward_offset() &&
-      ah->complex_restriction_reverse_offset() + difference ==
-          bh->complex_restriction_reverse_offset() &&
-      ah->date_created() == bh->date_created() && ah->density() == bh->density() &&
-      ah->departurecount() == bh->departurecount() &&
-      ah->directededgecount() == bh->directededgecount() &&
-      ah->edgeinfo_offset() + difference == bh->edgeinfo_offset() &&
-      ah->exit_quality() == bh->exit_quality() && ah->graphid() == bh->graphid() &&
-      ah->name_quality() == bh->name_quality() && ah->nodecount() == bh->nodecount() &&
-      ah->routecount() == bh->routecount() && ah->signcount() == bh->signcount() &&
-      ah->speed_quality() == bh->speed_quality() && ah->stopcount() == bh->stopcount() &&
-      ah->textlist_offset() + difference == bh->textlist_offset() &&
-      ah->schedulecount() == bh->schedulecount() && ah->version() == bh->version()) {
-    // make sure the edges' shape and names match
-    for (size_t i = 0; i < ah->directededgecount(); ++i) {
-      auto a_info = a.edgeinfo(a.directededge(i));
-      auto b_info = b.edgeinfo(b.directededge(i));
-      ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
-      ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
-      for (size_t j = 0; j < a_info.GetNames().size(); ++j)
-        ASSERT_EQ(a_info.GetNames()[j], b_info.GetNames()[j]);
-    }
+  EXPECT_EQ(ah->access_restriction_count(), bh->access_restriction_count());
+  EXPECT_EQ(ah->admincount(), bh->admincount());
+  EXPECT_EQ(ah->complex_restriction_forward_offset() + difference,
+            bh->complex_restriction_forward_offset());
+  EXPECT_EQ(ah->complex_restriction_reverse_offset() + difference,
+            bh->complex_restriction_reverse_offset());
+  EXPECT_EQ(ah->date_created(), bh->date_created());
+  EXPECT_EQ(ah->density(), bh->density());
+  EXPECT_EQ(ah->departurecount(), bh->departurecount());
+  EXPECT_EQ(ah->directededgecount(), bh->directededgecount());
+  EXPECT_EQ(ah->edgeinfo_offset() + difference, bh->edgeinfo_offset());
+  EXPECT_EQ(ah->exit_quality(), bh->exit_quality());
+  EXPECT_EQ(ah->graphid(), bh->graphid());
+  EXPECT_EQ(ah->name_quality(), bh->name_quality());
+  EXPECT_EQ(ah->nodecount(), bh->nodecount());
+  EXPECT_EQ(ah->routecount(), bh->routecount());
+  EXPECT_EQ(ah->signcount(), bh->signcount());
+  EXPECT_EQ(ah->speed_quality(), bh->speed_quality());
+  EXPECT_EQ(ah->stopcount(), bh->stopcount());
+  EXPECT_EQ(ah->textlist_offset() + difference, bh->textlist_offset());
+  EXPECT_EQ(ah->schedulecount(), bh->schedulecount());
+  EXPECT_EQ(ah->version(), bh->version());
+  // make sure the edges' shape and names match
+  for (size_t i = 0; i < ah->directededgecount(); ++i) {
+    auto a_info = a.edgeinfo(a.directededge(i));
+    auto b_info = b.edgeinfo(b.directededge(i));
+    ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
+    ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
+    for (size_t j = 0; j < a_info.GetNames().size(); ++j)
+      ASSERT_EQ(a_info.GetNames()[j], b_info.GetNames()[j]);
+  }
 
-    ASSERT_EQ(b.header()->has_bounding_circles(), bounding_circles);
+  ASSERT_EQ(b.header()->has_bounding_circles(), bounding_circles);
 
-    // check that the bins contain what was just added to them
-    for (size_t i = 0; i < bins.size(); ++i) {
-      auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
-      auto circle_bin = b.GetBoundingCircles(i % kBinsDim, i / kBinsDim);
+  // check that the bins contain what was just added to them
+  for (size_t i = 0; i < bins.size(); ++i) {
+    auto bin = b.GetBin(i % kBinsDim, i / kBinsDim);
+    auto circle_bin = b.GetBoundingCircles(i % kBinsDim, i / kBinsDim);
 
-      ASSERT_EQ(circle_bin.begin() == circle_bin.end(), !bounding_circles);
-      EXPECT_EQ(circle_bin.size(), bounding_circles ? bin.size() : 0);
-      auto offset = bin.size() - bins[i].size();
-      for (size_t j = 0; j < bins[i].size(); ++j) {
-        ASSERT_EQ(bin[j + offset], bins[i][j].first);
-        if (bounding_circles) {
-          ASSERT_EQ(circle_bin[j + offset], bins[i][j].second)
-              << "Bounding circle mismatch at bin " << i << ", circle " << j;
-        }
+    ASSERT_EQ(circle_bin.begin() == circle_bin.end(), !bounding_circles);
+    EXPECT_EQ(circle_bin.size(), bounding_circles ? bin.size() : 0);
+    auto offset = bin.size() - bins[i].size();
+    for (size_t j = 0; j < bins[i].size(); ++j) {
+      ASSERT_EQ(bin[j + offset], bins[i][j].first);
+      if (bounding_circles) {
+        ASSERT_EQ(circle_bin[j + offset], bins[i][j].second)
+            << "Bounding circle mismatch at bin " << i << ", circle " << j;
       }
     }
-  } else {
-    FAIL() << "not equal";
   }
 }
 

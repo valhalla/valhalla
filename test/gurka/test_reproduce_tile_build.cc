@@ -69,6 +69,8 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
   ASSERT_EQ(ah->signcount(), bh->signcount());
   ASSERT_EQ(ah->speed_quality(), bh->speed_quality());
   ASSERT_EQ(ah->stopcount(), bh->stopcount());
+  ASSERT_EQ(ah->bounding_circle_offset(), bh->bounding_circle_offset());
+  ASSERT_EQ(ah->has_bounding_circles(), bh->has_bounding_circles());
   ASSERT_EQ(ah->textlist_offset(), bh->textlist_offset());
   ASSERT_EQ(ah->schedulecount(), bh->schedulecount());
   ASSERT_EQ(ah->version(), bh->version());

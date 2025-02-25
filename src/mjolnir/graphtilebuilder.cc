@@ -1225,6 +1225,14 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   }
   end = reinterpret_cast<const char*>(tile->header()) + tile->header()->end_offset();
   in_mem.write(begin, end - begin);
+  // maybe pad since the bounding circles are 4 bytes
+  int tmp = in_mem.tellp() % 8;
+  int padding = (tmp > 0) ? 8 - tmp : 0;
+  if (padding > 0 && padding < 8) {
+    in_mem.write("\0\0\0\0\0\0\0\0", padding);
+  }
+
+  header.set_end_offset(header.end_offset() + padding);
 
   // Sanity check for the end offset
   uint32_t curr =
