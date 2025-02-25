@@ -598,7 +598,8 @@ struct bin_handler_t {
             }
             // we can also ignore this edge if we have something in radius but this edge is entirely
             // out of radius
-            if (p_itr->reachable.back().sq_distance < p_itr->sq_radius && dsqr > p_itr->sq_radius) {
+            if (p_itr->reachable.back().sq_distance < p_itr->sq_radius &&
+                dsqr > std::pow(p_itr->sq_radius + radius, 2)) {
               c_itr->prefiltered = true;
             } else {
               // finally we have at least one in-radius candidate and the best candidate
