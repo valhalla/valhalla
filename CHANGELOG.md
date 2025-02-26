@@ -15,6 +15,7 @@
    * FIXED: Slim down Matrix PBF response [#5066](https://github.com/valhalla/valhalla/pull/5066)
    * FIXED: restore ignoring hierarchy limits for bicycle and pedestrian [#5080](https://github.com/valhalla/valhalla/pull/5080)
    * FIXED: GCC warning 'template-id not allowed for constructor in C++20' [#5110](https://github.com/valhalla/valhalla/pull/5110)
+   * FIXED: update deprecated boost geometry headers [#5117](https://github.com/valhalla/valhalla/pull/5117)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
