@@ -7,6 +7,7 @@ extern "C" {
 #include <lualib.h>
 }
 
+#include <osmium/osm/tag.hpp>
 #include <valhalla/mjolnir/osmdata.h>
 
 #include <robin_hood.h>
@@ -30,7 +31,7 @@ public:
 
   ~LuaTagTransform();
 
-  Tags Transform(OSMType type, uint64_t osmid, const Tags& tags);
+  Tags Transform(OSMType type, uint64_t osmid, const osmium::TagList& tags);
 
 protected:
   lua_State* state_;
