@@ -1,7 +1,6 @@
 ## UNRELEASED
 * **Removed**
 * **Bug Fix**
-   * FIXED: Attemp to retrieve traffic signal information of nodes through trace_attribute request [#5121](https://github.com/valhalla/valhalla/pull/5121)
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
    * FIXED: Fix valhalla_benchmark_loki benchmark application. [#4981](https://github.com/valhalla/valhalla/pull/4981)
@@ -33,6 +32,7 @@
    * CHANGED: Speed up pbf parsing by using libosmium [#5070](https://github.com/valhalla/valhalla/pull/5070)
    * ADDED: headings and correlated ll's in verbose matrix output [#5072](https://github.com/valhalla/valhalla/pull/5072)
    * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082) 
+   * ADDED: Retrieve traffic signal information of nodes through trace_attribute request [#5121](https://github.com/valhalla/valhalla/pull/5121)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
