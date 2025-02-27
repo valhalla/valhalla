@@ -703,18 +703,20 @@ public:
       *flow_sources |= kPredictedFlowMask;
       return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
                                    (1 - partial_live_pct) * (std::max(speed, 0.5f) + 0.5f));
-#ifdef LOGGING_LEVEL_TRACE
-      else LOG_TRACE("Predicted speed = " + std::to_string(speed) + " for edge index: " +
-                     std::to_string(idx) + " of tile: " + std::to_string(header_->graphid()));
-#endif
     }
+#ifdef LOGGING_LEVEL_TRACE
+    else
+      LOG_TRACE("Predicted speed = " + std::to_string(speed) + " for edge index: " +
+                std::to_string(idx) + " of tile: " + std::to_string(header_->graphid()));
+#endif
 
     // fallback to constrained if time of week is within 7am to 7pm (or if no time was passed in) and
     // if the edge has constrained speed
     // kInvalidSecondsOfWeek %= midgard::kSecondsPerDay = 12.1
     seconds %= midgard::kSecondsPerDay;
     auto is_daytime = (25200 < seconds && seconds < 68400);
-    if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask)) {
+    if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask) &&
+        valid_speed(de->constrained_flow_speed())) {
       *flow_sources |= kConstrainedFlowMask;
       return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
                                    (1 - partial_live_pct) * de->constrained_flow_speed());
@@ -728,7 +730,8 @@ public:
 
     // fallback to freeflow if time of week is not within 7am to 7pm (or if no time was passed in) and
     // the edge has freeflow speed
-    if ((invalid_time || !is_daytime) && (flow_mask & kFreeFlowMask)) {
+    if ((invalid_time || !is_daytime) && (flow_mask & kFreeFlowMask) &&
+        valid_speed(de->free_flow_speed())) {
       *flow_sources |= kFreeFlowMask;
       return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
                                    (1 - partial_live_pct) * de->free_flow_speed());

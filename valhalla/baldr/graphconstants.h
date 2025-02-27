@@ -105,11 +105,16 @@ constexpr uint32_t kMaxAssumedTruckSpeed = 120; // ~75 MPH
 // to measure a probe going this slow via stop and go traffic over a long enough
 // stretch, its unlikely to be good signal below this value
 constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
+constexpr uint32_t kMinValidSpeedKph = 1;
 
 // Default Fixed Speed. This is the default fixed speed that is assumed.
 // Unless otherwised specified no fixed speed will be assumed and speed will be
 // calculated from costing algorithm.
 constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
+
+inline bool valid_speed(uint32_t speed) {
+  return speed >= kMinValidSpeedKph;
+}
 
 // Maximum ferry speed
 constexpr uint32_t kMaxFerrySpeedKph = 40; // 21 knots
