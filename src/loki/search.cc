@@ -587,35 +587,34 @@ struct bin_handler_t {
 
           // we can ignore this edge if it's outside of the search cutoff
           // since it's a hard filter
-          if (dsqr > p_itr->sq_cutoff) {
+          // if we don't have any reachable candidates yet, we can't reject any edge within
+          // the cutoff distance
+          if (p_itr->reachable.empty()) {
+            all_prefiltered = false;
+            break;
+          }
+          // we can also ignore this edge if we have something in radius but this edge is entirely
+          // out of radius
+          if (dsqr > std::pow(p_itr->location.search_cutoff_ + radius, 2) ||
+              (p_itr->reachable.back().sq_distance < p_itr->sq_radius &&
+               dsqr > std::pow(p_itr->location.radius_ + radius, 2))) {
             c_itr->prefiltered = true;
           } else {
-            // if we don't have any reachable candidates yet, we can't reject any edge within
-            // the cutoff distance
-            if (p_itr->reachable.empty()) {
-              all_prefiltered = false;
-              break;
-            }
-            // we can also ignore this edge if we have something in radius but this edge is entirely
-            // out of radius
-            if (p_itr->reachable.back().sq_distance < p_itr->sq_radius &&
-                dsqr > std::pow(p_itr->sq_radius + radius, 2)) {
-              c_itr->prefiltered = true;
-            } else {
-              // finally we have at least one in-radius candidate and the best candidate
-              // we can get from this edge will also be in-radius, so we dig a little deeper
-              // and compare the worst distance we can get from this edge to the distance
-              // to the current best one that's in radius
-              c_itr->distance = p_itr->reachable.back().distance;
-              auto distance = std::sqrt(p_itr->project.approx.DistanceSquared(circle.first));
-              auto min_distance = distance - radius;
+            // finally we have at least one in-radius candidate and the best candidate
+            // we can get from this edge will also be in-radius, so we dig a little deeper
+            // and compare the worst distance we can get from this edge to the distance
+            // to the current best one that's in radius
+            c_itr->distance = p_itr->reachable.back().distance;
+            auto distance = std::sqrt(dsqr);
+            auto min_distance = distance - radius;
 
-              c_itr->prefiltered = min_distance >= c_itr->distance;
-            }
-            if (c_itr->prefiltered == false) {
-              all_prefiltered = false;
-              break;
-            }
+            c_itr->prefiltered =
+                min_distance >= p_itr->location.search_cutoff_ ||
+                (min_distance >= p_itr->location.radius_ && min_distance >= c_itr->distance);
+          }
+          if (c_itr->prefiltered == false) {
+            all_prefiltered = false;
+            break;
           }
         }
         if (all_prefiltered) {
