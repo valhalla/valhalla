@@ -585,8 +585,10 @@ struct bin_handler_t {
         for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
           auto dsqr = p_itr->project.approx.DistanceSquared(circle.first);
 
-          // we can ignore this edge if it's outside of the search cutoff
-          // since it's a hard filter
+          if (dsqr > std::pow(p_itr->location.search_cutoff_ + radius, 2)) {
+            c_itr->prefiltered = true;
+            continue;
+          }
           // if we don't have any reachable candidates yet, we can't reject any edge within
           // the cutoff distance
           if (p_itr->reachable.empty()) {
@@ -595,8 +597,7 @@ struct bin_handler_t {
           }
           // we can also ignore this edge if we have something in radius but this edge is entirely
           // out of radius
-          if (dsqr > std::pow(p_itr->location.search_cutoff_ + radius, 2) ||
-              (p_itr->reachable.back().sq_distance < p_itr->sq_radius &&
+          if ((p_itr->reachable.back().sq_distance < p_itr->sq_radius &&
                dsqr > std::pow(p_itr->location.radius_ + radius, 2))) {
             c_itr->prefiltered = true;
           } else {
