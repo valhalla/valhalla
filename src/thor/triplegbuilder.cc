@@ -2019,7 +2019,8 @@ void TripLegBuilder::Build(
       }
       // if this edge is on a different level than the previous one,
       // add a level change
-      if (lvl != kMaxLevel && std::fabs(lvl - prev_level) >= std::numeric_limits<float>::epsilon()) {
+      if (lvl != kMaxLevel && !(is_last_edge && multilevel && !is_first_edge) &&
+          std::fabs(lvl - prev_level) >= std::numeric_limits<float>::epsilon()) {
         auto* change = trip_path.add_level_changes();
         change->set_level(lvl);
         change->set_shape_index(begin_index);
@@ -2027,8 +2028,8 @@ void TripLegBuilder::Build(
         prev_level = lvl;
       }
 
-      // trivial case: leg only consists of one edge and it's multilevel
-      if (is_first_edge && is_last_edge && dest.search_filter().has_level_case()) {
+      // special case multilevel last edge
+      if (is_last_edge && multilevel && dest.search_filter().has_level_case()) {
         auto* change = trip_path.add_level_changes();
         change->set_level(dest.search_filter().level());
         change->set_shape_index(trip_shape.size() - 1);
