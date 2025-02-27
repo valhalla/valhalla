@@ -2008,8 +2008,7 @@ void TripLegBuilder::Build(
      */
     if (bool multilevel = is_multi_level(levels.first);
         (is_first_edge && multilevel) || (is_last_edge && multilevel) ||
-        levels.first.size() == 1 && levels.first[0].first == levels.first[0].second) {
-
+        (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second)) {
       float lvl = kMaxLevel;
       if (!multilevel) {
         lvl = levels.first[0].first;
