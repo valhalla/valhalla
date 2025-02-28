@@ -704,11 +704,6 @@ public:
       return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
                                    (1 - partial_live_pct) * (std::max(speed, 0.5f) + 0.5f));
     }
-#ifdef LOGGING_LEVEL_TRACE
-    else
-      LOG_TRACE("Predicted speed = " + std::to_string(speed) + " for edge index: " +
-                std::to_string(idx) + " of tile: " + std::to_string(header_->graphid()));
-#endif
 
     // fallback to constrained if time of week is within 7am to 7pm (or if no time was passed in) and
     // if the edge has constrained speed
