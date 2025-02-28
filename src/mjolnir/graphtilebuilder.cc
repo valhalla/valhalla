@@ -439,8 +439,7 @@ void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   if (file.is_open()) {
     // Write the header
-    file.write(reinterpret_cast<const char*>(header_), sizeof(GraphTileHeader));
-
+    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
     // Write the updated nodes. Make sure node count matches.
     if (nodes.size() != header_->nodecount()) {
       throw std::runtime_error("GraphTileBuilder::Update - node count has changed");
@@ -1064,11 +1063,12 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 }
 
 // return this tiles' edges' bins and its edges' tweeners' bins
-using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
-                                                                       tweeners_t& tweeners) {
+using tweeners_t = std::unordered_map<GraphId, bins_t>;
+bins_t GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
+                                  tweeners_t& tweeners,
+                                  bool build_bounding_circles) {
   assert(tile);
-  std::array<std::vector<GraphId>, kBinCount> bins;
+  bins_t bins;
   // we store these at the highest level
   auto max_level = TileHierarchy::levels().back().level;
   // skip transit or other special levels and empty tiles
@@ -1084,6 +1084,9 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
   const auto* start_edge = tile->directededge(0);
   for (const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount();
        ++edge) {
+    GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(),
+                    edge - start_edge);
+
     // dont bin these
     if (edge->use() == Use::kTransitConnection || edge->use() == Use::kPlatformConnection ||
         edge->use() == Use::kEgressConnection) {
@@ -1110,10 +1113,9 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
       continue;
     }
 
+    std::tuple<PointLL, double> bounding_circle = get_bounding_circle(shape);
     // for each bin that got intersected
     auto intersection = tiles.Intersect(shape);
-    GraphId edge_id(tile->header()->graphid().tileid(), tile->header()->graphid().level(),
-                    edge - start_edge);
     for (const auto& i : intersection) {
       // as per the rules above about when to add intersections
       auto originating = i.first == start_id;
@@ -1124,9 +1126,22 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
         auto& out_bins = originating && max
                              ? bins
                              : tweeners.insert({GraphId(i.first, max_level, 0), {}}).first->second;
-        // keep the edge id
+        // keep the edge id and optionally compute the bounding circle
         for (auto bin : i.second) {
-          out_bins[bin].push_back(edge_id);
+          baldr::DiscretizedBoundingCircle circle;
+          if (build_bounding_circles) {
+            auto minx = tiles.TileBounds(i.first).minx();
+            auto miny = tiles.TileBounds(i.first).miny();
+            auto lat_offset =
+                (bin / kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+            auto lng_offset =
+                (bin % kBinsDim) * tiles.SubdivisionSize() + tiles.SubdivisionSize() / 2;
+            PointLL center{minx + lng_offset, miny + lat_offset};
+            DistanceApproximator<PointLL> approx(center);
+            circle = baldr::DiscretizedBoundingCircle(approx, center, std::get<0>(bounding_circle),
+                                                      std::get<1>(bounding_circle));
+          }
+          out_bins[bin].push_back(std::make_pair(edge_id, circle));
         }
       }
     }
@@ -1138,22 +1153,47 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const gra
 
 void GraphTileBuilder::AddBins(const std::string& tile_dir,
                                const graph_tile_ptr& tile,
-                               const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
+                               const bins_t& more_bins,
+                               bool build_bounding_circles) {
   assert(tile);
   // read bins and append and keep track of how much is appended
-  std::vector<GraphId> bins[kBinCount];
+  bins_t all_bins;
+  // std::array<std::vector<GraphId>, kBinCount> bins;
+  // std::array<std::vector<DiscretizedBoundingCircle>, kBinCount> circles;
   uint32_t shift = 0;
+  bool added_bounding_circles = false;
   for (size_t i = 0; i < kBinCount; ++i) {
     auto bin = tile->GetBin(i % kBinsDim, i / kBinsDim);
-    bins[i].assign(bin.begin(), bin.end());
-    bins[i].insert(bins[i].end(), more_bins[i].cbegin(), more_bins[i].cend());
+    auto circle_bin = tile->GetBoundingCircles(i % kBinsDim, i / kBinsDim);
+    // append existing ones
+    auto bin_it = bin.begin();
+    auto circle_it = circle_bin.begin();
+    assert(build_bounding_circles ? bin.size() == circle_bin.size() : true);
+
+    while (bin_it != bin.end()) {
+      auto p =
+          std::make_pair(*bin_it, build_bounding_circles ? *circle_it : DiscretizedBoundingCircle());
+      all_bins[i].push_back(p);
+      added_bounding_circles = build_bounding_circles;
+      ++bin_it, ++circle_it;
+    }
+
+    // append new ones
+    for (size_t j = 0; j < more_bins[i].size(); ++j) {
+      added_bounding_circles = build_bounding_circles; // at least one circle was added
+      all_bins[i].push_back(more_bins[i][j]);
+    }
+    // sorting within bins is easy
+    std::sort(all_bins[i].begin(), all_bins[i].end(),
+              [](auto& p1, auto& p2) { return p1.first < p2.first; });
+    // but we also need to sort the circles in the same order... how?
     shift += more_bins[i].size();
   }
-  shift *= sizeof(GraphId);
+  shift *= (sizeof(GraphId) + (build_bounding_circles ? sizeof(DiscretizedBoundingCircle) : 0));
   // update header bin indices
-  uint32_t offsets[kBinCount] = {static_cast<uint32_t>(bins[0].size())};
+  uint32_t offsets[kBinCount] = {static_cast<uint32_t>(all_bins[0].size())};
   for (size_t i = 1; i < kBinCount; ++i) {
-    offsets[i] = static_cast<uint32_t>(bins[i].size()) + offsets[i - 1];
+    offsets[i] = static_cast<uint32_t>(all_bins[i].size()) + offsets[i - 1];
   }
   // update header offsets
   // NOTE: if format changes to add more things here we need to make a change here as well
@@ -1166,6 +1206,55 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
+  std::stringstream in_mem;
+
+  // a bunch of stuff between header and bins
+  const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
+  const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin());
+  in_mem.write(begin, end - begin);
+  // the updated bins
+  for (const auto& bins : all_bins) {
+    for (const auto& bin : bins)
+      in_mem.write(reinterpret_cast<const char*>(&bin.first), sizeof(GraphId));
+  }
+  header.set_bounding_circle_offset(
+      added_bounding_circles ? (sizeof(GraphTileHeader) + in_mem.tellp()) : 0);
+
+  // the updated bounding circles
+  if (added_bounding_circles) {
+    for (const auto& circles : all_bins) {
+      for (const auto& circle : circles)
+        in_mem.write(reinterpret_cast<const char*>(&circle.second),
+                     sizeof(DiscretizedBoundingCircle));
+    }
+  }
+  // the rest of the stuff after circles if it had any
+  if (tile->header()->has_bounding_circles()) {
+    begin = reinterpret_cast<const char*>(tile->GetBoundingCircles(kBinsDim - 1, kBinsDim - 1).end());
+  } else {
+    // or after the bins
+    begin = reinterpret_cast<const char*>(tile->GetBin(kBinsDim - 1, kBinsDim - 1).end());
+  }
+  end = reinterpret_cast<const char*>(tile->header()) + tile->header()->end_offset();
+  in_mem.write(begin, end - begin);
+  // maybe pad since the bounding circles are 4 bytes
+  int tmp = in_mem.tellp() % 8;
+  int padding = (tmp > 0) ? 8 - tmp : 0;
+  if (padding > 0 && padding < 8) {
+    in_mem.write("\0\0\0\0\0\0\0\0", padding);
+  }
+
+  header.set_end_offset(header.end_offset() + padding);
+
+  // Sanity check for the end offset
+  uint32_t curr =
+      static_cast<uint32_t>(in_mem.tellp()) + static_cast<uint32_t>(sizeof(GraphTileHeader));
+  if (header.end_offset() != curr) {
+    LOG_ERROR("Mismatch in end offset " + std::to_string(header.end_offset()) + " vs in_mem stream " +
+              std::to_string(curr));
+  }
+
+  // write to file
   filesystem::path filename =
       tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(header.graphid());
   if (!filesystem::exists(filename.parent_path())) {
@@ -1176,18 +1265,9 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   if (file.is_open()) {
     // new header
     file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
-    // a bunch of stuff between header and bins
-    const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
-    const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin());
-    file.write(begin, end - begin);
-    // the updated bins
-    for (const auto& bin : bins) {
-      file.write(reinterpret_cast<const char*>(bin.data()), bin.size() * sizeof(GraphId));
-    }
-    // the rest of the stuff after bins
-    begin = reinterpret_cast<const char*>(tile->GetBin(kBinsDim - 1, kBinsDim - 1).end());
-    end = reinterpret_cast<const char*>(tile->header()) + tile->header()->end_offset();
-    file.write(begin, end - begin);
+    // everything else
+    file << in_mem.rdbuf();
+    file.close();
   } // failed
   else {
     throw std::runtime_error("Failed to open file " + filename.string());

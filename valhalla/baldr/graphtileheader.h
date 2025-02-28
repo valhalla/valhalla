@@ -18,7 +18,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 11;
+constexpr size_t kEmptySlots = 10;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -252,6 +252,10 @@ public:
       LOG_ERROR("Tile exceeded maximum directededge count: " + std::to_string(count));
     }
     directededgecount_ = count;
+  }
+
+  bool has_bounding_circles() const {
+    return boundingcircles_offset_ != 0 && boundingcircles_offset_ != tile_size_;
   }
 
   /**
@@ -513,12 +517,30 @@ public:
   }
 
   /**
+   * Get the offset to the given bounding circle bin in the 5x5 grid.
+   * @param  column of the grid
+   * @param  row of the grid
+   * @return the begin and end offset in the list of bounding circles
+   */
+  std::pair<uint32_t, uint32_t> bounding_circle_offset(size_t column, size_t row) const {
+    return bounding_circle_offset(row * kBinsDim + column);
+  }
+
+  /**
    * Get the offset to the given bin in the 5x5 grid, the bins contain
    * graphids for all the edges that intersect the bin
    * @param  index of the bin within row major grid array
    * @return the begin and end offset in the list of edge ids
    */
   std::pair<uint32_t, uint32_t> bin_offset(size_t index) const;
+
+  /**
+   * Get the offset to the given bin in the 5x5 grid, the bins contain
+   * graphids for all the edges that intersect the bin
+   * @param  index of the bin within row major grid array
+   * @return the begin and end offset in the list of edge ids
+   */
+  std::pair<uint32_t, uint32_t> bounding_circle_offset(size_t index) const;
 
   /**
    * Sets the edge bin offsets
@@ -590,6 +612,22 @@ public:
     tile_size_ = offset;
   }
 
+  /**
+   * Get the offset to the start of the bounding circles
+   * @return the byte offset to the start of the bounding circles
+   */
+  uint32_t bounding_circle_offset() const {
+    return boundingcircles_offset_ == tile_size_ ? 0 : boundingcircles_offset_;
+  }
+
+  /**
+   * Sets the offset to the start of the bounding circles
+   * @param offset the offset in bytes to the beginning of the bounding circles
+   */
+  void set_bounding_circle_offset(uint32_t offset) {
+    boundingcircles_offset_ = offset;
+  }
+
 protected:
   // TODO when c++20 bitfields can be initialized here
   // GraphId (tileid and level) of this tile. Data quality metrics.
@@ -616,7 +654,7 @@ protected:
   uint64_t nodecount_ : 21;             // Number of nodes
   uint64_t directededgecount_ : 21;     // Number of directed edges
   uint64_t predictedspeeds_count_ : 21; // Number of predictive speed records
-  uint64_t spare1_ : 1;
+  uint64_t spare_ : 1;
 
   // Currently there can only be twice as many transitions as there are nodes,
   // but in practice the number should be much less.
@@ -689,12 +727,15 @@ protected:
   // GraphTile data size in bytes
   uint32_t tile_size_ = 0;
 
+  uint32_t boundingcircles_offset_ = 0;
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,
   // simply add a uint32_t some_offset_; just above empty_slots_ and decrease
   // kEmptySlots by 1. Note that you can ONLY add an offset here and NOT a
   // bitfield or union or anything like that
   std::array<uint32_t, kEmptySlots> empty_slots_ = {};
+  // Offset to the beginning of the bounding circles data
+  // uint32_t boundingcircles_offset_ = 0;
 };
 
 } // namespace baldr
