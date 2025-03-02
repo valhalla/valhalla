@@ -753,6 +753,16 @@ void Dijkstras::ComputeMultiModal(
     // Check if we should stop
     cb_decision = ShouldExpand(graphreader, pred, ExpansionType::multimodal);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
+      if (expansion_callback_) {
+        GraphId pred_edge = pred.predecessor() == kInvalidLabel ? 
+                          GraphId() : 
+                          mmedgelabels_[pred.predecessor()].edgeid();
+        expansion_callback_(graphreader, pred.edgeid(), pred_edge, 
+                          "multimodal", 
+                          valhalla::Expansion_EdgeStatus_reached,
+                          pred.cost().secs, pred.path_distance(), pred.cost().cost,
+                          valhalla::Expansion_ExpansionType_forward);
+      }
       // Expand from the end node of the predecessor edge.
       ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,
                               mode_costing, time_infos.front());
