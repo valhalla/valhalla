@@ -220,24 +220,46 @@ select_transit_tiles(const std::filesystem::path& gtfs_path) {
           tile_info.stations.insert({stop.stop_id, feed_name});
           tile_info.station_children.insert({{stop.stop_id, feed_name}, stop.stop_id});
         }
+      }
 
-        for (const auto& stopTime : feed.get_stop_times_for_stop(stop.stop_id)) {
-          // add trip, route, agency and service_id from stop_time, it's the only place with that info
-          // TODO: should we throw here?
-          auto trip = feed.get_trip(stopTime.trip_id);
+      // Process stop times efficiently
+      std::unordered_map<std::string, gtfs::Trip> trip_cache;
+      std::unordered_map<std::string, gtfs::Route> route_cache;
+
+      for (const auto& stop_time : feed.get_stop_times()) {
+        const auto& trip_id = stop_time.trip_id;
+
+        // Check trip cache first
+        auto trip_it = trip_cache.find(trip_id);
+        if (trip_it == trip_cache.end()) {
+          auto trip = feed.get_trip(trip_id);
+          if (!gtfs::valid(trip))
+            continue; // Skip invalid trips
+          trip_it = trip_cache.emplace(trip_id, std::move(trip)).first;
+        }
+        const auto& trip = trip_it->second;
+
+        // Check route cache
+        auto route_it = route_cache.find(trip.route_id);
+        if (route_it == route_cache.end()) {
           auto route = feed.get_route(trip.route_id);
-          if (!gtfs::valid(trip) || !gtfs::valid(route) || trip.service_id.empty()) {
-            LOG_ERROR("Missing trip or route or service_id for trip");
-            continue;
-          }
+          if (!gtfs::valid(route))
+            continue; // Skip invalid routes
+          route_it = route_cache.emplace(trip.route_id, std::move(route)).first;
+        }
+        const auto& route = route_it->second;
 
-          tile_info.trips.insert({trip.trip_id, feed_name});
-          tile_info.routes.insert({{route.route_id, feed_name}, tile_info.routes.size()});
+        // Now get the stop's tile info
+        const auto& stop = feed.get_stop(stop_time.stop_id);
+        auto& tile_info = get_tile_info(stop);
 
-          // shapes are optional, don't keep non-existing shapes around
-          if (!trip.shape_id.empty()) {
-            tile_info.shapes.insert({{trip.shape_id, feed_name}, tile_info.shapes.size()});
-          }
+        // Store trip, route, and shape data
+        tile_info.trips.insert({trip.trip_id, feed_name});
+        tile_info.routes.insert({{route.route_id, feed_name}, tile_info.routes.size()});
+
+        // Only add valid shapes
+        if (!trip.shape_id.empty()) {
+          tile_info.shapes.insert({{trip.shape_id, feed_name}, tile_info.shapes.size()});
         }
       }
 
