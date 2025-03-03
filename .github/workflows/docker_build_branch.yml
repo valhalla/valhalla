@@ -6,7 +6,16 @@ on:
 jobs:
   build_image:
     name: Manual docker image build
-    runs-on: ubuntu-24.04-arm
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux/amd64
+            tagsuffix: amd64
+          - os: ubuntu-24.04-arm
+            platform: linux/arm64
+            tagsuffix: arm64
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -22,4 +31,4 @@ jobs:
 
       - name: Build latest image for given branch
         run: |
-          docker buildx build --push --platform linux/arm64 --tag ghcr.io/valhalla/valhalla:branch-${{ github.ref_name }} .
+          docker buildx build --push --platform ${{ matrix.platform }} --tag ghcr.io/valhalla/valhalla:branch-${{ github.ref_name }}-${{ matrix.tagsuffix }} .
