@@ -1,5 +1,4 @@
 #include "mjolnir/util.h"
-
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/aabb2.h"
@@ -17,6 +16,7 @@
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/transitbuilder.h"
+#include "timer.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -259,13 +259,22 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // and will be created if it does not already exist
   if (start_stage == BuildStage::kInitialize) {
     // set up the directories and purge old tiles if starting at the parsing stage
+    auto initialize_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("Initialize", false);
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
       auto level_dir = tile_dir + std::to_string(level.level);
+      std::string substage_name = "PurgeLevel" + std::to_string(level.level);
+      auto purge_timer =
+          std::make_unique<valhalla::mjolnir::BuildStageTimer>("Initialize", true, substage_name);
+
       if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
         LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
         filesystem::remove_all(level_dir);
       }
+      // precise timing, you get more accurate timing than letting it happen automatically at
+      // destruction.
+      purge_timer->stop(true);
     }
+    initialize_timer->stop(true);
 
     // check for transit level.
     auto level_dir =
@@ -299,6 +308,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Parse the ways
   if (start_stage <= BuildStage::kParseWays && BuildStage::kParseWays <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
+    auto parse_ways_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("ParseWays", false);
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
                                          way_nodes_bin, access_bin);
 
@@ -306,13 +316,15 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    parse_ways_timer->stop(true);
   }
 
   // Parse OSM data
   if (start_stage <= BuildStage::kParseRelations && BuildStage::kParseRelations <= end_stage) {
-
     // Read the OSM protocol buffer file. Callbacks for relations are defined within the PBFParser
     // class
+    auto parse_relations_timer =
+        std::make_unique<valhalla::mjolnir::BuildStageTimer>("ParseRelations", false);
     PBFGraphParser::ParseRelations(config.get_child("mjolnir"), input_files, cr_from_bin, cr_to_bin,
                                    osm_data);
 
@@ -320,12 +332,14 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    parse_relations_timer->stop(true);
   }
 
   // Parse OSM data
   if (start_stage <= BuildStage::kParseNodes && BuildStage::kParseNodes <= end_stage) {
-    // Read the OSM protocol buffer file. Callbacks for nodes
-    // are defined within the PBFParser class
+    // Read the OSM protocol buffer file. Callbacks for nodes are defined within the PBFParser class
+    auto parse_nodes_timer =
+        std::make_unique<valhalla::mjolnir::BuildStageTimer>("ParseNodes", false);
     PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
                                linguistic_node_bin, osm_data);
 
@@ -333,13 +347,15 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
     }
+    parse_nodes_timer->stop(true);
   }
 
   // Construct edges
   std::map<baldr::GraphId, size_t> tiles;
   if (start_stage <= BuildStage::kConstructEdges && BuildStage::kConstructEdges <= end_stage) {
-
     // Read OSMData from files if construct edges is the first stage
+    auto construct_edges_timer =
+        std::make_unique<valhalla::mjolnir::BuildStageTimer>("ConstructEdges", false);
     if (start_stage == BuildStage::kConstructEdges)
       osm_data.read_from_temp_files(tile_dir);
 
@@ -347,10 +363,13 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Output manifest
     TileManifest manifest{tiles};
     manifest.LogToFile(tile_manifest);
+    construct_edges_timer->stop(true);
   }
 
   // Build Valhalla routing tiles
   if (start_stage <= BuildStage::kBuild && BuildStage::kBuild <= end_stage) {
+    auto build_tiles_timer =
+        std::make_unique<valhalla::mjolnir::BuildStageTimer>("BuildTiles", false);
     if (start_stage == BuildStage::kBuild) {
       // Read OSMData from files if building tiles is the first stage
       osm_data.read_from_temp_files(tile_dir);
@@ -367,35 +386,45 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
                         cr_to_bin, linguistic_node_bin, tiles);
+
+    build_tiles_timer->stop(true);
   }
 
   // Enhance the local level of the graph. This adds information to the local
   // level that is usable across all levels (density, administrative
   // information (and country based attribution), edge transition logic, etc.
   if (start_stage <= BuildStage::kEnhance && BuildStage::kEnhance <= end_stage) {
+    auto enhance_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("Enhance", false);
     // Read OSMData names from file if enhancing tiles is the first stage
     if (start_stage == BuildStage::kEnhance) {
       osm_data.read_from_unique_names_file(tile_dir);
     }
     GraphEnhancer::Enhance(config, osm_data, access_bin);
+    enhance_timer->stop(true);
   }
 
   // Perform optional edge filtering (remove edges and nodes for specific access modes)
   if (start_stage <= BuildStage::kFilter && BuildStage::kFilter <= end_stage) {
+    auto filter_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("Filter", false);
     GraphFilter::Filter(config);
+    filter_timer->stop(true);
   }
 
   // Add transit
   if (start_stage <= BuildStage::kTransit && BuildStage::kTransit <= end_stage) {
+    auto transit_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("Transit", false);
     TransitBuilder::Build(config);
+    transit_timer->stop(true);
   }
 
   // Build bike share stations
   if (start_stage <= BuildStage::kBss && BuildStage::kBss <= end_stage) {
+    auto bss_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("Bss", false);
     if (start_stage == BuildStage::kBss) {
       osm_data.read_from_unique_names_file(tile_dir);
     }
     BssBuilder::Build(config, osm_data, bss_nodes_bin);
+    bss_timer->stop(true);
   }
 
   // Builds additional hierarchies if specified within config file. Connections
@@ -403,7 +432,9 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   auto build_hierarchy = config.get<bool>("mjolnir.hierarchy", true);
   if (build_hierarchy) {
     if (start_stage <= BuildStage::kHierarchy && BuildStage::kHierarchy <= end_stage) {
+      auto hierarchy_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("Hierarchy", false);
       HierarchyBuilder::Build(config, new_to_old_bin, old_to_new_bin);
+      hierarchy_timer->stop(true);
     }
 
     // Build shortcuts if specified in the config file. Shortcuts can only be
@@ -411,7 +442,10 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     auto build_shortcuts = config.get<bool>("mjolnir.shortcuts", true);
     if (build_shortcuts) {
       if (start_stage <= BuildStage::kShortcuts && BuildStage::kShortcuts <= end_stage) {
+        auto shortcuts_timer =
+            std::make_unique<valhalla::mjolnir::BuildStageTimer>("Shortcuts", false);
         ShortcutBuilder::Build(config);
+        shortcuts_timer->stop(true);
       }
     } else {
       LOG_INFO("Skipping shortcut builder");
@@ -422,7 +456,9 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Add elevation to the tiles
   if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
+    auto elevation_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("Elevation", false);
     ElevationBuilder::Build(config);
+    elevation_timer->stop(true);
   }
 
   // Build the Complex Restrictions
@@ -430,16 +466,22 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // elevation into the tiles reads each tile and serializes the data to "builders"
   // within the tile. However, there is no serialization currently available for complex restrictions.
   if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
+    auto restrictions_timer =
+        std::make_unique<valhalla::mjolnir::BuildStageTimer>("Restrictions", false);
     RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
+    restrictions_timer->stop(true);
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
+    auto validate_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("Validate", false);
     GraphValidator::Validate(config);
+    validate_timer->stop(true);
   }
 
   // Cleanup bin files
   if (start_stage <= BuildStage::kCleanup && BuildStage::kCleanup <= end_stage) {
+    auto cleanup_timer = std::make_unique<valhalla::mjolnir::BuildStageTimer>("Cleanup", false);
     LOG_INFO("Cleaning up temporary *.bin files within " + tile_dir);
     remove_temp_file(ways_bin);
     remove_temp_file(way_nodes_bin);
@@ -454,7 +496,9 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(old_to_new_bin);
     remove_temp_file(tile_manifest);
     OSMData::cleanup_temp_files(tile_dir);
+    cleanup_timer->stop(true);
   }
+  valhalla::mjolnir::log_build_timing_summary();
   return true;
 }
 
