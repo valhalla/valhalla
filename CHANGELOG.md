@@ -37,6 +37,8 @@
    * ADDED: Add scoped timer macro for timing stages and sub-stages of the tile build process [5136](https://github.com/valhalla/valhalla/pull/5136)
    * CHANGED: Remove redundant callback-style pbf parsing [#5119](https://github.com/valhalla/valhalla/pull/5119)
    * ADDED: Multimodal expansion endpoint support [#5129](https://github.com/valhalla/valhalla/pull/5129)
+   * CHANGED: Remove redundant callback-style pbf parsing [5119](https://github.com/valhalla/valhalla/pull/5119)
+   * ADDED: Add scoped timer macro for timing stages and sub-stages of the tile build process [5136](https://github.com/valhalla/valhalla/pull/5136)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
