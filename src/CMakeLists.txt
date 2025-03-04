@@ -157,7 +157,8 @@ endif()
 
 if (ENABLE_SERVICES)
   set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
-  set(valhalla_src ${valhalla_src} tile_server.cc)
+  set(valhalla_src ${valhalla_src} tile_server.cc
+          mjolnir/valhalla_tile_utils.cc)
 endif()
 
 add_library(valhalla ${valhalla_src})
