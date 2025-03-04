@@ -154,20 +154,17 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
           continue;
         }
 
-        uint16_t edge_fwd_access = edge.fwd_access & baldr::kVehicularAccess;
-        uint16_t edge_rev_access = edge.rev_access & baldr::kVehicularAccess;
-
         // Skip non-drivable edges and ones which are not accessible for the current access_filter
         // (based on inbound flag)
         bool forward = (edge.sourcenode_ == expand_node_idx);
         if (forward) {
-          if ((inbound && !edge_rev_access) || (inbound && !(access_filter & edge.rev_access)) ||
-              (!inbound && !edge_fwd_access) || (!inbound && !(access_filter & edge.fwd_access))) {
+          if ((inbound && !(access_filter & edge.rev_access)) ||
+              (!inbound && !(access_filter & edge.fwd_access))) {
             continue;
           }
         } else {
-          if ((inbound && !edge_fwd_access) || (inbound && !(access_filter & edge.fwd_access)) ||
-              (!inbound && !edge_rev_access) || (!inbound && !(access_filter & edge.rev_access))) {
+          if ((inbound && !(access_filter & edge.fwd_access)) ||
+              (!inbound && !(access_filter & edge.rev_access))) {
             continue;
           }
         }
