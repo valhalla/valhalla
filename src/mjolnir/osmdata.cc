@@ -7,7 +7,7 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
-#include "mjolnir/scoped_timer.h"
+#include "scoped_timer.h"
 
 using namespace valhalla::mjolnir;
 using valhalla::baldr::ConditionalSpeedLimit;

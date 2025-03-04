@@ -15,8 +15,8 @@
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/scoped_timer.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
 

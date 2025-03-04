@@ -1,6 +1,6 @@
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/scoped_timer.h"
+#include "scoped_timer.h"
 
 #include <fstream>
 #include <future>

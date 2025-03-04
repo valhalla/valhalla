@@ -13,10 +13,10 @@
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
 #include "mjolnir/osmlinguistic.h"
-#include "mjolnir/scoped_timer.h"
 #include "mjolnir/timeparsing.h"
 #include "mjolnir/util.h"
 #include "proto/common.pb.h"
+#include "scoped_timer.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm/remove_if.hpp>

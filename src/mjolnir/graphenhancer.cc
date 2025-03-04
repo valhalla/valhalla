@@ -43,7 +43,7 @@
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 #include "mjolnir/osmaccess.h"
-#include "mjolnir/scoped_timer.h"
+#include "scoped_timer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -3,7 +3,7 @@
 #include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmrestriction.h"
-#include "mjolnir/scoped_timer.h"
+#include "scoped_timer.h"
 
 #include <future>
 #include <queue>

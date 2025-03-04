@@ -1,6 +1,6 @@
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/scoped_timer.h"
+#include "scoped_timer.h"
 
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>

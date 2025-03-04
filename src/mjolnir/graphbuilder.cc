@@ -29,8 +29,8 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
-#include "mjolnir/scoped_timer.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

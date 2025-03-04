@@ -1,7 +1,7 @@
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/scoped_timer.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 
 #include <boost/format.hpp>
 #include <future>
