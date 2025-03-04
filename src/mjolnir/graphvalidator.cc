@@ -14,6 +14,7 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -457,6 +458,10 @@ void validate(
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
       auto reloaded = GraphTile::Create(graph_reader.tile_dir(), tile_id);
+      // Sort bins by GraphId values in each vector of the array to make tile generation deterministic
+      for (auto& bin : bins) {
+          std::sort(bin.begin(), bin.end());
+      }      
       GraphTileBuilder::AddBins(graph_reader.tile_dir(), reloaded, bins);
     }
 
@@ -524,8 +529,14 @@ void bin_tweeners(const std::string& tile_dir,
       tile = GraphTile::Create(tile_dir, tile_bin.first);
     }
 
+    // Sort bins by GraphId values in each vector of the array to make tile generation deterministic
+    auto sorted_bin = tile_bin.second;
+    for (auto& bin : sorted_bin) {
+       std::sort(bin.begin(), bin.end());
+    }
+
     // keep the extra binned edges
-    GraphTileBuilder::AddBins(tile_dir, tile, tile_bin.second);
+    GraphTileBuilder::AddBins(tile_dir, tile, sorted_bin);
   }
 }
 } // namespace
