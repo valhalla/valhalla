@@ -1,5 +1,6 @@
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/scoped_timer.h"
 #include "mjolnir/util.h"
 
 #include <boost/format.hpp>
@@ -534,6 +535,7 @@ namespace valhalla {
 namespace mjolnir {
 
 void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
+  SCOPED_TIMER();
   LOG_INFO("Validating, finishing and binning tiles...");
   auto hierarchy_properties = pt.get_child("mjolnir");
   std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");

@@ -3,6 +3,7 @@
 #include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmrestriction.h"
+#include "mjolnir/scoped_timer.h"
 
 #include <future>
 #include <queue>
@@ -728,6 +729,7 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
                                const std::string& complex_from_restrictions_file,
                                const std::string& complex_to_restrictions_file) {
 
+  SCOPED_TIMER();
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
   for (auto tl = TileHierarchy::levels().rbegin(); tl != TileHierarchy::levels().rend(); ++tl) {

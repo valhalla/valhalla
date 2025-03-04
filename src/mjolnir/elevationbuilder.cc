@@ -15,6 +15,7 @@
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/scoped_timer.h"
 #include "mjolnir/util.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
@@ -313,6 +314,7 @@ namespace mjolnir {
 
 void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
                              std::deque<baldr::GraphId> tile_ids) {
+  SCOPED_TIMER();
   auto elevation = pt.get_optional<std::string>("additional_data.elevation");
   if (!elevation || !filesystem::exists(*elevation)) {
     LOG_WARN("Elevation storage directory does not exist");

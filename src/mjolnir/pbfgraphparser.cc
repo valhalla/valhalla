@@ -13,6 +13,7 @@
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
 #include "mjolnir/osmlinguistic.h"
+#include "mjolnir/scoped_timer.h"
 #include "mjolnir/timeparsing.h"
 #include "mjolnir/util.h"
 #include "proto/common.pb.h"
@@ -5062,6 +5063,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   OSMData osmdata{};
   graph_parser parser(pt, osmdata);
 
@@ -5118,6 +5120,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   graph_parser parser(pt, osmdata);
 
   // Read the OSMData to files if not initialized.
@@ -5182,6 +5185,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   graph_parser parser(pt, osmdata);
 
   // Read the OSMData to files if not initialized.

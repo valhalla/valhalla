@@ -43,6 +43,7 @@
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 #include "mjolnir/osmaccess.h"
+#include "mjolnir/scoped_timer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -1715,6 +1716,7 @@ namespace mjolnir {
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
                             const OSMData& osmdata,
                             const std::string& access_file) {
+  SCOPED_TIMER();
   LOG_INFO("Enhancing local graph...");
 
   // A place to hold worker threads and their results, exceptions or otherwise

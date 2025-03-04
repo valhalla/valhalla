@@ -1,5 +1,6 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/scoped_timer.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -561,6 +562,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   // TODO: thread this. Might be more possible now that we don't create
   // shortcuts in the HierarchyBuilder
 
+  SCOPED_TIMER();
   // Construct GraphReader
   LOG_INFO("HierarchyBuilder");
   GraphReader reader(pt.get_child("mjolnir"));

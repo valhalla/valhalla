@@ -15,6 +15,7 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/restrictionbuilder.h"
+#include "mjolnir/scoped_timer.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/transitbuilder.h"
 
@@ -232,6 +233,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
                     const BuildStage end_stage) {
+  SCOPED_TIMER();
   auto remove_temp_file = [](const std::string& fname) {
     if (filesystem::exists(fname)) {
       filesystem::remove(fname);

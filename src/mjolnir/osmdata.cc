@@ -7,6 +7,7 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
+#include "mjolnir/scoped_timer.h"
 
 using namespace valhalla::mjolnir;
 using valhalla::baldr::ConditionalSpeedLimit;
@@ -573,6 +574,7 @@ namespace mjolnir {
 
 // Write OSMData to temporary files
 bool OSMData::write_to_temp_files(const std::string& tile_dir) {
+  SCOPED_TIMER();
   LOG_INFO("Write OSMData to temp files");
 
   // Write counts
@@ -614,6 +616,7 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
 
 // Read OSMData from temporary files
 bool OSMData::read_from_temp_files(const std::string& tile_dir) {
+  SCOPED_TIMER();
   LOG_INFO("Read OSMData from temp files");
 
   std::string tile_directory = tile_dir;
@@ -661,6 +664,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
 
 // Read OSMData from temporary files
 bool OSMData::read_from_unique_names_file(const std::string& tile_dir) {
+  SCOPED_TIMER();
   LOG_INFO("Read OSMData unique_names from temp file");
 
   // Read the other data
@@ -705,6 +709,7 @@ void OSMData::add_to_name_map(const uint64_t member_id,
 }
 
 void OSMData::cleanup_temp_files(const std::string& tile_dir) {
+  SCOPED_TIMER();
   auto remove_temp_file = [](const std::string& fname) {
     if (filesystem::exists(fname)) {
       filesystem::remove(fname);

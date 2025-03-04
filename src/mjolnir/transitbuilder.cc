@@ -1,5 +1,6 @@
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/scoped_timer.h"
 
 #include <fstream>
 #include <future>
@@ -529,8 +530,7 @@ namespace mjolnir {
 
 // Add transit to the graph
 void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
-
-  auto t1 = std::chrono::high_resolution_clock::now();
+  SCOPED_TIMER();
   std::unordered_set<GraphId> tiles;
 
   // Bail if nothing
@@ -648,10 +648,6 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   if (total_conn_edges) {
     LOG_INFO("Found " + std::to_string(total_conn_edges) + " connection edges");
   }
-
-  auto t2 = std::chrono::high_resolution_clock::now();
-  [[maybe_unused]] uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-  LOG_INFO("Finished - TransitBuilder took " + std::to_string(secs) + " secs");
 }
 
 } // namespace mjolnir

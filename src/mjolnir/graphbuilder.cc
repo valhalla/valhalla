@@ -29,6 +29,7 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
+#include "mjolnir/scoped_timer.h"
 #include "mjolnir/util.h"
 
 using namespace valhalla::midgard;
@@ -1425,6 +1426,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
                                                    const std::string& edges_file) {
+  SCOPED_TIMER();
   uint8_t level = TileHierarchy::levels().back().level;
   auto tiling = TileHierarchy::get_tiling(level);
   uint32_t grid_divisions =
@@ -1463,6 +1465,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // edge list needs to be modified. ReclassifyLinks also infers turn channels
   // so we always want to do this unless reclassify_links and infer_turn_channels
   // are both false.
+  SCOPED_TIMER();
   bool reclassify_links = pt.get<bool>("mjolnir.reclassify_links", true);
   bool infer_turn_channels = pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true);
   if (reclassify_links || infer_turn_channels) {
