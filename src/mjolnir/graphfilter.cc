@@ -1,6 +1,7 @@
 #include "mjolnir/graphfilter.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <iostream>
@@ -908,6 +909,7 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
 
   // TODO: thread this. Could be difficult due to sequence creates to associate nodes
 
+  SCOPED_TIMER();
   // Edge filtering (optionally exclude edges)
   bool include_driving = pt.get_child("mjolnir").get<bool>("include_driving", true);
   if (!include_driving) {
