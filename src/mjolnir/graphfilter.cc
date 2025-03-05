@@ -232,7 +232,7 @@ void FilterTiles(GraphReader& reader,
                  const bool include_driving,
                  const bool include_bicycle,
                  const bool include_pedestrian) {
-
+  SCOPED_TIMER();
   // lambda to check if an edge should be included
   auto include_edge = [&include_driving, &include_bicycle,
                        &include_pedestrian](const DirectedEdge* edge) {
@@ -540,6 +540,7 @@ void ValidateData(GraphReader& reader,
 
 void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
 
+  SCOPED_TIMER();
   LOG_INFO("Validating edges for aggregation");
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
@@ -789,6 +790,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
  * @param  old_to_new  Map of original node Ids to new nodes Ids (after filtering).
  */
 void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
+  SCOPED_TIMER();
   LOG_INFO("Update end nodes of directed edges");
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
@@ -844,6 +846,7 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
  * @param  reader  Graph reader.
  */
 void UpdateOpposingEdgeIndex(GraphReader& reader) {
+  SCOPED_TIMER();
   LOG_INFO("Update Opposing Edge Index of directed edges");
 
   // Iterate through all tiles in the local level

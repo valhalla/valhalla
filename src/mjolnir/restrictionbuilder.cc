@@ -279,6 +279,7 @@ struct Result {
 
 void HandleOnlyRestrictionProperties(const std::vector<Result>& results,
                                      const boost::property_tree::ptree& config) {
+  SCOPED_TIMER();
   std::unordered_map<GraphId, std::vector<const ComplexRestrictionBuilder*>> restrictions;
   std::unordered_map<GraphId, std::vector<GraphId>> part_of_restriction;
   for (const auto& res : results) {

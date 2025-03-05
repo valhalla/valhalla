@@ -9,6 +9,7 @@
 #include "mjolnir/ferry_connections.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 
 using namespace valhalla::baldr;
 
@@ -748,6 +749,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
                                                   Data& data,
                                                   bool reclassify_links,
                                                   bool infer_turn_channels) {
+  SCOPED_TIMER();
   // number of reclassified edges
   uint32_t reclass_count = 0;
   uint32_t tc_count = 0;
@@ -890,6 +892,7 @@ void ReclassifyLinks(const std::string& ways_file,
                      const OSMData& osmdata,
                      bool reclassify_links,
                      bool infer_turn_channels) {
+  SCOPED_TIMER();
   LOG_INFO("Reclassifying_V2 link graph edges...");
 
   Data data(nodes_file, edges_file, ways_file, way_nodes_file, osmdata);
