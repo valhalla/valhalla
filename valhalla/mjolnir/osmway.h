@@ -2673,7 +2673,6 @@ struct OSMWay {
   uint32_t truck_route_ : 1;
   uint32_t sidewalk_right_ : 1;
   uint32_t sidewalk_left_ : 1;
-  uint32_t multiple_levels_ : 1;
   uint32_t sac_scale_ : 3;
 
   // Classification
@@ -2725,7 +2724,8 @@ struct OSMWay {
   uint16_t bike_backward_ : 1;
   uint16_t lit_ : 1;
   uint16_t destination_only_hgv_ : 1;
-  uint16_t spare2_ : 2;
+  uint16_t spare2_ : 1;
+  uint16_t multiple_levels_ : 1;
 
   uint16_t nodecount_;
 
