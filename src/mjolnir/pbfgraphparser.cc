@@ -530,7 +530,7 @@ struct graph_parser {
         return;
 
       way_.set_level_index(osmdata_.name_offset_map.index(tag_.second));
-      way_.set_multiple_levels(tag_.second.length()>2);
+      way_.set_multiple_levels(tag_.second.length() > 2);
     };
     tag_handlers_["level:ref"] = [this]() {
       if (!tag_.second.empty())
