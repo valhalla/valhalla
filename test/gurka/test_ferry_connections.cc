@@ -704,7 +704,7 @@ TEST(Standalone, MultiModalReclassify) {
   const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_multimodal");
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
-  for (const std::string& way : {"AB", "BEFC", "BC", "CDGH", "HJKI", "HI", "IM"}) {
+  for (const std::string way : {"AB", "BEFC", "BC", "CDGH", "HJKI", "HI", "IM"}) {
     auto edge = gurka::findEdge(reader, layout, way, way.substr(way.size() - 1));
     EXPECT_EQ(std::get<1>(edge)->classification(), valhalla::baldr::RoadClass::kPrimary) << way;
   }
