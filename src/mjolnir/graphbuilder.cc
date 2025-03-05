@@ -235,10 +235,11 @@ void ConstructEdges(const std::string& ways_file,
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
 
         // We should add the previous edge now that we know its done
-        if (prev_edge.is_valid()){
+        if (prev_edge.is_valid()) {
           edges.push_back(prev_edge);
           if (way.multiple_levels()) {
-            LOG_WARN("Multilevel Way [ID:" + std::to_string(way.way_id()) +"] - Split at intersection");
+            LOG_WARN("Multilevel Way [ID:" + std::to_string(way.way_id()) +
+                     "] - Split at intersection");
           }
         }
 
@@ -270,7 +271,8 @@ void ConstructEdges(const std::string& ways_file,
           node.start_of = edges.size() + 1; // + 1 because the edge has not been added yet
           element = node;
           if (way.multiple_levels()) {
-            LOG_WARN("Multilevel Way [ID:"+std::to_string(way.way_id()) +"] - Additional edge created");
+            LOG_WARN("Multilevel Way [ID:" + std::to_string(way.way_id()) +
+                     "] - Additional edge created");
           }
         }
       } // If this edge has a signal not at a intersection

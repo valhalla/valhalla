@@ -2181,19 +2181,19 @@ struct OSMWay {
   bool drive_on_right() const {
     return drive_on_right_;
   }
-   /**
-   * Set multiple_levels flag. 
+  /**
+   * Set multiple_levels flag.
    * @param multiple_levels Is there a multiple levels?
    */
-  void set_multiple_levels(const bool multiple_levels){
+  void set_multiple_levels(const bool multiple_levels) {
     multiple_levels_ = multiple_levels;
   }
 
   /**
    * Get the multiple levels flag.
-   * @return Returns drive on right flag. 
+   * @return Returns drive on right flag.
    */
-  bool multiple_levels() const{
+  bool multiple_levels() const {
     return multiple_levels_;
   }
 
