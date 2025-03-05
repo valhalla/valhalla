@@ -70,7 +70,7 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
     overall_access_before = overall_access_after;
 
     // which modes do we still have to find a path for?
-    uint32_t access_filter = baldr::kVehicularAccess ^ overall_access_before;
+    const uint32_t access_filter = baldr::kVehicularAccess ^ overall_access_before;
 
     // Map to store the status and index of nodes that have been encountered.
     // Any unreached nodes are not added to the map.
@@ -85,7 +85,8 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
     // Add node to list of node labels, set the node status and add
     // to the adjacency set
     uint32_t nodelabel_index = 0;
-    node_labels.emplace_back(0.0f, node_idx, node_idx, 0, first_edge_destonly);
+    node_labels.emplace_back(0.0f, node_idx, node_idx, 0, first_edge_destonly,
+                             baldr::kVehicularAccess);
     node_status[node_idx] = {kTemporary, nodelabel_index};
     adjset.push({0.0f, nodelabel_index});
     nodelabel_index++;
@@ -99,10 +100,11 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
       // Get the next node from the adjacency list/priority queue. Gets its
       // current cost and index
       const auto& expand_node = adjset.top();
-      float current_cost = expand_node.first;
+      const float current_cost = expand_node.first;
       label_idx = expand_node.second;
-      uint32_t expand_node_idx = node_labels[label_idx].node_index;
+      const uint32_t expand_node_idx = node_labels[label_idx].node_index;
       const bool pred_destonly = node_labels[label_idx].dest_only;
+      uint16_t current_access = node_labels[label_idx].access;
       adjset.pop();
 
       // Skip if already labeled - this can happen if an edge is already in
@@ -114,7 +116,8 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
       // Expand all edges from this node
       auto expand_node_itr = nodes[expand_node_idx];
       auto expanded_bundle = collect_node_edges(expand_node_itr, nodes, edges);
-      if (!(expanded_bundle.node.access() & access_filter)) {
+      current_access &= expanded_bundle.node.access();
+      if (!(current_access & access_filter)) {
         continue;
       }
 
@@ -156,17 +159,15 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
 
         // Skip non-drivable edges and ones which are not accessible for the current access_filter
         // (based on inbound flag)
-        bool forward = (edge.sourcenode_ == expand_node_idx);
-        if (forward) {
-          if ((inbound && !(access_filter & edge.rev_access)) ||
-              (!inbound && !(access_filter & edge.fwd_access))) {
-            continue;
-          }
+        const bool forward = (edge.sourcenode_ == expand_node_idx);
+        uint16_t access = current_access;
+        if (forward != inbound) {
+          access &= edge.fwd_access;
         } else {
-          if ((inbound && !(access_filter & edge.fwd_access)) ||
-              (!inbound && !(access_filter & edge.rev_access))) {
-            continue;
-          }
+          access &= edge.rev_access;
+        }
+        if (!(access & access_filter)) {
+          continue;
         }
 
         // Get the end node. Skip if already permanently labeled or this
@@ -195,8 +196,8 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
         }
 
         // Add to the node labels and adjacency set. Skip if this is a loop.
-        node_labels.emplace_back(cost, endnode, expand_node_idx, edge.wayindex_,
-                                 w.destination_only());
+        node_labels.emplace_back(cost, endnode, expand_node_idx, edge.wayindex_, w.destination_only(),
+                                 access);
         node_status[endnode] = {kTemporary, nodelabel_index};
         adjset.push({cost, nodelabel_index});
         nodelabel_index++;
@@ -208,9 +209,11 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
       return std::make_pair(0, false);
     }
 
+    // update the overall mode access with the previous path
+    overall_access_after |= node_labels[last_label_idx].access;
+
     // Trace shortest path backwards and upgrade edge classifications
     // did we find all modes in the path?
-    uint16_t path_access = baldr::kVehicularAccess;
     while (true) {
       // Get the edge with matching wayindex between this node and the predecessor
       const NodeLabel& node_lab = node_labels[last_label_idx];
@@ -227,11 +230,6 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
         if (forward || edge.first.targetnode_ == pred_node) {
           sequence<Edge>::iterator element = edges[edge.second];
           auto update_edge = *element;
-          if ((forward && inbound) || (!forward && !inbound)) {
-            path_access &= update_edge.rev_access;
-          } else if ((forward && !inbound) || (!forward && inbound)) {
-            path_access &= update_edge.fwd_access;
-          }
           if (update_edge.attributes.importance > kFerryUpClass) {
             update_edge.attributes.importance = kFerryUpClass;
             update_edge.attributes.reclass_ferry = true;
@@ -248,8 +246,6 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
 
       last_label_idx = node_status[pred_node].index;
     }
-    // update the overall mode access with the previous path
-    overall_access_after |= path_access;
   }
 
   return std::make_pair(edge_count, true);

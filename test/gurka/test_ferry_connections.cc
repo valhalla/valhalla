@@ -638,6 +638,78 @@ TEST(Standalone, ConsiderBlockedRoads) {
   EXPECT_EQ(std::get<1>(blocked)->classification(), valhalla::baldr::RoadClass::kServiceOther);
 }
 
+TEST(Standalone, MultiModalReclassify) {
+  // Sometimes ferries are connected by dedicated roads for different modes of transport.
+  // Reclassification should reclassify as much roads as needed to cover all modes of transport.
+
+  const std::string ascii_map = R"(
+      A=====X
+      |
+      |
+      B   I---M==N
+     /|   |\
+    / |   | \
+   E  |   |  K
+   |  |   |  |
+   F  |   |  J
+    \ |   | /
+     \|   |/
+      C   H
+      |   |
+      D---G
+  )";
+
+  const std::map<std::string, std::string> service = {{"highway", "service"}};
+  const std::map<std::string, std::string> non_hgv = {{"highway", "service"},
+                                                      {"access", "no"},
+                                                      {"hgv", "no"},
+                                                      {"motor_vehicle", "permissive"},
+                                                      {"toll", "yes"}};
+  const std::map<std::string, std::string> hgv_only = {{"highway", "service"},
+                                                       {"access", "no"},
+                                                       {"hgv", "permissive"},
+                                                       {"toll", "yes"}};
+
+  const gurka::ways ways = {
+      {"AX",
+       {
+           {"name", "Le Shuttle"},
+           {"route", "shuttle_train"},
+           {"service", "car_shuttle"},
+           {"bicycle", "yes"},
+           {"bus", "yes"},
+           {"foot", "no"},
+           {"hgv", "yes"},
+           {"motorcar", "yes"},
+           {"motorcycle", "yes"},
+           {"tunnel", "yes"},
+           {"duration", "35"},
+       }},
+      {"AB", service},
+
+      {"BEFC", non_hgv},
+      {"BC", hgv_only},
+
+      {"CDGH", service},
+
+      {"HJKI", hgv_only},
+      {"HI", non_hgv},
+
+      {"IM", service},
+
+      {"MN", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_multimodal");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  for (const std::string& way : {"AB", "BEFC", "BC", "CDGH", "HJKI", "HI", "IM"}) {
+    auto edge = gurka::findEdge(reader, layout, way, way.substr(way.size() - 1));
+    EXPECT_EQ(std::get<1>(edge)->classification(), valhalla::baldr::RoadClass::kPrimary) << way;
+  }
+}
+
 TEST(Standalone, ReclassifyNothingReclassified) {
   // Test to validate that if no edges are found with the target classification
   // nothing gets reclassified.
