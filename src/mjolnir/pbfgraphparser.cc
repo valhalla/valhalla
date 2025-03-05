@@ -530,11 +530,7 @@ struct graph_parser {
         return;
 
       way_.set_level_index(osmdata_.name_offset_map.index(tag_.second));
-
-      bool has_multiple_levels =
-          tag_.second.find_first_of(";,-") != std::string::npos &&
-          (tag_.second.find('-') == std::string::npos || tag_.second.find('-') > 0);
-      way_.set_multiple_levels(has_multiple_levels);
+      way_.set_multiple_levels(tag_.second.length()>2);
     };
     tag_handlers_["level:ref"] = [this]() {
       if (!tag_.second.empty())
