@@ -20,8 +20,8 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
 #include "mjolnir/traffic_updater.h"
+#include "mjolnir/util.h"
 
 #include "argparse_utils.h"
 
@@ -82,18 +82,15 @@ int main(int argc, char** argv) {
   auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
 
   // Process traffic tiles
-  auto final_stats = vj::ProcessTrafficTiles(
-    tile_dir, 
-    traffic_tiles, 
-    config.get<uint32_t>("mjolnir.concurrency")
-  );
+  auto final_stats =
+      vj::ProcessTrafficTiles(tile_dir, traffic_tiles, config.get<uint32_t>("mjolnir.concurrency"));
 
   // Log processing results
   vj::LogProcessingResults(final_stats);
 
   // Optional summary
   if (summary) {
-   vj:: GenerateSummary(config);
+    vj::GenerateSummary(config);
   }
 
   return EXIT_SUCCESS;

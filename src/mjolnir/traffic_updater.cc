@@ -32,17 +32,17 @@ namespace vj = valhalla::mjolnir;
 namespace valhalla {
 namespace mjolnir {
 void TrafficStats::operator()(const TrafficStats& other) {
-    constrained_count += other.constrained_count;
-    free_flow_count += other.free_flow_count;
-    compressed_count += other.compressed_count;
-    updated_count += other.updated_count;
-    dup_count += other.dup_count;
+  constrained_count += other.constrained_count;
+  free_flow_count += other.free_flow_count;
+  compressed_count += other.compressed_count;
+  updated_count += other.updated_count;
+  dup_count += other.dup_count;
 }
 /**
  * Read speed CSV file and update the tile_speeds in unique_data
  */
- std::unordered_map<uint32_t,TrafficSpeeds>
- ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) {
+std::unordered_map<uint32_t, TrafficSpeeds>
+ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) {
   typedef boost::tokenizer<boost::char_separator<char>> tokenizer;
   boost::char_separator<char> sep{","};
   std::unordered_map<uint32_t, TrafficSpeeds> ts;
@@ -133,64 +133,63 @@ void TrafficStats::operator()(const TrafficStats& other) {
   return ts;
 }
 void UpdateTile(const std::string& tile_dir,
-                 const GraphId& tile_id,
-                 const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
-                 TrafficStats& stat) {
-    auto tile_path = tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-    if (!filesystem::exists(tile_path)) {
-      LOG_ERROR("No tile at " + tile_path);
-      return;
-    }
-
-    // Get the tile
-    vj::GraphTileBuilder tile_builder(tile_dir, tile_id, false);
-
-    // Get a count of how many predicted speed edges there will be this avoids reallocs
-    size_t pred_count = 0;
-    for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
-      auto found = speeds.find(j);
-      pred_count += found != speeds.cend() && static_cast<bool>(found->second.coefficients);
-    }
-
-    // Update directed edges as needed
-    std::vector<DirectedEdge> directededges;
-    directededges.reserve(tile_builder.header()->directededgecount());
-    for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
-      // skip edges for which we dont have speed data
-      DirectedEdge& directededge = tile_builder.directededge(j);
-      auto found = speeds.find(j);
-      if (found != speeds.end()) {
-        const auto& speed = found->second;
-        if (speed.constrained_flow_speed) {
-          directededge.set_constrained_flow_speed(speed.constrained_flow_speed);
-        }
-        if (speed.free_flow_speed) {
-          directededge.set_free_flow_speed(speed.free_flow_speed);
-        }
-        if (speed.coefficients) {
-          tile_builder.AddPredictedSpeed(j, *speed.coefficients, pred_count);
-          directededge.set_has_predicted_speed(true);
-        }
-        ++stat.updated_count;
-      }
-
-      // Add the directed edge to the local list
-      directededges.emplace_back(std::move(directededge));
-    }
-
-    // Write the new tile with updated directed edges and the predicted speeds
-    tile_builder.UpdatePredictedSpeeds(directededges);
+                const GraphId& tile_id,
+                const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
+                TrafficStats& stat) {
+  auto tile_path = tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
+  if (!filesystem::exists(tile_path)) {
+    LOG_ERROR("No tile at " + tile_path);
+    return;
   }
+
+  // Get the tile
+  vj::GraphTileBuilder tile_builder(tile_dir, tile_id, false);
+
+  // Get a count of how many predicted speed edges there will be this avoids reallocs
+  size_t pred_count = 0;
+  for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
+    auto found = speeds.find(j);
+    pred_count += found != speeds.cend() && static_cast<bool>(found->second.coefficients);
+  }
+
+  // Update directed edges as needed
+  std::vector<DirectedEdge> directededges;
+  directededges.reserve(tile_builder.header()->directededgecount());
+  for (uint32_t j = 0; j < tile_builder.header()->directededgecount(); ++j) {
+    // skip edges for which we dont have speed data
+    DirectedEdge& directededge = tile_builder.directededge(j);
+    auto found = speeds.find(j);
+    if (found != speeds.end()) {
+      const auto& speed = found->second;
+      if (speed.constrained_flow_speed) {
+        directededge.set_constrained_flow_speed(speed.constrained_flow_speed);
+      }
+      if (speed.free_flow_speed) {
+        directededge.set_free_flow_speed(speed.free_flow_speed);
+      }
+      if (speed.coefficients) {
+        tile_builder.AddPredictedSpeed(j, *speed.coefficients, pred_count);
+        directededge.set_has_predicted_speed(true);
+      }
+      ++stat.updated_count;
+    }
+
+    // Add the directed edge to the local list
+    directededges.emplace_back(std::move(directededge));
+  }
+
+  // Write the new tile with updated directed edges and the predicted speeds
+  tile_builder.UpdatePredictedSpeeds(directededges);
+}
 /**
  * Read both the constrained and freeflow speed CSV files
  * We expect the files to be named as <quadtreeID>.constrained.csv and
  * <quadtreeID>.freeflow.csv. (e.g., 1202021.constrained.csv and 1202021.freeflow.csv)
  */
-void UpdateTiles(
-  const std::string& tile_dir,
-  std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_start,
-  std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_end,
-  std::promise<TrafficStats>& result) {
+void UpdateTiles(const std::string& tile_dir,
+                 std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_start,
+                 std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_end,
+                 std::promise<TrafficStats>& result) {
 
   std::stringstream thread_name;
   thread_name << std::this_thread::get_id();
@@ -205,12 +204,12 @@ void UpdateTiles(
     LOG_INFO(thread_name.str() + " add traffic data to " + std::to_string(tile_start->first));
     UpdateTile(tile_dir, tile_start->first, traffic, stat);
     LOG_INFO(thread_name.str() + " finished " + std::to_string(tile_start->first) + "(" +
-            std::to_string(++count / total * 100.0) + ")");
+             std::to_string(++count / total * 100.0) + ")");
   }
 
   result.set_value(stat);
 }
-std::vector<std::pair<GraphId, std::vector<std::string>>> 
+std::vector<std::pair<GraphId, std::vector<std::string>>>
 PrepareTrafficTiles(const filesystem::path& traffic_tile_dir) {
   std::unordered_map<GraphId, std::vector<std::string>> files_per_tile;
   for (filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
@@ -226,21 +225,21 @@ PrepareTrafficTiles(const filesystem::path& traffic_tile_dir) {
       } catch (...) {}
     }
   }
-  
-  std::vector<std::pair<GraphId, std::vector<std::string>>> traffic_tiles(
-    files_per_tile.begin(), files_per_tile.end());
-  
+
+  std::vector<std::pair<GraphId, std::vector<std::string>>> traffic_tiles(files_per_tile.begin(),
+                                                                          files_per_tile.end());
+
   std::random_device rd;
   std::shuffle(traffic_tiles.begin(), traffic_tiles.end(), std::mt19937(rd()));
-  
+
   return traffic_tiles;
 }
-  //  to process threads and collect results
-  TrafficStats ProcessTrafficTiles(
-    const std::string& tile_dir, 
-    const std::vector<std::pair<GraphId, std::vector<std::string>>>& traffic_tiles,
-    uint32_t concurrency) {
-  
+//  to process threads and collect results
+TrafficStats
+ProcessTrafficTiles(const std::string& tile_dir,
+                    const std::vector<std::pair<GraphId, std::vector<std::string>>>& traffic_tiles,
+                    uint32_t concurrency) {
+
   std::vector<std::shared_ptr<std::thread>> threads(concurrency);
   std::list<std::promise<TrafficStats>> results;
 
@@ -248,7 +247,7 @@ PrepareTrafficTiles(const filesystem::path& traffic_tile_dir) {
   size_t floor = traffic_tiles.size() / threads.size();
   size_t at_ceiling = traffic_tiles.size() - (threads.size() * floor);
   auto tile_end = traffic_tiles.begin();
-  
+
   // Distribute work across threads
   for (size_t i = 0; i < threads.size(); ++i) {
     auto tile_start = tile_end;
@@ -275,15 +274,16 @@ PrepareTrafficTiles(const filesystem::path& traffic_tile_dir) {
 
   return final_stats;
 }
-void LogProcessingResults(const TrafficStats& final_stats){
-  LOG_INFO("Parsed " + std::to_string(final_stats.constrained_count) + " constrained traffic speeds.");
+void LogProcessingResults(const TrafficStats& final_stats) {
+  LOG_INFO("Parsed " + std::to_string(final_stats.constrained_count) +
+           " constrained traffic speeds.");
   LOG_INFO("Parsed " + std::to_string(final_stats.free_flow_count) + " free flow traffic speeds.");
   LOG_INFO("Parsed " + std::to_string(final_stats.compressed_count) + " compressed records.");
   LOG_INFO("Updated " + std::to_string(final_stats.updated_count) + " directed edges.");
   LOG_INFO("Duplicate count " + std::to_string(final_stats.dup_count) + ".");
   LOG_INFO("Finished");
 }
-void GenerateSummary(const boost::property_tree::ptree& config){
+void GenerateSummary(const boost::property_tree::ptree& config) {
   auto mutable_config = config;
   mutable_config.get_child("mjolnir").erase("tile_extract");
 
@@ -350,7 +350,7 @@ void GenerateSummary(const boost::property_tree::ptree& config){
   LOG_INFO("Stats - excluding shortcut edges");
   LOG_INFO("non drivable with speed = " + std::to_string(non_dr_with_speed));
   LOG_INFO("Shortcuts with speed = " + std::to_string(shortcuts_with_speed));
-  
+
   uint32_t totaldrivable = 0, totalpt = 0, totalff = 0, totaldrivablelink = 0;
   for (uint32_t i = 0; i < 8; i++) {
     float pct1 = 100.0f * (float)pred_road_class_edges[i] / dr_road_class_edges[i];
@@ -374,7 +374,6 @@ void GenerateSummary(const boost::property_tree::ptree& config){
   LOG_INFO("total pred " + std::to_string(totalpt));
   LOG_INFO("total ff " + std::to_string(totalff));
 }
-
 
 } // namespace mjolnir
 } // namespace valhalla

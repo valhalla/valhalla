@@ -57,15 +57,17 @@ void UpdateTile(const std::string& tile_dir,
 
 void UpdateTiles(
     const std::string& tile_dir,
-    std::vector<std::pair<valhalla::baldr::GraphId, std::vector<std::string>>>::const_iterator tile_start,
-    std::vector<std::pair<valhalla::baldr::GraphId, std::vector<std::string>>>::const_iterator tile_end,
+    std::vector<std::pair<valhalla::baldr::GraphId, std::vector<std::string>>>::const_iterator
+        tile_start,
+    std::vector<std::pair<valhalla::baldr::GraphId, std::vector<std::string>>>::const_iterator
+        tile_end,
     std::promise<TrafficStats>& result);
 
-std::vector<std::pair<valhalla::baldr::GraphId, std::vector<std::string>>> 
+std::vector<std::pair<valhalla::baldr::GraphId, std::vector<std::string>>>
 PrepareTrafficTiles(const filesystem::path& traffic_tile_dir);
 
 TrafficStats ProcessTrafficTiles(
-    const std::string& tile_dir, 
+    const std::string& tile_dir,
     const std::vector<std::pair<valhalla::baldr::GraphId, std::vector<std::string>>>& traffic_tiles,
     uint32_t concurrency);
 
