@@ -58,6 +58,7 @@ set(sources
   speed_assigner.h
   timeparsing.cc
   transitbuilder.cc
+  way_edges_processor.cc
   util.cc
   validatetransit.cc)
 
