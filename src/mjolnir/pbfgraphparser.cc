@@ -164,7 +164,6 @@ struct graph_parser {
     use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
 
     empty_node_tags_ = lua_.Transform(OSMType::kNode, 0, {});
-    empty_way_tags_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_tags_ = lua_.Transform(OSMType::kRelation, 0, {});
 
     tag_handlers_["driving_side"] = [this]() {
@@ -2295,16 +2294,18 @@ struct graph_parser {
     osmdata_.edge_count -= intersection; // more accurate but undercounts by skipping lone edges
   }
 
-  void way(const osmium::Way& way) {
-    changeset(way.changeset());
+  // Intermediate structure that represents transformed (by Lua) osm way
+  struct Way {
+    uint64_t osmid;
+    std::vector<uint64_t> nodes;
+    Tags tags;
+    uint64_t changeset_id;
+  };
 
-    osmid_ = static_cast<uint64_t>(way.id());
-    // unsorted extracts are just plain nasty, so they can bugger off!
-    if (osmid_ < last_way_) {
-      throw std::runtime_error("Detected unsorted input data");
-    }
-    last_way_ = osmid_;
-
+  static void transform_way(const osmium::Way& way,
+                            LuaTagTransform& lua,
+                            const Tags& empty_way_tags,
+                            std::vector<Way>& transformed) {
     std::vector<uint64_t> nodes;
     nodes.reserve(way.nodes().size());
     for (const auto& node : way.nodes()) {
@@ -2331,11 +2332,28 @@ struct graph_parser {
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    const Tags tags =
-        way.tags().empty() ? empty_way_tags_ : lua_.Transform(OSMType::kWay, osmid_, way.tags());
+    Tags tags =
+        way.tags().empty() ? empty_way_tags : lua.Transform(OSMType::kWay, way.id(), way.tags());
     if (tags.empty()) {
       return;
     }
+
+    transformed.emplace_back(
+        Way{static_cast<uint64_t>(way.id()), std::move(nodes), std::move(tags), way.changeset()});
+  }
+
+  void way(const Way& way) {
+    changeset(way.changeset_id);
+
+    osmid_ = way.osmid;
+    // unsorted extracts are just plain nasty, so they can bugger off!
+    if (osmid_ < last_way_) {
+      throw std::runtime_error("Detected unsorted input data");
+    }
+    last_way_ = osmid_;
+
+    const auto& nodes = way.nodes;
+    const auto& tags = way.tags;
 
     try {
       // Throw away use if include_driveways_ is false
@@ -5028,7 +5046,6 @@ struct graph_parser {
 
   // empty objects initialized with defaults to use when no tags are present on objects
   Tags empty_node_tags_;
-  Tags empty_way_tags_;
   Tags empty_relation_tags_;
 
   uint32_t get_pronunciation_index(const uint8_t type, const uint8_t alpha) {
@@ -5058,17 +5075,24 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                   const std::string& ways_file,
                                   const std::string& way_nodes_file,
                                   const std::string& access_file) {
-  // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
-  // option 2: synchronize around adding things to a single osmdata. will have to test to see
-  // which is the least expensive (memory and speed). leaning towards option 2
-  //  unsigned int threads =
-  //      std::max(static_cast<unsigned int>(1),
-  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
-
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   SCOPED_TIMER();
   OSMData osmdata{};
   graph_parser parser(pt, osmdata);
+  const auto lua_script = graph_parser::get_lua(pt);
+
+  // Asymmetric multithreading (in data flow order):
+  // - osmium::thread::pool for parsing PBF file
+  // - 1 thread to feed the lua transform pool and guarantee the order of ways
+  // - `lua_concurrency` threads for lua transform. Currently there is no point in using more than 8
+  // - current thread for working with OSMData in `graph_parser::way()`
+  // None of them will saturate the full CPU core, so total count can be bigger than
+  // `std::thread::hardware_concurrency()` or "concurrency" parameter.
+  const size_t concurrency =
+      std::max(static_cast<size_t>(1),
+               pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
+  const size_t lua_concurrency =
+      std::clamp(concurrency - 1, static_cast<size_t>(1), static_cast<size_t>(8));
 
   LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
@@ -5080,16 +5104,75 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   for (auto& file : input_files) {
     parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
 
-    osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
-    while (const osmium::memory::Buffer buffer = reader.read()) {
-      for (const osmium::memory::Item& item : buffer) {
-        parser.way(static_cast<const osmium::Way&>(item));
+    using Ways = std::vector<graph_parser::Way>;
+    osmium::thread::Queue<std::future<Ways>> ways_queue(lua_concurrency * 8);
+    osmium::thread::Queue<std::pair<osmium::memory::Buffer, std::promise<Ways>>> buffer_queue(
+        lua_concurrency * 4);
+
+    // Single reader thread that guarantees the order of ways via future/promise magic.
+    std::thread reader_thread([&file, &ways_queue, &buffer_queue, lua_concurrency] {
+      osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
+      while (osmium::memory::Buffer buffer = reader.read()) {
+        std::promise<Ways> promise;
+        ways_queue.push(promise.get_future());
+        buffer_queue.push(std::make_pair(std::move(buffer), std::move(promise)));
+      }
+
+      // Send stop signals to all threads.
+      ways_queue.push({});
+      for (size_t i = 0; i < lua_concurrency; ++i) {
+        buffer_queue.push({});
+      }
+
+      reader.close(); // Explicit close to get an exception in case of an error.
+    });
+
+    // Thread pool for Lua processing.
+    std::vector<std::thread> lua_pool;
+    lua_pool.reserve(lua_concurrency);
+    for (size_t i = 0; i < lua_concurrency; ++i) {
+      lua_pool.emplace_back(std::thread([&lua_script, &buffer_queue] {
+        LuaTagTransform lua(lua_script);
+        const Tags empty_way_tags = lua.Transform(OSMType::kWay, 0, {});
+
+        while (true) {
+          std::pair<osmium::memory::Buffer, std::promise<Ways>> buffer_promise;
+          buffer_queue.wait_and_pop(buffer_promise);
+          if (!buffer_promise.first) {
+            break; // End of the queue
+          }
+
+          Ways transformed;
+          for (const osmium::memory::Item& item : buffer_promise.first) {
+            graph_parser::transform_way(static_cast<const osmium::Way&>(item), lua, empty_way_tags,
+                                        transformed);
+          }
+          buffer_promise.second.set_value(std::move(transformed));
+        }
+      }));
+    }
+
+    while (true) {
+      std::future<Ways> future;
+      ways_queue.wait_and_pop(future);
+      if (!future.valid()) {
+        break; // End of the queue
+      }
+
+      Ways transformed = future.get();
+      for (const auto& way : transformed) {
+        parser.way(way);
       }
     }
-    reader.close(); // Explicit close to get an exception in case of an error.
+
+    reader_thread.join();
+    for (auto& t : lua_pool) {
+      t.join();
+    }
   }
 
   // Clarifies types of loop roads and saves fixed ways.
+  LOG_INFO("Clarifying and fixing cul-de-sacs...");
   parser.culdesac_processor_.clarify_and_fix(*parser.way_nodes_, *parser.ways_);
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
