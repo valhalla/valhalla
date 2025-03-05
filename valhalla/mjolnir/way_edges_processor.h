@@ -1,5 +1,5 @@
-#ifndef VALHALLA_WAY_EDGES_PROCESSOR_H
-#define VALHALLA_WAY_EDGES_PROCESSOR_H
+#ifndef VALHALLA_MJOLNIR_WAY_EDGES_PROCESSOR_H
+#define VALHALLA_MJOLNIR_WAY_EDGES_PROCESSOR_H
 
 #include <cstdint>
 #include <string>
@@ -23,9 +23,6 @@ struct EdgeAndDirection {
   EdgeAndDirection(const bool f, const baldr::GraphId& id);
 };
 
-// Check if an edge is valid for processing
-bool is_valid_edge(const baldr::DirectedEdge* edge);
-
 // Process edges and collect way information
 std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>
 collect_way_edges(baldr::GraphReader& reader);
@@ -37,4 +34,4 @@ void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirec
 } // namespace wayedges
 } // namespace valhalla
 
-#endif // VALHALLA_WAY_EDGES_PROCESSOR_H
+#endif // VALHALLA_MJOLNIR_WAY_EDGES_PROCESSOR_H

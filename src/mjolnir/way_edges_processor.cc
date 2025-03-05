@@ -3,29 +3,14 @@
 #include <fstream>
 #include <iostream>
 
-#include <cxxopts.hpp>
-
 #include "baldr/edgeinfo.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
-
-#include "argparse_utils.h"
 
 namespace valhalla {
 namespace wayedges {
 
 EdgeAndDirection::EdgeAndDirection(const bool f, const baldr::GraphId& id) : forward(f), edgeid(id) {
-}
-bool is_valid_edge(const baldr::DirectedEdge* edge) {
-  // Skip transit, connection, and shortcut edges
-  if (edge->IsTransitLine() || edge->use() == baldr::Use::kTransitConnection ||
-      edge->use() == baldr::Use::kEgressConnection ||
-      edge->use() == baldr::Use::kPlatformConnection || edge->is_shortcut()) {
-    return false;
-  }
-
-  // Check if the edge allows auto access
-  return (edge->forwardaccess() & baldr::kAutoAccess);
 }
 
 std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>
@@ -48,8 +33,15 @@ collect_way_edges(baldr::GraphReader& reader) {
     for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
       const baldr::DirectedEdge* edge = tile->directededge(edge_id);
 
-      // Skip edges that don't meet our criteria
-      if (!is_valid_edge(edge)) {
+      // Skip transit, connection, and shortcut edges
+      if (edge->IsTransitLine() || edge->use() == baldr::Use::kTransitConnection ||
+          edge->use() == baldr::Use::kEgressConnection ||
+          edge->use() == baldr::Use::kPlatformConnection || edge->is_shortcut()) {
+        continue;
+      }
+
+      // Skip if the edge does not allow auto use
+      if (!(edge->forwardaccess() & baldr::kAutoAccess)) {
         continue;
       }
 

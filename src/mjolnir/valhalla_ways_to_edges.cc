@@ -21,7 +21,7 @@
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-using namespace valhalla::wayedges;
+namespace vw = valhalla::wayedges;
 
 // Structure holding an edge Id and forward flag
 struct EdgeAndDirection {
@@ -71,10 +71,10 @@ int main(int argc, char** argv) {
   GraphReader reader(config.get_child("mjolnir"));
 
   // Collect all way edges
-  auto ways_edges = collect_way_edges(reader);
+  auto ways_edges = vw::collect_way_edges(reader);
 
   // Write way edges to a file
-  write_way_edges(ways_edges, config);
+  vw::write_way_edges(ways_edges, config);
 
   LOG_INFO("Finished with " + std::to_string(ways_edges.size()) + " ways.");
 
