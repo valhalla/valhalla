@@ -1,9 +1,12 @@
+
 #include "argparse_utils.h"
 #include "filesystem.h"
 #include "mjolnir/traffic_updater.h"
+
 #include <boost/property_tree/ptree.hpp>
-#include <cstdint>
 #include <cxxopts.hpp>
+
+#include <cstdint>
 #include <iostream>
 #include <string>
 

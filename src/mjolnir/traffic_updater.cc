@@ -1,15 +1,15 @@
 #include "mjolnir/traffic_updater.h"
-
 #include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/predictedspeeds.h"
+#include "mjolnir/graphtilebuilder.h"
+
 #include <fstream>
 #include <iomanip>
 #include <list>
 #include <random>
 #include <sstream>
 
-#include "baldr/graphreader.h"
-#include "baldr/predictedspeeds.h"
-#include "mjolnir/graphtilebuilder.h"
 #include <boost/tokenizer.hpp>
 
 namespace vb = valhalla::baldr;
