@@ -344,6 +344,7 @@ Here are some sample results with `verbose` set to `true`:
 | `edge_info.conditional_speed_limits` | The key describes the time window during which the speed limit applies, the value is the limit |
 | `edge_info.speed_limit` | The edge's speed limit |
 | `edge_info.levels` | An array containing the edge's levels as derived from the `level=*` tag. Values are either numeric, or another array containing two elements, which denote the start and end of a range (inclusive) |
+| `shoulder` | A boolean value indicating whether the edge has shoulder (`true` or `false`) |
 
 ### HTTP status codes and error messages
 

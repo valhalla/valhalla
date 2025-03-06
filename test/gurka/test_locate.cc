@@ -141,3 +141,50 @@ TEST(locate, basic_properties) {
   ASSERT_EQ(result.options().locations(0).heading_tolerance(), 20);
   ASSERT_TRUE(result.options().locations(0).correlation().edges().empty());
 }
+
+TEST(locate, locate_shoulder) {
+  const std::string ascii_map = R"(
+    A---B---C
+    |   |   |
+    D---E---F
+  )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"shoulder", "yes"}}},
+                            {"BC", {{"highway", "motorway"}}},
+                            {"AD", {{"highway", "residential"}}},
+                            {"BE", {{"highway", "residential"}, {"shoulder", "yes"}}},
+                            {"CF", {{"highway", "residential"}}},
+                            {"DE", {{"highway", "tertiary"}}},
+                            {"EF", {{"highway", "tertiary"}, {"shoulder", "yes"}}}};
+
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_locate_shoulder_moderate");
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  std::string json;
+  auto result =
+      gurka::do_action(valhalla::Options::locate, map, {"B", "E", "F"}, "none", {}, reader, &json);
+
+  rapidjson::Document response;
+  response.Parse(json);
+  if (response.HasParseError())
+    throw std::runtime_error("bad json response");
+
+  std::unordered_map<std::string, bool> expected_shoulders = {{"AB", true},  {"BC", false},
+                                                              {"AD", false}, {"BE", true},
+                                                              {"CF", false}, {"DE", false},
+                                                              {"EF", true}};
+
+  for (size_t i = 0; i < response.GetArray().Size(); ++i) {
+    auto edges = rapidjson::Pointer("/" + std::to_string(i) + "/edges").Get(response)->GetArray();
+    for (const auto& edge : edges) {
+      std::string way_name = edge["edge_info"]["names"][0].GetString();
+
+      ASSERT_TRUE(edge.HasMember("shoulder"));
+
+      bool shoulder_value = edge["shoulder"].GetBool();
+      EXPECT_EQ(shoulder_value, expected_shoulders[way_name])
+          << "Way " << way_name << " has incorrect shoulder value.";
+    }
+  }
+}
