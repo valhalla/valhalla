@@ -1,29 +1,16 @@
 #pragma once
-
-#include <algorithm>
-#include <cmath>
+#include "baldr/graphid.h"
+#include "baldr/predictedspeeds.h"
+#include "filesystem.h"
+#include <array>
+#include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <future>
 #include <optional>
-#include <random>
 #include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
-
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/tokenizer.hpp>
-
-#include "baldr/graphreader.h"
-#include "baldr/predictedspeeds.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
 
 namespace valhalla {
 namespace mjolnir {
@@ -43,7 +30,7 @@ struct TrafficStats {
 struct TrafficSpeeds {
   uint8_t constrained_flow_speed = 0;
   uint8_t free_flow_speed = 0;
-  std::optional<std::array<int16_t, kCoefficientCount>> coefficients;
+  std::optional<std::array<int16_t, valhalla::baldr::kCoefficientCount>> coefficients;
 };
 
 // Functions declarations

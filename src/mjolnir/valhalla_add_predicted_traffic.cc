@@ -1,34 +1,15 @@
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <future>
-#include <optional>
-#include <random>
-#include <string>
-#include <thread>
-
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/tokenizer.hpp>
-#include <cxxopts.hpp>
-
-#include "baldr/graphreader.h"
-#include "baldr/predictedspeeds.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/traffic_updater.h"
-#include "mjolnir/util.h"
-
 #include "argparse_utils.h"
+#include "filesystem.h"
+#include "mjolnir/traffic_updater.h"
+#include <boost/property_tree/ptree.hpp>
+#include <cstdint>
+#include <cxxopts.hpp>
+#include <iostream>
+#include <string>
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vj = valhalla::mjolnir;
-
 namespace bpt = boost::property_tree;
 
 int main(int argc, char** argv) {
@@ -37,14 +18,12 @@ int main(int argc, char** argv) {
   filesystem::path traffic_tile_dir;
   bool summary = false;
   boost::property_tree::ptree config;
-
   try {
     // clang-format off
     cxxopts::Options options(
       program,
       program + " " + VALHALLA_VERSION + "\n\n"
       "adds predicted traffic to valhalla tiles.\n");
-
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
@@ -54,13 +33,11 @@ int main(int argc, char** argv) {
       ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>(summary))
       ("t,traffic-tile-dir", "positional argument", cxxopts::value<std::string>());
     // clang-format on
-
     options.parse_positional({"traffic-tile-dir"});
     options.positional_help("Traffic tile dir");
     auto result = options.parse(argc, argv);
     if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
-
     if (!result.count("traffic-tile-dir")) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
       return false;
@@ -74,24 +51,18 @@ int main(int argc, char** argv) {
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
-
   // Prepare traffic tiles
   auto traffic_tiles = vj::PrepareTrafficTiles(traffic_tile_dir);
-
   // Get tile directory from config
   auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
-
   // Process traffic tiles
   auto final_stats =
       vj::ProcessTrafficTiles(tile_dir, traffic_tiles, config.get<uint32_t>("mjolnir.concurrency"));
-
   // Log processing results
   vj::LogProcessingResults(final_stats);
-
   // Optional summary
   if (summary) {
     vj::GenerateSummary(config);
   }
-
   return EXIT_SUCCESS;
 }

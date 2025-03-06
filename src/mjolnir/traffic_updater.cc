@@ -1,31 +1,17 @@
 #include "mjolnir/traffic_updater.h"
 
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <future>
-#include <iomanip>
-#include <optional>
-#include <random>
-#include <string>
-#include <thread>
-
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/tokenizer.hpp>
-
 #include "baldr/graphid.h"
+#include <fstream>
+#include <iomanip>
+#include <list>
+#include <random>
+#include <sstream>
+
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
+#include <boost/tokenizer.hpp>
 
-namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vj = valhalla::mjolnir;
 
