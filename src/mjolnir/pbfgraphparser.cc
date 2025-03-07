@@ -2290,10 +2290,11 @@ struct graph_parser {
     osmdata_.edge_count -= intersection; // more accurate but undercounts by skipping lone edges
   }
 
+  // Intermediate structure that represents transformed (by Lua) osm way
   struct Way {
     uint64_t osmid;
-    Tags tags;
     std::vector<uint64_t> nodes;
+    Tags tags;
     uint64_t changeset_id;
   };
 
@@ -2334,7 +2335,7 @@ struct graph_parser {
     }
 
     transformed.emplace_back(
-        Way{static_cast<uint64_t>(way.id()), std::move(tags), std::move(nodes), way.changeset()});
+        Way{static_cast<uint64_t>(way.id()), std::move(nodes), std::move(tags), way.changeset()});
   }
 
   void way(const Way& way) {
@@ -5159,6 +5160,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   }
 
   // Clarifies types of loop roads and saves fixed ways.
+  LOG_INFO("Clarifying and fixing cul-de-sacs...");
   parser.culdesac_processor_.clarify_and_fix(*parser.way_nodes_, *parser.ways_);
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
