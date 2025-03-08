@@ -1,6 +1,4 @@
-#ifndef VALHALLA_MJOLNIR_SCOPED_TIMER_H
-#define VALHALLA_MJOLNIR_SCOPED_TIMER_H
-
+#pragma once
 #include <chrono>
 #include <string>
 
@@ -26,5 +24,3 @@ namespace mjolnir {
 
 } // namespace mjolnir
 } // namespace valhalla
-
-#endif // VALHALLA_MJOLNIR_SCOPED_TIMER_H
