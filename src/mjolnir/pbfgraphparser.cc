@@ -1982,10 +1982,10 @@ struct graph_parser {
 
     std::string buffer;
     bss_info.SerializeToString(&buffer);
-    n.set_bss_info_index(osmdata_.node_names.index(buffer));
+    const uint32_t bss_info_index = osmdata_.node_names.index(buffer);
     ++osmdata_.node_name_count;
 
-    bss_nodes_->push_back(n);
+    bss_nodes_->push_back({n, bss_info_index});
   }
 
   void node(const osmium::Node& node) {
@@ -4211,7 +4211,7 @@ struct graph_parser {
              sequence<OSMAccess>* access,
              sequence<OSMRestriction>* complex_restrictions_from,
              sequence<OSMRestriction>* complex_restrictions_to,
-             sequence<OSMNode>* bss_nodes,
+             sequence<OSMBSSNode>* bss_nodes,
              sequence<OSMNodeLinguistic>* node_linguistics) {
     // reset the pointers (either null them out or set them to something valid)
     ways_.reset(ways);
@@ -5014,7 +5014,7 @@ struct graph_parser {
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_to_;
 
   // bss nodes
-  std::unique_ptr<sequence<OSMNode>> bss_nodes_;
+  std::unique_ptr<sequence<OSMBSSNode>> bss_nodes_;
 
   // node linguistics
   std::unique_ptr<sequence<OSMNodeLinguistic>> node_linguistics_;
@@ -5199,7 +5199,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
           0;
       // we send a null way_nodes file so that only the bike share stations are parsed
       parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
-                   new sequence<OSMNode>(bss_nodes_file, create), nullptr);
+                   new sequence<OSMBSSNode>(bss_nodes_file, create), nullptr);
       create = false;
 
       osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
