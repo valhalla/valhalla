@@ -20,7 +20,7 @@
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
-#include "mjolnir/osmnode.h"
+#include "mjolnir/osmdata.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -65,15 +65,19 @@ struct BSSConnection {
   uint32_t forwardaccess = kPedestrianAccess | kBicycleAccess;
   uint32_t reverseaccess = kPedestrianAccess | kBicycleAccess;
 
+  uint32_t bss_info_index = 0;
+
   BSSConnection() = default;
 
   BSSConnection(OSMNode osm_node,
+                uint32_t bss_info_index,
                 PointLL bss_ll,
                 GraphId way_node_id,
                 const EdgeInfo& edgeinfo,
                 bool is_forward,
                 const BestProjection& best)
-      : osm_node(osm_node), bss_ll(std::move(bss_ll)), way_node_id(way_node_id) {
+      : osm_node(osm_node), bss_ll(std::move(bss_ll)), way_node_id(way_node_id),
+        bss_info_index(bss_info_index) {
     /*
      * In this constructor: bss_node_id, shapes are left on default value on purpose
      * 	they are to be updated once the bss node is added into the local tile
@@ -127,7 +131,7 @@ DirectedEdge make_directed_edge(const GraphId endnode,
   return directededge;
 }
 
-using bss_by_tile_t = std::unordered_map<GraphId, std::vector<OSMNode>>;
+using bss_by_tile_t = std::unordered_map<GraphId, std::vector<OSMBSSNode>>;
 
 void compute_and_fill_shape(const BestProjection& best,
                             const PointLL& bss_ll,
@@ -152,7 +156,8 @@ const static auto VALID_EDGE_USES = std::unordered_set<Use>{
 
 };
 
-std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vector<OSMNode>& osm_bss) {
+std::vector<BSSConnection> project(const GraphTile& local_tile,
+                                   const std::vector<OSMBSSNode>& osm_bss) {
   auto t1 = std::chrono::high_resolution_clock::now();
   auto scoped_finally = make_finally([&t1, size = osm_bss.size()]() {
     auto t2 = std::chrono::high_resolution_clock::now();
@@ -171,7 +176,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
   // its corresponding tile... Not a good idea in term of performance... any better idea???
   for (const auto& bss : osm_bss) {
 
-    auto latlng = bss.latlng();
+    auto latlng = bss.node.latlng();
     auto bss_ll = PointLL{latlng.first, latlng.second};
 
     float mindist_ped = std::numeric_limits<float>::max();
@@ -226,13 +231,14 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
     }
     if (best_ped.startnode == static_cast<uint32_t>(-1) ||
         best_bicycle.startnode == static_cast<uint32_t>(-1)) {
-      LOG_ERROR("Cannot find any edge to project the BSS: " + std::to_string(bss.osmid_));
+      LOG_ERROR("Cannot find any edge to project the BSS: " + std::to_string(bss.node.osmid_));
       continue;
     }
 
     auto edgeinfo_ped = local_tile.edgeinfo(best_ped.directededge);
     // Store the information of the edge start <-> bss for pedestrian
-    auto start_ped = BSSConnection{bss,
+    auto start_ped = BSSConnection{bss.node,
+                                   bss.bss_info_index,
                                    bss_ll,
                                    {local_tile.id().tileid(), local_level, best_ped.startnode},
                                    edgeinfo_ped,
@@ -242,14 +248,17 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
                                    best_ped};
 
     // Store the information of the edge end <-> bss for pedestrian
-    auto end_ped =
-        BSSConnection{bss, bss_ll, best_ped.directededge->endnode(), edgeinfo_ped, false, best_ped};
+    auto end_ped = BSSConnection{bss.node,     bss.bss_info_index,
+                                 bss_ll,       best_ped.directededge->endnode(),
+                                 edgeinfo_ped, false,
+                                 best_ped};
 
     auto edgeinfo_bicycle = local_tile.edgeinfo(best_bicycle.directededge);
 
     // Store the information of the edge start <-> bss for bicycle
     auto start_bicycle =
-        BSSConnection{bss,
+        BSSConnection{bss.node,
+                      bss.bss_info_index,
                       bss_ll,
                       {local_tile.id().tileid(), local_level, best_bicycle.startnode},
                       edgeinfo_bicycle,
@@ -257,9 +266,10 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
                       best_bicycle};
 
     // Store the information of the edge end <-> bss for bicycle
-    auto end_bicycle =
-        BSSConnection{bss,   bss_ll,      best_bicycle.directededge->endnode(), edgeinfo_bicycle,
-                      false, best_bicycle};
+    auto end_bicycle = BSSConnection{bss.node,         bss.bss_info_index,
+                                     bss_ll,           best_bicycle.directededge->endnode(),
+                                     edgeinfo_bicycle, false,
+                                     best_bicycle};
 
     compute_and_fill_shape(best_ped, bss_ll, start_ped, end_ped);
     compute_and_fill_shape(best_bicycle, bss_ll, start_bicycle, end_bicycle);
@@ -318,7 +328,7 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
       auto& bss_to_waynode = *(it + j);
       bss_to_waynode.bss_node_id = new_bss_node_graphid;
       bss_to_waynode.tagged_values.push_back(encode_tag(TaggedValue::kBssInfo) +
-                                             osm_data.node_names.name(it->osm_node.bss_info_index()));
+                                             osm_data.node_names.name(it->bss_info_index));
 
       bool added{false};
       auto directededge =
@@ -594,24 +604,23 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
     LOG_INFO("Finished - BssBuilder took " + std::to_string(secs) + " secs");
   });
 
-  midgard::sequence<mjolnir::OSMNode> osm_nodes{bss_nodes_bin, false};
+  midgard::sequence<mjolnir::OSMBSSNode> bss_nodes{bss_nodes_bin, false};
 
-  // bss_by_tile_t bss_by_tile;
   bss_by_tile_t bss_by_tile;
 
   GraphReader reader(pt.get_child("mjolnir"));
   auto local_level = TileHierarchy::levels().back().level;
 
   // Group the nodes by their tiles. In the next step, we will work on each tile only once
-  for (auto node : osm_nodes) {
-    auto latlng = node.latlng();
+  for (auto bss : bss_nodes) {
+    auto latlng = bss.node.latlng();
     auto tile_id = TileHierarchy::GetGraphId({latlng.first, latlng.second}, local_level);
     graph_tile_ptr local_tile = reader.GetGraphTile(tile_id);
     if (!local_tile) {
       LOG_INFO("Cannot find node in tiles");
       continue;
     }
-    bss_by_tile[tile_id].push_back(node);
+    bss_by_tile[tile_id].push_back(bss);
   }
 
   size_t nb_threads =
@@ -623,7 +632,7 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
   std::mutex lock;
 
   // Start the threads
-  LOG_INFO("Adding " + std::to_string(osm_nodes.size()) + " bike share stations to " +
+  LOG_INFO("Adding " + std::to_string(bss_nodes.size()) + " bike share stations to " +
            std::to_string(bss_by_tile.size()) + " local graphs with " + std::to_string(nb_threads) +
            " thread(s)");
 
