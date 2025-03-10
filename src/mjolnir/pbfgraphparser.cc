@@ -1942,7 +1942,6 @@ struct graph_parser {
 
   // Handle bike share stations separately
   void bss_node(const osmium::Node& node) {
-    SCOPED_TIMER();
     const uint64_t osmid = node.id();
     // unsorted extracts are just plain nasty, so they can bugger off!
     if (osmid < last_node_) {
@@ -1992,7 +1991,6 @@ struct graph_parser {
   }
 
   void node(const osmium::Node& node) {
-    SCOPED_TIMER();
     changeset(node.changeset());
 
     const uint64_t osmid = node.id();
@@ -2296,7 +2294,6 @@ struct graph_parser {
   }
 
   void way(const osmium::Way& way) {
-    SCOPED_TIMER();
     changeset(way.changeset());
 
     osmid_ = static_cast<uint64_t>(way.id());
@@ -3754,7 +3751,6 @@ struct graph_parser {
   }
 
   void relation(const osmium::Relation& relation) {
-    SCOPED_TIMER();
     changeset(relation.changeset());
 
     const uint64_t osmid = relation.id();

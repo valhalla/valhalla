@@ -749,7 +749,6 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
                                                   Data& data,
                                                   bool reclassify_links,
                                                   bool infer_turn_channels) {
-  SCOPED_TIMER();
   // number of reclassified edges
   uint32_t reclass_count = 0;
   uint32_t tc_count = 0;
