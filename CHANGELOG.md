@@ -34,7 +34,8 @@
    * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082) 
    * ADDED: Retrieve traffic signal information of nodes through trace_attribute request [#5121](https://github.com/valhalla/valhalla/pull/5121)
    * CHANGED: Remove redundant callback-style pbf parsing [5119](https://github.com/valhalla/valhalla/pull/5119)
-   * REFACTORED: `valhalla_add_predictied_traffic` to extract core functionality into a reusable library function ([#5140](https://github.com/valhalla/valhalla/pull/5140))
+   * CHANGED: `valhalla_add_predictied_traffic` to extract core functionality into a reusable library function ([#5140](https://github.com/valhalla/valhalla/pull/5140))
+
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
 * **Bug Fix**
