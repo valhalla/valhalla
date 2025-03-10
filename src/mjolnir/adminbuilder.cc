@@ -386,22 +386,18 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // relations are defined within the PBFParser class
   OSMAdminData admin_data = PBFAdminParser::Parse(pt, input_files);
 
-  if (filesystem::exists(*database)) {
-    filesystem::remove(*database);
-  }
-
   sqlite3* db_handle;
   sqlite3_stmt* stmt;
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
 
-  ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                        NULL);
+  // In-memory database that will be dumped to disk at the end
+  ret = sqlite3_open(":memory:", &db_handle);
   // TODO: these blocks are the same like 20 times or so
   // let's abstract the sqlite commands somewhere
   if (ret != SQLITE_OK) {
-    LOG_ERROR("cannot open " + (*database));
+    LOG_ERROR("cannot create in-memory database");
     sqlite3_close(db_handle);
     return false;
   }
@@ -816,6 +812,35 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return false;
   }
 
+  LOG_INFO("Writing database to disk.");
+  if (filesystem::exists(*database)) {
+    filesystem::remove(*database);
+  }
+
+  sqlite3* db_on_disk;
+  ret = sqlite3_open_v2((*database).c_str(), &db_on_disk, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+                        NULL);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("cannot open " + (*database));
+    sqlite3_close(db_handle);
+    sqlite3_close(db_on_disk);
+    return false;
+  }
+
+  sqlite3_backup* backup = sqlite3_backup_init(db_on_disk, "main", db_handle, "main");
+  if (backup) {
+    sqlite3_backup_step(backup, -1);
+    sqlite3_backup_finish(backup);
+  }
+  ret = sqlite3_errcode(db_on_disk);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("failed to save database to " + (*database));
+    sqlite3_close(db_handle);
+    sqlite3_close(db_on_disk);
+    return false;
+  }
+
+  sqlite3_close(db_on_disk);
   sqlite3_close(db_handle);
 
   LOG_INFO("Finished.");
