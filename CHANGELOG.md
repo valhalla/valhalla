@@ -33,8 +33,8 @@
    * ADDED: headings and correlated ll's in verbose matrix output [#5072](https://github.com/valhalla/valhalla/pull/5072)
    * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082) 
    * ADDED: Retrieve traffic signal information of nodes through trace_attribute request [#5121](https://github.com/valhalla/valhalla/pull/5121)
-   * CHANGED: Remove redundant callback-style pbf parsing [5119](https://github.com/valhalla/valhalla/pull/5119)
-   * ADDED: Multimodal expension endpoint support [#5129](https://github.com/valhalla/valhalla/pull/5129)
+   * CHANGED: Remove redundant callback-style pbf parsing [#5119](https://github.com/valhalla/valhalla/pull/5119)
+   * ADDED: Multimodal expansion endpoint support [#5129](https://github.com/valhalla/valhalla/pull/5129)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
