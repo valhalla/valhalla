@@ -2,6 +2,7 @@
 #include <chrono>
 #include <string>
 
+#include "config.h"
 #include <midgard/logging.h>
 #include <midgard/util.h>
 
@@ -16,9 +17,9 @@ namespace mjolnir {
         auto _scoped_timer_duration = std::chrono::duration_cast<std::chrono::milliseconds>(         \
                                           _scoped_timer_end - _scoped_timer_start_##__COUNTER__)     \
                                           .count();                                                  \
-        valhalla::midgard::logging::Log(std::string(__FILE__) + "::" + std::string(__func__) +       \
-                                            " took " + std::to_string(_scoped_timer_duration) +      \
-                                            "ms",                                                    \
+        valhalla::midgard::logging::Log(std::string(VALHALLA_RELATIVE_FILE) +                        \
+                                            "::" + std::string(__func__) + " took " +                \
+                                            std::to_string(_scoped_timer_duration) + "ms",           \
                                         " [TIMING] ");                                               \
       })
 
