@@ -56,6 +56,10 @@ struct TrafficSpeeds {
   std::optional<std::array<int16_t, kCoefficientCount>> coefficients;
 };
 
+inline bool is_possible_outlier(float speed) {
+  return speed < kMinSpeedKph || speed > kMaxAssumedSpeed;
+}
+
 /**
  * Read speed CSV file and update the tile_speeds in unique_data
  */
@@ -103,6 +107,9 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
             case 1: {
               try {
                 traffic->second.free_flow_speed = std::stoi(t);
+                if (is_possible_outlier(static_cast<float>(traffic->second.free_flow_speed)))
+                  LOG_WARN("Detected free flow speed outlier: " +
+                           std::to_string(traffic->second.free_flow_speed) + ".");
                 stat.free_flow_count++;
               } catch (std::exception& e) {
                 LOG_WARN("Invalid free flow speed in file: " + full_filename + " line number " +
@@ -113,6 +120,10 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
             case 2: {
               try {
                 traffic->second.constrained_flow_speed = std::stoi(t);
+
+                if (is_possible_outlier(static_cast<float>(traffic->second.constrained_flow_speed)))
+                  LOG_WARN("Detected possible constrained speed outlier: " +
+                           std::to_string(traffic->second.constrained_flow_speed) + ".");
                 stat.constrained_count++;
               } catch (std::exception& e) {
                 LOG_WARN("Invalid constrained flow speed in file: " + full_filename +
@@ -125,6 +136,20 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
                 try {
                   // Decode the base64 predicted speeds
                   traffic->second.coefficients = decode_compressed_speeds(t);
+
+                  // Look at the decompressed speeds warn about possible outlier values.
+                  // The reason we do this is previously these outlier speeds were
+                  // discarded during path finding, but now the user bears responsibility
+                  // for handling outliers in their data.
+                  // (see https://github.com/valhalla/valhalla/pull/5087)
+                  for (size_t i = 0; i < kBucketsPerWeek; ++i) {
+                    if (float speed =
+                            decompress_speed_bucket((*traffic->second.coefficients).data(), i);
+                        is_possible_outlier(speed)) {
+                      LOG_WARN("Detected possible predicted speed outlier: " + std::to_string(speed) +
+                               ".");
+                    }
+                  }
                   stat.compressed_count++;
                 } catch (std::exception& e) {
                   LOG_WARN("Invalid compressed speeds in file: " + full_filename + " line number " +
