@@ -459,7 +459,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
   }
   if (incident_metadata.num_lanes_blocked()) {
     writer.Key(key_prefix + "num_lanes_blocked");
-    writer.Int(incident_metadata.num_lanes_blocked());
+    writer.Uint64(incident_metadata.num_lanes_blocked());
   }
   if (!incident_metadata.clear_lanes().empty()) {
     writer.Key(key_prefix + "clear_lanes");
@@ -468,7 +468,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
 
   if (incident_metadata.length() > 0) {
     writer.Key(key_prefix + "length");
-    writer.Int(incident_metadata.length());
+    writer.Uint(incident_metadata.length());
   }
 
   if (incident_metadata.road_closed()) {
@@ -484,7 +484,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.Key(key_prefix + "congestion");
     writer.StartObject();
     writer.Key("value");
-    writer.Int(incident_metadata.congestion().value());
+    writer.Uint(incident_metadata.congestion().value());
     writer.EndObject();
   }
 
