@@ -5076,11 +5076,18 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   graph_parser parser(pt, osmdata);
   const auto lua_script = graph_parser::get_lua(pt);
 
-  // There is no point in using more than 8 threads as they will be blocked by output queue.
-  // TODO: This value should be adjusted based on `graph_parser::way()` performance.
+  // Assymetric multithreading (in data flow order):
+  // - osmium::thread::pool for parsing PBF file
+  // - 1 thread to feed the lua transform pool and guarantee the order of ways
+  // - `lua_concurrency` threads for lua transform. Currently there is no point in using more than 8
+  // - current thread for working with OSMData in `graph_parser::way()`
+  // None of them will saturate the full CPU core, so total count can be bigger than
+  // `std::thread::hardware_concurrency()` or "concurrency" parameter.
   const size_t concurrency =
-      std::clamp(pt.get<size_t>("concurrency", std::thread::hardware_concurrency()),
-                 static_cast<size_t>(1), static_cast<size_t>(8));
+      std::max(static_cast<size_t>(1),
+               pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
+  const size_t lua_concurrency =
+      std::clamp(concurrency - 1, static_cast<size_t>(1), static_cast<size_t>(8));
 
   LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
@@ -5093,12 +5100,12 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
     parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
 
     using Ways = std::vector<graph_parser::Way>;
-    osmium::thread::Queue<std::future<Ways>> ways_queue(concurrency * 8);
+    osmium::thread::Queue<std::future<Ways>> ways_queue(lua_concurrency * 8);
     osmium::thread::Queue<std::pair<osmium::memory::Buffer, std::promise<Ways>>> buffer_queue(
-        concurrency * 4);
+        lua_concurrency * 4);
 
     // Single reader thread that guarantees the order of ways via future/promise magic.
-    std::thread reader_thread([&file, &ways_queue, &buffer_queue, concurrency] {
+    std::thread reader_thread([&file, &ways_queue, &buffer_queue, lua_concurrency] {
       osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
       while (osmium::memory::Buffer buffer = reader.read()) {
         std::promise<Ways> promise;
@@ -5108,7 +5115,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
       // Send stop signals to all threads.
       ways_queue.push({});
-      for (size_t i = 0; i < concurrency; ++i) {
+      for (size_t i = 0; i < lua_concurrency; ++i) {
         buffer_queue.push({});
       }
 
@@ -5116,10 +5123,10 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
     });
 
     // Thread pool for Lua processing.
-    std::vector<std::thread> pool;
-    pool.reserve(concurrency);
-    for (size_t i = 0; i < concurrency; ++i) {
-      pool.emplace_back(std::thread([&lua_script, &buffer_queue] {
+    std::vector<std::thread> lua_pool;
+    lua_pool.reserve(lua_concurrency);
+    for (size_t i = 0; i < lua_concurrency; ++i) {
+      lua_pool.emplace_back(std::thread([&lua_script, &buffer_queue] {
         LuaTagTransform lua(lua_script);
         const Tags empty_way_tags = lua.Transform(OSMType::kWay, 0, {});
 
@@ -5154,7 +5161,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
     }
 
     reader_thread.join();
-    for (auto& t : pool) {
+    for (auto& t : lua_pool) {
       t.join();
     }
   }
