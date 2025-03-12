@@ -13,7 +13,6 @@
 #include "mjolnir/graphfilter.h"
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/shortcutbuilder.h"
