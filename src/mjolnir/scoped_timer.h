@@ -19,7 +19,7 @@ namespace mjolnir {
                                           .count();                                                  \
         valhalla::midgard::logging::Log(std::string(VALHALLA_RELATIVE_FILE) +                        \
                                             "::" + std::string(__func__) + " took " +                \
-                                            std::to_string(_scoped_timer_duration) + "ms",           \
+                                            std::to_string(_scoped_timer_duration / 1000) + "s",     \
                                         " [TIMING] ");                                               \
       })
 
