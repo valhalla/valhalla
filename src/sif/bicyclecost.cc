@@ -447,8 +447,6 @@ BicycleCost::BicycleCost(const Costing& costing)
 
   // Get the bicycle type - enter as string and convert to enum
   std::string bicycle_type = costing_options.transport_type();
-  std::transform(bicycle_type.begin(), bicycle_type.end(), bicycle_type.begin(),
-    [](unsigned char c){ return std::tolower(c); });
   if (bicycle_type == "cross") {
     type_ = BicycleType::kCross;
   } else if (bicycle_type == "road") {
@@ -859,8 +857,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
   // convert string to enum, set ranges and defaults based on enum
   BicycleType type;
-  std::string bicycle_type = co->transport_type();
-  std::transform(bicycle_type.begin(), bicycle_type.end(), bicycle_type.begin(),
+  std::transform(co->mutable_transport_type().begin(), co->mutable_transport_type().end(), co->mutable_transport_type().begin(),
     [](unsigned char c){ return std::tolower(c); });
   if (bicycle_type == "cross") {
     type = BicycleType::kCross;
