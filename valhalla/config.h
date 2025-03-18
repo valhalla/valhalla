@@ -42,7 +42,7 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-inline std::string get_relative_file_path(std::string file_path) {
+inline std::string get_relative_file_path(const std::string& file_path) {
   std::string valhalla_dir_str = VALHALLA_STRINGIZE(VALHALLA_SOURCE_DIR);
   size_t len = valhalla_dir_str.length();
   return file_path.substr(len + 1);
