@@ -97,3 +97,7 @@ valhalla_module(NAME mjolnir
     PkgConfig::LuaJIT
     Threads::Threads
     PkgConfig::ZLIB)
+
+target_compile_definitions(valhalla-mjolnir PRIVATE
+  VALHALLA_SOURCE_DIR=${VALHALLA_SOURCE_DIR}
+  VALHALLA_BUILD_DIR=${VALHALLA_BUILD_DIR})

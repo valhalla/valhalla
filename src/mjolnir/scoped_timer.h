@@ -14,12 +14,12 @@ namespace mjolnir {
   auto _scoped_timer_finally_##__COUNTER__ =                                                         \
       valhalla::midgard::make_finally([_scoped_timer_start_##__COUNTER__]() {                        \
         auto _scoped_timer_end = std::chrono::high_resolution_clock::now();                          \
-        auto _scoped_timer_duration = std::chrono::duration_cast<std::chrono::milliseconds>(         \
+        auto _scoped_timer_duration = std::chrono::duration_cast<std::chrono::seconds>(              \
                                           _scoped_timer_end - _scoped_timer_start_##__COUNTER__)     \
                                           .count();                                                  \
         valhalla::midgard::logging::Log(std::string(VALHALLA_RELATIVE_FILE) +                        \
                                             "::" + std::string(__func__) + " took " +                \
-                                            std::to_string(_scoped_timer_duration / 1000) + "s",     \
+                                            std::to_string(_scoped_timer_duration) + "s",            \
                                         " [TIMING] ");                                               \
       })
 

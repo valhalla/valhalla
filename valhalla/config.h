@@ -38,26 +38,18 @@
 /* Define to the version of this package. */
 #define PACKAGE_VERSION VALHALLA_VERSION
 
-#if !defined(VALHALLA_SOURCE_DIR_STR)
-#define VALHALLA_SOURCE_DIR_STR
+#if !defined(VALHALLA_SOURCE_DIR)
+#define VALHALLA_SOURCE_DIR
 #endif
 
-inline const char* get_relative_file_path(const char* file_path) {
-  const char* valhalla_dir = VALHALLA_STRINGIZE(VALHALLA_SOURCE_DIR_STR);
-  std::string valhalla_dir_str(valhalla_dir);
-
-  if (!valhalla_dir_str.empty() && valhalla_dir_str.back() != '/') {
-    valhalla_dir_str += '/';
-  }
+inline std::string get_relative_file_path(std::string file_path) {
+  std::string valhalla_dir_str = VALHALLA_STRINGIZE(VALHALLA_SOURCE_DIR);
 
   size_t len = valhalla_dir_str.length();
-  if (strncmp(file_path, valhalla_dir_str.c_str(), len) == 0) {
-    return file_path + len;
-  }
-  return file_path;
+  return file_path.substr(len + 1);
 }
 
-#if defined(VALHALLA_SOURCE_DIR_STR)
+#if defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_RELATIVE_FILE get_relative_file_path(__FILE__)
 #else
 #define VALHALLA_RELATIVE_FILE __FILE__
