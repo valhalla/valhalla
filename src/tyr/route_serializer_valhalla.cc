@@ -282,7 +282,8 @@ void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writ
       bool depart_maneuver = (maneuver_index == 0);
       bool arrive_maneuver = (maneuver_index == directions_leg.maneuver_size() - 1);
       if (!depart_maneuver) {
-        uint32_t in_brg = etp.GetPrevEdge(maneuver_index)->end_heading();
+        uint32_t node_index = maneuver.begin_path_index();
+        uint32_t in_brg = etp.GetPrevEdge(node_index)->end_heading();
         writer("bearing_before", static_cast<uint64_t>(in_brg));
       }
       if (!arrive_maneuver) {
