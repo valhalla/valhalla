@@ -449,11 +449,11 @@ BicycleCost::BicycleCost(const Costing& costing)
   std::string bicycle_type = costing_options.transport_type();
   std::transform(bicycle_type.begin(), bicycle_type.end(), bicycle_type.begin(),
     [](unsigned char c){ return std::tolower(c); });
-  if (bicycle_type == "cross" || bicycle_type == "Cross") {
+  if (bicycle_type == "cross") {
     type_ = BicycleType::kCross;
-  } else if (bicycle_type == "road" || bicycle_type == "Road") {
+  } else if (bicycle_type == "road") {
     type_ = BicycleType::kRoad;
-  } else if (bicycle_type == "mountain" || bicycle_type == "Mountain") {
+  } else if (bicycle_type == "mountain") {
     type_ = BicycleType::kMountain;
   } else {
     type_ = BicycleType::kHybrid;
@@ -859,12 +859,14 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
   // convert string to enum, set ranges and defaults based on enum
   BicycleType type;
-  const std::string& bicycle_type = co->transport_type();
-  if (bicycle_type == "cross" || bicycle_type == "Cross") {
+  std::string bicycle_type = co->transport_type();
+  std::transform(bicycle_type.begin(), bicycle_type.end(), bicycle_type.begin(),
+    [](unsigned char c){ return std::tolower(c); });
+  if (bicycle_type == "cross") {
     type = BicycleType::kCross;
-  } else if (bicycle_type == "road" || bicycle_type == "Road") {
+  } else if (bicycle_type == "road") {
     type = BicycleType::kRoad;
-  } else if (bicycle_type == "mountain" || bicycle_type == "Mountain") {
+  } else if (bicycle_type == "mountain") {
     type = BicycleType::kMountain;
   } else {
     type = BicycleType::kHybrid;
