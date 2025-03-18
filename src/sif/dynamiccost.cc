@@ -156,6 +156,7 @@ DynamicCost::DynamicCost(const Costing& costing,
       ignore_oneways_(costing.options().ignore_oneways()),
       ignore_access_(costing.options().ignore_access()),
       ignore_closures_(costing.options().ignore_closures()),
+      ignore_construction_(costing.options().ignore_construction()),
       top_speed_(costing.options().top_speed()), fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
@@ -206,7 +207,11 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCost(const DirectedEdge*, const NodeInfo*, const EdgeLabel&) const {
+Cost DynamicCost::TransitionCost(const DirectedEdge*,
+                                 const NodeInfo*,
+                                 const EdgeLabel&,
+                                 const graph_tile_ptr&,
+                                 const std::function<baldr::LimitedGraphReader()>&) const {
   return {0.0f, 0.0f};
 }
 
@@ -218,6 +223,9 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
                                         const baldr::DirectedEdge*,
+                                        const graph_tile_ptr&,
+                                        const baldr::GraphId&,
+                                        const std::function<baldr::LimitedGraphReader()>&,
                                         const bool,
                                         const InternalTurn) const {
   return {0.0f, 0.0f};
@@ -403,6 +411,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, false, json, "/ignore_oneways", ignore_oneways);
   JSON_PBF_DEFAULT(co, false, json, "/ignore_access", ignore_access);
   JSON_PBF_DEFAULT(co, false, json, "/ignore_closures", ignore_closures);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_construction", ignore_construction);
   JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_non_vehicular_restrictions",
                       ignore_non_vehicular_restrictions);
 

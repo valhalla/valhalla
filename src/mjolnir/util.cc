@@ -13,7 +13,6 @@
 #include "mjolnir/graphfilter.h"
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/shortcutbuilder.h"
@@ -232,8 +231,7 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
 bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
-                    const BuildStage end_stage,
-                    const bool release_osmpbf_memory) {
+                    const BuildStage end_stage) {
   auto remove_temp_file = [](const std::string& fname) {
     if (filesystem::exists(fname)) {
       filesystem::remove(fname);
@@ -304,11 +302,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
                                          way_nodes_bin, access_bin);
 
-    // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory && BuildStage::kParseWays == end_stage) {
-      OSMPBF::Parser::free();
-    }
-
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
@@ -323,11 +316,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     PBFGraphParser::ParseRelations(config.get_child("mjolnir"), input_files, cr_from_bin, cr_to_bin,
                                    osm_data);
 
-    // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory && BuildStage::kParseRelations == end_stage) {
-      OSMPBF::Parser::free();
-    }
-
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
@@ -340,11 +328,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // are defined within the PBFParser class
     PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
                                linguistic_node_bin, osm_data);
-
-    // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory) {
-      OSMPBF::Parser::free();
-    }
 
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {

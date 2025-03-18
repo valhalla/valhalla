@@ -10,6 +10,11 @@
    * FIXED: More trivial cases in `CostMatrix` [#5001](https://github.com/valhalla/valhalla/pull/5001)
    * FIXED: Tag smoothness=impassable breaks pedestrian routing [#5023](https://github.com/valhalla/valhalla/pull/5023)
    * FIXED: Make isochrone geotiff serialization use "north up" geotransform [#5019](https://github.com/valhalla/valhalla/pull/5019)
+   * FIXED: Get CostMatrix allow second pass option from new location in config [#5055](https://github.com/valhalla/valhalla/pull/5055/)
+   * FIXED: Slim down Matrix PBF response [#5066](https://github.com/valhalla/valhalla/pull/5066)
+   * FIXED: restore ignoring hierarchy limits for bicycle and pedestrian [#5080](https://github.com/valhalla/valhalla/pull/5080)
+   * FIXED: GCC warning 'template-id not allowed for constructor in C++20' [#5110](https://github.com/valhalla/valhalla/pull/5110)
+   * FIXED: update deprecated boost geometry headers [#5117](https://github.com/valhalla/valhalla/pull/5117)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
@@ -20,6 +25,16 @@
    * ADDED: increased precision in route lengths [#5020](https://github.com/valhalla/valhalla/pull/5020)
    * ADDED: Add maneuver bearings in route json response [#5024](https://github.com/valhalla/valhalla/pull/5024)
    * ADDED: Allow specifying custom `graph.lua` file name via `valhalla_build_config` [#5036](https://github.com/valhalla/valhalla/pull/5036)
+   * ADDED: per level elevator penalty [#4973](https://github.com/valhalla/valhalla/pull/4973)
+   * ADDED: `ignore_construction` allows routing on ways with construction tag [#5030](https://github.com/valhalla/valhalla/pull/5030)
+   * ADDED: Australian English language translations [#5057](https://github.com/valhalla/valhalla/pull/5057)
+   * ADDED: Support `"access:conditional"` conditional restrictions like `"access:conditional"="no @ (Oct-May)"` [#5048](https://github.com/valhalla/valhalla/pull/5048)
+   * CHANGED: Speed up pbf parsing by using libosmium [#5070](https://github.com/valhalla/valhalla/pull/5070)
+   * ADDED: headings and correlated ll's in verbose matrix output [#5072](https://github.com/valhalla/valhalla/pull/5072)
+   * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082) 
+   * ADDED: Retrieve traffic signal information of nodes through trace_attribute request [#5121](https://github.com/valhalla/valhalla/pull/5121)
+   * CHANGED: Remove redundant callback-style pbf parsing [#5119](https://github.com/valhalla/valhalla/pull/5119)
+   * ADDED: Multimodal expansion endpoint support [#5129](https://github.com/valhalla/valhalla/pull/5129)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

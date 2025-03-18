@@ -94,7 +94,8 @@ bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
                             sif::cost_ptr_t& cost,
                             const valhalla::Costing_Options& options,
                             const hierarchy_limits_config_t& config,
-                            const bool allow_modifications);
+                            const bool allow_modifications,
+                            const bool use_hierarchy_limits);
 #ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
