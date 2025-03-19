@@ -1,6 +1,5 @@
 #pragma once
 #include <filesystem>
-#include <iostream>
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
@@ -37,22 +36,6 @@
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION VALHALLA_VERSION
-
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
-inline std::string get_relative_file_path(const std::string& file_path) {
-  std::string valhalla_dir_str = VALHALLA_STRINGIZE(VALHALLA_SOURCE_DIR);
-  size_t len = valhalla_dir_str.length();
-  return file_path.substr(len + 1);
-}
-
-#if defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_RELATIVE_FILE get_relative_file_path(__FILE__)
-#else
-#define VALHALLA_RELATIVE_FILE __FILE__
-#endif
 
 namespace valhalla {
 

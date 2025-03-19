@@ -50,6 +50,10 @@ function(valhalla_module)
   create_source_groups("Header Files" ${MODULE_HEADERS})
   create_source_groups("Source Files" ${MODULE_SOURCES})
 
+  target_compile_definitions(${library} PRIVATE
+    VALHALLA_SOURCE_DIR=${VALHALLA_SOURCE_DIR}
+    VALHALLA_BUILD_DIR=${VALHALLA_BUILD_DIR})
+
   target_compile_definitions(${library}
     PUBLIC
       $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
