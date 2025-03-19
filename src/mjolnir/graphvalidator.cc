@@ -2,6 +2,7 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
 
+#include <algorithm>
 #include <boost/format.hpp>
 #include <future>
 #include <list>
@@ -38,6 +39,13 @@ struct HGVRestrictionTypes {
   bool weight;
   bool width;
 };
+
+// Custom comparator to sort by GraphId (level desc, tile_id asc, id asc)
+inline bool graphid_less(GraphId a, GraphId b) {
+  return ((a.level() > b.level()) ||
+          ((a.level() == b.level()) &&
+           ((a.tileid() < b.tileid()) || ((a.tileid() == b.tileid()) && (a.id() < b.id())))));
+}
 
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
@@ -457,6 +465,12 @@ void validate(
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
       auto reloaded = GraphTile::Create(graph_reader.tile_dir(), tile_id);
+      // Sort bins using a custom comparator in each vector of the array to make tile generation
+      // deterministic
+      for (auto& bin : bins) {
+        std::sort(bin.begin(), bin.end(),
+                  [](uint64_t a, uint64_t b) { return graphid_less(GraphId(a), GraphId(b)); });
+      }
       GraphTileBuilder::AddBins(graph_reader.tile_dir(), reloaded, bins);
     }
 
@@ -510,7 +524,7 @@ void bin_tweeners(const std::string& tile_dir,
       break;
     }
     // grab this tile and its extra bin edges
-    const auto& tile_bin = *start;
+    auto& tile_bin = *start;
     ++start;
     lock.unlock();
 
@@ -522,6 +536,13 @@ void bin_tweeners(const std::string& tile_dir,
       empty.header_builder().set_dataset_id(dataset_id);
       empty.StoreTileData();
       tile = GraphTile::Create(tile_dir, tile_bin.first);
+    }
+
+    // Sort bins using a custom comparator in each vector of the array to make tile generation
+    // deterministic
+    for (auto& bin : tile_bin.second) {
+      std::sort(bin.begin(), bin.end(),
+                [](uint64_t a, uint64_t b) { return graphid_less(GraphId(a), GraphId(b)); });
     }
 
     // keep the extra binned edges
