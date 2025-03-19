@@ -574,7 +574,6 @@ namespace mjolnir {
 
 // Write OSMData to temporary files
 bool OSMData::write_to_temp_files(const std::string& tile_dir) {
-  SCOPED_TIMER();
   LOG_INFO("Write OSMData to temp files");
 
   // Write counts
@@ -584,6 +583,7 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
     LOG_ERROR("Failed to open output file: " + countfile);
     return false;
   }
+  SCOPED_TIMER();
   file.write(reinterpret_cast<const char*>(&max_changeset_id_), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&osm_node_count), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&osm_way_count), sizeof(uint64_t));
@@ -616,7 +616,6 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
 
 // Read OSMData from temporary files
 bool OSMData::read_from_temp_files(const std::string& tile_dir) {
-  SCOPED_TIMER();
   LOG_INFO("Read OSMData from temp files");
 
   std::string tile_directory = tile_dir;
@@ -631,6 +630,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
     LOG_ERROR("Failed to open input file: " + countfile);
     return false;
   }
+  SCOPED_TIMER();
   file.read(reinterpret_cast<char*>(&max_changeset_id_), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&osm_node_count), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&osm_way_count), sizeof(uint64_t));

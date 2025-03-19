@@ -580,11 +580,11 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
                        const OSMData& osmdata,
                        const std::string& bss_nodes_bin) {
 
-  SCOPED_TIMER();
   if (!pt.get<bool>("mjolnir.import_bike_share_stations", false)) {
     return;
   }
 
+  SCOPED_TIMER();
   LOG_INFO("Importing Bike Share station");
 
   midgard::sequence<mjolnir::OSMNode> osm_nodes{bss_nodes_bin, false};

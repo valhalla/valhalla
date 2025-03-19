@@ -314,13 +314,14 @@ namespace mjolnir {
 
 void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
                              std::deque<baldr::GraphId> tile_ids) {
-  SCOPED_TIMER();
+
   auto elevation = pt.get_optional<std::string>("additional_data.elevation");
   if (!elevation || !filesystem::exists(*elevation)) {
     LOG_WARN("Elevation storage directory does not exist");
     return;
   }
 
+  SCOPED_TIMER();
   std::unique_ptr<skadi::sample> sample = std::make_unique<skadi::sample>(pt);
   std::uint32_t nthreads =
       std::max(static_cast<std::uint32_t>(1),

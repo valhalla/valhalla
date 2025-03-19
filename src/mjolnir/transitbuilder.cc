@@ -530,7 +530,6 @@ namespace mjolnir {
 
 // Add transit to the graph
 void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
-  SCOPED_TIMER();
   std::unordered_set<GraphId> tiles;
 
   // Bail if nothing
@@ -540,7 +539,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;
   }
-
+  SCOPED_TIMER();
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
   transit_dir->push_back(filesystem::path::preferred_separator);
   GraphReader reader(hierarchy_properties);
