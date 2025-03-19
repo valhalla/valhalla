@@ -71,13 +71,15 @@ using results_t = std::set<result_t>;
 
 valhalla::sif::cost_ptr_t create_costing() {
   valhalla::Options options;
-  valhalla::Costing::Type costing;
-  if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
-    options.set_costing_type(costing);
+  valhalla::Costing::Type costing_type;
+  if (valhalla::Costing_Enum_Parse(costing_str, &costing_type)) {
+    options.set_costing_type(costing_type);
   } else {
     options.set_costing_type(valhalla::Costing::none_);
   }
-  (*options.mutable_costings())[costing];
+  auto& co = (*options.mutable_costings())[costing_type];
+  co.set_type(costing_type);
+
   return valhalla::sif::CostFactory{}.Create(options);
 }
 
