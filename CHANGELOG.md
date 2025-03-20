@@ -36,6 +36,7 @@
    * CHANGED: Remove redundant callback-style pbf parsing [#5119](https://github.com/valhalla/valhalla/pull/5119)
    * ADDED: Multimodal expansion endpoint support [#5129](https://github.com/valhalla/valhalla/pull/5129)
    * ADDED: Sort tweeners by GraphId to make tile generation deterministic [#5133] (https://github.com/valhalla/valhalla/pull/5133)
+   * ADDED: Turn lane information for valhalla serializer [#5078](https://github.com/valhalla/valhalla/pull/5078)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
