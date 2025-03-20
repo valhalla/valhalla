@@ -3,6 +3,7 @@
 #include "baldr/graphid.h"
 #include "midgard/pointll.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
 
 #include <algorithm>
 #include <limits>
@@ -583,16 +584,8 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
     return;
   }
 
-  LOG_INFO("Importing Bike Share station");
-
-  auto t1 = std::chrono::high_resolution_clock::now();
-
-  auto scoped_finally = make_finally([&t1]() {
-    auto t2 = std::chrono::high_resolution_clock::now();
-    [[maybe_unused]] uint32_t secs =
-        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    LOG_INFO("Finished - BssBuilder took " + std::to_string(secs) + " secs");
-  });
+  SCOPED_TIMER();
+  LOG_INFO("Importing Bike Share stations");
 
   midgard::sequence<mjolnir::OSMNode> osm_nodes{bss_nodes_bin, false};
 
