@@ -268,20 +268,6 @@ public:
   void set_toll(const bool toll);
 
   /**
-   * Does this edge have a seasonal access (e.g., closed in the winter)?
-   * @return  Returns true if this edge has seasonal access, false if not.
-   */
-  bool seasonal() const {
-    return seasonal_;
-  }
-
-  /**
-   * Sets the flag indicating this edge has seasonal access.
-   * @param  seasonal  True if this edge has seasonal access, false if not.
-   */
-  void set_seasonal(const bool seasonal);
-
-  /**
    * Is this edge part of a private or no through road that allows access
    * only if required to get to a destination?
    * @return  Returns true if the edge is destination only / private access.
@@ -1232,34 +1218,34 @@ protected:
   uint64_t has_predicted_speed_ : 1;    // Does this edge have a predicted speed records?
 
   // 4th 8-byte word
-  uint64_t forwardaccess_ : 12; // Access (bit mask) in forward direction (see graphconstants.h)
-  uint64_t reverseaccess_ : 12; // Access (bit mask) in reverse direction (see graphconstants.h)
-  uint64_t max_up_slope_ : 5;   // Maximum upward slope
-  uint64_t max_down_slope_ : 5; // Maximum downward slope
-  uint64_t sac_scale_ : 3;      // Is this edge for hiking and if so how difficult is the hike?
-  uint64_t cycle_lane_ : 2;     // Does this edge have bicycle lanes?
-  uint64_t bike_network_ : 1;   // Edge that is part of a bicycle network
-  uint64_t use_sidepath_ : 1;   // Is there a cycling path to the side that should be preferred?
-  uint64_t dismount_ : 1;       // Do you need to dismount when biking on this edge?
-  uint64_t sidewalk_left_ : 1;  // Sidewalk to the left of the edge
-  uint64_t sidewalk_right_ : 1; // Sidewalk to the right of the edge
-  uint64_t shoulder_ : 1;       // Does the edge have a shoulder?
-  uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
-  uint64_t turnlanes_ : 1;      // Does this edge have turn lanes (end of edge)
-  uint64_t sign_ : 1;           // Exit signs exist for this edge
-  uint64_t internal_ : 1;       // Edge that is internal to an intersection
-  uint64_t tunnel_ : 1;         // Is this edge part of a tunnel
-  uint64_t bridge_ : 1;         // Is this edge part of a bridge?
-  uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
-  uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
-  uint64_t deadend_ : 1;        // Leads to a dead-end (no other drivable roads) TODO
-  uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
-  uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge
-  uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge
-  uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
-  uint64_t indoor_ : 1;         // Is this edge indoor
-  uint64_t lit_ : 1;            // Is the edge lit?
-  uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
+  uint64_t forwardaccess_ : 12;  // Access (bit mask) in forward direction (see graphconstants.h)
+  uint64_t reverseaccess_ : 12;  // Access (bit mask) in reverse direction (see graphconstants.h)
+  uint64_t max_up_slope_ : 5;    // Maximum upward slope
+  uint64_t max_down_slope_ : 5;  // Maximum downward slope
+  uint64_t sac_scale_ : 3;       // Is this edge for hiking and if so how difficult is the hike?
+  uint64_t cycle_lane_ : 2;      // Does this edge have bicycle lanes?
+  uint64_t bike_network_ : 1;    // Edge that is part of a bicycle network
+  uint64_t use_sidepath_ : 1;    // Is there a cycling path to the side that should be preferred?
+  uint64_t dismount_ : 1;        // Do you need to dismount when biking on this edge?
+  uint64_t sidewalk_left_ : 1;   // Sidewalk to the left of the edge
+  uint64_t sidewalk_right_ : 1;  // Sidewalk to the right of the edge
+  uint64_t shoulder_ : 1;        // Does the edge have a shoulder?
+  uint64_t lane_conn_ : 1;       // 1 if has lane connectivity, 0 otherwise
+  uint64_t turnlanes_ : 1;       // Does this edge have turn lanes (end of edge)
+  uint64_t sign_ : 1;            // Exit signs exist for this edge
+  uint64_t internal_ : 1;        // Edge that is internal to an intersection
+  uint64_t tunnel_ : 1;          // Is this edge part of a tunnel
+  uint64_t bridge_ : 1;          // Is this edge part of a bridge?
+  uint64_t traffic_signal_ : 1;  // Traffic signal at end of the directed edge
+  uint64_t UNUSED_seasonal_ : 1; // Used to be "seasonal", was never used, can be reclaimed
+  uint64_t deadend_ : 1;         // Leads to a dead-end (no other drivable roads) TODO
+  uint64_t bss_connection_ : 1;  // Does this lead to(come out from) a bike share station?
+  uint64_t stop_sign_ : 1;       // Stop sign at end of the directed edge
+  uint64_t yield_sign_ : 1;      // Yield/give way sign at end of the directed edge
+  uint64_t hov_type_ : 1;        // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
+  uint64_t indoor_ : 1;          // Is this edge indoor
+  uint64_t lit_ : 1;             // Is the edge lit?
+  uint64_t dest_only_hgv_ : 1;   // destonly for HGV specifically
   uint64_t spare4_ : 3;
 
   // 5th 8-byte word
