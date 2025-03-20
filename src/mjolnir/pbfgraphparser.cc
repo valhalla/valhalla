@@ -16,6 +16,7 @@
 #include "mjolnir/timeparsing.h"
 #include "mjolnir/util.h"
 #include "proto/common.pb.h"
+#include "scoped_timer.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
@@ -62,6 +63,7 @@ public:
 
   // Clarifies types of loop roads and saves fixed ways.
   void clarify_and_fix(sequence<OSMWayNode>& osm_way_node_seq, sequence<OSMWay>& osm_way_seq) {
+    SCOPED_TIMER();
     osm_way_node_seq.flush();
     osm_way_seq.flush();
 
@@ -5072,6 +5074,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                   const std::string& way_nodes_file,
                                   const std::string& access_file) {
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   OSMData osmdata{};
   graph_parser parser(pt, osmdata);
   const auto lua_script = graph_parser::get_lua(pt);
@@ -5201,6 +5204,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   graph_parser parser(pt, osmdata);
 
   // Read the OSMData to files if not initialized.
@@ -5265,6 +5269,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   graph_parser parser(pt, osmdata);
 
   // Read the OSMData to files if not initialized.
