@@ -585,7 +585,7 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
   }
 
   SCOPED_TIMER();
-  LOG_INFO("Importing Bike Share station");
+  LOG_INFO("Importing Bike Share stations");
 
   midgard::sequence<mjolnir::OSMNode> osm_nodes{bss_nodes_bin, false};
 
