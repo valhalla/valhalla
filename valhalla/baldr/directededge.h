@@ -1237,7 +1237,7 @@ protected:
   uint64_t tunnel_ : 1;          // Is this edge part of a tunnel
   uint64_t bridge_ : 1;          // Is this edge part of a bridge?
   uint64_t traffic_signal_ : 1;  // Traffic signal at end of the directed edge
-  uint64_t spare1_ : 1; // Used to be "seasonal", was never used, can be reclaimed
+  uint64_t spare1_ : 1;          // Used to be "seasonal", was never used, can be reclaimed
   uint64_t deadend_ : 1;         // Leads to a dead-end (no other drivable roads) TODO
   uint64_t bss_connection_ : 1;  // Does this lead to(come out from) a bike share station?
   uint64_t stop_sign_ : 1;       // Stop sign at end of the directed edge
