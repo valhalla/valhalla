@@ -16,6 +16,7 @@
 #include "mjolnir/timeparsing.h"
 #include "mjolnir/util.h"
 #include "proto/common.pb.h"
+#include "scoped_timer.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
@@ -62,6 +63,7 @@ public:
 
   // Clarifies types of loop roads and saves fixed ways.
   void clarify_and_fix(sequence<OSMWayNode>& osm_way_node_seq, sequence<OSMWay>& osm_way_seq) {
+    SCOPED_TIMER();
     osm_way_node_seq.flush();
     osm_way_seq.flush();
 
@@ -1587,7 +1589,6 @@ struct graph_parser {
     tag_handlers_["toll"] = [this]() { way_.set_toll(tag_.second == "true" ? true : false); };
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
     tag_handlers_["indoor"] = [this]() { way_.set_indoor(tag_.second == "yes" ? true : false); };
-    tag_handlers_["seasonal"] = [this]() { way_.set_seasonal(tag_.second == "true" ? true : false); };
     tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
     //    tag_handlers_["bike_national_ref"] = [this]() {
     //      if (!tag_.second.empty())
@@ -5062,6 +5063,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   OSMData osmdata{};
   graph_parser parser(pt, osmdata);
 
@@ -5118,6 +5120,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   graph_parser parser(pt, osmdata);
 
   // Read the OSMData to files if not initialized.
@@ -5182,6 +5185,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   graph_parser parser(pt, osmdata);
 
   // Read the OSMData to files if not initialized.

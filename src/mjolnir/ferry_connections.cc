@@ -4,6 +4,7 @@
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
 #include "mjolnir/ferry_connections.h"
+#include "scoped_timer.h"
 
 namespace valhalla {
 namespace mjolnir {
@@ -317,6 +318,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
                                 const std::string& edges_file) {
+  SCOPED_TIMER();
   LOG_INFO("Reclassifying ferry connection graph edges...");
 
   sequence<OSMWay> ways(ways_file, false);
