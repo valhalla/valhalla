@@ -528,8 +528,11 @@ struct graph_parser {
         tunnel_name_right_ = tag_.second;
     };
     tag_handlers_["level"] = [this]() {
-      if (!tag_.second.empty())
-        way_.set_level_index(osmdata_.name_offset_map.index(tag_.second));
+      if (tag_.second.empty())
+        return;
+
+      way_.set_level_index(osmdata_.name_offset_map.index(tag_.second));
+      way_.set_multiple_levels(tag_.second.length() > 2);
     };
     tag_handlers_["level:ref"] = [this]() {
       if (!tag_.second.empty())
