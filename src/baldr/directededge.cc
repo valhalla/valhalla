@@ -181,11 +181,6 @@ void DirectedEdge::set_toll(const bool toll) {
   toll_ = toll;
 }
 
-// Sets the flag indicating this edge has seasonal access
-void DirectedEdge::set_seasonal(const bool seasonal) {
-  seasonal_ = seasonal;
-}
-
 // Sets the destination only (private) flag. This indicates the edge should
 // allow access only to locations that are destinations and not allow
 // "through" traffic
@@ -608,7 +603,6 @@ json::MapPtr DirectedEdge::json() const {
       {"part_of_complex_restriction", static_cast<bool>(complex_restriction_)},
       {"has_sign", static_cast<bool>(sign_)},
       {"toll", static_cast<bool>(toll_)},
-      {"seasonal", static_cast<bool>(seasonal_)},
       {"destination_only", static_cast<bool>(dest_only_)},
       {"tunnel", static_cast<bool>(tunnel_)},
       {"bridge", static_cast<bool>(bridge_)},
