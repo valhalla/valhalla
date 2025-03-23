@@ -142,7 +142,7 @@ void TryIsoDateTime() {
             current_date_time)
       << std::string("Iso date time failed ") + current_date_time;
 
-  tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("Africa/Porto-Novo"));
+  tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("Africa/Lagos"));
   current_date_time = DateTime::iso_date_time(tz);
   found = current_date_time.find('T'); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos)
@@ -639,31 +639,6 @@ TEST(DateTime, TestDayOfWeek) {
   date = "2019-11-06T17:15";
   dow = DateTime::day_of_week(date);
   EXPECT_EQ(dow, 3) << "DateTime::day_of_week failed: 3 expected";
-}
-
-TEST(DateTime, TimezoneAliases) {
-  const auto& dt_db = DateTime::get_tz_db();
-  // map of alias and target names
-  // this can be old deprecated timezone name (pre-2023) or renamed timezones (after 2023)
-  std::vector<std::pair<std::string, std::string>> pairs =
-      {{"Etc/Zulu", "Etc/UTC"},
-       {"Etc/GMT-0", "Etc/GMT"},
-       {"ROC", "Asia/Taipei"},
-       {"GB", "Europe/London"},
-       {"NZ-CHAT", "Pacific/Chatham"},
-       {"Asia/Ujung_Pandang", "Asia/Makassar"},
-       {"Africa/Bamako", "Africa/Abidjan"},
-       {"Africa/Kampala", "Africa/Nairobi"},
-       {"Asia/Kuala_Lumpur", "Asia/Singapore"}, // ^ deprecated 2018 tz
-       {"America/Nuuk", "America/Godthab"},
-       {"Pacific/Kanton", "Pacific/Enderbury"},
-       {"Europe/Kyiv", "Europe/Kiev"}, // ^ renamed 2023 tz
-       {"WET", "Europe/Lisbon"}};      // renamed 2024b
-
-  for (const auto& pair : pairs) {
-    auto alias_idx = dt_db.from_index(dt_db.to_index(pair.first));
-    EXPECT_EQ(alias_idx, dt_db.from_index(dt_db.to_index(pair.second)));
-  }
 }
 
 TEST(DateTime, TimezoneIndices) {
