@@ -6,7 +6,6 @@
 #include "filesystem.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/adminconstants.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 
@@ -386,9 +385,6 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
   // relations are defined within the PBFParser class
   OSMAdminData admin_data = PBFAdminParser::Parse(pt, input_files);
-
-  // done with the protobuffer library, cant use it again after this
-  OSMPBF::Parser::free();
 
   if (filesystem::exists(*database)) {
     filesystem::remove(*database);

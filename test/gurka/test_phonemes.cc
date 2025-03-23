@@ -255,8 +255,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
 
@@ -1502,8 +1501,7 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
 
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
 
