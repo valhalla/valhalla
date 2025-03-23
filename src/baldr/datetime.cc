@@ -17,15 +17,16 @@ const valhalla::baldr::DateTime::dt_info_t INVALID_DT = {"", "", ""};
 // into the tiles, so it needs to be stable. When updating the timezone submodule to a newer
 // release, there are a couple of scenarios:
 // - new time zone: always cut out of an existing timezone, pretty much always due to DST changes.
-//   Add a new entry to the below map.
+//   Add a new entry to the below map, bit shifting the old index by 9 or 10
 // - renamed time zone: for a pure renaming (e.g. Kiev -> Kiyv), add a new entry to the below map
+//   with the same old index
 // - deleted time zone: happens when e.g. when DST is harmonized with the enclosing time zone.
 //   Nothing else to do.
 //
-// If new entries to the below map are added, the "old" index must be shifted by 9 bits for old
-// code/new tile compatibility. To keep new code/old tile compatibility, no entries may be removed.
-// "New" entries are referring to the reference release 2018d. If "new" entries are renamed or broken
-// up even further, we'll have to use a 10 bit shift.
+// To keep old code/new tile compatibility, the "old" index must be shifted by 9 or 10 bits when
+// adding new time zones. To keep new code/old tile compatibility, no entries may be removed.
+// "New" time zones are referring to the reference release 2018d. If "new" entries are broken up
+// even further, we'll have to use a 10 bit shift.
 const std::unordered_map<std::string, size_t> tz_name_to_id = {
     {"Africa/Abidjan", 1}, // start timezones release 2018d;
     {"Africa/Accra", 2},
@@ -416,9 +417,9 @@ const std::unordered_map<std::string, size_t> tz_name_to_id = {
     {"WET", 387},                              // end timezones release 2018d;
     {"America/Ciudad_Juarez", 117 | (1 << 9)}, // new time zone due to DST
     {"Asia/Qostanay", 214 | (1 << 9)},         // new time zone due to DST
-    {"America/Nuuk", 69 | (1 << 9)},           // renamed from America/Godthab
-    {"Europe/Kyiv", 308 | (1 << 9)},           // renamed from Europe/Kiev
-    {"Pacific/Kanton", 358 | (1 << 9)},        // renamed from Pacific/Enderbury
+    {"America/Nuuk", 69},                      // renamed from America/Godthab
+    {"Europe/Kyiv", 308},                      // renamed from Europe/Kiev
+    {"Pacific/Kanton", 358},                   // renamed from Pacific/Enderbury
 };
 
 // checks the integrity of the static tz maps, which will fail in case of

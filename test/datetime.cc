@@ -641,6 +641,20 @@ TEST(DateTime, TestDayOfWeek) {
   EXPECT_EQ(dow, 3) << "DateTime::day_of_week failed: 3 expected";
 }
 
+TEST(DateTime, TimezoneAliases) {
+  const auto& dt_db = DateTime::get_tz_db();
+  // map of alias and target names
+  // this can be old deprecated timezone name (pre-2023) or renamed timezones (after 2023)
+  std::vector<std::pair<std::string, std::string>> pairs = {{"America/Godthab", "America/Nuuk"},
+                                                            {"Pacific/Enderbury", "Pacific/Kanton"},
+                                                            {"Europe/Kiev", "Europe/Kyiv"}};
+
+  for (const auto& pair : pairs) {
+    auto alias_tz = dt_db.from_index(dt_db.to_index(pair.first));
+    EXPECT_EQ(alias_tz, dt_db.from_index(dt_db.to_index(pair.second)));
+  }
+}
+
 TEST(DateTime, TimezoneIndices) {
   const auto& dt_db = DateTime::get_tz_db();
 
