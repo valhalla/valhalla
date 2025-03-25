@@ -17,6 +17,7 @@
    * FIXED: GCC warning 'template-id not allowed for constructor in C++20' [#5110](https://github.com/valhalla/valhalla/pull/5110)
    * FIXED: update deprecated boost geometry headers [#5117](https://github.com/valhalla/valhalla/pull/5117)
    * FIXED: Fix type mismatch in `src/tyr/serializers.cc` [#5145](https://github.com/valhalla/valhalla/pull/5145)
+   * FIXED: Multimodal ferry reclassification [#5139](https://github.com/valhalla/valhalla/pull/5139)
 
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
