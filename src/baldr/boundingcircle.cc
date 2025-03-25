@@ -98,5 +98,8 @@ DiscretizedBoundingCircle::get(const midgard::DistanceApproximator<midgard::Poin
   return std::make_pair(center, kBoundingCircleRadii[radius_index]);
 }
 
+std::ostream& operator<<(std::ostream& os, const DiscretizedBoundingCircle& circle) {
+  return os << std::to_string(circle);
+}
 } // namespace baldr
 } // namespace valhalla

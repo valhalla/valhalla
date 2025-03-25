@@ -22,13 +22,32 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
                        sizeof(GraphTileHeader)),
             0);
 
-  // check bins
+  // check bins and circles
   for (size_t bin_index = 0; bin_index < kBinCount; ++bin_index) {
     ASSERT_EQ(ah->bin_offset(bin_index), bh->bin_offset(bin_index));
     auto a_bin = a.GetBin(bin_index);
     auto b_bin = b.GetBin(bin_index);
     GraphId* a_pos = a_bin.begin();
     GraphId* b_pos = b_bin.begin();
+
+    auto a_circles = a.GetBoundingCircles(bin_index);
+    auto b_circles = b.GetBoundingCircles(bin_index);
+    DiscretizedBoundingCircle* a_circle = a_circles.begin();
+    DiscretizedBoundingCircle* b_circle = b_circles.begin();
+
+    while (true) {
+      const auto diff = std::mismatch(a_circle, a_circles.end(), b_circle, b_circles.end());
+      if (diff.first != a_circles.end()) {
+        ADD_FAILURE() << "Bin[" << bin_index << "] mismatch at position "
+                      << std::distance(a_circles.begin(), diff.first) << ": " << *diff.first
+                      << " != " << *diff.second;
+
+        a_circle = diff.first + 1;
+        b_circle = diff.second + 1;
+      } else {
+        break;
+      }
+    }
 
     while (true) {
       const auto diff = std::mismatch(a_pos, a_bin.end(), b_pos, b_bin.end());

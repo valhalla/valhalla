@@ -38,7 +38,7 @@ struct DiscretizedBoundingCircle {
    * to the bin (i.e. this edge cannot be possibly be intersecting the bin)
    */
   DiscretizedBoundingCircle()
-      : y_offset(kMaxOffsetValue), x_offset(kMaxOffsetValue), radius_index(0){};
+      : y_offset(kMaxOffsetValue), x_offset(kMaxOffsetValue), radius_index(0) {};
 
   /**
    * Constructor.
@@ -69,6 +69,20 @@ struct DiscretizedBoundingCircle {
     return x_offset != kMaxOffsetValue && y_offset != kMaxOffsetValue && radius_index != 0;
   }
 
+  friend std::ostream& operator<<(std::ostream& os, const DiscretizedBoundingCircle& circle);
+
+  inline uint32_t get_y_offset() const {
+    return y_offset;
+  }
+
+  inline uint32_t get_x_offset() const {
+    return x_offset;
+  }
+
+  inline uint32_t get_radius_index() const {
+    return radius_index;
+  }
+
 protected:
   uint32_t y_offset : kCoordinateBits; // y offset in meters from the bin center
   uint32_t x_offset : kCoordinateBits; // x offset in meters from the bin center
@@ -76,3 +90,11 @@ protected:
 };
 } // namespace baldr
 } // namespace valhalla
+
+namespace std {
+inline std::string to_string(const valhalla::baldr::DiscretizedBoundingCircle& circle) {
+  return "x=" + std::to_string(circle.get_x_offset()) +
+         "|y=" + std::to_string(circle.get_y_offset()) +
+         "|r=" + std::to_string(circle.get_radius_index());
+}
+} // namespace std
