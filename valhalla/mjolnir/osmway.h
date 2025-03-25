@@ -2087,22 +2087,6 @@ struct OSMWay {
   }
 
   /**
-   * Set seasonal flag.
-   * @param  seasonal   Is this seasonal?
-   */
-  void set_seasonal(const bool seasonal) {
-    seasonal_ = seasonal;
-  }
-
-  /**
-   * Get the seasonal flag.
-   * @return  Returns seasonal flag.
-   */
-  bool seasonal() const {
-    return seasonal_;
-  }
-
-  /**
    * Set wheelchair flag.
    * @param  wheelchair   Is this wheelchair?
    */
@@ -2660,7 +2644,7 @@ struct OSMWay {
   uint32_t tunnel_ : 1;
   uint32_t toll_ : 1;
   uint32_t bridge_ : 1;
-  uint32_t seasonal_ : 1;
+  uint32_t spare1_ : 1;
   uint32_t drive_on_right_ : 1;
   uint32_t bike_network_ : 4;
   uint32_t exit_ : 1;
