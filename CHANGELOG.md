@@ -43,6 +43,7 @@
    * ADDED: Turn lane information for valhalla serializer [#5078](https://github.com/valhalla/valhalla/pull/5078)
    * ADDED: Add scoped timer macro for timing stages and sub-stages of the tile build process [#5136](https://github.com/valhalla/valhalla/pull/5136)
    * CHANGED: Speed up `valhalla_build_admins` by using intermediate in-memory database [#5146](https://github.com/valhalla/valhalla/pull/5146)
+   * UPDATED: bump tz from 2024a to 2025a [#5061](https://github.com/valhalla/valhalla/pull/5061)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
