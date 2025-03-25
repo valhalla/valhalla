@@ -17,6 +17,7 @@
    * FIXED: GCC warning 'template-id not allowed for constructor in C++20' [#5110](https://github.com/valhalla/valhalla/pull/5110)
    * FIXED: update deprecated boost geometry headers [#5117](https://github.com/valhalla/valhalla/pull/5117)
    * FIXED: Fix type mismatch in `src/tyr/serializers.cc` [#5145](https://github.com/valhalla/valhalla/pull/5145)
+   * FIXED: Multimodal ferry reclassification [#5139](https://github.com/valhalla/valhalla/pull/5139)
    * FIXED: Fix time info calculation across time zone boundries [#5163](https://github.com/valhalla/valhalla/pull/5163)
 
 * **Enhancement**
@@ -43,6 +44,9 @@
    * ADDED: Turn lane information for valhalla serializer [#5078](https://github.com/valhalla/valhalla/pull/5078)
    * ADDED: Add scoped timer macro for timing stages and sub-stages of the tile build process [#5136](https://github.com/valhalla/valhalla/pull/5136)
    * CHANGED: Speed up `valhalla_build_admins` by using intermediate in-memory database [#5146](https://github.com/valhalla/valhalla/pull/5146)
+   * UPDATED: bump tz from 2024a to 2025a [#5061](https://github.com/valhalla/valhalla/pull/5061)
+   * ADDED: Add shoulder attribute to locate API [#5144](https://github.com/valhalla/valhalla/pull/5144)
+   * CHANGED: Move `bss_info_` from `OSMNode` to the new `OSMBSSNode` to reduce `way_nodes.bin` size [#5147](https://github.com/valhalla/valhalla/pull/5147)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
@@ -366,6 +370,7 @@
    * FIXED: Fixed invalid time detection in GetSpeed [#3800](https://github.com/valhalla/valhalla/pull/3800)
    * FIXED: Osmway struct update: added up to 33 and not 32 [#3808](https://github.com/valhalla/valhalla/pull/3808)
    * FIXED: Fix out-of-range linestrings in expansion [#4603](https://github.com/valhalla/valhalla/pull/4603)
+   * FIXED: Osmway struct update: used 1 bit for multiple levels from spare bits [#5112](https://github.com/valhalla/valhalla/issues/5112)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
