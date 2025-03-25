@@ -5,13 +5,12 @@
 #include "loki/worker.h"
 #include "midgard/pointll.h"
 
+#include <filesystem>
+
 #include <gtest/gtest.h>
-#include <prime_server/http_protocol.hpp>
-#include <prime_server/prime_server.hpp>
 
 using namespace valhalla;
 using namespace valhalla::gurka;
-using namespace prime_server;
 
 const std::string workdir = "test/data/gurka_elevation";
 
@@ -125,8 +124,8 @@ TEST(Standalone, ElevationCompareToSkadi) {
     }
   }
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -148,8 +147,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
   pt.put("additional_data.elevation", workdir);
 
   std::vector<std::string> input_files = {pbf_filename};
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   // try a bunch of routes
   for (const auto& waypoints : std::vector<std::vector<std::string>>{
@@ -220,7 +218,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
     result.Parse(route_json.c_str());
 
     for (size_t leg_index = 0; leg_index < waypoints.size() - 1; ++leg_index) {
-      auto s =
+      [[maybe_unused]] auto s =
           rapidjson::get_child_optional(result, ("/trip/legs/" + std::to_string(leg_index) + "/shape")
                                                     .c_str());
 

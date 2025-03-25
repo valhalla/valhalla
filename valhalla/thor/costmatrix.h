@@ -2,22 +2,20 @@
 #define VALHALLA_THOR_COSTMATRIX_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <set>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/common.pb.h>
+#include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+#include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/matrix_common.h>
-// this is only for EdgeMetadata. one day we should move to a global interface
-#include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/matrixalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
@@ -81,7 +79,7 @@ struct BestCandidate {
  * Shortest Paths".
  * https://i11www.iti.uni-karlsruhe.de/_media/teaching/theses/files/da-sknopp-06.pdf
  */
-class CostMatrix {
+class CostMatrix : public MatrixAlgorithm {
 public:
   /**
    * Default constructor. Most internal values are set when a query is made so
@@ -99,55 +97,29 @@ public:
    * @param  mode_costing          List of target/destination locations.
    * @param  mode                  Graph reader for accessing routing graph.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @param  has_time              whether time-dependence was requested
-   * @param  invariant             whether invariant time-dependence was requested
-   * @param  shape_format          which shape_format, if any
    */
-  void SourceToTarget(Api& request,
+  bool SourceToTarget(Api& request,
                       baldr::GraphReader& graphreader,
                       const sif::mode_costing_t& mode_costing,
                       const sif::travel_mode_t mode,
-                      const float max_matrix_distance,
-                      const bool has_time = false,
-                      const bool invariant = false,
-                      const ShapeFormat& shape_format = no_shape);
+                      const float max_matrix_distance) override;
 
   /**
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void clear();
+  void Clear() override;
 
   /**
-   * Sets the functor which will track the Dijkstra expansion.
-   *
-   * @param  expansion_callback  the functor to call back when the Dijkstra makes progress
-   *                             on a given edge
+   * Get the algorithm's name
+   * @return the name of the algorithm
    */
-  using expansion_callback_t = std::function<void(baldr::GraphReader&,
-                                                  const baldr::GraphId,
-                                                  const baldr::GraphId,
-                                                  const char*,
-                                                  const char*,
-                                                  float,
-                                                  uint32_t,
-                                                  float)>;
-  void set_track_expansion(const expansion_callback_t& expansion_callback) {
-    expansion_callback_ = expansion_callback;
-  }
-
-  /**
-   * Set a callback that will throw when the path computation should be aborted
-   * @param interrupt_callback  the function to periodically call to see if
-   *                            we should abort
-   */
-  void set_interrupt(const std::function<void()>* interrupt_callback) {
-    interrupt_ = interrupt_callback;
+  inline const std::string& name() override {
+    return MatrixAlgoToString(Matrix::CostMatrix);
   }
 
 protected:
   uint32_t max_reserved_labels_count_;
-  bool clear_reserved_memory_;
   uint32_t max_reserved_locations_count_;
   bool check_reverse_connections_;
 
@@ -166,17 +138,20 @@ protected:
   std::array<uint32_t, 2> locs_count_;
   std::array<uint32_t, 2> locs_remaining_;
 
-  // The cost threshold being used for the currently executing query
-  float current_cost_threshold_;
+  // The path distance threshold being used for the currently executing query
+  float current_pathdist_threshold_;
 
   // Status
   std::array<std::vector<LocationStatus>, 2> locs_status_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each location
-  std::array<std::vector<std::vector<sif::HierarchyLimits>>, 2> hierarchy_limits_;
+  std::array<std::vector<std::vector<valhalla::HierarchyLimits>>, 2> hierarchy_limits_;
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
+
+  // A* heuristics for both trees and each location
+  std::array<std::vector<AStarHeuristic>, 2> astar_heuristics_;
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
@@ -186,21 +161,6 @@ protected:
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
-  // for tracking the expansion of the Dijkstra
-  expansion_callback_t expansion_callback_;
-
-  // whether time was specified
-  bool has_time_;
-
-  const std::function<void()>* interrupt_ = nullptr;
-
-  /**
-   * Get the cost threshold based on the current mode and the max arc-length distance
-   * for that mode.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   */
-  float GetCostThreshold(const float max_matrix_distance);
-
   /**
    * Form the initial time distance matrix given the sources
    * and destinations.
@@ -208,7 +168,8 @@ protected:
    * @param  target_location_list   List of target/destination locations.
    */
   void Initialize(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list);
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+                  const valhalla::Matrix& matrix);
 
   /**
    * Iterate the forward search from the source/origin location.
@@ -231,17 +192,21 @@ protected:
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
    * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
    */
   void CheckForwardConnections(const uint32_t source,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
-                               baldr::GraphReader& graphreader);
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   bool Expand(const uint32_t index,
               const uint32_t n,
               baldr::GraphReader& graphreader,
+              const valhalla::Options& options,
               const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
               const bool invariant = false);
 
@@ -265,11 +230,14 @@ protected:
    * @param  pred        Edge label of the predecessor.
    * @param  n           Iteration counter.
    * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
    */
   void CheckReverseConnections(const uint32_t target,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
-                               baldr::GraphReader& graphreader);
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   /**
    * Update status when a connection is found.
@@ -337,14 +305,12 @@ protected:
    */
   std::string RecostFormPath(baldr::GraphReader& graphreader,
                              BestCandidate& connection,
-                             const valhalla::Location& source,
-                             const valhalla::Location& target,
+                             Api& request,
                              const uint32_t source_idx,
                              const uint32_t target_idx,
+                             const uint32_t connection_idx,
                              const baldr::TimeInfo& time_info,
-                             const bool invariant,
-                             const ShapeFormat shape_format);
-
+                             const bool invariant);
   /**
    * Sets the date_time on the origin locations.
    *
@@ -365,19 +331,18 @@ protected:
     return infos;
   };
 
-  void ModifyHierarchyLimits() {
-    // Distance threshold optimized for unidirectional search. For bidirectional case
-    // they can be lowered.
-    // Decrease distance thresholds only for arterial roads for now
-    for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
-      if (hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 2.f;
-    }
-    for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
-      if (hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
-    }
-  };
+  /**
+   * Get the minimum AStar heuristic for a given source/target, i.e. for a source we get
+   * the minimum heuristic of all targets for the forward expansion, so that we direct
+   * the search towards the closest target/source.
+   *
+   * @param loc_idx  either the source or target index
+   * @param node_ll  the current edge's end node's lat/lon
+   * @returns The heuristic for the closest target/source of the passed node
+   */
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
+  float GetAstarHeuristic(const uint32_t loc_idx, const PointLL& node_ll) const;
 
 private:
   class ReachedMap;

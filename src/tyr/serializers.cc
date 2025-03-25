@@ -1,11 +1,7 @@
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <cstdint>
-#include <functional>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "baldr/datetime.h"
@@ -213,6 +209,12 @@ std::string serializePbf(Api& request) {
       case Options::sources_to_targets:
         selection.set_matrix(true);
         break;
+      case Options::isochrone:
+        selection.set_isochrone(true);
+        break;
+      case Options::expansion:
+        selection.set_expansion(true);
+        break;
       // should never get here, actions which dont have pbf yet return json
       default:
         throw std::logic_error("Requested action is not yet serializable as pbf");
@@ -238,6 +240,10 @@ std::string serializePbf(Api& request) {
     request.clear_options();
   if (!selection.matrix())
     request.clear_matrix();
+  if (!selection.isochrone())
+    request.clear_isochrone();
+  if (!selection.expansion())
+    request.clear_expansion();
 
   // serialize the bytes
   auto bytes = request.SerializeAsString();
@@ -251,7 +257,7 @@ std::string serializePbf(Api& request) {
 }
 
 // Generate leg shape in geojson format.
-baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
+baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape) {
   auto geojson = baldr::json::map({});
   auto coords = baldr::json::array({});
   coords->reserve(shape.size());
@@ -453,7 +459,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
   }
   if (incident_metadata.num_lanes_blocked()) {
     writer.Key(key_prefix + "num_lanes_blocked");
-    writer.Int(incident_metadata.num_lanes_blocked());
+    writer.Uint64(incident_metadata.num_lanes_blocked());
   }
   if (!incident_metadata.clear_lanes().empty()) {
     writer.Key(key_prefix + "clear_lanes");
@@ -462,7 +468,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
 
   if (incident_metadata.length() > 0) {
     writer.Key(key_prefix + "length");
-    writer.Int(incident_metadata.length());
+    writer.Uint(incident_metadata.length());
   }
 
   if (incident_metadata.road_closed()) {
@@ -478,7 +484,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.Key(key_prefix + "congestion");
     writer.StartObject();
     writer.Key("value");
-    writer.Int(incident_metadata.congestion().value());
+    writer.Uint(incident_metadata.congestion().value());
     writer.EndObject();
   }
 

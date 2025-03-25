@@ -10,7 +10,6 @@ using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::odin;
-using namespace valhalla::thor;
 
 namespace {
 
@@ -190,6 +189,26 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeSpeed)) {
         writer("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
       }
+      if (controller(kEdgeCountryCrossing)) {
+        writer("country_crossing", static_cast<bool>(edge.country_crossing()));
+      }
+      if (controller(kEdgeForward)) {
+        writer("forward", static_cast<bool>(edge.forward()));
+      }
+      if (controller(kEdgeLevels)) {
+        if (edge.levels_size()) {
+          writer.start_array("levels");
+          writer.set_precision(edge.level_precision());
+          for (const auto& level : edge.levels()) {
+            writer.start_array();
+            writer(static_cast<float>(level.start()));
+            writer(static_cast<float>(level.end()));
+            writer.end_array();
+          }
+          writer.end_array();
+          writer.set_precision(3);
+        }
+      }
       if (controller(kEdgeLength)) {
         writer.set_precision(3);
         writer("length", edge.length_km() * scale);
@@ -309,12 +328,16 @@ void serialize_edges(const AttributesController& controller,
         if (controller(kNodeElapsedTime)) {
           writer.set_precision(3);
           writer("elapsed_time", node.cost().elapsed_cost().seconds());
+          writer("elapsed_cost", node.cost().elapsed_cost().cost());
         }
         if (controller(kNodeAdminIndex)) {
           writer("admin_index", static_cast<uint64_t>(node.admin_index()));
         }
         if (controller(kNodeType)) {
           writer("type", to_string(static_cast<baldr::NodeType>(node.type())));
+        }
+        if (controller(kNodeTrafficSignal)) {
+          writer("traffic_signal", static_cast<bool>(node.traffic_signal()));
         }
         if (controller(kNodeFork)) {
           writer("fork", static_cast<bool>(node.fork()));

@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     auto result = options.parse(argc, argv);
     if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -37,12 +37,17 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  // spawn threads to download all the tiles returning a list of
-  // tiles that ended up having dangling stop pairs
-  auto dangling_tiles = valhalla::mjolnir::ingest_transit(config);
+  try {
+    // spawn threads to download all the tiles returning a list of
+    // tiles that ended up having dangling stop pairs
+    auto dangling_tiles = valhalla::mjolnir::ingest_transit(config);
 
-  // spawn threads to connect dangling stop pairs to adjacent tiles' stops
-  valhalla::mjolnir::stitch_transit(config, dangling_tiles);
+    // spawn threads to connect dangling stop pairs to adjacent tiles' stops
+    valhalla::mjolnir::stitch_transit(config, dangling_tiles);
+  } catch (const std::runtime_error& e) {
+    LOG_ERROR(e.what());
+    return EXIT_FAILURE;
+  }
 
-  return 0;
+  return EXIT_SUCCESS;
 }

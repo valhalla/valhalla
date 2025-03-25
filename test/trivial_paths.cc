@@ -1,8 +1,6 @@
 #include "test.h"
 
-#include <iostream>
 #include <string>
-#include <vector>
 
 #include "loki/worker.h"
 #include "midgard/logging.h"

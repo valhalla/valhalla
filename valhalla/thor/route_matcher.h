@@ -1,11 +1,6 @@
 #ifndef VALHALLA_THOR_ROUTE_MATCHER_H_
 #define VALHALLA_THOR_ROUTE_MATCHER_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>

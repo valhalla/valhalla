@@ -111,8 +111,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-82.68811, 40.22535});
 
@@ -146,7 +144,7 @@ TEST_F(RouteWithStreetnameAndSign_en_UnitedStates, CheckStreetNamesAndSigns1) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result, {"I 70", "", "6th Avenue/SR 37"});
@@ -676,8 +674,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {4.3516970, 50.8465573});
 
@@ -712,7 +708,7 @@ TEST_F(RouteWithStreetnameAndSign_fr_nl_BrusselsBelgium, CheckStreetNamesAndSign
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result, {"E40", "", "Rue Bodenbroek/Bodenbroekstraat/N6"});
@@ -1283,8 +1279,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {27.56191, 53.90246});
 
@@ -1318,7 +1312,7 @@ TEST_F(RouteWithStreetnameAndSign_ru_be_MinskBelarus, CheckStreetNamesAndSigns1)
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result, {"М2", "", "МКАД, 1-й километр/1-ы кіламетр МКАД/M9"});
@@ -1890,8 +1884,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-3.73895, 52.29282});
 
@@ -1925,7 +1917,7 @@ TEST_F(RouteWithStreetnameAndSign_cy_en_Wales, CheckStreetNamesAndSigns1) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result, {"A55/Gwibffordd Gogledd Cymru/North Wales Expressway", "",
@@ -2436,8 +2428,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {4.3516970, 50.8465573});
 
@@ -2472,7 +2462,7 @@ TEST_F(RouteWithStreetnameAndSign_fr_nl_BrusselsBelgiumRightLeft, CheckRightName
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"O", "Q"}, "auto");
   gurka::assert::raw::expect_path(result, {"Chaussée de Gand/Steenweg op Gent"});
@@ -2611,8 +2601,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-76.69980, 40.25882});
 
@@ -2647,7 +2635,7 @@ TEST_F(RouteWithStreetnameAndSign_en_USForwardBackwardWithName, CheckForwardName
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"O", "Q"}, "auto");
   gurka::assert::raw::expect_path(result, {"Waltonville Road/C-1"});
@@ -2765,8 +2753,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-76.69980, 40.25882});
 
@@ -2801,7 +2787,7 @@ TEST_F(RouteWithStreetnameAndSign_en_USForwardBackwardNoName, CheckForwardNames)
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"O", "Q"}, "auto");
   gurka::assert::raw::expect_path(result, {"Waltonville Road"});
@@ -2944,7 +2930,7 @@ TEST_F(RouteWithStreetnameAndSign_fr_nl_MesenBelgiumRightLeft, CheckRightNames) 
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"Q", "O"}, "auto");
   gurka::assert::raw::expect_path(result, {"Komenstraat"});
@@ -3038,8 +3024,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {7.159328, 46.805244});
 
@@ -3074,7 +3058,7 @@ TEST_F(RouteWithStreetnameAndSign_fr_de_FribourgSwitzerlandMulti, CheckForwardNa
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"Q", "O"}, "auto");
   gurka::assert::raw::expect_path(result, {"Route des Alpes/Alpenstrasse"});
@@ -3187,8 +3171,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {9.65035, 46.46977});
 
@@ -3227,7 +3209,7 @@ TEST_F(RouteWithStreetnameAndSign_rm_de_BivioSwitzerland, CheckForwardNames) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"O", "Q"}, "auto");
   gurka::assert::raw::expect_path(result, {"Vea del Giulia/Via digl Gelgia/Julierstrasse"});
@@ -3342,8 +3324,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {8.5355, 47.3726});
 
@@ -3378,7 +3358,7 @@ TEST_F(RouteWithStreetnameAndSign_de_ZurichSwitzerland, CheckForwardNames) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"O", "Q"}, "auto");
   gurka::assert::raw::expect_path(result, {"Werdstrasse"});
@@ -3483,8 +3463,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {6.03475, 50.62766});
 
@@ -3522,7 +3500,7 @@ TEST_F(RouteWithStreetnameAndSign_fr_nl_EupenBelgium, CheckLingusticPoly) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"O", "Q"}, "auto");
   gurka::assert::raw::expect_path(result,
@@ -3746,8 +3724,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {139.79079, 35.69194});
 
@@ -3781,7 +3757,7 @@ TEST_F(RouteWithStreetnameAndSign_ja_en_Japan, CheckStreetNamesAndSigns1) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result,
@@ -4555,8 +4531,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-75.6625, 45.3940});
 
@@ -4590,7 +4564,7 @@ TEST_F(RouteWithStreetnameAndSign_en_fr_OttawaCanada, CheckStreetNamesAndSigns1)
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result, {"417/Highway 417/Route 417", "",
@@ -5243,8 +5217,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-71.2593, 46.8111});
 
@@ -5278,7 +5250,7 @@ TEST_F(RouteWithStreetnameAndSign_en_fr_QuebecCanada, CheckStreetNamesAndSigns1)
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result, {"417/Highway 417/Route 417", "",
@@ -5839,8 +5811,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {103.87149, 1.32510});
 
@@ -5875,7 +5845,7 @@ TEST_F(RouteWithStreetnameAndSign_en_ms_ta_zh_Singapore, CheckForwardNames) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"O", "Q"}, "auto");
   gurka::assert::raw::expect_path(result, {"Rochor/梧槽/Rochor/ரோச்சோர்"});
@@ -6141,8 +6111,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {139.79079, 35.69194});
 
@@ -6177,7 +6145,7 @@ TEST_F(RouteWithStreetnameAndSign_ja_en_JapanPronunciations, CheckStreetNamesAnd
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_path(result,
@@ -6633,8 +6601,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-76.69980, 40.25882});
 
@@ -6669,7 +6635,7 @@ TEST_F(RouteWithStreetnameAndSign_en_USMultiWithNameDash, CheckForwardNames) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"O", "Q"}, "auto");
   gurka::assert::raw::expect_path(result, {"Pamplona South/Airport"});
@@ -6786,8 +6752,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-76.69980, 40.25882});
 
@@ -6822,7 +6786,7 @@ TEST_F(RouteWithStreetnameAndSign_en_USMultiWithNameSlash, CheckForwardNames) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   auto result = gurka::do_action(valhalla::Options::route, the_map, {"O", "Q"}, "auto");
   gurka::assert::raw::expect_path(result, {"Pamplona South/Airport"});

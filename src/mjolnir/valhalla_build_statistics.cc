@@ -3,16 +3,13 @@
 #include "statistics.h"
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <future>
 #include <iostream>
 #include <list>
 #include <mutex>
-#include <ostream>
-#include <queue>
-#include <sstream>
+#include <random>
 #include <string>
 #include <thread>
 #include <utility>
@@ -592,7 +589,7 @@ int main(int argc, char** argv) {
     auto result = options.parse(argc, argv);
     if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

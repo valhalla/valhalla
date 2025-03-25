@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <future>
 #include <memory>
+#include <random>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -99,7 +100,7 @@ int main(int argc, char** argv) {
     auto result = options.parse(argc, argv);
     if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

@@ -57,7 +57,9 @@ function(valhalla_module)
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
     PRIVATE
-      $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
+      $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>
+      VALHALLA_SOURCE_DIR=${VALHALLA_SOURCE_DIR}
+      VALHALLA_BUILD_DIR=${VALHALLA_BUILD_DIR})
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE
        ${VALHALLA_BINARY_DIR}
@@ -186,10 +188,10 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
-    ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-    ${VALHALLA_SOURCE_DIR}/third_party/date/include
+    ${rapidjson_include_dir}
+    ${date_include_dir}
     ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
-    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+    $<$<BOOL:${WIN32}>:${dirent_include_dir}>
   PRIVATE
     ${libvalhalla_include_directories})
 

@@ -2,8 +2,6 @@
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
 #include <algorithm>
-#include <iostream> // TODO remove if not needed
-#include <map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -158,7 +156,9 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
     auto edge_cost = current_costing->EdgeCost(directededge, tile);
     Cost normalized_edge_cost = {edge_cost.cost * current_costing->GetModeFactor(), edge_cost.secs};
-    auto transition_cost = current_costing->TransitionCost(directededge, nodeinfo, pred);
+    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
+    auto transition_cost =
+        current_costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
 
     // Compute the cost to the end of this edge
     Cost newcost = pred.cost() + normalized_edge_cost + transition_cost;
@@ -221,7 +221,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, GraphId(), directededge, newcost, sortcost, dist, mode,
-                             transition_cost, false, true, false, InternalTurn::kNoTurn,
+                             transition_cost, false, false, false, InternalTurn::kNoTurn,
                              baldr::kInvalidRestriction);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
@@ -446,7 +446,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     BDEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                           travel_mode_t::kPedestrian, baldr::kInvalidRestriction, true, false,
+                           travel_mode_t::kPedestrian, baldr::kInvalidRestriction, false, false,
                            sif::InternalTurn::kNoTurn);
     // Set the origin flag and path distance
     edge_label.set_origin();
@@ -513,7 +513,7 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
   // Work backwards from the destination
   std::vector<PathInfo> path;
   travel_mode_t old = travel_mode_t::kPedestrian;
-  int mode_change_count = 0;
+  [[maybe_unused]] int mode_change_count = 0;
 
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
@@ -540,6 +540,5 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
   std::reverse(path.begin(), path.end());
   return path;
 }
-
 } // namespace thor
 } // namespace valhalla

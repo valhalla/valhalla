@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <ostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -57,7 +56,7 @@ int main(int argc, char** argv) {
     if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

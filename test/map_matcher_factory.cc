@@ -23,8 +23,8 @@ using ptree = boost::property_tree::ptree;
 
 void create_costing_options(Costing::Type costing, Options& options) {
   const rapidjson::Document doc;
-  sif::ParseCosting(doc, "/costing_options", options);
   options.set_costing_type(costing);
+  sif::ParseCosting(doc, "/costing_options", options);
 }
 
 TEST(MapMatcherFactory, TestMapMatcherFactory) {
@@ -124,7 +124,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
 
       delete matcher;
 
-      options.set_costing_type(Costing::bicycle);
+      create_costing_options(Costing::bicycle, options);
       matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kBicycle)
           << "should read costing in options correctly again";
@@ -167,7 +167,7 @@ TEST(MapMatcherFactory, TestMapMatcher) {
   Options options;
   create_costing_options(Costing::auto_, options);
   auto auto_matcher = factory.Create(options);
-  options.set_costing_type(Costing::pedestrian);
+  create_costing_options(Costing::pedestrian, options);
   auto pedestrian_matcher = factory.Create(options);
 
   // Share the same pool

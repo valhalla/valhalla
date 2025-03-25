@@ -5,7 +5,6 @@
 #include <list>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
@@ -58,6 +57,18 @@ public:
   bool IsMergeType() const;
   bool IsRightType() const;
   bool IsLeftType() const;
+
+  void set_node_type(TripLeg_Node_Type type);
+  TripLeg_Node_Type node_type() const;
+  bool has_node_type() const;
+  bool traffic_signal() const;
+  void set_traffic_signal(bool traffic_signal);
+  bool is_steps() const;
+  void set_steps(bool steps);
+  bool is_bridge() const;
+  void set_bridge(bool bridge);
+  bool is_tunnel() const;
+  void set_tunnel(bool tunnel);
 
   const StreetNames& street_names() const;
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
@@ -407,6 +418,12 @@ public:
 
 protected:
   DirectionsLeg_Maneuver_Type type_;
+  TripLeg_Node_Type node_type_;
+  bool has_node_type_;
+  bool traffic_signal_;
+  bool is_steps_;
+  bool is_bridge_;
+  bool is_tunnel_;
   std::unique_ptr<StreetNames> street_names_;
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;

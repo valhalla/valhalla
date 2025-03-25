@@ -63,7 +63,9 @@ void print_edge(GraphReader& reader,
                          kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
-    Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
+
+    auto reader_getter = [&reader]() { return baldr::LimitedGraphReader(reader); };
+    Cost trans_cost = costing->TransitionCost(edge, node, pred_label, tile, reader_getter);
     trans_total += trans_cost;
     std::cout << "TransitionCost cost: " << trans_cost.cost;
     std::cout << " secs: " << trans_cost.secs << "\n";
@@ -195,11 +197,11 @@ int main(int argc, char* argv[]) {
     } else if (result.count("shape")) {
       shape = result["shape"].as<std::string>();
     } else {
-      throw cxxopts::OptionException(
+      throw cxxopts::exceptions::exception(
           "The json parameter or shape parameter was not supplied but is required.\n\n" +
           options.help());
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -267,11 +269,6 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
-  if (!map_match) {
-    rapidjson::Document doc;
-    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
-  }
-
   // Construct costing
   valhalla::Costing::Type costing;
   if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
@@ -279,6 +276,12 @@ int main(int argc, char* argv[]) {
   } else {
     throw std::runtime_error("No costing method found");
   }
+
+  if (!map_match) {
+    rapidjson::Document doc;
+    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
+  }
+
   valhalla::sif::TravelMode mode;
   auto mode_costings = valhalla::sif::CostFactory{}.CreateModeCosting(request.options(), mode);
   auto cost_ptr = mode_costings[static_cast<uint32_t>(mode)];

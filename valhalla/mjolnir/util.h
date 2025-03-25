@@ -12,7 +12,9 @@
 // needs to be after sqlite include
 #include <spatialite.h>
 
+#include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
@@ -128,6 +130,21 @@ bool shapes_match(const std::vector<midgard::PointLL>& shape1,
                   const std::vector<midgard::PointLL>& shape2);
 
 /**
+ * Get the index of the opposing edge at the end node. This is on the local hierarchy,
+ * before adding transition and shortcut edges. Make sure that even if the end nodes
+ * and lengths match that the correct edge is selected (match shape) since some loops
+ * can have the same length and end node.
+ * @param  endnodetile   Graph tile at the end node.
+ * @param  startnode     Start node of the directed edge.
+ * @param  tile          Graph tile of the edge
+ * @param  directededge  Directed edge to match.
+ */
+uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
+                              const baldr::GraphId& startnode,
+                              const graph_tile_ptr& tile,
+                              const baldr::DirectedEdge& edge);
+
+/**
  * Compute a curvature metric given an edge shape.
  * @param  shape  Shape of an edge (list of lat,lon vertices).
  * @return Returns a curvature measure [0-15] where higher numbers indicate
@@ -158,8 +175,7 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle);
 bool build_tile_set(const ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
-                    const BuildStage end_stage = BuildStage::kValidate,
-                    const bool release_osmpbf_memory = true);
+                    const BuildStage end_stage = BuildStage::kValidate);
 
 // The tile manifest is a JSON-serializable index of tiles to be processed during the build stage of
 // valhalla_build_tiles'. It can be used to distribute shard keys when building tiles with

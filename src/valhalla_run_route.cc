@@ -4,9 +4,7 @@
 #include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
-#include <queue>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -227,7 +225,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
-      LOG_ERROR("RouteMatcher failed");
+      LOG_ERROR("RouteMatcher failed.");
     }
   }
 
@@ -515,9 +513,9 @@ int main(int argc, char* argv[]) {
     } else if (result.count("json")) {
       json_str = result["json"].as<std::string>();
     } else {
-      throw cxxopts::OptionException("Either json or json-file args must be set.");
+      throw cxxopts::exceptions::exception("Either json or json-file args must be set.");
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

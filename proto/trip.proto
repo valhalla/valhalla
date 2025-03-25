@@ -119,6 +119,32 @@ message TripLeg {
     uint32 type = 1;
   }
 
+  // represents a single date/time range from https://wiki.openstreetmap.org/wiki/Key:opening_hours
+  message TimeDomain {
+    enum DayDowType {
+      kDayOfMonth = 0;    // day_dow is a day of month in range [1,31]
+      kNthDayOfWeek = 1;  // day_dow is a day of week in range [1,7]
+    }
+
+    DayDowType day_dow_type = 1;  // `begin_day_dow` and `end_day_dow` type
+    uint32 dow_mask = 2;          // day of week mask, e.g. 0b0111110 for Mo-Fr as week starts from Su
+    uint32 begin_hrs = 3;         // begin hours, 0 if not set
+    uint32 begin_mins = 4;        // begin minutes, 0 if not set
+    uint32 begin_month = 5;       // begin month, from 1 (January) to 12 (December), 0 if not set
+    uint32 begin_day_dow = 6;     // begin day of month or nth dow, i.e. 1st Sunday
+    uint32 begin_week = 7;        // which week does this start, i.e. 1st week in Oct
+    uint32 end_hrs = 8;           // end hours, 0 if not set
+    uint32 end_mins = 9;          // end minutes, 0 if not set
+    uint32 end_month = 10;        // end month, from 1 (January) to 12 (December), 0 if not set
+    uint32 end_day_dow = 11;      // end day of month or nth dow, i.e. last Sunday
+    uint32 end_week = 12;         // which week does this end, i.e. last week in Oct
+  }
+
+  message ConditionalSpeedLimit {
+    uint32 speed_limit = 1;
+    TimeDomain condition = 2;
+  }
+
   message Edge {
     repeated StreetName name = 1;           // street names
     float length_km = 2;           // km
@@ -180,6 +206,15 @@ message TripLeg {
     repeated StreetName tunnel_name = 55;
     float elevation_sampling_interval = 56;
     repeated float elevation = 57;
+    bool country_crossing = 58;
+    bool forward = 59;
+    repeated ConditionalSpeedLimit conditional_speed_limits = 60;
+    message Level {
+      float start = 1;
+      float end = 2;
+    }
+    repeated Level levels = 61;
+    uint32 level_precision = 62;
   }
 
   message IntersectingEdge {
@@ -193,6 +228,7 @@ message TripLeg {
     RoadClass road_class = 8;
     uint32 lane_count = 9;
     TripSign sign = 10;
+    repeated StreetName name = 21;           // street names
   }
 
   message Cost {
@@ -236,6 +272,7 @@ message TripLeg {
     PathCost cost = 12;             // how much cost did it take at this node in the path
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for recostings
     BikeShareStationInfo bss_info = 14;
+     bool traffic_signal = 21;
  }
 
   message Admin {
@@ -284,6 +321,8 @@ message TripLeg {
   repeated Incident incidents = 11;
   repeated string algorithms = 12;
   repeated Closure closures = 13;
+  Summary summary = 14;
+  repeated LevelChange level_changes = 15;
 }
 
 message TripRoute {

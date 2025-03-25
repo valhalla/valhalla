@@ -52,11 +52,11 @@ message PbfFieldSelector {
   bool directions = 3; // /route /trace_route /optimized_route /centroid
   bool status = 4;     // /status
   bool matrix = 5;     // sources_to_targets
+  bool isochrone = 6;
+  bool expansion = 9;
   // TODO: enable these once we have objects for them
-  // bool isochrone = 5;
   // bool locate = 7;
   // bool height = 8;
-  // bool expansion = 9;
 }
 
 message AvoidEdge {
@@ -66,6 +66,25 @@ message AvoidEdge {
   oneof has_percent_along {
     float percent_along = 2;
   }
+}
+
+/**
+ * Hierarchy limits controls expansion and transitions between hierarchy
+ * levels. It allows limiting expansion on hierarchy levels once
+ * some number of "upward" transitions have been made (e.g. from the local
+ * level to the arterial level). Expansion on a level is allowed within some
+ * distance from the destination location. This also allows control of where
+ * upward and downward transitions are allowed based on distance from the
+ * destination.
+ */
+message HierarchyLimits {
+ uint32 up_transition_count = 1;   // Keep track of # of upward transitions
+                                   // Internal use only, remember to clear on incoming requests
+ uint32 max_up_transitions = 2;    // Maximum number of upward transitions before 
+                                   // expansion is stopped on a level.
+ float expand_within_dist = 3; // Distance (m) to destination within which
+                                   // expansion of a hierarchy level is
+                                   // always allowed. Used for A*.
 }
 
 message Costing {
@@ -312,6 +331,18 @@ message Costing {
     uint32 axle_count = 81;
     float use_lit = 82;
     bool disable_hierarchy_pruning = 83;
+    bool ignore_non_vehicular_restrictions = 84;
+    oneof has_hgv_no_access_penalty {
+      float hgv_no_access_penalty = 85;
+    }
+    float use_truck_route = 86;
+    bool exclude_bridges = 87;
+    bool exclude_tunnels = 88;
+    bool exclude_tolls = 89;
+    bool exclude_highways = 90;
+    bool exclude_ferries = 91;
+    map<uint32, HierarchyLimits> hierarchy_limits = 92;
+    bool ignore_construction = 93;
   }
 
   oneof has_options {
@@ -340,6 +371,7 @@ message Options {
     gpx = 1;
     osrm = 2;
     pbf = 3;
+    geotiff = 4;
   }
 
   enum Action {
@@ -373,6 +405,7 @@ message Options {
     edge_status = 3;
     edge_id = 4;
     pred_edge_id = 5;
+    expansion_type = 6;
   }
 
   Units units = 1;                                                 // kilometers or miles
@@ -488,4 +521,9 @@ message Options {
                                                                    // or when CostMatrix is the selected matrix mode.
   bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
   float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
+  bool voice_instructions = 57;                                    // Whether to return voiceInstructions in the OSRM serializer response
+  bool dedupe = 58;                                                // Keep track of edges and override their properties during expansion,
+                                                                   // ensuring that each edge appears in the output only once. [default = false]
+  bool admin_crossings = 59;                                       // Include administrative boundary crossings
+  bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
 }

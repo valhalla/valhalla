@@ -1,3 +1,4 @@
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -10,7 +11,10 @@
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
+#include "odin/narrative_builder_factory.h"
+#include "odin/narrativebuilder.h"
 #include "odin/util.h"
+#include "route_serializer_osrm.h"
 #include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
@@ -94,6 +98,12 @@ const constexpr PointLL::first_type DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     2.6,      // z18
 };
 
+const constexpr double SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION = 35.0;
+const constexpr double SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION = 10.0;
+const constexpr double MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION = 40;
+const constexpr double APPROXIMATE_VERBAL_POSTRANSITION_LENGTH = 110;
+const constexpr double APPROXIMATE_VERBAL_PRERANSITION_SECONDS = 3.0;
+
 inline double clamp(const double lat) {
   return std::max(std::min(lat, double(EPSG3857_MAX_LATITUDE)), double(-EPSG3857_MAX_LATITUDE));
 }
@@ -168,34 +178,6 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
     {"VI", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
     {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
 };
-
-namespace osrm_serializers {
-/*
-OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
-{
-    "code":"Ok"
-    "waypoints": [{ }, { }...],
-    "routes": [
-        {
-            "geometry":"....."
-            "distance":xxx.y
-            "duration":yyy.z
-            "legs":[
-                {
-                    "steps":[
-                        "intersections":[
-                        ]
-                        "geometry":" "
-                        "maneuver":{
-                        }
-                    ]
-                }
-            ]
-        },
-        ...
-    ]
-}
-*/
 
 std::string destinations(const valhalla::TripSign& sign);
 
@@ -382,11 +364,8 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
 // the optimized sequence.
 json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
   // Create a vector of indexes.
-  uint32_t i = 0;
-  std::vector<uint32_t> indexes;
-  for (const auto& loc : locs) {
-    indexes.push_back(i++);
-  }
+  std::vector<uint32_t> indexes(locs.size());
+  std::iota(indexes.begin(), indexes.end(), 0);
 
   // Sort the the vector by the location's original index
   std::sort(indexes.begin(), indexes.end(), [&locs](const uint32_t a, const uint32_t b) -> bool {
@@ -475,7 +454,6 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
   count = 0;
   auto intersections = json::array({});
   uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
-  EnhancedTripLeg_Node* prev_node = nullptr;
   for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
     auto intersection = json::map({});
 
@@ -533,7 +511,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add rest_stop when passing by a rest_area or service_area
     if (i > 0 && !arrive_maneuver) {
       auto rest_stop = json::map({});
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+      for (int m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
 
@@ -574,7 +552,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     if (!arrive_maneuver) {
       edges.emplace_back(curr_edge->begin_heading(), true, false, true);
       if (i > 0) {
-        for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        for (int m = 0; m < node->intersecting_edge_size(); m++) {
           auto intersecting_edge = node->GetIntersectingEdge(m);
           bool routable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
           edges.emplace_back(intersecting_edge->begin_heading(), routable, false, false);
@@ -597,7 +575,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Sort edges by increasing bearing and update the in/out edge indexes
     std::sort(edges.begin(), edges.end());
-    uint32_t incoming_index, outgoing_index;
+    uint32_t incoming_index = 0, outgoing_index = 0;
     for (uint32_t n = 0; n < edges.size(); ++n) {
       if (edges[n].in_edge) {
         incoming_index = n;
@@ -623,9 +601,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add tunnel_name for tunnels
     if (!arrive_maneuver) {
       if (curr_edge->tunnel() && !curr_edge->tagged_value().empty()) {
-        for (uint32_t t = 0; t < curr_edge->tagged_value().size(); ++t) {
-          if (curr_edge->tagged_value().Get(t).type() == TaggedValue_Type_kTunnel) {
-            intersection->emplace("tunnel_name", curr_edge->tagged_value().Get(t).value());
+        for (const auto& e : curr_edge->tagged_value()) {
+          if (e.type() == TaggedValue_Type_kTunnel) {
+            intersection->emplace("tunnel_name", e.value());
           }
         }
       }
@@ -1454,6 +1432,181 @@ void maneuver_geometry(json::MapPtr& step,
   }
 }
 
+// The idea is that the instructions come a fixed amount of seconds before the maneuver takes place.
+// For whatever reasons, a distance in meters from the end of the maneuver needs to be provided
+// though. When different speeds are used on the road, they all need to be taken into account. This
+// function calculates the distance before the end of the maneuver by checking the elapsed_cost
+// seconds of each edges and accumulates their distances until the seconds threshold is passed. The
+// speed of this last edge is then used to subtract the distance so that the the seconds until the end
+// are exactly the provided amount of seconds.
+float distance_along_geometry(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                              valhalla::odin::EnhancedTripLeg* etp,
+                              const double distance,
+                              const uint32_t target_seconds) {
+  uint32_t node_index = prev_maneuver->end_path_index();
+  double end_node_elapsed_seconds = etp->node(node_index).cost().elapsed_cost().seconds();
+  double begin_node_elapsed_seconds =
+      etp->node(prev_maneuver->begin_path_index()).cost().elapsed_cost().seconds();
+
+  // If the maneuver is too short, simply return its distance.
+  if (end_node_elapsed_seconds - begin_node_elapsed_seconds < target_seconds) {
+    return distance;
+  }
+
+  float accumulated_distance_km = 0;
+  float previous_accumulated_distance_km = 0;
+  double accumulated_seconds = 0;
+  double previous_accumulated_seconds = 0;
+  // Find the node after which the instructions should be heard:
+  while (accumulated_seconds < target_seconds && node_index >= prev_maneuver->begin_path_index()) {
+    node_index -= 1;
+    // not really accumulating seconds ourselves, but it happens elsewhere:
+    previous_accumulated_seconds = accumulated_seconds;
+    accumulated_seconds =
+        end_node_elapsed_seconds - etp->node(node_index).cost().elapsed_cost().seconds();
+    previous_accumulated_distance_km = accumulated_distance_km;
+    accumulated_distance_km += etp->GetCurrEdge(node_index)->length_km();
+  }
+  // The node_index now indicates the node AFTER which the target_seconds will be reached
+  // we now have to subtract the surplus distance (based on seconds) of this edge from the
+  // accumulated_distance_km
+  auto surplus_percentage =
+      (accumulated_seconds - target_seconds) / (accumulated_seconds - previous_accumulated_seconds);
+  accumulated_distance_km -=
+      (accumulated_distance_km - previous_accumulated_distance_km) * surplus_percentage;
+  if (accumulated_distance_km * 1000 > distance) {
+    return distance;
+  } else {
+    return accumulated_distance_km * 1000; // in meters
+  }
+}
+
+void addVoiceInstruction(const std::string& instruction,
+                         double distance_along_geometry,
+                         json::ArrayPtr& voice_instructions) {
+  json::MapPtr voice_instruction = json::map({});
+  voice_instruction->emplace("distanceAlongGeometry", json::fixed_t{distance_along_geometry, 1});
+  voice_instruction->emplace("announcement", instruction);
+  voice_instruction->emplace("ssmlAnnouncement", "<speak>" + instruction + "</speak>");
+  voice_instructions->emplace_back(std::move(voice_instruction));
+}
+
+// Populate the voiceInstructions within a step.
+json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                                  const valhalla::DirectionsLeg::Maneuver& maneuver,
+                                  const double distance,
+                                  const uint32_t maneuver_index,
+                                  valhalla::odin::EnhancedTripLeg* etp,
+                                  const valhalla::Options& options) {
+  // narrative builder for custom pre alert instructions
+  // TODO: actually we should build the alert instructions with enhanced distance information during
+  // building the maneuver. The would require enhancing the voice instructions of the maneuver
+  // providing distance information and therefore a larger refactor
+  MarkupFormatter nullFormatter;
+  std::unique_ptr<NarrativeBuilder> narrative_builder =
+      NarrativeBuilderFactory::Create(options, etp, nullFormatter);
+
+  // voiceInstructions is an array, because there may be similar voice instructions.
+  // When the step is long enough, there may be multiple voice instructions.
+  json::ArrayPtr voice_instructions = json::array({});
+
+  // distanceAlongGeometry is the distance along the current step from where on this
+  // voice instruction should be played. It is measured from the end of the maneuver.
+  // Using the maneuver length (distance) as the distanceAlongGeometry plays
+  // right at the beginning of the maneuver. A distanceAlongGeometry of 10 is
+  // shortly (10 meters at the given speed) after the maneuver has started.
+  // The voice_instruction_beginning starts shortly after the beginning of the step.
+  // The voice_instruction_end starts shortly before the end of the step.
+  float distance_before_verbal_transition_alert_instruction =
+      distance_along_geometry(prev_maneuver, etp, distance,
+                              SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION);
+  float distance_before_verbal_pre_transition_instruction =
+      distance_along_geometry(prev_maneuver, etp, distance,
+                              SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION);
+
+  // we want to at least have the pre transition instruction
+  // MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION meters before the maneuver. So even if we are
+  // driving really slow we want to have the instruction few meters before the actual maneuver.
+  if (distance_before_verbal_pre_transition_instruction <
+          MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION &&
+      distance > MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION) {
+    distance_before_verbal_pre_transition_instruction =
+        MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION;
+  }
+  // accordingly we will omit the alert instruction if it is closer than
+  // MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION meters to the maneuver.
+  if (distance_before_verbal_transition_alert_instruction <
+      MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION) {
+    // using -1 here to state that they don't have to be played
+    distance_before_verbal_transition_alert_instruction = -1;
+  }
+
+  if (maneuver_index == 1 && !prev_maneuver->verbal_pre_transition_instruction().empty()) {
+    // For depart maneuver, we always want to hear the verbal_pre_transition_instruction
+    // right at the beginning of the navigation. This is something like:
+    // Drive West on XYZ Street.
+    // This voice_instruction_start is only created once. It is always played, even when
+    // the maneuver would otherwise be too short.
+    addVoiceInstruction(prev_maneuver->verbal_pre_transition_instruction(), double(distance),
+                        voice_instructions);
+  } else if (distance_before_verbal_transition_alert_instruction >= 0.0 &&
+             distance > distance_before_verbal_transition_alert_instruction +
+                            APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
+             !prev_maneuver->verbal_post_transition_instruction().empty()) {
+    // In all other cases we want to play the verbal_post_transition_instruction shortly
+    // after the maneuver has started but only if there is sufficient time to play. On
+    // the one hand distance_before_verbal_transition_alert_instruction has to be set,
+    // so there is enough time to play the transition instruction afterwards. On the other hand
+    // there has to be enough time to play the upcoming verbal_pre_transition_instruction and
+    // the verbal_post_transition_instruction itself.
+    // The approximation here is that the verbal_post_transition_instruction takes 100
+    // meters to play + the 10 meters after the maneuver start which is added so that the
+    // instruction is not played directly on the intersection where the maneuver starts.
+    addVoiceInstruction(prev_maneuver->verbal_post_transition_instruction(), double(distance - 10),
+                        voice_instructions);
+  }
+
+  // If there is an alert instruction and we have enough time to play it, we will play it
+  // TODO: We shouldn't add an alert instruction if there was already a pre/post transition alert
+  // which is close by
+  if (!maneuver.verbal_transition_alert_instruction().empty() &&
+      distance_before_verbal_transition_alert_instruction >= 0.0 &&
+      prev_maneuver->time() > SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION +
+                                  APPROXIMATE_VERBAL_PRERANSITION_SECONDS) {
+    if (maneuver_index == 1 && distance_before_verbal_transition_alert_instruction == distance) {
+      // For the depart maneuver we want to play both the verbal_post_transition_instruction and
+      // the verbal_transition_alert_instruction even if the maneuver is too short.
+      // In all other cases we use distance_before_verbal_transition_alert_instruction value
+      // as it is capped to the maneuver length.
+      distance_before_verbal_transition_alert_instruction = distance / 2;
+    }
+    // building voice instructions for the alert. We are enhancing it by the distance information here
+    // by using the narrative builder
+    float distance_km = (float)distance_before_verbal_transition_alert_instruction / 1000.0f;
+    std::string instruction =
+        narrative_builder
+            ->FormVerbalAlertApproachInstruction(distance_km,
+                                                 maneuver.verbal_transition_alert_instruction());
+    addVoiceInstruction(instruction, distance_before_verbal_transition_alert_instruction,
+                        voice_instructions);
+  }
+
+  // add pre transition instruction if available
+  if (!maneuver.verbal_pre_transition_instruction().empty()) {
+    if (maneuver_index == 1 && distance_before_verbal_pre_transition_instruction >= distance / 2) {
+      // For the depart maneuver we want to play the verbal_post_transition_instruction and
+      // the verbal_pre_transition_instruction even if the maneuver is too short.
+      // In all other cases we use distance_before_verbal_pre_transition_instruction value as is
+      // because it is capped to the maneuver length.
+      distance_before_verbal_pre_transition_instruction = distance / 4;
+    }
+    addVoiceInstruction(maneuver.verbal_pre_transition_instruction(),
+                        distance_before_verbal_pre_transition_instruction, voice_instructions);
+  }
+
+  return voice_instructions;
+}
+
 // Get the mode
 std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
                      const bool arrive_maneuver,
@@ -1570,7 +1723,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // #########################################################################
     //  Iterate through maneuvers - convert to OSRM steps
-    uint32_t maneuver_index = 0;
+    int maneuver_index = 0;
     uint32_t prev_intersection_count = 0;
     double prev_distance = 0;
     std::string drive_side = "right";
@@ -1717,16 +1870,28 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       // Add banner instructions if the user requested them
       if (options.banner_instructions()) {
-        if (prev_step) {
+        if (prev_step && prev_maneuver) {
           prev_step->emplace("bannerInstructions",
                              banner_instructions(name, dest, ref, prev_maneuver, maneuver,
                                                  arrive_maneuver, &etp, mnvr_type, modifier, ex,
                                                  prev_distance, drive_side));
         }
         if (arrive_maneuver) {
-          step->emplace("bannerInstructions",
-                        banner_instructions(name, dest, ref, prev_maneuver, maneuver, arrive_maneuver,
-                                            &etp, mnvr_type, modifier, ex, distance, drive_side));
+          // just add empty array for arrival maneuver
+          step->emplace("bannerInstructions", json::array({}));
+        }
+      }
+
+      // Add voice instructions if the user requested them
+      if (options.voice_instructions()) {
+        if (prev_step && prev_maneuver) {
+          prev_step->emplace("voiceInstructions",
+                             voice_instructions(prev_maneuver, maneuver, prev_distance,
+                                                maneuver_index, &etp, options));
+        }
+        if (arrive_maneuver) {
+          // just add empty array for arrival maneuver
+          step->emplace("voiceInstructions", json::array({}));
         }
       }
 
@@ -1775,7 +1940,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       maneuver_index++;
       steps->emplace_back(std::move(step));
     } // end maneuver loop
-    // #########################################################################
+      // #########################################################################
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
@@ -1856,7 +2021,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   // Find the simplest summary for every leg of every route. Important note:
   // each route should have the same number of legs. Hence, we only need to make
   // unique the same leg (leg_idx) between all routes.
-  for (size_t route_i = 0; route_i < routes.size(); route_i++) {
+  for (int route_i = 0; route_i < routes.size(); route_i++) {
 
     size_t num_legs_i = routes.Get(route_i).legs_size();
     std::vector<std::string> leg_summaries;
@@ -1872,7 +2037,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
       // Compare every jth route/leg summary vs the current ith route/leg summary.
       // We desire to compute num_named_segs_needed, which is the number of named
       // segments needed to uniquely identify the ith's summary.
-      for (size_t route_j = 0; route_j < routes.size(); route_j++) {
+      for (int route_j = 0; route_j < routes.size(); route_j++) {
 
         // avoid self
         if (route_i == route_j)
@@ -1917,6 +2082,9 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   return all_summaries;
 }
 
+} // namespace
+
+namespace osrm_serializers {
 // Serialize route response in OSRM compatible format.
 // Inputs are:
 //     directions options
@@ -1982,6 +2150,11 @@ std::string serialize(valhalla::Api& api) {
                                           *api.mutable_trip()->mutable_routes(i)->mutable_legs(),
                                           imperial, options, controller));
 
+    // Add voice instructions if the user requested them
+    if (options.voice_instructions()) {
+      route->emplace("voiceLocale", options.language());
+    }
+
     routes->emplace_back(std::move(route));
   }
 
@@ -2005,6 +2178,7 @@ std::string serialize(valhalla::Api& api) {
 
 using namespace osrm_serializers;
 
+namespace {
 /// Assert equality of two json documents
 //
 // TODO Improve the diffed view of mismatching documents
@@ -2304,9 +2478,4 @@ int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
-#else
-
-} // namespace
-
 #endif

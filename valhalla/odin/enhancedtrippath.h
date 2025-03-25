@@ -80,12 +80,20 @@ public:
     return trip_path_.leg_count();
   }
 
+  const ::google::protobuf::RepeatedPtrField<::valhalla::LevelChange>& level_changes() const {
+    return trip_path_.level_changes();
+  }
+
   const ::google::protobuf::RepeatedPtrField<::valhalla::Location>& location() const {
     return trip_path_.location();
   }
 
   const ::valhalla::BoundingBox& bbox() const {
     return trip_path_.bbox();
+  }
+
+  const ::valhalla::Summary& summary() const {
+    return trip_path_.summary();
   }
 
   std::unique_ptr<EnhancedTripLeg_Node> GetEnhancedNode(const int node_index);
@@ -360,6 +368,16 @@ public:
     return mutable_edge_->indoor();
   }
 
+  const google::protobuf::RepeatedPtrField<valhalla::TripLeg_Edge_Level>& levels() const {
+    return mutable_edge_->levels();
+  }
+
+  bool traverses_levels() const {
+    return !mutable_edge_->levels().empty() &&
+           (mutable_edge_->levels().size() > 1 ||
+            mutable_edge_->levels()[0].start() != mutable_edge_->levels()[0].end());
+  }
+
   bool IsUnnamed() const;
 
   // Use
@@ -418,7 +436,7 @@ public:
 
   std::vector<std::pair<std::string, bool>> GetNameList() const;
 
-  std::string GetLevelRef() const;
+  std::vector<std::string> GetLevelRef() const;
 
   float GetLength(const Options::Units& units);
 
@@ -466,6 +484,18 @@ protected:
 class EnhancedTripLeg_IntersectingEdge {
 public:
   EnhancedTripLeg_IntersectingEdge(TripLeg_IntersectingEdge* mutable_intersecting_edge);
+
+  int name_size() const {
+    return mutable_intersecting_edge_->name_size();
+  }
+
+  const ::valhalla::StreetName& name(int index) const {
+    return mutable_intersecting_edge_->name(index);
+  }
+
+  const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& name() const {
+    return mutable_intersecting_edge_->name();
+  }
 
   uint32_t begin_heading() const {
     return mutable_intersecting_edge_->begin_heading();
@@ -602,6 +632,9 @@ public:
     return mutable_node_->type();
   }
 
+  bool traffic_signal() const {
+    return mutable_node_->traffic_signal();
+  }
   double elapsed_time() const {
     return mutable_node_->cost().elapsed_cost().seconds();
   }

@@ -12,7 +12,6 @@
 #include <cxxopts.hpp>
 #include <iostream>
 #include <unordered_map>
-#include <utility>
 
 #include "argparse_utils.h"
 
@@ -169,7 +168,7 @@ int main(int argc, char* argv[]) {
     auto result = options.parse(argc, argv);
     if (!parse_common_args(program, options, result, config, ""))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -178,11 +177,11 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  // get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
-
   // configure logging here, we want it to go to stderr
   valhalla::midgard::logging::Configure({{"type", "std_err"}, {"color", "true"}});
+
+  // get something we can use to fetch tiles
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // keep the global number of edges encountered at the point we encounter each tile
   // this allows an edge to have a sequential global id and makes storing it very small

@@ -1,11 +1,8 @@
 #include <algorithm>
 #include <cstdint>
-#include <functional>
-#include <iostream>
 #include <iterator>
 #include <optional>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -240,6 +237,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
   // Step through nodes in reverse order to produce maneuvers
   // excluding the last and first nodes
   for (int i = (trip_path_->GetLastNodeIndex() - 1); i > 0; --i) {
+    auto node = trip_path_->GetEnhancedNode(i);
 
 #ifdef LOGGING_LEVEL_TRACE
     auto prev_edge = trip_path_->GetPrevEdge(i);
@@ -253,7 +251,6 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
     LOG_TRACE(std::string("  prev2curr_turn_degree=") + std::to_string(prev2curr_turn_degree) +
               " is a " + Turn::GetTypeString(Turn::GetType(prev2curr_turn_degree)));
-    auto node = trip_path_->GetEnhancedNode(i);
     for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
       auto intersecting_edge = node->GetIntersectingEdge(z);
       auto xturn_degree = GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading());
@@ -278,7 +275,34 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
               std::string(" | left_similar_traversable_outbound =") +
               std::to_string(xedge_counts.left_similar_traversable_outbound));
 #endif
-
+    if (trip_path_->GetCurrEdge(i)->pedestrian_type() == PedestrianType::kBlind) {
+      switch (node->type()) {
+        case TripLeg_Node_Type_kStreetIntersection: {
+          std::vector<std::pair<std::string, bool>> name_list;
+          for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
+            auto intersecting_edge = node->GetIntersectingEdge(z);
+            for (const auto& name : intersecting_edge->name()) {
+              std::pair<std::string, bool> cur_street = {name.value(), name.is_route_number()};
+              if (std::find(name_list.begin(), name_list.end(), cur_street) == name_list.end())
+                name_list.push_back(cur_street);
+            }
+          }
+          if (!name_list.empty()) {
+            maneuvers.front().set_cross_street_names(name_list);
+            maneuvers.front().set_node_type(node->type());
+            if (node->traffic_signal())
+              maneuvers.front().set_traffic_signal(true);
+          }
+          break;
+        }
+        case TripLeg_Node_Type_kGate:
+        case TripLeg_Node_Type_kBollard:
+          maneuvers.front().set_node_type(node->type());
+          break;
+        default:
+          break;
+      }
+    }
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
       UpdateManeuver(maneuvers.front(), i);
     } else {
@@ -507,6 +531,19 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // if next maneuver has an intersecting forward link
       else if (next_man->intersecting_forward_edge()) {
         LOG_TRACE("+++ Do Not Combine: if next maneuver has an intersecting forward link +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      }
+      // Do not combine
+      // if has node_type
+      else if ((curr_man->pedestrian_type() == PedestrianType::kBlind &&
+                next_man->pedestrian_type() == PedestrianType::kBlind) &&
+               (curr_man->has_node_type() || next_man->has_node_type() || curr_man->is_steps() ||
+                next_man->is_steps() || curr_man->is_bridge() || next_man->is_bridge() ||
+                curr_man->is_tunnel() || next_man->is_tunnel())) {
+        LOG_TRACE("+++ Do Not Combine: if has node type+++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -1120,7 +1157,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
 
   // Set the end level ref
   if (curr_edge && !curr_edge->GetLevelRef().empty()) {
-    maneuver.set_end_level_ref(curr_edge->GetLevelRef());
+    if (curr_edge->GetLevelRef().size() > 1) {
+      maneuver.set_end_level_ref("");
+    } else {
+      maneuver.set_end_level_ref(curr_edge->GetLevelRef()[0]);
+    }
   }
 
   // Elevator
@@ -1251,6 +1292,19 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     }
   }
 
+  // only set steps to true if it involves a level change or the steps are long enough to
+  // not be considered trivial
+  maneuver.set_steps(prev_edge->use() == TripLeg_Use_kStepsUse &&
+                     (prev_edge->traverses_levels() || prev_edge->length_km() >= 0.003));
+
+  if (maneuver.pedestrian_type() == PedestrianType::kBlind) {
+    if (prev_edge->use() == TripLeg_Use_kStepsUse)
+      maneuver.set_steps(true);
+    if (prev_edge->bridge())
+      maneuver.set_bridge(true);
+    if (prev_edge->tunnel())
+      maneuver.set_tunnel(true);
+  }
   // TODO - what about street names; maybe check name flag
   UpdateManeuver(maneuver, node_index);
 }
@@ -1381,7 +1435,6 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 }
 
 void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
-
   auto prev_edge = trip_path_->GetPrevEdge(node_index);
   auto curr_edge = trip_path_->GetCurrEdge(node_index);
   auto node = trip_path_->GetEnhancedNode(node_index);
@@ -1406,9 +1459,14 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // Set elevator
   if (node->IsElevator()) {
     maneuver.set_elevator(true);
+    maneuver.set_node_type(node->type());
     // Set the end level ref
     if (curr_edge && !curr_edge->GetLevelRef().empty()) {
-      maneuver.set_end_level_ref(curr_edge->GetLevelRef());
+      if (curr_edge->GetLevelRef().size() > 1) {
+        maneuver.set_end_level_ref("");
+      } else {
+        maneuver.set_end_level_ref(curr_edge->GetLevelRef()[0]);
+      }
     }
   }
 
@@ -1482,7 +1540,6 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
       maneuver.set_begin_street_names(std::move(curr_edge_names));
     }
   }
-
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare && prev_edge &&
       (prev_edge->travel_mode() == TravelMode::kBicycle) &&
       maneuver.travel_mode() == TravelMode::kPedestrian) {
@@ -1757,7 +1814,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=ELEVATOR");
   }
   // Process steps
-  else if (maneuver.indoor_steps()) {
+  else if (maneuver.indoor_steps() || maneuver.is_steps()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kStepsEnter);
     LOG_TRACE("ManeuverType=STEPS");
   }
@@ -2063,6 +2120,9 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   auto node = trip_path_->GetEnhancedNode(node_index);
   auto turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
+  if (curr_edge->pedestrian_type() == PedestrianType::kBlind && maneuver.has_node_type()) {
+    return false;
+  }
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare) {
     return false;
   }
@@ -3960,10 +4020,12 @@ void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& m
 
     for (auto node = man->begin_node_index(); node < man->end_node_index(); ++node) {
       auto curr_edge = trip_path_->GetCurrEdge(node);
-      // multipoint routes with `through` or `via` types can have consecutive copies of the same edge
+      // multipoint routes with `through` or `via` types can have consecutive copies of the same
+      // edge
       if (curr_edge != trip_path_->GetCurrEdge(node + 1)) {
         // every time we are about to leave an edge, collect all landmarks in it
-        // and reset distance of each landmark to the distance from the landmark to the maneuver point
+        // and reset distance of each landmark to the distance from the landmark to the maneuver
+        // point
         auto curr_landmarks = curr_edge->landmarks();
         for (auto& l : curr_landmarks) {
           double new_distance =

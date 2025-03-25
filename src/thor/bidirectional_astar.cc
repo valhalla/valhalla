@@ -7,6 +7,7 @@
 #include "sif/edgelabel.h"
 #include "sif/recost.h"
 #include "thor/alternates.h"
+#include "worker.h"
 #include <algorithm>
 
 using namespace valhalla::midgard;
@@ -90,7 +91,7 @@ void BidirectionalAStar::Clear() {
   // Set the ferry flag to false
   has_ferry_ = false;
   // Set not thru pruning to true
-  not_thru_pruning_ = true;
+  set_not_thru_pruning(true);
   // reset origin & destination pruning states
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
@@ -135,13 +136,13 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   // the threshold is set.
   cost_threshold_ = std::numeric_limits<float>::max();
   iterations_threshold_ = std::numeric_limits<uint32_t>::max();
-
   auto& hierarchy_limits = costing_->GetHierarchyLimits();
-  ignore_hierarchy_limits_ = std::all_of(hierarchy_limits.begin() + 1,
-                                         hierarchy_limits.begin() + TileHierarchy::levels().size(),
-                                         [](const HierarchyLimits& limits) {
-                                           return limits.max_up_transitions == kUnlimitedTransitions;
-                                         });
+  ignore_hierarchy_limits_ =
+      std::all_of(hierarchy_limits.begin() + 1,
+                  hierarchy_limits.begin() + TileHierarchy::levels().size(),
+                  [](const HierarchyLimits& limits) {
+                    return limits.max_up_transitions() == kUnlimitedTransitions;
+                  });
   hierarchy_limits_forward_ = hierarchy_limits;
   hierarchy_limits_reverse_ = hierarchy_limits;
 }
@@ -199,7 +200,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     // Synchronize shortcuts for both directions. If this shortcut has been already
     // encountered on the opposing search we should do the same now: skip or traverse.
     if ((opp_edge_set != EdgeSet::kSkipped &&
-         hierarchy_limits[meta.edge_id.level() + 1].StopExpanding(pred.distance())) ||
+         StopExpanding(hierarchy_limits[meta.edge_id.level() + 1], pred.distance())) ||
         opp_edge_set == EdgeSet::kPermanent || opp_edge_set == EdgeSet::kTemporary) {
       shortcuts |= meta.edge->shortcut();
     } else {
@@ -237,7 +238,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
-  uint8_t restriction_idx = -1;
+  uint8_t restriction_idx = kInvalidRestriction;
   if (FORWARD) {
     // Why is is_dest false?
     // We have to consider next cases:
@@ -268,11 +269,12 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
                              : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
 
+  auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
   // Separate out transition cost.
   sif::Cost transition_cost =
-      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
+      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred, tile, reader_getter)
               : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge,
+                                                opp_pred_edge, t2, pred.edgeid(), reader_getter,
                                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
   newcost += transition_cost;
@@ -309,42 +311,48 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                           : astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist));
 
   // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
-  bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
+  // We allow settling not_thru edges so we can connect both trees on them.
+  bool not_thru_pruning =
+      not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = 0;
   if (FORWARD) {
     idx = edgelabels_forward_.size();
-    if (hierarchy_limits_forward_[meta.edge_id.level()].max_up_transitions != kUnlimitedTransitions) {
+    if (hierarchy_limits_forward_[meta.edge_id.level()].max_up_transitions() !=
+        kUnlimitedTransitions) {
       // Override distance to the destination with a distance from the origin.
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
     }
     edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
-                                     sortcost, dist, mode_, transition_cost, thru,
+                                     sortcost, dist, mode_, transition_cost, not_thru_pruning,
                                      (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                                      restriction_idx, 0,
                                      meta.edge->destonly() ||
-                                         (costing_->is_hgv() && meta.edge->destonly_hgv()));
+                                         (costing_->is_hgv() && meta.edge->destonly_hgv()),
+                                     meta.edge->forwardaccess() & kTruckAccess);
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
-    if (hierarchy_limits_reverse_[meta.edge_id.level()].max_up_transitions != kUnlimitedTransitions) {
+    if (hierarchy_limits_reverse_[meta.edge_id.level()].max_up_transitions() !=
+        kUnlimitedTransitions) {
       // Override distance to the origin with a distance from the destination.
       // It will be used by hierarchy limits
       dist = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
     }
     edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
-                                     sortcost, dist, mode_, transition_cost, thru,
-                                     (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
+                                     sortcost, dist, mode_, transition_cost, not_thru_pruning,
+                                     (pred.closure_pruning() || !costing_->IsClosed(opp_edge, t2)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                         opp_pred_edge),
                                      restriction_idx, 0,
                                      opp_edge->destonly() ||
-                                         (costing_->is_hgv() && opp_edge->destonly_hgv()));
+                                         (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                                     opp_edge->forwardaccess() & kTruckAccess);
     adjacencylist_reverse_.add(idx);
   }
 
@@ -357,8 +365,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
             ? GraphId{}
             : (FORWARD ? edgelabels_forward_ : edgelabels_reverse_)[pred.predecessor()].edgeid();
     expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
-                        "bidirectional_astar", "r", newcost.secs,
-                        pred.path_distance() + meta.edge->length(), newcost.cost);
+                        "bidirectional_astar", Expansion_EdgeStatus_reached, newcost.secs,
+                        pred.path_distance() + meta.edge->length(), newcost.cost,
+                        static_cast<Expansion_ExpansionType>(expansion_direction));
   }
 
   // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge that
@@ -422,14 +431,14 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
     // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
     // this edge until last. If any other edges were emplaced, it means we should not
     // even try to evaluate a u-turn since u-turns should only happen for deadends
-    uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
+    bool is_uturn = pred.opp_local_idx() == meta.edge->localedgeidx();
+    uturn_meta = is_uturn ? meta : uturn_meta;
 
     // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
-    disable_uturn =
-        (pred.opp_local_idx() != meta.edge->localedgeidx() &&
-         ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                          shortcuts, tile, offset_time)) ||
-        disable_uturn;
+    disable_uturn = (!is_uturn && ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge,
+                                                                   nodeinfo, pred_idx, meta,
+                                                                   shortcuts, tile, offset_time)) ||
+                    disable_uturn;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -441,13 +450,14 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() && !ignore_hierarchy_limits_ &&
-           hierarchy_limits[trans->endnode().level()].StopExpanding(pred.distance())) ||
+           StopExpanding(hierarchy_limits[trans->endnode().level()], pred.distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
 
       // setup for expansion at this level
-      hierarchy_limits[node.level()].up_transition_count += trans->up();
+      hierarchy_limits[node.level()].set_up_transition_count(
+          hierarchy_limits[node.level()].up_transition_count() + trans->up());
       const auto* trans_node = trans_tile->node(trans->endnode());
       EdgeMetadata trans_meta =
           EdgeMetadata::make(trans->endnode(), trans_node, trans_tile, edgestatus);
@@ -532,10 +542,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // points to may be harder to find
   SetOrigin(graphreader, origin, forward_time_info);
   SetDestination(graphreader, destination, reverse_time_info);
-
-  // Update hierarchy limits
-  if (!ignore_hierarchy_limits_)
-    ModifyHierarchyLimits();
 
   // Find shortest path. Switch between a forward direction and a reverse
   // direction search based on the current costs. Alternating like this
@@ -676,12 +682,12 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
     bool force_reverse = false;
     if (!ignore_hierarchy_limits_) {
       for (size_t level = TileHierarchy::levels().size() - 1; level > 0; --level) {
-        if (hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance()) &&
-            !hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance())) {
+        if (StopExpanding(hierarchy_limits_reverse_[level], rev_pred.distance()) &&
+            !StopExpanding(hierarchy_limits_forward_[level], fwd_pred.distance())) {
           force_forward = true;
           break;
-        } else if (hierarchy_limits_forward_[level].StopExpanding(fwd_pred.distance()) &&
-                   !hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance())) {
+        } else if (StopExpanding(hierarchy_limits_forward_[level], fwd_pred.distance()) &&
+                   !StopExpanding(hierarchy_limits_reverse_[level], rev_pred.distance())) {
           force_reverse = true;
           break;
         }
@@ -703,16 +709,18 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         const auto prev_pred = fwd_pred.predecessor() == kInvalidLabel
                                    ? GraphId{}
                                    : edgelabels_forward_[fwd_pred.predecessor()].edgeid();
-        expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "bidirectional_astar", "s",
-                            fwd_pred.cost().secs, fwd_pred.path_distance(), fwd_pred.cost().cost);
+        expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "bidirectional_astar",
+                            Expansion_EdgeStatus_settled, fwd_pred.cost().secs,
+                            fwd_pred.path_distance(), fwd_pred.cost().cost,
+                            Expansion_ExpansionType_forward);
       }
 
       // Prune path if predecessor is not a through edge or if the maximum
       // number of upward transitions has been exceeded on this hierarchy level.
       if ((fwd_pred.not_thru() && fwd_pred.not_thru_pruning()) ||
           (!ignore_hierarchy_limits_ &&
-           hierarchy_limits_forward_[fwd_pred.endnode().level()].StopExpanding(
-               fwd_pred.distance()))) {
+           StopExpanding(hierarchy_limits_forward_[fwd_pred.endnode().level()],
+                         fwd_pred.distance()))) {
         continue;
       }
 
@@ -750,15 +758,17 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         const auto prev_pred = rev_pred.predecessor() == kInvalidLabel
                                    ? GraphId{}
                                    : edgelabels_reverse_[rev_pred.predecessor()].edgeid();
-        expansion_callback_(graphreader, rev_pred.opp_edgeid(), prev_pred, "bidirectional_astar", "s",
-                            rev_pred.cost().secs, rev_pred.path_distance(), rev_pred.cost().cost);
+        expansion_callback_(graphreader, rev_pred.opp_edgeid(), prev_pred, "bidirectional_astar",
+                            Expansion_EdgeStatus_settled, rev_pred.cost().secs,
+                            rev_pred.path_distance(), rev_pred.cost().cost,
+                            Expansion_ExpansionType_reverse);
       }
 
       // Prune path if predecessor is not a through edge
       if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
           (!ignore_hierarchy_limits_ &&
-           hierarchy_limits_reverse_[rev_pred.endnode().level()].StopExpanding(
-               rev_pred.distance()))) {
+           StopExpanding(hierarchy_limits_reverse_[rev_pred.endnode().level()],
+                         rev_pred.distance()))) {
         continue;
       }
 
@@ -865,8 +875,9 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
     const auto prev_pred = pred.predecessor() == kInvalidLabel
                                ? GraphId{}
                                : edgelabels_forward_[pred.predecessor()].edgeid();
-    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "bidirectional_astar", "c",
-                        pred.cost().secs, pred.path_distance(), pred.cost().cost);
+    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "bidirectional_astar",
+                        Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
+                        pred.cost().cost, Expansion_ExpansionType_forward);
   }
 
   return true;
@@ -937,8 +948,10 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
     const auto prev_pred = fwd_pred.predecessor() == kInvalidLabel
                                ? GraphId{}
                                : edgelabels_forward_[fwd_pred.predecessor()].edgeid();
-    expansion_callback_(graphreader, fwd_edge_id, prev_pred, "bidirectional_astar", "c",
-                        fwd_pred.cost().secs, fwd_pred.path_distance(), fwd_pred.cost().cost);
+    expansion_callback_(graphreader, fwd_edge_id, prev_pred, "bidirectional_astar",
+                        Expansion_EdgeStatus_connected, fwd_pred.cost().secs,
+                        fwd_pred.path_distance(), fwd_pred.cost().cost,
+                        Expansion_ExpansionType_reverse);
   }
 
   return true;
@@ -1005,32 +1018,35 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // to invalid to indicate the origin of the path.
     uint32_t idx = edgelabels_forward_.size();
     edgestatus_forward_.Set(edgeid, EdgeSet::kTemporary, idx, tile);
-    if (hierarchy_limits_forward_[edgeid.level()].max_up_transitions != kUnlimitedTransitions) {
+    if (hierarchy_limits_forward_[edgeid.level()].max_up_transitions() != kUnlimitedTransitions) {
       // Override distance to the destination with a distance from the origin.
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
     }
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     -1, !(costing_->IsClosed(directededge, tile)),
+                                     kInvalidRestriction, !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      sif::InternalTurn::kNoTurn, 0,
                                      directededge->destonly() ||
-                                         (costing_->is_hgv() && directededge->destonly_hgv()));
+                                         (costing_->is_hgv() && directededge->destonly_hgv()),
+                                     directededge->forwardaccess() & kTruckAccess);
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
     if (expansion_callback_) {
-      expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar", "r", cost.secs,
-                          static_cast<uint32_t>(edge.distance() + 0.5), cost.cost);
+      expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar",
+                          Expansion_EdgeStatus_reached, cost.secs,
+                          static_cast<uint32_t>(edge.distance() + 0.5), cost.cost,
+                          Expansion_ExpansionType_forward);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
     edgelabels_forward_.back().set_not_thru(false);
 
-    pruning_disabled_at_origin_ = pruning_disabled_at_origin_ ||
-                                  !edgelabels_forward_.back().closure_pruning() ||
-                                  !edgelabels_forward_.back().not_thru_pruning();
+    pruning_disabled_at_origin_ =
+        pruning_disabled_at_origin_ || !edgelabels_forward_.back().closure_pruning() ||
+        !edgelabels_forward_.back().not_thru_pruning() || edgelabels_forward_.back().destonly();
   }
 
   // Set the origin timezone
@@ -1100,7 +1116,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // edge (edgeid) is set.
     uint32_t idx = edgelabels_reverse_.size();
     edgestatus_reverse_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile);
-    if (hierarchy_limits_reverse_[opp_edge_id.level()].max_up_transitions != kUnlimitedTransitions) {
+    if (hierarchy_limits_reverse_[opp_edge_id.level()].max_up_transitions() !=
+        kUnlimitedTransitions) {
       // Override distance to the origin with a distance from the destination.
       // It will be used by hierarchy limits
       dist = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
@@ -1109,24 +1126,27 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, -1,
-                                     opp_dir_edge->destonly() ||
-                                         (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
+                                     sif::InternalTurn::kNoTurn, kInvalidRestriction,
+                                     directededge->destonly() ||
+                                         (costing_->is_hgv() && directededge->destonly_hgv()),
+                                     directededge->forwardaccess() & kTruckAccess);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as reached, sending the opposing because this is the reverse tree
     if (expansion_callback_) {
-      expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar", "r", cost.secs,
-                          static_cast<uint32_t>(edge.distance() + 0.5), cost.cost);
+      expansion_callback_(graphreader, edgeid, GraphId{}, "bidirectional_astar",
+                          Expansion_EdgeStatus_reached, cost.secs,
+                          static_cast<uint32_t>(edge.distance() + 0.5), cost.cost,
+                          Expansion_ExpansionType_reverse);
     }
 
     // Set the initial not_thru flag to false. There is an issue with not_thru
     // flags on small loops. Set this to false here to override this for now.
     edgelabels_reverse_.back().set_not_thru(false);
 
-    pruning_disabled_at_destination_ = pruning_disabled_at_destination_ ||
-                                       !edgelabels_reverse_.back().closure_pruning() ||
-                                       !edgelabels_reverse_.back().not_thru_pruning();
+    pruning_disabled_at_destination_ =
+        pruning_disabled_at_destination_ || !edgelabels_reverse_.back().closure_pruning() ||
+        !edgelabels_reverse_.back().not_thru_pruning() || edgelabels_reverse_.back().destonly();
   }
 }
 
@@ -1309,17 +1329,6 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
   }
   // give back the paths
   return paths;
-}
-
-void BidirectionalAStar::ModifyHierarchyLimits() {
-  // Distance threshold optimized for unidirectional search. For bidirectional case
-  // they can be lowered.
-  // Decrease distance thresholds only for arterial roads for now
-  if (hierarchy_limits_forward_[1].max_up_transitions != kUnlimitedTransitions)
-    hierarchy_limits_forward_[1].expansion_within_dist /= 5.f;
-
-  if (hierarchy_limits_reverse_[1].max_up_transitions != kUnlimitedTransitions)
-    hierarchy_limits_reverse_[1].expansion_within_dist /= 5.f;
 }
 
 bool IsBridgingEdgeRestricted(GraphReader& graphreader,

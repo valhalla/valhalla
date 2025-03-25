@@ -11,11 +11,26 @@
     "boost-range",
     "boost-tokenizer",
     "curl",
+    "cxxopts",
+    "date",
+    {
+      "name": "dirent",
+      "platform": "windows"
+    },
+    {
+      "name": "gdal",
+      "default-features": false,
+      "features": ["recommended-features"]
+    },
     "geos",
     "libspatialite",
     "pkgconf",
+    "pybind11",
+    "rapidjson",
+    "robin-hood-hashing",
     "spatialite-tools",
     "luajit",
+    "lz4",
     "protobuf",
     "sqlite3",
     "zlib"

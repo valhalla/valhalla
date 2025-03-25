@@ -38,14 +38,10 @@ set(includes
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
      )
 
-# treat date library as system
 set(system_includes 
-  ${VALHALLA_SOURCE_DIR}/third_party/date/include
-  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
-  ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)
-if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
-endif()
+  ${date_include_dir}
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>
+  ${rapidjson_include_dir})
 
 set(sources
     accessrestriction.cc
@@ -69,6 +65,7 @@ set(sources
     pathlocation.cc
     predictedspeeds.cc
     tilehierarchy.cc
+    timedomain.cc
     turn.cc
     shortcut_recovery.h
     streetname.cc

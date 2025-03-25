@@ -6,15 +6,6 @@ import public "sign.proto";
 
 message DirectionsLeg {
 
-  message Summary {
-    float length = 1;          // kilometers or miles based on units
-    double time = 2;           // seconds
-    BoundingBox bbox = 3;      // Bounding box of the shape
-    bool has_time_restrictions = 4; // Does the route contain any time restrictions?
-    bool has_toll = 5;
-    bool has_ferry = 6;
-    bool has_highway = 7;
-  }
 
   message GuidanceView {
     enum Type{
@@ -150,6 +141,7 @@ message DirectionsLeg {
   Summary summary = 5;
   repeated Maneuver maneuver = 6;
   string shape = 7;
+  repeated LevelChange level_changes = 8;
 }
 
 message DirectionsRoute {

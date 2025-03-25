@@ -1,12 +1,4 @@
-#include <future>
-#include <optional>
-#include <thread>
-#include <utility>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-#include <boost/range/algorithm/remove_if.hpp>
-
+#include "mjolnir/pbfgraphparser.h"
 #include "baldr/complexrestriction.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -21,11 +13,16 @@
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
 #include "mjolnir/osmlinguistic.h"
-#include "mjolnir/osmpbfparser.h"
-#include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/timeparsing.h"
 #include "mjolnir/util.h"
 #include "proto/common.pb.h"
+#include "scoped_timer.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/range/algorithm/remove_if.hpp>
+#include <osmium/io/pbf_input.hpp>
+#include <thread>
+#include <utility>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -66,6 +63,7 @@ public:
 
   // Clarifies types of loop roads and saves fixed ways.
   void clarify_and_fix(sequence<OSMWayNode>& osm_way_node_seq, sequence<OSMWay>& osm_way_seq) {
+    SCOPED_TIMER();
     osm_way_node_seq.flush();
     osm_way_seq.flush();
 
@@ -141,14 +139,8 @@ private:
 };
 
 // Construct PBFGraphParser based on properties file and input PBF extract
-struct graph_callback : public OSMPBF::Callback {
-public:
-  graph_callback() = delete;
-  graph_callback(const graph_callback&) = delete;
-  virtual ~graph_callback() {
-  }
-
-  graph_callback(const boost::property_tree::ptree& pt, OSMData& osmdata)
+struct graph_parser {
+  graph_parser(const boost::property_tree::ptree& pt, OSMData& osmdata)
       : lua_(get_lua(pt)), osmdata_(osmdata) {
     current_way_node_index_ = last_node_ = last_way_ = last_relation_ = 0;
 
@@ -171,9 +163,9 @@ public:
     use_rest_area_ = pt.get<bool>("data_processing.use_rest_area", false);
     use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
 
-    empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
-    empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
-    empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});
+    empty_node_tags_ = lua_.Transform(OSMType::kNode, 0, {});
+    empty_way_tags_ = lua_.Transform(OSMType::kWay, 0, {});
+    empty_relation_tags_ = lua_.Transform(OSMType::kRelation, 0, {});
 
     tag_handlers_["driving_side"] = [this]() {
       if (!use_admin_db_) {
@@ -934,6 +926,55 @@ public:
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
+    tag_handlers_["maxspeed:hgv:forward"] = [this]() {
+      try {
+        way_.set_truck_speed_forward(std::stof(tag_.second));
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["maxspeed:hgv:backward"] = [this]() {
+      try {
+        way_.set_truck_speed_backward(std::stof(tag_.second));
+      } catch (const std::out_of_range& oor) {
+        LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
+      }
+    };
+    tag_handlers_["maxspeed:conditional"] = [this]() {
+      std::vector<std::string> tokens = GetTagTokens(tag_.second, '@');
+      if (tokens.size() < 2) {
+        return; // just ignore bad entries
+      }
+
+      uint8_t speed;
+      if (tokens.at(0) == "no" || tokens.at(0) == "none") {
+        // Handle autobahns that have unlimited speed during smaller part of the day
+        speed = kUnlimitedSpeedLimit;
+      } else {
+        try {
+          const float parsed = std::stof(tokens.at(0));
+          if (parsed > kMaxAssumedSpeed) {
+            // LOG_WARN("Ignoring maxspeed:conditional that exceedes max for way id: " +
+            //          std::to_string(osmid_));
+            return;
+          }
+          speed = static_cast<uint8_t>(parsed + 0.5f);
+        } catch (const std::invalid_argument&) {
+          return; // ignore strange things like 'walk @...'
+        }
+      }
+
+      std::vector<std::string> conditions = GetTagTokens(tokens.at(1), ';');
+      for (const auto& c : conditions) {
+        std::vector<uint64_t> values = get_time_range(c);
+        for (const auto& v : values) {
+          ConditionalSpeedLimit limit = {};
+          limit.td_ = TimeDomain(v);
+          limit.speed_ = speed;
+          osmdata_.conditional_speeds.emplace(osmid_, limit);
+        }
+      }
+    };
     tag_handlers_["truck_route"] = [this]() {
       way_.set_truck_route(tag_.second == "true" ? true : false);
     };
@@ -945,11 +986,47 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["hazmat_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kHazmat);
+      restriction.set_value(tag_.second == "true" ? true : false);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["hazmat_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kHazmat);
+      restriction.set_value(tag_.second == "true" ? true : false);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["maxheight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxHeight);
       restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxheight_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxHeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxheight_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxHeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -961,6 +1038,24 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["maxwidth_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWidth);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxwidth_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWidth);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["maxlength"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
@@ -969,11 +1064,47 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["maxlength_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxLength);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxlength_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxLength);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["maxweight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
       restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxweight_forward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kForward);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxweight_backward"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWeight);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      restriction.set_direction(AccessRestrictionDirection::kBackward);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -1344,6 +1475,30 @@ public:
         has_surface_ = false;
       }
     };
+
+    // surface and tracktype tag should win over smoothness.
+    tag_handlers_["smoothness"] = [this]() {
+      if (!has_surface_tag_ && !has_tracktype_tag_) {
+        has_surface_ = true;
+        if (tag_.second == "excellent" || tag_.second == "good") {
+          way_.set_surface(Surface::kPavedSmooth);
+        } else if (tag_.second == "intermediate") {
+          way_.set_surface(Surface::kPavedRough);
+        } else if (tag_.second == "bad") {
+          way_.set_surface(Surface::kCompacted);
+        } else if (tag_.second == "very_bad") {
+          way_.set_surface(Surface::kDirt);
+        } else if (tag_.second == "horrible") {
+          way_.set_surface(Surface::kGravel);
+        } else if (tag_.second == "very_horrible") {
+          way_.set_surface(Surface::kPath);
+        } else if (tag_.second == "impassable") {
+          way_.set_surface(Surface::kImpassable);
+        } else {
+          has_surface_ = false;
+        }
+      }
+    };
     // surface tag should win over tracktype.
     tag_handlers_["tracktype"] = [this]() {
       if (!has_surface_tag_) {
@@ -1434,7 +1589,6 @@ public:
     tag_handlers_["toll"] = [this]() { way_.set_toll(tag_.second == "true" ? true : false); };
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
     tag_handlers_["indoor"] = [this]() { way_.set_indoor(tag_.second == "yes" ? true : false); };
-    tag_handlers_["seasonal"] = [this]() { way_.set_seasonal(tag_.second == "true" ? true : false); };
     tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
     //    tag_handlers_["bike_national_ref"] = [this]() {
     //      if (!tag_.second.empty())
@@ -1785,64 +1939,65 @@ public:
     return std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len);
   }
 
-  virtual void node_callback(const uint64_t osmid,
-                             const double lng,
-                             const double lat,
-                             const OSMPBF::Tags& tags) override {
+  // Handle bike share stations separately
+  void bss_node(const osmium::Node& node) {
+    const uint64_t osmid = node.id();
     // unsorted extracts are just plain nasty, so they can bugger off!
     if (osmid < last_node_) {
       throw std::runtime_error("Detected unsorted input data");
     }
     last_node_ = osmid;
 
-    // Handle bike share stations separately
-    std::optional<Tags> results = std::nullopt;
-    if (bss_nodes_) {
-      // Get tags - do't bother with Lua callout if the taglist is empty
-      if (tags.size() > 0) {
-        results = lua_.Transform(OSMType::kNode, osmid, tags);
-      } else {
-        results = empty_node_results_;
-      }
+    // Get tags - do't bother with Lua callout if the taglist is empty
+    const Tags tags = node.tags().empty() ? empty_node_tags_
+                                          : lua_.Transform(OSMType::kNode, node.id(), node.tags());
 
-      // bail if there is nothing bike related
-      Tags::const_iterator found;
-      if (!results || (found = results->find("amenity")) == results->end() ||
-          found->second != "bicycle_rental") {
-        return;
-      }
-
-      // Create a new node and set its attributes
-      OSMNode n{osmid};
-      n.set_latlng(lng, lat);
-      n.set_type(NodeType::kBikeShare);
-      valhalla::BikeShareStationInfo bss_info;
-
-      for (auto& key_value : *results) {
-        if (key_value.first == "name") {
-          bss_info.set_name(key_value.second);
-        } else if (key_value.first == "network") {
-          bss_info.set_network(key_value.second);
-        } else if (key_value.first == "ref") {
-          bss_info.set_ref(key_value.second);
-        } else if (key_value.first == "capacity") {
-          auto capacity = std::strtoul(key_value.second.c_str(), nullptr, 10);
-          if (capacity > 0) {
-            bss_info.set_capacity(capacity);
-          }
-        } else if (key_value.first == "operator") {
-          bss_info.set_operator_(key_value.second);
-        }
-      }
-
-      std::string buffer;
-      bss_info.SerializeToString(&buffer);
-      n.set_bss_info_index(osmdata_.node_names.index(buffer));
-      ++osmdata_.node_name_count;
-
-      bss_nodes_->push_back(n);
-      return; // we are done.
+    // bail if there is nothing bike related
+    Tags::const_iterator found = tags.find("amenity");
+    if (found == tags.end() || found->second != "bicycle_rental") {
+      return;
     }
+
+    // Create a new node and set its attributes
+    OSMNode n{osmid};
+    n.set_latlng(node.location().lon(), node.location().lat());
+    n.set_type(NodeType::kBikeShare);
+    valhalla::BikeShareStationInfo bss_info;
+
+    for (auto& key_value : tags) {
+      if (key_value.first == "name") {
+        bss_info.set_name(key_value.second);
+      } else if (key_value.first == "network") {
+        bss_info.set_network(key_value.second);
+      } else if (key_value.first == "ref") {
+        bss_info.set_ref(key_value.second);
+      } else if (key_value.first == "capacity") {
+        auto capacity = std::strtoul(key_value.second.c_str(), nullptr, 10);
+        if (capacity > 0) {
+          bss_info.set_capacity(capacity);
+        }
+      } else if (key_value.first == "operator") {
+        bss_info.set_operator_(key_value.second);
+      }
+    }
+
+    std::string buffer;
+    bss_info.SerializeToString(&buffer);
+    n.set_bss_info_index(osmdata_.node_names.index(buffer));
+    ++osmdata_.node_name_count;
+
+    bss_nodes_->push_back(n);
+  }
+
+  void node(const osmium::Node& node) {
+    changeset(node.changeset());
+
+    const uint64_t osmid = node.id();
+    // unsorted extracts are just plain nasty, so they can bugger off!
+    if (osmid < last_node_) {
+      throw std::runtime_error("Detected unsorted input data");
+    }
+    last_node_ = osmid;
 
     // if we found all of the node ids we were looking for already we can bail
     if (current_way_node_index_ >= way_nodes_->size()) {
@@ -1869,35 +2024,32 @@ public:
 
     // Get tags if not already available.  Don't bother calling Lua if there
     // are no OSM tags to process.
-    if (tags.size() > 0) {
-      results = results ? results : lua_.Transform(OSMType::kNode, osmid, tags);
-    } else {
-      results = results ? results : empty_node_results_;
-    }
+    const Tags tags =
+        node.tags().empty() ? empty_node_tags_ : lua_.Transform(OSMType::kNode, osmid, node.tags());
 
-    const auto highway = results->find("highway");
-    bool is_highway_junction =
-        ((highway != results->end()) && (highway->second == "motorway_junction"));
+    const auto highway = tags.find("highway");
+    bool is_highway_junction = ((highway != tags.end()) && (highway->second == "motorway_junction"));
 
-    const auto junction = results->find("junction");
+    const auto junction = tags.find("junction");
     bool maybe_named_junction =
-        junction != results->end() && (junction->second == "named" || junction->second == "yes");
+        junction != tags.end() && (junction->second == "named" || junction->second == "yes");
     bool named_junction = false;
 
-    const auto barrier_toll_booth = results->find("barrier");
+    const auto barrier_toll_booth = tags.find("barrier");
     bool is_barrier_toll_booth =
-        (barrier_toll_booth != results->end()) && (barrier_toll_booth->second == "toll_booth");
+        (barrier_toll_booth != tags.end()) && (barrier_toll_booth->second == "toll_booth");
 
-    const auto highway_toll_gantry = results->find("highway");
+    const auto highway_toll_gantry = tags.find("highway");
     bool is_highway_toll_gantry =
-        (highway_toll_gantry != results->end()) && (highway_toll_gantry->second == "toll_gantry");
+        (highway_toll_gantry != tags.end()) && (highway_toll_gantry->second == "toll_gantry");
 
     bool is_toll_node = is_barrier_toll_booth || is_highway_toll_gantry;
     bool named_toll_node = false;
 
     OSMNode n;
+    OSMNodeLinguistic linguistics;
     n.set_id(osmid);
-    n.set_latlng(lng, lat);
+    n.set_latlng(node.location().lon(), node.location().lat());
     bool intersection = false;
     if (is_highway_junction) {
       n.set_type(NodeType::kMotorWayJunction);
@@ -1906,11 +2058,12 @@ public:
     name_ipa_ = ref_ipa_ = name_nt_sampa_ = ref_nt_sampa_ = name_katakana_ = ref_katakana_ =
         name_jeita_ = ref_jeita_ = {};
 
-    for (const auto& tag : *results) {
-      tag_ = tag;
+    for (const auto& tag : tags) {
+      // To make `ProcessNameTag` function below happy.
+      tag_ = {tag.first, tag.second};
 
       bool is_lang_pronunciation = false;
-      std::size_t found = tag_.first.find(":pronunciation");
+      std::size_t found = tag.first.find(":pronunciation");
       if (found != std::string::npos)
         is_lang_pronunciation = true;
 
@@ -2035,12 +2188,12 @@ public:
           ProcessNameTag(tag_, name_w_lang_, language_);
           ++osmdata_.node_name_count;
           named_junction = maybe_named_junction;
-        } else if (boost::algorithm::starts_with(tag_.first, "ref:")) {
+        } else if (boost::algorithm::starts_with(tag.first, "ref:")) {
           ProcessNameTag(tag_, ref_w_lang_, ref_language_);
           ++osmdata_.node_ref_count;
         }
       } else {
-        std::string t = tag_.first;
+        const std::string& t = tag.first;
         PronunciationAlphabet alphabet = PronunciationAlphabet::kIpa;
         std::size_t found = t.find(":nt-sampa");
         if (found != std::string::npos)
@@ -2056,48 +2209,52 @@ public:
           }
         }
         if (boost::algorithm::starts_with(t, "name:")) {
-          ProcessPronunciationTag(OSMLinguistic::Type::kNodeName, alphabet, &n);
+          ProcessPronunciationTag(OSMLinguistic::Type::kNodeName, alphabet, &linguistics);
         } else if (boost::algorithm::starts_with(t, "ref:")) {
-          ProcessPronunciationTag(OSMLinguistic::Type::kNodeRef, alphabet, &n);
+          ProcessPronunciationTag(OSMLinguistic::Type::kNodeRef, alphabet, &linguistics);
         }
       }
     }
 
     // begin name logic
-    std::string l = language_;
     ProcessName(name_w_lang_, name_, language_);
     n.set_name_index(osmdata_.node_names.index(name_));
-    n.set_name_lang_index(osmdata_.node_names.index(language_));
+    linguistics.set_name_lang_index(osmdata_.node_names.index(language_));
 
     // begin ref logic
-    l = ref_language_;
     ProcessName(ref_w_lang_, ref_, ref_language_);
     n.set_ref_index(osmdata_.node_names.index(ref_));
-    n.set_ref_lang_index(osmdata_.node_names.index(ref_language_));
+    linguistics.set_ref_lang_index(osmdata_.node_names.index(ref_language_));
 
     ProcessPronunciationName(OSMLinguistic::Type::kNodeName, PronunciationAlphabet::kIpa, name_ipa_,
-                             &n);
+                             &linguistics);
 
     ProcessPronunciationName(OSMLinguistic::Type::kNodeName, PronunciationAlphabet::kKatakana,
-                             name_katakana_, &n);
+                             name_katakana_, &linguistics);
 
     ProcessPronunciationName(OSMLinguistic::Type::kNodeName, PronunciationAlphabet::kJeita,
-                             name_jeita_, &n);
+                             name_jeita_, &linguistics);
 
     ProcessPronunciationName(OSMLinguistic::Type::kNodeName, PronunciationAlphabet::kNtSampa,
-                             name_nt_sampa_, &n);
+                             name_nt_sampa_, &linguistics);
 
     ProcessPronunciationName(OSMLinguistic::Type::kNodeRef, PronunciationAlphabet::kIpa, ref_ipa_,
-                             &n);
+                             &linguistics);
 
     ProcessPronunciationName(OSMLinguistic::Type::kNodeRef, PronunciationAlphabet::kKatakana,
-                             ref_katakana_, &n);
+                             ref_katakana_, &linguistics);
 
     ProcessPronunciationName(OSMLinguistic::Type::kNodeRef, PronunciationAlphabet::kJeita, ref_jeita_,
-                             &n);
+                             &linguistics);
 
     ProcessPronunciationName(OSMLinguistic::Type::kNodeRef, PronunciationAlphabet::kNtSampa,
-                             ref_nt_sampa_, &n);
+                             ref_nt_sampa_, &linguistics);
+
+    if (!linguistics.isEmpty()) {
+      n.set_linguistic_info_index(osmdata_.node_linguistic_count);
+      node_linguistics_->push_back(linguistics);
+      ++osmdata_.node_linguistic_count;
+    }
 
     // Different types of named nodes are tagged as a named intersection
     n.set_named_intersection(named_junction || named_toll_node);
@@ -2135,17 +2292,21 @@ public:
     osmdata_.edge_count -= intersection; // more accurate but undercounts by skipping lone edges
   }
 
-  virtual void way_callback(const uint64_t osmid,
-                            const OSMPBF::Tags& tags,
-                            const std::vector<uint64_t>& nodes) override {
+  void way(const osmium::Way& way) {
+    changeset(way.changeset());
 
-    osmid_ = osmid;
-
+    osmid_ = static_cast<uint64_t>(way.id());
     // unsorted extracts are just plain nasty, so they can bugger off!
     if (osmid_ < last_way_) {
       throw std::runtime_error("Detected unsorted input data");
     }
     last_way_ = osmid_;
+
+    std::vector<uint64_t> nodes;
+    nodes.reserve(way.nodes().size());
+    for (const auto& node : way.nodes()) {
+      nodes.push_back(node.ref());
+    }
 
     // Do not add ways with < 2 nodes. Log error or add to a problem list
     // TODO - find out if we do need these, why they exist...
@@ -2156,9 +2317,9 @@ public:
     // Throw away closed features with following tags: building, landuse,
     // leisure, natural. See: http://wiki.openstreetmap.org/wiki/Key:area
     if (nodes[0] == nodes[nodes.size() - 1]) {
-      for (const auto& tag : tags) {
-        if (tag.first == "building" || tag.first == "landuse" || tag.first == "leisure" ||
-            tag.first == "natural") {
+      for (const auto& tag : way.tags()) {
+        std::string_view key = tag.key();
+        if (key == "building" || key == "landuse" || key == "leisure" || key == "natural") {
           // LOG_INFO("Loop wayid " + std::to_string(osmid) + " Discard?");
           return;
         }
@@ -2167,31 +2328,31 @@ public:
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    Tags results =
-        tags.size() == 0 ? empty_way_results_ : lua_.Transform(OSMType::kWay, osmid_, tags);
-    if (results.size() == 0) {
+    const Tags tags =
+        way.tags().empty() ? empty_way_tags_ : lua_.Transform(OSMType::kWay, osmid_, way.tags());
+    if (tags.empty()) {
       return;
     }
 
     try {
       // Throw away use if include_driveways_ is false
       Tags::const_iterator use;
-      if (!include_driveways_ && (use = results.find("use")) != results.end() &&
+      if (!include_driveways_ && (use = tags.find("use")) != tags.end() &&
           static_cast<Use>(std::stoi(use->second)) == Use::kDriveway) {
 
         // only private use.
         Tags::const_iterator priv;
-        if ((priv = results.find("private")) != results.end() && priv->second == "true") {
+        if ((priv = tags.find("private")) != tags.end() && priv->second == "true") {
           return;
         }
       }
       // Throw away constructions if include_construction_ is false
-      if (!include_construction_ && (use = results.find("use")) != results.end() &&
+      if (!include_construction_ && (use = tags.find("use")) != tags.end() &&
           static_cast<Use>(std::stoi(use->second)) == Use::kConstruction) {
         return;
       }
       // Throw away platforms if include_platforms_ is false
-      if (!include_platforms_ && (use = results.find("use")) != results.end() &&
+      if (!include_platforms_ && (use = tags.find("use")) != tags.end() &&
           static_cast<Use>(std::stoi(use->second)) == Use::kPlatform) {
         return;
       }
@@ -2209,7 +2370,7 @@ public:
 
       // Check whether the node is on a part of a way doubling back on itself
       OSMNode osm_node{node};
-      auto inserted = loop_nodes_.insert(std::make_pair(node, i));
+      auto inserted = loop_nodes_.emplace(node, i);
       bool flattening = inserted.first->second > 0 && i < nodes.size() - 1 &&
                         nodes[i + 1] == nodes[inserted.first->second - 1];
       bool unflattening = i > 0 && inserted.first->second < nodes.size() - 1 &&
@@ -2331,16 +2492,19 @@ public:
     direction_ = int_direction_ = {};
     direction_pronunciation_ = int_direction_pronunciation_ = {};
 
-    const auto& surface_exists = results.find("surface");
-    has_surface_tag_ = (surface_exists != results.end());
+    const auto& surface_exists = tags.find("surface");
+    has_surface_tag_ = (surface_exists != tags.end());
     if (!has_surface_tag_) {
       has_surface_ = false;
     }
 
+    const auto& tracktype_exists = tags.find("tracktype");
+    has_tracktype_tag_ = (tracktype_exists != tags.end());
+
     way_.set_drive_on_right(true); // default
 
-    for (const auto& kv : results) {
-      tag_ = kv;
+    for (const auto& kv : tags) {
+      tag_ = {kv.first, kv.second};
 
       bool is_lang_pronunciation = false;
       std::size_t found = tag_.first.find(":pronunciation");
@@ -2360,7 +2524,8 @@ public:
 
       }
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
+      else if (boost::algorithm::starts_with(tag_.first, "access:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
                boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional") ||
                boost::algorithm::starts_with(tag_.first, "bicycle:conditional") ||
                boost::algorithm::starts_with(tag_.first, "motorcycle:conditional") ||
@@ -2391,7 +2556,9 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
+          if (boost::algorithm::starts_with(tag_.first, "access:conditional")) {
+            mode = kAllAccess;
+          } else if (boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
           } else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional")) {
@@ -2689,8 +2856,8 @@ public:
     MergeRefPronunciations();
 
     // Process mtb tags.
-    auto mtb_scale = results.find("mtb:scale");
-    bool has_mtb_scale = mtb_scale != results.end();
+    auto mtb_scale = tags.find("mtb:scale");
+    bool has_mtb_scale = mtb_scale != tags.end();
     if (has_mtb_scale) {
       int scale = get_number("mtb:scale", mtb_scale->second);
       if (scale >= 0) {
@@ -2716,8 +2883,8 @@ public:
       }
     }
 
-    auto mtb_uphill_scale = results.find("mtb:scale:uphill");
-    bool has_mtb_uphill_scale = mtb_uphill_scale != results.end();
+    auto mtb_uphill_scale = tags.find("mtb:scale:uphill");
+    bool has_mtb_uphill_scale = mtb_uphill_scale != tags.end();
     if (has_mtb_uphill_scale) {
       int scale = get_number("mtb:uphill:scale", mtb_uphill_scale->second);
       if (scale >= 0) {
@@ -2744,8 +2911,8 @@ public:
     }
 
     // IMBA scale
-    auto mtb_imba_scale = results.find("mtb:scale:imba");
-    bool has_mtb_imba = mtb_imba_scale != results.end();
+    auto mtb_imba_scale = tags.find("mtb:scale:imba");
+    bool has_mtb_imba = mtb_imba_scale != tags.end();
     if (has_mtb_imba) {
       // Update bike access (only if neither mtb:scale nor mtb:scale:uphill is present)
       if (!has_mtb_scale && !has_mtb_uphill_scale && way_.use() != Use::kConstruction) {
@@ -2759,7 +2926,7 @@ public:
     }
 
     // Only has MTB description - set bicycle access.
-    bool has_mtb_desc = results.find("mtb:description") != results.end();
+    bool has_mtb_desc = tags.find("mtb:description") != tags.end();
     if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba &&
         way_.use() != Use::kConstruction) {
       if (!way_.oneway_reverse()) {
@@ -2772,7 +2939,7 @@ public:
 
     // if no surface and tracktype but we have a sac_scale, set surface to path.
     if (!has_surface_) {
-      if (results.find("sac_scale") != results.end()) {
+      if (tags.find("sac_scale") != tags.end()) {
         way_.set_surface(Surface::kPath);
       } else {
         // If no surface has been set by a user, assign a surface based on Road Class and Use
@@ -3582,9 +3749,10 @@ public:
     ways_->push_back(way_);
   }
 
-  virtual void relation_callback(const uint64_t osmid,
-                                 const OSMPBF::Tags& tags,
-                                 const std::vector<OSMPBF::Member>& members) override {
+  void relation(const osmium::Relation& relation) {
+    changeset(relation.changeset());
+
+    const uint64_t osmid = relation.id();
     // unsorted extracts are just plain nasty, so they can bugger off!
     if (osmid < last_relation_) {
       throw std::runtime_error("Detected unsorted input data");
@@ -3592,9 +3760,10 @@ public:
     last_relation_ = osmid;
 
     // Get tags
-    Tags results =
-        tags.empty() ? empty_relation_results_ : lua_.Transform(OSMType::kRelation, osmid, tags);
-    if (results.size() == 0) {
+    const Tags tags = relation.tags().empty()
+                          ? empty_relation_tags_
+                          : lua_.Transform(OSMType::kRelation, osmid, relation.tags());
+    if (tags.empty()) {
       return;
     }
 
@@ -3613,7 +3782,7 @@ public:
     std::string hour_start, hour_end, day_start, day_end;
     uint32_t modes = 0;
 
-    for (const auto& tag : results) {
+    for (const auto& tag : tags) {
       if (tag.first == "type") {
         if (tag.second == "restriction") {
           isRestriction = true;
@@ -3773,6 +3942,19 @@ public:
         special_network = true;
     }
 
+    // Convert into a vector of helper structs to simplify processing by using
+    // `std::string_view` for `role` instead of original `const char*`.
+    struct Member {
+      osmium::item_type member_type;
+      uint64_t member_id;
+      std::string_view role;
+    };
+    std::vector<Member> members;
+    members.reserve(relation.members().size());
+    for (const auto& member : relation.members()) {
+      members.push_back(Member{member.type(), static_cast<uint64_t>(member.ref()), member.role()});
+    }
+
     if (isBicycle && isRoute && !network.empty()) {
       OSMBike bike;
       const uint32_t name_index = osmdata_.name_offset_map.index(name);
@@ -3838,11 +4020,9 @@ public:
       uint32_t to_way_id = 0;
       for (const auto& member : members) {
         // from and to must be of type 1(way).
-        if (member.role == "from" &&
-            member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        if (member.role == "from" && member.member_type == osmium::item_type::way) {
           from_way_id = member.member_id;
-        } else if (member.role == "to" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        } else if (member.role == "to" && member.member_type == osmium::item_type::way) {
           to_way_id = member.member_id;
         }
       }
@@ -3861,22 +4041,18 @@ public:
       for (const auto& member : members) {
 
         // from and to must be of type 1(way).  via must be of type 0(node)
-        if (member.role == "from" &&
-            member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        if (member.role == "from" && member.member_type == osmium::item_type::way) {
           from_way_id = member.member_id;
-        } else if (member.role == "to" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        } else if (member.role == "to" && member.member_type == osmium::item_type::way) {
           if (!restriction.to())
             restriction.set_to(member.member_id);
-        } else if (member.role == "via" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_NODE) {
+        } else if (member.role == "via" && member.member_type == osmium::item_type::node) {
           if (vias.size()) { // mix of nodes and ways.  Not supported yet.
             from_way_id = 0;
             break;
           }
           restriction.set_via(member.member_id);
-        } else if (member.role == "via" &&
-                   member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
+        } else if (member.role == "via" && member.member_type == osmium::item_type::way) {
           if (restriction.via()) { // mix of nodes and ways.  Not supported yet.
             from_way_id = 0;
             break;
@@ -4026,7 +4202,7 @@ public:
     }
   }
 
-  virtual void changeset_callback(const uint64_t changeset_id) override {
+  void changeset(const uint64_t changeset_id) {
     osmdata_.max_changeset_id_ = std::max(osmdata_.max_changeset_id_, changeset_id);
   }
 
@@ -4036,7 +4212,8 @@ public:
              sequence<OSMAccess>* access,
              sequence<OSMRestriction>* complex_restrictions_from,
              sequence<OSMRestriction>* complex_restrictions_to,
-             sequence<OSMNode>* bss_nodes) {
+             sequence<OSMNode>* bss_nodes,
+             sequence<OSMNodeLinguistic>* node_linguistics) {
     // reset the pointers (either null them out or set them to something valid)
     ways_.reset(ways);
     way_nodes_.reset(way_nodes);
@@ -4044,34 +4221,42 @@ public:
     complex_restrictions_from_.reset(complex_restrictions_from);
     complex_restrictions_to_.reset(complex_restrictions_to);
     bss_nodes_.reset(bss_nodes);
+    node_linguistics_.reset(node_linguistics);
+
+    if (node_linguistics != nullptr) {
+      // push empty struct at index 0
+      OSMNodeLinguistic ling;
+      node_linguistics_->push_back(ling);
+      ++osmdata_.node_linguistic_count;
+    }
   }
 
   void ProcessPronunciationTag(const OSMLinguistic::Type& type,
                                const PronunciationAlphabet& alphabet,
-                               OSMNode* n = nullptr) {
+                               OSMNodeLinguistic* linguistics = nullptr) {
 
     uint32_t name = 0, lang = 0;
     uint8_t t = static_cast<uint8_t>(type);
     uint8_t alpha = static_cast<uint8_t>(alphabet);
 
-    if (n) {
+    if (linguistics) {
       if (type == OSMLinguistic::Type::kNodeName) {
         switch (alphabet) {
           case PronunciationAlphabet::kIpa:
-            name = n->name_pronunciation_ipa_index();
-            lang = n->name_pronunciation_ipa_lang_index();
+            name = linguistics->name_pronunciation_ipa_index();
+            lang = linguistics->name_pronunciation_ipa_lang_index();
             break;
           case PronunciationAlphabet::kKatakana:
-            name = n->name_pronunciation_katakana_index();
-            lang = n->name_pronunciation_katakana_lang_index();
+            name = linguistics->name_pronunciation_katakana_index();
+            lang = linguistics->name_pronunciation_katakana_lang_index();
             break;
           case PronunciationAlphabet::kJeita:
-            name = n->name_pronunciation_jeita_index();
-            lang = n->name_pronunciation_jeita_lang_index();
+            name = linguistics->name_pronunciation_jeita_index();
+            lang = linguistics->name_pronunciation_jeita_lang_index();
             break;
           case PronunciationAlphabet::kNtSampa:
-            name = n->name_pronunciation_nt_sampa_index();
-            lang = n->name_pronunciation_nt_sampa_lang_index();
+            name = linguistics->name_pronunciation_nt_sampa_index();
+            lang = linguistics->name_pronunciation_nt_sampa_lang_index();
             break;
           case PronunciationAlphabet::kNone:
             break;
@@ -4079,20 +4264,20 @@ public:
       } else if (type == OSMLinguistic::Type::kNodeRef) {
         switch (alphabet) {
           case PronunciationAlphabet::kIpa:
-            name = n->ref_pronunciation_ipa_index();
-            lang = n->ref_pronunciation_ipa_lang_index();
+            name = linguistics->ref_pronunciation_ipa_index();
+            lang = linguistics->ref_pronunciation_ipa_lang_index();
             break;
           case PronunciationAlphabet::kKatakana:
-            name = n->ref_pronunciation_katakana_index();
-            lang = n->ref_pronunciation_katakana_lang_index();
+            name = linguistics->ref_pronunciation_katakana_index();
+            lang = linguistics->ref_pronunciation_katakana_lang_index();
             break;
           case PronunciationAlphabet::kJeita:
-            name = n->ref_pronunciation_jeita_index();
-            lang = n->ref_pronunciation_jeita_lang_index();
+            name = linguistics->ref_pronunciation_jeita_index();
+            lang = linguistics->ref_pronunciation_jeita_lang_index();
             break;
           case PronunciationAlphabet::kNtSampa:
-            name = n->ref_pronunciation_nt_sampa_index();
-            lang = n->ref_pronunciation_nt_sampa_lang_index();
+            name = linguistics->ref_pronunciation_nt_sampa_index();
+            lang = linguistics->ref_pronunciation_nt_sampa_lang_index();
             break;
           case PronunciationAlphabet::kNone:
             break;
@@ -4106,14 +4291,15 @@ public:
     std::string name_w_lang, language;
 
     if (name != 0)
-      name_w_lang = !n ? osmdata_.name_offset_map.name(name) : osmdata_.node_names.name(name);
+      name_w_lang =
+          !linguistics ? osmdata_.name_offset_map.name(name) : osmdata_.node_names.name(name);
 
     if (lang != 0)
-      language = !n ? osmdata_.name_offset_map.name(lang) : osmdata_.node_names.name(lang);
+      language = !linguistics ? osmdata_.name_offset_map.name(lang) : osmdata_.node_names.name(lang);
 
     ProcessNameTag(tag_, name_w_lang, language, true);
 
-    SavePronunciationData(t, alpha, name_w_lang, language, n);
+    SavePronunciationData(t, alpha, name_w_lang, language, linguistics);
   }
 
   void ProcessLeftRightPronunciationTag(const OSMLinguistic::Type& type,
@@ -4141,30 +4327,36 @@ public:
                              const uint8_t alphabet,
                              const std::string& pronunciation,
                              const std::string& language,
-                             OSMNode* n = nullptr) {
+                             OSMNodeLinguistic* linguistics = nullptr) {
     if (!pronunciation.empty()) {
       has_pronunciation_tags_ = true;
 
-      if (n) {
+      if (linguistics) {
         OSMLinguistic::Type t = static_cast<OSMLinguistic::Type>(type);
         PronunciationAlphabet alpha = static_cast<PronunciationAlphabet>(alphabet);
         if (t == OSMLinguistic::Type::kNodeName) {
           switch (alpha) {
             case PronunciationAlphabet::kIpa:
-              n->set_name_pronunciation_ipa_index(osmdata_.node_names.index(pronunciation));
-              n->set_name_pronunciation_ipa_lang_index(osmdata_.node_names.index(language));
+              linguistics->set_name_pronunciation_ipa_index(osmdata_.node_names.index(pronunciation));
+              linguistics->set_name_pronunciation_ipa_lang_index(osmdata_.node_names.index(language));
               break;
             case PronunciationAlphabet::kKatakana:
-              n->set_name_pronunciation_katakana_index(osmdata_.node_names.index(pronunciation));
-              n->set_name_pronunciation_katakana_lang_index(osmdata_.node_names.index(language));
+              linguistics->set_name_pronunciation_katakana_index(
+                  osmdata_.node_names.index(pronunciation));
+              linguistics->set_name_pronunciation_katakana_lang_index(
+                  osmdata_.node_names.index(language));
               break;
             case PronunciationAlphabet::kJeita:
-              n->set_name_pronunciation_jeita_index(osmdata_.node_names.index(pronunciation));
-              n->set_name_pronunciation_jeita_lang_index(osmdata_.node_names.index(language));
+              linguistics->set_name_pronunciation_jeita_index(
+                  osmdata_.node_names.index(pronunciation));
+              linguistics->set_name_pronunciation_jeita_lang_index(
+                  osmdata_.node_names.index(language));
               break;
             case PronunciationAlphabet::kNtSampa:
-              n->set_name_pronunciation_nt_sampa_index(osmdata_.node_names.index(pronunciation));
-              n->set_name_pronunciation_nt_sampa_lang_index(osmdata_.node_names.index(language));
+              linguistics->set_name_pronunciation_nt_sampa_index(
+                  osmdata_.node_names.index(pronunciation));
+              linguistics->set_name_pronunciation_nt_sampa_lang_index(
+                  osmdata_.node_names.index(language));
               break;
             case PronunciationAlphabet::kNone:
               break;
@@ -4172,20 +4364,26 @@ public:
         } else if (t == OSMLinguistic::Type::kNodeRef) {
           switch (alpha) {
             case PronunciationAlphabet::kIpa:
-              n->set_ref_pronunciation_ipa_index(osmdata_.node_names.index(pronunciation));
-              n->set_ref_pronunciation_ipa_lang_index(osmdata_.node_names.index(language));
+              linguistics->set_ref_pronunciation_ipa_index(osmdata_.node_names.index(pronunciation));
+              linguistics->set_ref_pronunciation_ipa_lang_index(osmdata_.node_names.index(language));
               break;
             case PronunciationAlphabet::kKatakana:
-              n->set_ref_pronunciation_katakana_index(osmdata_.node_names.index(pronunciation));
-              n->set_ref_pronunciation_katakana_lang_index(osmdata_.node_names.index(language));
+              linguistics->set_ref_pronunciation_katakana_index(
+                  osmdata_.node_names.index(pronunciation));
+              linguistics->set_ref_pronunciation_katakana_lang_index(
+                  osmdata_.node_names.index(language));
               break;
             case PronunciationAlphabet::kJeita:
-              n->set_ref_pronunciation_jeita_index(osmdata_.node_names.index(pronunciation));
-              n->set_ref_pronunciation_jeita_lang_index(osmdata_.node_names.index(language));
+              linguistics->set_ref_pronunciation_jeita_index(
+                  osmdata_.node_names.index(pronunciation));
+              linguistics->set_ref_pronunciation_jeita_lang_index(
+                  osmdata_.node_names.index(language));
               break;
             case PronunciationAlphabet::kNtSampa:
-              n->set_ref_pronunciation_nt_sampa_index(osmdata_.node_names.index(pronunciation));
-              n->set_ref_pronunciation_nt_sampa_lang_index(osmdata_.node_names.index(language));
+              linguistics->set_ref_pronunciation_nt_sampa_index(
+                  osmdata_.node_names.index(pronunciation));
+              linguistics->set_ref_pronunciation_nt_sampa_lang_index(
+                  osmdata_.node_names.index(language));
               break;
             case PronunciationAlphabet::kNone:
               break;
@@ -4200,7 +4398,7 @@ public:
     }
   }
 
-  void ProcessNameTag(const std::pair<std::string, std::string>& tag,
+  void ProcessNameTag(const robin_hood::pair<std::string, std::string>& tag,
                       std::string& name_w_lang,
                       std::string& language,
                       bool is_lang_pronunciation = false) {
@@ -4262,7 +4460,7 @@ public:
     }
   }
 
-  void ProcessLeftRightNameTag(const std::pair<std::string, std::string>& tag,
+  void ProcessLeftRightNameTag(const robin_hood::pair<std::string, std::string>& tag,
                                std::string& name_left_right_w_lang,
                                std::string& lang_left_right,
                                bool is_lang_pronunciation = false) {
@@ -4322,30 +4520,30 @@ public:
   void ProcessPronunciationName(const OSMLinguistic::Type& type,
                                 const PronunciationAlphabet& alphabet,
                                 std::string& name_w_pronunciation,
-                                OSMNode* n = nullptr) {
+                                OSMNodeLinguistic* linguistics = nullptr) {
     uint32_t name_index = 0, lang_index = 0;
     std::string language, name_pronunciation_w_lang;
     uint8_t t = static_cast<uint8_t>(type);
     uint8_t alpha = static_cast<uint8_t>(alphabet);
 
-    if (n) {
+    if (linguistics) {
       if (type == OSMLinguistic::Type::kNodeName) {
         switch (alphabet) {
           case PronunciationAlphabet::kIpa:
-            name_index = n->name_pronunciation_ipa_index();
-            lang_index = n->name_pronunciation_ipa_lang_index();
+            name_index = linguistics->name_pronunciation_ipa_index();
+            lang_index = linguistics->name_pronunciation_ipa_lang_index();
             break;
           case PronunciationAlphabet::kKatakana:
-            name_index = n->name_pronunciation_katakana_index();
-            lang_index = n->name_pronunciation_katakana_lang_index();
+            name_index = linguistics->name_pronunciation_katakana_index();
+            lang_index = linguistics->name_pronunciation_katakana_lang_index();
             break;
           case PronunciationAlphabet::kJeita:
-            name_index = n->name_pronunciation_jeita_index();
-            lang_index = n->name_pronunciation_jeita_lang_index();
+            name_index = linguistics->name_pronunciation_jeita_index();
+            lang_index = linguistics->name_pronunciation_jeita_lang_index();
             break;
           case PronunciationAlphabet::kNtSampa:
-            name_index = n->name_pronunciation_nt_sampa_index();
-            lang_index = n->name_pronunciation_nt_sampa_lang_index();
+            name_index = linguistics->name_pronunciation_nt_sampa_index();
+            lang_index = linguistics->name_pronunciation_nt_sampa_lang_index();
             break;
           case PronunciationAlphabet::kNone:
             break;
@@ -4353,20 +4551,20 @@ public:
       } else if (type == OSMLinguistic::Type::kNodeRef) {
         switch (alphabet) {
           case PronunciationAlphabet::kIpa:
-            name_index = n->ref_pronunciation_ipa_index();
-            lang_index = n->ref_pronunciation_ipa_lang_index();
+            name_index = linguistics->ref_pronunciation_ipa_index();
+            lang_index = linguistics->ref_pronunciation_ipa_lang_index();
             break;
           case PronunciationAlphabet::kKatakana:
-            name_index = n->ref_pronunciation_katakana_index();
-            lang_index = n->ref_pronunciation_katakana_lang_index();
+            name_index = linguistics->ref_pronunciation_katakana_index();
+            lang_index = linguistics->ref_pronunciation_katakana_lang_index();
             break;
           case PronunciationAlphabet::kJeita:
-            name_index = n->ref_pronunciation_jeita_index();
-            lang_index = n->ref_pronunciation_jeita_lang_index();
+            name_index = linguistics->ref_pronunciation_jeita_index();
+            lang_index = linguistics->ref_pronunciation_jeita_lang_index();
             break;
           case PronunciationAlphabet::kNtSampa:
-            name_index = n->ref_pronunciation_nt_sampa_index();
-            lang_index = n->ref_pronunciation_nt_sampa_lang_index();
+            name_index = linguistics->ref_pronunciation_nt_sampa_index();
+            lang_index = linguistics->ref_pronunciation_nt_sampa_lang_index();
             break;
           case PronunciationAlphabet::kNone:
             break;
@@ -4378,16 +4576,16 @@ public:
     }
 
     if (name_index != 0)
-      name_pronunciation_w_lang =
-          !n ? osmdata_.name_offset_map.name(name_index) : osmdata_.node_names.name(name_index);
+      name_pronunciation_w_lang = !linguistics ? osmdata_.name_offset_map.name(name_index)
+                                               : osmdata_.node_names.name(name_index);
 
     if (lang_index != 0)
-      language =
-          !n ? osmdata_.name_offset_map.name(lang_index) : osmdata_.node_names.name(lang_index);
+      language = !linguistics ? osmdata_.name_offset_map.name(lang_index)
+                              : osmdata_.node_names.name(lang_index);
 
     ProcessName(name_pronunciation_w_lang, name_w_pronunciation, language);
 
-    SavePronunciationData(t, alpha, name_w_pronunciation, language, n);
+    SavePronunciationData(t, alpha, name_w_pronunciation, language, linguistics);
   }
 
   void ProcessPronunciationLRFBName(const std::string& pronunciation_name,
@@ -4643,7 +4841,7 @@ public:
   std::unordered_map<std::string, TagHandler> tag_handlers_;
   // Tag handlers capture these fields
   OSMWay way_;
-  std::pair<std::string, std::string> tag_;
+  robin_hood::pair<std::string, std::string> tag_;
   uint64_t osmid_;
 
   const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
@@ -4656,7 +4854,7 @@ public:
   bool has_default_speed_ = false, has_max_speed_ = false;
   bool has_average_speed_ = false, has_advisory_speed_ = false;
   bool has_surface_ = true;
-  bool has_surface_tag_ = true;
+  bool has_surface_tag_ = true, has_tracktype_tag_ = true;
   OSMAccess osm_access_;
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> pronunciationMap;
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> langMap;
@@ -4806,12 +5004,11 @@ public:
   // this lets us only have to iterate over the whole set once
   size_t current_way_node_index_;
   uint64_t last_node_, last_way_, last_relation_;
-  std::unordered_map<uint64_t, size_t> loop_nodes_;
+  robin_hood::unordered_map<uint64_t, size_t> loop_nodes_;
 
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;
-  // way pronunciations
-  // GREG std::unique_ptr<sequence<OSMPronunciation>> pronunciation_;
+
   // from complex restrictions
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_from_;
   //  used to find out if a wayid is the to edge for a complex restriction
@@ -4820,13 +5017,16 @@ public:
   // bss nodes
   std::unique_ptr<sequence<OSMNode>> bss_nodes_;
 
+  // node linguistics
+  std::unique_ptr<sequence<OSMNodeLinguistic>> node_linguistics_;
+
   // used to set "culdesac" labels to loop roads correctly
   culdesac_processor culdesac_processor_;
 
   // empty objects initialized with defaults to use when no tags are present on objects
-  Tags empty_node_results_;
-  Tags empty_way_results_;
-  Tags empty_relation_results_;
+  Tags empty_node_tags_;
+  Tags empty_way_tags_;
+  Tags empty_relation_tags_;
 
   uint32_t get_pronunciation_index(const uint8_t type, const uint8_t alpha) {
     auto itr = pronunciationMap.find(std::make_pair(type, alpha));
@@ -4863,42 +5063,35 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
+  SCOPED_TIMER();
   OSMData osmdata{};
-  graph_callback callback(pt, osmdata);
+  graph_parser parser(pt, osmdata);
 
   LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
-  callback.reset(new sequence<OSMWay>(ways_file, true),
-                 new sequence<OSMWayNode>(way_nodes_file, true),
-                 new sequence<OSMAccess>(access_file, true), nullptr, nullptr, nullptr);
+  parser.reset(new sequence<OSMWay>(ways_file, true), new sequence<OSMWayNode>(way_nodes_file, true),
+               new sequence<OSMAccess>(access_file, true), nullptr, nullptr, nullptr, nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
-  for (auto& file_handle : file_handles) {
-    callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
-        callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+  for (auto& file : input_files) {
+    parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
+
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
+    while (const osmium::memory::Buffer buffer = reader.read()) {
+      for (const osmium::memory::Item& item : buffer) {
+        parser.way(static_cast<const osmium::Way&>(item));
+      }
+    }
+    reader.close(); // Explicit close to get an exception in case of an error.
   }
 
   // Clarifies types of loop roads and saves fixed ways.
-  callback.culdesac_processor_.clarify_and_fix(*callback.way_nodes_, *callback.ways_);
+  parser.culdesac_processor_.clarify_and_fix(*parser.way_nodes_, *parser.ways_);
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the access tags so that we can easily find them.
   LOG_INFO("Sorting osm access tags by way id...");
@@ -4927,43 +5120,38 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
-  graph_callback callback(pt, osmdata);
+  SCOPED_TIMER();
+  graph_parser parser(pt, osmdata);
 
   // Read the OSMData to files if not initialized.
   if (!osmdata.initialized)
-    callback.osmdata_.read_from_temp_files(pt.get<std::string>("tile_dir"));
+    parser.osmdata_.read_from_temp_files(pt.get<std::string>("tile_dir"));
 
   LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
 
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
-  callback.reset(nullptr, nullptr, nullptr,
-                 new sequence<OSMRestriction>(complex_restriction_from_file, true),
-                 new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
+  parser.reset(nullptr, nullptr, nullptr,
+               new sequence<OSMRestriction>(complex_restriction_from_file, true),
+               new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr, nullptr);
 
   // Parse relations.
   LOG_INFO("Parsing relations...");
-  for (auto& file_handle : file_handles) {
-    callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
-        callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+  for (auto& file : input_files) {
+    parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
+
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::relation);
+    while (const osmium::memory::Buffer buffer = reader.read()) {
+      for (const osmium::memory::Item& item : buffer) {
+        parser.relation(static_cast<const osmium::Relation&>(item));
+      }
+    }
+    reader.close(); // Explicit close to get an exception in case of an error.
   }
-  LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) + " simple restrictions");
+  LOG_INFO("Finished with " + std::to_string(osmdata.restrictions.size()) +
+           " simple turn restrictions");
   LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) +
            " lane connections");
 
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
@@ -4987,6 +5175,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                                 const std::vector<std::string>& input_files,
                                 const std::string& way_nodes_file,
                                 const std::string& bss_nodes_file,
+                                const std::string& linguistic_node_file,
                                 OSMData& osmdata) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
@@ -4996,44 +5185,41 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
 
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
-  graph_callback callback(pt, osmdata);
+  SCOPED_TIMER();
+  graph_parser parser(pt, osmdata);
 
   // Read the OSMData to files if not initialized.
   if (!osmdata.initialized)
-    callback.osmdata_.read_from_temp_files(pt.get<std::string>("tile_dir"));
+    parser.osmdata_.read_from_temp_files(pt.get<std::string>("tile_dir"));
 
   LOG_INFO("Parsing files for nodes: " + boost::algorithm::join(input_files, ", "));
-
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
 
   if (pt.get<bool>("import_bike_share_stations", false)) {
     LOG_INFO("Parsing bss nodes...");
 
     bool create = true;
-    for (auto& file_handle : file_handles) {
-      callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
-          callback.last_relation_ = 0;
+    for (auto& file : input_files) {
+      parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ =
+          0;
       // we send a null way_nodes file so that only the bike share stations are parsed
-      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
-                     new sequence<OSMNode>(bss_nodes_file, create));
-      OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
-                            callback);
+      parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
+                   new sequence<OSMNode>(bss_nodes_file, create), nullptr);
       create = false;
+
+      osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
+      while (const osmium::memory::Buffer buffer = reader.read()) {
+        for (const osmium::memory::Item& item : buffer) {
+          parser.bss_node(static_cast<const osmium::Node&>(item));
+        }
+      }
+      reader.close(); // Explicit close to get an exception in case of an error.
     }
     // Since the sequence must be flushed before reading it...
-    callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+    parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
     LOG_INFO("Found " + std::to_string(sequence<OSMNode>{bss_nodes_file, false}.size()) +
              " bss nodes...");
   }
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
@@ -5049,20 +5235,23 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   // being used in a way.
   // TODO: we know how many knows we expect, stop early once we have that many
   LOG_INFO("Parsing nodes...");
-  for (auto& file_handle : file_handles) {
+  for (auto& file : input_files) {
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
-    callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
-                   nullptr, nullptr);
-    callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
-        callback.last_relation_ = 0;
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+    parser.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr, nullptr,
+                 nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, true));
+    parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
+
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
+    while (const osmium::memory::Buffer buffer = reader.read()) {
+      for (const osmium::memory::Item& item : buffer) {
+        parser.node(static_cast<const osmium::Node&>(item));
+      }
+    }
+    reader.close(); // Explicit close to get an exception in case of an error.
   }
-  uint64_t max_osm_id = callback.last_node_;
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  uint64_t max_osm_id = parser.last_node_;
+  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) +
            " nodes contained in routable ways");
 
@@ -5093,6 +5282,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   LOG_INFO("Number of nodes with refs (exits) = " + std::to_string(osmdata.node_ref_count));
   LOG_INFO("Number of nodes with exit_to = " + std::to_string(osmdata.node_exit_to_count));
   LOG_INFO("Number of nodes with names = " + std::to_string(osmdata.node_name_count));
+  LOG_INFO("Number of nodes with linguistics = " + std::to_string(osmdata.node_linguistic_count));
   LOG_INFO("Number of way refs = " + std::to_string(osmdata.way_ref.size()));
   LOG_INFO("Number of reverse way refs = " + std::to_string(osmdata.way_ref_rev.size()));
   LOG_INFO("Unique Node Strings (names, refs, etc.) = " + std::to_string(osmdata.node_names.Size()));

@@ -44,16 +44,18 @@ The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal`
 | `date_time` | The local date and time at the location. <ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time.</li><li>2 - Specified arrival time. Note: This is not yet implemented for `multimodal`.</li></ul></li><li>`value` - the date and time specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. For example, "2016-07-03T08:06"</li></ul> |
 | `id` | Name of the isochrone request. If `id` is specified, the name is returned with the response. |
 | `contours` | A JSON array of contour objects with the time in minutes or distance in kilometers and color to use for each isochrone contour. You can specify up to four contours (by default).<ul><li>`time` - A floating point value specifying the time in minutes for the contour.</li><li>`distance` - A floating point value specifying the distance in kilometers for the contour.</li><li>`color` - The color for the output of the contour. Specify it as a [Hex value](http://www.w3schools.com/colors/colors_hexadecimal.asp), but without the `#`, such as `"color":"ff0000"` for red. If no color is specified, the isochrone service will assign a default color to the output.</li></ul>You can only specify **one metric per contour**, i.e. `time` or `distance`.  |
-| `polygons` | A Boolean value to determine whether to return geojson polygons or linestrings as the contours. The default is `false`, which returns lines; when `true`, polygons are returned. Note: When `polygons` is `true`, any contour that forms a ring is returned as a polygon. |
+| `polygons` | A Boolean value to determine whether to return geojson polygons or linestrings as the contours. The default is `false`, which returns lines; when `true`, polygons are returned. Note: When `polygons` is `true`, a feature's geometry type can be either `Polygon` or `MultiPolygon`, depending on the number of exterior rings formed for a given interval. |
 | `denoise` | A floating point value from `0` to `1` (default of `1`) which can be used to remove smaller contours. A value of `1` will only return the largest contour for a given time value. A value of `0.5` drops any contours that are less than half the area of the largest contour in the set of contours for that same time value. |
 | `generalize` | A floating point value in meters used as the tolerance for [Douglas-Peucker](https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm) generalization. Note: Generalization of contours can lead to self-intersections, as well as intersections of adjacent contours. |
-| `show_locations` | A boolean indicating whether the input locations should be returned as MultiPoint features: one feature for the exact input coordinates and one feature for the coordinates of the network node it snapped to. Default false. 
+| `show_locations` | A boolean indicating whether the input locations should be returned as MultiPoint features: one feature for the exact input coordinates and one feature for the coordinates of the network node it snapped to. Default false. |
+| `reverse` | A boolean which can be set to do inverse expansion of the isochrone. The reverse isochrone will show from which area the given location can be reached within the given time.
+ 
 
 ## Outputs of the Isochrone service
 
-In the service response, the isochrone contours are returned as [GeoJSON](http://geojson.org/), which can be integrated into mapping applications.
+In the service response, the isochrone contours are returned as [GeoJSON](http://geojson.org/), which can be integrated into mapping applications. Alternatively, the grid data that underlies these contours can be returned as a [GeoTIFF](https://www.ogc.org/standard/geotiff/). 
 
-The contours are calculated using rasters and are returned as either polygon or line features, depending on your input setting for the `polygons` parameter. If an isochrone request has been named using the optional `&id=` input, then the `id` is returned as a name property for the feature collection within the GeoJSON response. A `metric` attribute lets you know whether it's a `distance` or `time` contour. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
+The isochrone service returns contours as GeoJSON line or polygon features for the requested intervals (depending on the value of the `polygons` request parameter). These contours are calculated using a two dimensional grid. If the `format` request parameter is set to `geotiff`, the underlying grid data is returned directly instead of the contours derived from it. It will return one band for each requested metric (i.e. one for `time` and one for `distance`). If an isochrone request has been named using the optional `&id=` input, then the `id` is returned as a name property for the feature collection within the GeoJSON response. A `metric` attribute lets you know whether it's a `distance` or `time` contour. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
 
@@ -63,21 +65,7 @@ Most JavaScript-based GeoJSON renderers, including [Leaflet](http://leafletjs.co
 
 When making a map, drawing the isochrone contours as lines is more straightforward than polygons, and, therefore, currently is the default and recommended method. When deciding between the output as lines and polygons, consider your use case and the additional styling considerations involved with polygons. For example, fills should be rendered as semi-transparent over the other map layers so they are visible, although you may have more flexibility when using a vector-based map. In addition, polygons from multiple contour levels do not have overlapping areas cut out or removed. In other words, the outer contours include the areas of any inner contours, causing the colors and transparencies to blend when multiple contour polygons are drawn at the same time.
 
-The Valhalla team has plans to improving the polygon isochrone output and rendering capabilities, including by demoting some rings to be inners of other rings and removing potential self-intersections in polygon geometries.
-
-## Future work on the isochrone service
-
-The Isochrone service is in active development. To report software issues or suggest enhancements, open an issue in the [Valhalla GitHub repository](https://github.com/valhalla/valhalla/issues).
-
-Several other options are being considered as future service enhancements. These include:
-
-* ~~Using distance rather than time for each unit.~~
-* Generating outer contours or contours with interior holes for regions that cannot be accessed within the specified time.
-* ~~Options to control the minimum size of interior holes.~~
-* Removing self intersections from polygonal contours.
-* ~~Allowing multiple locations to compute the region reachable from any of the locations within a specified time.~~
-* ~~Generating contours with reverse access logic to see the region that can reach a specific location within the specified time.~~
-* Returning raster data for potential animation using OpenGL shaders. This also has analysis use for being able to query thousands of locations to determine the time to each location, including improvements with one-to-many requests to the Valhalla Time-Distance Matrix service.
+(TODO: write something about rendering the GeoTIFF output.)
 
 ## Data credits
 

@@ -3,7 +3,6 @@
 #include "midgard/logging.h"
 #include "worker.h"
 #include <algorithm>
-#include <map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -66,10 +65,6 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& destll,
   float range = kBucketCount * bucketsize;
   adjacencylist_.reuse(0.0f, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
-
-  // Get hierarchy limits from the costing. Get a copy since we increment
-  // transition counts (i.e., this is not a const reference).
-  hierarchy_limits_ = costing->GetHierarchyLimits();
 }
 
 // Clear the temporary information generated during path construction.
@@ -462,8 +457,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       // a transit line (assume the wait time is the cost)
       // transition_cost = {10.0f, 10.0f };
     } else {
+      auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
       transition_cost =
-          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
+          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred,
+                                                                     tile, reader_getter);
     }
     newcost += transition_cost;
 
@@ -734,7 +731,8 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     }
 
     // Get cost
-    auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
+    auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
     Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile) + transition_cost;
     uint32_t walking_distance = pred.path_distance() + directededge->length();
 
@@ -751,7 +749,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels.size();
     edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                            walking_distance, baldr::kInvalidRestriction, true, false,
+                            walking_distance, baldr::kInvalidRestriction, false, false,
                             InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
@@ -809,7 +807,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
     // we cannot do transition_cost on this label yet because we have no predecessor, but when we find
     // it, we will do an update on it and set the real transition cost based on the path to it
     edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, mode_, length,
-                            baldr::kInvalidRestriction, true, false, InternalTurn::kNoTurn);
+                            baldr::kInvalidRestriction, false, false, InternalTurn::kNoTurn);
     adjlist.add(label_idx);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx, tile);
     label_idx++;
@@ -859,6 +857,5 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
   std::reverse(path.begin(), path.end());
   return path;
 }
-
 } // namespace thor
 } // namespace valhalla

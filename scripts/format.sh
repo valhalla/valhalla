@@ -23,16 +23,16 @@ readonly CLANG_FORMAT=$(pwd)/mason_packages/.link/bin/clang-format
 
 echo "Using clang-format $CLANG_FORMAT_VERSION from ${CLANG_FORMAT}"
 
-find src valhalla test bench -type f -name '*.h' -o -name '*.cc' \
+find src valhalla test -type f -name '*.h' -o -name '*.cc' \
   | xargs -I{} -P ${NPROC} ${CLANG_FORMAT} -i -style=file {}
 
 # Python setup
 py=$(setup_python)
 if [[ $(python3 -m pip list | grep -c "black\|flake8") -ne 2 ]]; then
   if [[ $(python3 -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
-    ${py} -m pip install black==22.10.0 flake8==5.0.4
+    ${py} -m pip install black==24.10.0 flake8==7.1.1
   else
-    sudo PIP_BREAK_SYSTEM_PACKAGES=1 ${py} -m pip install black==22.10.0 flake8==5.0.4
+    sudo PIP_BREAK_SYSTEM_PACKAGES=1 ${py} -m pip install black==24.10.0 flake8==7.1.1
   fi
 fi
 python_sources=$(LANG=C find scripts src/bindings/python -type f -exec file {} \; | grep -F "Python script" | sed 's/:.*//')

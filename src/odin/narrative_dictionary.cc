@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include <boost/property_tree/ptree.hpp>
 
 #include "midgard/logging.h"
@@ -315,6 +313,10 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   // Populate approach_verbal_alert_subset
   Load(approach_verbal_alert_subset, narrative_pt.get_child(kApproachVerbalAlertKey));
 
+  /////////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate pass_subset...");
+  // Populate pass_subset
+  Load(pass_subset, narrative_pt.get_child(kPassKey));
   ///////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate elevator_subset");
   // Populate elevator_subset
@@ -567,6 +569,16 @@ void NarrativeDictionary::Load(ApproachVerbalAlertSubset& approach_verbal_alert_
   // Populate us_customary_lengths
   approach_verbal_alert_handle.us_customary_lengths =
       as_vector<std::string>(approach_verbal_alert_subset_pt, kUsCustomaryLengthsKey);
+}
+
+void NarrativeDictionary::Load(PassSubset& pass_handle,
+                               const boost::property_tree::ptree& pass_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(pass_handle), pass_subset_pt);
+
+  // Populate object_labels
+  pass_handle.object_labels = as_vector<std::string>(pass_subset_pt, kObjectLabelsKey);
 }
 
 void NarrativeDictionary::Load(EnterBuildingSubset& enter_building_handle,

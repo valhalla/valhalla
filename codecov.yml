@@ -1,7 +1,8 @@
 coverage:
-
   ignore:
     - third_party/.*
-    - bench/.*
+    # ignore executables
+    - src/valhalla_*
+    - src/mjolnir/valhalla_*
 
 comment: off

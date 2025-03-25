@@ -1,11 +1,10 @@
 #include <cstdint>
-#include <functional>
 #include <sstream>
 #include <vector>
 
 #include "midgard/encoded.h"
 #include "midgard/util.h"
-#include "route_serializer_osrm.cc"
+#include "route_serializer_osrm.h"
 #include "route_serializer_valhalla.cc"
 #include "tyr/serializers.h"
 

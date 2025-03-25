@@ -2,7 +2,7 @@
 
 #include "baldr/json.h"
 #include "proto_conversions.h"
-#include "thor/matrix_common.h"
+#include "thor/matrixalgorithm.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
@@ -50,7 +50,7 @@ json::ArrayPtr serialize_shape(const valhalla::Matrix& matrix,
                                const ShapeFormat shape_format) {
   // TODO(nils): shapes aren't implemented yet in TDMatrix
   auto shapes = json::array({});
-  if (shape_format == no_shape || matrix.algorithm() != Matrix::CostMatrix)
+  if (shape_format == no_shape || (matrix.algorithm() != Matrix::CostMatrix))
     return shapes;
 
   for (size_t i = start_td; i < start_td + td_count; ++i) {
@@ -139,6 +139,12 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
     const auto& date_time = matrix.date_times()[i];
     const auto& time_zone_offset = matrix.time_zone_offsets()[i];
     const auto& time_zone_name = matrix.time_zone_names()[i];
+    const auto& begin_lat = matrix.begin_lat()[i];
+    const auto& begin_lon = matrix.begin_lon()[i];
+    const auto& end_lat = matrix.end_lat()[i];
+    const auto& end_lon = matrix.end_lon()[i];
+    const auto& begin_heading = matrix.begin_heading()[i];
+    const auto& end_heading = matrix.end_heading()[i];
     if (time != kMaxCost) {
       map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
                        {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
@@ -156,14 +162,36 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
         map->emplace("time_zone_name", time_zone_name);
       }
 
+      if (begin_heading != kInvalidHeading) {
+        map->emplace("begin_heading", json::fixed_t{begin_heading, 0});
+      }
+
+      if (end_heading != kInvalidHeading) {
+        map->emplace("end_heading", json::fixed_t{end_heading, 0});
+      }
+      if (begin_lat != INVALID_LL) {
+        map->emplace("begin_lat", json::fixed_t{begin_lat, 6});
+      }
+      if (begin_lon != INVALID_LL) {
+        map->emplace("begin_lon", json::fixed_t{begin_lon, 6});
+      }
+      if (end_lat != INVALID_LL) {
+        map->emplace("end_lat", json::fixed_t{end_lat, 6});
+      }
+      if (end_lon != INVALID_LL) {
+        map->emplace("end_lon", json::fixed_t{end_lon, 6});
+      }
       if (matrix.shapes().size() && shape_format != no_shape) {
-        switch (shape_format) {
-          case geojson:
-            map->emplace("shape",
-                         tyr::geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
-            break;
-          default:
-            map->emplace("shape", matrix.shapes()[i]);
+        // TODO(nils): tdmatrices don't have "shape" support yet
+        if (!matrix.shapes()[i].empty()) {
+          switch (shape_format) {
+            case geojson:
+              map->emplace("shape",
+                           tyr::geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
+              break;
+            default:
+              map->emplace("shape", matrix.shapes()[i]);
+          }
         }
       }
     } else {
@@ -210,7 +238,7 @@ std::string serialize(const Api& request, double distance_scale) {
     }
     matrix->emplace("distances", distance);
     matrix->emplace("durations", time);
-    if (!(options.shape_format() == no_shape) && request.matrix().algorithm() == Matrix::CostMatrix)
+    if (!(options.shape_format() == no_shape) && (request.matrix().algorithm() == Matrix::CostMatrix))
       matrix->emplace("shapes", shapes);
 
     json->emplace("sources_to_targets", matrix);
@@ -239,6 +267,16 @@ namespace tyr {
 
 std::string serializeMatrix(Api& request) {
   double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
+
+  // error if we failed finding any connection
+  // dont bother serializing in case of /expansion request
+  if (std::all_of(request.matrix().times().begin(), request.matrix().times().end(),
+                  [](const float& time) { return time == kMaxCost; })) {
+    throw valhalla_exception_t(442);
+  } else if (request.options().action() == Options_Action_expansion) {
+    return "";
+  }
+
   switch (request.options().format()) {
     case Options_Format_osrm:
       return osrm_serializers::serialize(request);

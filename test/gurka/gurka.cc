@@ -2,7 +2,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "loki/worker.h"
 #include "midgard/constants.h"
 #include "midgard/encoded.h"
@@ -29,6 +28,7 @@
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/osm/object_comparisons.hpp>
 
+#include <filesystem>
 #include <regex>
 #include <string>
 #include <tuple>
@@ -52,21 +52,11 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
   return lls;
 }
 
-/**
- * build a valhalla json request body
- *
- * @param location_types vector of locations or shape, sources, targets
- * @param waypoints      all pointll sequences for all location types
- * @param costing        which costing name to use, defaults to auto
- * @param options        overrides parts of the request, supports rapidjson pointer semantics
- * @param stop_type      break, through, via, break_through
- * @return json string
- */
 std::string build_valhalla_request(const std::vector<std::string>& location_types,
                                    const std::vector<std::vector<midgard::PointLL>>& waypoints,
-                                   const std::string& costing = "auto",
-                                   const std::unordered_map<std::string, std::string>& options = {},
-                                   const std::string& stop_type = "break") {
+                                   const std::string& costing,
+                                   const std::unordered_map<std::string, std::string>& options,
+                                   const std::string& stop_type) {
   assert(location_types.size() == waypoints.size());
 
   rapidjson::Document doc;
@@ -461,9 +451,9 @@ map buildtiles(const nodelayout& layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (filesystem::exists(workdir))
-    filesystem::remove_all(workdir);
-  filesystem::create_directories(workdir);
+  if (std::filesystem::exists(workdir))
+    std::filesystem::remove_all(workdir);
+  std::filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
   std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
@@ -473,7 +463,7 @@ map buildtiles(const nodelayout& layout,
   midgard::logging::Configure({{"type", ""}});
 
   mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate, false);
+                          mjolnir::BuildStage::kValidate);
 
   return result;
 }
@@ -488,6 +478,7 @@ map buildtiles(const nodelayout& layout,
  * @param end_node the node that should be the target of the directed edge you want
  * @param tile_id optional tile_id to limit the search to
  * @param way_id optional way_id to limit the search to
+ * @param is_shortcut whether we want a shortcut returned
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,

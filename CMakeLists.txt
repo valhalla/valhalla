@@ -7,7 +7,7 @@
 # This is secondary build configuration provided for convenient development
 # on Windows and using CMake-enabled IDEs.
 #
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
@@ -31,11 +31,12 @@ option(ENABLE_ADDRESS_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_UNDEFINED_SANITIZER "Use UB sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
-option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
+option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
+option(ENABLE_GDAL "Whether to include GDAL; currently only used for raster serialization of isotile grid" ON)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -96,9 +97,8 @@ include(ValhallaSourceGroups)
 # We use pkg-config for (almost) all dependencies:
 # - CMake Find* modules are versioned with CMake, not the packages, see protobuf > 21.12
 # - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
-find_package(PkgConfig REQUIRED)
-find_package(Threads REQUIRED)
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
+pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
 
 # cURL
 set(curl_targets "")
@@ -112,22 +112,71 @@ if (ENABLE_HTTP OR ENABLE_DATA_TOOLS)
   endif()
 endif()
 
+# prefer CONFIG mode over MODULE mode, which versions configuration on the package, not CMake
+# NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+
 # Boost has no .pc file..
 find_package(Boost 1.71 REQUIRED)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
+find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
+
+# resolve vendored libraries
+set(date_include_dir ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+set(rapidjson_include_dir ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)
+set(robinhoodhashing_include_dir ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include)
+set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
+if (PREFER_EXTERNAL_DEPS)
+  # date
+  find_package(date QUIET)
+  if (date_FOUND)
+    get_target_property(date_include_dir date::date INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    message(WARNING "No date found in system libraries, using vendored date...")
+  endif()
+  # rapidjson
+  find_package(RapidJSON QUIET)
+  if (RapidJSON_FOUND)
+    get_target_property(rapidjson_include_dir rapidjson INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    message(WARNING "No RapidJSON found in system libraries, using vendored RapidJSON...")
+  endif()
+  # robin-hood-hashing
+  find_package(robin_hood QUIET)
+  if (robin_hood_FOUND)
+    get_target_property(robinhoodhashing_include_dir robin_hood::robin_hood INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    message(WARNING "No robin_hood found in system libraries, using vendored robin_hood...")
+  endif()
+  # cxxopts
+  if (ENABLE_DATA_TOOLS OR ENABLE_TOOLS)
+    find_package(cxxopts QUIET)
+    if (cxxopts_FOUND)
+      get_target_property(cxxopts_include_dir cxxopts::cxxopts INTERFACE_INCLUDE_DIRECTORIES)
+    else()
+      message(WARNING "No cxxopts found in system libraries, using vendored cxxopts...")
+    endif()
+  endif()
+  # dirent
+  if (WIN32)
+    find_path(dirent_include_dir dirent.h REQUIRED)
+    if (dirent_include_dir-NOTFOUND)
+      message(WARNING "No dirent.h found in system headers, using vendored dirent.h...")
+    endif()
+  endif()
+endif()
+
 # Protobuf is non-trivial to include via pkg-config, pkg_check_modules has no way to check
 # for protoc location in a platform agnostic manner
-# prefer CONFIG mode over MODULE mode, there were a few CMake/protobuf messups
-# NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 # newer protobuf versions require a compat bool
 set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
 find_package(Protobuf REQUIRED)
 # and turn it off again
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 message(STATUS "Using protoc from ${Protobuf_PROTOC_EXECUTABLE}")
 message(STATUS "Using pbf headers from ${Protobuf_INCLUDE_DIRS}")
 message(STATUS "Using pbf libs from ${PROTOBUF_LIBRARIES}")
@@ -142,6 +191,22 @@ else()
   message(FATAL_ERROR "Required target protobuf::libprotobuf-lite or protobuf::libprotobuf is not defined")
 endif()
 
+# unless you said you didnt want gdal we try to turn it on, if we cant we tell you
+# we don't need it to build tiles (yet)
+set(GDAL_TARGET "")
+if (ENABLE_GDAL AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDINGS))
+  find_package(GDAL QUIET)
+  if (GDAL_FOUND)
+    set(GDAL_TARGET GDAL::GDAL)
+    add_compile_definitions(ENABLE_GDAL)
+    message(STATUS "Gdal support is enabled")
+  else()
+    message(WARNING "Unable to enable gdal support")
+  endif()
+endif()
+
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
+
 # libprime_server
 # see https://gitlab.kitware.com/cmake/cmake/-/issues/19467
 set(libprime_server_targets "")
@@ -155,6 +220,7 @@ if(ENABLE_SERVICES)
     message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
   endif()
 endif()
+
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
@@ -211,7 +277,7 @@ if(ENABLE_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
     target_link_libraries(${program} valhalla)
-    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    target_include_directories(${program} PRIVATE ${cxxopts_include_dir})
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -222,7 +288,7 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
-    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    target_include_directories(${program} PRIVATE ${cxxopts_include_dir})
     target_link_libraries(${program} valhalla)
     if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
@@ -272,22 +338,17 @@ install(FILES COPYING CHANGELOG.md
   COMPONENT runtime)
 
 # install third_party
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/
+install(DIRECTORY ${rapidjson_include_dir}/
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/date/include/
+install(DIRECTORY ${date_include_dir}/
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 if (WIN32)
-  install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/dirent/include/
+  install(DIRECTORY ${dirent_include_dir}/
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 endif()
 
 if(ENABLE_TESTS)
   add_subdirectory(test)
-endif()
-
-# NOTE(mookerji): Windows CI seems to break on the gbench build, so shelve Win32 support for now.
-if(ENABLE_BENCHMARKS AND ENABLE_DATA_TOOLS AND NOT WIN32)
-  add_subdirectory(bench)
 endif()
 
 ## Coverage report targets
@@ -304,7 +365,7 @@ if(ENABLE_COVERAGE)
     DEPENDS check)
 
   add_custom_target(coverage
-    COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info
+    COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info --ignore-errors=negative
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/coverage.info)
   set_target_properties(coverage PROPERTIES FOLDER "Tests")

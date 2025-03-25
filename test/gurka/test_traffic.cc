@@ -4,10 +4,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/traffictile.h"
 
-#include <boost/property_tree/ptree.hpp>
-
 #include <cmath>
-#include <sstream>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
@@ -113,7 +110,6 @@ TEST(Traffic, BasicUpdates) {
                "it's noticed the changes in the live traffic file"
             << std::endl;
   {
-
     auto result = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "auto",
                                    {{"/date_time/type", "0"}}, clean_reader);
     gurka::assert::osrm::expect_steps(result, {"BC", "CE", "DE"});
@@ -296,8 +292,6 @@ TEST(Traffic, CutGeoms) {
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
         baldr::GraphId tile_id(tile.header->tile_id);
         auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
-        baldr::TrafficSpeed* existing =
-            const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + index);
         current->breakpoint1 = 255;
         if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
           current->overall_encoded_speed = 0;

@@ -33,6 +33,9 @@ function(configure_valhalla_pc)
   if(ENABLE_SERVICES)
     list(APPEND REQUIRES libprime_server)
   endif()
+  if(ENABLE_GDAL)
+    list(APPEND REQUIRES gdal)
+  endif()
   if(WIN32 AND NOT MINGW)
     list(APPEND LIBS_PRIVATE -lole32 -lshell32)
   else()
@@ -45,7 +48,7 @@ function(configure_valhalla_pc)
   list(JOIN LIBS_PRIVATE " " LIBS_PRIVATE)
 
   configure_file(
-    ${CMAKE_SOURCE_DIR}/libvalhalla.pc.in
-    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    ${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in
+    ${VALHALLA_BUILD_DIR}/libvalhalla.pc
     @ONLY)
 endfunction()

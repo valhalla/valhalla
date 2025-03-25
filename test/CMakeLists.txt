@@ -1,4 +1,5 @@
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
+
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
 set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
@@ -13,21 +14,17 @@ add_library(valhalla_test
   ${TEST_SRCS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4hc.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4frame.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/xxhash.c
   )
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
-  ${VALHALLA_SOURCE_DIR}/test/gurka
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
-  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+  ${VALHALLA_SOURCE_DIR}/test/gurka)
+target_include_directories(valhalla_test SYSTEM PUBLIC
+  ${robinhoodhashing_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-  ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread PkgConfig::LZ4)
 
 if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_test PkgConfig::GEOS)
@@ -37,19 +34,18 @@ endif()
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
-  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
-  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
+  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll pointtileindex
   polyline2 predictedspeeds queue routing sample sequence sign signs statsd streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile
-  incident_loading worker_nullptr_tiles tar_index curl_tilegetter)
+  incident_loading worker_nullptr_tiles curl_tilegetter)
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
-    graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
-    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
+    graphtilebuilder graphreader hierarchylimits isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
+    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban tar_index
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
@@ -72,36 +68,19 @@ endif()
 # "-Werror" flag
 # Avoid adding a test to this list
 set(tests_with_warnings
-  compression
-  countryaccess
-  encode
-  edgecollapser
-  edgeinfobuilder
   filesystem
   graphbuilder
-  graphparser
   graphtilebuilder
   gridded_data
-  logging
   maneuversbuilder
-  mapmatch
-  matrix
   narrativebuilder
-  node_search
-  polyline2
   parse_request
-  routing
   sample
-  search
   sequence
   statsd
   traffictile
-  util_midgard
   util_odin
-  utrecht
   timedep_paths
-  vector2
-  viterbi_search
   worker
   )
 
@@ -358,6 +337,7 @@ endif()
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
   add_dependencies(run-mapmatch utrecht_tiles)
+  add_dependencies(run-hierarchylimits utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
   add_dependencies(run-matrix_bss paris_bss_tiles)

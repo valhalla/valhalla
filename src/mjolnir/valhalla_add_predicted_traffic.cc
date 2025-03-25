@@ -1,11 +1,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <deque>
 #include <future>
-#include <mutex>
 #include <optional>
-#include <queue>
+#include <random>
 #include <string>
 #include <thread>
 
@@ -18,7 +16,6 @@
 
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
-#include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -271,7 +268,7 @@ int main(int argc, char** argv) {
       return false;
     }
     traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -350,6 +347,9 @@ int main(int argc, char** argv) {
 
   if (!summary)
     return EXIT_SUCCESS;
+
+  // don't use the .tar for stats
+  config.get_child("mjolnir").erase("tile_extract");
 
   GraphReader reader(config.get_child("mjolnir"));
   // Iterate through the tiles

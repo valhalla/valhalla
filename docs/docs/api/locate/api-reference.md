@@ -334,8 +334,16 @@ Here are some sample results with `verbose` set to `true`:
 ```
 
 ### Attribute Descriptions for Responses
+#### Edge
+##### Verbose 
 
-TODO:
+| Key | Description |
+| :------------------ | :----------- |
+| `access_restrictions` | A list of access restrictions that apply to the edge. Each entry contains information about its access mode mask, value, and more |
+| `edge_info` | Contains information stored in the edge's `EdgeInfo` struct |
+| `edge_info.conditional_speed_limits` | The key describes the time window during which the speed limit applies, the value is the limit |
+| `edge_info.speed_limit` | The edge's speed limit |
+| `edge_info.levels` | An array containing the edge's levels as derived from the `level=*` tag. Values are either numeric, or another array containing two elements, which denote the start and end of a range (inclusive) |
 
 ### HTTP status codes and error messages
 

@@ -3,13 +3,10 @@
 #include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
-#include <map>
-#include <unordered_map>
 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
@@ -397,10 +394,10 @@ int main(int argc, char* argv[]) {
     for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng"}) {
       if (result.count(arg) == 0) {
         const std::string msg = "The <" + arg + "> argument was not provided, but is mandatory\n\n";
-        throw cxxopts::OptionException(msg + options.help());
+        throw cxxopts::exceptions::exception(msg + options.help());
       }
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

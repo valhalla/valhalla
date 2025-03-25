@@ -7,22 +7,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
 namespace {
-static bool IsTrivial(const uint64_t& edgeid,
-                      const valhalla::Location& origin,
-                      const valhalla::Location& destination) {
-  for (const auto& destination_edge : destination.correlation().edges()) {
-    if (destination_edge.graph_id() == edgeid) {
-      for (const auto& origin_edge : origin.correlation().edges()) {
-        if (origin_edge.graph_id() == edgeid &&
-            origin_edge.percent_along() <= destination_edge.percent_along()) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
 static travel_mode_t get_other_travel_mode(const travel_mode_t current_mode) {
   static const auto bss_modes =
       std::vector<travel_mode_t>{travel_mode_t::kPedestrian, travel_mode_t::kBicycle};
@@ -35,7 +19,7 @@ namespace thor {
 
 // Constructor with cost threshold.
 TimeDistanceBSSMatrix::TimeDistanceBSSMatrix(const boost::property_tree::ptree& config)
-    : settled_count_(0), current_cost_threshold_(0),
+    : MatrixAlgorithm(config), settled_count_(0), current_cost_threshold_(0),
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_dijkstras",
                                                       kInitialEdgeLabelCountDijkstras)),
       clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
@@ -110,7 +94,7 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
-    uint8_t restriction_idx = -1;
+    uint8_t restriction_idx = kInvalidRestriction;
     const bool is_dest = dest_edges_.find(edgeid.value) != dest_edges_.cend();
     if (FORWARD) {
       if (!current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
@@ -129,10 +113,12 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     // Get cost and update distance
     auto edge_cost = FORWARD ? current_costing->EdgeCost(directededge, tile)
                              : current_costing->EdgeCost(opp_edge, t2);
+    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
-        FORWARD ? current_costing->TransitionCost(directededge, nodeinfo, pred)
-                : current_costing->TransitionCostReverse(directededge->localedgeidx(), nodeinfo,
-                                                         opp_edge, opp_pred_edge);
+        FORWARD
+            ? current_costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter)
+            : current_costing->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                     opp_pred_edge, t2, pred.edgeid(), reader_getter);
 
     Cost normalized_edge_cost = {edge_cost.cost * current_costing->GetModeFactor(), edge_cost.secs};
     // Compute the cost to the end of this edge
@@ -154,7 +140,7 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode,
-                             path_distance, restriction_idx, true, false, InternalTurn::kNoTurn);
+                             path_distance, restriction_idx, false, false, InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -178,12 +164,12 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
 // Calculate time and distance from one origin location to many destination
 // locations.
 template <const ExpansionType expansion_direction, const bool FORWARD>
-void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
+bool TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
                                           baldr::GraphReader& graphreader,
-                                          const float max_matrix_distance,
-                                          const uint32_t matrix_locations) {
-  // Run a series of one to many calls and concatenate the results.
+                                          const float max_matrix_distance) {
+  uint32_t matrix_locations = request.options().matrix_locations();
 
+  // Run a series of one to many calls and concatenate the results.
   auto& origins = FORWARD ? *request.mutable_options()->mutable_sources()
                           : *request.mutable_options()->mutable_targets();
   auto& destinations = FORWARD ? *request.mutable_options()->mutable_targets()
@@ -195,10 +181,12 @@ void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
 
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
-  // reserve the PBF vectors
-  reserve_pbf_arrays(*request.mutable_matrix(), origins.size() * destinations.size());
 
-  for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
+  // reserve the PBF vectors
+  reserve_pbf_arrays(*request.mutable_matrix(), origins.size() * destinations.size(),
+                     request.options().verbose());
+
+  for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
     edgelabels_.reserve(max_reserved_labels_count_);
     const auto& origin = origins.Get(origin_index);
 
@@ -210,6 +198,7 @@ void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
     SetOrigin<expansion_direction>(graphreader, origin);
     SetDestinationEdges();
 
+    uint32_t n = 0;
     // Find shortest path
     graph_tile_ptr tile;
     while (true) {
@@ -259,21 +248,27 @@ void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
       // Expand forward from the end node of the predecessor edge.
       Expand<expansion_direction>(graphreader, pred.endnode(), pred, predindex, false, false,
                                   pred.mode());
+
+      // Allow this process to be aborted
+      if (interrupt_ && (n++ % kInterruptIterationsInterval) == 0) {
+        (*interrupt_)();
+      }
     }
     reset();
   }
+
+  // TODO(nils): not sure a second pass would make for BSS
+  return true;
 }
 
-template void
+template bool
 TimeDistanceBSSMatrix::ComputeMatrix<ExpansionType::forward, true>(Api& request,
                                                                    baldr::GraphReader& graphreader,
-                                                                   const float max_matrix_distance,
-                                                                   const uint32_t matrix_locations);
-template void
+                                                                   const float max_matrix_distance);
+template bool
 TimeDistanceBSSMatrix::ComputeMatrix<ExpansionType::reverse, false>(Api& request,
                                                                     baldr::GraphReader& graphreader,
-                                                                    const float max_matrix_distance,
-                                                                    const uint32_t matrix_locations);
+                                                                    const float max_matrix_distance);
 
 // Add edges at the origin to the adjacency list
 template <const ExpansionType expansion_direction, const bool FORWARD>
@@ -324,11 +319,11 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
       dist = static_cast<uint32_t>(directededge->length() * percent_along);
 
     } else {
-      opp_edge_id = graphreader.GetOpposingEdgeId(edgeid);
+      opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, endtile);
       if (!opp_edge_id.Is_Valid()) {
         continue;
       }
-      opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
+      opp_dir_edge = graphreader.GetOpposingEdge(edgeid, endtile);
       cost = pedestrian_costing_->EdgeCost(opp_dir_edge, endtile, time_info, flow_sources) *
              edge.percent_along();
       dist = static_cast<uint32_t>(directededge->length() * edge.percent_along());
@@ -344,11 +339,11 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
     // of the path. Set the origin flag
     if (FORWARD) {
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost,
-                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, true,
+                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, false,
                                false, InternalTurn::kNoTurn);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost,
-                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, true,
+                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, false,
                                false, InternalTurn::kNoTurn);
     }
     edgelabels_.back().set_origin();
