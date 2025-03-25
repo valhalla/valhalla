@@ -150,8 +150,9 @@ TEST(locate, locate_shoulder) {
   )";
 
   const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"shoulder", "yes"}}},
-                            {"BC", {{"highway", "motorway"}}},
-                            {"AD", {{"highway", "residential"}}},
+                            {"BC",
+                             {{"highway", "motorway"}, {"shoulder", "false"}}}, // Tagged as false
+                            {"AD", {{"highway", "residential"}}},               // No shoulder tag
                             {"BE", {{"highway", "residential"}, {"shoulder", "yes"}}},
                             {"CF", {{"highway", "residential"}}},
                             {"DE", {{"highway", "tertiary"}}},
@@ -162,8 +163,8 @@ TEST(locate, locate_shoulder) {
 
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
-  auto result =
-      gurka::do_action(valhalla::Options::locate, map, {"B", "E", "F"}, "none", {}, reader, &json);
+  auto result = gurka::do_action(valhalla::Options::locate, map, {"B", "C", "E", "F"}, "none", {},
+                                 reader, &json);
 
   rapidjson::Document response;
   response.Parse(json);
