@@ -1,5 +1,6 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
@@ -15,6 +16,8 @@
    * FIXED: restore ignoring hierarchy limits for bicycle and pedestrian [#5080](https://github.com/valhalla/valhalla/pull/5080)
    * FIXED: GCC warning 'template-id not allowed for constructor in C++20' [#5110](https://github.com/valhalla/valhalla/pull/5110)
    * FIXED: update deprecated boost geometry headers [#5117](https://github.com/valhalla/valhalla/pull/5117)
+   * FIXED: Fix type mismatch in `src/tyr/serializers.cc` [#5145](https://github.com/valhalla/valhalla/pull/5145)
+
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
@@ -33,6 +36,13 @@
    * ADDED: headings and correlated ll's in verbose matrix output [#5072](https://github.com/valhalla/valhalla/pull/5072)
    * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082) 
    * ADDED: Bounding circles for faster loki [#5103](https://github.com/valhalla/valhalla/pull/5103)
+   * ADDED: Retrieve traffic signal information of nodes through trace_attribute request [#5121](https://github.com/valhalla/valhalla/pull/5121)
+   * CHANGED: Remove redundant callback-style pbf parsing [#5119](https://github.com/valhalla/valhalla/pull/5119)
+   * ADDED: Multimodal expansion endpoint support [#5129](https://github.com/valhalla/valhalla/pull/5129)
+   * ADDED: Sort tweeners by GraphId to make tile generation deterministic [#5133](https://github.com/valhalla/valhalla/pull/5133)
+   * ADDED: Turn lane information for valhalla serializer [#5078](https://github.com/valhalla/valhalla/pull/5078)
+   * ADDED: Add scoped timer macro for timing stages and sub-stages of the tile build process [#5136](https://github.com/valhalla/valhalla/pull/5136)
+   * CHANGED: Speed up `valhalla_build_admins` by using intermediate in-memory database [#5146](https://github.com/valhalla/valhalla/pull/5146)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

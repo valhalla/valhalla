@@ -336,6 +336,9 @@ void serialize_edges(const AttributesController& controller,
         if (controller(kNodeType)) {
           writer("type", to_string(static_cast<baldr::NodeType>(node.type())));
         }
+        if (controller(kNodeTrafficSignal)) {
+          writer("traffic_signal", static_cast<bool>(node.traffic_signal()));
+        }
         if (controller(kNodeFork)) {
           writer("fork", static_cast<bool>(node.fork()));
         }
