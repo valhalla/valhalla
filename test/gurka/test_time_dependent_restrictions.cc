@@ -103,8 +103,8 @@ gurka::map TimeDependentRestrictionsInDifferentTimezone::map = {};
 
 TEST_P(TimeDependentRestrictionsInDifferentTimezone, NoRestrictionEarly) {
   auto timeValue = GetParam() == 1
-                       ? "2021-04-02T06:30"
-                       : "2021-04-02T07:30"; // Earlier time at the neighbor tz or at the restriction
+                       ? "2021-01-02T06:30"
+                       : "2021-01-02T07:30"; // Earlier time at the neighbor tz or at the restriction
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
                                  {{"/date_time/type", std::to_string(GetParam())},
                                   {"/date_time/value", timeValue}});
@@ -113,8 +113,8 @@ TEST_P(TimeDependentRestrictionsInDifferentTimezone, NoRestrictionEarly) {
 
 TEST_P(TimeDependentRestrictionsInDifferentTimezone, ActiveHourRestriction) {
   auto timeValue = GetParam() == 1
-                       ? "2021-04-02T07:30"
-                       : "2021-04-02T08:30"; // Active time at the neighbor tz or at the restriction
+                       ? "2021-01-02T07:30"
+                       : "2021-01-02T08:30"; // Active time at the neighbor tz or at the restriction
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
                                  {{"/date_time/type", std::to_string(GetParam())},
                                   {"/date_time/value", timeValue}});
@@ -123,8 +123,8 @@ TEST_P(TimeDependentRestrictionsInDifferentTimezone, ActiveHourRestriction) {
 
 TEST_P(TimeDependentRestrictionsInDifferentTimezone, NoRestrictionsLate) {
   auto timeValue = GetParam() == 1
-                       ? "2021-04-02T08:30"
-                       : "2021-04-02T09:30"; // Later time at the neighbor tz or at the restriction
+                       ? "2021-01-02T08:30"
+                       : "2021-01-02T09:30"; // Later time at the neighbor tz or at the restriction
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
                                  {{"/date_time/type", std::to_string(GetParam())},
                                   {"/date_time/value", timeValue}});
