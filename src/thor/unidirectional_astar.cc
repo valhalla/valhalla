@@ -231,17 +231,17 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     // (based on costing method)
     uint8_t restriction_idx = kInvalidRestriction;
     if (FORWARD) {
-      if (!costing_->Allowed(meta.edge, dest_path_edge, pred, tile, meta.edge_id,
-                             time_info.local_time, nodeinfo->timezone(), restriction_idx) ||
+      if (!costing_->Allowed(meta.edge, dest_path_edge, pred, tile, meta.edge_id, time_info.sys_epoch,
+                             nodeinfo->timezone(), restriction_idx) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
-                               time_info.local_time, nodeinfo->timezone())) {
+                               time_info.sys_epoch, nodeinfo->timezone())) {
         return false;
       }
     } else {
       if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
-                                    time_info.local_time, nodeinfo->timezone(), restriction_idx) ||
+                                    time_info.sys_epoch, nodeinfo->timezone(), restriction_idx) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false, &edgestatus_,
-                               time_info.local_time, nodeinfo->timezone())) {
+                               time_info.sys_epoch, nodeinfo->timezone())) {
         return false;
       }
     }
@@ -324,17 +324,17 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     auto update_label = [&]() {
       uint8_t restriction_idx = kInvalidRestriction;
       if (FORWARD) {
-        if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
+        if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.sys_epoch,
                                nodeinfo->timezone(), restriction_idx) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
-                                 time_info.local_time, nodeinfo->timezone())) {
+                                 time_info.sys_epoch, nodeinfo->timezone())) {
           return false;
         }
       } else {
         if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
-                                      time_info.local_time, nodeinfo->timezone(), restriction_idx) ||
+                                      time_info.sys_epoch, nodeinfo->timezone(), restriction_idx) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false,
-                                 &edgestatus_, time_info.local_time, nodeinfo->timezone())) {
+                                 &edgestatus_, time_info.sys_epoch, nodeinfo->timezone())) {
           return false;
         }
       }

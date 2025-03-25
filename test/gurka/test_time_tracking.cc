@@ -48,7 +48,7 @@ TEST(TimeTracking, make) {
     location.set_date_time("2020-04-01T12:34");
     ti = baldr::TimeInfo::make(location, reader, cache, 7777);
     // zero out the part we dont care to test
-    ti.local_time = 0;
+    ti.sys_epoch = 0;
     ti.second_of_week = 0;
     ti.seconds_from_now = 0;
     ti.negative_seconds_from_now = 0;

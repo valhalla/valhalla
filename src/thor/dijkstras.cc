@@ -185,12 +185,12 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       // With date time we check time dependent restrictions and access
       const bool allowed =
           FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid,
-                                      offset_time.local_time, nodeinfo->timezone(), restriction_idx)
+                                      offset_time.sys_epoch, nodeinfo->timezone(), restriction_idx)
                   : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
-                                             offset_time.local_time, nodeinfo->timezone(),
+                                             offset_time.sys_epoch, nodeinfo->timezone(),
                                              restriction_idx);
       if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true,
-                                           todo, offset_time.local_time, nodeinfo->timezone())) {
+                                           todo, offset_time.sys_epoch, nodeinfo->timezone())) {
         continue;
       }
     } else {

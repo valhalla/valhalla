@@ -108,17 +108,17 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     uint8_t restriction_idx = kInvalidRestriction;
     const bool is_dest = dest_edges_.find(edgeid) != dest_edges_.cend();
     if (FORWARD) {
-      if (!costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
+      if (!costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.sys_epoch,
                              nodeinfo->timezone(), restriction_idx) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, nullptr,
-                               offset_time.local_time, nodeinfo->timezone())) {
+                               offset_time.sys_epoch, nodeinfo->timezone())) {
         continue;
       }
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
-                                    offset_time.local_time, nodeinfo->timezone(), restriction_idx) ||
+                                    offset_time.sys_epoch, nodeinfo->timezone(), restriction_idx) ||
           (costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, false, nullptr,
-                                offset_time.local_time, nodeinfo->timezone()))) {
+                                offset_time.sys_epoch, nodeinfo->timezone()))) {
         continue;
       }
     }

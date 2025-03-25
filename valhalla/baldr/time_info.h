@@ -23,9 +23,9 @@ struct TimeInfo {
   // used to do timezone offset as the route progresses
   uint64_t timezone_index : 9;
 
-  // seconds from epoch adjusted for timezone at the location
-  // used to do local time offset as the route progresses
-  uint64_t local_time : 54;
+  // seconds from epoch in system clock (no leap seconds)
+  // used to
+  uint64_t sys_epoch : 54;
 
   // the ordinal second from the beginning of the week (starting monday at 00:00)
   // used to look up historical traffic as the route progresses
@@ -140,10 +140,10 @@ struct TimeInfo {
       return {false, 0, 0, kInvalidSecondsOfWeek, 0, false, nullptr};
     }
     const auto then_date = date::make_zoned(tz, parsed_date, date::choose::latest);
-    uint64_t local_time = date::to_utc_time(then_date.get_sys_time()).time_since_epoch().count();
+    uint64_t sys_epoch = then_date.get_sys_time().time_since_epoch().count();
 
     // What second of the week is this (for historical traffic lookup)
-    auto second_of_week = dt::second_of_week(local_time, tz);
+    auto second_of_week = dt::second_of_week(sys_epoch, tz);
 
     // When is this route with respect to now this will let us appropriately use current flow traffic
     int64_t seconds_from_now = (then_date.get_local_time() - now_date.get_local_time()).count();
@@ -151,7 +151,7 @@ struct TimeInfo {
     // Make a valid object
     return {true,
             static_cast<uint64_t>(timezone_index),
-            local_time,
+            sys_epoch,
             second_of_week,
             static_cast<uint64_t>(std::abs(seconds_from_now)),
             seconds_from_now < 0,
@@ -169,7 +169,7 @@ struct TimeInfo {
       return *this;
 
     // offset the local time and second of week by the amount traveled to this label
-    uint64_t lt = local_time + static_cast<uint64_t>(seconds_offset);
+    uint64_t lt = sys_epoch + static_cast<uint64_t>(seconds_offset);
     int32_t sw = static_cast<int32_t>(second_of_week + seconds_offset);
 
     // if the timezone changed we need to account for that offset as well
@@ -216,7 +216,7 @@ struct TimeInfo {
       return *this;
 
     // offset the local time and second of week by the amount traveled to this label
-    uint64_t lt = local_time - static_cast<uint64_t>(seconds_offset); // dont route near the epoch
+    uint64_t lt = sys_epoch - static_cast<uint64_t>(seconds_offset); // dont route near the epoch
     int32_t sw = static_cast<int32_t>(second_of_week) - static_cast<int32_t>(seconds_offset);
 
     // if the timezone changed we need to account for that offset as well
@@ -254,7 +254,7 @@ struct TimeInfo {
 
   // returns localtime as a string
   std::string date_time() const {
-    return DateTime::seconds_to_date(local_time, dt::get_tz_db().from_index(timezone_index), false);
+    return DateTime::seconds_to_date(sys_epoch, dt::get_tz_db().from_index(timezone_index), false);
   }
 
   uint32_t day_seconds() const {
@@ -263,7 +263,7 @@ struct TimeInfo {
 
   // for unit tests
   bool operator==(const TimeInfo& ti) const {
-    return valid == ti.valid && timezone_index == ti.timezone_index && local_time == ti.local_time &&
+    return valid == ti.valid && timezone_index == ti.timezone_index && sys_epoch == ti.sys_epoch &&
            second_of_week == ti.second_of_week && seconds_from_now == ti.seconds_from_now &&
            negative_seconds_from_now == ti.negative_seconds_from_now;
   }
@@ -271,7 +271,7 @@ struct TimeInfo {
   // for unit tests
   friend std::ostream& operator<<(std::ostream& os, const TimeInfo& ti) {
     return os << "{valid: " << ti.valid << ", timezone_index: " << ti.timezone_index
-              << ", local_time: " << ti.local_time << ", second_of_week: " << ti.second_of_week
+              << ", sys_epoch: " << ti.sys_epoch << ", second_of_week: " << ti.second_of_week
               << ", seconds_from_now: " << ti.seconds_from_now
               << ", negative_seconds_from_now: " << ti.negative_seconds_from_now
               << ", tz_cache: " << ti.tz_cache << "}";

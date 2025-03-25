@@ -237,7 +237,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
-  const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
+  const uint64_t sys_epoch = time_info.valid ? time_info.sys_epoch : 0;
   uint8_t restriction_idx = kInvalidRestriction;
   if (FORWARD) {
     // Why is is_dest false?
@@ -248,17 +248,17 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     // We can set is_dest incorrectly in the second case, but it is the rare case.
     // The result path will be correct, because there are cosing.Allowed calls inside recost_forward
     // function in second time.
-    if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, localtime,
+    if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, sys_epoch,
                            time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
-                             &edgestatus_forward_, localtime, time_info.timezone_index)) {
+                             &edgestatus_forward_, sys_epoch, time_info.timezone_index)) {
       return false;
     }
   } else {
-    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
+    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, sys_epoch,
                                   time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
-                             &edgestatus_reverse_, localtime, time_info.timezone_index)) {
+                             &edgestatus_reverse_, sys_epoch, time_info.timezone_index)) {
       return false;
     }
   }

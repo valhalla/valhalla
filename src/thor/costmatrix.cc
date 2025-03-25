@@ -470,18 +470,18 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // or if a complex restriction prevents transition onto this edge.
   uint8_t restriction_idx = kInvalidRestriction;
   if (FORWARD) {
-    if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
+    if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.sys_epoch,
                            time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, true,
-                             &edgestatus_[FORWARD][index], time_info.local_time,
+                             &edgestatus_[FORWARD][index], time_info.sys_epoch,
                              time_info.timezone_index)) {
       return false;
     }
   } else {
-    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.local_time,
+    if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.sys_epoch,
                                   time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, false,
-                             &edgestatus_[FORWARD][index], time_info.local_time,
+                             &edgestatus_[FORWARD][index], time_info.sys_epoch,
                              time_info.timezone_index)) {
       return false;
     }

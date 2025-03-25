@@ -93,12 +93,12 @@ void recost_forward(baldr::GraphReader& reader,
     // queued edges as normal
     uint8_t time_restrictions_TODO = baldr::kInvalidRestriction;
     // if its not time dependent set to 0 for Allowed method below
-    const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
+    const uint64_t sys_epoch = offset_time.valid ? offset_time.sys_epoch : 0;
     // we should call 'Allowed' method even if 'ignore_access' flag is true in order to
     // evaluate time restrictions
     const auto next_id = edge_cb();
     if (predecessor != baldr::kInvalidLabel &&
-        (!costing.Allowed(edge, !next_id.Is_Valid(), label, tile, edge_id, localtime,
+        (!costing.Allowed(edge, !next_id.Is_Valid(), label, tile, edge_id, sys_epoch,
                           offset_time.timezone_index, time_restrictions_TODO) &&
          !ignore_access)) {
       throw std::runtime_error("This path requires different edge access than this costing allows");
