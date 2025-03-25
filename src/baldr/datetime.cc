@@ -420,6 +420,7 @@ const std::unordered_map<std::string, size_t> tz_name_to_id = {
     {"America/Nuuk", 69},                      // renamed from America/Godthab
     {"Europe/Kyiv", 308},                      // renamed from Europe/Kiev
     {"Pacific/Kanton", 358},                   // renamed from Pacific/Enderbury
+    {"America/Coyhaique", 134 | (1 << 9)}      // new time zone due to DST
 };
 
 // checks the integrity of the static tz maps, which will fail in case of
