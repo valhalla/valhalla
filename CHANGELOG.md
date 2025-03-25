@@ -32,7 +32,6 @@
    * ADDED: Allow specifying custom `graph.lua` file name via `valhalla_build_config` [#5036](https://github.com/valhalla/valhalla/pull/5036)
    * ADDED: per level elevator penalty [#4973](https://github.com/valhalla/valhalla/pull/4973)
    * ADDED: `ignore_construction` allows routing on ways with construction tag [#5030](https://github.com/valhalla/valhalla/pull/5030)
-   * UPDATED: bump tz from 2024a to 2025a [#5061](https://github.com/valhalla/valhalla/pull/5061)
    * ADDED: Australian English language translations [#5057](https://github.com/valhalla/valhalla/pull/5057)
    * ADDED: Support `"access:conditional"` conditional restrictions like `"access:conditional"="no @ (Oct-May)"` [#5048](https://github.com/valhalla/valhalla/pull/5048)
    * CHANGED: Speed up pbf parsing by using libosmium [#5070](https://github.com/valhalla/valhalla/pull/5070)
