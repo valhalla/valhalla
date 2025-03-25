@@ -473,7 +473,10 @@ void validate(
       // deterministic
       for (auto& bin : bins) {
         std::sort(bin.begin(), bin.end(),
-                  [](uint64_t a, uint64_t b) { return graphid_less(GraphId(a), GraphId(b)); });
+                  [](std::pair<GraphId, DiscretizedBoundingCircle>& a,
+                     std::pair<GraphId, DiscretizedBoundingCircle>& b) {
+                    return graphid_less(a.first, b.first);
+                  });
       }
       GraphTileBuilder::AddBins(graph_reader.tile_dir(), reloaded, bins, build_bounding_circles);
     }
