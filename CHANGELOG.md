@@ -19,6 +19,7 @@
    * FIXED: Fix type mismatch in `src/tyr/serializers.cc` [#5145](https://github.com/valhalla/valhalla/pull/5145)
    * FIXED: Multimodal ferry reclassification [#5139](https://github.com/valhalla/valhalla/pull/5139)
    * FIXED: Fix time info calculation across time zone boundaries [#5163](https://github.com/valhalla/valhalla/pull/5163)
+   * FIXED: Fix leap seconds when checking conditional access restrictions and historical traffic [#5163](https://github.com/valhalla/valhalla/pull/5163)
 
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
