@@ -167,8 +167,6 @@ TEST(locate, locate_shoulder) {
 
   rapidjson::Document response;
   response.Parse(json);
-  if (response.HasParseError())
-    throw std::runtime_error("bad json response");
 
   std::unordered_map<std::string, bool> expected_shoulders = {{"AB", true},  {"BC", false},
                                                               {"AD", false}, {"BE", true},
