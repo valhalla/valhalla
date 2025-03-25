@@ -278,8 +278,6 @@ struct bin_handler_t {
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
   Reach reach_finder;
-  uint32_t nSearched;
-  uint32_t nSkipped;
 
   // keep track of edges whose reachability we've already computed
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
@@ -288,7 +286,7 @@ struct bin_handler_t {
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
                 const std::shared_ptr<DynamicCost>& costing)
-      : reader(reader), costing(costing), nSearched(0), nSkipped(0) {
+      : reader(reader), costing(costing) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(uniq_locations.size());
@@ -564,7 +562,6 @@ struct bin_handler_t {
     auto bounding_circle = bounding_circles.begin();
     for (auto edge_it = edges.begin(); edge_it != edges.end(); ++edge_it, ++bounding_circle) {
       auto edge_id = *edge_it;
-      nSearched++;
       bool all_prefiltered = true;
       std::pair<PointLL, uint16_t> circle({0, 0}, 0);
       if (has_bounding_circles && bounding_circle->is_valid())
@@ -619,7 +616,6 @@ struct bin_handler_t {
           }
         }
         if (all_prefiltered) {
-          nSkipped++;
           continue;
         }
       }
@@ -953,9 +949,6 @@ Search(const std::vector<valhalla::baldr::Location>& locations,
   bin_handler_t handler(locations, reader, costing);
   // search over the bins doing multiple locations per bin
   handler.search();
-  // TODO - remove after testing
-  LOG_INFO("skipped " + std::to_string(handler.nSkipped) + " out of " +
-           std::to_string(handler.nSearched));
   // turn each locations candidate set into path locations
   return handler.finalize();
 }

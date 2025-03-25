@@ -654,7 +654,7 @@ protected:
   uint64_t nodecount_ : 21;             // Number of nodes
   uint64_t directededgecount_ : 21;     // Number of directed edges
   uint64_t predictedspeeds_count_ : 21; // Number of predictive speed records
-  uint64_t spare_ : 1;
+  uint64_t spare1_ : 1;
 
   // Currently there can only be twice as many transitions as there are nodes,
   // but in practice the number should be much less.
@@ -734,8 +734,6 @@ protected:
   // kEmptySlots by 1. Note that you can ONLY add an offset here and NOT a
   // bitfield or union or anything like that
   std::array<uint32_t, kEmptySlots> empty_slots_ = {};
-  // Offset to the beginning of the bounding circles data
-  // uint32_t boundingcircles_offset_ = 0;
 };
 
 } // namespace baldr

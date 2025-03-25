@@ -16,9 +16,6 @@ constexpr unsigned int kRadiiBits = 32 - kCoordinateBits * 2;
 constexpr unsigned int kRadiiCount = 1 << kRadiiBits;
 constexpr uint32_t kMaxOffsetValue = (1 << kCoordinateBits) - 1;
 
-// TODO: derive empirically. Ideally, we keep a couple of these arrays around for
-// tiles of different densities and store an identifier in the tile header that points
-// to the array that best fits the edge shapes in the given tile
 constexpr std::array<uint16_t, kRadiiCount> kBoundingCircleRadii =
     {2,   4,   5,   7,   10,  13,  15,   18,   20,   25,   30,   35,   40,   45,   50,   55,
      60,  65,  70,  75,  80,  85,  90,   95,   100,  110,  120,  130,  140,  150,  160,  170,
@@ -84,9 +81,9 @@ struct DiscretizedBoundingCircle {
   }
 
 protected:
-  uint32_t y_offset : kCoordinateBits; // y offset in meters from the bin center
-  uint32_t x_offset : kCoordinateBits; // x offset in meters from the bin center
-  uint32_t radius_index : kRadiiBits;  // index into the fixed size array of available radii
+  uint32_t y_offset : 13;    // y offset in meters from the bin center
+  uint32_t x_offset : 13;    // x offset in meters from the bin center
+  uint32_t radius_index : 6; // index into the fixed size array of available radii
 };
 } // namespace baldr
 } // namespace valhalla

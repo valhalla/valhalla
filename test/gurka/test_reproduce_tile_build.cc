@@ -36,23 +36,11 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
     DiscretizedBoundingCircle* b_circle = b_circles.begin();
 
     while (a_circle != a_circles.end() && b_circle != b_circles.end()) {
-      std::cerr << *a_circle << " vs. " << *b_circle << "\n";
       EXPECT_EQ(a_circle->get_y_offset(), b_circle->get_y_offset());
       EXPECT_EQ(a_circle->get_x_offset(), b_circle->get_x_offset());
       EXPECT_EQ(a_circle->get_radius_index(), b_circle->get_radius_index());
       a_circle++;
       b_circle++;
-      // const auto diff = std::mismatch(a_circle, a_circles.end(), b_circle, b_circles.end());
-      // if (diff.first != a_circles.end()) {
-      //   ADD_FAILURE() << "Bin[" << bin_index << "] mismatch at position "
-      //                 << std::distance(a_circles.begin(), diff.first) << ": " << *diff.first
-      //                 << " != " << *diff.second;
-
-      //   a_circle = diff.first + 1;
-      //   b_circle = diff.second + 1;
-      // } else {
-      //   break;
-      // }
     }
 
     while (true) {
