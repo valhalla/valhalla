@@ -109,6 +109,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
             {"predicted_speeds", predicted_speeds},
             {"live_speed", live_speed},
             {"access_restrictions", get_access_restrictions(tile, edge.id.id())},
+            {"shoulder", directed_edge->shoulder()},
         }));
       } // they want it lean and mean
       else {
