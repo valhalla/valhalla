@@ -2644,7 +2644,7 @@ struct OSMWay {
   uint32_t tunnel_ : 1;
   uint32_t toll_ : 1;
   uint32_t bridge_ : 1;
-  uint32_t spare1_ : 1;
+  uint32_t multiple_levels_ : 1;
   uint32_t drive_on_right_ : 1;
   uint32_t bike_network_ : 4;
   uint32_t exit_ : 1;
@@ -2708,8 +2708,7 @@ struct OSMWay {
   uint16_t bike_backward_ : 1;
   uint16_t lit_ : 1;
   uint16_t destination_only_hgv_ : 1;
-  uint16_t multiple_levels_ : 1;
-  uint16_t spare2_ : 1;
+  uint16_t spare2_ : 2;
 
   uint16_t nodecount_;
 
