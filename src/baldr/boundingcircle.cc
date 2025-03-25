@@ -25,9 +25,12 @@ DiscretizedBoundingCircle::DiscretizedBoundingCircle(
   double y_meters = offset.lat() * midgard::kMetersPerDegreeLat;
 
   // if any of the offsets is larger than the largest value we support bail
-  if (std::abs(x_meters) >= kMaxOffsetMeters - 0.5 || std::abs(y_meters) >= kMaxOffsetMeters - 0.5)
+  if (std::abs(x_meters) >= kMaxOffsetMeters - 0.5 || std::abs(y_meters) >= kMaxOffsetMeters - 0.5) {
+    radius_index = 0;
+    y_offset = kMaxOffsetValue;
+    x_offset = kMaxOffsetValue;
     return;
-
+  }
   // this gives us the offset values we store
   uint32_t x_offset_increments =
       static_cast<uint64_t>((x_meters + kMaxOffsetMeters) / kOffsetIncrement + 0.5);
