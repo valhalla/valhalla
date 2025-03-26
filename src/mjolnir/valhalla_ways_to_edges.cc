@@ -70,11 +70,13 @@ int main(int argc, char** argv) {
 
   GraphReader reader(config.get_child("mjolnir"));
 
+  std::string fname = config.get<std::string>("mjolnir.tile_dir") +
+                      filesystem::path::preferred_separator + "way_edges.txt";
+
   // Collect all way edges
-  auto ways_edges = vw::collect_way_edges(reader);
+  auto ways_edges = vw::collect_way_edges(reader, fname);
 
   // Write way edges to a file
-  vw::write_way_edges(ways_edges, config);
 
   LOG_INFO("Finished with " + std::to_string(ways_edges.size()) + " ways.");
 

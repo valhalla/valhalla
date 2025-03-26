@@ -2,13 +2,11 @@
 #define VALHALLA_MJOLNIR_WAY_EDGES_PROCESSOR_H
 
 #include <cstdint>
-#include <string>
 #include <unordered_map>
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 
@@ -24,12 +22,15 @@ struct EdgeAndDirection {
 };
 
 // Process edges and collect way information
+/**
+ * Collects edges for ways in the graph.
+ *
+ * @param reader GraphReader to access graph data
+ * @param filename Optional file path for additional edge information
+ * @return Map of way IDs to their associated edges and directions
+ */
 std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>
-collect_way_edges(baldr::GraphReader& reader);
-
-// Write way edges to a file
-void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>& ways_edges,
-                     const boost::property_tree::ptree& config);
+collect_way_edges(baldr::GraphReader& reader, const std::string& filename = "");
 
 } // namespace wayedges
 } // namespace valhalla

@@ -4,17 +4,32 @@
 #include <iostream>
 
 #include "baldr/edgeinfo.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
 
 namespace valhalla {
 namespace wayedges {
+
+namespace {
+void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>& ways_edges,
+                     const std::string& fname) {
+  std::ofstream ways_file;
+  ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
+
+  for (const auto& way : ways_edges) {
+    ways_file << way.first;
+    for (auto edge : way.second) {
+      ways_file << "," << (uint32_t)edge.forward << "," << (uint64_t)edge.edgeid;
+    }
+    ways_file << std::endl;
+  }
+  ways_file.close();
+}
+} // namespace
 
 EdgeAndDirection::EdgeAndDirection(const bool f, const baldr::GraphId& id) : forward(f), edgeid(id) {
 }
 
 std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>
-collect_way_edges(baldr::GraphReader& reader) {
+collect_way_edges(baldr::GraphReader& reader, const std::string& filename) {
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
 
   // Iterate through all tiles
@@ -50,26 +65,11 @@ collect_way_edges(baldr::GraphReader& reader) {
       ways_edges[wayid].push_back({edge->forward(), edge_id});
     }
   }
+  if (!filename.empty()) {
+    write_way_edges(ways_edges, filename);
+  }
 
   return ways_edges;
 }
-
-void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>& ways_edges,
-                     const boost::property_tree::ptree& config) {
-  std::ofstream ways_file;
-  std::string fname = config.get<std::string>("mjolnir.tile_dir") +
-                      filesystem::path::preferred_separator + "way_edges.txt";
-  ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
-
-  for (const auto& way : ways_edges) {
-    ways_file << way.first;
-    for (auto edge : way.second) {
-      ways_file << "," << (uint32_t)edge.forward << "," << (uint64_t)edge.edgeid;
-    }
-    ways_file << std::endl;
-  }
-  ways_file.close();
-}
-
 } // namespace wayedges
 } // namespace valhalla
