@@ -6,25 +6,36 @@
 
 #include <fstream>
 #include <iomanip>
-#include <list>
 #include <random>
 #include <sstream>
 #include <thread>
+#include <unordered_map>
+#include <vector>
 
 #include <boost/tokenizer.hpp>
+#include <future>
 
-namespace vb = valhalla::baldr;
 namespace vj = valhalla::mjolnir;
 
 namespace valhalla {
 namespace mjolnir {
-void TrafficStats::operator()(const TrafficStats& other) {
-  constrained_count += other.constrained_count;
-  free_flow_count += other.free_flow_count;
-  compressed_count += other.compressed_count;
-  updated_count += other.updated_count;
-  dup_count += other.dup_count;
-}
+namespace {
+// Struct to hold stats information during each threads work
+struct TrafficStats {
+  uint32_t constrained_count = 0;
+  uint32_t free_flow_count = 0;
+  uint32_t compressed_count = 0;
+  uint32_t updated_count = 0;
+  uint32_t dup_count = 0;
+
+  // Accumulate counts from all threads
+  void operator()(const TrafficStats& other);
+};
+struct TrafficSpeeds {
+  uint8_t constrained_flow_speed = 0;
+  uint8_t free_flow_speed = 0;
+  std::optional<std::array<int16_t, valhalla::baldr::kCoefficientCount>> coefficients;
+};
 /**
  * Read speed CSV file and update the tile_speeds in unique_data
  */
@@ -221,46 +232,6 @@ PrepareTrafficTiles(const filesystem::path& traffic_tile_dir) {
 
   return traffic_tiles;
 }
-//  to process threads and collect results
-TrafficStats
-ProcessTrafficTiles(const std::string& tile_dir,
-                    const std::vector<std::pair<GraphId, std::vector<std::string>>>& traffic_tiles,
-                    uint32_t concurrency) {
-
-  std::vector<std::shared_ptr<std::thread>> threads(concurrency);
-  std::list<std::promise<TrafficStats>> results;
-
-  LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " tiles.");
-  size_t floor = traffic_tiles.size() / threads.size();
-  size_t at_ceiling = traffic_tiles.size() - (threads.size() * floor);
-  auto tile_end = traffic_tiles.begin();
-
-  // Distribute work across threads
-  for (size_t i = 0; i < threads.size(); ++i) {
-    auto tile_start = tile_end;
-    tile_end += (i < at_ceiling ? floor + 1 : floor);
-    results.emplace_back();
-    threads[i].reset(
-        new std::thread(UpdateTiles, tile_dir, tile_start, tile_end, std::ref(results.back())));
-  }
-
-  // Wait for threads to complete
-  for (auto& thread : threads)
-    thread->join();
-
-  // Aggregate thread results
-  TrafficStats final_stats{};
-  for (auto& result : results) {
-    try {
-      auto thread_stats = result.get_future().get();
-      final_stats(thread_stats);
-    } catch (std::exception& e) {
-      // TODO: throw further up the chain?
-    }
-  }
-
-  return final_stats;
-}
 void LogProcessingResults(const TrafficStats& final_stats) {
   LOG_INFO("Parsed " + std::to_string(final_stats.constrained_count) +
            " constrained traffic speeds.");
@@ -360,6 +331,59 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
   LOG_INFO("total drivable non ramps/links = " + std::to_string(totaldrivable - totaldrivablelink));
   LOG_INFO("total pred " + std::to_string(totalpt));
   LOG_INFO("total ff " + std::to_string(totalff));
+}
+void TrafficStats::operator()(const vj::TrafficStats& other) {
+  constrained_count += other.constrained_count;
+  free_flow_count += other.free_flow_count;
+  compressed_count += other.compressed_count;
+  updated_count += other.updated_count;
+  dup_count += other.dup_count;
+}
+} // namespace
+
+//  to process threads and collect results
+void ProcessTrafficTiles(const std::string& tile_dir,
+                         const filesystem::path& traffic_tile_dir,
+                         const bool summary,
+                         const boost::property_tree::ptree& config) {
+
+  std::vector<std::shared_ptr<std::thread>> threads(config.get<uint32_t>("mjolnir.concurrency"));
+  std::list<std::promise<TrafficStats>> results;
+  auto traffic_tiles = PrepareTrafficTiles(traffic_tile_dir);
+  LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " tiles.");
+  size_t floor = traffic_tiles.size() / threads.size();
+  size_t at_ceiling = traffic_tiles.size() - (threads.size() * floor);
+  auto tile_end = traffic_tiles.begin();
+
+  // Distribute work across threads
+  for (size_t i = 0; i < threads.size(); ++i) {
+    auto tile_start = tile_end;
+    tile_end += (i < at_ceiling ? floor + 1 : floor);
+    results.emplace_back();
+    threads[i].reset(
+        new std::thread(UpdateTiles, tile_dir, tile_start, tile_end, std::ref(results.back())));
+  }
+
+  // Wait for threads to complete
+  for (auto& thread : threads)
+    thread->join();
+
+  // Aggregate thread results
+  TrafficStats final_stats{};
+  for (auto& result : results) {
+    try {
+      auto thread_stats = result.get_future().get();
+      final_stats(thread_stats);
+    } catch (std::exception& e) {
+      // TODO: throw further up the chain?
+    }
+  }
+  // Log processing results
+  LogProcessingResults(final_stats);
+  // Optional summary
+  if (summary) {
+    GenerateSummary(config);
+  }
 }
 
 } // namespace mjolnir

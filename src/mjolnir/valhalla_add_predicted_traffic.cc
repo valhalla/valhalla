@@ -55,17 +55,10 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
   // Prepare traffic tiles
-  auto traffic_tiles = vj::PrepareTrafficTiles(traffic_tile_dir);
   // Get tile directory from config
   auto tile_dir = config.get<std::string>("mjolnir.tile_dir");
   // Process traffic tiles
-  auto final_stats =
-      vj::ProcessTrafficTiles(tile_dir, traffic_tiles, config.get<uint32_t>("mjolnir.concurrency"));
-  // Log processing results
-  vj::LogProcessingResults(final_stats);
-  // Optional summary
-  if (summary) {
-    vj::GenerateSummary(config);
-  }
+  vj::ProcessTrafficTiles(tile_dir, traffic_tile_dir, summary, config);
+
   return EXIT_SUCCESS;
 }
