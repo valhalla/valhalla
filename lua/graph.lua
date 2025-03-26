@@ -1718,11 +1718,6 @@ function filter_tags_generic(kv)
 
   kv["bridge"] = bridge[kv["bridge"]] or "false"
 
-  -- TODO access:conditional
-  if kv["seasonal"] and kv["seasonal"] ~= "no" then
-    kv["seasonal"] = "true"
-  end
-
   kv["hov_tag"] = "true"
   if (kv["hov"] and kv["hov"] == "no") then
     kv["hov_forward"] = "false"
