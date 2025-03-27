@@ -1,7 +1,7 @@
 
 #include "argparse_utils.h"
 #include "filesystem.h"
-#include "mjolnir/traffic_updater.h"
+#include "mjolnir/add_predicted_speeds.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>

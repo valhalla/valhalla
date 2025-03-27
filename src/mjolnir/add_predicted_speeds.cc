@@ -1,4 +1,4 @@
-#include "mjolnir/traffic_updater.h"
+#include "mjolnir/add_predicted_speeds.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
@@ -29,7 +29,14 @@ struct TrafficStats {
   uint32_t dup_count = 0;
 
   // Accumulate counts from all threads
-  void operator()(const TrafficStats& other);
+  TrafficStats& operator+=(const TrafficStats& other) {
+    constrained_count += other.constrained_count;
+    free_flow_count += other.free_flow_count;
+    compressed_count += other.compressed_count;
+    updated_count += other.updated_count;
+    dup_count += other.dup_count;
+    return *this;
+  }
 };
 struct TrafficSpeeds {
   uint8_t constrained_flow_speed = 0;
@@ -232,15 +239,7 @@ PrepareTrafficTiles(const filesystem::path& traffic_tile_dir) {
 
   return traffic_tiles;
 }
-void LogProcessingResults(const TrafficStats& final_stats) {
-  LOG_INFO("Parsed " + std::to_string(final_stats.constrained_count) +
-           " constrained traffic speeds.");
-  LOG_INFO("Parsed " + std::to_string(final_stats.free_flow_count) + " free flow traffic speeds.");
-  LOG_INFO("Parsed " + std::to_string(final_stats.compressed_count) + " compressed records.");
-  LOG_INFO("Updated " + std::to_string(final_stats.updated_count) + " directed edges.");
-  LOG_INFO("Duplicate count " + std::to_string(final_stats.dup_count) + ".");
-  LOG_INFO("Finished");
-}
+
 void GenerateSummary(const boost::property_tree::ptree& config) {
   auto mutable_config = config;
   mutable_config.get_child("mjolnir").erase("tile_extract");
@@ -332,13 +331,6 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
   LOG_INFO("total pred " + std::to_string(totalpt));
   LOG_INFO("total ff " + std::to_string(totalff));
 }
-void TrafficStats::operator()(const vj::TrafficStats& other) {
-  constrained_count += other.constrained_count;
-  free_flow_count += other.free_flow_count;
-  compressed_count += other.compressed_count;
-  updated_count += other.updated_count;
-  dup_count += other.dup_count;
-}
 } // namespace
 
 //  to process threads and collect results
@@ -373,13 +365,19 @@ void ProcessTrafficTiles(const std::string& tile_dir,
   for (auto& result : results) {
     try {
       auto thread_stats = result.get_future().get();
-      final_stats(thread_stats);
+      final_stats += thread_stats;
     } catch (std::exception& e) {
       // TODO: throw further up the chain?
     }
   }
   // Log processing results
-  LogProcessingResults(final_stats);
+  LOG_INFO("Parsed " + std::to_string(final_stats.constrained_count) +
+           " constrained traffic speeds.");
+  LOG_INFO("Parsed " + std::to_string(final_stats.free_flow_count) + " free flow traffic speeds.");
+  LOG_INFO("Parsed " + std::to_string(final_stats.compressed_count) + " compressed records.");
+  LOG_INFO("Updated " + std::to_string(final_stats.updated_count) + " directed edges.");
+  LOG_INFO("Duplicate count " + std::to_string(final_stats.dup_count) + ".");
+  LOG_INFO("Finished");
   // Optional summary
   if (summary) {
     GenerateSummary(config);
