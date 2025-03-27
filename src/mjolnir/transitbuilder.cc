@@ -1,5 +1,6 @@
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
 
 #include <fstream>
 #include <future>
@@ -529,8 +530,6 @@ namespace mjolnir {
 
 // Add transit to the graph
 void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
-
-  auto t1 = std::chrono::high_resolution_clock::now();
   std::unordered_set<GraphId> tiles;
 
   // Bail if nothing
@@ -540,7 +539,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;
   }
-
+  SCOPED_TIMER();
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
   transit_dir->push_back(filesystem::path::preferred_separator);
   GraphReader reader(hierarchy_properties);
@@ -648,10 +647,6 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   if (total_conn_edges) {
     LOG_INFO("Found " + std::to_string(total_conn_edges) + " connection edges");
   }
-
-  auto t2 = std::chrono::high_resolution_clock::now();
-  [[maybe_unused]] uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-  LOG_INFO("Finished - TransitBuilder took " + std::to_string(secs) + " secs");
 }
 
 } // namespace mjolnir
