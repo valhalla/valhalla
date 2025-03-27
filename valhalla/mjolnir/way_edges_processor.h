@@ -1,5 +1,4 @@
-#ifndef VALHALLA_MJOLNIR_WAY_EDGES_PROCESSOR_H
-#define VALHALLA_MJOLNIR_WAY_EDGES_PROCESSOR_H
+#pragma once
 
 #include <cstdint>
 #include <unordered_map>
@@ -31,5 +30,3 @@ collect_way_edges(baldr::GraphReader& reader, const std::string& filename = "");
 
 } // namespace mjolnir
 } // namespace valhalla
-
-#endif // VALHALLA_MJOLNIR_WAY_EDGES_PROCESSOR_H
