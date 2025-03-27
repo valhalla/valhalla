@@ -19,7 +19,6 @@ struct EdgeAndDirection {
   baldr::GraphId edgeid;
 };
 
-// Process edges and collect way information
 /**
  * Collects edges for ways in the graph.
  *
