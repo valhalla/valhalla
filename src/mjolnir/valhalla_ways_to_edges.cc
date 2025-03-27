@@ -1,36 +1,20 @@
-#include <cstdint>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
 #include "argparse_utils.h"
-#include "baldr/directededge.h"
-#include "baldr/edgeinfo.h"
 #include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/way_edges_processor.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-namespace vw = valhalla::wayedges;
-
-// Structure holding an edge Id and forward flag
-struct EdgeAndDirection {
-  bool forward;
-  GraphId edgeid;
-
-  EdgeAndDirection(const bool f, const GraphId& id) : forward(f), edgeid(id) {
-  }
-};
+namespace vm = valhalla::mjolnir;
 
 // Main application to create a list wayids and directed edges belonging
 // to ways that are drivable.
@@ -74,7 +58,7 @@ int main(int argc, char** argv) {
                       filesystem::path::preferred_separator + "way_edges.txt";
 
   // Collect all way edges
-  auto ways_edges = vw::collect_way_edges(reader, fname);
+  auto ways_edges = vm::collect_way_edges(reader, fname);
 
   // Write way edges to a file
 

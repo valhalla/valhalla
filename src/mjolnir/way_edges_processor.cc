@@ -1,12 +1,11 @@
 #include "mjolnir/way_edges_processor.h"
 
 #include <fstream>
-#include <iostream>
 
 #include "baldr/edgeinfo.h"
 
 namespace valhalla {
-namespace wayedges {
+namespace mjolnir {
 
 namespace {
 void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>& ways_edges,
@@ -24,9 +23,6 @@ void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirec
   ways_file.close();
 }
 } // namespace
-
-EdgeAndDirection::EdgeAndDirection(const bool f, const baldr::GraphId& id) : forward(f), edgeid(id) {
-}
 
 std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>
 collect_way_edges(baldr::GraphReader& reader, const std::string& filename) {
@@ -71,5 +67,5 @@ collect_way_edges(baldr::GraphReader& reader, const std::string& filename) {
 
   return ways_edges;
 }
-} // namespace wayedges
+} // namespace mjolnir
 } // namespace valhalla

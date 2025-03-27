@@ -11,14 +11,12 @@
 #include "baldr/graphreader.h"
 
 namespace valhalla {
-namespace wayedges {
+namespace mjolnir {
 
 // Structure holding an edge Id and forward flag
 struct EdgeAndDirection {
   bool forward;
   baldr::GraphId edgeid;
-
-  EdgeAndDirection(const bool f, const baldr::GraphId& id);
 };
 
 // Process edges and collect way information
@@ -32,7 +30,7 @@ struct EdgeAndDirection {
 std::unordered_map<uint64_t, std::vector<EdgeAndDirection>>
 collect_way_edges(baldr::GraphReader& reader, const std::string& filename = "");
 
-} // namespace wayedges
+} // namespace mjolnir
 } // namespace valhalla
 
 #endif // VALHALLA_MJOLNIR_WAY_EDGES_PROCESSOR_H
