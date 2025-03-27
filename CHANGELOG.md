@@ -18,6 +18,7 @@
    * FIXED: update deprecated boost geometry headers [#5117](https://github.com/valhalla/valhalla/pull/5117)
    * FIXED: Fix type mismatch in `src/tyr/serializers.cc` [#5145](https://github.com/valhalla/valhalla/pull/5145)
    * FIXED: Multimodal ferry reclassification [#5139](https://github.com/valhalla/valhalla/pull/5139)
+   * FIXED: Fix time info calculation across time zone boundaries [#5163](https://github.com/valhalla/valhalla/pull/5163)
 
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
@@ -45,6 +46,7 @@
    * CHANGED: Speed up `valhalla_build_admins` by using intermediate in-memory database [#5146](https://github.com/valhalla/valhalla/pull/5146)
    * UPDATED: bump tz from 2024a to 2025a [#5061](https://github.com/valhalla/valhalla/pull/5061)
    * ADDED: Add shoulder attribute to locate API [#5144](https://github.com/valhalla/valhalla/pull/5144)
+   * CHANGED: Move `bss_info_` from `OSMNode` to the new `OSMBSSNode` to reduce `way_nodes.bin` size [#5147](https://github.com/valhalla/valhalla/pull/5147)
    * ADDED: Mutithreaded `PBFGraphParser::ParseWays()` [#5143](https://github.com/valhalla/valhalla/pull/5143)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
