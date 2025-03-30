@@ -207,7 +207,11 @@ Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr
 // Returns the cost to make the transition from the predecessor edge.
 // Defaults to 0. Costing models that wish to include edge transition
 // costs (i.e., intersection/turn costs) must override this method.
-Cost DynamicCost::TransitionCost(const DirectedEdge*, const NodeInfo*, const EdgeLabel&) const {
+Cost DynamicCost::TransitionCost(const DirectedEdge*,
+                                 const NodeInfo*,
+                                 const EdgeLabel&,
+                                 const graph_tile_ptr&,
+                                 const std::function<baldr::LimitedGraphReader()>&) const {
   return {0.0f, 0.0f};
 }
 
@@ -219,6 +223,9 @@ Cost DynamicCost::TransitionCostReverse(const uint32_t,
                                         const baldr::NodeInfo*,
                                         const baldr::DirectedEdge*,
                                         const baldr::DirectedEdge*,
+                                        const graph_tile_ptr&,
+                                        const baldr::GraphId&,
+                                        const std::function<baldr::LimitedGraphReader()>&,
                                         const bool,
                                         const InternalTurn) const {
   return {0.0f, 0.0f};

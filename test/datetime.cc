@@ -657,7 +657,8 @@ TEST(DateTime, TimezoneAliases) {
        {"Asia/Kuala_Lumpur", "Asia/Singapore"}, // ^ deprecated 2018 tz
        {"America/Nuuk", "America/Godthab"},
        {"Pacific/Kanton", "Pacific/Enderbury"},
-       {"Europe/Kyiv", "Europe/Kiev"}}; // ^ renamed 2023 tz
+       {"Europe/Kyiv", "Europe/Kiev"}, // ^ renamed 2023 tz
+       {"WET", "Europe/Lisbon"}};      // renamed 2024b
 
   for (const auto& pair : pairs) {
     auto alias_idx = dt_db.from_index(dt_db.to_index(pair.first));
@@ -670,9 +671,12 @@ TEST(DateTime, TimezoneIndices) {
 
   // test some official/current timezone names & indices
   std::vector<std::pair<size_t, std::string>> pairs = {
-      {1, "Africa/Abidjan"},  {82, "America/Indiana/Tell_City"}, {323, "Europe/Samara"},
-      {387, "WET"},           {629, "America/Ciudad_Juarez"}, // new timezone since 2023c update
-      {726, "Asia/Qostanay"},                                 // new timezone since 2023c update
+      {1, "Africa/Abidjan"},
+      {82, "America/Indiana/Tell_City"},
+      {323, "Europe/Samara"},
+      // {387, "WET"}, // aliased to Europe/Lisbon
+      {629, "America/Ciudad_Juarez"}, // new timezone since 2023c update
+      {726, "Asia/Qostanay"},         // new timezone since 2023c update
   };
 
   for (const auto& pair : pairs) {

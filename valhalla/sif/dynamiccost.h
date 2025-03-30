@@ -9,6 +9,7 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/baldr/time_info.h>
@@ -412,34 +413,44 @@ public:
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param   edge  Directed edge (the to edge)
-   * @param   node  Node (intersection) where transition occurs.
-   * @param   pred  Predecessor edge information.
+   * @param   edge     Directed edge (the to edge)
+   * @param   node     Node (intersection) where transition occurs.
+   * @param   pred     Predecessor edge information.
+   * @param   tile     Pointer to the graph tile containing the to edge.
+   * @param   reader   Grahpreader to get the tile containing the predecessor if needed
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const;
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile,
+                              const std::function<baldr::LimitedGraphReader()>& reader_getter) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
    * when using a reverse search (from destination towards the origin).
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  idx   Directed edge local index
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  opp_edge  Pointer to the opposing directed edge - this is the
-   *                   "from" or predecessor edge in the transition.
-   * @param  opp_pred_edge  Pointer to the opposing directed edge to the
-   *                        predecessor. This is the "to" edge.
+   * @param  idx                Directed edge local index
+   * @param  node               Node (intersection) where transition occurs.
+   * @param  opp_edge           Pointer to the opposing directed edge - this is the
+   *                            "from" or predecessor edge in the transition.
+   * @param  opp_pred_edge      Pointer to the opposing directed edge to the
+   *                            predecessor. This is the "to" edge.
+   * @param  tile               Graphtile that contains the node and the opp_edge
+   * @param  pred_id            Graph ID of opp_pred_edge to get its tile if needed
+   * @param  reader             Graphreader to optionally get the tile containing the "to" edge.
    * @param  has_measured_speed Do we have any of the measured speed types set?
-   * @param  internal_turn Did we make a uturn on a short internal edge?
-   * @return  Returns the cost and time (seconds)
+   * @param  internal_turn      Did we make a uturn on a short internal edge?
+   * @return                    Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
                                      const baldr::DirectedEdge* opp_pred_edge,
+                                     const graph_tile_ptr& tile,
+                                     const baldr::GraphId& pred_id,
+                                     const std::function<baldr::LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed = false,
                                      const InternalTurn internal_turn = InternalTurn::kNoTurn) const;
 
@@ -989,6 +1000,10 @@ public:
     default_hierarchy_limits = default_;
   }
 
+  bool UseHierarchyLimits() {
+    return use_hierarchy_limits;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
@@ -1094,6 +1109,7 @@ protected:
   bool exclude_ferries_{false};
   bool has_excludes_{false};
   bool default_hierarchy_limits{true};
+  bool use_hierarchy_limits{true};
 
   bool exclude_cash_only_tolls_{false};
 
