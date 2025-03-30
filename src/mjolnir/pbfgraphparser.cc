@@ -4604,7 +4604,7 @@ struct graph_parser {
     name_lr_fb_w_lang_index = get_pronunciation_index(t, alpha);
     lang_lr_fb_index = get_lang_index(t, alpha);
 
-    const std::string name_lr_fb_w_lang = osmdata_.name_offset_map.name(name_lr_fb_w_lang_index);
+    const std::string& name_lr_fb_w_lang = osmdata_.name_offset_map.name(name_lr_fb_w_lang_index);
     std::string name = name_lr_fb;
     std::string lang = osmdata_.name_offset_map.name(lang_lr_fb_index);
 
