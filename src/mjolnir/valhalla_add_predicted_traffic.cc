@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
     if (!result.count("traffic-tile-dir")) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
-      return false;
+      return EXIT_SUCCESS;
     }
     traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
   } catch (cxxopts::exceptions::exception& e) {
