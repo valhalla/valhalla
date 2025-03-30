@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
       parse_hierarchy_limits_from_config(config, "costmatrix", false);
   check_hierarchy_limits(mode_costing[int(mode)]->GetHierarchyLimits(), mode_costing[int(mode)],
                          options.costings().find(options.costing_type())->second.options(), hl_config,
-                         true);
+                         true, mode_costing[int(mode)]->UseHierarchyLimits());
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
