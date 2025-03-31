@@ -515,6 +515,11 @@ void DirectedEdge::set_opp_local_idx(const uint32_t idx) {
   }
 }
 
+void DirectedEdge::set_hierarchy_roadclass(const uint64_t road_class, const bool reset) {
+  shortcut_ = road_class;
+  is_shortcut_ = !reset;
+}
+
 // Set the flag for whether this edge represents a shortcut between 2 nodes.
 void DirectedEdge::set_shortcut(const uint32_t shortcut) {
   // 0 is not a valid shortcut

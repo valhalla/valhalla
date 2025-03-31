@@ -232,7 +232,7 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
           sequence<Edge>::iterator element = edges[edge.second];
           auto update_edge = *element;
           if (update_edge.attributes.importance > kFerryUpClass) {
-            update_edge.attributes.importance = kFerryUpClass;
+            update_edge.attributes.importance_hierarchy = kFerryUpClass;
             update_edge.attributes.reclass_ferry = true;
             element = update_edge;
             edge_count++;
@@ -333,6 +333,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.ferry_edge_ && bundle.node.non_ferry_edge_ &&
         GetBestNonFerryClass(bundle.node_edges) > kFerryUpClass &&
+        // TODO(nils): why exactly do we not want to consider short ferries?
         !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
       bool inbound_path_found = false;
       bool outbound_path_found = false;
@@ -385,7 +386,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           sequence<Edge>::iterator element = edges[edge.second];
           auto update_edge = *element;
           if (ret1.second && ret2.second && update_edge.attributes.importance > kFerryUpClass) {
-            update_edge.attributes.importance = kFerryUpClass;
+            update_edge.attributes.importance_hierarchy = kFerryUpClass;
             update_edge.attributes.reclass_ferry = remove_destonly;
             element = update_edge;
             total_count++;
@@ -404,7 +405,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
             sequence<Edge>::iterator element = edges[edge.second];
             auto update_edge = *element;
             if (update_edge.attributes.importance > kFerryUpClass) {
-              update_edge.attributes.importance = kFerryUpClass;
+              update_edge.attributes.importance_hierarchy = kFerryUpClass;
               update_edge.attributes.reclass_ferry = remove_destonly;
               element = update_edge;
               total_count++;

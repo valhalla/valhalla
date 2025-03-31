@@ -1061,6 +1061,15 @@ public:
   void set_opp_local_idx(const uint32_t localidx);
 
   /**
+   * We hijack the shortcut mask to move link and/or ferry edges to lower
+   * hierarchies. Will be set during the graph build and re-set during the
+   * hierarchy builder.
+   * @param road_class the road class which should determine the edge's hierarchy
+   * @param reset      whether is_shortcut_ should be set false
+   */
+  void set_hierarchy_roadclass(const uint64_t road_class, const bool reset = false);
+
+  /**
    * Indicates the mask of the superseded edge bypassed by a shortcut.
    * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
    * (other than the 1-2 higher level edges that superseded by the shortcut).

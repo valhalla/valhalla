@@ -113,7 +113,7 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
     // If the node has a both links and non links at it
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.link_edge_ && bundle.node.non_link_edge_) {
-      // Check if this node has a link edge that is drivable from the node
+      // Check if this node has a link edge that is outgoing (i.e. driveforward) from the node
       for (const auto& edge : bundle.node_edges) {
         if (edge.first.attributes.link && (edge.first.attributes.driveforward)) {
           // Get the highest classification of non-link edges at this node.
@@ -150,6 +150,13 @@ struct WayTags {
     return refs.empty() && dest_refs.empty();
   }
 
+  /**
+   * Parses destination:ref & ref tags as separate vectors of names
+   *
+   * @param way     The way to parse the tags of
+   * @param omsdata The data parsed from the PBF
+   * @returns a WayTags object holding the vectors of names
+   */
   static WayTags Parse(const OSMWay& way, const OSMData& osmdata) {
     WayTags road_tags;
 
@@ -846,18 +853,13 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
         turn_channel = IsTurnChannel(data, link_edges);
       }
 
-      // Reclassify link edges to the new classification.
+      // Mark edges if they need to be moved in hierarchy
       for (auto edge_idx : link_edges) {
         sequence<Edge>::iterator element = data.edges[edge_idx];
         auto edge = *element;
 
-        // Reclassify edge (if reclassify_links is true).
-        if (reclassify_links && rc > edge.attributes.importance) {
-          if (rc < static_cast<uint32_t>(RoadClass::kUnclassified))
-            edge.attributes.importance = rc;
-          else
-            edge.attributes.importance = static_cast<uint32_t>(RoadClass::kTertiary);
-
+        if (rc > edge.attributes.importance) {
+          edge.attributes.importance_hierarchy = rc;
           ++reclass_count;
         }
 

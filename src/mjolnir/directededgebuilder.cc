@@ -1,7 +1,8 @@
-#include "mjolnir/directededgebuilder.h"
-#include "midgard/logging.h"
-
 #include <algorithm>
+
+#include "midgard/logging.h"
+#include "mjolnir/directededgebuilder.h"
+#include "mjolnir/node_expander.h"
 
 using namespace valhalla::baldr;
 
@@ -26,7 +27,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const bool minor,
                                          const uint32_t restrictions,
                                          const uint32_t bike_network,
-                                         const bool remove_destonly)
+                                         const Edge::EdgeAttributes& attrs)
     : DirectedEdge() {
   set_endnode(endnode);
   set_use(use);
@@ -52,10 +53,16 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   set_truck_route(way.truck_route());
 
-  // Set destination only to true if the remove_destonly is set to false and either destination only
-  // or no thru traffic is set. remove_destonly is set for reclassified paths due to ferries.
-  set_dest_only(!remove_destonly && (way.destination_only() || way.no_thru_traffic()));
-  if (remove_destonly && (way.destination_only() || way.no_thru_traffic())) {
+  if (attrs.importance_hierarchy < static_cast<uint64_t>(baldr::RoadClass::kInvalidRoadClass)) {
+    // hijack shortcut flag to indicate whether this needs to be moved in hierarchy builder
+    // will be reset there
+    set_hierarchy_roadclass(attrs.importance_hierarchy);
+  }
+
+  // Set destination only to true if we didn't reclassify for ferry and either destination only
+  // or no thru traffic is set.
+  set_dest_only(!attrs.reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
+  if (attrs.reclass_ferry && (way.destination_only() || way.no_thru_traffic())) {
     LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
   }
   set_dest_only_hgv(way.destination_only_hgv());
