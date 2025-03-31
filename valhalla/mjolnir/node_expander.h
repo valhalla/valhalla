@@ -61,17 +61,17 @@ struct Edge {
                                        // defaults to kInvalidRoadClass
     uint64_t spare : 21;
   };
-  EdgeAttributes attributes;
+  EdgeAttributes attributes{};
 
   // index of the source (start) node of the edge
-  uint32_t sourcenode_;
+  uint32_t sourcenode_{};
 
   // index of the target (end) node of the edge
-  uint32_t targetnode_;
+  uint32_t targetnode_{};
 
   // to record the access of an edge
-  uint16_t fwd_access;
-  uint16_t rev_access;
+  uint16_t fwd_access{};
+  uint16_t rev_access{};
 
   /**
    * For now you cant be valid if you dont have any shape
