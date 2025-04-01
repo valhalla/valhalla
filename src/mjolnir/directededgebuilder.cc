@@ -27,7 +27,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const bool minor,
                                          const uint32_t restrictions,
                                          const uint32_t bike_network,
-                                         const Edge::EdgeAttributes& attrs)
+                                         const bool reclass_ferry,
+                                         const baldr::RoadClass rc_hierarchy)
     : DirectedEdge() {
   set_endnode(endnode);
   set_use(use);
@@ -53,16 +54,16 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   set_truck_route(way.truck_route());
 
-  if (attrs.importance_hierarchy < static_cast<uint64_t>(baldr::RoadClass::kInvalidRoadClass)) {
+  if (rc_hierarchy < baldr::RoadClass::kInvalidRoadClass) {
     // hijack shortcut flag to indicate whether this needs to be moved in hierarchy builder
     // will be reset there
-    set_hierarchy_roadclass(attrs.importance_hierarchy);
+    set_hierarchy_roadclass(rc_hierarchy);
   }
 
   // Set destination only to true if we didn't reclassify for ferry and either destination only
   // or no thru traffic is set.
-  set_dest_only(!attrs.reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
-  if (attrs.reclass_ferry && (way.destination_only() || way.no_thru_traffic())) {
+  set_dest_only(!reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
+  if (reclass_ferry && (way.destination_only() || way.no_thru_traffic())) {
     LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
   }
   set_dest_only_hgv(way.destination_only_hgv());

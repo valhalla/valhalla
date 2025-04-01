@@ -926,7 +926,8 @@ void BuildTileSet(const std::string& ways_file,
                                  truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
                                  n, has_signal, has_stop, has_yield,
                                  ((has_stop || has_yield) ? node.minor() : false), restrictions,
-                                 bike_network, edge.attributes);
+                                 bike_network, edge.attributes.reclass_ferry,
+                                 static_cast<RoadClass>(edge.attributes.importance_hierarchy));
 
           DirectedEdge& directededge = graphtile.directededges().emplace_back(de);
 

@@ -1067,7 +1067,7 @@ public:
    * @param road_class the road class which should determine the edge's hierarchy
    * @param reset      whether is_shortcut_ should be set false
    */
-  void set_hierarchy_roadclass(const uint64_t road_class, const bool reset = false);
+  void set_hierarchy_roadclass(const baldr::RoadClass rc, const bool reset = false);
 
   /**
    * Indicates the mask of the superseded edge bypassed by a shortcut.

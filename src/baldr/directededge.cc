@@ -515,8 +515,8 @@ void DirectedEdge::set_opp_local_idx(const uint32_t idx) {
   }
 }
 
-void DirectedEdge::set_hierarchy_roadclass(const uint64_t road_class, const bool reset) {
-  shortcut_ = road_class;
+void DirectedEdge::set_hierarchy_roadclass(const baldr::RoadClass rc, const bool reset) {
+  shortcut_ = static_cast<uint32_t>(rc);
   is_shortcut_ = !reset;
 }
 
