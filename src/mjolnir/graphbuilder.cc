@@ -1476,7 +1476,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   bool reclassify_links = pt.get<bool>("mjolnir.reclassify_links", true);
   bool infer_turn_channels = pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true);
   if (reclassify_links || infer_turn_channels) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata, infer_turn_channels);
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata, reclassify_links,
+                    infer_turn_channels);
   } else {
     LOG_WARN("Not reclassifying link graph edges or inferring turn channels");
   }
