@@ -91,7 +91,7 @@ class TileResolver:
         for t in list(dict.fromkeys(self.matched_paths)):
             LOGGER.debug(f"Adding tile {t} to the tar file")
             # Normalize path to use forward slashes, fixes issues when running on Windows
-            normalized_path = str(t).replace("\\", "/")  
+            normalized_path = str(t).replace("\\", "/")
             if self._is_tar:
                 tar_member = self._tar_obj.getmember(normalized_path)
                 tar.addfile(tar_member, self._tar_obj.extractfile(tar_member.name))
