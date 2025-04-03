@@ -5104,6 +5104,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   for (auto& file : input_files) {
     parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
 
+    // These two queues maintains the order of processed ways by holding futures that correspond
+    // to the promises sent to the Lua workers. Lua workers take that promises and corresponding
+    // osmium buffers, process them and set the value of the promise.
     using Ways = std::vector<graph_parser::Way>;
     osmium::thread::Queue<std::future<Ways>> ways_queue(lua_concurrency * 8);
     osmium::thread::Queue<std::pair<osmium::memory::Buffer, std::promise<Ways>>> buffer_queue(
@@ -5114,7 +5117,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
       osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
       while (osmium::memory::Buffer buffer = reader.read()) {
         std::promise<Ways> promise;
-        ways_queue.push(promise.get_future());
+        ways_queue.push(promise.get_future()); // Blocks if queue is full.
         buffer_queue.push(std::make_pair(std::move(buffer), std::move(promise)));
       }
 
