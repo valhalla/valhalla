@@ -853,13 +853,18 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
         turn_channel = IsTurnChannel(data, link_edges);
       }
 
-      // Mark edges if they need to be moved in hierarchy
+      // Reclassify link edges to the new classification.
       for (auto edge_idx : link_edges) {
         sequence<Edge>::iterator element = data.edges[edge_idx];
         auto edge = *element;
 
+        // Reclassify edge (if reclassify_links is true).
         if (reclassify_links && rc > edge.attributes.importance) {
-          edge.attributes.importance_hierarchy = rc;
+          if (rc < static_cast<uint32_t>(RoadClass::kUnclassified))
+            edge.attributes.importance = rc;
+          else
+            edge.attributes.importance = static_cast<uint32_t>(RoadClass::kTertiary);
+
           ++reclass_count;
         }
 

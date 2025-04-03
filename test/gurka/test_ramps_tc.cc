@@ -285,10 +285,8 @@ void check_edge_classification(baldr::GraphReader& graph_reader,
                                const gurka::nodelayout& nodes,
                                const std::string& b,
                                const std::string& e,
-                               uint8_t level,
                                baldr::RoadClass rc) {
-  const auto [edge_id, edge] = gurka::findEdgeByNodes(graph_reader, nodes, b, e);
-  EXPECT_EQ(edge_id.level(), level);
+  const auto edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, nodes, b, e));
   EXPECT_EQ(edge->classification(), rc);
 }
 
@@ -360,13 +358,13 @@ TEST(RampsNoReclass, test_tc_infer) {
 
   // check that motorway links were not reclassified
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
-  check_edge_classification(graph_reader, layout, "B", "E", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "E", "G", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "E", "H", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "G", "K", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "K", "N", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "L", "N", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "N", "C", 0, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "B", "E", baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "E", "G", baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "E", "H", baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "G", "K", baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "K", "N", baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "L", "N", baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "N", "C", baldr::RoadClass::kMotorway);
 
   check_edge_use(graph_reader, layout, "G", "K", baldr::Use::kTurnChannel);
 
@@ -421,8 +419,8 @@ TEST(LinkReclassification, test_use_refs) {
   const gurka::ways ways = {
       // motorway road M1
       {"ABCD", {{"highway", "motorway"}, {"ref", "M1"}}},
-      // secondary road M2
-      {"EFG", {{"highway", "secondary"}, {"ref", "M2"}}},
+      // trunk road M2
+      {"EFG", {{"highway", "trunk"}, {"ref", "M2"}}},
       // link from M1 to M2
       {"BJF", {{"highway", "motorway_link"}, {"ref", "M2"}, {"oneway", "yes"}}},
       // some tertiary road
@@ -439,12 +437,12 @@ TEST(LinkReclassification, test_use_refs) {
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
   // check that ramp classification from M1 to M2 wasn't confused by the tertiary road
-  check_edge_classification(graph_reader, layout, "B", "J", 1, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "J", "F", 1, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "B", "J", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "J", "F", baldr::RoadClass::kTrunk);
 
   // check that ramp classification from M2 to M1 wasn't confused by the tertiary road
-  check_edge_classification(graph_reader, layout, "F", "K", 1, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "K", "C", 1, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "F", "K", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "K", "C", baldr::RoadClass::kTrunk);
 }
 
 TEST(LinkReclassification, test_use_dest_refs) {
@@ -468,8 +466,8 @@ TEST(LinkReclassification, test_use_dest_refs) {
   const gurka::ways ways = {
       // motorway road M1
       {"ABCD", {{"highway", "motorway"}, {"ref", "M1"}}},
-      // secondary road M2
-      {"EFG", {{"highway", "secondary"}, {"ref", "M2"}}},
+      // trunk road M2
+      {"EFG", {{"highway", "trunk"}, {"ref", "M2"}}},
       // link from M1 to M2
       {"BJF", {{"highway", "motorway_link"}, {"destination:ref", "M2"}, {"oneway", "yes"}}},
       // some tertiary road
@@ -486,12 +484,12 @@ TEST(LinkReclassification, test_use_dest_refs) {
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
   // check that ramp classification from M1 to M2 wasn't confused by the tertiary road
-  check_edge_classification(graph_reader, layout, "B", "J", 1, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "J", "F", 1, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "B", "J", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "J", "F", baldr::RoadClass::kTrunk);
 
   // check that ramp classification from M2 to M1 wasn't confused by the tertiary road
-  check_edge_classification(graph_reader, layout, "F", "K", 1, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "K", "C", 1, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "F", "K", baldr::RoadClass::kTrunk);
+  check_edge_classification(graph_reader, layout, "K", "C", baldr::RoadClass::kTrunk);
 }
 
 TEST(LinkReclassification, test_hierarchical_reclass) {
@@ -524,15 +522,15 @@ TEST(LinkReclassification, test_hierarchical_reclass) {
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
   // BG leads to 3 roads, make sure that the best classification was chosen
-  check_edge_classification(graph_reader, layout, "B", "G", 0, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "B", "G", baldr::RoadClass::kTrunk);
   // GJ leads to only one secondary road
-  check_edge_classification(graph_reader, layout, "G", "J", 1, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "G", "J", baldr::RoadClass::kSecondary);
   // GH lead to 2 road, make sure that the best classification was chosen
-  check_edge_classification(graph_reader, layout, "G", "H", 0, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "G", "H", baldr::RoadClass::kTrunk);
   // HM leads to only one tertiary road
-  check_edge_classification(graph_reader, layout, "H", "M", 1, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "H", "M", baldr::RoadClass::kTertiary);
   // HE leads to only one trunk road
-  check_edge_classification(graph_reader, layout, "H", "E", 0, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "H", "E", baldr::RoadClass::kTrunk);
 }
 
 TEST(LinkReclassification, test_acyclic_graph) {
@@ -557,7 +555,7 @@ TEST(LinkReclassification, test_acyclic_graph) {
       {"GHI", {{"highway", "motorway"}}},
       {"ABC", {{"highway", "primary"}}},
       {"DEF", {{"highway", "secondary"}}},
-      {"OPR", {{"highway", "residential"}}},
+      {"OPR", {{"highway", "tertiary"}}},
 
       {"BJ", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
       {"EJ", {{"highway", "motorway_link"}, {"oneway", "yes"}}},
@@ -575,15 +573,15 @@ TEST(LinkReclassification, test_acyclic_graph) {
                                {{"mjolnir.reclassify_links", "true"}});
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
-  check_edge_classification(graph_reader, layout, "B", "J", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "J", "K", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "K", "L", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "K", "M", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "M", "L", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "L", "N", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "N", "H", 0, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "N", "P", 2, baldr::RoadClass::kMotorway);
-  check_edge_classification(graph_reader, layout, "E", "J", 1, baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "B", "J", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "J", "K", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "K", "L", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "K", "M", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "M", "L", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "L", "N", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "N", "H", baldr::RoadClass::kPrimary);
+  check_edge_classification(graph_reader, layout, "N", "P", baldr::RoadClass::kTertiary);
+  check_edge_classification(graph_reader, layout, "E", "J", baldr::RoadClass::kSecondary);
 }
 
 TEST(RampsTCs, SlipLane) {
