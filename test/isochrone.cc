@@ -70,7 +70,6 @@ void try_isochrone(loki_worker_t& loki_worker,
   ParseApi(test_request, Options::isochrone, request);
   loki_worker.isochrones(request);
   auto response_json = thor_worker.isochrones(request);
-  std::cerr << response_json << std::endl;
   loki_worker.cleanup();
   thor_worker.cleanup();
 
