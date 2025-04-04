@@ -2486,6 +2486,15 @@ struct OSMWay {
     return lit_;
   }
 
+  // CUSTOM: optionally prohibit private access roads in locate
+  bool private_prohibit_access_index() const {
+    return private_prohibit_access_index_;
+  }
+
+  void set_private_prohibit_access_index(const uint32_t index) {
+    private_prohibit_access_index_ = index;
+  }
+
   static void
   ProcessNamesPronunciations(const UniqueNames& name_offset_map,
                              const std::vector<std::pair<std::string, bool>>& default_languages,
@@ -2624,6 +2633,9 @@ struct OSMWay {
   // level and level:ref of the way
   uint32_t level_index_;
   uint32_t level_ref_index_;
+
+  // CUSTOM: distinguish private and destination only
+  uint32_t private_prohibit_access_index_;
 
   // Bike network information. TODO - these are not yet used.
   //  uint32_t bike_national_ref_index_;

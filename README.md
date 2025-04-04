@@ -1,3 +1,19 @@
+> Note: dies ist ein Valhalla Fork, der `/locate` um die Funktionalität erweitert, pro korrelierter Edge ein ganzes Straßensegmente zu erhalten. Dieses findet sich in der Response unter `.edges[].full_road_segment`. Dazu wird jede Edge in beide Richtungen expandiert bis die nächste Kreuzung oder Sackgasse gefunden ist. Eine Kreuzung ist definiert als eine Node mit mehr als einer eingehenden/ausgehenden (für reverse/forward Expansion respektive) Edge, die erlaubt ist und die gleiche Road Class und Use hat wie die Ausgangsedge. 
+
+#### Zusätzliche Konfigurations- & Requestparameter
+
+##### `road_segments`
+
+Boolean, der bei `/locate` mitgegeben werden kann, damit in der Response pro Edge ein ganzes Straßensegment enthalten ist.
+
+##### `costing_options.<mode>.exclude_private`
+
+Hiermit können optional private Straßen (also solche mit `access|motor_vehicle|motorcar=private` Tag) von der Kandidatensuche ausgeschlossen werden. Um dieses Feature verwenden zu können, muss der Graph mit einem Valhalla build von diesem Fork neu gebaut werden.
+
+
+##### `mjolnir.remove_all_driveways` (Server-Konfiguration)
+
+Hiermit können beim Graphbuild nicht nur driveways, die als `private` markiert sind vom Graphen ausgeschlossen werden, sondern optional alle (`include_driveways` muss `false` sein).
 
 
 

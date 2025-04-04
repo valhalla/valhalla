@@ -159,6 +159,8 @@ public:
 
     include_platforms_ = pt.get<bool>("include_platforms", false);
     include_driveways_ = pt.get<bool>("include_driveways", true);
+    remove_all_driveways_ = pt.get<bool>("remove_all_driveways", false);
+
     include_construction_ = pt.get<bool>("include_construction", false);
     infer_internal_intersections_ =
         pt.get<bool>("data_processing.infer_internal_intersections", true);
@@ -344,6 +346,13 @@ public:
       // Make sure we do not unset this flag if set previously
       if (tag_.second == "true")
         way_.set_destination_only(true);
+    };
+    tag_handlers_["private_prohibit_access"] = [this]() {
+      if (!tag_.second.empty()) {
+        // CUSTOM: set private prohibit access
+        way_.set_private_prohibit_access_index(
+            osmdata_.name_offset_map.index(tag_.second == "true" ? "1" : "0"));
+      }
     };
     tag_handlers_["private_hgv"] = [this]() {
       if (tag_.second == "true")
@@ -2323,6 +2332,9 @@ public:
       if (!include_driveways_ && (use = results.find("use")) != results.end() &&
           static_cast<Use>(std::stoi(use->second)) == Use::kDriveway) {
 
+        if (remove_all_driveways_)
+          return;
+
         // only private use.
         Tags::const_iterator priv;
         if ((priv = results.find("private")) != results.end() && priv->second == "true") {
@@ -4118,7 +4130,7 @@ public:
                   return; // should not make it here; has to be bad data.
                 }
               } // else
-            }   // if (condition.empty())
+            } // if (condition.empty())
 
             std::vector<std::string> conditions = GetTagTokens(condition, ';');
 
@@ -4145,7 +4157,7 @@ public:
             }
             return;
           } // if (isConditional)
-        }   // end turning into complex restriction
+        } // end turning into complex restriction
 
         restriction.set_modes(modes);
 
@@ -4924,6 +4936,9 @@ public:
 
   // Configuration option to include driveways
   bool include_driveways_;
+
+  // CUSTOM: remove even the non-private driveways
+  bool remove_all_driveways_;
 
   // Configuration option to include roads under construction
   bool include_construction_;

@@ -623,3 +623,38 @@ TEST(Standalone, AccessForwardBackward) {
     gurka::assert::raw::expect_path(result, {"CFH", "ABCDE", "EG"});
   }
 }
+
+/** CUSTOM: test private access stored in EdgeInfo */
+TEST(Standalone, DedicatedPrivateAccess) {
+  const std::string ascii_map = R"(
+          A--B--C--D--E--F
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "living_street"}}},
+      {"BC", {{"highway", "living_street"}, {"access", "private"}}},
+      {"CD", {{"highway", "living_street"}, {"access", "destination"}}},
+      {"CD", {{"highway", "living_street"}, {"access", "destination"}}},
+      {"DE", {{"highway", "living_street"}, {"motor_vehicle", "private"}}},
+      {"EF", {{"highway", "living_street"}, {"motorcar", "private"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50, {5.1079374, 52.0887174});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_dedicated_private_access",
+                               build_config);
+
+  baldr::GraphReader reader = baldr::GraphReader(map.config.get_child("mjolnir"));
+
+  std::vector<std::tuple<std::string, std::string, bool>> values =
+      {{"A", "B", false}, {"B", "A", false}, {"B", "C", true}, {"C", "B", true},
+       {"C", "D", false}, {"D", "C", false}, {"D", "E", true}, {"E", "F", true}};
+
+  for (auto tuple : values) {
+    auto edge = gurka::findEdgeByNodes(reader, layout, std::get<0>(tuple), std::get<1>(tuple));
+    auto edgeid = std::get<0>(edge);
+    auto einfo = reader.edgeinfo(edgeid);
+    EXPECT_EQ(einfo.private_access(), std::get<2>(tuple))
+        << "Wrong private access for " << std::get<0>(tuple) << std::get<1>(tuple) << ": "
+        << einfo.private_access();
+  }
+}

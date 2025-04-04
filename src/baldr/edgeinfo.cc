@@ -57,6 +57,7 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
     case TaggedValue::kLevelRef:
     case TaggedValue::kTunnel:
     case TaggedValue::kBridge:
+    case TaggedValue::kPrivate:
       return {std::string(ptr)};
     case TaggedValue::kLandmark: {
       std::string landmark_name = ptr + 10;
@@ -515,13 +516,22 @@ std::vector<std::string> EdgeInfo::level_ref() const {
   return values;
 }
 
+bool EdgeInfo::private_access() const {
+  const auto& tags = GetTags();
+  for (auto [itr, range_end] = tags.equal_range(TaggedValue::kPrivate); itr != range_end; ++itr) {
+    if (itr->second == std::string("1")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 json::MapPtr EdgeInfo::json() const {
-  json::MapPtr edge_info = json::map({
-      {"way_id", static_cast<uint64_t>(wayid())},
-      {"bike_network", bike_network_json(bike_network())},
-      {"names", names_json(GetNames())},
-      {"shape", midgard::encode(shape())},
-  });
+  json::MapPtr edge_info = json::map({{"way_id", static_cast<uint64_t>(wayid())},
+                                      {"bike_network", bike_network_json(bike_network())},
+                                      {"names", names_json(GetNames())},
+                                      {"shape", midgard::encode(shape())},
+                                      {"private_access", private_access()}});
   // add the mean_elevation depending on its validity
   const auto elev = mean_elevation();
   if (elev == kNoElevationData) {

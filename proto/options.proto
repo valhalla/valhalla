@@ -317,6 +317,7 @@ message Costing {
       float hgv_no_access_penalty = 85;
     }
     float use_truck_route = 86;
+    bool exclude_private = 99;  // CUSTOM: exclude private access for motorized vehicles
   }
 
   oneof has_options {

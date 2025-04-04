@@ -306,6 +306,13 @@ public:
   std::vector<std::string> level_ref() const;
 
   /**
+   * Get layer:ref of the edge.
+   * @see https://wiki.openstreetmap.org/wiki/Key:level:ref
+   * @return layer index of the edge
+   */
+  bool private_access() const;
+
+  /**
    * Returns json representing this object
    * @return json object
    */

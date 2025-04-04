@@ -1097,6 +1097,12 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
     names.emplace_back(encode_tag(TaggedValue::kLayer) + static_cast<char>(layer_));
   }
 
+  if (private_prohibit_access_index_ != 0) {
+    auto tokens = GetTagTokens(name_offset_map.name(private_prohibit_access_index_));
+    assert(tokens.size() == 1);
+    names.emplace_back(encode_tag(TaggedValue::kPrivate) + tokens[0]);
+  }
+
   if (level_index_ != 0) {
     // level
 

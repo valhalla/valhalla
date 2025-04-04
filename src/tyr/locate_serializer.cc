@@ -93,6 +93,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
   auto node_id = opp_edge->endnode();
   auto node = reader.GetGraphTile(node_id)->node(node_id);
   auto edge = de;
+
+  // track whether the begin/end of this segment is a deadend vs an intersection
   bool forward_deadend = false;
   bool backward_deadend = false;
 
@@ -107,6 +109,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
     // check the number of outgoing edges accessible with the provided costing
     for (int i = 0; i < node->edge_count(); ++i) {
       auto outgoing_edge = tile->directededge(node->edge_index() + i);
+      auto ei = tile->edgeinfo(outgoing_edge);
 
       // except our current edge
       if (outgoing_edge == edge)
@@ -114,7 +117,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       auto incoming_edge = get_opposing_edge(outgoing_edge, reader);
       if ((costing->Allowed(incoming_edge, reader.GetGraphTile(outgoing_edge->endnode()),
                             sif::kDisallowShortcut) ||
-           costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut))) {
+           costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
+          !(costing->ExcludePrivate() && ei.private_access())) {
 
         allowed_cnt++;
         outgoing_pred = outgoing_edge;
@@ -133,13 +137,15 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       for (int i = 0; i < trans_node->edge_count(); ++i) {
         auto outgoing_edge = tile->directededge(trans_node->edge_index() + i);
         auto incoming_edge = get_opposing_edge(outgoing_edge, reader);
+        auto ei = tile->edgeinfo(outgoing_edge);
         // auto opp_tile = reader.GetGraphTile(incoming_edge->endnode());
         // auto name = tile->edgeinfo(outgoing_edge).GetNames()[0];
         // auto opp_name = opp_tile->edgeinfo(incoming_edge).GetNames()[0];
 
         if ((costing->Allowed(incoming_edge, reader.GetGraphTile(outgoing_edge->endnode()),
                               sif::kDisallowShortcut) ||
-             costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut))) {
+             costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
+            !(costing->ExcludePrivate() && ei.private_access())) {
 
           allowed_cnt++;
           incoming_pred = incoming_edge;
@@ -209,11 +215,13 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
     for (int i = 0; i < node->edge_count(); ++i) {
       auto candidate_edge = tile->directededge(node->edge_index() + i);
       auto opp_candidate_edge = get_opposing_edge(candidate_edge, reader);
+      auto ei = tile->edgeinfo(candidate_edge);
       if (edge == opp_candidate_edge)
         continue;
       if ((costing->Allowed(candidate_edge, tile, sif::kDisallowShortcut) ||
            costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
-                            sif::kDisallowShortcut))) {
+                            sif::kDisallowShortcut)) &&
+          !(costing->ExcludePrivate() && ei.private_access())) {
         allowed_cnt++;
         possible_next = candidate_edge;
       }
@@ -230,9 +238,11 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       for (int i = 0; i < trans_node->edge_count(); ++i) {
         auto candidate_edge = tile->directededge(trans_node->edge_index() + i);
         auto opp_candidate_edge = get_opposing_edge(candidate_edge, reader);
+        auto ei = tile->edgeinfo(candidate_edge);
         if ((costing->Allowed(candidate_edge, tile, sif::kDisallowShortcut) ||
              costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
-                              sif::kDisallowShortcut))) {
+                              sif::kDisallowShortcut)) &&
+            !(costing->ExcludePrivate() && ei.private_access())) {
           allowed_cnt++;
           possible_next = candidate_edge;
         }
@@ -358,7 +368,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
 json::ArrayPtr serialize_edges(const PathLocation& location,
                                GraphReader& reader,
                                bool verbose,
-                               bool intersections,
+                               bool full_road_segments,
                                sif::cost_ptr_t costing) {
   auto array = json::array({});
   for (const auto& edge : location.edges) {
@@ -409,7 +419,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location,
             {"access_restrictions", get_access_restrictions(tile, edge.id.id())},
         });
 
-        if (intersections)
+        if (full_road_segments)
           info->insert({"full_road_segment",
                         get_full_road_segment(directed_edge, costing, edge.percent_along, reader)});
 
@@ -427,7 +437,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location,
             {"percent_along", json::fixed_t{edge.percent_along, 5}},
         });
 
-        if (intersections)
+        if (full_road_segments)
           info->insert({"full_road_segment",
                         get_full_road_segment(directed_edge, costing, edge.percent_along, reader)});
 

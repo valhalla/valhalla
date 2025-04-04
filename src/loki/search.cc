@@ -322,7 +322,8 @@ struct bin_handler_t {
         // do we want this edge, note we have to re-evaluate the filter check because we may be
         // seeing these edges a second time (filtered out before)
         if (costing->Allowed(edge, tile, kDisallowShortcut) &&
-            !search_filter(edge, *costing, tile, location.search_filter_)) {
+            !search_filter(edge, *costing, tile, location.search_filter_) &&
+            !(costing->ExcludePrivate() && info.private_access())) {
           auto reach = get_reach(id, edge);
           PathLocation::PathEdge
               path_edge{id,   0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound,
@@ -342,7 +343,8 @@ struct bin_handler_t {
           continue;
 
         if (costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
-            !search_filter(other_edge, *costing, other_tile, location.search_filter_)) {
+            !search_filter(other_edge, *costing, other_tile, location.search_filter_) &&
+            !(costing->ExcludePrivate() && info.private_access())) {
           auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{other_id,
@@ -570,6 +572,15 @@ struct bin_handler_t {
 
       // get some shape of the edge
       auto edge_info = std::make_shared<const EdgeInfo>(tile->edgeinfo(edge));
+
+      /**
+       * CUSTOM: optionally disallow private roads
+       *
+       * discard this and opp edge if road is private
+       **/
+      if (costing->ExcludePrivate() && edge_info->private_access())
+        continue;
+
       auto shape = edge_info->lazy_shape();
       PointLL v;
       if (!shape.empty()) {

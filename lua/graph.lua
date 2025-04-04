@@ -110,6 +110,10 @@ private = {
 ["residents"] = "true"
 }
 
+private_prohibit_access = {
+  ["private"] = "true"
+}
+
 no_thru_traffic = {
 ["destination"] = "true",
 ["customers"] = "true",
@@ -1651,6 +1655,7 @@ function filter_tags_generic(kv)
 
   --- TODO(nils): "private" also has directionality which we don't parse and handle yet
   kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or "false"
+  kv["private_prohibit_access"] = private_prohibit_access[kv["access"]] or private_prohibit_access[kv["motor_vehicle"]] or private_prohibit_access[kv["motorcar"]] or "false"
   kv["private_hgv"] = private[kv["hgv"]] or kv["private"] or "false"
   kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"
   kv["ferry"] = tostring(ferry)

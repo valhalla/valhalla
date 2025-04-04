@@ -934,6 +934,10 @@ public:
     return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 
+  inline bool ExcludePrivate() const {
+    return exclude_private_;
+  }
+
   float SpeedPenalty(const baldr::DirectedEdge* edge,
                      const graph_tile_ptr& tile,
                      const baldr::TimeInfo& time_info,
@@ -1057,6 +1061,8 @@ protected:
   bool include_hot_{false};
   bool include_hov2_{false};
   bool include_hov3_{false};
+  // CUSTOM: exclude private stuff
+  bool exclude_private_ = false;
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
