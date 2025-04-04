@@ -42,9 +42,9 @@ git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout <some-tag>
 ./vcpkg/bootstrap-vcpkg.sh
 # windows: cmd.exe /c bootstrap-vcpkg.bat
 # only build Release versions of dependencies, not Debug
-echo "VCPKG_BUILD_TYPE release" >> vcpkg/triplets/x64-linux.cmake
+echo "set(VCPKG_BUILD_TYPE Release)" >> vcpkg/triplets/x64-linux.cmake
 # windows: echo.set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
-# osx: echo "VCPKG_BUILD_TYPE release" >> vcpkg/triplets/arm64-osx.cmake
+# osx: echo "set(VCPKG_BUILD_TYPE release)" >> vcpkg/triplets/arm64-osx.cmake
 
 # vcpkg will install everything during cmake configuration
 # if you want to ENABLE_SERVICES=ON, install https://github.com/kevinkreiser/prime_server#build-and-install (no Windows)
@@ -79,7 +79,7 @@ To install Valhalla on macOS, you need to install its dependencies with [Homebre
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
-brew install automake cmake libtool protobuf-c libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit
+brew install automake cmake libtool protobuf-c libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit boost
 # following packages are needed for running Linux compatible scripts
 brew install bash coreutils binutils
 # Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
@@ -114,7 +114,7 @@ It's recommended to work with the following toolset:
 ```
 git -C C:\path\to\vcpkg checkout f330a32
 # only build release versions for vcpkg packages
-echo.set(VCPKG_BUILD_TYPE release)>> path\to\vcpkg\triplets\x64-windows.cmake
+echo.set(VCPKG_BUILD_TYPE Release)>> path\to\vcpkg\triplets\x64-windows.cmake
 cd C:\path\to\valhalla
 C:\path\to\vcpkg.exe install --triplet x64-windows
 ```

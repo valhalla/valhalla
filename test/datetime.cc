@@ -550,6 +550,16 @@ TEST(DateTime, TestIsRestricted) {
   TryIsRestricted(td, "2022-05-10T16:00", false);
   TryIsRestricted(td, "2021-02-18T16:00", false);
   TryIsRestricted(td, "2021-06-26T16:00", false);
+
+  td = TimeDomain(35184375234560); // "Jun-Aug"
+  TryIsRestricted(td, "2024-04-03T08:00", false);
+  TryIsRestricted(td, "2024-05-31T21:00", false);
+  TryIsRestricted(td, "2024-06-01T00:01", true);
+  TryIsRestricted(td, "2024-06-15T16:00", true);
+  TryIsRestricted(td, "2024-07-10T16:00", true);
+  TryIsRestricted(td, "2024-08-18T16:00", true);
+  TryIsRestricted(td, "2024-08-31T23:59", true);
+  TryIsRestricted(td, "2024-09-01T00:01", false);
 }
 
 TEST(DateTime, TestTimezoneDiff) {
@@ -647,7 +657,8 @@ TEST(DateTime, TimezoneAliases) {
        {"Asia/Kuala_Lumpur", "Asia/Singapore"}, // ^ deprecated 2018 tz
        {"America/Nuuk", "America/Godthab"},
        {"Pacific/Kanton", "Pacific/Enderbury"},
-       {"Europe/Kyiv", "Europe/Kiev"}}; // ^ renamed 2023 tz
+       {"Europe/Kyiv", "Europe/Kiev"}, // ^ renamed 2023 tz
+       {"WET", "Europe/Lisbon"}};      // renamed 2024b
 
   for (const auto& pair : pairs) {
     auto alias_idx = dt_db.from_index(dt_db.to_index(pair.first));
@@ -660,9 +671,12 @@ TEST(DateTime, TimezoneIndices) {
 
   // test some official/current timezone names & indices
   std::vector<std::pair<size_t, std::string>> pairs = {
-      {1, "Africa/Abidjan"},  {82, "America/Indiana/Tell_City"}, {323, "Europe/Samara"},
-      {387, "WET"},           {629, "America/Ciudad_Juarez"}, // new timezone since 2023c update
-      {726, "Asia/Qostanay"},                                 // new timezone since 2023c update
+      {1, "Africa/Abidjan"},
+      {82, "America/Indiana/Tell_City"},
+      {323, "Europe/Samara"},
+      // {387, "WET"}, // aliased to Europe/Lisbon
+      {629, "America/Ciudad_Juarez"}, // new timezone since 2023c update
+      {726, "Asia/Qostanay"},         // new timezone since 2023c update
   };
 
   for (const auto& pair : pairs) {

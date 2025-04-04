@@ -1,12 +1,12 @@
 #include <future>
 #include <memory>
-#include <set>
 #include <thread>
 #include <utility>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
+#include "baldr/conditional_speed_limit.h"
 #include "filesystem.h"
 
 #include "baldr/datetime.h"
@@ -30,6 +30,7 @@
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -265,6 +266,10 @@ void ConstructEdges(const std::string& ways_file,
           auto node = *element;
           node.start_of = edges.size() + 1; // + 1 because the edge has not been added yet
           element = node;
+          if (way.multiple_levels()) {
+            LOG_WARN("Multilevel Way [ID:" + std::to_string(way.way_id()) +
+                     "] - Additional edge created");
+          }
         }
       } // If this edge has a signal not at a intersection
       else if (way_node.node.traffic_signal()) {
@@ -860,8 +865,19 @@ void BuildTileSet(const std::string& ways_file,
             w.GetTaggedValues(osmdata.name_offset_map, pronunciationMap, langMap, default_languages,
                               tunnel_index, tunnel_lang_index, names.size(), tagged_values,
                               linguistics, type, diff_names);
-            // Update bike_network type
 
+            // Append conditional limits as tagged values
+            const auto cond_limits_range = osmdata.conditional_speeds.equal_range(w.way_id());
+            for (auto it = cond_limits_range.first; it != cond_limits_range.second; ++it) {
+              std::string value;
+              value.reserve(1 + sizeof(ConditionalSpeedLimit));
+              value += static_cast<std::string::value_type>(TaggedValue::kConditionalSpeedLimits);
+              value.append(reinterpret_cast<const std::string::value_type*>(&it->second),
+                           sizeof(ConditionalSpeedLimit));
+              tagged_values.push_back(std::move(value));
+            }
+
+            // Update bike_network type
             if (bike_network) {
               bike_network |= w.bike_network();
             } else {
@@ -1322,6 +1338,7 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& tile_dir,
                      DataQuality& stats,
                      const boost::property_tree::ptree& pt) {
+  SCOPED_TIMER();
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
   uint32_t tile_creation_date =
       DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
@@ -1414,6 +1431,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
                                                    const std::string& edges_file) {
+  SCOPED_TIMER();
   uint8_t level = TileHierarchy::levels().back().level;
   auto tiling = TileHierarchy::get_tiling(level);
   uint32_t grid_divisions =
@@ -1452,6 +1470,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // edge list needs to be modified. ReclassifyLinks also infers turn channels
   // so we always want to do this unless reclassify_links and infer_turn_channels
   // are both false.
+  SCOPED_TIMER();
   bool reclassify_links = pt.get<bool>("mjolnir.reclassify_links", true);
   bool infer_turn_channels = pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true);
   if (reclassify_links || infer_turn_channels) {

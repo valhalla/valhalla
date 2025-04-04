@@ -13,11 +13,11 @@
 #include "mjolnir/graphfilter.h"
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/transitbuilder.h"
+#include "scoped_timer.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -216,19 +216,34 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
   spatialite_singleton_t::get_instance();
   void* conn = spatialite_alloc_connection();
   spatialite_init_ex(handle, conn, 0);
-  return {conn, [](void* c) { spatialite_cleanup_ex(c); }};
+
+  // Sadly, `spatialite_cleanup_ex` calls `xmlCleanupParser()` (via `free_internal_cache()`) which is
+  // not thread-safe and may cause a crash on double-free if called from multiple threads.
+  // This static mutex works around the issue until the spatialite library is fixed:
+  // - https://www.gaia-gis.it/fossil/libspatialite/tktview/855ef62a68b9ac6e500b54883707b2876c390c01
+  // For full "double free" issue details follow https://github.com/valhalla/valhalla/issues/4904
+  static std::mutex spatialite_mutex;
+  return std::shared_ptr<void>(conn, [](void* c) {
+    std::lock_guard<std::mutex> lock(spatialite_mutex);
+    spatialite_cleanup_ex(c);
+  });
 }
 
 bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
-                    const BuildStage end_stage,
-                    const bool release_osmpbf_memory) {
+                    const BuildStage end_stage) {
+  SCOPED_TIMER();
   auto remove_temp_file = [](const std::string& fname) {
     if (filesystem::exists(fname)) {
       filesystem::remove(fname);
     }
   };
+
+  if (input_files.size() > 1) {
+    LOG_WARN(
+        "Tile building using more than one osm.pbf extract is discouraged. Consider merging the extracts into one file. See this issue for more info: https://github.com/valhalla/valhalla/issues/3925 ");
+  }
 
   // Take out tile_extract and tile_url from property tree as tiles must only use the tile_dir
   auto config = original_config;
@@ -289,11 +304,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
                                          way_nodes_bin, access_bin);
 
-    // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory && BuildStage::kParseWays == end_stage) {
-      OSMPBF::Parser::free();
-    }
-
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
@@ -308,11 +318,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     PBFGraphParser::ParseRelations(config.get_child("mjolnir"), input_files, cr_from_bin, cr_to_bin,
                                    osm_data);
 
-    // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory && BuildStage::kParseRelations == end_stage) {
-      OSMPBF::Parser::free();
-    }
-
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
@@ -325,11 +330,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // are defined within the PBFParser class
     PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
                                linguistic_node_bin, osm_data);
-
-    // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory) {
-      OSMPBF::Parser::free();
-    }
 
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {

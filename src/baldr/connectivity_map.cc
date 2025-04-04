@@ -1,5 +1,4 @@
 #include <iomanip>
-#include <list>
 #include <random>
 #include <sstream>
 #include <unordered_set>

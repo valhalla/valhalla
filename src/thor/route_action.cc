@@ -276,7 +276,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     if (ll1.Distance(ll2) < max_timedep_distance) {
       return &timedep_reverse;
     } else {
-      add_warning(request, 209);
+      add_warning(request, 212);
     }
   }
 
@@ -366,15 +366,52 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
+  const Costing_Options& costing_options =
+      options.costings().find(options.costing_type())->second.options();
   valhalla::Trip& trip = *api.mutable_trip();
   trip.mutable_routes()->Reserve(options.alternates() + 1);
 
   graph_tile_ptr tile = nullptr;
+
+  // get the user provided hierarchy limits and store one for each path algorithm
+  // because we may use them interchangeably
+  std::vector<HierarchyLimits> hierarchy_limits_bidir =
+      mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+  std::vector<HierarchyLimits> hierarchy_limits_unidir =
+      mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+
+  // check whether hierarchy limits were already checked for this algorithm
+  // on a multi-leg route
+  bool used_unidir = false;
+  bool used_bidir = false;
+  bool add_hierarchy_limits_warning = false;
+
   auto route_two_locations = [&](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm =
         this->get_path_algorithm(costing, *origin, *destination, api);
     path_algorithm->Clear();
+
+    // once we know which algorithm will be used, set the hierarchy limits accordingly
+    bool is_bidir = path_algorithm == &bidir_astar;
+    auto& hierarchy_limits = is_bidir ? hierarchy_limits_bidir : hierarchy_limits_unidir;
+
+    // only check hierarchy limits if not already done for the current algorithm
+    add_hierarchy_limits_warning =
+        (!(is_bidir ? used_bidir : used_unidir) &&
+         check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
+                                costing_options,
+                                path_algorithm == &bidir_astar
+                                    ? hierarchy_limits_config_bidirectional_astar
+                                    : hierarchy_limits_config_astar,
+                                allow_hierarchy_limits_modifications,
+                                mode_costing[int(mode)]->UseHierarchyLimits())) ||
+        add_hierarchy_limits_warning;
+
+    // ..and mark hierarchy limits for this algorithm as checked
+    is_bidir ? (used_bidir = true) : (used_unidir = true);
+    mode_costing[static_cast<uint32_t>(mode)]->SetHierarchyLimits(hierarchy_limits);
+
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
 
@@ -537,6 +574,10 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     }
     ++origin;
   }
+
+  // maybe warn if we needed to change user provided hierarchy limits
+  if (add_hierarchy_limits_warning)
+    add_warning(api, allow_hierarchy_limits_modifications ? 210 : 209);
   // Reverse the legs because protobuf only has adding to the end
   std::reverse(route->mutable_legs()->begin(), route->mutable_legs()->end());
   // assign changed locations
@@ -551,8 +592,21 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   std::vector<thor::PathInfo> path;
   std::vector<std::string> algorithms;
   const Options& options = api.options();
+  const Costing_Options& costing_options =
+      options.costings().find(options.costing_type())->second.options();
   valhalla::Trip& trip = *api.mutable_trip();
   trip.mutable_routes()->Reserve(options.alternates() + 1);
+
+  // get the user provided hierarchy limits and store one for each path algorithm
+  // because we may use them interchangeably
+  auto hierarchy_limits_bidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+  auto hierarchy_limits_unidir = mode_costing[static_cast<uint32_t>(mode)]->GetHierarchyLimits();
+
+  // check whether hierarchy limits were already checked for this algorithm
+  // on a multi-leg route
+  bool used_unidir = false;
+  bool used_bidir = false;
+  bool add_hierarchy_limits_warning = false;
 
   graph_tile_ptr tile = nullptr;
   auto route_two_locations = [&, this](auto& origin, auto& destination) -> bool {
@@ -562,6 +616,25 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
+
+    // once we know which algorithm will be used, set the hierarchy limits accordingly
+    bool is_bidir = path_algorithm == &bidir_astar;
+    auto& hierarchy_limits = is_bidir ? hierarchy_limits_bidir : hierarchy_limits_unidir;
+
+    // only check hierarchy limits if not already done for the current algorithm
+    add_hierarchy_limits_warning =
+        (!(is_bidir ? used_bidir : used_unidir) &&
+         check_hierarchy_limits(hierarchy_limits, mode_costing[static_cast<uint32_t>(mode)],
+                                costing_options,
+                                path_algorithm == &bidir_astar
+                                    ? hierarchy_limits_config_bidirectional_astar
+                                    : hierarchy_limits_config_astar,
+                                allow_hierarchy_limits_modifications,
+                                mode_costing[static_cast<uint32_t>(mode)]->UseHierarchyLimits())) ||
+        add_hierarchy_limits_warning;
+    // ..and mark hierarchy limits for this algorithm as checked
+    is_bidir ? (used_bidir = true) : (used_unidir = true);
+    mode_costing[static_cast<uint32_t>(mode)]->SetHierarchyLimits(hierarchy_limits);
 
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
@@ -696,6 +769,10 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
     }
     ++destination;
   }
+  // maybe warn if we needed to change user provided hierarchy limits
+  if (add_hierarchy_limits_warning)
+    add_warning(api, allow_hierarchy_limits_modifications ? 210 : 209);
+
   // assign changed locations
   *api.mutable_options()->mutable_locations() = std::move(correlated);
 }

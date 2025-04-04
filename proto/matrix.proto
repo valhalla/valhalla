@@ -20,4 +20,10 @@ message Matrix {
   repeated string time_zone_offsets = 9;
   repeated string time_zone_names = 10;
   repeated bool second_pass = 11;
+  repeated float begin_heading = 12;
+  repeated float end_heading = 13;
+  repeated double begin_lat = 14;
+  repeated double begin_lon = 15;
+  repeated double end_lat = 16;
+  repeated double end_lon = 17;
 }

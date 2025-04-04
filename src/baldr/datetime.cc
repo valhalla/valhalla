@@ -1,7 +1,4 @@
 #include <algorithm>
-#include <bitset>
-#include <fstream>
-#include <iostream>
 #include <sstream>
 
 #include <boost/algorithm/string.hpp>
@@ -14,10 +11,10 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
-namespace { // NOTE, the below timezone maps are indexed for compatibility reasons. We put the value
-            // (index)
+namespace {
 const valhalla::baldr::DateTime::dt_info_t INVALID_DT = {"", "", ""};
-// into the tiles, so it needs to be stable. We have 2 timezone maps here:
+// NOTE, the below timezone maps are indexed for compatibility reasons. We put the value
+// (index) into the tiles, so it needs to be stable. We have 2 timezone maps here:
 //  - tz_name_to_id:
 //    - before 2023c: currently and past official timezone names
 //    - after 2023c: we point to the old timezone using a bit shift which is resolved in NodeInfo
@@ -633,6 +630,7 @@ const std::unordered_map<std::string, size_t> tz_new_to_old_id = {
     {"America/Nuuk", 69}, // start renamed timezones 2023c
     {"Europe/Kyiv", 308},
     {"Pacific/Kanton", 358}, // end renamed timezones 2023c
+    {"WET", 310}             // renamed time zones 2024b
 };
 
 // checks the integrity of the static tz maps, which will fail in case of

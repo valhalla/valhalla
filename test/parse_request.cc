@@ -1671,9 +1671,9 @@ protected:
         valhalla::sif::CostFactory().CreateModeCosting(request.options(), travel_mode);
 
     // Check hierarchy limits
-    auto& hierarchy_limits = mode_costing[int(travel_mode)]->GetHierarchyLimits();
+    const auto& hierarchy_limits = mode_costing[int(travel_mode)]->GetHierarchyLimits();
     for (auto& hierarchy : hierarchy_limits) {
-      EXPECT_EQ(hierarchy.max_up_transitions, kUnlimitedTransitions);
+      EXPECT_EQ(hierarchy.max_up_transitions(), kUnlimitedTransitions);
     }
   }
 };

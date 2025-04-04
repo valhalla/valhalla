@@ -2,12 +2,10 @@
 #define VALHALLA_MJOLNIR_OSMDATA_H
 
 #include <cstdint>
-#include <map>
-#include <memory>
 #include <string>
 #include <unordered_set>
-#include <vector>
 
+#include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/mjolnir/osmaccessrestriction.h>
 #include <valhalla/mjolnir/osmlinguistic.h>
 #include <valhalla/mjolnir/osmnode.h>
@@ -27,6 +25,13 @@ struct OSMWayNode {
   OSMNode node;
   uint32_t way_index = 0;
   uint32_t way_shape_node_index = 0;
+};
+
+// Structure to store OSM node information for BSS
+struct OSMBSSNode {
+  OSMNode node;
+  // Index with serialized `BikeShareStationInfo` within the node_names list
+  uint32_t bss_info_index;
 };
 
 // OSM bicycle data (stored within OSMData)
@@ -51,6 +56,8 @@ using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRe
 using BikeMultiMap = std::unordered_multimap<uint64_t, OSMBike>;
 using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
 using LinguisticMultiMap = std::unordered_multimap<uint64_t, OSMLinguistic>;
+using ConditionalSpeedLimitsMultiMap =
+    std::unordered_multimap<uint64_t, baldr::ConditionalSpeedLimit>;
 
 // OSMString map uses the way Id as the key and the name index into UniqueNames as the value
 using OSMStringMap = std::unordered_map<uint64_t, uint32_t>;
@@ -137,6 +144,9 @@ struct OSMData {
 
   // Stores the pronunciation languages. Indexed by the way Id.
   LinguisticMultiMap langs;
+
+  // Stores the conditional speed limits ("maxspeed:conditional" osm key). Indexed by the way Id.
+  ConditionalSpeedLimitsMultiMap conditional_speeds;
 
   bool initialized = false;
 };

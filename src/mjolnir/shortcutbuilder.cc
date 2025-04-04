@@ -1,13 +1,9 @@
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
 
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <iostream>
-#include <map>
-#include <ostream>
-#include <set>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -328,10 +324,7 @@ void ConnectEdges(GraphReader& reader,
 
   // Add edge and turn duration for truck
   total_truck_duration += turn_duration;
-  auto const truck_speed =
-      std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
-               directededge->truck_speed() ? directededge->truck_speed() : kMaxAssumedTruckSpeed);
-
+  auto const truck_speed = tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
   assert(truck_speed != 0);
   auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
   total_truck_duration += edge_duration_truck;
@@ -767,6 +760,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   // across tile boundaries so that we are only messing with one tile
   // in one thread at a time
 
+  SCOPED_TIMER();
   // Get GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
 

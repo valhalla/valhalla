@@ -5,7 +5,6 @@
 #include <map>
 #include <memory>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
@@ -15,7 +14,6 @@
 #include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
@@ -90,9 +88,6 @@ protected:
   std::string origin_date_time_;
   std::unordered_map<std::string, uint32_t> operators_;
   std::unordered_set<uint32_t> processed_tiles_;
-
-  // Hierarchy limits.
-  std::vector<sif::HierarchyLimits> hierarchy_limits_;
 
   // A* heuristic
   AStarHeuristic astarheuristic_;

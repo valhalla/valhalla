@@ -2,10 +2,8 @@
 #define VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
@@ -96,7 +94,6 @@ protected:
   float current_cost_threshold_;
 
   uint32_t max_reserved_labels_count_;
-  bool clear_reserved_memory_;
 
   // List of destinations
   std::vector<Destination> destinations_;

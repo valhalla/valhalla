@@ -1,7 +1,6 @@
 #ifndef VALHALLA_BALDR_STREETNAME_H_
 #define VALHALLA_BALDR_STREETNAME_H_
 
-#include <memory>
 #include <optional>
 #include <string>
 

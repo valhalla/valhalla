@@ -12,6 +12,7 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <random>
 #include <set>
 #include <stdexcept>
 #include <thread>
@@ -21,10 +22,10 @@
 #include <vector>
 
 #include <boost/format.hpp>
+#include <boost/geometry/geometries/multi_polygon.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
-#include <boost/geometry/multi/geometries/multi_polygon.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -42,6 +43,7 @@
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 #include "mjolnir/osmaccess.h"
+#include "scoped_timer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -1714,6 +1716,7 @@ namespace mjolnir {
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
                             const OSMData& osmdata,
                             const std::string& access_file) {
+  SCOPED_TIMER();
   LOG_INFO("Enhancing local graph...");
 
   // A place to hold worker threads and their results, exceptions or otherwise

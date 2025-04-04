@@ -1,8 +1,5 @@
-#include <iostream>
-#include <unordered_map>
-
-#include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
+#include "midgard/logging.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuversbuilder.h"
 #include "odin/markup_formatter.h"
@@ -99,6 +96,7 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
   trip_directions.set_trip_id(etp->trip_id());
   trip_directions.set_leg_id(etp->leg_id());
   trip_directions.set_leg_count(etp->leg_count());
+  trip_directions.mutable_level_changes()->CopyFrom(etp->level_changes());
 
   // Populate locations
   trip_directions.mutable_location()->CopyFrom(etp->location());

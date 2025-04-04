@@ -1,7 +1,6 @@
 #include "baldr/graphconstants.h"
 #include "gurka.h"
 #include "test.h"
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -81,12 +80,11 @@ TEST_F(TopSpeedTest, ClampMaxSpeed) {
   Api api;
   auto& options = *api.mutable_options();
   rapidjson::Document dom;
-  rapidjson::SetValueByPointer(dom, "/top_speed", 500);
+  rapidjson::SetValueByPointer(dom, "/auto/top_speed", 500);
+  Costing co;
 
   options.set_costing_type(Costing::auto_);
-  auto& co = (*options.mutable_costings())[Costing::auto_];
-  sif::ParseBaseCostOptions(*rapidjson::GetValueByPointer(dom, ""), &co, {},
-                            *api.mutable_info()->mutable_warnings());
+  sif::ParseAutoCostOptions(dom, "/auto", &co, *api.mutable_info()->mutable_warnings());
 
   EXPECT_EQ(co.options().top_speed(), baldr::kMaxAssumedSpeed);
   EXPECT_EQ(api.info().warnings().size(), 1);

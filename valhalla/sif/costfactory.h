@@ -3,7 +3,6 @@
 
 #include <functional>
 #include <map>
-#include <memory>
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/proto/options.pb.h>

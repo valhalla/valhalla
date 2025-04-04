@@ -1,10 +1,8 @@
 #include "mjolnir/elevationbuilder.h"
 
-#include <future>
+#include <random>
 #include <thread>
 #include <utility>
-
-#include <boost/format.hpp>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -18,6 +16,7 @@
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
 
@@ -269,8 +268,7 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
 void add_elevations_to_multiple_tiles(const boost::property_tree::ptree& pt,
                                       std::deque<GraphId>& tilequeue,
                                       std::mutex& lock,
-                                      const std::unique_ptr<valhalla::skadi::sample>& sample,
-                                      std::promise<uint32_t>& /*result*/) {
+                                      const std::unique_ptr<valhalla::skadi::sample>& sample) {
   // Local Graphreader
   GraphReader graphreader(pt.get_child("mjolnir"));
 
@@ -316,12 +314,14 @@ namespace mjolnir {
 
 void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
                              std::deque<baldr::GraphId> tile_ids) {
+
   auto elevation = pt.get_optional<std::string>("additional_data.elevation");
   if (!elevation || !filesystem::exists(*elevation)) {
     LOG_WARN("Elevation storage directory does not exist");
     return;
   }
 
+  SCOPED_TIMER();
   std::unique_ptr<skadi::sample> sample = std::make_unique<skadi::sample>(pt);
   std::uint32_t nthreads =
       std::max(static_cast<std::uint32_t>(1),
@@ -331,15 +331,13 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
     tile_ids = get_tile_ids(pt);
 
   std::vector<std::shared_ptr<std::thread>> threads(nthreads);
-  std::vector<std::promise<uint32_t>> results(nthreads);
 
   LOG_INFO("Adding elevation to " + std::to_string(tile_ids.size()) + " tiles with " +
            std::to_string(nthreads) + " threads...");
   std::mutex lock;
   for (auto& thread : threads) {
-    results.emplace_back();
     thread.reset(new std::thread(add_elevations_to_multiple_tiles, std::cref(pt), std::ref(tile_ids),
-                                 std::ref(lock), std::ref(sample), std::ref(results.back())));
+                                 std::ref(lock), std::ref(sample)));
   }
 
   for (auto& thread : threads) {

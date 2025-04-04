@@ -1,5 +1,8 @@
 #include <vector>
 
+#include "gurka.h"
+#include <gtest/gtest.h>
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -42,7 +45,6 @@ TEST(StandAlone, ClampedParameters) {
 TEST(Standalone, BidirAstarFallback) {
   constexpr double gridsize = 1000;
 
-  // ~ are approximate time zone crossings
   const std::string ascii_map = R"(
       A-----B-----C
     )";
@@ -71,7 +73,7 @@ TEST(Standalone, BidirAstarFallback) {
     auto api = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto",
                                 {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
     EXPECT_EQ(api.info().warnings().size(), 1);
-    EXPECT_EQ(api.info().warnings(0).code(), 209);
+    EXPECT_EQ(api.info().warnings(0).code(), 212);
     EXPECT_THAT(api.info().warnings(0).description(),
                 testing::HasSubstr("max_timedep_distance for arrive_by"));
   }

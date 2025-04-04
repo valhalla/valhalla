@@ -1,8 +1,8 @@
-#include <unordered_map>
 #include <vector>
 
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
+#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
@@ -143,7 +143,9 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
   writer("max_lon", bbox.maxx());
   writer.set_precision(3);
   writer("time", route_time);
+  writer.set_precision(api.options().units() == Options::miles ? 4 : 3);
   writer("length", route_length);
+  writer.set_precision(3);
   writer("cost", route_cost);
   auto recost_itr = api.options().recostings().begin();
   for (auto recost : recost_times) {
@@ -218,11 +220,47 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
   writer.end_array();
 }
 
-void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
+// Serialize turn lane information
+void turn_lanes(const TripLeg& leg,
+                const DirectionsLeg_Maneuver& maneuver,
+                rapidjson::writer_wrapper_t& writer) {
+
+  // Read edge from a trip leg
+  if (maneuver.begin_path_index() == 0 || maneuver.begin_path_index() >= leg.node_size())
+    return;
+
+  auto prev_index = maneuver.begin_path_index() - 1;
+  const auto& prev_edge = leg.node(prev_index).edge();
+
+  if (prev_edge.turn_lanes_size() > 1) {
+    writer.start_array("lanes");
+
+    for (const auto& turn_lane : prev_edge.turn_lanes()) {
+      writer.start_object();
+
+      // Directions as a bit mask
+      writer("directions", static_cast<uint64_t>(turn_lane.directions_mask()));
+
+      if (turn_lane.state() == TurnLane::kActive) {
+        writer("active", static_cast<uint64_t>(turn_lane.active_direction()));
+      } else if (turn_lane.state() == TurnLane::kValid) {
+        writer("valid", static_cast<uint64_t>(turn_lane.active_direction()));
+      }
+
+      writer.end_object();
+    }
+
+    writer.end_array();
+  }
+}
+
+void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("legs");
   const auto& directions_legs = api.directions().routes(route_index).legs();
-  auto trip_leg_itr = api.trip().routes(route_index).legs().begin();
+  unsigned int length_prec = api.options().units() == Options::miles ? 4 : 3;
+  auto trip_leg_itr = api.mutable_trip()->mutable_routes(route_index)->mutable_legs()->begin();
   for (const auto& directions_leg : directions_legs) {
+    valhalla::odin::EnhancedTripLeg etp(*trip_leg_itr);
     writer.start_object(); // leg
     bool has_time_restrictions = false;
     bool has_toll = false;
@@ -232,6 +270,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     if (directions_leg.maneuver_size())
       writer.start_array("maneuvers");
 
+    int maneuver_index = 0;
     for (const auto& maneuver : directions_leg.maneuver()) {
       writer.start_object();
 
@@ -272,6 +311,20 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
         writer.end_array();
       }
 
+      // Set bearings
+      // absolute bearing (degrees from north, clockwise) before and after the maneuver.
+      bool depart_maneuver = (maneuver_index == 0);
+      bool arrive_maneuver = (maneuver_index == directions_leg.maneuver_size() - 1);
+      if (!depart_maneuver) {
+        uint32_t node_index = maneuver.begin_path_index();
+        uint32_t in_brg = etp.GetPrevEdge(node_index)->end_heading();
+        writer("bearing_before", static_cast<uint64_t>(in_brg));
+      }
+      if (!arrive_maneuver) {
+        uint32_t out_brg = maneuver.begin_heading();
+        writer("bearing_after", static_cast<uint64_t>(out_brg));
+      }
+
       // Time, length, cost, and shape indexes
       const auto& end_node = trip_leg_itr->node(maneuver.end_path_index());
       const auto& begin_node = trip_leg_itr->node(maneuver.begin_path_index());
@@ -279,7 +332,9 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
 
       writer.set_precision(3);
       writer("time", maneuver.time());
+      writer.set_precision(length_prec);
       writer("length", maneuver.length());
+      writer.set_precision(3);
       writer("cost", cost);
       writer("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
       writer("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
@@ -510,7 +565,13 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       // “gateAccessRequiredNote” : “<gateAccessRequiredNote>”,
       // “checkFerryInfoNote” : “<checkFerryInfoNote>”
 
+      // Add Line info if enabled
+      if (api.options().turn_lanes()) {
+        turn_lanes(*trip_leg_itr, maneuver, writer);
+      }
+
       writer.end_object(); // maneuver
+      maneuver_index++;
     }
     if (directions_leg.maneuver_size()) {
       writer.end_array(); // maneuvers
@@ -532,6 +593,58 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     }
 
     writer.start_object("summary");
+
+    // Does the user want admin info?
+    if (api.options().admin_crossings()) {
+      // write the admin array
+      writer.start_array("admins");
+      for (const auto& admin : trip_leg_itr->admin()) {
+        writer.start_object();
+        writer("country_code", admin.country_code());
+        writer("country_text", admin.country_text());
+        writer("state_code", admin.state_code());
+        writer("state_text", admin.state_text());
+        writer.end_object();
+      }
+      writer.end_array();
+
+      if (trip_leg_itr->admin_size() > 1) {
+        // write the admin crossings
+        auto node_itr = trip_leg_itr->node().begin();
+        auto next_node_itr = trip_leg_itr->node().begin();
+        next_node_itr++;
+        writer.start_array("admin_crossings");
+
+        while (next_node_itr != trip_leg_itr->node().end()) {
+          if (next_node_itr->admin_index() != node_itr->admin_index()) {
+            writer.start_object();
+            writer("from_admin_index", static_cast<uint64_t>(node_itr->admin_index()));
+            writer("to_admin_index", static_cast<uint64_t>(next_node_itr->admin_index()));
+            writer("begin_shape_index", static_cast<uint64_t>(node_itr->edge().begin_shape_index()));
+            writer("end_shape_index", static_cast<uint64_t>(node_itr->edge().end_shape_index()));
+            writer.end_object();
+          }
+          ++node_itr;
+          ++next_node_itr;
+        }
+        writer.end_array();
+      }
+    }
+
+    // are there any level changes along the leg
+    if (directions_leg.level_changes().size() > 0) {
+      writer.start_array("level_changes");
+      for (auto& level_change : directions_leg.level_changes()) {
+        writer.start_array();
+        writer(static_cast<int64_t>(level_change.shape_index()));
+        writer.set_precision(std::max(level_change.precision(), static_cast<uint32_t>(1)));
+        writer(level_change.level());
+        writer.set_precision(3);
+        writer.end_array();
+      }
+      writer.end_array();
+    }
+
     writer("has_time_restrictions", has_time_restrictions);
     writer("has_toll", has_toll);
     writer("has_highway", has_highway);
@@ -543,7 +656,9 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     writer("max_lon", directions_leg.summary().bbox().max_ll().lng());
     writer.set_precision(3);
     writer("time", directions_leg.summary().time());
+    writer.set_precision(length_prec);
     writer("length", directions_leg.summary().length());
+    writer.set_precision(3);
     writer("cost", trip_leg_itr->node().rbegin()->cost().elapsed_cost().cost());
     auto recost_itr = api.options().recostings().begin();
     for (const auto& recost : trip_leg_itr->node().rbegin()->recosts()) {
@@ -563,7 +678,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
   writer.end_array(); // legs
 }
 
-std::string serialize(const Api& api) {
+std::string serialize(Api& api) {
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);
 

@@ -1,6 +1,6 @@
+#include "gurka/gurka.h"
 #include "test.h"
 
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -89,7 +89,10 @@ public:
 
   Cost TransitionCost(const DirectedEdge* /*edge*/,
                       const NodeInfo* /*node*/,
-                      const EdgeLabel& /*pred*/) const override {
+                      const EdgeLabel& /*pred*/,
+                      const graph_tile_ptr& /*tile*/,
+                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/
+  ) const override {
     return {5.0f, 5.0f};
   }
 
@@ -97,6 +100,9 @@ public:
                              const NodeInfo* /*node*/,
                              const DirectedEdge* /*opp_edge*/,
                              const DirectedEdge* /*opp_pred_edge*/,
+                             const graph_tile_ptr& /*tile*/,
+                             const baldr::GraphId& /*edge_id*/,
+                             const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
                              const bool /*has_measured_speed*/,
                              const InternalTurn /*internal_turn*/) const override {
     return {5.0f, 5.0f};
@@ -136,7 +142,15 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
-const auto cfg = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+const auto hl_config = parse_hierarchy_limits_from_config(cfg, "costmatrix", true);
+
+// hierarchy limits are managed by thor's worker, since we call the algorithms directly here,
+// we have to do this manually
+void set_hierarchy_limits(sif::cost_ptr_t cost) {
+  Costing_Options opts;
+  check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, hl_config, false, true);
+}
 
 const auto test_request = R"({
     "sources":[
@@ -214,7 +228,7 @@ TEST(Matrix, test_matrix) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
-
+  set_hierarchy_limits(mode_costing[0]);
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto matrix = request.matrix();
@@ -300,6 +314,7 @@ TEST(Matrix, test_timedistancematrix_forward) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
@@ -351,6 +366,7 @@ TEST(Matrix, test_timedistancematrix_reverse) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
@@ -388,6 +404,7 @@ TEST(Matrix, test_matrix_osrm) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
 
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
@@ -429,6 +446,7 @@ TEST(Matrix, partial_matrix) {
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+  set_hierarchy_limits(mode_costing[0]);
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
@@ -468,13 +486,19 @@ TEST(Matrix, default_matrix) {
 
   EXPECT_TRUE(json.HasMember("sources_to_targets"));
 
-  // contains 4 keys i.e, "distance", "time", "to_index" and "from_index"
-  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 4);
+  // contains 10 keys
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 10);
 
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("distance"));
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("time"));
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("to_index"));
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("from_index"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("begin_heading"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("end_heading"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("begin_lat"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("begin_lon"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("end_lat"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("end_lon"));
 
   EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].IsObject());
 
@@ -543,6 +567,8 @@ TEST(Matrix, slim_matrix) {
   EXPECT_FALSE(json.HasMember("targets"));
   EXPECT_TRUE(json.HasMember("units"));
 }
+
+/**************************************************************************************************/
 
 int main(int argc, char* argv[]) {
   logging::Configure({{"type", ""}}); // silence logs

@@ -1,5 +1,3 @@
-#include <stdexcept>
-
 #include "baldr/location.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
@@ -13,11 +11,15 @@ Location::SearchFilter::SearchFilter(valhalla::RoadClass min_road_class,
                                      valhalla::RoadClass max_road_class,
                                      bool exclude_tunnel,
                                      bool exclude_bridge,
+                                     bool exclude_toll,
                                      bool exclude_ramp,
-                                     bool exclude_closures)
+                                     bool exclude_ferry,
+                                     bool exclude_closures,
+                                     float level)
     : min_road_class_(min_road_class), max_road_class_(max_road_class),
-      exclude_tunnel_(exclude_tunnel), exclude_bridge_(exclude_bridge), exclude_ramp_(exclude_ramp),
-      exclude_closures_(exclude_closures) {
+      exclude_tunnel_(exclude_tunnel), exclude_bridge_(exclude_bridge), exclude_toll_(exclude_toll),
+      exclude_ramp_(exclude_ramp), exclude_ferry_(exclude_ferry), exclude_closures_(exclude_closures),
+      level_(level) {
 }
 
 // TODO: get defaults from config singleton

@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -1000,6 +999,22 @@ protected:
   std::unique_ptr<TileCache> cache_;
 
   bool enable_incidents_;
+};
+
+class LimitedGraphReader {
+public:
+  LimitedGraphReader(GraphReader& reader) : reader_(reader) {
+  }
+
+  /**
+   * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  virtual graph_tile_ptr GetGraphTile(const GraphId& graphid);
+
+protected:
+  GraphReader& reader_;
 };
 
 // Given the Location relation, return the full metadata

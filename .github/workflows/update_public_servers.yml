@@ -1,0 +1,36 @@
+name: Update public FOSSGIS servers 
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/**'
+      - 'src/**'
+      - 'valhalla/**'
+      - 'proto/**'
+      - 'scripts/**'
+      - 'lua/**'
+      - 'cmake/**'
+      - 'third_party/**'
+      - 'locales/**'
+      - 'CMakeLists.txt'
+  workflow_dispatch:
+
+jobs:
+  update_servers:
+    name: Update servers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run script
+        run: |
+          eval $(ssh-agent -s)
+          ssh-add - <<< "${{ secrets.SSH_SECRET }}"
+          # first the build server
+          ssh -p 23432 -o StrictHostKeyChecking=no valhalla@162.55.103.19 'sudo bash -s builder' < scripts/update_public_server.sh
+          # then the services
+          ssh -p 23432 -o StrictHostKeyChecking=no valhalla@162.55.2.221 'sudo bash -s service' < scripts/update_public_server.sh

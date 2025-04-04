@@ -3,16 +3,13 @@
 #include "statistics.h"
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <future>
 #include <iostream>
 #include <list>
 #include <mutex>
-#include <ostream>
-#include <queue>
-#include <sstream>
+#include <random>
 #include <string>
 #include <thread>
 #include <utility>
