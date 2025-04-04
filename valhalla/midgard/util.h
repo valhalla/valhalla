@@ -25,13 +25,14 @@
 namespace valhalla {
 namespace midgard {
 
-// Holds a range plus a default value for that range
+// Holds a named option, its range plus a default value for that range
 template <class T> struct ranged_default_t {
   T min, def, max;
 
   // Returns the value snapped to the default if outside of the range
-  T operator()(const T& value) const {
+  T operator()(const T& value, bool& clamped) const {
     if (value < min || value > max) {
+      clamped = true;
       return def;
     }
     return value;
