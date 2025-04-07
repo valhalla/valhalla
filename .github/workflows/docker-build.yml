@@ -95,7 +95,7 @@ jobs:
           docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build_and_publish.outputs.tag }}
 
       - name: Create and push latest manifest
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/cb-locate-intersections'
         run: |
           docker manifest create \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
