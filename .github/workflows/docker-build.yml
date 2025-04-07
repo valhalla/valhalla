@@ -98,7 +98,7 @@ jobs:
         if: github.ref == 'refs/heads/cb-locate-intersections'
         run: |
           docker manifest create \
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cb-locate-intersections \
             --amend ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cb-locate-intersections-amd64 \
             --amend ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cb-locate-intersections-arm64 
           docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cb-locate-intersections
