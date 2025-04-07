@@ -58,7 +58,7 @@ jobs:
           provenance: false # needed to be able to converge into one image
           platforms: ${{ matrix.platform }}
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-${{ matrix.tagsuffix }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cb-locate-intersections-${{ matrix.tagsuffix }}
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
 
@@ -99,6 +99,6 @@ jobs:
         run: |
           docker manifest create \
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
-            --amend ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-amd64 \
-            --amend ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest-arm64 
-          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            --amend ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cb-locate-intersections-amd64 \
+            --amend ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cb-locate-intersections-arm64 
+          docker manifest push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:cb-locate-intersections
