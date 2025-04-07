@@ -465,7 +465,19 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       }
       case DirectionsLeg_Maneuver_Type_kElevatorEnter: {
         // Set instruction
-        maneuver.set_instruction(FormElevatorInstruction(maneuver));
+        auto instr = FormElevatorInstruction(maneuver);
+        maneuver.set_instruction(instr);
+
+        if (maneuver.has_node_type() && maneuver.node_type() == TripLeg_Node_Type_kElevator) {
+          maneuver.set_verbal_transition_alert_instruction(instr);
+
+          // Set verbal pre transition instruction
+          maneuver.set_verbal_pre_transition_instruction(instr);
+
+          // Set verbal post transition instruction
+          maneuver.set_verbal_post_transition_instruction(
+              FormVerbalPostTransitionInstruction(maneuver));
+        }
         break;
       }
       case DirectionsLeg_Maneuver_Type_kStepsEnter: {

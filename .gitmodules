@@ -1,6 +1,3 @@
-[submodule "OSM-binary"]
-	path = third_party/OSM-binary
-	url = https://github.com/scrosby/OSM-binary.git
 [submodule "rapidjson"]
 	path = third_party/rapidjson
 	url = https://github.com/miloyip/rapidjson

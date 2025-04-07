@@ -417,6 +417,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location,
             {"predicted_speeds", predicted_speeds},
             {"live_speed", live_speed},
             {"access_restrictions", get_access_restrictions(tile, edge.id.id())},
+            {"shoulder", directed_edge->shoulder()},
         });
 
         if (full_road_segments)

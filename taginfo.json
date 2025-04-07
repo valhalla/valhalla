@@ -7430,12 +7430,6 @@
       ]
     },
     {
-      "key": "seasonal",
-      "object_types": [
-        "way"
-      ]
-    },
-    {
       "key": "segregated",
       "value": "yes",
       "object_types": [
@@ -7657,6 +7651,13 @@
     {
       "key": "surface",
       "description": "Road surface",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "smoothness",
+      "description": "Road smoothness.  Note that surface and tracktype keys have a higher priority than smoothness.",
       "object_types": [
         "way"
       ]

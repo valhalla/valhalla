@@ -68,6 +68,25 @@ message AvoidEdge {
   }
 }
 
+/**
+ * Hierarchy limits controls expansion and transitions between hierarchy
+ * levels. It allows limiting expansion on hierarchy levels once
+ * some number of "upward" transitions have been made (e.g. from the local
+ * level to the arterial level). Expansion on a level is allowed within some
+ * distance from the destination location. This also allows control of where
+ * upward and downward transitions are allowed based on distance from the
+ * destination.
+ */
+message HierarchyLimits {
+ uint32 up_transition_count = 1;   // Keep track of # of upward transitions
+                                   // Internal use only, remember to clear on incoming requests
+ uint32 max_up_transitions = 2;    // Maximum number of upward transitions before 
+                                   // expansion is stopped on a level.
+ float expand_within_dist = 3; // Distance (m) to destination within which
+                                   // expansion of a hierarchy level is
+                                   // always allowed. Used for A*.
+}
+
 message Costing {
   enum Type {
     none_ = 0;
@@ -317,6 +336,13 @@ message Costing {
       float hgv_no_access_penalty = 85;
     }
     float use_truck_route = 86;
+    bool exclude_bridges = 87;
+    bool exclude_tunnels = 88;
+    bool exclude_tolls = 89;
+    bool exclude_highways = 90;
+    bool exclude_ferries = 91;
+    map<uint32, HierarchyLimits> hierarchy_limits = 92;
+    bool ignore_construction = 93;
     bool exclude_private = 99;  // CUSTOM: exclude private access for motorized vehicles
   }
 
@@ -500,4 +526,6 @@ message Options {
   bool road_segments = 92;                                         // Whether to return full road segments for edges in the locate response 
   bool dedupe = 58;                                                // Keep track of edges and override their properties during expansion,
                                                                    // ensuring that each edge appears in the output only once. [default = false]
+  bool admin_crossings = 59;                                       // Include administrative boundary crossings
+  bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
 }

@@ -1,7 +1,53 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
 * **Bug Fix**
+   * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
+   * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
+   * FIXED: Fix valhalla_benchmark_loki benchmark application. [#4981](https://github.com/valhalla/valhalla/pull/4981)
+   * FIXED: Double free crash during tiles build inside libxml2 on concurrent `spatialite_cleanup_ex()` calls [#5005](https://github.com/valhalla/valhalla/pull/5005)
+   * FIXED: update CircleCI runners to Ubuntu 24.04 [#5002](https://github.com/valhalla/valhalla/pull/5002)
+   * FIXED: Fixed a typo in the (previously undocumented) matrix-APIs responses `algorithm` field: `timedistancbssematrix` is now `timedistancebssmatrix` [#5000](https://github.com/valhalla/valhalla/pull/5000).
+   * FIXED: More trivial cases in `CostMatrix` [#5001](https://github.com/valhalla/valhalla/pull/5001)
+   * FIXED: Tag smoothness=impassable breaks pedestrian routing [#5023](https://github.com/valhalla/valhalla/pull/5023)
+   * FIXED: Make isochrone geotiff serialization use "north up" geotransform [#5019](https://github.com/valhalla/valhalla/pull/5019)
+   * FIXED: Get CostMatrix allow second pass option from new location in config [#5055](https://github.com/valhalla/valhalla/pull/5055/)
+   * FIXED: Slim down Matrix PBF response [#5066](https://github.com/valhalla/valhalla/pull/5066)
+   * FIXED: restore ignoring hierarchy limits for bicycle and pedestrian [#5080](https://github.com/valhalla/valhalla/pull/5080)
+   * FIXED: GCC warning 'template-id not allowed for constructor in C++20' [#5110](https://github.com/valhalla/valhalla/pull/5110)
+   * FIXED: update deprecated boost geometry headers [#5117](https://github.com/valhalla/valhalla/pull/5117)
+   * FIXED: Fix type mismatch in `src/tyr/serializers.cc` [#5145](https://github.com/valhalla/valhalla/pull/5145)
+   * FIXED: Multimodal ferry reclassification [#5139](https://github.com/valhalla/valhalla/pull/5139)
+   * FIXED: Fix time info calculation across time zone boundaries [#5163](https://github.com/valhalla/valhalla/pull/5163)
+   * FIXED: pass thor config to matrix algorithms in `valhalla_run_matrix` [#5053](https://github.com/valhalla/valhalla/pull/5053)
+   * FIXED: clang warning: bool literal returned from `main` `[-Wmain]` [#5173](https://github.com/valhalla/valhalla/pull/5173)
 * **Enhancement**
+   * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
+   * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
+   * ADDED: include level change info in `/route` response [#4942](https://github.com/valhalla/valhalla/pull/4942)
+   * ADDED: steps maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
+   * ADDED: instruction improvements for node-based elevators [#4988](https://github.com/valhalla/valhalla/pull/4988)
+   * ADDED: customizable hierarchy limits [#5010](https://github.com/valhalla/valhalla/pull/5010)
+   * ADDED: increased precision in route lengths [#5020](https://github.com/valhalla/valhalla/pull/5020)
+   * ADDED: Add maneuver bearings in route json response [#5024](https://github.com/valhalla/valhalla/pull/5024)
+   * ADDED: Allow specifying custom `graph.lua` file name via `valhalla_build_config` [#5036](https://github.com/valhalla/valhalla/pull/5036)
+   * ADDED: per level elevator penalty [#4973](https://github.com/valhalla/valhalla/pull/4973)
+   * ADDED: `ignore_construction` allows routing on ways with construction tag [#5030](https://github.com/valhalla/valhalla/pull/5030)
+   * ADDED: Australian English language translations [#5057](https://github.com/valhalla/valhalla/pull/5057)
+   * ADDED: Support `"access:conditional"` conditional restrictions like `"access:conditional"="no @ (Oct-May)"` [#5048](https://github.com/valhalla/valhalla/pull/5048)
+   * CHANGED: Speed up pbf parsing by using libosmium [#5070](https://github.com/valhalla/valhalla/pull/5070)
+   * ADDED: headings and correlated ll's in verbose matrix output [#5072](https://github.com/valhalla/valhalla/pull/5072)
+   * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082) 
+   * ADDED: Retrieve traffic signal information of nodes through trace_attribute request [#5121](https://github.com/valhalla/valhalla/pull/5121)
+   * CHANGED: Remove redundant callback-style pbf parsing [#5119](https://github.com/valhalla/valhalla/pull/5119)
+   * ADDED: Multimodal expansion endpoint support [#5129](https://github.com/valhalla/valhalla/pull/5129)
+   * ADDED: Sort tweeners by GraphId to make tile generation deterministic [#5133](https://github.com/valhalla/valhalla/pull/5133)
+   * ADDED: Turn lane information for valhalla serializer [#5078](https://github.com/valhalla/valhalla/pull/5078)
+   * ADDED: Add scoped timer macro for timing stages and sub-stages of the tile build process [#5136](https://github.com/valhalla/valhalla/pull/5136)
+   * CHANGED: Speed up `valhalla_build_admins` by using intermediate in-memory database [#5146](https://github.com/valhalla/valhalla/pull/5146)
+   * UPDATED: bump tz from 2024a to 2025a [#5061](https://github.com/valhalla/valhalla/pull/5061)
+   * ADDED: Add shoulder attribute to locate API [#5144](https://github.com/valhalla/valhalla/pull/5144)
+   * CHANGED: Move `bss_info_` from `OSMNode` to the new `OSMBSSNode` to reduce `way_nodes.bin` size [#5147](https://github.com/valhalla/valhalla/pull/5147)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
@@ -16,6 +62,7 @@
    * ADDED: Add option `edge.forward` to trace attributes [#4876](https://github.com/valhalla/valhalla/pull/4876)
    * ADDED: Provide conditional speed limits from "maxspeed:conditional" in `/locate` and proto `/route` responses [#4851](https://github.com/valhalla/valhalla/pull/4851)
    * ADDED: Support multiple levels and level ranges [#4879](https://github.com/valhalla/valhalla/pull/4879)
+   * ADDED: Level location search filter [#4926](https://github.com/valhalla/valhalla/pull/4926)
 
 ## Release Date: 2024-08-21 Valhalla 3.5.0
 * **Removed**
@@ -222,6 +269,7 @@
    * ADDED: "has_transit_tiles" & "osm_changeset" to verbose status response [#4062](https://github.com/valhalla/valhalla/pull/4062)
    * ADDED: time awareness to CostMatrix for e.g. traffic support [#4071](https://github.com/valhalla/valhalla/pull/4071)
    * UPDATED: transifex translations [#4102](https://github.com/valhalla/valhalla/pull/4102)
+   * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
@@ -323,6 +371,7 @@
    * FIXED: Fixed invalid time detection in GetSpeed [#3800](https://github.com/valhalla/valhalla/pull/3800)
    * FIXED: Osmway struct update: added up to 33 and not 32 [#3808](https://github.com/valhalla/valhalla/pull/3808)
    * FIXED: Fix out-of-range linestrings in expansion [#4603](https://github.com/valhalla/valhalla/pull/4603)
+   * FIXED: Osmway struct update: used 1 bit for multiple levels from spare bits [#5112](https://github.com/valhalla/valhalla/issues/5112)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)

@@ -10,6 +10,7 @@
 #include "filesystem.h"
 #include "loki/search.h"
 #include "loki/worker.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 #include "mjolnir/graphbuilder.h"
@@ -30,6 +31,7 @@
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
+#include "worker.h"
 
 #include "gurka.h"
 
@@ -125,14 +127,23 @@ const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member,
 
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 gurka::nodelayout node_locations;
-const std::string test_dir = "test/data/fake_tiles_astar";
+const std::string test_dir = VALHALLA_BUILD_DIR "test/data/fake_tiles_astar";
 const auto fake_conf =
     test::make_config(test_dir,
                       {{"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"},
-                       {"mjolnir.timezone", VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite"},
+                       {"mjolnir.timezone", "test/data/not_needed.sqlite"},
                        {"mjolnir.hierarchy", "false"},
                        {"mjolnir.shortcuts", "false"}});
+const auto hl_config = parse_hierarchy_limits_from_config(fake_conf, "unidirectional_astar", true);
+const auto hl_config_bd = parse_hierarchy_limits_from_config(fake_conf, "bidirectional_astar", true);
+// hierarchy limits are managed by thor's worker, since we call the algorithms directly here,
+// we have to do this manually
 
+void set_hierarchy_limits(vs::cost_ptr_t cost, bool bdir) {
+  Costing_Options opts;
+  check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, bdir ? hl_config_bd : hl_config,
+                         false, true);
+}
 void make_tile() {
 
   if (filesystem::exists(test_dir))
@@ -171,11 +182,9 @@ void make_tile() {
   }
 
   {
-    constexpr bool release_osmpbf_memory = false;
     mjolnir::build_tile_set(fake_conf,
                             {test_dir + "/map1.pbf", test_dir + "/map2.pbf", test_dir + "/map3.pbf"},
-                            mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                            release_osmpbf_memory);
+                            mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
     /** Set the freeflow and constrained flow speeds manually on all edges */
     vj::GraphTileBuilder tile_builder(test_dir, tile_id, false);
     std::vector<DirectedEdge> directededges;
@@ -204,6 +213,7 @@ void make_tile() {
 
 void create_costing_options(Options& options, Costing::Type costing) {
   const rapidjson::Document doc;
+
   options.set_costing_type(costing);
   sif::ParseCosting(doc, "/costing_options", options);
 }
@@ -229,12 +239,10 @@ enum class TrivialPathTest {
 
 std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
   // make the config file
-  std::stringstream json;
-  json << "{ \"tile_dir\": \"" << tile_dir << "\" }";
-  bpt::ptree conf;
-  rapidjson::read_json(json, conf);
+  bpt::ptree config = test::make_config("");
+  config.put<std::string>("mjolnir.tile_dir", tile_dir);
 
-  std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
+  std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(config.get_child("mjolnir")));
   auto tile = reader->GetGraphTile(tile_id);
 
   EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run successfully?";
@@ -263,6 +271,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
   auto costing = mode == vs::TravelMode::kPedestrian ? Costing::pedestrian : Costing::auto_;
   create_costing_options(options, costing);
   auto mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
+  set_hierarchy_limits(mode_costing[int(mode)], true);
   ASSERT_TRUE(bool(mode_costing[int(mode)]));
 
   auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode);
@@ -420,7 +429,7 @@ TEST(Astar, TestPartialDurationReverse) {
 }
 
 TEST(Astar, TestTrivialPathNoUturns) {
-  boost::property_tree::ptree conf = test::make_config("test/data/utrecht_tiles");
+  boost::property_tree::ptree conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
   vr::actor_t actor(conf);
   valhalla::Api api;
   actor.route(
@@ -431,8 +440,8 @@ TEST(Astar, TestTrivialPathNoUturns) {
 
 struct route_tester {
   route_tester(const boost::property_tree::ptree& _conf)
-      : conf(_conf), reader(new GraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
-        thor_worker(conf, reader), odin_worker(conf) {
+      : conf(_conf), reader(new GraphReader(_conf.get_child("mjolnir"))), loki_worker(_conf, reader),
+        thor_worker(_conf, reader), odin_worker(_conf) {
   }
   Api test(const std::string& request_json) {
     Api request;
@@ -454,7 +463,7 @@ struct route_tester {
 };
 
 TEST(Astar, test_oneway) {
-  auto conf = test::make_config("test/data/whitelion_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/whitelion_tiles");
   route_tester tester(conf);
   // Test onewayness with this route - oneway works, South-West to North-East
   std::string request =
@@ -489,7 +498,7 @@ TEST(Astar, test_oneway) {
 }
 
 TEST(Astar, test_oneway_wrong_way) {
-  auto conf = test::make_config("test/data/whitelion_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/whitelion_tiles");
   route_tester tester(conf);
   // Test onewayness with this route - oneway wrong way, North-east to South-West
   // Should produce no-route
@@ -505,7 +514,7 @@ TEST(Astar, test_oneway_wrong_way) {
 }
 
 TEST(Astar, test_deadend) {
-  auto conf = test::make_config("test/data/whitelion_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/whitelion_tiles");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -556,7 +565,7 @@ TEST(Astar, test_deadend) {
 TEST(Astar, test_time_dep_forward_with_current_time) {
   // Test a request with date_time as "current" (type: 0)
   //
-  auto conf = test::make_config("test/data/whitelion_tiles_reverse");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/whitelion_tiles_reverse");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -602,7 +611,7 @@ TEST(Astar, test_time_dep_forward_with_current_time) {
 }
 
 TEST(Astar, test_deadend_timedep_forward) {
-  auto conf = test::make_config("test/data/whitelion_tiles_reverse");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/whitelion_tiles_reverse");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -655,7 +664,7 @@ TEST(Astar, test_deadend_timedep_forward) {
   EXPECT_EQ(uturn_street, "Quay Street") << "We did not find the expected u-turn";
 }
 TEST(Astar, test_deadend_timedep_reverse) {
-  auto conf = test::make_config("test/data/whitelion_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/whitelion_tiles");
   route_tester tester(conf);
   std::string request =
       R"({
@@ -712,7 +721,7 @@ TEST(Astar, test_time_restricted_road_bidirectional) {
   // Try routing over "Via Montebello" in Rome which is a time restricted road
   // We should receive a route for a time-independent query but have the response
   // note that it is time restricted
-  auto conf = test::make_config("test/data/roma_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/roma_tiles");
   route_tester tester(conf);
   std::string request =
       R"({"locations":[{"lat":41.90550,"lon":12.50090},{"lat":41.90477,"lon":12.49914}],"costing":"auto"})";
@@ -791,7 +800,7 @@ Api route_on_timerestricted(const std::string& costing_str, int16_t hour) {
   // so lets use a timedependent a-star and verify that
 
   LOG_INFO("Testing " + costing_str + " route at hour " + std::to_string(hour));
-  auto conf = test::make_config("test/data/roma_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/roma_tiles");
   route_tester tester(conf);
   // The following request results in timedep astar during the restricted hours
   // and should be denied
@@ -865,7 +874,7 @@ void test_backtrack_complex_restriction(int date_time_type) {
   //
   // Test-case documented in https://github.com/valhalla/valhalla/issues/2103
   //
-  auto conf = test::make_config("test/data/bayfront_singapore_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/bayfront_singapore_tiles");
   route_tester tester(conf);
   std::string request;
   switch (date_time_type) {
@@ -1005,6 +1014,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   vs::TravelMode mode;
   auto costs = vs::CostFactory().CreateModeCosting(options, mode);
   ASSERT_TRUE(bool(costs[int(mode)]));
+  set_hierarchy_limits(costs[int(mode)], true);
 
   auto reader = get_graph_reader(test_dir);
 
@@ -1078,7 +1088,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
 Api timed_access_restriction_ny(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
   // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
-  auto conf = test::make_config("test/data/ny_ar_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/ny_ar_tiles");
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1149,7 +1159,7 @@ TEST(Astar, test_timed_access_restriction_2) {
 
 Api timed_conditional_restriction_pa(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
-  auto conf = test::make_config("test/data/pa_ar_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/pa_ar_tiles");
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1169,7 +1179,7 @@ Api timed_conditional_restriction_pa(const std::string& mode, const std::string&
 
 Api timed_conditional_restriction_nh(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="hgv:conditional" v="no @ (19:00-06:00)"/>
-  auto conf = test::make_config("test/data/nh_ar_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/nh_ar_tiles");
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1261,6 +1271,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   vs::TravelMode mode;
   auto costs = vs::CostFactory().CreateModeCosting(options, mode);
   ASSERT_TRUE(bool(costs[int(mode)]));
+  set_hierarchy_limits(costs[int(mode)], true);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["n"]});
@@ -1279,6 +1290,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   }
 
   // Test Bidirectional both for forward and reverse expansion
+  boost::property_tree::ptree conf = test::make_config("");
   vt::BidirectionalAStar astar;
 
   // Two tests where start and end lives on a partial complex restriction
@@ -1337,7 +1349,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
 TEST(Astar, test_complex_restriction_short_path_melborne) {
   // Tests a real live scenario of a short Bidirectional query against "Melborne"
-  auto conf = test::make_config("test/data/melborne_tiles");
+  auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/melborne_tiles");
   route_tester tester(conf);
   {
     // Tests "Route around the block" due to complex restriction,
@@ -1515,10 +1527,10 @@ TEST(Astar, BiDirTrivial) {
   // whole edge based on what percentage of the edge is left between the origin and destination.
 
   // Get access to tiles
-  boost::property_tree::ptree conf;
-  conf.put("tile_dir", "test/data/utrecht_tiles");
-  conf.put<unsigned long>("mjolnir.id_table_size", 1000);
-  vb::GraphReader graph_reader(conf);
+  boost::property_tree::ptree config = test::make_config("");
+  config.put("mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+  config.put<unsigned long>("mjolnir.id_table_size", 1000);
+  vb::GraphReader graph_reader(config.get_child("mjolnir"));
 
   // Locations
   std::vector<valhalla::baldr::Location> locations;
@@ -1535,6 +1547,7 @@ TEST(Astar, BiDirTrivial) {
   vs::TravelMode mode;
   auto mode_costing = vs::CostFactory().CreateModeCosting(options, mode);
   auto cost = mode_costing[int(mode)];
+  set_hierarchy_limits(cost, true);
 
   // Loki
   const auto projections = vk::Search(locations, graph_reader, cost);
@@ -1586,7 +1599,7 @@ TEST(BiDiAstar, test_recost_path) {
 
   auto nodes = gurka::detail::map_to_coordinates(ascii_map, 500);
 
-  const std::string test_dir = "test/data/astar_shortcuts_recosting";
+  const std::string test_dir = VALHALLA_BUILD_DIR "test/data/astar_shortcuts_recosting";
   const auto map = gurka::buildtiles(nodes, ways, {}, {}, test_dir);
 
   vb::GraphReader graphreader(map.config.get_child("mjolnir"));
@@ -1624,6 +1637,18 @@ TEST(BiDiAstar, test_recost_path) {
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode travel_mode = vs::TravelMode::kDrive;
+  // hack hierarchy limits to allow to go through the shortcut
+  auto hl = options.mutable_costings()
+                ->find(Costing::auto_)
+                ->second.mutable_options()
+                ->mutable_hierarchy_limits();
+  for (const auto& level : TileHierarchy::levels()) {
+    HierarchyLimits lims;
+    lims.set_expand_within_dist(0);
+    lims.set_max_up_transitions(0);
+    hl->insert({level.level, lims});
+  }
+
   const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
 
   std::vector<vb::Location> locations;
@@ -1632,17 +1657,9 @@ TEST(BiDiAstar, test_recost_path) {
   // set destination location
   locations.push_back({nodes["2"]});
   auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
-
+  auto config = test::make_config("");
   vt::BidirectionalAStar astar;
 
-  // hack hierarchy limits to allow to go through the shortcut
-  {
-    auto& hierarchy_limits =
-        mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
-    for (auto& hierarchy : hierarchy_limits) {
-      hierarchy.Relax(0.f, 0.f);
-    }
-  }
   const auto path =
       astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
           .front();
@@ -1702,7 +1719,7 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
 
   auto nodes = gurka::detail::map_to_coordinates(ascii_map, 500);
 
-  const std::string test_dir = "test/data/astar_shortcuts_recosting";
+  const std::string test_dir = VALHALLA_BUILD_DIR "test/data/astar_shortcuts_recosting";
   const auto map = gurka::buildtiles(nodes, ways, {}, {}, test_dir);
 
   vb::GraphReader graphreader(map.config.get_child("mjolnir"));
@@ -1730,7 +1747,7 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
     auto& hierarchy_limits =
         mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
     for (auto& hierarchy : hierarchy_limits) {
-      hierarchy.Relax(0.f, 0.f);
+      sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
     }
   }
   const auto path =
@@ -1770,18 +1787,18 @@ public:
 };
 
 TEST(BiDiAstar, test_clear_reserved_memory) {
-  boost::property_tree::ptree config;
-  config.put("clear_reserved_memory", true);
+  boost::property_tree::ptree config = test::make_config("");
+  config.put("thor.clear_reserved_memory", true);
 
-  BiAstarTest astar(config);
+  BiAstarTest astar;
   astar.Clear();
 }
 
 TEST(BiDiAstar, test_max_reserved_labels_count) {
-  boost::property_tree::ptree config;
-  config.put("max_reserved_labels_count_bidir_astar", 10);
+  boost::property_tree::ptree config = test::make_config("");
+  config.put("thor.max_reserved_labels_count_bidir_astar", 10);
 
-  BiAstarTest astar(config);
+  BiAstarTest astar;
   astar.Clear();
 }
 
@@ -1795,6 +1812,7 @@ public:
 } // anonymous namespace
 
 int main(int argc, char* argv[]) {
+  // logging::Configure({{"type", ""}});
   testing::AddGlobalTestEnvironment(new AstarTestEnv);
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

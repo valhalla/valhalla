@@ -96,6 +96,7 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
   trip_directions.set_trip_id(etp->trip_id());
   trip_directions.set_leg_id(etp->leg_id());
   trip_directions.set_leg_count(etp->leg_count());
+  trip_directions.mutable_level_changes()->CopyFrom(etp->level_changes());
 
   // Populate locations
   trip_directions.mutable_location()->CopyFrom(etp->location());

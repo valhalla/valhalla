@@ -80,6 +80,7 @@ const std::string kEdgeIndoor = "edge.indoor";
 const std::string kEdgeLandmarks = "edge.landmarks";
 const std::string kEdgeCountryCrossing = "edge.country_crossing";
 const std::string kEdgeForward = "edge.forward";
+const std::string kEdgeLevels = "edge.levels";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
@@ -97,6 +98,7 @@ const std::string kNodeIntersectingEdgeSignInfo = "node.intersecting_edge.sign_i
 const std::string kNodeElapsedTime = "node.elapsed_time";
 const std::string kNodeAdminIndex = "node.admin_index";
 const std::string kNodeType = "node.type";
+const std::string kNodeTrafficSignal = "node.traffic_signal";
 const std::string kNodeFork = "node.fork";
 const std::string kNodeTransitPlatformInfoType = "node.transit_platform_info.type";
 const std::string kNodeTransitPlatformInfoOnestopId = "node.transit_platform_info.onestop_id";

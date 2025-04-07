@@ -48,6 +48,7 @@ public:
 
 protected:
   void parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
+                       Api& request,
                        std::optional<valhalla_exception_t> required_exception = valhalla_exception_t{
                            110});
   void parse_trace(Api& request);
@@ -103,6 +104,7 @@ protected:
   float min_resample;
   unsigned int max_alternates;
   bool allow_verbose;
+  bool allow_hard_exclusions;
 
   // add max_distance_disable_hierarchy_culling
   float max_distance_disable_hierarchy_culling;

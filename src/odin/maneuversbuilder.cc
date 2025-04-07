@@ -1292,6 +1292,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     }
   }
 
+  // only set steps to true if it involves a level change or the steps are long enough to
+  // not be considered trivial
+  maneuver.set_steps(prev_edge->use() == TripLeg_Use_kStepsUse &&
+                     (prev_edge->traverses_levels() || prev_edge->length_km() >= 0.003));
+
   if (maneuver.pedestrian_type() == PedestrianType::kBlind) {
     if (prev_edge->use() == TripLeg_Use_kStepsUse)
       maneuver.set_steps(true);
@@ -1454,6 +1459,7 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   // Set elevator
   if (node->IsElevator()) {
     maneuver.set_elevator(true);
+    maneuver.set_node_type(node->type());
     // Set the end level ref
     if (curr_edge && !curr_edge->GetLevelRef().empty()) {
       if (curr_edge->GetLevelRef().size() > 1) {
@@ -1808,7 +1814,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     LOG_TRACE("ManeuverType=ELEVATOR");
   }
   // Process steps
-  else if (maneuver.indoor_steps()) {
+  else if (maneuver.indoor_steps() || maneuver.is_steps()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kStepsEnter);
     LOG_TRACE("ManeuverType=STEPS");
   }

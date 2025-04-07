@@ -638,6 +638,78 @@ TEST(Standalone, ConsiderBlockedRoads) {
   EXPECT_EQ(std::get<1>(blocked)->classification(), valhalla::baldr::RoadClass::kServiceOther);
 }
 
+TEST(Standalone, MultiModalReclassify) {
+  // Sometimes ferries are connected by dedicated roads for different modes of transport.
+  // Reclassification should reclassify as much roads as needed to cover all modes of transport.
+
+  const std::string ascii_map = R"(
+      A=====X
+      |
+      |
+      B   I---M==N
+     /|   |\
+    / |   | \
+   E  |   |  K
+   |  |   |  |
+   F  |   |  J
+    \ |   | /
+     \|   |/
+      C   H
+      |   |
+      D---G
+  )";
+
+  const std::map<std::string, std::string> service = {{"highway", "service"}};
+  const std::map<std::string, std::string> non_hgv = {{"highway", "service"},
+                                                      {"access", "no"},
+                                                      {"hgv", "no"},
+                                                      {"motor_vehicle", "permissive"},
+                                                      {"toll", "yes"}};
+  const std::map<std::string, std::string> hgv_only = {{"highway", "service"},
+                                                       {"access", "no"},
+                                                       {"hgv", "permissive"},
+                                                       {"toll", "yes"}};
+
+  const gurka::ways ways = {
+      {"AX",
+       {
+           {"name", "Le Shuttle"},
+           {"route", "shuttle_train"},
+           {"service", "car_shuttle"},
+           {"bicycle", "yes"},
+           {"bus", "yes"},
+           {"foot", "no"},
+           {"hgv", "yes"},
+           {"motorcar", "yes"},
+           {"motorcycle", "yes"},
+           {"tunnel", "yes"},
+           {"duration", "35"},
+       }},
+      {"AB", service},
+
+      {"BEFC", non_hgv},
+      {"BC", hgv_only},
+
+      {"CDGH", service},
+
+      {"HJKI", hgv_only},
+      {"HI", non_hgv},
+
+      {"IM", service},
+
+      {"MN", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_multimodal");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  for (const std::string way : {"AB", "BEFC", "BC", "CDGH", "HJKI", "HI", "IM"}) {
+    auto edge = gurka::findEdge(reader, layout, way, way.substr(way.size() - 1));
+    EXPECT_EQ(std::get<1>(edge)->classification(), valhalla::baldr::RoadClass::kPrimary) << way;
+  }
+}
+
 TEST(Standalone, ReclassifyNothingReclassified) {
   // Test to validate that if no edges are found with the target classification
   // nothing gets reclassified.
@@ -679,6 +751,55 @@ TEST(Standalone, ReclassifyNothingReclassified) {
   auto not_upclassed3 = gurka::findEdge(reader, layout, "CD", "D");
   EXPECT_TRUE(std::get<1>(not_upclassed3)->classification() == valhalla::baldr::RoadClass::kTertiary);
 }
+
+class ExcludeFerryTest : public ::testing::TestWithParam<std::string> {
+protected:
+  static gurka::map map;
+  static void SetUpTestSuite() {
+
+    const std::string ascii_map = R"(
+    A----1---B----C--D------E
+  )";
+
+    const gurka::ways ways = {
+        {"AB", {{"highway", "secondary"}}},
+        {"BC", {{"route", "ferry"}}},
+        {"CD", {{"highway", "secondary"}}},
+        {"DE", {{"highway", "secondary"}}},
+    };
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/exclude_ferry");
+    baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+  }
+};
+
+gurka::map ExcludeFerryTest::map = {};
+
+TEST_P(ExcludeFerryTest, ExcludeFerry) {
+  const auto default_result = gurka::do_action(valhalla::Options::route, map, {"1", "D"}, GetParam());
+  gurka::assert::raw::expect_path(default_result, {"AB", "BC", "CD"});
+
+  try {
+    const auto result =
+        gurka::do_action(valhalla::Options::route, map, {"1", "D"}, GetParam(),
+                         {{"/costing_options/" + GetParam() + "/exclude_ferries", "1"}});
+    FAIL() << "Expected no path to be found";
+  } catch (valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
+    FAIL() << "Failed with unexpected error code";
+  }
+}
+INSTANTIATE_TEST_SUITE_P(ExcludeFerry,
+                         ExcludeFerryTest,
+                         ::testing::Values("auto",
+                                           "truck",
+                                           "motor_scooter",
+                                           "pedestrian",
+                                           "bicycle",
+                                           "motorcycle",
+                                           "taxi",
+                                           "bus"));
 
 INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,
                          FerryTest,
