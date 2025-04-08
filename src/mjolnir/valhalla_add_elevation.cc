@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
     } else {
       for (const auto& tile : result["concurrency"].as<std::vector<std::string>>()) {
         if (filesystem::exists(tile) && filesystem::is_regular_file(tile))
-          return true;
+          return EXIT_FAILURE;
       }
       std::cerr << "All tile files are invalid\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
