@@ -1,6 +1,7 @@
 ## UNRELEASED
 * **Removed**
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
+   * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
@@ -50,6 +51,7 @@
    * ADDED: Add shoulder attribute to locate API [#5144](https://github.com/valhalla/valhalla/pull/5144)
    * CHANGED: Move `bss_info_` from `OSMNode` to the new `OSMBSSNode` to reduce `way_nodes.bin` size [#5147](https://github.com/valhalla/valhalla/pull/5147)
    * CHANGED: Removed reclassification and only move edges in hierarchy [#5174](https://github.com/valhalla/valhalla/pull/5174)
+   * UPDATED: bump tz from 2025a to 2025b [#5164](https://github.com/valhalla/valhalla/pull/5164)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
