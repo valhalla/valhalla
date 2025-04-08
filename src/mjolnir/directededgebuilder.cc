@@ -2,7 +2,7 @@
 
 #include "midgard/logging.h"
 #include "mjolnir/directededgebuilder.h"
-#include "mjolnir/node_expander.h"
+#include "mjolnir/osmway.h"
 
 using namespace valhalla::baldr;
 

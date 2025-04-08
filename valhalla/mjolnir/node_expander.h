@@ -101,7 +101,7 @@ struct Edge {
                      way.taxi_backward();
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
-    e.attributes.importance = static_cast<uint32_t>(way.road_class());
+    e.attributes.importance = static_cast<uint64_t>(way.road_class());
     e.attributes.link = way.link();
     e.attributes.drivable_ferry = (way.ferry() || way.rail()) && (drive_fwd || drive_rev);
     e.attributes.reclass_link = false;

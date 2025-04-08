@@ -311,7 +311,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // reset shortcuts after hijacking them for reclassification
-      newedge.set_hierarchy_roadclass(RoadClass::kMotorway, true);
+      newedge.set_hierarchy_roadclass(static_cast<RoadClass>(0), true);
 
       // Add directed edge
       tilebuilder->directededges().emplace_back(std::move(newedge));
