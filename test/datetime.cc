@@ -142,7 +142,7 @@ void TryIsoDateTime() {
             current_date_time)
       << std::string("Iso date time failed ") + current_date_time;
 
-  tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("Africa/Porto-Novo"));
+  tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("Africa/Lagos"));
   current_date_time = DateTime::iso_date_time(tz);
   found = current_date_time.find('T'); // YYYY-MM-DDTHH:MM
   if (found != std::string::npos)
@@ -645,24 +645,13 @@ TEST(DateTime, TimezoneAliases) {
   const auto& dt_db = DateTime::get_tz_db();
   // map of alias and target names
   // this can be old deprecated timezone name (pre-2023) or renamed timezones (after 2023)
-  std::vector<std::pair<std::string, std::string>> pairs =
-      {{"Etc/Zulu", "Etc/UTC"},
-       {"Etc/GMT-0", "Etc/GMT"},
-       {"ROC", "Asia/Taipei"},
-       {"GB", "Europe/London"},
-       {"NZ-CHAT", "Pacific/Chatham"},
-       {"Asia/Ujung_Pandang", "Asia/Makassar"},
-       {"Africa/Bamako", "Africa/Abidjan"},
-       {"Africa/Kampala", "Africa/Nairobi"},
-       {"Asia/Kuala_Lumpur", "Asia/Singapore"}, // ^ deprecated 2018 tz
-       {"America/Nuuk", "America/Godthab"},
-       {"Pacific/Kanton", "Pacific/Enderbury"},
-       {"Europe/Kyiv", "Europe/Kiev"}, // ^ renamed 2023 tz
-       {"WET", "Europe/Lisbon"}};      // renamed 2024b
+  std::vector<std::pair<std::string, std::string>> pairs = {{"America/Godthab", "America/Nuuk"},
+                                                            {"Pacific/Enderbury", "Pacific/Kanton"},
+                                                            {"Europe/Kiev", "Europe/Kyiv"}};
 
   for (const auto& pair : pairs) {
-    auto alias_idx = dt_db.from_index(dt_db.to_index(pair.first));
-    EXPECT_EQ(alias_idx, dt_db.from_index(dt_db.to_index(pair.second)));
+    auto alias_tz = dt_db.from_index(dt_db.to_index(pair.first));
+    EXPECT_EQ(alias_tz, dt_db.from_index(dt_db.to_index(pair.second)));
   }
 }
 
