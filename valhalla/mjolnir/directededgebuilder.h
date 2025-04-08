@@ -4,13 +4,18 @@
 #include <cstdint>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/node_expander.h>
 
 using namespace valhalla::baldr;
 
 namespace valhalla {
+namespace baldr {
+class GraphId;
+}
+
 namespace mjolnir {
+
+class OSMWay;
 
 /**
  * Derived class to build a directed edge given OSM way and other properties.
@@ -51,7 +56,8 @@ public:
                       const bool minor,
                       const uint32_t restrictions,
                       const uint32_t bike_network,
-                      const bool remove_destonly);
+                      const bool remove_destonly,
+                      const baldr::RoadClass rc_hierarchy);
 };
 
 } // namespace mjolnir

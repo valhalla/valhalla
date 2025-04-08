@@ -232,7 +232,7 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
           sequence<Edge>::iterator element = edges[edge.second];
           auto update_edge = *element;
           if (update_edge.attributes.importance > kFerryUpClass) {
-            update_edge.attributes.importance = kFerryUpClass;
+            update_edge.attributes.importance_hierarchy = kFerryUpClass;
             update_edge.attributes.reclass_ferry = true;
             element = update_edge;
             edge_count++;
@@ -385,7 +385,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           sequence<Edge>::iterator element = edges[edge.second];
           auto update_edge = *element;
           if (ret1.second && ret2.second && update_edge.attributes.importance > kFerryUpClass) {
-            update_edge.attributes.importance = kFerryUpClass;
+            update_edge.attributes.importance_hierarchy = kFerryUpClass;
             update_edge.attributes.reclass_ferry = remove_destonly;
             element = update_edge;
             total_count++;
@@ -404,7 +404,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
             sequence<Edge>::iterator element = edges[edge.second];
             auto update_edge = *element;
             if (update_edge.attributes.importance > kFerryUpClass) {
-              update_edge.attributes.importance = kFerryUpClass;
+              update_edge.attributes.importance_hierarchy = kFerryUpClass;
               update_edge.attributes.reclass_ferry = remove_destonly;
               element = update_edge;
               total_count++;

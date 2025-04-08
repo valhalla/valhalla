@@ -1071,6 +1071,8 @@ public:
     return shortcut_;
   }
 
+  void set_hierarchy_roadclass(const baldr::RoadClass rc, const bool reset = false);
+
   /**
    * Set the mask for whether this edge represents a shortcut between 2 nodes.
    * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
