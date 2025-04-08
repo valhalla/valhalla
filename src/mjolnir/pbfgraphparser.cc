@@ -30,6 +30,16 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+// Limits number of Lua workers in `PBFGraphParser::ParseWays()`.
+// Increase this number if downstream processing can handle more.
+constexpr size_t kMaxLuaConcurrency = 8;
+// Number of OSM pbf buffers per Lua worker in `PBFGraphParser::ParseWays()`.
+constexpr size_t kOsmBuffersPerLua = 4;
+// Number of processed OSM pbf buffers (buffer has many ways) per Lua worker. That one should be
+// reasonably big because `PBFGraphParser::ParseWays()` keeps original order of OSM ways and this
+// buffer allows Lua workers not to stuck if next needed buffer takes more time than others.
+constexpr size_t kWaysChunksPerLua = 8;
+
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
 int get_number(const std::string& tag, const std::string& value) { // NOLINT
@@ -5084,7 +5094,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   // Asymmetric multithreading (in data flow order):
   // - osmium::thread::pool for parsing PBF file
   // - 1 thread to feed the lua transform pool and guarantee the order of ways
-  // - `lua_concurrency` threads for lua transform. Currently there is no point in using more than 8
+  // - `lua_concurrency` threads for lua transform, no more than `kMaxLuaConcurrency`
   // - current thread for working with OSMData in `graph_parser::way()`
   // None of them will saturate the full CPU core, so total count can be bigger than
   // `std::thread::hardware_concurrency()` or "concurrency" parameter.
@@ -5092,7 +5102,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
       std::max(static_cast<size_t>(1),
                pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
   const size_t lua_concurrency =
-      std::clamp(concurrency - 1, static_cast<size_t>(1), static_cast<size_t>(8));
+      std::clamp(concurrency - 1, static_cast<size_t>(1), kMaxLuaConcurrency);
 
   LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
@@ -5108,9 +5118,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
     // to the promises sent to the Lua workers. Lua workers take that promises and corresponding
     // osmium buffers, process them and set the value of the promise.
     using Ways = std::vector<graph_parser::Way>;
-    osmium::thread::Queue<std::future<Ways>> ways_queue(lua_concurrency * 8);
+    osmium::thread::Queue<std::future<Ways>> ways_queue(lua_concurrency * kWaysChunksPerLua);
     osmium::thread::Queue<std::pair<osmium::memory::Buffer, std::promise<Ways>>> buffer_queue(
-        lua_concurrency * 4);
+        lua_concurrency * kOsmBuffersPerLua);
 
     // Single reader thread that guarantees the order of ways via future/promise magic.
     std::thread reader_thread([&file, &ways_queue, &buffer_queue, lua_concurrency] {
