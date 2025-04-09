@@ -66,3 +66,9 @@ This will mostly be performed by the maintainers before we merge PRs which could
 Valhalla currently supports almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. We're using [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) to manage translations and try to download all improvements before each release.
 
 You can find more information in the [dedicated README](locales/README.md).
+
+## Documentation contributions
+
+Valhalla uses [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) to create project documentation. All relevant files are in the `docs/` directory.
+
+Additionally, some pages are made to be shown on GitHub (`README.md`, `CONTRIBUTING.md`, etc). See [About writing and formatting on GitHub](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/about-writing-and-formatting-on-github) for more info.
