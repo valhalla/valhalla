@@ -5,19 +5,19 @@
 #include <string>
 #include <unordered_set>
 
-#include "baldr/json.h"
-#include "baldr/rapidjson_utils.h"
-#include "midgard/logging.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/motorcyclecost.h"
-#include "sif/motorscootercost.h"
-#include "sif/pedestriancost.h"
-#include "tyr/actor.h"
-
-#include "loki/polygon_search.h"
-#include "loki/search.h"
-#include "loki/worker.h"
+#include <valhalla/baldr/connectivity_map.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/loki/polygon_search.h>
+#include <valhalla/loki/search.h>
+#include <valhalla/loki/worker.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/sif/autocost.h>
+#include <valhalla/sif/bicyclecost.h>
+#include <valhalla/sif/motorcyclecost.h>
+#include <valhalla/sif/motorscootercost.h>
+#include <valhalla/sif/pedestriancost.h>
+#include <valhalla/tyr/actor.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

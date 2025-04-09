@@ -1,4 +1,6 @@
-#include "mjolnir/countryaccess.h"
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/mjolnir/countryaccess.h>
+#include <valhalla/mjolnir/osmaccess.h>
 
 namespace valhalla {
 namespace mjolnir {

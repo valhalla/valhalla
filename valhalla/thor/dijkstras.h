@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>

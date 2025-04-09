@@ -5,6 +5,8 @@
 #include <memory>
 #include <vector>
 
+#include <boost/property_tree/ptree_fwd.hpp>
+
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/proto/api.pb.h>
@@ -42,7 +44,7 @@ public:
    * Constructor.
    * @param config A config object of key, value pairs
    */
-  explicit BidirectionalAStar(const boost::property_tree::ptree& config = {});
+  explicit BidirectionalAStar(const boost::property_tree::ptree& config);
 
   /**
    * Destructor

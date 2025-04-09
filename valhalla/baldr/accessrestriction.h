@@ -2,11 +2,15 @@
 #define VALHALLA_BALDR_ACCESSRESTRICTION_H_
 
 #include <cstdint>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/json.h>
+#include <memory>
 
 namespace valhalla {
 namespace baldr {
+namespace json {
+class Jmap;
+using MapPtr = std::shared_ptr<Jmap>;
+} // namespace json
+enum class AccessType : uint8_t;
 
 /**
  * Information held for each access restriction.

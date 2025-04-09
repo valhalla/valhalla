@@ -1,5 +1,7 @@
-#include "baldr/admin.h"
 #include <algorithm>
+#include <unordered_map>
+
+#include <valhalla/baldr/admin.h>
 
 namespace {
 

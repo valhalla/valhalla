@@ -1,13 +1,19 @@
 #ifndef VALHALLA_LOKI_SEARCH_H_
 #define VALHALLA_LOKI_SEARCH_H_
 
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/sif/dynamiccost.h>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
+namespace baldr {
+class Location;
+class PathLocation;
+class GraphReader;
+} // namespace baldr
+namespace sif {
+class DynamicCost;
+}
 namespace loki {
 
 /**

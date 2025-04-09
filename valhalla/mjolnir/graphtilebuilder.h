@@ -2,7 +2,6 @@
 #define VALHALLA_MJOLNIR_GRAPHTILEBUILDER_H_
 
 #include <algorithm>
-#include <boost/functional/hash.hpp>
 #include <cstdint>
 #include <list>
 #include <memory>
@@ -10,25 +9,30 @@
 #include <unordered_map>
 #include <utility>
 
-#include <valhalla/baldr/admin.h>
-#include <valhalla/baldr/graphid.h>
+#include <boost/functional/hash.hpp>
+
+#include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/graphtileheader.h>
-#include <valhalla/baldr/nodetransition.h>
+#include <valhalla/baldr/predictedspeeds.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/baldr/transitroute.h>
 #include <valhalla/baldr/transitschedule.h>
 #include <valhalla/baldr/transitstop.h>
-#include <valhalla/baldr/turnlanes.h>
-
 #include <valhalla/mjolnir/complexrestrictionbuilder.h>
-#include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
-#include <valhalla/mjolnir/landmarks.h>
 
 namespace valhalla {
+namespace baldr {
+class GraphId;
+class GraphTileHeader;
+class Landmark;
+class NameInfo;
+class NodeTransition;
+class TurnLanes;
+} // namespace baldr
 namespace mjolnir {
 
 using edge_tuple = std::tuple<uint32_t, baldr::GraphId, baldr::GraphId>;
@@ -52,7 +56,7 @@ public:
    *                                If false, the offsets are indexes into unique name file
    */
   GraphTileBuilder(const std::string& tile_dir,
-                   const GraphId& graphid,
+                   const baldr::GraphId& graphid,
                    const bool deserialize,
                    bool serialize_turn_lanes = true);
 
@@ -71,31 +75,32 @@ public:
    * @param nodes Updated list of nodes
    * @param directededges Updated list of edges.
    */
-  void Update(const std::vector<NodeInfo>& nodes, const std::vector<DirectedEdge>& directededges);
+  void Update(const std::vector<baldr::NodeInfo>& nodes,
+              const std::vector<baldr::DirectedEdge>& directededges);
 
   /**
    * Get the current list of node builders.
    * @return  Returns the node info builders.
    */
-  std::vector<NodeInfo>& nodes();
+  std::vector<baldr::NodeInfo>& nodes();
 
   /**
    * Gets the current list of directed edge (builders).
    * @return  Returns the directed edge builders.
    */
-  std::vector<DirectedEdge>& directededges();
+  std::vector<baldr::DirectedEdge>& directededges();
 
   /**
    * Gets the current list of directed edge extension (builders).
    * @return  Returns the directed edge extension builders.
    */
-  std::vector<DirectedEdgeExt>& directededges_ext();
+  std::vector<baldr::DirectedEdgeExt>& directededges_ext();
 
   /**
    * Gets the current list of node transition (builders).
    * @return  Returns a reference to node transition builders.
    */
-  std::vector<NodeTransition>& transitions() {
+  std::vector<baldr::NodeTransition>& transitions() {
     return transitions_builder_;
   }
 
@@ -133,7 +138,7 @@ public:
    * Add restriction.
    * @param  restrictions Access restrictions
    */
-  void AddAccessRestrictions(const std::vector<AccessRestriction>& restrictions);
+  void AddAccessRestrictions(const std::vector<baldr::AccessRestriction>& restrictions);
 
   /**
    * Add sign information.
@@ -200,7 +205,7 @@ public:
   void ProcessTaggedValues(const uint32_t edgeindex,
                            const std::vector<std::string>& names,
                            size_t& name_count,
-                           std::vector<NameInfo>& name_info_list);
+                           std::vector<baldr::NameInfo>& name_info_list);
 
   /**
    * Add the edge info to the tile.
@@ -330,35 +335,35 @@ public:
    * Gets a reference to the header builder.
    * @return  Returns a reference to the header builder.
    */
-  GraphTileHeader& header_builder();
+  baldr::GraphTileHeader& header_builder();
 
   /**
    * Gets a node from an existing tile.
    * @param  idx  Index of the node within the tile.
    * @return  Returns a reference to the node builder.
    */
-  NodeInfo& node(const size_t idx);
+  baldr::NodeInfo& node(const size_t idx);
 
   /**
    * Get the node at the specified index.
    * @param  idx  Index of the node builder.
    * @return  Returns a reference to the node builder.
    */
-  NodeInfo& node_builder(const size_t idx);
+  baldr::NodeInfo& node_builder(const size_t idx);
 
   /**
    * Gets a directed edge from existing tile data.
    * @param  idx  Index of the directed edge within the tile.
    * @return  Returns a reference to the directed edge.
    */
-  DirectedEdge& directededge(const size_t idx);
+  baldr::DirectedEdge& directededge(const size_t idx);
 
   /**
    * Gets a directed edge extension from existing tile data.
    * @param  idx  Index of the directed edge extension within the tile.
    * @return  Returns a reference to the directed edge extension.
    */
-  DirectedEdgeExt& directededge_ext(const size_t idx);
+  baldr::DirectedEdgeExt& directededge_ext(const size_t idx);
 
   /**
    * Gets a pointer to directed edges within the list being built.
@@ -366,7 +371,7 @@ public:
    * @return  Returns a pointer to the directed edge builder (allows
    *          accessing all directed edges from a node).
    */
-  const DirectedEdge* directededges(const size_t idx) const;
+  const baldr::DirectedEdge* directededges(const size_t idx) const;
 
   /**
    * Gets a pointer to directed edge extensions within the list being built.
@@ -374,21 +379,21 @@ public:
    * @return  Returns a pointer to the directed edge extension builder (allows
    *          accessing all directed edge extensions from a node).
    */
-  const DirectedEdgeExt* directededges_ext(const size_t idx) const;
+  const baldr::DirectedEdgeExt* directededges_ext(const size_t idx) const;
 
   /**
    * Get the directed edge builder at the specified index.
    * @param  idx  Index of the directed edge builder.
    * @return  Returns a reference to the directed edge builder.
    */
-  DirectedEdge& directededge_builder(const size_t idx);
+  baldr::DirectedEdge& directededge_builder(const size_t idx);
 
   /**
    * Get the directed edge extension builder at the specified index.
    * @param  idx  Index of the directed edge extension builder.
    * @return  Returns a reference to the directed edge extension builder.
    */
-  DirectedEdgeExt& directededge_ext_builder(const size_t idx);
+  baldr::DirectedEdgeExt& directededge_ext_builder(const size_t idx);
 
   /**
    * Gets a non-const access restriction from existing tile data.
@@ -396,7 +401,7 @@ public:
    *              directed edge index) within the tile.
    * @return  Returns a reference to the access restriction.
    */
-  AccessRestriction& accessrestriction(const size_t idx);
+  baldr::AccessRestriction& accessrestriction(const size_t idx);
 
   /**
    * Gets an access restriction builder at the specified index.
@@ -404,7 +409,7 @@ public:
    *              directed edge index) within the tile.
    * @return  Returns a reference to the access restriction (builder).
    */
-  AccessRestriction& accessrestriction_builder(const size_t idx);
+  baldr::AccessRestriction& accessrestriction_builder(const size_t idx);
 
   /**
    * Gets a non-const sign (builder) from existing tile data.
@@ -425,7 +430,7 @@ public:
    * Gets a const admin builder at specified index.
    * @param  idx  Index of the admin builder in the list.
    */
-  const Admin& admins_builder(size_t idx);
+  const baldr::Admin& admins_builder(size_t idx);
 
   /**
    * Sets the tile creation date.
@@ -439,9 +444,10 @@ public:
    * @param tile       the tile whose edges need the binned
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
-  using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const graph_tile_ptr& tile,
-                                                              tweeners_t& tweeners);
+  using tweeners_t =
+      std::unordered_map<baldr::GraphId, std::array<std::vector<baldr::GraphId>, baldr::kBinCount>>;
+  static std::array<std::vector<baldr::GraphId>, baldr::kBinCount>
+  BinEdges(const graph_tile_ptr& tile, tweeners_t& tweeners);
 
   /**
    * Adds to the bins the tile already has, only modifies the header to reflect the new counts
@@ -452,14 +458,14 @@ public:
    */
   static void AddBins(const std::string& tile_dir,
                       const graph_tile_ptr& tile,
-                      const std::array<std::vector<GraphId>, kBinCount>& more_bins);
+                      const std::array<std::vector<baldr::GraphId>, baldr::kBinCount>& more_bins);
 
   /**
    * Get the turn lane builder at the specified index.
    * @param  idx  Index of the turn lane builder.
    * @return  Returns a reference to the turn lane builder.
    */
-  TurnLanes& turnlane_builder(const size_t idx);
+  baldr::TurnLanes& turnlane_builder(const size_t idx);
 
   /**
    * Add turn lane information for a directed edge.
@@ -479,7 +485,7 @@ public:
    * Add turn lanes
    * @param  turn_lanes vector of turn lanes
    */
-  void AddTurnLanes(const std::vector<TurnLanes>& turn_lanes);
+  void AddTurnLanes(const std::vector<baldr::TurnLanes>& turn_lanes);
 
   /**
    * Add a predicted speed profile for a directed edge.
@@ -488,7 +494,7 @@ public:
    * @param  predicted_count_hint  How many predicted speeds should we expect to add
    */
   void AddPredictedSpeed(const uint32_t idx,
-                         const std::array<int16_t, kCoefficientCount>& coefficients,
+                         const std::array<int16_t, baldr::kCoefficientCount>& coefficients,
                          const size_t predicted_count_hint = 256);
 
   /**
@@ -497,7 +503,7 @@ public:
    * predicted traffic is written after turn lane data.
    * @param  directededges  Updated directed edge information.
    */
-  void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
+  void UpdatePredictedSpeeds(const std::vector<baldr::DirectedEdge>& directededges);
 
   /**
    * Adds a landmark to the given edge id by modifying its edgeinfo to add a name and tagged value
@@ -505,7 +511,7 @@ public:
    * @param edge_id  the edge id to modify
    * @param landmark the landmark to associate to the edge
    */
-  void AddLandmark(const baldr::GraphId& edge_id, const Landmark& landmark);
+  void AddLandmark(const baldr::GraphId& edge_id, const baldr::Landmark& landmark);
 
   /**
    * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
@@ -514,7 +520,7 @@ public:
    * @param  tile          Graph tile of the edge
    * @param  directededge  Directed edge to check.
    */
-  bool OpposingEdgeInfoDiffers(const graph_tile_ptr& tile, const DirectedEdge* edge);
+  bool OpposingEdgeInfoDiffers(const graph_tile_ptr& tile, const baldr::DirectedEdge* edge);
 
 protected:
   struct EdgeTupleHasher {
@@ -548,23 +554,23 @@ protected:
   std::string tile_dir_;
 
   // Header information for the tile
-  GraphTileHeader header_builder_;
+  baldr::GraphTileHeader header_builder_;
 
   // List of nodes. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<NodeInfo> nodes_builder_;
+  std::vector<baldr::NodeInfo> nodes_builder_;
 
   // List of directed edges. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<DirectedEdge> directededges_builder_;
+  std::vector<baldr::DirectedEdge> directededges_builder_;
 
   // Optional list of directed edge extended attributes. If this is used it must be the same size
   // as the directededges_builder.
-  std::vector<DirectedEdgeExt> directededges_ext_builder_;
+  std::vector<baldr::DirectedEdgeExt> directededges_ext_builder_;
 
   // List of node transitions. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<NodeTransition> transitions_builder_;
+  std::vector<baldr::NodeTransition> transitions_builder_;
 
   // List of transit departures. Sorted by directed edge Id and
   // departure time
@@ -588,7 +594,7 @@ protected:
 
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<Admin> admins_builder_;
+  std::vector<baldr::Admin> admins_builder_;
 
   // Admin info offset
   std::unordered_map<std::string, size_t> admin_info_offset_map_;
@@ -615,10 +621,10 @@ protected:
   std::list<std::string> textlistbuilder_;
 
   // List of lane connectivity records.
-  std::vector<LaneConnectivity> lane_connectivity_builder_;
+  std::vector<baldr::LaneConnectivity> lane_connectivity_builder_;
 
   // List of turn lanes.
-  std::vector<TurnLanes> turnlanes_builder_;
+  std::vector<baldr::TurnLanes> turnlanes_builder_;
 
   // Offsets into predicted speed profiles for each directed edge.
   std::vector<uint32_t> speed_profile_offset_builder_;

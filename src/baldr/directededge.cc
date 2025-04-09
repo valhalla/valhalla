@@ -1,6 +1,8 @@
-#include "baldr/directededge.h"
-#include "baldr/nodeinfo.h"
-#include "midgard/logging.h"
+
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
 

@@ -1,7 +1,7 @@
 #ifndef VALHALLA_TYR_ACTOR_H_
 #define VALHALLA_TYR_ACTOR_H_
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 #include <memory>
 
 #include <valhalla/baldr/graphreader.h>

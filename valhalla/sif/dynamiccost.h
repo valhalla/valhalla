@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel

@@ -1,7 +1,9 @@
-#include "baldr/json.h"
-#include "baldr/openlr.h"
-#include "tyr/serializers.h"
 #include <cstdint>
+
+#include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/openlr.h>
+#include <valhalla/tyr/serializers.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

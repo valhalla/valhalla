@@ -1,7 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 #define VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 #include <string>
 #include <vector>
 

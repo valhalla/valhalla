@@ -1,11 +1,20 @@
 #ifndef VALHALLA_LOKI_POLYGON_SEARCH_H_
 #define VALHALLA_LOKI_POLYGON_SEARCH_H_
 
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/sif/dynamiccost.h>
-
+#include <memory>
+#include <unordered_set>
+namespace google::protobuf {
+template <typename Element> class RepeatedPtrField;
+}
 namespace valhalla {
+class Ring;
+namespace baldr {
+class GraphId;
+class GraphReader;
+} // namespace baldr
+namespace sif {
+class DynamicCost;
+}
 namespace loki {
 
 /**

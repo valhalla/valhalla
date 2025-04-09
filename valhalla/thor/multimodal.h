@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <boost/property_tree/ptree_fwd.hpp>
+
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -32,7 +34,7 @@ public:
    * Constructor.
    * @param config A config object of key, value pairs
    */
-  explicit MultiModalPathAlgorithm(const boost::property_tree::ptree& config = {});
+  explicit MultiModalPathAlgorithm(const boost::property_tree::ptree& config);
 
   /**
    * Destructor

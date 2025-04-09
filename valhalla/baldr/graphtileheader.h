@@ -9,9 +9,12 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
+namespace midgard {
+template <typename PrecisionT> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace baldr {
 
 // Number of expansion slots remaining in this tile. If you want to add

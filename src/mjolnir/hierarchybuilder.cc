@@ -1,22 +1,24 @@
-#include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "scoped_timer.h"
-
-#include <boost/property_tree/ptree.hpp>
-
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/sequence.h"
+#include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/filesystem.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/sequence.h>
+#include <valhalla/mjolnir/graphtilebuilder.h>
+#include <valhalla/mjolnir/hierarchybuilder.h>
+
+#include "scoped_timer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -10,7 +10,7 @@ namespace valhalla {
 namespace mjolnir {
 
 // Set the via edge ids used by this complex restriction.
-void ComplexRestrictionBuilder::set_via_list(const std::vector<GraphId>& via_list) {
+void ComplexRestrictionBuilder::set_via_list(const std::vector<baldr::GraphId>& via_list) {
   if (via_list.size() > kMaxViasPerRestriction) {
     LOG_WARN("Tried to exceed max vias per restriction: " + std::to_string(via_list.size()));
   } else {
@@ -32,7 +32,8 @@ std::ostream& operator<<(std::ostream& os, const ComplexRestrictionBuilder& crb)
   // write the via Ids (if any).
   os.write(reinterpret_cast<const char*>(&crb), 3 * sizeof(uint64_t));
   if (via_count > 0) {
-    os.write(reinterpret_cast<const char*>(crb.via_list_.data()), (via_count * sizeof(GraphId)));
+    os.write(reinterpret_cast<const char*>(crb.via_list_.data()),
+             (via_count * sizeof(baldr::GraphId)));
   }
   return os;
 }

@@ -2,6 +2,7 @@
 #define VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMACCESS_H
 
 #include <cstdint>
+#include <cstring>
 
 #include <valhalla/baldr/graphconstants.h>
 

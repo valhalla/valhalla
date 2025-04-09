@@ -2,13 +2,18 @@
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
 #include <cstdint>
+#include <memory>
+#include <strings.h>
+
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/turn.h>
 
 namespace valhalla {
 namespace baldr {
+namespace json {
+using MapPtr = std::shared_ptr<Jmap>;
+}
 
 /**
  * Directed edge within the graph.

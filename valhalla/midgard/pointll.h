@@ -3,9 +3,10 @@
 #include <cmath>
 #include <limits>
 #include <tuple>
+
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/linesegment2.h>
 #include <valhalla/midgard/point2.h>
 
 namespace valhalla {

@@ -6,8 +6,9 @@
 #include <stdint.h>
 #include <string>
 #include <unordered_map>
-#include <valhalla/midgard/util.h>
 #include <vector>
+
+#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {

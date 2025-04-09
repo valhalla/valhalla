@@ -20,7 +20,9 @@
 #include <gtest/gtest.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
+
+using namespace valhalla::baldr;
 
 namespace test {
 

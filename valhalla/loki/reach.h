@@ -1,14 +1,15 @@
 #pragma once
 #include <cstdint>
 
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/loki/search.h>
 #include <valhalla/thor/dijkstras.h>
 
 constexpr uint8_t kInbound = 1;
 constexpr uint8_t kOutbound = 2;
 
 namespace valhalla {
+namespace baldr {
+class DirectedEdge;
+}
 namespace loki {
 
 // NOTE: another approach is possible which would still allow for one-at-a-time look up. In this case

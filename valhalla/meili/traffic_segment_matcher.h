@@ -1,20 +1,24 @@
 #ifndef MMP_TRAFFIC_SEGMENT_MATCHER_H_
 #define MMP_TRAFFIC_SEGMENT_MATCHER_H_
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 #include <cstdint>
 #include <list>
 #include <string>
 #include <vector>
 
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/map_matcher_factory.h>
 
 namespace valhalla {
+namespace baldr {
+class GraphReader;
+}
 namespace meili {
+class EdgeSegment;
+class MapMatcher;
+class MatchResult;
+class Measurement;
 
 struct interpolation_t {
   baldr::GraphId edge;   // edge id

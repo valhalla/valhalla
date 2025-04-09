@@ -1,47 +1,46 @@
 #pragma once
 
-#include <valhalla/baldr/accessrestriction.h>
-#include <valhalla/baldr/admininfo.h>
-#include <valhalla/baldr/complexrestriction.h>
-#include <valhalla/baldr/datetime.h>
+#include <cstdint>
+#include <iterator>
+#include <memory>
+
+#include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphmemory.h>
 #include <valhalla/baldr/graphtileheader.h>
 #include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/nodetransition.h>
 #include <valhalla/baldr/predictedspeeds.h>
-#include <valhalla/baldr/sign.h>
-#include <valhalla/baldr/signinfo.h>
 #include <valhalla/baldr/traffictile.h>
-#include <valhalla/baldr/transitdeparture.h>
-#include <valhalla/baldr/transitroute.h>
-#include <valhalla/baldr/transitschedule.h>
-#include <valhalla/baldr/transitstop.h>
-#include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/turnlanes.h>
-
-#include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
 
-#include <valhalla/filesystem.h>
-
-#include <cstdint>
-#include <iterator>
-#include <memory>
-
 namespace valhalla {
+namespace midgard {
+template <class coord_t> class AABB2;
+}
 namespace baldr {
+
+class AdminInfo;
+class AccessRestriction;
+class ComplexRestriction;
+class EdgeInfo;
+class GraphMemory;
+class Sign;
+class SignInfo;
+class TransitDeparture;
+class TransitRoute;
+class TransitSchedule;
+class TransitStop;
+class TransitTransfer;
+class tile_getter_t;
 
 const std::string SUFFIX_NON_COMPRESSED = ".gph";
 const std::string SUFFIX_COMPRESSED = ".gph.gz";
-
-class tile_getter_t;
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */

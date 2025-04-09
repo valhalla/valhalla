@@ -1,12 +1,12 @@
 #pragma once
 
 #include <algorithm>
+#include <filesystem>
 #include <list>
 #include <string>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/filesystem.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/transit.pb.h>
 
@@ -49,7 +49,7 @@ Transit read_pbf(const std::string& file_name);
  * @param tile contains transit data
  * @param transit_tile destination where the protobuf is written
  */
-void write_pbf(const Transit& tile, const filesystem::path& transit_tile);
+void write_pbf(const Transit& tile, const std::filesystem::path& transit_tile);
 
 } // namespace mjolnir
 } // namespace valhalla
