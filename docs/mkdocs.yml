@@ -12,7 +12,7 @@ theme:
   palette:
     - scheme: default
       toggle:
-        icon: material/brightness-7 
+        icon: material/brightness-7
         name: Switch to dark mode
       primary: black
       accent: deep purple
@@ -117,5 +117,6 @@ nav:
     - Administrative data: mjolnir/admins.md
     - Attribution requirements: mjolnir/attribution.md
   - Development:
+    - contributing.md
     - Changelog: https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md
     - releasing.md
