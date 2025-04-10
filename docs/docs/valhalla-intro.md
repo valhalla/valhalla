@@ -10,11 +10,11 @@ After much intense ~~battle~~ development we are proud to take the wraps off of 
 
 Valhalla developers know routing. We have worked together as a team for over a decade and have complementary skills that allow efficient software development. Our experience includes both commercial and OSM routing. We are well versed in scaling routing services to handle millions of requests per day. Performance and scalability is important, but ==our primary focus will be creating high quality routes, guidance, and directions==.
 
+## Features
+
 Existing open-source routing engines derive from academic research, resulting in fast routing algorithms over large graphs/networks. There are many properties of road networks that must be considered to produce quality routes and guidance/narrative descriptions. Rather than wrap these decisions into a baked costing model, we choose to add most attribution to the graph data and allow dynamic, run-time costing. This should allow others to contribute and apply costing models and also allow flexible use of alternate costing to produce routes with different characteristics.
 
 There are other key features that we hope distinguish Valhalla from other systems and encourage developers to build systems around the service and contribute back to the project. These features include:
-
-## Features
 
 ### Multimodal and time-based routing
 
