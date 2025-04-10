@@ -89,3 +89,9 @@ You can find more information in the [dedicated README](locales/README.md).
 Valhalla uses [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) to create project documentation. All relevant files are in the `docs/` directory.
 
 Additionally, some pages are made to be shown on GitHub (`README.md`, `CONTRIBUTING.md`, etc). See [About writing and formatting on GitHub](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/about-writing-and-formatting-on-github) for more info.
+
+### Publishing
+
+Documentation is published to GitHub pages [via GitHub Actions](https://squidfunk.github.io/mkdocs-material/publishing-your-site/#with-github-actions) on every push to `master` branch.
+
+See `.github/workflows/gh-pages.yml` file for more info.
