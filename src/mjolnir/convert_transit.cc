@@ -21,7 +21,6 @@
 #include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 #include "midgard/vector2.h"
 
 #include "mjolnir/admin.h"

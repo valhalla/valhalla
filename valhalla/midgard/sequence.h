@@ -344,9 +344,6 @@ public:
     auto tmp_path = filesystem::path(file_name).replace_filename(
         filesystem::path(file_name).filename().string() + ".tmp");
     {
-      // we need a temporary sequence to merge the sorted subsections into
-      sequence<T> output_seq(tmp_path.string(), true);
-
       // Comparator needs to be inverted for pq to provide constant time *smallest* lookup
       // Pq keeps track of element and its index.
       auto cmp = [&predicate](const std::pair<T, size_t>& a, std::pair<T, size_t>& b) {
@@ -362,7 +359,8 @@ public:
         pq.emplace(*at(i), i);
       }
 
-      // Perform the merge
+      // Perform the merge using a temporary sequence to merge the sorted subsections into
+      sequence<T> output_seq(tmp_path.string(), true);
       while (!pq.empty()) {
         auto tmp = pq.top();
         pq.pop();

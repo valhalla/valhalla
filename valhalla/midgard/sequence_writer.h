@@ -1,8 +1,9 @@
 #pragma once
 
-#include <vector>
+#include <condition_variable>
 #include <fstream>
 #include <thread>
+#include <vector>
 
 namespace valhalla {
 namespace midgard {
@@ -30,8 +31,8 @@ template <class T> class sequence_writer {
   std::thread worker;
 
 public:
-  // Constructor - opens the file for writing and starts worker thread
-  explicit sequence_writer(const std::string& filename, size_t buffer_size = 1024 * 1024 * 32 / sizeof(T))
+  explicit sequence_writer(const std::string& filename,
+                           size_t buffer_size = 1024 * 1024 * 32 / sizeof(T))
       : file(filename, std::ios_base::binary | std::ios_base::trunc) {
     if (!file) {
       throw std::runtime_error("sequence_writer: " + filename + ": " + strerror(errno));
@@ -71,6 +72,7 @@ public:
     }
   }
 
+  // Number of elements pushed to the sequence
   size_t size() const {
     return count;
   }
