@@ -9,6 +9,7 @@
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
+#include "midgard/sequence_writer.h"
 #include "midgard/tiles.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
@@ -2395,7 +2396,8 @@ struct graph_parser {
 
     // Add the refs to the reference list and mark the nodes that care about when processing nodes
     loop_nodes_.clear();
-    auto way_node_index = way_nodes_->size();
+    way_nodes_buffer_.clear();
+
     for (size_t i = 0; i < nodes.size(); ++i) {
       const auto& node = nodes[i];
 
@@ -2409,23 +2411,21 @@ struct graph_parser {
       osm_node.flat_loop_ = flattening || unflattening;
       osm_node.intersection_ = i == 0 || i == nodes.size() - 1;
 
-      // Keep the node
-      way_nodes_->push_back(
-          {osm_node, static_cast<uint32_t>(ways_->size()), static_cast<uint32_t>(i)});
+      way_nodes_buffer_.push_back(
+          {osm_node, static_cast<uint32_t>(osmdata_.osm_way_count), static_cast<uint32_t>(i)});
 
       // If this way is a loop (node occurs twice) we can make our lives way easier if we simply
       // split it up into multiple edges in the graph. If a problem is hard, avoid the problem!
       if (!inserted.second) {
         // We'll make an intersection in the middle of the loop
-        auto way_node_itr = (*way_nodes_)[way_node_index + (i + inserted.first->second) / 2];
-        auto way_node = *way_node_itr;
-        way_node.node.intersection_ = true;
-        way_node_itr = way_node;
+        way_nodes_buffer_[(i + inserted.first->second) / 2].node.intersection_ = true;
         // Update the index in case the node is used again (a future loop)
         inserted.first->second = i;
       }
     }
-    ++osmdata_.osm_way_count;
+    for (const auto& way_node : way_nodes_buffer_) {
+      way_nodes_writer_->push_back(way_node);
+    }
     osmdata_.osm_way_node_count += nodes.size();
 
     default_speed_ = 0.0f, max_speed_ = 0.0f;
@@ -3746,7 +3746,7 @@ struct graph_parser {
     if (!way_.roundabout() && loop_nodes_.size() != nodes.size() && way_.use() == Use::kRoad &&
         way_.road_class() > RoadClass::kTertiary) {
       // Adds a loop road as a candidate to be a "culdesac" road.
-      culdesac_processor_.add_candidate(way_.way_id(), ways_->size(), nodes);
+      culdesac_processor_.add_candidate(way_.way_id(), osmdata_.osm_way_count, nodes);
     }
 
     if (has_user_tags_) {
@@ -3777,7 +3777,8 @@ struct graph_parser {
     }
 
     // Add the way to the list
-    ways_->push_back(way_);
+    ways_writer_->push_back(way_);
+    ++osmdata_.osm_way_count;
   }
 
   void relation(const osmium::Relation& relation) {
@@ -4238,16 +4239,18 @@ struct graph_parser {
   }
 
   // lets the sequences be set and reset
-  void reset(sequence<OSMWay>* ways,
-             sequence<OSMWayNode>* way_nodes,
-             sequence<OSMAccess>* access,
-             sequence<OSMRestriction>* complex_restrictions_from,
-             sequence<OSMRestriction>* complex_restrictions_to,
-             sequence<OSMBSSNode>* bss_nodes,
-             sequence<OSMNodeLinguistic>* node_linguistics) {
+  void reset(sequence<OSMWayNode>* way_nodes,
+             sequence_writer<OSMAccess>* access,
+             sequence_writer<OSMRestriction>* complex_restrictions_from,
+             sequence_writer<OSMRestriction>* complex_restrictions_to,
+             sequence_writer<OSMBSSNode>* bss_nodes,
+             sequence_writer<OSMNodeLinguistic>* node_linguistics,
+             sequence_writer<OSMWay>* ways_writer = nullptr,
+             sequence_writer<OSMWayNode>* way_nodes_writer = nullptr) {
     // reset the pointers (either null them out or set them to something valid)
-    ways_.reset(ways);
+    ways_writer_.reset(ways_writer);
     way_nodes_.reset(way_nodes);
+    way_nodes_writer_.reset(way_nodes_writer);
     access_.reset(access);
     complex_restrictions_from_.reset(complex_restrictions_from);
     complex_restrictions_to_.reset(complex_restrictions_to);
@@ -5029,27 +5032,29 @@ struct graph_parser {
   OSMData& osmdata_;
 
   // Ways and nodes written to file, nodes are written in the order they appear in way (shape)
-  std::unique_ptr<sequence<OSMWay>> ways_;
+  std::unique_ptr<sequence_writer<OSMWay>> ways_writer_;
   std::unique_ptr<sequence<OSMWayNode>> way_nodes_;
+  std::unique_ptr<sequence_writer<OSMWayNode>> way_nodes_writer_;
   // When updating the references with the node information we keep the last index we looked at
   // this lets us only have to iterate over the whole set once
   size_t current_way_node_index_;
   uint64_t last_node_, last_way_, last_relation_;
   robin_hood::unordered_map<uint64_t, size_t> loop_nodes_;
+  std::vector<OSMWayNode> way_nodes_buffer_;
 
   // user entered access
-  std::unique_ptr<sequence<OSMAccess>> access_;
+  std::unique_ptr<sequence_writer<OSMAccess>> access_;
 
   // from complex restrictions
-  std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_from_;
+  std::unique_ptr<sequence_writer<OSMRestriction>> complex_restrictions_from_;
   //  used to find out if a wayid is the to edge for a complex restriction
-  std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_to_;
+  std::unique_ptr<sequence_writer<OSMRestriction>> complex_restrictions_to_;
 
   // bss nodes
-  std::unique_ptr<sequence<OSMBSSNode>> bss_nodes_;
+  std::unique_ptr<sequence_writer<OSMBSSNode>> bss_nodes_;
 
   // node linguistics
-  std::unique_ptr<sequence<OSMNodeLinguistic>> node_linguistics_;
+  std::unique_ptr<sequence_writer<OSMNodeLinguistic>> node_linguistics_;
 
   // used to set "culdesac" labels to loop roads correctly
   culdesac_processor culdesac_processor_;
@@ -5106,8 +5111,9 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
-  parser.reset(new sequence<OSMWay>(ways_file, true), new sequence<OSMWayNode>(way_nodes_file, true),
-               new sequence<OSMAccess>(access_file, true), nullptr, nullptr, nullptr, nullptr);
+  parser.reset(nullptr, new sequence_writer<OSMAccess>(access_file), nullptr, nullptr, nullptr,
+               nullptr, new sequence_writer<OSMWay>(ways_file),
+               new sequence_writer<OSMWayNode>(way_nodes_file));
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
@@ -5183,14 +5189,19 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
       t.join();
     }
   }
+  // Reset the parser to flush the remaining data to disk.
+  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Clarifies types of loop roads and saves fixed ways.
   LOG_INFO("Clarifying and fixing cul-de-sacs...");
-  parser.culdesac_processor_.clarify_and_fix(*parser.way_nodes_, *parser.ways_);
+  {
+    sequence<OSMWay> ways_seq(ways_file, false);
+    sequence<OSMWayNode> way_nodes_seq(way_nodes_file, false);
+    parser.culdesac_processor_.clarify_and_fix(way_nodes_seq, ways_seq);
+  }
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
-  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the access tags so that we can easily find them.
   LOG_INFO("Sorting osm access tags by way id...");
@@ -5228,9 +5239,8 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Parsing files for relations: " + boost::algorithm::join(input_files, ", "));
 
-  parser.reset(nullptr, nullptr, nullptr,
-               new sequence<OSMRestriction>(complex_restriction_from_file, true),
-               new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr, nullptr);
+  parser.reset(nullptr, nullptr, new sequence_writer<OSMRestriction>(complex_restriction_from_file),
+               new sequence_writer<OSMRestriction>(complex_restriction_to_file), nullptr, nullptr);
 
   // Parse relations.
   LOG_INFO("Parsing relations...");
@@ -5250,7 +5260,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) +
            " lane connections");
 
-  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
@@ -5296,14 +5306,12 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   if (pt.get<bool>("import_bike_share_stations", false)) {
     LOG_INFO("Parsing bss nodes...");
 
-    bool create = true;
+    parser.reset(nullptr, nullptr, nullptr, nullptr, new sequence_writer<OSMBSSNode>(bss_nodes_file),
+                 nullptr);
+
     for (auto& file : input_files) {
       parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ =
           0;
-      // we send a null way_nodes file so that only the bike share stations are parsed
-      parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
-                   new sequence<OSMBSSNode>(bss_nodes_file, create), nullptr);
-      create = false;
 
       osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
       while (const osmium::memory::Buffer buffer = reader.read()) {
@@ -5314,11 +5322,11 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
       reader.close(); // Explicit close to get an exception in case of an error.
     }
     // Since the sequence must be flushed before reading it...
-    parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+    parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
     LOG_INFO("Found " + std::to_string(sequence<OSMBSSNode>{bss_nodes_file, false}.size()) +
              " bss nodes...");
   }
-  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
@@ -5337,8 +5345,8 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
   for (auto& file : input_files) {
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
-    parser.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr, nullptr,
-                 nullptr, new sequence<OSMNodeLinguistic>(linguistic_node_file, true));
+    parser.reset(new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr, nullptr, nullptr,
+                 new sequence_writer<OSMNodeLinguistic>(linguistic_node_file));
     parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
 
     osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
@@ -5350,7 +5358,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
     reader.close(); // Explicit close to get an exception in case of an error.
   }
   uint64_t max_osm_id = parser.last_node_;
-  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) +
            " nodes contained in routable ways");
 

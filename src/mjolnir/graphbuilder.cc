@@ -20,6 +20,7 @@
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
+#include "midgard/sequence_writer.h"
 #include "midgard/tiles.h"
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
@@ -165,7 +166,7 @@ void ConstructEdges(const std::string& ways_file,
   // so we can read ways and nodes and write edges
   sequence<OSMWay> ways(ways_file, false);
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
-  sequence<Edge> edges(edges_file, true);
+  sequence_writer<Edge> edges(edges_file);
   sequence<Node> nodes(nodes_file, true);
 
   // Method to get length of an edge (used to find short link edges)

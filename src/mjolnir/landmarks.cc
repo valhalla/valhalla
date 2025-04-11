@@ -3,6 +3,7 @@
 
 #include "baldr/graphreader.h"
 #include "midgard/sequence.h"
+#include "midgard/sequence_writer.h"
 #include "mjolnir/util.h"
 
 #include "baldr/location.h"
@@ -312,7 +313,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
   GraphReader reader(pt);
   // create the sequence file
   std::string file_name = "landmark_dump_" + std::to_string(thread_number);
-  midgard::sequence<std::pair<GraphId, uint64_t>> seq_file(file_name, true);
+  midgard::sequence_writer<std::pair<GraphId, uint64_t>> seq_file(file_name);
 
   for (size_t i = 0; i < tileset.size(); ++i) {
     // every i'th thread works on every i'th tile
