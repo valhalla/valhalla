@@ -17,6 +17,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include "midgard/sequence_writer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -379,10 +380,10 @@ void CreateNodeAssociations(GraphReader& reader,
   };
 
   // Create a sequence to associate new nodes to old nodes
-  sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, true);
+  sequence_writer<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file);
 
   // Create a sequence to associate new nodes to old nodes
-  sequence<OldToNewNodes> old_to_new(old_to_new_file, true);
+  sequence_writer<OldToNewNodes> old_to_new(old_to_new_file);
 
   // Hierarchy level information
   const auto& arterial_level = TileHierarchy::levels()[1];
