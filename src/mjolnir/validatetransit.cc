@@ -18,7 +18,6 @@
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
