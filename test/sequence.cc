@@ -77,7 +77,7 @@ TEST(SequenceWriter, Write) {
   // Destructor should flush
   {
     sequence_writer<osm_node> writer(filename, 512);
-    writer.push_back({1,2.0,3.0});
+    writer.push_back({1, 2.0, 3.0});
   }
   {
     sequence<osm_node> reader(filename, false, 512);
@@ -93,7 +93,7 @@ TEST(SequenceWriter, Write) {
   {
     sequence_writer<osm_node> writer(filename, 512);
     ASSERT_EQ(writer.size(), 0);
-    writer.push_back({4,5.0,6.0});
+    writer.push_back({4, 5.0, 6.0});
     ASSERT_EQ(writer.size(), 1);
     writer.flush();
     ASSERT_EQ(writer.size(), 1);
@@ -111,7 +111,7 @@ TEST(SequenceWriter, Write) {
   {
     sequence_writer<osm_node> writer(filename, 64);
     for (size_t i = 0; i < 30; ++i) {
-      writer.push_back({i,8.0,9.0});
+      writer.push_back({i, 8.0, 9.0});
     }
     ASSERT_EQ(writer.size(), 30);
   }
