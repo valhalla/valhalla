@@ -52,6 +52,7 @@
    * CHANGED: Move `bss_info_` from `OSMNode` to the new `OSMBSSNode` to reduce `way_nodes.bin` size [#5147](https://github.com/valhalla/valhalla/pull/5147)
    * UPDATED: bump tz from 2025a to 2025b [#5164](https://github.com/valhalla/valhalla/pull/5164)
    * ADDED: Mutithreaded `PBFGraphParser::ParseWays()` [#5143](https://github.com/valhalla/valhalla/pull/5143)
+   * CHANGED: "Multilevel Way" message logging level changed from WARN to DEBUG [#5188](https://github.com/valhalla/valhalla/pull/5188)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
