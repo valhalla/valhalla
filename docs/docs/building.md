@@ -58,6 +58,8 @@ cmake --build build -- -j$(nproc)
 # osx: cmake --build build -- -j$(sysctl -n hw.physicalcpu)
 ```
 
+## Platform-specific builds
+
 ### Building from Source - Linux
 
 To install on a Debian or Ubuntu system you need to install its dependencies with:
