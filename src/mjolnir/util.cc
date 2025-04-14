@@ -13,11 +13,11 @@
 #include "mjolnir/graphfilter.h"
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/transitbuilder.h"
+#include "scoped_timer.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -233,6 +233,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
                     const BuildStage end_stage) {
+  SCOPED_TIMER();
   auto remove_temp_file = [](const std::string& fname) {
     if (filesystem::exists(fname)) {
       filesystem::remove(fname);

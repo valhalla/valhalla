@@ -367,6 +367,7 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 | `prioritize_bidirectional` | Prioritize `bidirectional a*` when `date_time.type = depart_at/current`. By default `time_dependent_forward a*` is used in these cases, but `bidirectional a*` is much faster. Currently it does not update the time (and speeds) when searching for the route path, but the ETA on that route is recalculated based on the time-dependent speeds |
 | `roundabout_exits` | A boolean indicating whether exit instructions at roundabouts should be added to the output or not. Default is true. |
 | `admin_crossings` | When present and `true`, the successful route summary will include the two keys `admins` and `admin_crossings`. `admins` is an array of administrative regions the route lies within. `admin_crossings` is an array of objects that contain `from_admin_index` and `to_admin_index`, which are indices into the `admins` array. They also contain `from_shape_index` and `to_shape_index`, which are start and end indices of the edge along which an administrative boundary is crossed. |
+| `turn_lanes` | When present and `true`, each maneuver in the route response can include a `lanes` array describing lane-level guidance. The lanes array details possible `directions`, as well as which lanes are `valid` or `active` for following the maneuver.
 
 [openlr]: https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 
@@ -408,7 +409,7 @@ A `trip` contains one or more `legs`. For *n* number of `break` locations, there
 
 Each leg of the trip includes a summary, which is comprised of the same information as a trip summary but applied to the single leg of the trip. It also includes a `shape`, which is an [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path (with 6 digits decimal precision), and a list of `maneuvers` as a JSON array. For more about decoding route shapes, see these [code examples](../../decoding.md).
 
-If `elevation_interval` is specified, each leg of the trip will return `elevation` along the route as a JSON array. The `elevation_interval` is also returned. Units for both `elevation` and `elevation_interval` are either meters or feet based on the input units specified. 
+If `elevation_interval` is specified, each leg of the trip will return `elevation` along the route as a JSON array. The `elevation_interval` is also returned. Units for both `elevation` and `elevation_interval` are either meters or feet based on the input units specified.
 
 Each maneuver includes:
 
@@ -439,10 +440,11 @@ Each maneuver includes:
 | `transit_info` | Contains the attributes that describe a specific transit route. See below for details. |
 | `verbal_multi_cue` | True if the `verbal_pre_transition_instruction` has been appended with the verbal instruction of the next maneuver. |
 | `travel_mode` | Travel mode.<ul><li>"drive"</li><li>"pedestrian"</li><li>"bicycle"</li><li>"transit"</li></ul>|
-| `travel_type` | Travel type for drive.<ul><li>"car"</li></ul>Travel type for pedestrian.<ul><li>"foot"</li></ul>Travel type for bicycle.<ul><li>"road"</li></ul>Travel type for transit.<ul><li>Tram or light rail = "tram"</li><li>Metro or subway = "metro"</li><li>Rail = "rail"</li><li>Bus = "bus"</li><li>Ferry = "ferry"</li><li>Cable car = "cable_car"</li><li>Gondola = "gondola"</li><li>Funicular = "funicular"</li></ul>|
+| `travel_type` | Travel type for drive.<ul><li>"car"</li><li>"motorcycle"</li><li>"motor_scooter"</li><li>"truck"</li><li>"bus"</li></ul>Travel type for pedestrian.<ul><li>"foot"</li><li>"wheelchair"</li></ul>Travel type for bicycle.<ul><li>"road"</li><li>"hybrid"</li><li>"cross"</li><li>"mountain"</li></ul>Travel type for transit.<ul><li>Tram or light rail = "tram"</li><li>Metro or subway = "metro"</li><li>Rail = "rail"</li><li>Bus = "bus"</li><li>Ferry = "ferry"</li><li>Cable car = "cable_car"</li><li>Gondola = "gondola"</li><li>Funicular = "funicular"</li></ul>|
 | `bss_maneuver_type` | Used when `travel_mode` is `bikeshare`. Describes bike share maneuver. The default value is "NoneAction <ul><li>"NoneAction"</li><li>"RentBikeAtBikeShare"</li><li>"ReturnBikeAtBikeShare"</li></ul> |
 | `bearing_before` | The clockwise angle from true north to the direction of travel immediately before the maneuver. |
 | `bearing_after` | The clockwise angle from true north to the direction of travel immediately after the maneuver. |
+| `lanes` | An array describing lane-level guidance. Used when `turn_lanes` is enabled. See below for details. |
 
 For the maneuver `type`, the following are available:
 
@@ -537,6 +539,48 @@ A `transit_stop` includes:
 | `lon` | Longitude of the transit stop in degrees. |
 
 Continuing with the earlier routing example from the Detroit, Michigan area, a maneuver such as this one may be returned with that request: `{"begin_shape_index":0,"length":0.109,"end_shape_index":1,"instruction":"Go south on Appleton.","street_names":["Appleton"],"type":1,"time":0}`
+
+A `lanes` includes:
+
+When `turn_lanes` is enabled, each maneuver may include a `lanes` array describing lane-level guidance. Each lane object can include the following fields:
+
+| Field | Description |
+| --- | --- |
+| `directions` | A bitmask indicating all possible turn directions for that lane. |
+| `valid` (Optional) | A bitmask indicating valid turn directions for following the route initially. A lane is marked valid if it can be used at the start of the maneuver but might require further lane changes. |
+| `active` (Optional) | A bitmask indicating active turn directions for continuing along the route without needing additional lane changes. A lane is marked active if it is the best lane for following the maneuver as intended.|
+
+The directions, valid, and active fields use the following bitmask values:
+
+| Decimal Value | Name | Description |
+| --- | --- | --- |
+| 0 | Empty | No turn lane or undefined |
+| 1 | None | No specific direction |
+| 2 | Through | Goes straight |
+| 4 | SharpLeft | Turns sharply to the left |
+| 8 | Left | Turns left |
+| 16 | SlightLeft | Turns slightly to the left |
+| 32 | SlightRight | Turns slightly to the right |
+| 64 | Right | Turns right |
+| 128 | SharpRight | Turns sharply to the right |
+| 256 | Reverse | U-turn |
+| 512 | MergeToLeft | Lane merges to the left |
+| 1024 | MergeToRight | Lane merges to the right |
+
+Example of a lanes array with two lanes: the first lane can only turn left and is marked as the preferred (active) lane for left turns. The second lane allows going left or straight, but it is marked as valid only for left turns in this maneuver context:
+
+```
+"lanes": [
+  {
+    "directions": 8,   // bitmask for Left (8)
+    "active": 8        // indicates this lane should be preferred for a left turn
+  },
+  {
+    "directions": 10,  // bitmask for Left (8) + Straight (2)
+    "valid": 8         // indicates this lane can be used for a left turn
+  }
+]
+```
 
 In the future, look for additional maneuver information to enhance navigation applications, including landmark usage.
 
