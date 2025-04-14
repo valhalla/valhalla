@@ -7,6 +7,7 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
 
+#include <gtest/gtest.h>
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
@@ -130,25 +131,151 @@ public:
 TEST(Graphbuilder, NewTimezones) {
   TestNodeInfo test_node;
   auto* sql_db = GetDBHandle(VALHALLA_BUILD_DIR "test/data/tz.sqlite");
+  auto geos_context = NewGEOSContext();
 
   auto sconn = make_spatialite_cache(sql_db);
   const auto& tzdb = DateTime::get_tz_db();
 
   // America/Ciudad_Juarez
-  auto ciudad_juarez_polys = GetTimeZones(sql_db, {-106.450948, 31.669746, -106.386046, 31.724371});
+  auto ciudad_juarez_polys =
+      GetTimeZones(sql_db, geos_context, {-106.450948, 31.669746, -106.386046, 31.724371});
   EXPECT_EQ(ciudad_juarez_polys.begin()->first, tzdb.to_index("America/Ciudad_Juarez"));
   test_node.set_timezone(ciudad_juarez_polys.begin()->first);
   EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("America/Ojinaga"));
   EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
 
   // Asia/Qostanay
-  auto qostanay_polys = GetTimeZones(sql_db, {62.41766759, 51.37601571, 64.83104595, 52.71089583});
+  auto qostanay_polys =
+      GetTimeZones(sql_db, geos_context, {62.41766759, 51.37601571, 64.83104595, 52.71089583});
   EXPECT_EQ(qostanay_polys.begin()->first, tzdb.to_index("Asia/Qostanay"));
   test_node.set_timezone(qostanay_polys.begin()->first);
   EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("Asia/Qyzylorda"));
   EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
 
   sqlite3_close(sql_db);
+}
+
+TEST(Graphbuilder, AdminBbox) {
+  auto* db = GetDBHandle(VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite");
+  ASSERT_NE(db, nullptr);
+  auto cache = make_spatialite_cache(db);
+  auto geos_context = NewGEOSContext();
+
+  const auto& tiling = TileHierarchy::levels().back().tiles;
+
+  // Problematic tile in Belgium where boost::geometry::intersection(box, polygon) fails to produce
+  // multiple polygons.
+  const GraphId id(811462);
+  GraphTileBuilder graphtile(tile_dir, id, false);
+  std::unordered_map<uint32_t, bool> drive_on_right;
+  std::unordered_map<uint32_t, bool> allow_intersection_names;
+  language_poly_index language_polys;
+
+  const AABB2<PointLL> tile_bounds = tiling.TileBounds(id);
+  const double eps = 1e-3;
+  const AABB2<PointLL> tile_bbox(tile_bounds.minx() - eps, tile_bounds.miny() - eps,
+                                 tile_bounds.maxx() + eps, tile_bounds.maxy() + eps);
+
+  auto admin_polys = GetAdminInfo(db, geos_context, drive_on_right, allow_intersection_names,
+                                  language_polys, tile_bbox, graphtile);
+
+  const auto admin_name = [&](const Admin& admin) {
+    return admin.country_iso() + "/" + admin.state_iso();
+  };
+
+  ASSERT_EQ(admin_polys.size(), 3);
+  EXPECT_EQ(admin_name(graphtile.admins_builder(0)), "/"); // default empty strings
+  EXPECT_EQ(admin_name(graphtile.admins_builder(1)), "BE/VLG");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(2)), "BE/WAL");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(3)), "BE/");
+
+  // fr, nl, nl, fr
+  ASSERT_EQ(language_polys.size(), 4);
+
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL(tile_bbox.minx() + eps, tile_bbox.miny() + eps), graphtile))),
+            "BE/VLG");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL(tile_bbox.maxx() - eps, tile_bbox.miny() + eps), graphtile))),
+            "BE/VLG");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL(tile_bbox.minx() + eps, tile_bbox.maxy() - eps), graphtile))),
+            "BE/VLG");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL(tile_bbox.maxx() - eps, tile_bbox.maxy() - eps), graphtile))),
+            "BE/VLG");
+
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL((tile_bbox.minx() + tile_bbox.maxx()) / 2,
+                                       tile_bbox.miny() + eps),
+                               graphtile))),
+            "BE/WAL");
+
+  // std::string svg_file = "debug_" + std::to_string(id.tileid()) + ".svg";
+  // std::ofstream svg(svg_file);
+
+  // // Convert polygons and determine bounds
+  // double minx = std::numeric_limits<double>::max(), miny = std::numeric_limits<double>::max();
+  // double maxx = std::numeric_limits<double>::lowest(), maxy =
+  // std::numeric_limits<double>::lowest();
+
+  // // First collect bounds from all polygons and points
+  // for (const auto& admin_poly : admin_polys) {
+  //   for (const auto& pt : admin_poly.second) {
+  //     for (const auto& outer : pt.outer()) {
+  //       minx = std::min(minx, double(outer.x()));
+  //       miny = std::min(miny, double(outer.y()));
+  //       maxx = std::max(maxx, double(outer.x()));
+  //       maxy = std::max(maxy, double(outer.y()));
+  //     }
+  //   }
+  // }
+
+  // // Add some margin
+  // double margin = (maxx - minx) * 0.05;
+  // minx -= margin;
+  // miny -= margin;
+  // maxx += margin;
+  // maxy += margin;
+
+  // // SVG header
+  // svg << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n";
+  // svg << "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1200\" height=\"800\" ";
+  // svg << "viewBox=\"" << minx << " " << miny << " " << (maxx - minx) << " " << (maxy - miny)
+  //     << "\">\n";
+
+  // // Draw original admin polygons in green
+  // int color_idx = 0;
+  // for (const auto& admin_poly : admin_polys) {
+  //   int g = 100 + (color_idx % 5) * 30;
+  //   svg << "<path d=\"";
+  //   for (const auto& poly : admin_poly.second) {
+  //     bool first = true;
+  //     for (const auto& pt : poly.outer()) {
+  //       svg << (first ? "M" : "L") << double(pt.x()) << "," << double(pt.y()) << " ";
+  //       first = false;
+  //     }
+  //     svg << "Z ";
+  //   }
+  //   svg << "\" fill=\"rgb(0," << g
+  //       << ",0)\" fill-opacity=\"0.3\" stroke=\"black\" stroke-width=\"0.001\"/>\n";
+  //   color_idx++;
+  // }
+
+  // // Draw tile boundary
+  // svg << "<rect x=\"" << tile_bbox.minx() << "\" y=\"" << tile_bbox.miny() << "\" width=\""
+  //     << (tile_bbox.maxx() - tile_bbox.minx()) << "\" height=\""
+  //     << (tile_bbox.maxy() - tile_bbox.miny())
+  //     << "\" fill=\"none\" stroke=\"black\" stroke-width=\"0.002\"/>\n";
+
+  // // SVG footer
+  // svg << "</svg>\n";
+  // svg.close();
 }
 
 class HarrisburgTestSuiteEnv : public ::testing::Environment {
