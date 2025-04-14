@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <future>
 #include <memory>
+#include <set>
 #include <string>
 #include <thread>
 #include <unordered_set>
@@ -529,9 +530,10 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::vector<float>& distances,
                 const std::vector<uint32_t>& route_types,
                 bool tile_within_one_tz,
-                const std::multimap<uint32_t, multi_polygon_type>& tz_polys,
+                const std::multimap<uint32_t, geometry_type>& tz_polys,
                 uint32_t& no_dir_edge_count) {
   auto t1 = std::chrono::high_resolution_clock::now();
+  auto geos_context = NewGEOSContext();
 
   std::set<uint64_t> added_stations;
   std::set<uint64_t> added_egress;
@@ -602,8 +604,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       if (timezone == 0) {
         // fallback to tz database.
-        timezone =
-            (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, station_ll);
+        timezone = (tile_within_one_tz) ? tz_polys.begin()->first
+                                        : GetMultiPolyId(tz_polys, geos_context, station_ll);
 
         if (timezone == 0) {
           LOG_WARN("Timezone not found for station " + station.name());
@@ -647,8 +649,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         if (timezone == 0) {
           // fallback to tz database.
-          timezone =
-              (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, egress_ll);
+          timezone = (tile_within_one_tz) ? tz_polys.begin()->first
+                                          : GetMultiPolyId(tz_polys, geos_context, egress_ll);
           if (timezone == 0) {
             LOG_WARN("Timezone not found for egress " + egress.name());
           }
@@ -824,8 +826,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     if (timezone == 0) {
       // fallback to tz database.
-      timezone =
-          (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, platform_ll);
+      timezone = (tile_within_one_tz) ? tz_polys.begin()->first
+                                      : GetMultiPolyId(tz_polys, geos_context, platform_ll);
       if (timezone == 0) {
         LOG_WARN("Timezone not found for platform " + platform.name());
       }
@@ -1002,6 +1004,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     LOG_WARN("Time zone db " + *database + " not found. Not saving time zone information from db.");
   }
 
+  auto geos_context = NewGEOSContext();
   const auto& tiles = TileHierarchy::levels().back().tiles;
   // Iterate through the tiles in the queue and find any that include stops
   for (; tile_start != tile_end; ++tile_start) {
@@ -1169,9 +1172,9 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::vector<uint32_t> route_types = AddRoutes(tile_pbf, tilebuilder_transit);
     auto tile_bounds = tiles.TileBounds(tile_id.tileid());
     bool tile_within_one_tz = false;
-    std::multimap<uint32_t, multi_polygon_type> tz_polys;
+    std::multimap<uint32_t, geometry_type> tz_polys;
     if (tz_db) {
-      tz_polys = GetTimeZones(*tz_db, tile_bounds);
+      tz_polys = GetTimeZones(*tz_db, geos_context, tile_bounds);
       if (tz_polys.size() < 2) {
         tile_within_one_tz = true;
       }

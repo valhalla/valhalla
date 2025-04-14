@@ -1,17 +1,14 @@
 #include "mjolnir/graphbuilder.h"
 #include "baldr/graphreader.h"
-#include "midgard/sequence.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/pbfgraphparser.h"
-#include "mjolnir/util.h"
-
-#include <string>
 
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
-#include "test.h"
+#include <string>
 
 using boost::property_tree::ptree;
 using namespace valhalla;
@@ -19,8 +16,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 using valhalla::baldr::GraphId;
 using valhalla::baldr::GraphReader;
-using valhalla::mjolnir::build_tile_set;
-using valhalla::mjolnir::TileManifest;
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -131,22 +126,85 @@ TEST(Graphbuilder, NewTimezones) {
   TestNodeInfo test_node;
   auto sql_db = Sqlite3::open(VALHALLA_BUILD_DIR "test/data/tz.sqlite");
   ASSERT_TRUE(sql_db);
+  auto geos_context = NewGEOSContext();
 
   const auto& tzdb = DateTime::get_tz_db();
 
   // America/Ciudad_Juarez
-  auto ciudad_juarez_polys = GetTimeZones(*sql_db, {-106.450948, 31.669746, -106.386046, 31.724371});
+  auto ciudad_juarez_polys =
+      GetTimeZones(*sql_db, geos_context, {-106.450948, 31.669746, -106.386046, 31.724371});
   EXPECT_EQ(ciudad_juarez_polys.begin()->first, tzdb.to_index("America/Ciudad_Juarez"));
   test_node.set_timezone(ciudad_juarez_polys.begin()->first);
   EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("America/Ojinaga"));
   EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
 
   // Asia/Qostanay
-  auto qostanay_polys = GetTimeZones(*sql_db, {62.41766759, 51.37601571, 64.83104595, 52.71089583});
+  auto qostanay_polys =
+      GetTimeZones(*sql_db, geos_context, {62.41766759, 51.37601571, 64.83104595, 52.71089583});
   EXPECT_EQ(qostanay_polys.begin()->first, tzdb.to_index("Asia/Qostanay"));
   test_node.set_timezone(qostanay_polys.begin()->first);
   EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("Asia/Qyzylorda"));
   EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
+}
+
+TEST(Graphbuilder, AdminBbox) {
+  auto admin_db = Sqlite3::open(VALHALLA_BUILD_DIR "test/data/language_admin.sqlite");
+  auto geos_context = NewGEOSContext();
+
+  const auto& tiling = TileHierarchy::levels().back().tiles;
+
+  // Problematic tile in Belgium where boost::geometry::intersection(box, polygon) fails to produce
+  // multiple polygons.
+  const GraphId id(811462);
+  GraphTileBuilder graphtile(tile_dir, id, false);
+  std::unordered_map<uint32_t, bool> drive_on_right;
+  std::unordered_map<uint32_t, bool> allow_intersection_names;
+  language_poly_index language_polys;
+
+  const AABB2<PointLL> tile_bounds = tiling.TileBounds(id);
+  const double eps = 1e-3;
+  const AABB2<PointLL> tile_bbox(tile_bounds.minx() - eps, tile_bounds.miny() - eps,
+                                 tile_bounds.maxx() + eps, tile_bounds.maxy() + eps);
+
+  auto admin_polys = GetAdminInfo(*admin_db, geos_context, drive_on_right, allow_intersection_names,
+                                  language_polys, tile_bbox, graphtile);
+
+  const auto admin_name = [&](const Admin& admin) {
+    return admin.country_iso() + "/" + admin.state_iso();
+  };
+
+  ASSERT_EQ(admin_polys.size(), 3);
+  EXPECT_EQ(admin_name(graphtile.admins_builder(0)), "/"); // default empty strings
+  EXPECT_EQ(admin_name(graphtile.admins_builder(1)), "BE/VLG");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(2)), "BE/WAL");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(3)), "BE/");
+
+  // fr, nl, nl, fr
+  ASSERT_EQ(language_polys.size(), 4);
+
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL(tile_bbox.minx() + eps, tile_bbox.miny() + eps), graphtile))),
+            "BE/VLG");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL(tile_bbox.maxx() - eps, tile_bbox.miny() + eps), graphtile))),
+            "BE/VLG");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL(tile_bbox.minx() + eps, tile_bbox.maxy() - eps), graphtile))),
+            "BE/VLG");
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL(tile_bbox.maxx() - eps, tile_bbox.maxy() - eps), graphtile))),
+            "BE/VLG");
+
+  EXPECT_EQ(admin_name(graphtile.admins_builder(
+                GetMultiPolyId(admin_polys, geos_context,
+                               PointLL((tile_bbox.minx() + tile_bbox.maxx()) / 2,
+                                       tile_bbox.miny() + eps),
+                               graphtile))),
+            "BE/WAL");
 }
 
 class HarrisburgTestSuiteEnv : public ::testing::Environment {

@@ -439,6 +439,7 @@ void BuildTileSet(const std::string& ways_file,
   } else if (!admin_db && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found. Not saving admin information.");
   }
+  auto geos_context = NewGEOSContext();
 
   database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
@@ -503,24 +504,33 @@ void BuildTileSet(const std::string& ways_file,
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
       bool tile_within_one_admin = false;
-      std::multimap<uint32_t, multi_polygon_type> admin_polys;
+      std::multimap<uint32_t, geometry_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       std::unordered_map<uint32_t, bool> allow_intersection_names;
       language_poly_index language_polys;
 
+      // Tile might contain nodes slightly beyond the bbox.
+      const AABB2<PointLL> tile_bbox = [id, &tiling]() {
+        const double eps = 1e-3;
+        AABB2<PointLL> tile_bounds = tiling.TileBounds(id);
+        AABB2<PointLL> bbox(tile_bounds.minx() - eps, tile_bounds.miny() - eps,
+                            tile_bounds.maxx() + eps, tile_bounds.maxy() + eps);
+        return bbox;
+      }();
+
       if (admin_db) {
-        admin_polys = GetAdminInfo(*admin_db, drive_on_right, allow_intersection_names,
-                                   language_polys, tiling.TileBounds(id), graphtile);
+        admin_polys = GetAdminInfo(*admin_db, geos_context, drive_on_right, allow_intersection_names,
+                                   language_polys, tile_bbox, graphtile);
         if (admin_polys.size() == 1) {
           // TODO - check if tile bounding box is entirely inside the polygon...
           tile_within_one_admin = true;
         }
       }
 
-      std::multimap<uint32_t, multi_polygon_type> tz_polys;
+      std::multimap<uint32_t, geometry_type> tz_polys;
       bool tile_within_one_tz = false;
       if (tz_db) {
-        tz_polys = GetTimeZones(*tz_db, tiling.TileBounds(id));
+        tz_polys = GetTimeZones(*tz_db, geos_context, tile_bbox);
         if (tz_polys.size() == 1) {
           tile_within_one_tz = true;
         }
@@ -558,10 +568,11 @@ void BuildTileSet(const std::string& ways_file,
         std::vector<std::pair<std::string, bool>> default_languages;
 
         if (use_admin_db) {
-          admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
-                                                : GetMultiPolyId(admin_polys, node_ll, graphtile);
+          admin_index = (tile_within_one_admin)
+                            ? admin_polys.begin()->first
+                            : GetMultiPolyId(admin_polys, geos_context, node_ll, graphtile);
           dor = drive_on_right[admin_index];
-          default_languages = GetMultiPolyIndexes(language_polys, node_ll);
+          default_languages = GetMultiPolyIndexes(language_polys, geos_context, node_ll);
 
         } else {
           admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
@@ -1280,8 +1291,8 @@ void BuildTileSet(const std::string& ways_file,
         graphtile.nodes().back().set_drive_on_right(dor);
 
         // Set the time zone index
-        uint32_t tz_index =
-            (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
+        uint32_t tz_index = (tile_within_one_tz) ? tz_polys.begin()->first
+                                                 : GetMultiPolyId(tz_polys, geos_context, node_ll);
 
         graphtile.nodes().back().set_timezone(tz_index);
 

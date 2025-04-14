@@ -1,35 +1,45 @@
 #ifndef VALHALLA_MJOLNIR_ADMIN_H_
 #define VALHALLA_MJOLNIR_ADMIN_H_
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/io/wkt/wkt.hpp>
-
-#include <cstdint>
-#include <unordered_map>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/mjolnir/sqlite3.h>
 
+#include <geos_c.h>
+
+#include <cstdint>
+#include <unordered_map>
+
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-namespace bg = boost::geometry;
 
 namespace valhalla {
 namespace mjolnir {
 
-// Geometry types for admin queries
-typedef bg::model::d2::point_xy<double> point_type;
-typedef bg::model::polygon<point_type> polygon_type;
-typedef bg::model::multi_polygon<polygon_type> multi_polygon_type;
-typedef bg::index::rtree<
-    std::tuple<bg::model::box<point_type>, multi_polygon_type, std::vector<std::string>, bool>,
-    bg::index::rstar<16>>
-    language_poly_index;
+typedef std::shared_ptr<GEOSContextHandle_HS> geos_context_type;
+inline geos_context_type NewGEOSContext() {
+  return geos_context_type(GEOS_init_r(), GEOS_finish_r);
+}
+
+// Helper struct for simple wrapping of GEOS types by `std::unique_ptr`
+struct GEOSDeleter {
+  geos_context_type context;
+
+  GEOSDeleter(geos_context_type ctx) : context(std::move(ctx)) {
+  }
+
+  void operator()(GEOSGeometry* p) const {
+    GEOSGeom_destroy_r(context.get(), p);
+  };
+  void operator()(GEOSWKBReader* p) const {
+    GEOSWKBReader_destroy_r(context.get(), p);
+  };
+};
+
+typedef std::unique_ptr<GEOSGeometry, GEOSDeleter> geometry_type;
+typedef std::vector<std::tuple<geometry_type, std::vector<std::string>, bool>> language_poly_index;
 
 /**
  * Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
@@ -38,7 +48,8 @@ typedef bg::index::rtree<
  * @param  ll         point that needs to be checked.
  * @param  graphtile  graphtilebuilder that is used to determine if we are a country poly or not.
  */
-uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys,
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, geometry_type>& polys,
+                        geos_context_type context,
                         const PointLL& ll,
                         GraphTileBuilder& graphtile);
 
@@ -48,7 +59,9 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
  * @param  polys      unordered map of polys.
  * @param  ll         point that needs to be checked.
  */
-uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys, const PointLL& ll);
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, geometry_type>& polys,
+                        geos_context_type context,
+                        const PointLL& ll);
 
 /**
  * Get the vector of languages for this LL.  Used by admin areas.  Checks if the pointLL is covered_by
@@ -58,14 +71,18 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
  * @return  Returns the vector of pairs {language, is_default_language}
  */
 std::vector<std::pair<std::string, bool>>
-GetMultiPolyIndexes(const language_poly_index& language_ploys, const PointLL& ll);
+GetMultiPolyIndexes(const language_poly_index& language_ploys,
+                    geos_context_type context,
+                    const PointLL& ll);
 
 /**
  * Get the timezone polys from the db
  * @param  db           sqlite3 db handle
  * @param  aabb         bb of the tile
  */
-std::multimap<uint32_t, multi_polygon_type> GetTimeZones(Sqlite3& db, const AABB2<PointLL>& aabb);
+std::multimap<uint32_t, geometry_type>
+GetTimeZones(Sqlite3& db, geos_context_type context, const AABB2<PointLL>& aabb);
+
 /**
  * Get the admin data from the spatialite db given an SQL statement
  * @param  db               sqlite3 db handle
@@ -84,8 +101,9 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(Sqlite3& db, const AABB
 void GetData(Sqlite3& db,
              sqlite3_stmt* stmt,
              const std::string& sql,
+             geos_context_type context,
              GraphTileBuilder& tilebuilder,
-             std::multimap<uint32_t, multi_polygon_type>& polys,
+             std::multimap<uint32_t, geometry_type>& polys,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              language_poly_index& language_polys,
              bool languages_only);
@@ -104,8 +122,9 @@ void GetData(Sqlite3& db,
  * @param  aabb              bb of the tile
  * @param  tilebuilder       Graph tile builder
  */
-std::multimap<uint32_t, multi_polygon_type>
+std::multimap<uint32_t, geometry_type>
 GetAdminInfo(Sqlite3& db,
+             geos_context_type context,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
              language_poly_index& language_polys,
