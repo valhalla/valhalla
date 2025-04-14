@@ -269,6 +269,20 @@ baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape) {
   geojson->emplace("coordinates", coords);
   return geojson;
 }
+
+void geojson_shape(const std::vector<midgard::PointLL> shape, rapidjson::writer_wrapper_t& writer) {
+  writer("type", "LineString");
+  writer.start_array("coordinates");
+  writer.set_precision(6);
+  for (const auto& p : shape) {
+    writer.start_array();
+    writer(p.lng());
+    writer(p.lat());
+    writer.end_array();
+  }
+  writer.set_precision(3);
+  writer.end_array();
+}
 } // namespace tyr
 } // namespace valhalla
 
