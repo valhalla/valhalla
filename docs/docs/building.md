@@ -1,8 +1,10 @@
-We aim to make Valhalla installable on every half-modern hardware, platform and architecture. If the below instructions are not working for you, we'd be happy if you [file an issue or open a PR with a fix](https://github.com/valhalla/valhalla/blob/master/CONTRIBUTING.md).
+# Build from Source
 
-### Build Configuration (all platforms)
+We aim to make Valhalla installable on every half-modern hardware, platform and architecture. If the below instructions are not working for you, we'd be happy if you [file an issue or open a PR with a fix](contributing.md).
 
-Valhalla uses CMake as build system. When compiling with `gcc` (GNU Compiler Collection), currently version 5 or newer is supported.
+## Build Configuration (all platforms)
+
+Valhalla uses [CMake](https://cmake.org/) as the build system. When compiling with `gcc` (GNU Compiler Collection), currently version 5 or newer is supported.
 
 Important build options include:
 
@@ -13,8 +15,8 @@ Important build options include:
 | `-DENABLE_HTTP` (`On`/`Off`) | Build with `curl` support (defaults to on)|
 | `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings (defaults to on)|
 | `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service (defaults to on)|
-| `-DENABLE_THREAD_SAFE_TILE_REF_COUNT` (`ON` / `OFF`) | If ON uses shared_ptr as tile reference (i.e. it is thread safe, defaults to off)|
-| `-DENABLE_CCACHE` (`On` / `Off`) | Speed up incremental rebuilds via ccache (defaults to on)|
+| `-DENABLE_THREAD_SAFE_TILE_REF_COUNT` (`ON` / `OFF`) | If ON uses `shared_ptr` as tile reference (i.e. it is thread safe, defaults to off)|
+| `-DENABLE_CCACHE` (`On` / `Off`) | Speed up incremental rebuilds via `ccache` (defaults to on)|
 | `-DENABLE_BENCHMARKS` (`On` / `Off`) | Enable microbenchmarking (defaults to on)|
 | `-DENABLE_TESTS` (`On` / `Off`) | Enable Valhalla tests (defaults to on)|
 | `-DENABLE_COVERAGE` (`On` / `Off`) | Build with coverage instrumentalisation (defaults to off)|
@@ -29,7 +31,7 @@ Important build options include:
 | `-DPREFER_SYSTEM_DEPS` (`ON` / `OFF`) | Whether to use internally vendored headers or find the equivalent external package (defaults to off).|
 | `-DENABLE_GDAL` (`ON` / `OFF`) | Whether to include GDAL as a dependency (used for GeoTIFF serialization of isochrone grid) (defaults to off).|
 
-### Building with `vcpkg` - any platform
+## Building with `vcpkg` - any platform
 
 Instead of installing the dependencies system-wide, you can also opt to use [`vcpkg`](https://github.com/microsoft/vcpkg).
 
@@ -38,9 +40,11 @@ The following commands should work on all platforms:
 ```bash
 git clone --recurse-submodules https://github.com/valhalla/valhalla
 cd valhalla
+
 git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout <some-tag>
 ./vcpkg/bootstrap-vcpkg.sh
 # windows: cmd.exe /c bootstrap-vcpkg.bat
+
 # only build Release versions of dependencies, not Debug
 echo "set(VCPKG_BUILD_TYPE Release)" >> vcpkg/triplets/x64-linux.cmake
 # windows: echo.set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
@@ -62,7 +66,7 @@ To install on a Debian or Ubuntu system you need to install its dependencies wit
 ./scripts/install-linux-deps.sh
 ```
 
-Now you can build and install Valhalla, e.g. 
+Now you can build and install Valhalla, e.g.
 
 ```bash
 # will build to ./build
@@ -105,25 +109,31 @@ sudo make -C build install
 ### Building from Source - Windows
 
 It's recommended to work with the following toolset:
+
 - Visual Studio with C++ support
 - Visual Studio Code (easier and lighter to handle)
 - [vcpkg](https://github.com/Microsoft/vcpkg) to install packages
 - [CMake](https://cmake.org/download/)
 
-1. Install the dependencies with `vcpkg`:
-```
+Install the dependencies with `vcpkg`:
+
+```powershell
 git -C C:\path\to\vcpkg checkout f330a32
 # only build release versions for vcpkg packages
 echo.set(VCPKG_BUILD_TYPE Release)>> path\to\vcpkg\triplets\x64-windows.cmake
 cd C:\path\to\valhalla
 C:\path\to\vcpkg.exe install --triplet x64-windows
 ```
-2. Let CMake configure the build with the required modules enabled. The final command for `x64` could look like
-```
+
+Let CMake configure the build with the required modules enabled. The final command for `x64` could look like
+
+```powershell
 "C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_HTTP=ON -DENABLE_CCACHE=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/valhalla -Bpath/to/valhalla/build -G "Visual Studio 16 2019" -T host=x64 -A x64
 ```
-3. Run the build for all targets.
-```
+
+Run the build for all targets.
+
+```powershell
 cmake -B build -S C:\path\to\valhalla --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:8
 ```
 
@@ -133,17 +143,20 @@ The artifacts will be built to `./build/Release`.
 
 - if the build fails on something with `date_time`, chances are you don't have [`make`](https://gnuwin32.sourceforge.net/packages/make.htm) and/or [`awk`](https://gnuwin32.sourceforge.net/packages/gawk.htm) installed, which is needed to properly configure `third_party/tz`. Even so, it might still fail because the used MS shell can't handle `mv` properly. In that case simply mv `third_party/tz/leapseconds.out` to `third_party/tz/leapseconds` and start the build again
 
-### Include Valhalla as a project dependency
+## Include Valhalla as a project dependency
 
-When importing `libvalhalla` as a dependency in a project, it's important to know that we're using both CMake and `pkg-config` to resolve our own dependencies. Check the root `CMakeLists.txt` for details. This is important in case you'd like to bring your own dependencies, such as cURL or protobuf. It's always safe to use `PKG_CONFIG_PATH` environment variable to point CMake to custom installations, however, for dependencies we resolve with `find_package` you'll need to check CMake's built-in `Find*` modules on how to provide the proper paths.
+When importing `libvalhalla` as a dependency in a project, it's important to know that we're using **both** CMake **and** [`pkg-config`](https://www.freedesktop.org/wiki/Software/pkg-config/) to resolve our own dependencies. Check the root `CMakeLists.txt` for details. This is important in case you'd like to bring your own dependencies, such as cURL or protobuf. It's always safe to use `PKG_CONFIG_PATH` environment variable to point CMake to custom installations, however, for dependencies we resolve with `find_package` you'll need to check CMake's built-in `Find*` modules on how to provide the proper paths.
 
-To resolve `libvalhalla`'s linker/library paths/options, we recommend to use `pkg-config` or `pkg_check_modules` (in CMake).
+To resolve `libvalhalla`'s linker/library paths/options, we recommend to use `pkg-config` or [`pkg_check_modules`](https://cmake.org/cmake/help/latest/module/FindPkgConfig.html#command:pkg_check_modules) (in CMake).
 
-Currently, `rapidjson`, `date` & `dirent` (Win only) headers are vendored in `third_party`. Consuming applications are encouraged to use `pkg-config` to resolve Valhalla and its dependencies which will automatically install those headers to `/path/to/include/valhalla/third_party/{rapidjson, date, dirent.h}` and can be `#include`d appropriately.
+Currently, `rapidjson`, `date` & `dirent` (Windows only) headers are vendored in `third_party`. Consuming applications are encouraged to use `pkg-config` to resolve Valhalla and its dependencies which will automatically install those headers to `/path/to/include/valhalla/third_party/{rapidjson, date, dirent.h}` and can be `#include`d appropriately.
 
 ## Running Valhalla server on Unix
 
-The following script should be enough to make some routing data and start a server using it. (Note - if you would like to run an elevation lookup service with Valhalla follow the instructions [here](./elevation.md)).
+The following script should be enough to make some routing data and start a server using it.
+
+!!! tip
+    Instructions for [running an **elevation lookup service**](./elevation.md) with Valhalla.
 
 ```bash
 # download some data and make tiles out of it
