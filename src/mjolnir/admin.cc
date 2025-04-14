@@ -11,6 +11,23 @@
 namespace valhalla {
 namespace mjolnir {
 
+namespace {
+
+// Replace polygon by bbox if it is entirely inside the polygon for faster calculus.
+// Sadly, `bg::intersection(bg::multi_polygon, bg::multi_polygon)` produces too many points,
+// while `bg::intersection(bg::box, bg::multi_polygon)` doesn't work in all cases (sometimes
+// produces bad multi_polygon) if bbox is not fully covered by polygon.
+void ClipPolygon(multi_polygon_type& poly, const AABB2<PointLL>& bbox) {
+  multi_polygon_type bbox_poly;
+  bg::convert(bg::model::box<point_type>{{bbox.minx(), bbox.miny()}, {bbox.maxx(), bbox.maxy()}},
+              bbox_poly);
+  if (bg::within(bbox_poly, poly)) {
+    poly = std::move(bbox_poly);
+  }
+}
+
+} // namespace
+
 // Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
 sqlite3* GetDBHandle(const std::string& database) {
 
@@ -150,6 +167,7 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
 
       multi_polygon_type multi_poly;
       boost::geometry::read_wkt(geom, multi_poly);
+      ClipPolygon(multi_poly, aabb);
       polys.emplace(idx, multi_poly);
       result = sqlite3_step(stmt);
     }
@@ -176,6 +194,7 @@ std::vector<std::string> ParseLanguageTokens(const std::string& lang_tag) {
 void GetData(sqlite3* db_handle,
              sqlite3_stmt* stmt,
              const std::string& sql,
+             const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder,
              std::multimap<uint32_t, multi_polygon_type>& polys,
              std::unordered_map<uint32_t, bool>& drive_on_right,
@@ -246,6 +265,7 @@ void GetData(sqlite3* db_handle,
       uint32_t index = tilebuilder.AddAdmin(country_name, state_name, country_iso, state_iso);
       multi_polygon_type multi_poly;
       bg::read_wkt(geom, multi_poly);
+      ClipPolygon(multi_poly, aabb);
       polys.emplace(index, multi_poly);
       drive_on_right.emplace(index, dor);
       allow_intersection_names.emplace(index, intersection_name);
@@ -280,6 +300,7 @@ void GetData(sqlite3* db_handle,
 
       multi_polygon_type multi_poly;
       bg::read_wkt(geom, multi_poly);
+      ClipPolygon(multi_poly, aabb);
       bg::model::box<point_type> box{};
       bg::envelope(multi_poly, box);
 
@@ -329,7 +350,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) order by admin_level desc, name;";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
+  GetData(db_handle, stmt, sql, aabb, tilebuilder, polys, drive_on_right, allow_intersection_names,
           language_polys, true);
 
   // state query
@@ -345,7 +366,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) order by state.name, country.name;";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
+  GetData(db_handle, stmt, sql, aabb, tilebuilder, polys, drive_on_right, allow_intersection_names,
           language_polys);
 
   // country query
@@ -359,7 +380,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) order by name;";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
+  GetData(db_handle, stmt, sql, aabb, tilebuilder, polys, drive_on_right, allow_intersection_names,
           language_polys);
 
   if (stmt) { // just in case something bad happened.

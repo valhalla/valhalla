@@ -509,9 +509,18 @@ void BuildTileSet(const std::string& ways_file,
       std::unordered_map<uint32_t, bool> allow_intersection_names;
       language_poly_index language_polys;
 
+      // Tile might contain nodes slightly beyond the bbox.
+      const AABB2<PointLL> tile_bbox = [id, &tiling]() {
+        const double eps = 1e-3;
+        AABB2<PointLL> tile_bounds = tiling.TileBounds(id);
+        AABB2<PointLL> bbox(tile_bounds.minx() - eps, tile_bounds.miny() - eps,
+                            tile_bounds.maxx() + eps, tile_bounds.maxy() + eps);
+        return bbox;
+      }();
+
       if (admin_db_handle) {
         admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names,
-                                   language_polys, tiling.TileBounds(id), graphtile);
+                                   language_polys, tile_bbox, graphtile);
         if (admin_polys.size() == 1) {
           // TODO - check if tile bounding box is entirely inside the polygon...
           tile_within_one_admin = true;
@@ -519,7 +528,7 @@ void BuildTileSet(const std::string& ways_file,
       }
 
       bool tile_within_one_tz = false;
-      auto tz_polys = GetTimeZones(tz_db_handle, tiling.TileBounds(id));
+      auto tz_polys = GetTimeZones(tz_db_handle, tile_bbox);
       if (tz_polys.size() == 1) {
         tile_within_one_tz = true;
       }
