@@ -43,11 +43,12 @@ void serialize_duration(const valhalla::Matrix& matrix,
 void serialize_distance(const valhalla::Matrix& matrix,
                         rapidjson::writer_wrapper_t& writer,
                         size_t start_td,
-                        const size_t td_count) {
+                        const size_t td_count,
+                        double distance_scale) {
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for distance in matrix result
     if (matrix.distances()[i] != kMaxCost) {
-      writer(static_cast<uint64_t>(matrix.distances()[i]));
+      writer(static_cast<uint64_t>(matrix.distances()[i]) * distance_scale);
     } else {
       writer(static_cast<std::nullptr_t>(nullptr));
     }
@@ -302,7 +303,7 @@ std::string serialize(const Api& request, double distance_scale) {
     for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
       const auto first_td = source_index * options.targets_size();
       writer.start_array();
-      serialize_distance(request.matrix(), writer, first_td, options.targets_size());
+      serialize_distance(request.matrix(), writer, first_td, options.targets_size(), distance_scale);
       writer.end_array();
     }
     writer.end_array();
