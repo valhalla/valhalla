@@ -885,9 +885,14 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
     curr_man->set_elevator(true);
   }
 
-  // If needed, set steps
+  // If needed, set indoor steps
   if (next_man->indoor_steps()) {
     curr_man->set_indoor_steps(true);
+  }
+
+  // If needed, set steps
+  if (next_man->is_steps()) {
+    curr_man->set_steps(true);
   }
 
   // If needed, set escalator
@@ -2218,6 +2223,18 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
     return false;
   }
   if (maneuver.indoor_steps() && prev_edge->IsStepsUse() && prev_edge->indoor()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process steps
+  if (maneuver.is_steps() && !(prev_edge->IsStepsUse())) {
+    return false;
+  }
+  if (prev_edge->IsStepsUse() && !maneuver.is_steps()) {
+    return false;
+  }
+  if (maneuver.is_steps() && prev_edge->IsStepsUse()) {
     return true;
   }
 
