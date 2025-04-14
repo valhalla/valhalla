@@ -39,6 +39,8 @@ struct stats {
   uint32_t compressed_count;
   uint32_t updated_count;
   uint32_t dup_count;
+  uint32_t lower_bound_count;
+  uint32_t upper_bound_count;
 
   // Accumulate counts from all threads
   void operator()(const stats& other) {
@@ -47,6 +49,8 @@ struct stats {
     compressed_count += other.compressed_count;
     updated_count += other.updated_count;
     dup_count += other.dup_count;
+    lower_bound_count += other.lower_bound_count;
+    upper_bound_count += other.upper_bound_count;
   }
 };
 
@@ -146,8 +150,8 @@ ParseTrafficFile(const std::vector<std::string>& filenames, stats& stat) {
                     if (float speed =
                             decompress_speed_bucket((*traffic->second.coefficients).data(), i);
                         is_possible_outlier(speed)) {
-                      LOG_WARN("Detected possible predicted speed outlier: " + std::to_string(speed) +
-                               ".");
+                      stat.lower_bound_count += speed < kMinSpeedKph;
+                      stat.upper_bound_count += speed > kMaxAssumedSpeed;
                     }
                   }
                   stat.compressed_count++;
@@ -349,7 +353,7 @@ int main(int argc, char** argv) {
 
   // collect some stats
   uint32_t constrained_count = 0, free_flow_count = 0, compressed_count = 0, updated_count = 0,
-           duplicate_count = 0;
+           duplicate_count = 0, lower_bound_count = 0, upper_bound_count = 0;
   for (auto& result : results) {
     try {
       auto thread_stats = result.get_future().get();
@@ -358,6 +362,8 @@ int main(int argc, char** argv) {
       compressed_count += thread_stats.compressed_count;
       updated_count += thread_stats.updated_count;
       duplicate_count += thread_stats.dup_count;
+      lower_bound_count += thread_stats.lower_bound_count;
+      upper_bound_count = thread_stats.upper_bound_count;
     } catch (std::exception& e) {
       // TODO: throw further up the chain?
     }
@@ -368,6 +374,8 @@ int main(int argc, char** argv) {
   LOG_INFO("Parsed " + std::to_string(compressed_count) + " compressed records.");
   LOG_INFO("Updated " + std::to_string(updated_count) + " directed edges.");
   LOG_INFO("Duplicate count " + std::to_string(duplicate_count) + ".");
+  LOG_INFO("Speeds below lower bound count " + std::to_string(lower_bound_count) + ".");
+  LOG_INFO("Speeds above upper bound count " + std::to_string(upper_bound_count) + ".");
   LOG_INFO("Finished");
 
   if (!summary)
