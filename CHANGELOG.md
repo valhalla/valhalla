@@ -54,6 +54,7 @@
    * UPDATED: bump tz from 2025a to 2025b [#5164](https://github.com/valhalla/valhalla/pull/5164)
    * ADDED: Mutithreaded `PBFGraphParser::ParseWays()` [#5143](https://github.com/valhalla/valhalla/pull/5143)
    * CHANGED: "Multilevel Way" message logging level changed from WARN to DEBUG [#5188](https://github.com/valhalla/valhalla/pull/5188)
+   * CHANGED: Clip admin/languages/timezones polygons by tile bbox for faster calculus [#5193](https://github.com/valhalla/valhalla/pull/5193)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
