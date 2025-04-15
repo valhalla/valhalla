@@ -213,7 +213,12 @@ int main(int argc, char* argv[]) {
   }
 
   // Timing with CostMatrix
-  CostMatrix matrix;
+  CostMatrix matrix(config.get_child("thor"));
+  hierarchy_limits_config_t hl_config =
+      parse_hierarchy_limits_from_config(config, "costmatrix", false);
+  check_hierarchy_limits(mode_costing[int(mode)]->GetHierarchyLimits(), mode_costing[int(mode)],
+                         options.costings().find(options.costing_type())->second.options(), hl_config,
+                         true, mode_costing[int(mode)]->UseHierarchyLimits());
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
@@ -227,7 +232,7 @@ int main(int argc, char* argv[]) {
   LogResults(optimize, options, request.matrix(), log_details);
 
   // Run with TimeDistanceMatrix
-  TimeDistanceMatrix tdm;
+  TimeDistanceMatrix tdm(config.get_child("thor"));
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
     tdm.SourceToTarget(request, reader, mode_costing, mode, max_distance);
