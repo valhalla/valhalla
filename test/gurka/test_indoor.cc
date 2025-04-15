@@ -388,7 +388,31 @@ TEST_F(Indoor, NodeElevatorPenalty) {
             nodes2.at(nodes2.size() - 1).cost().elapsed_cost().cost());
 }
 
-TEST(Standalone, ElevatorMultiCueInstructions) {
+TEST_F(Indoor, MultiLevelStartEnd) {
+  std::string res;
+  rapidjson::Document doc;
+  auto result = gurka::do_action(valhalla::Options::route, map, {"S", "U"}, "pedestrian",
+                                 {{"/locations/0/search_filter/level", "3"},
+                                  {"/locations/1/search_filter/level", "4"}},
+                                 {}, &res);
+  doc.Parse(res.c_str());
+  gurka::assert::raw::expect_path(result, {"ST", "TU"});
+  check_level_changes(doc, {{0, 3.f}, {1, 4.f}});
+}
+
+TEST_F(Indoor, TrivialMultiLevel) {
+  std::string res;
+  rapidjson::Document doc;
+  auto result = gurka::do_action(valhalla::Options::route, map, {"S", "T"}, "pedestrian",
+                                 {{"/locations/0/search_filter/level", "3"},
+                                  {"/locations/1/search_filter/level", "4"}},
+                                 {}, &res);
+  doc.Parse(res.c_str());
+  gurka::assert::raw::expect_path(result, {"ST"});
+  check_level_changes(doc, {{0, 3.f}, {1, 4.f}});
+}
+
+TEST(StandAlone, ElevatorMultiCueInstructions) {
   constexpr double gridsize_metres = 1;
 
   const std::string ascii_map = R"(
