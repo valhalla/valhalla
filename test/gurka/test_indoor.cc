@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -315,7 +315,9 @@ TEST_F(Indoor, CombineStepsManeuvers) {
 }
 
 TEST_F(Indoor, StepsStartManeuver) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "C"}, "pedestrian", {});
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "C"}, "pedestrian",
+                                 {{"/locations/0/search_filter/level", "0"},
+                                  {"/locations/1/search_filter/level", "1"}});
   gurka::assert::raw::expect_path(result, {"BC"});
 
   // Verify maneuver types
