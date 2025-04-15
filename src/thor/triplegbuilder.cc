@@ -1669,6 +1669,10 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
   }
 }
 
+inline bool is_multi_level(const std::vector<std::pair<float, float>>& levels) {
+  return levels.size() == 1 ? levels[0].first != levels[0].second : levels.size() != 0;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -1914,20 +1918,6 @@ void TripLegBuilder::Build(
                     travel_type == PedestrianType::kBlind && mode == sif::TravelMode::kPedestrian,
                     edgeinfo, levels);
 
-    // for the level changes, only consider edges on a single level
-    if (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second) {
-      float lvl = levels.first[0].first;
-      // if this edge is on a different level than the previous one,
-      // add a level change
-      if (std::fabs(lvl - prev_level) >= std::numeric_limits<float>::epsilon()) {
-        auto* change = trip_path.add_level_changes();
-        change->set_level(lvl);
-        change->set_shape_index(begin_index);
-        change->set_precision(std::max(static_cast<uint32_t>(1), levels.second));
-        prev_level = lvl;
-      }
-    }
-
     // some information regarding shape/length trimming
     float trim_start_pct = is_first_edge ? start_pct : 0;
     float trim_end_pct = is_last_edge ? end_pct : 1;
@@ -2007,6 +1997,42 @@ void TripLegBuilder::Build(
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1, edgeinfo.shape().end());
       } else {
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1, edgeinfo.shape().rend());
+      }
+    }
+
+    /**
+     * For the level changes, only consider edges  if
+     *   - they are on a single level
+     *   - they are on multiple levels and either the first or last in leg
+     *     so we can use the start/end level filter to fill up the level changes
+     */
+    if (bool multilevel = is_multi_level(levels.first);
+        (is_first_edge && multilevel) || (is_last_edge && multilevel) ||
+        (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second)) {
+      float lvl = kMaxLevel;
+      if (!multilevel) {
+        lvl = levels.first[0].first;
+      } else if ((is_first_edge && origin.search_filter().has_level_case()) ||
+                 (is_last_edge && dest.search_filter().has_level_case())) {
+        lvl = is_first_edge ? origin.search_filter().level() : dest.search_filter().level();
+      }
+      // if this edge is on a different level than the previous one,
+      // add a level change
+      if (lvl != kMaxLevel && !(is_last_edge && multilevel && !is_first_edge) &&
+          std::fabs(lvl - prev_level) >= std::numeric_limits<float>::epsilon()) {
+        auto* change = trip_path.add_level_changes();
+        change->set_level(lvl);
+        change->set_shape_index(begin_index);
+        change->set_precision(std::max(static_cast<uint32_t>(1), levels.second));
+        prev_level = lvl;
+      }
+
+      // special case multilevel last edge
+      if (is_last_edge && multilevel && dest.search_filter().has_level_case()) {
+        auto* change = trip_path.add_level_changes();
+        change->set_level(dest.search_filter().level());
+        change->set_shape_index(trip_shape.size() - 1);
+        change->set_precision(std::max(static_cast<uint32_t>(1), levels.second));
       }
     }
 
