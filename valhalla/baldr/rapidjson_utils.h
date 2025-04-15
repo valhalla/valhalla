@@ -34,6 +34,16 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+namespace {
+
+// helper to only evaluate a constexpr once a type is known
+template <class... T> constexpr bool always_false = false;
+
+template <typename T>
+constexpr bool is_string_like_v =
+    std::is_constructible_v<std::string, std::remove_cv_t<std::remove_reference_t<T>>>;
+} // namespace
+
 namespace rapidjson {
 
 inline std::string to_string(const rapidjson::Value& value, int decimal_places = -1) {
@@ -323,103 +333,54 @@ public:
     writer.SetMaxDecimalPlaces(precision);
   }
 
-  inline void operator()(const char* key, const char* value) {
-    writer.String(key);
-    writer.String(value);
+  template <typename K, typename V> inline void operator()(K key, V value) {
+    if constexpr (is_string_like_v<K>) {
+      writer.String(key);
+    } else {
+      static_assert(always_false<K>, "Unsupported key type");
+    }
+
+    if constexpr (std::is_same_v<V, int> || std::is_same_v<V, int32_t>) {
+      writer.Int64(static_cast<int64_t>(value));
+    } else if constexpr (std::is_same_v<V, unsigned int> || std::is_same_v<V, uint32_t>) {
+      writer.Uint64(static_cast<uint64_t>(value));
+    } else if constexpr (std::is_same_v<V, uint64_t>) {
+      writer.Uint64(value);
+    } else if constexpr (std::is_same_v<V, int64_t>) {
+      writer.Int64(value);
+    } else if constexpr (is_string_like_v<V>) {
+      writer.String(value);
+    } else if constexpr (std::is_same_v<V, double> || std::is_same_v<V, float>) {
+      writer.Double(value);
+    } else if constexpr (std::is_same_v<V, bool>) {
+      writer.Bool(value);
+    } else if constexpr (std::is_same_v<V, std::nullptr_t>) {
+      writer.Null();
+    } else {
+      static_assert(always_false<V>, "Unsupported value type");
+    }
   }
 
-  inline void operator()(const char* key, const std::string& value) {
-    writer.String(key);
-    writer.String(value);
-  }
-
-  inline void operator()(const char* key, const double value) {
-    writer.String(key);
-    writer.Double(value);
-  }
-
-  inline void operator()(const char* key, const uint64_t value) {
-    writer.String(key);
-    writer.Uint64(value);
-  }
-
-  inline void operator()(const char* key, const int64_t value) {
-    writer.String(key);
-    writer.Int64(value);
-  }
-
-  inline void operator()(const char* key, const bool value) {
-    writer.String(key);
-    writer.Bool(value);
-  }
-
-  inline void operator()(const char* key, const std::nullptr_t) {
-    writer.String(key);
-    writer.Null();
-  }
-
-  inline void operator()(const std::string& key, const char* value) {
-    writer.String(key);
-    writer.String(value);
-  }
-
-  inline void operator()(const std::string& key, const std::string& value) {
-    writer.String(key);
-    writer.String(value);
-  }
-
-  inline void operator()(const std::string& key, const double value) {
-    writer.String(key);
-    writer.Double(value);
-  }
-
-  inline void operator()(const std::string& key, const uint64_t value) {
-    writer.String(key);
-    writer.Uint64(value);
-  }
-
-  inline void operator()(const std::string& key, const int64_t value) {
-    writer.String(key);
-    writer.Int64(value);
-  }
-
-  inline void operator()(const std::string& key, const bool value) {
-    writer.String(key);
-    writer.Bool(value);
-  }
-
-  inline void operator()(const std::string& key, const std::nullptr_t) {
-    writer.String(key);
-    writer.Null();
-  }
-
-  inline void operator()(const char* value) {
-    writer.String(value);
-  }
-
-  inline void operator()(const std::string& value) {
-    writer.String(value);
-  }
-
-  inline void operator()(const double value) {
-    writer.Double(value);
-  }
-
-  inline void operator()(const uint64_t value) {
-    writer.Uint64(value);
-  }
-
-  inline void operator()(const int64_t value) {
-    writer.Int64(value);
-  }
-
-  inline void operator()(const bool value) {
-
-    writer.Bool(value);
-  }
-
-  inline void operator()(const std::nullptr_t) {
-    writer.Null();
+  template <typename V> inline void operator()(V value) {
+    if constexpr (std::is_same_v<V, int> || std::is_same_v<V, int32_t>) {
+      writer.Int64(static_cast<int64_t>(value));
+    } else if constexpr (std::is_same_v<V, unsigned int> || std::is_same_v<V, uint32_t>) {
+      writer.Uint64(static_cast<uint64_t>(value));
+    } else if constexpr (std::is_same_v<V, uint64_t>) {
+      writer.Uint64(value);
+    } else if constexpr (std::is_same_v<V, int64_t>) {
+      writer.Int64(value);
+    } else if constexpr (is_string_like_v<V>) {
+      writer.String(value);
+    } else if constexpr (std::is_same_v<V, double> || std::is_same_v<V, float>) {
+      writer.Double(value);
+    } else if constexpr (std::is_same_v<V, bool>) {
+      writer.Bool(value);
+    } else if constexpr (std::is_same_v<V, std::nullptr_t>) {
+      writer.Null();
+    } else {
+      static_assert(always_false<V>, "Unsupported value type");
+    }
   }
 };
 

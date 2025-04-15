@@ -21,6 +21,9 @@
 namespace valhalla {
 namespace tyr {
 
+constexpr unsigned int kDefaultPrecision = 3;
+constexpr unsigned int kCoordinatePrecision = 6;
+
 /**
  * Turn path and directions into a route that one can follow
  */
@@ -256,6 +259,10 @@ namespace osrm {
  */
 valhalla::baldr::json::MapPtr
 waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is_optimized = false);
+void waypoint(const valhalla::Location& location,
+              rapidjson::writer_wrapper_t& writer,
+              bool is_tracepoint = false,
+              bool is_optimized = false);
 
 /*
  * Serialize locations into osrm waypoints
@@ -263,6 +270,9 @@ waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is
 valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
+void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+               rapidjson::writer_wrapper_t& writer,
+               bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 

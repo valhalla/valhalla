@@ -12,20 +12,6 @@ using namespace valhalla::thor;
 
 namespace {
 
-json::ArrayPtr
-serialize_duration(const valhalla::Matrix& matrix, size_t start_td, const size_t td_count) {
-  auto time = json::array({});
-  for (size_t i = start_td; i < start_td + td_count; ++i) {
-    // check to make sure a route was found; if not, return null for time in matrix result
-    if (matrix.times()[i] != kMaxCost) {
-      time->emplace_back(static_cast<uint64_t>(matrix.times()[i]));
-    } else {
-      time->emplace_back(static_cast<std::nullptr_t>(nullptr));
-    }
-  }
-  return time;
-}
-
 void serialize_duration(const valhalla::Matrix& matrix,
                         rapidjson::writer_wrapper_t& writer,
                         size_t start_td,
@@ -35,7 +21,7 @@ void serialize_duration(const valhalla::Matrix& matrix,
     if (matrix.times()[i] != kMaxCost) {
       writer(static_cast<uint64_t>(matrix.times()[i]));
     } else {
-      writer(static_cast<std::nullptr_t>(nullptr));
+      writer(nullptr);
     }
   }
 }
@@ -50,7 +36,7 @@ void serialize_distance(const valhalla::Matrix& matrix,
     if (matrix.distances()[i] != kMaxCost) {
       writer(static_cast<uint64_t>(matrix.distances()[i]) * distance_scale);
     } else {
-      writer(static_cast<std::nullptr_t>(nullptr));
+      writer(nullptr);
     }
   }
 }
@@ -81,88 +67,50 @@ void serialize_shape(const valhalla::Matrix& matrix,
     }
   }
 }
-json::ArrayPtr serialize_distance(const valhalla::Matrix& matrix,
-                                  const size_t start_td,
-                                  const size_t td_count,
-                                  const size_t /* source_index */,
-                                  const size_t /* target_index */,
-                                  double distance_scale) {
-  auto distance = json::array({});
-  for (size_t i = start_td; i < start_td + td_count; ++i) {
-    // check to make sure a route was found; if not, return null for distance in matrix result
-    if (matrix.times()[i] != kMaxCost) {
-      distance->emplace_back(json::fixed_t{matrix.distances()[i] * distance_scale, 3});
-    } else {
-      distance->emplace_back(static_cast<std::nullptr_t>(nullptr));
-    }
-  }
-  return distance;
-}
-
-json::ArrayPtr serialize_shape(const valhalla::Matrix& matrix,
-                               const size_t start_td,
-                               const size_t td_count,
-                               const ShapeFormat shape_format) {
-  // TODO(nils): shapes aren't implemented yet in TDMatrix
-  auto shapes = json::array({});
-  if (shape_format == no_shape || (matrix.algorithm() != Matrix::CostMatrix))
-    return shapes;
-
-  for (size_t i = start_td; i < start_td + td_count; ++i) {
-    switch (shape_format) {
-      // even if it source == target or no route found, we want to emplace an element
-      case geojson:
-        if (!matrix.shapes()[i].empty())
-          shapes->emplace_back(tyr::geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
-        else
-          shapes->emplace_back(nullptr);
-        break;
-      default:
-        // this covers the polylines
-        shapes->emplace_back(matrix.shapes()[i]);
-    }
-  }
-  return shapes;
-}
 } // namespace
 
 namespace osrm_serializers {
 
 // Serialize route response in OSRM compatible format.
 std::string serialize(const Api& request) {
-  auto json = json::map({});
-  auto time = json::array({});
-  auto distance = json::array({});
+  rapidjson::writer_wrapper_t writer(4096);
+  writer.start_object();
   const auto& options = request.options();
 
   // If here then the matrix succeeded. Set status code to OK and serialize
   // waypoints (locations).
-  json->emplace("code", std::string("Ok"));
-  json->emplace("sources", osrm::waypoints(options.sources()));
-  json->emplace("destinations", osrm::waypoints(options.targets()));
-
+  writer("code", "Ok");
+  writer.start_array("sources");
+  osrm::waypoints(options.sources(), writer);
+  writer.end_array();
+  writer.start_array("destinations");
+  osrm::waypoints(options.targets(), writer);
+  writer.end_array();
+  writer.start_array("durations");
   for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
-    time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
-                                          options.targets_size()));
-    distance->emplace_back(serialize_distance(request.matrix(), source_index * options.targets_size(),
-                                              options.targets_size(), source_index, 0, 1.0));
+    const auto first_td = source_index * options.targets_size();
+    writer.start_array();
+    serialize_duration(request.matrix(), writer, first_td, options.targets_size());
+    writer.end_array();
   }
-  json->emplace("durations", time);
-  json->emplace("distances", distance);
-  json->emplace("algorithm", MatrixAlgoToString(request.matrix().algorithm()));
+  writer.end_array();
 
-  std::stringstream ss;
-  ss << *json;
-  return ss.str();
+  writer.start_array("distances");
+  for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
+    const auto first_td = source_index * options.targets_size();
+    writer.start_array();
+    serialize_distance(request.matrix(), writer, first_td, options.targets_size(), 1.0);
+    writer.end_array();
+  }
+  writer.end_array();
+  writer("algorithm", MatrixAlgoToString(request.matrix().algorithm()));
+
+  writer.end_object();
+  return writer.get_buffer();
 }
 } // namespace osrm_serializers
 
 namespace valhalla_serializers {
-
-/*
-valhalla output looks like this:
-
-*/
 
 void locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                rapidjson::writer_wrapper_t& writer) {
@@ -172,7 +120,7 @@ void locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
     } else {
       auto& corr_ll = location.correlation().edges(0).ll();
       writer.start_object();
-      writer.set_precision(6);
+      writer.set_precision(tyr::kCoordinatePrecision);
       writer("lat", corr_ll.lat());
       writer("lon", corr_ll.lng());
     }
@@ -204,8 +152,8 @@ void serialize_row(const valhalla::Matrix& matrix,
     const auto& end_heading = matrix.end_heading()[i];
     writer.start_object();
     if (time != kMaxCost) {
-      writer("from_index", static_cast<uint64_t>(source_index));
-      writer("to_index", static_cast<uint64_t>(target_index + (i - start_td)));
+      writer("from_index", source_index);
+      writer("to_index", target_index + (i - start_td));
       writer("time", static_cast<uint64_t>(time));
       writer("distance", static_cast<double>(matrix.distances()[i] * distance_scale));
       if (!date_time.empty()) {
@@ -228,7 +176,7 @@ void serialize_row(const valhalla::Matrix& matrix,
       if (end_heading != kInvalidHeading) {
         writer("end_heading", end_heading);
       }
-      writer.set_precision(6);
+      writer.set_precision(tyr::kCoordinatePrecision);
       if (begin_lat != INVALID_LL) {
         writer("begin_lat", begin_lat);
       }
@@ -241,7 +189,7 @@ void serialize_row(const valhalla::Matrix& matrix,
       if (end_lon != INVALID_LL) {
         writer("end_lon", end_lon);
       }
-      writer.set_precision(3);
+      writer.set_precision(tyr::kDefaultPrecision);
       if (matrix.shapes().size() && shape_format != no_shape) {
         // TODO(nils): tdmatrices don't have "shape" support yet
         if (!matrix.shapes()[i].empty()) {
@@ -257,10 +205,10 @@ void serialize_row(const valhalla::Matrix& matrix,
         }
       }
     } else {
-      writer("from_index", static_cast<uint64_t>(source_index));
-      writer("to_index", static_cast<uint64_t>(target_index + (i - start_td)));
-      writer("time", static_cast<std::nullptr_t>(nullptr));
-      writer("distance", static_cast<std::nullptr_t>(nullptr));
+      writer("from_index", source_index);
+      writer("to_index", target_index + (i - start_td));
+      writer("time", nullptr);
+      writer("distance", nullptr);
     }
     writer.end_object();
   }
