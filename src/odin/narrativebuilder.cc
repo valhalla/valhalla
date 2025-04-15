@@ -482,7 +482,16 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       }
       case DirectionsLeg_Maneuver_Type_kStepsEnter: {
         // Set instruction
-        maneuver.set_instruction(FormStepsInstruction(maneuver));
+        auto instr = FormStepsInstruction(maneuver);
+        maneuver.set_instruction(instr);
+        maneuver.set_verbal_transition_alert_instruction(instr);
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(instr);
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kEscalatorEnter: {
