@@ -42,7 +42,7 @@ There are several key features that we hope can differentiate the Valhalla proje
 
 ## Demo Server
 
-[FOSSGIS e.V.](https://fossgis.de) hosts a demo server which is open to the public and includes a full planet graph with an [open-source web app](https://github.com/gis-ops/valhalla-app) on https://valhalla.openstreetmap.de. The HTTP API is accessible on a slightly different subdomain, e.g. https://valhalla1.openstreetmap.de/isochrone. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
+[FOSSGIS e.V.](https://fossgis.de) hosts a demo server which is open to the public and includes a full planet graph with an [open-source web app](https://github.com/gis-ops/valhalla-app) on <https://valhalla.openstreetmap.de>. The HTTP API is accessible on a slightly different subdomain, e.g. <https://valhalla1.openstreetmap.de/isochrone>. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
 
 ## Platform Compatibility
 
@@ -77,7 +77,7 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 ## Installation
 
-To run Valhalla locally or your own server, we recommend using our Docker image. Checkout our docker image here: https://github.com/orgs/valhalla/packages. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
+To run Valhalla locally or your own server, we recommend using our Docker image. Checkout our docker image here: <https://github.com/orgs/valhalla/packages>. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
 
 If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
 
@@ -125,7 +125,7 @@ The following projects are open-source and built with the intention to make it e
 - [**OpenStreetMapSpeeds**](https://github.com/OpenStreetMapSpeeds/): A project conflating open GPS data to improve Valhalla's speed classification. The current JSON is from early 2022 and can be downloaded [here](https://raw.githubusercontent.com/OpenStreetMapSpeeds/schema/master/default_speeds.json) and used by setting the path in the `mjolnir.default_speeds_config` config option.
 - [**docker-valhalla**](https://github.com/gis-ops/docker-valhalla): An easy-to-use, relatively magical Docker image for Valhalla, which only requires setting a few environment variables in `docker-compose.yml` to get a full-featured Valhalla instance.
 - [**valhalla-operator**](https://github.com/itayankri/valhalla-operator): A k8s operator to deploy and manage Valhalla.
-- [**valhalla-app**](https://github.com/gis-ops/valhalla-app): A React based web app for Valhalla, powering https://valhalla.openstreetmap.de/.
+- [**valhalla-app**](https://github.com/gis-ops/valhalla-app): A React based web app for Valhalla, powering <https://valhalla.openstreetmap.de/>.
 - [**valhalla-qgis-plugin**](https://github.com/gis-ops/valhalla-qgis-plugin): A QGIS plugin for Valhalla, also available in the [official QGIS plugin store](https://plugins.qgis.org/plugins/valhalla/). **Note**, it's almost deprecated and will be replaced with a much superior alternative.
 - [**routingpy**](https://github.com/gis-ops/routingpy): A Python client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available on [PyPI](https://pypi.org/project/routingpy/).
 - [**routingjs**](https://github.com/gis-ops/routingjs): A TypeScript client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available as engine-specific packages on [npm](https://www.npmjs.com/package/@routingjs/valhalla).

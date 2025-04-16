@@ -131,6 +131,7 @@ node.intersecting_edge.lane_count
 node.elapsed_time
 node.admin_index
 node.type
+node.traffic_signal
 node.fork
 node.time_zone
 
@@ -246,6 +247,7 @@ Each `end_node` may include:
 | `elapsed_time` | Elapsed time of the path to arrive at this node. |
 | `admin_index` | Index value in the admin list. |
 | `type` | Node type values: <ul><li>`street_intersection`</li><li>`gate`</li><li>`bollard`</li><li>`toll_booth`</li><li>`multi_use_transit_stop`</li><li>`bike_share`</li><li>`parking`</li><li>`motor_way_junction`</li><li>`border_control`</li></ul> |
+| `traffic_signal` | A boolean value indicating whether the node is a traffic signal (`true` or `false`) |
 | `fork` | True if this node is a fork. |
 | `time_zone` | Time zone string for this node. |
 

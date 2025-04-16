@@ -43,11 +43,11 @@ set(sources
   hierarchybuilder.cc
   ingest_transit.cc
   landmarks.cc
+  add_predicted_speeds.cc
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc
   osmdata.cc
-  osmpbfparser.cc
   osmaccessrestriction.cc
   osmrestriction.cc
   osmway.cc
@@ -59,6 +59,7 @@ set(sources
   speed_assigner.h
   timeparsing.cc
   transitbuilder.cc
+  way_edges_processor.cc
   util.cc
   validatetransit.cc)
 

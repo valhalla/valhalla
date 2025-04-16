@@ -3,7 +3,6 @@
 
 #include "baldr/graphreader.h"
 #include "midgard/sequence.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
 
 #include "baldr/location.h"
@@ -13,7 +12,10 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/nocost.h"
 
+#include <osmium/io/pbf_input.hpp>
+
 #include <future>
+#include <string_view>
 #include <thread>
 #include <tuple>
 
@@ -31,51 +33,6 @@ constexpr unsigned long kLandmarkRadius = 25;
 constexpr float kLandmarkSearchCutoff = 75.;
 // a slight buffer to add to landmark queries to avoid near misses in the data due to precision
 constexpr double kLandmarkQueryBuffer = .000001;
-
-struct landmark_callback : public OSMPBF::Callback {
-public:
-  landmark_callback(const std::string& db_name) : db_(db_name, false) {
-  }
-  virtual ~landmark_callback() {
-  }
-
-  virtual void
-  node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
-    auto iter = tags.find("amenity");
-    if (iter != tags.cend() && !iter->second.empty()) {
-      try {
-        auto landmark_type = string_to_landmark_type(iter->second);
-
-        std::string name = "";
-        auto it = tags.find("name");
-        if (it != tags.cend() && !it->second.empty()) {
-          name = it->second;
-        }
-
-        // insert parsed landmark directly into database
-        db_.insert_landmark(name, landmark_type, lng, lat);
-      } catch (...) {}
-    }
-  }
-
-  virtual void changeset_callback(const uint64_t /*changeset_id*/) override {
-    LOG_WARN("landmark changeset callback shouldn't be called!");
-  }
-
-  virtual void way_callback(const uint64_t /*osmid*/,
-                            const OSMPBF::Tags& /*tags*/,
-                            const std::vector<uint64_t>& /*nodes*/) override {
-    LOG_WARN("landmark way callback shouldn't be called!");
-  }
-
-  virtual void relation_callback(const uint64_t /*osmid*/,
-                                 const OSMPBF::Tags& /*tags*/,
-                                 const std::vector<OSMPBF::Member>& /*members*/) override {
-    LOG_WARN("landmark relation callback shouldn't be called!");
-  }
-
-  valhalla::mjolnir::LandmarkDatabase db_;
-};
 
 // sort a sequence file to put the edges in the same tile together
 bool sort_seq_file(const std::pair<GraphId, uint64_t>& a, const std::pair<GraphId, uint64_t>& b) {
@@ -309,11 +266,34 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
                           const std::vector<std::string>& input_files) {
   // parse pbf to get landmark nodes
   const std::string db_name = pt.get<std::string>("landmarks", "");
-  landmark_callback callback(db_name);
+  valhalla::mjolnir::LandmarkDatabase db(db_name, false);
 
   LOG_INFO("Parsing nodes and storing landmarks...");
   for (auto& file : input_files) {
-    OSMPBF::parse(file, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES), callback);
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
+    while (const osmium::memory::Buffer buffer = reader.read()) {
+      for (const osmium::memory::Item& item : buffer) {
+        const osmium::Node& node = static_cast<const osmium::Node&>(item);
+
+        std::string amenity, name;
+        for (const auto& tag : node.tags()) {
+          std::string_view key = tag.key();
+          if (key == "amenity") {
+            amenity = tag.value();
+          } else if (key == "name") {
+            name = tag.value();
+          }
+        }
+
+        if (!amenity.empty()) {
+          try {
+            db.insert_landmark(name, string_to_landmark_type(amenity), node.location().lon(),
+                               node.location().lat());
+          } catch (...) {}
+        }
+      }
+    }
+    reader.close(); // Explicit close to get an exception in case of an error.
   }
 
   LOG_INFO("Successfully built landmark database from PBF");

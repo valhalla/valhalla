@@ -101,6 +101,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kNodeElapsedTime, true},
     {kNodeAdminIndex, true},
     {kNodeType, true},
+    {kNodeTrafficSignal, true},
     {kNodeFork, true},
     {kNodeTransitPlatformInfoType, true},
     {kNodeTransitPlatformInfoOnestopId, true},

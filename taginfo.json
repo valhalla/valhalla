@@ -7430,12 +7430,6 @@
       ]
     },
     {
-      "key": "seasonal",
-      "object_types": [
-        "way"
-      ]
-    },
-    {
       "key": "segregated",
       "value": "yes",
       "object_types": [

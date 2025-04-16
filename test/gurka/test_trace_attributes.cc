@@ -116,3 +116,37 @@ TEST(Standalone, InterpolatedPoints) {
   ASSERT_EQ(result_doc["matched_points"][4]["edge_index"].GetInt(), 1);
   ASSERT_EQ(result_doc["matched_points"][5]["edge_index"].GetInt(), 1);
 }
+
+TEST(Standalone, RetrieveTrafficSignal) {
+  const std::string ascii_map = R"(
+    A---B---C
+        |
+        D
+  )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                            {"BC", {{"highway", "primary"}}},
+                            {"BD", {{"highway", "primary"}}}};
+
+  const gurka::nodes nodes = {{"B", {{"highway", "traffic_signals"}}}};
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/traffic_signal_attributes");
+
+  std::string trace_json;
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto", {},
+                              {}, &trace_json, "via");
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+
+  auto edges = result["edges"].GetArray();
+  ASSERT_EQ(edges.Size(), 2);
+
+  EXPECT_TRUE(edges[0]["end_node"].HasMember("traffic_signal"));
+  EXPECT_TRUE(edges[0]["end_node"]["traffic_signal"].GetBool());
+
+  EXPECT_TRUE(edges[1]["end_node"].HasMember("traffic_signal"));
+  EXPECT_FALSE(edges[1]["end_node"]["traffic_signal"].GetBool());
+}
