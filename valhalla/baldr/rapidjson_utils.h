@@ -340,13 +340,14 @@ public:
       static_assert(always_false<K>, "Unsupported key type");
     }
 
-    if constexpr (std::is_same_v<V, int> || std::is_same_v<V, int32_t>) {
+    if constexpr (std::is_same_v<V, int> || std::is_same_v<V, int32_t> || std::is_same_v<V, long>) {
       writer.Int64(static_cast<int64_t>(value));
-    } else if constexpr (std::is_same_v<V, unsigned int> || std::is_same_v<V, uint32_t>) {
+    } else if constexpr (std::is_same_v<V, unsigned int> || std::is_same_v<V, uint32_t> ||
+                         std::is_same_v<V, unsigned long>) {
       writer.Uint64(static_cast<uint64_t>(value));
-    } else if constexpr (std::is_same_v<V, uint64_t>) {
+    } else if constexpr (std::is_same_v<V, uint64_t> || std::is_same_v<V, unsigned long long>) {
       writer.Uint64(value);
-    } else if constexpr (std::is_same_v<V, int64_t>) {
+    } else if constexpr (std::is_same_v<V, int64_t> || std::is_same_v<V, long long>) {
       writer.Int64(value);
     } else if constexpr (std::is_same_v<V, double> || std::is_same_v<V, float>) {
       writer.Double(value);
