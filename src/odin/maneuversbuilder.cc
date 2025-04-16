@@ -1123,7 +1123,6 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
 
 void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   int node_index = 0;
-
   // Determine if the origin has a side of street
   // and set the appropriate start maneuver type
   switch (trip_path_->GetOrigin().side_of_street()) {
@@ -1141,6 +1140,13 @@ void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
       maneuver.set_type(DirectionsLeg_Maneuver_Type_kStart);
       LOG_TRACE("ManeuverType=START");
     }
+  }
+
+  auto curr_edge = trip_path_->GetCurrEdge(node_index);
+
+  // exception: start maneuvers are not helpful for routes starting on stairs or escalators
+  if (curr_edge->IsStepsUse() || curr_edge->IsEscalatorUse()) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kNone);
   }
 
   FinalizeManeuver(maneuver, node_index);
