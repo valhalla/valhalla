@@ -314,6 +314,17 @@ TEST_F(Indoor, CombineStepsManeuvers) {
                                                             "Continue for 2 kilometers.");
 }
 
+TEST_F(Indoor, StepsStartManeuver) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"B", "C"}, "pedestrian",
+                                 {{"/locations/0/search_filter/level", "0"},
+                                  {"/locations/1/search_filter/level", "1"}});
+  gurka::assert::raw::expect_path(result, {"BC"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStepsEnter,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+}
+
 // Dont combine maneuvers if there is a level change
 TEST_F(Indoor, OutdoorStepsLevelChange) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"J", "U"}, "pedestrian", {});
