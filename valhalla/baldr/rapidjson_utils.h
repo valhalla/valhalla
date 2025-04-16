@@ -348,14 +348,14 @@ public:
       writer.Uint64(value);
     } else if constexpr (std::is_same_v<V, int64_t>) {
       writer.Int64(value);
-    } else if constexpr (is_string_like_v<V>) {
-      writer.String(value);
     } else if constexpr (std::is_same_v<V, double> || std::is_same_v<V, float>) {
       writer.Double(value);
     } else if constexpr (std::is_same_v<V, bool>) {
       writer.Bool(value);
     } else if constexpr (std::is_same_v<V, std::nullptr_t>) {
       writer.Null();
+    } else if constexpr (is_string_like_v<V>) {
+      writer.String(value);
     } else {
       static_assert(always_false<V>, "Unsupported value type");
     }
@@ -370,14 +370,14 @@ public:
       writer.Uint64(value);
     } else if constexpr (std::is_same_v<V, int64_t>) {
       writer.Int64(value);
-    } else if constexpr (is_string_like_v<V>) {
-      writer.String(value);
     } else if constexpr (std::is_same_v<V, double> || std::is_same_v<V, float>) {
       writer.Double(value);
     } else if constexpr (std::is_same_v<V, bool>) {
       writer.Bool(value);
     } else if constexpr (std::is_same_v<V, std::nullptr_t>) {
       writer.Null();
+    } else if constexpr (is_string_like_v<V>) {
+      writer.String(value);
     } else {
       static_assert(always_false<V>, "Unsupported value type");
     }
