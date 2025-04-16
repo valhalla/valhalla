@@ -378,7 +378,8 @@
    * FIXED: Osmway struct update: added up to 33 and not 32 [#3808](https://github.com/valhalla/valhalla/pull/3808)
    * FIXED: Fix out-of-range linestrings in expansion [#4603](https://github.com/valhalla/valhalla/pull/4603)
    * FIXED: Osmway struct update: used 1 bit for multiple levels from spare bits [#5112](https://github.com/valhalla/valhalla/issues/5112)
-   * FIXES: multi-edge steps maneuvers [#5191](https://github.com/valhalla/valhalla/pull/5191)
+   * FIXED: multi-edge steps maneuvers [#5191](https://github.com/valhalla/valhalla/pull/5191)
+   * FIXED: remove start maneuver if route starts on stairs/escalators [#5127](https://github.com/valhalla/valhalla/pull/5127)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
