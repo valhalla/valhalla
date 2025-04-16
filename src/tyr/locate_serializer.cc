@@ -87,7 +87,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
     return json::map({});
   auto opp_edge = get_opposing_edge(de, reader);
 
-  if (de->shortcut()) {
+  if (de->shortcut() || de->use() >= baldr::Use::kAlley) {
     return json::map({});
   }
   auto node_id = opp_edge->endnode();
@@ -118,7 +118,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       if ((costing->Allowed(incoming_edge, reader.GetGraphTile(outgoing_edge->endnode()),
                             sif::kDisallowShortcut) ||
            costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
-          !(costing->ExcludePrivate() && ei.private_access())) {
+          !(costing->ExcludePrivate() && ei.private_access()) &&
+          incoming_edge->use() < baldr::Use::kAlley) {
 
         allowed_cnt++;
         outgoing_pred = outgoing_edge;
@@ -145,7 +146,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
         if ((costing->Allowed(incoming_edge, reader.GetGraphTile(outgoing_edge->endnode()),
                               sif::kDisallowShortcut) ||
              costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
-            !(costing->ExcludePrivate() && ei.private_access())) {
+            !(costing->ExcludePrivate() && ei.private_access()) &&
+            incoming_edge->use() < baldr::Use::kAlley) {
 
           allowed_cnt++;
           incoming_pred = incoming_edge;
@@ -221,7 +223,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
       if ((costing->Allowed(candidate_edge, tile, sif::kDisallowShortcut) ||
            costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
                             sif::kDisallowShortcut)) &&
-          !(costing->ExcludePrivate() && ei.private_access())) {
+          !(costing->ExcludePrivate() && ei.private_access()) &&
+          candidate_edge->use() < baldr::Use::kAlley) {
         allowed_cnt++;
         possible_next = candidate_edge;
       }
@@ -242,7 +245,8 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
         if ((costing->Allowed(candidate_edge, tile, sif::kDisallowShortcut) ||
              costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
                               sif::kDisallowShortcut)) &&
-            !(costing->ExcludePrivate() && ei.private_access())) {
+            !(costing->ExcludePrivate() && ei.private_access()) &&
+            candidate_edge->use() < baldr::Use::kAlley) {
           allowed_cnt++;
           possible_next = candidate_edge;
         }
