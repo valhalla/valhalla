@@ -13,10 +13,12 @@ namespace mjolnir {
 
 namespace {
 
-// Replace polygon by bbox if it is entirely inside the polygon for faster calculus.
+// Replace polygon by bbox if the bbox is entirely inside the polygon for faster calculus.
 // Sadly, `bg::intersection(bg::multi_polygon, bg::multi_polygon)` produces too many points,
-// while `bg::intersection(bg::box, bg::multi_polygon)` doesn't work in all cases (sometimes
-// produces bad multi_polygon) if bbox is not fully covered by polygon.
+// while `bg::intersection(bg::box, bg::multi_polygon)` fails in some cases (sometimes
+// produces incomplete `multi_polygon`) if bbox is not fully covered by polygon - clipping a polygon
+// might produce multiple polygons, and boost appears to process each polygon in the multi_polygon
+// sequentially, potentially losing some parts.
 void ClipPolygon(multi_polygon_type& poly, const AABB2<PointLL>& bbox) {
   multi_polygon_type bbox_poly;
   bg::convert(bg::model::box<point_type>{{bbox.minx(), bbox.miny()}, {bbox.maxx(), bbox.maxy()}},
