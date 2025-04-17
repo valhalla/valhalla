@@ -222,32 +222,18 @@ select_transit_tiles(const std::filesystem::path& gtfs_path) {
         }
       }
 
-      // Process stop times efficiently
-      std::unordered_map<std::string, gtfs::Trip> trip_cache;
-      std::unordered_map<std::string, gtfs::Route> route_cache;
-
       for (const auto& stop_time : feed.get_stop_times()) {
         const auto& trip_id = stop_time.trip_id;
 
-        // Check trip cache first
-        auto trip_it = trip_cache.find(trip_id);
-        if (trip_it == trip_cache.end()) {
-          auto trip = feed.get_trip(trip_id);
-          if (!gtfs::valid(trip))
-            continue; // Skip invalid trips
-          trip_it = trip_cache.emplace(trip_id, std::move(trip)).first;
-        }
-        const auto& trip = trip_it->second;
+        // Directly get trip (no cache)
+        auto trip = feed.get_trip(trip_id);
+        if (!gtfs::valid(trip))
+          continue;
 
-        // Check route cache
-        auto route_it = route_cache.find(trip.route_id);
-        if (route_it == route_cache.end()) {
-          auto route = feed.get_route(trip.route_id);
-          if (!gtfs::valid(route))
-            continue; // Skip invalid routes
-          route_it = route_cache.emplace(trip.route_id, std::move(route)).first;
-        }
-        const auto& route = route_it->second;
+        // Directly get route (no cache)
+        auto route = feed.get_route(trip.route_id);
+        if (!gtfs::valid(route))
+          continue;
 
         // Now get the stop's tile info
         const auto& stop = feed.get_stop(stop_time.stop_id);
