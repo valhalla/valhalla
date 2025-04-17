@@ -72,6 +72,8 @@ constexpr float kMaxFactor = 100000.0f;
 // Default auto attributes
 constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
 constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
+constexpr float kDefaultAutoLength = 4.0f; // Meters (157,4808 inches)
+constexpr float kDefaultAutoWeight = 2.4f; // / Metric Tons (48,000 lbs)
 
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
@@ -80,6 +82,8 @@ constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
 constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
+constexpr ranged_default_t<float> kAutoWeightRange{0, kDefaultAutoWeight, 20.0f};
+constexpr ranged_default_t<float> kAutoLengthRange{0, kDefaultAutoLength, 15.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
@@ -352,6 +356,8 @@ public:
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
   float width_;  // Vehicle width in meters
+  float weight_; // Vehicle weight in metric tons
+  float length_; // Vehicle length in meters
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -408,6 +414,8 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // Get the vehicle attributes
   height_ = costing_options.height();
   width_ = costing_options.width();
+  weight_ = costing_options.weight();
+  length_ = costing_options.length();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -482,6 +490,10 @@ bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) 
       return height_ <= static_cast<float>(restriction.value() * 0.01);
     case AccessType::kMaxWidth:
       return width_ <= static_cast<float>(restriction.value() * 0.01);
+    case AccessType::kMaxWeight:
+      return weight_ <= static_cast<float>(restriction.value() * 0.01);
+    case AccessType::kMaxLength:
+      return length_ <= static_cast<float>(restriction.value() * 0.01);
     default:
       return true;
   };
@@ -712,6 +724,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance);
   JSON_PBF_RANGED_DEFAULT(co, kAutoHeightRange, json, "/height", height);
   JSON_PBF_RANGED_DEFAULT(co, kAutoWidthRange, json, "/width", width);
+  JSON_PBF_RANGED_DEFAULT(co, kAutoWeightRange, json, "/weight", weight);
+  JSON_PBF_RANGED_DEFAULT(co, kAutoLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
                           restriction_probability);
   JSON_PBF_DEFAULT(co, false, json, "/include_hot", include_hot);
