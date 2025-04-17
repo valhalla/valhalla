@@ -24,7 +24,7 @@
    * FIXED: clang warning: bool literal returned from `main` `[-Wmain]` [#5173](https://github.com/valhalla/valhalla/pull/5173)
    * FIXED: normalize paths on valhalla_build_extract for windows  [#5176](https://github.com/valhalla/valhalla/pull/5176)
    * FIXED: level changes for multi-level start/end edges [#5126](https://github.com/valhalla/valhalla/pull/5126)
-   * FIXED: Fix edge walk across tiles when traffic or predicted speeds are used
+   * FIXED: Fix edge walk across tiles when traffic or predicted speeds are used [#5198](https://github.com/valhalla/valhalla/pull/5198)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
