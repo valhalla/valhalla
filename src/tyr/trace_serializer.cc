@@ -59,7 +59,7 @@ void serialize_edges(const AttributesController& controller,
 
       writer.start_object();
       if (controller(kEdgeTruckRoute)) {
-        writer("truck_route", static_cast<bool>(edge.truck_route()));
+        writer("truck_route", edge.truck_route());
       }
       if (controller(kEdgeTruckSpeed) && (edge.truck_speed() > 0)) {
         writer("truck_speed", static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
@@ -72,13 +72,13 @@ void serialize_edges(const AttributesController& controller,
         }
       }
       if (controller(kEdgeDensity)) {
-        writer("density", static_cast<uint64_t>(edge.density()));
+        writer("density", edge.density());
       }
       if (controller(kEdgeSacScale)) {
         writer("sac_scale", static_cast<uint64_t>(edge.sac_scale()));
       }
       if (controller(kEdgeShoulder)) {
-        writer("shoulder", static_cast<bool>(edge.shoulder()));
+        writer("shoulder", edge.shoulder());
       }
       if (controller(kEdgeSidewalk)) {
         writer("sidewalk", to_string(edge.sidewalk()));
@@ -90,7 +90,7 @@ void serialize_edges(const AttributesController& controller,
         writer("cycle_lane", to_string(static_cast<CycleLane>(edge.cycle_lane())));
       }
       if (controller(kEdgeLaneCount)) {
-        writer("lane_count", static_cast<uint64_t>(edge.lane_count()));
+        writer("lane_count", edge.lane_count());
       }
       if (edge.lane_connectivity_size()) {
         writer.start_array("lane_connectivity");
@@ -104,13 +104,13 @@ void serialize_edges(const AttributesController& controller,
         writer.end_array();
       }
       if (controller(kEdgeMaxDownwardGrade)) {
-        writer("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
+        writer("max_downward_grade", edge.max_downward_grade());
       }
       if (controller(kEdgeMaxUpwardGrade)) {
-        writer("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
+        writer("max_upward_grade", edge.max_upward_grade());
       }
       if (controller(kEdgeWeightedGrade)) {
-        writer.set_precision(3);
+        writer.set_precision(tyr::kDefaultPrecision);
         writer("weighted_grade", edge.weighted_grade());
       }
       if (controller(kEdgeMeanElevation)) {
@@ -124,10 +124,10 @@ void serialize_edges(const AttributesController& controller,
         }
       }
       if (controller(kEdgeWayId)) {
-        writer("way_id", static_cast<uint64_t>(edge.way_id()));
+        writer("way_id", edge.way_id());
       }
       if (controller(kEdgeId)) {
-        writer("id", static_cast<uint64_t>(edge.id()));
+        writer("id", edge.id());
       }
       if (controller(kEdgeTravelMode)) {
         writer("travel_mode", to_string(edge.travel_mode()));
@@ -148,22 +148,22 @@ void serialize_edges(const AttributesController& controller,
         writer("drive_on_right", static_cast<bool>(!edge.drive_on_left()));
       }
       if (controller(kEdgeInternalIntersection)) {
-        writer("internal_intersection", static_cast<bool>(edge.internal_intersection()));
+        writer("internal_intersection", edge.internal_intersection());
       }
       if (controller(kEdgeRoundabout)) {
-        writer("roundabout", static_cast<bool>(edge.roundabout()));
+        writer("roundabout", edge.roundabout());
       }
       if (controller(kEdgeBridge)) {
-        writer("bridge", static_cast<bool>(edge.bridge()));
+        writer("bridge", edge.bridge());
       }
       if (controller(kEdgeTunnel)) {
-        writer("tunnel", static_cast<bool>(edge.tunnel()));
+        writer("tunnel", edge.tunnel());
       }
       if (controller(kEdgeUnpaved)) {
-        writer("unpaved", static_cast<bool>(edge.unpaved()));
+        writer("unpaved", edge.unpaved());
       }
       if (controller(kEdgeToll)) {
-        writer("toll", static_cast<bool>(edge.toll()));
+        writer("toll", edge.toll());
       }
       if (controller(kEdgeUse)) {
         writer("use", to_string(static_cast<baldr::Use>(edge.use())));
@@ -172,16 +172,16 @@ void serialize_edges(const AttributesController& controller,
         writer("traversability", to_string(edge.traversability()));
       }
       if (controller(kEdgeEndShapeIndex)) {
-        writer("end_shape_index", static_cast<uint64_t>(edge.end_shape_index()));
+        writer("end_shape_index", edge.end_shape_index());
       }
       if (controller(kEdgeBeginShapeIndex)) {
-        writer("begin_shape_index", static_cast<uint64_t>(edge.begin_shape_index()));
+        writer("begin_shape_index", edge.begin_shape_index());
       }
       if (controller(kEdgeEndHeading)) {
-        writer("end_heading", static_cast<uint64_t>(edge.end_heading()));
+        writer("end_heading", edge.end_heading());
       }
       if (controller(kEdgeBeginHeading)) {
-        writer("begin_heading", static_cast<uint64_t>(edge.begin_heading()));
+        writer("begin_heading", edge.begin_heading());
       }
       if (controller(kEdgeRoadClass)) {
         writer("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
@@ -190,10 +190,10 @@ void serialize_edges(const AttributesController& controller,
         writer("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
       }
       if (controller(kEdgeCountryCrossing)) {
-        writer("country_crossing", static_cast<bool>(edge.country_crossing()));
+        writer("country_crossing", edge.country_crossing());
       }
       if (controller(kEdgeForward)) {
-        writer("forward", static_cast<bool>(edge.forward()));
+        writer("forward", edge.forward());
       }
       if (controller(kEdgeLevels)) {
         if (edge.levels_size()) {
@@ -201,16 +201,16 @@ void serialize_edges(const AttributesController& controller,
           writer.set_precision(edge.level_precision());
           for (const auto& level : edge.levels()) {
             writer.start_array();
-            writer(static_cast<float>(level.start()));
-            writer(static_cast<float>(level.end()));
+            writer(level.start());
+            writer(level.end());
             writer.end_array();
           }
           writer.end_array();
-          writer.set_precision(3);
+          writer.set_precision(tyr::kDefaultPrecision);
         }
       }
       if (controller(kEdgeLength)) {
-        writer.set_precision(3);
+        writer.set_precision(tyr::kDefaultPrecision);
         writer("length", edge.length_km() * scale);
         if (edge.source_along_edge() != 0.f) {
           writer("source_percent_along", edge.source_along_edge());
@@ -231,7 +231,7 @@ void serialize_edges(const AttributesController& controller,
         writer.start_array("traffic_segments");
         for (const auto& segment : edge.traffic_segment()) {
           writer.start_object();
-          writer.set_precision(3);
+          writer.set_precision(tyr::kDefaultPrecision);
           writer("segment_id", segment.segment_id());
           writer("begin_percent", segment.begin_percent());
           writer("end_percent", segment.end_percent());
@@ -306,13 +306,13 @@ void serialize_edges(const AttributesController& controller,
               writer("driveability", to_string(xedge.driveability()));
             }
             if (controller(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
-              writer("from_edge_name_consistency", static_cast<bool>(xedge.prev_name_consistency()));
+              writer("from_edge_name_consistency", xedge.prev_name_consistency());
             }
             if (controller(kNodeIntersectingEdgeToEdgeNameConsistency)) {
-              writer("to_edge_name_consistency", static_cast<bool>(xedge.curr_name_consistency()));
+              writer("to_edge_name_consistency", xedge.curr_name_consistency());
             }
             if (controller(kNodeIntersectingEdgeBeginHeading)) {
-              writer("begin_heading", static_cast<uint64_t>(xedge.begin_heading()));
+              writer("begin_heading", xedge.begin_heading());
             }
             if (controller(kNodeIntersectingEdgeUse)) {
               writer("use", to_string(static_cast<baldr::Use>(xedge.use())));
@@ -326,27 +326,27 @@ void serialize_edges(const AttributesController& controller,
         }
 
         if (controller(kNodeElapsedTime)) {
-          writer.set_precision(3);
+          writer.set_precision(tyr::kDefaultPrecision);
           writer("elapsed_time", node.cost().elapsed_cost().seconds());
           writer("elapsed_cost", node.cost().elapsed_cost().cost());
         }
         if (controller(kNodeAdminIndex)) {
-          writer("admin_index", static_cast<uint64_t>(node.admin_index()));
+          writer("admin_index", node.admin_index());
         }
         if (controller(kNodeType)) {
           writer("type", to_string(static_cast<baldr::NodeType>(node.type())));
         }
         if (controller(kNodeTrafficSignal)) {
-          writer("traffic_signal", static_cast<bool>(node.traffic_signal()));
+          writer("traffic_signal", node.traffic_signal());
         }
         if (controller(kNodeFork)) {
-          writer("fork", static_cast<bool>(node.fork()));
+          writer("fork", node.fork());
         }
         if (controller(kNodeTimeZone) && !node.time_zone().empty()) {
           writer("time_zone", node.time_zone());
         }
         if (controller(kNodeTransitionTime)) {
-          writer.set_precision(3);
+          writer.set_precision(tyr::kDefaultPrecision);
           writer("transition_time", node.cost().transition_cost().seconds());
         }
 
@@ -392,7 +392,7 @@ void serialize_matched_points(const AttributesController& controller,
 
     // Process matched point
     if (controller(kMatchedPoint)) {
-      writer.set_precision(6);
+      writer.set_precision(tyr::kCoordinatePrecision);
       writer("lon", match_result.lnglat.first);
       writer("lat", match_result.lnglat.second);
     }
@@ -421,25 +421,25 @@ void serialize_matched_points(const AttributesController& controller,
 
     // Process matched point begin route discontinuity
     if (controller(kMatchedBeginRouteDiscontinuity) && match_result.begins_discontinuity) {
-      writer("begin_route_discontinuity", static_cast<bool>(match_result.begins_discontinuity));
+      writer("begin_route_discontinuity", match_result.begins_discontinuity);
     }
 
     // Process matched point end route discontinuity
     if (controller(kMatchedEndRouteDiscontinuity) && match_result.ends_discontinuity) {
-      writer("end_route_discontinuity", static_cast<bool>(match_result.ends_discontinuity));
+      writer("end_route_discontinuity", match_result.ends_discontinuity);
     }
 
     // Process matched point distance along edge
     if (controller(kMatchedDistanceAlongEdge) &&
         (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
-      writer.set_precision(6);
+      writer.set_precision(tyr::kCoordinatePrecision);
       writer("distance_along_edge", match_result.distance_along);
     }
 
     // Process matched point distance from trace point
     if (controller(kMatchedDistanceFromTracePoint) &&
         (match_result.GetType() != meili::MatchResult::Type::kUnmatched)) {
-      writer.set_precision(6);
+      writer.set_precision(tyr::kCoordinatePrecision);
       writer("distance_from_trace_point", match_result.distance_from);
     }
     writer.end_object();
@@ -451,7 +451,7 @@ void serialize_shape_attributes(const AttributesController& controller,
                                 const TripLeg& trip_path,
                                 rapidjson::writer_wrapper_t& writer) {
   writer.start_object("shape_attributes");
-  writer.set_precision(3);
+  writer.set_precision(tyr::kDefaultPrecision);
   if (controller(kShapeAttributesTime)) {
     writer.start_array("time");
     for (const auto& time : trip_path.shape_attributes().time()) {
@@ -500,13 +500,13 @@ void append_trace_info(
 
   // Add confidence_score
   if (controller(kConfidenceScore)) {
-    writer.set_precision(3);
+    writer.set_precision(tyr::kDefaultPrecision);
     writer("confidence_score", std::get<kConfidenceScoreIndex>(map_match_result));
   }
 
   // Add raw_score
   if (controller(kRawScore)) {
-    writer.set_precision(3);
+    writer.set_precision(tyr::kDefaultPrecision);
     writer("raw_score", std::get<kRawScoreIndex>(map_match_result));
   }
 
