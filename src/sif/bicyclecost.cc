@@ -375,7 +375,7 @@ public:
    */
   virtual float AStarCostFactor() const override {
     // Assume max speed of 2 * the average speed set for costing
-    return speedfactor_[static_cast<uint32_t>(2 * speed_)];
+    return kSpeedFactor[static_cast<uint32_t>(2 * speed_)];
   }
 
   /**
@@ -393,14 +393,13 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 
-  std::vector<float> speedfactor_; // Cost factors based on speed in kph
-  float use_roads_;                // Preference of using roads between 0 and 1
-  float avoid_roads_;              // Inverse of use roads
-  float road_factor_;              // Road factor based on use_roads_
-  float sidepath_factor_;          // Factor to use when use_sidepath is set on an edge
-  float livingstreet_factor_;      // Factor to use for living streets
-  float track_factor_;             // Factor to use tracks
-  float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
+  float use_roads_;           // Preference of using roads between 0 and 1
+  float avoid_roads_;         // Inverse of use roads
+  float road_factor_;         // Road factor based on use_roads_
+  float sidepath_factor_;     // Factor to use when use_sidepath is set on an edge
+  float livingstreet_factor_; // Factor to use for living streets
+  float track_factor_;        // Factor to use tracks
+  float avoid_bad_surfaces_;  // Preference of avoiding bad surfaces for the bike type
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -521,11 +520,8 @@ BicycleCost::BicycleCost(const Costing& costing)
 
   // Create speed cost table and penalty table (to avoid division in costing)
   float avoid_roads = (1.0f - use_roads_) * 0.75f + 0.25;
-  speedfactor_.resize(kMaxSpeedKph + 1, 0);
-  speedfactor_[0] = kSecPerHour;
   speedpenalty_[0] = 0.0f;
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-    speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
 
     float base_pen = 0.0f;
     if (s <= 40) {
@@ -621,15 +617,15 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            uint8_t&) const {
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
-    float sec = (edge->length() * speedfactor_[1]);
+    float sec = (edge->length() * kSpeedFactor[1]);
     return {shortest_ ? edge->length() : sec * kBicycleStepsFactor, sec};
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
-    assert(edge->speed() < speedfactor_.size());
-    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    assert(edge->speed() < kSpeedFactor.size());
+    float sec = (edge->length() * kSpeedFactor[edge->speed()]);
     return {shortest_ ? edge->length() : sec * ferry_factor_, sec};
   }
 
@@ -710,7 +706,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                              0.5f);
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
-  float sec = (edge->length() * speedfactor_[bike_speed]);
+  float sec = (edge->length() * kSpeedFactor[bike_speed]);
   return {shortest_ ? edge->length() : sec * factor, sec};
 }
 

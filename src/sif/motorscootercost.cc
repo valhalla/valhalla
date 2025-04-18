@@ -302,7 +302,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return speedfactor_[top_speed_];
+    return kSpeedFactor[top_speed_];
   }
 
   /**
@@ -330,11 +330,6 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
-  std::vector<float> speedfactor_;
-  float density_factor_[16]; // Density factor
-
-  // Density factor used in edge transition costing
-  std::vector<float> trans_density_factor_;
   float road_factor_; // Road factor based on use_primary
 
   // Elevation/grade penalty (weighting applied based on the edge's weighted
@@ -344,25 +339,11 @@ public:
 
 // Constructor
 MotorScooterCost::MotorScooterCost(const Costing& costing)
-    : DynamicCost(costing, TravelMode::kDrive, kMopedAccess),
-      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
-                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(costing, TravelMode::kDrive, kMopedAccess) {
   const auto& costing_options = costing.options();
 
   // Get the base costs
   get_base_costs(costing);
-
-  // Create speed cost table
-  speedfactor_.resize(kMaxSpeedKph + 1, 0);
-  speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
-  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-    speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
-  }
-
-  // Set density factors - used to penalize edges in dense, urban areas
-  for (uint32_t d = 0; d < 16; d++) {
-    density_factor_[d] = 0.85f + (d * 0.018f);
-  }
 
   // Set grade penalties based on use_hills option.
   // Scale from 0 (avoid hills) to 1 (don't avoid hills)
@@ -437,8 +418,8 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
                    : fixed_speed_;
 
   if (edge->use() == Use::kFerry) {
-    assert(speed < speedfactor_.size());
-    float sec = (edge->length() * speedfactor_[speed]);
+    assert(speed < kSpeedFactor.size());
+    float sec = (edge->length() * kSpeedFactor[speed]);
     return {sec * ferry_factor_, sec};
   }
 
@@ -448,14 +429,14 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
                      kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())] *
                      kGradeBasedSpeedFactor[static_cast<uint32_t>(edge->weighted_grade())]));
 
-  assert(scooter_speed < speedfactor_.size());
-  float sec = (edge->length() * speedfactor_[scooter_speed]);
+  assert(scooter_speed < kSpeedFactor.size());
+  float sec = (edge->length() * kSpeedFactor[scooter_speed]);
 
   if (shortest_) {
     return Cost(edge->length(), sec);
   }
 
-  float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
+  float factor = 1.0f + (kDensityFactor[edge->density()] - 0.85f) +
                  (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
                  grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
                  SpeedPenalty(edge, tile, time_info, flow_sources, speed);
@@ -534,7 +515,7 @@ Cost MotorScooterCost::TransitionCost(
     if (!pred.has_measured_speed()) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
-      seconds *= trans_density_factor_[node->density()];
+      seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
   }
@@ -607,7 +588,7 @@ Cost MotorScooterCost::TransitionCostReverse(
     if (!has_measured_speed) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
-      seconds *= trans_density_factor_[node->density()];
+      seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
   }

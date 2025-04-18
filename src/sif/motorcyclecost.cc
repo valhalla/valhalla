@@ -252,7 +252,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return speedfactor_[top_speed_];
+    return kSpeedFactor[top_speed_];
   }
 
   /**
@@ -281,22 +281,15 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
-  VehicleType type_; // Vehicle type: car (default), motorcycle, etc
-  std::vector<float> speedfactor_;
-  float density_factor_[16]; // Density factor
-  float toll_factor_;        // Factor applied when road has a toll
-  float surface_factor_;     // How much the surface factors are applied when using trails
-  float highway_factor_;     // Factor applied when road is a motorway or trunk
-
-  // Density factor used in edge transition costing
-  std::vector<float> trans_density_factor_;
+  VehicleType type_;     // Vehicle type: car (default), motorcycle, etc
+  float toll_factor_;    // Factor applied when road has a toll
+  float surface_factor_; // How much the surface factors are applied when using trails
+  float highway_factor_; // Factor applied when road is a motorway or trunk
 };
 
 // Constructor
 MotorcycleCost::MotorcycleCost(const Costing& costing)
-    : DynamicCost(costing, TravelMode::kDrive, kMotorcycleAccess),
-      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
-                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(costing, TravelMode::kDrive, kMotorcycleAccess) {
 
   const auto& costing_options = costing.options();
 
@@ -343,18 +336,6 @@ MotorcycleCost::MotorcycleCost(const Costing& costing)
   } else {
     float f = 1.0f - use_trails * 2.0f;
     surface_factor_ = static_cast<uint32_t>(kMaxTrailBiasFactor * (f * f));
-  }
-
-  // Create speed cost table
-  speedfactor_.resize(kMaxSpeedKph + 1, 0);
-  speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
-  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-    speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
-  }
-
-  // Set density factors - used to penalize edges in dense, urban areas
-  for (uint32_t d = 0; d < 16; d++) {
-    density_factor_[d] = 0.85f + (d * 0.018f);
   }
 }
 
@@ -420,7 +401,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   auto final_speed = std::min(edge_speed, top_speed_);
 
-  float sec = (edge->length() * speedfactor_[final_speed]);
+  float sec = (edge->length() * kSpeedFactor[final_speed]);
 
   if (shortest_) {
     return Cost(edge->length(), sec);
@@ -432,7 +413,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     return {sec * ferry_factor_, sec};
   }
 
-  float factor = density_factor_[edge->density()] +
+  float factor = kDensityFactor[edge->density()] +
                  highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
                  surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
   factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
@@ -510,7 +491,7 @@ Cost MotorcycleCost::TransitionCost(
     if (!pred.has_measured_speed()) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
-      seconds *= trans_density_factor_[node->density()];
+      seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
   }
@@ -583,7 +564,7 @@ Cost MotorcycleCost::TransitionCostReverse(
     if (!has_measured_speed) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
-      seconds *= trans_density_factor_[node->density()];
+      seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
   }

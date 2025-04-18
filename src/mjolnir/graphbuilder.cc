@@ -274,8 +274,8 @@ void ConstructEdges(const std::string& ways_file,
           node.start_of = edges.size() + 1; // + 1 because the edge has not been added yet
           element = node;
           if (way.multiple_levels()) {
-            LOG_WARN("Multilevel Way [ID:" + std::to_string(way.way_id()) +
-                     "] - Additional edge created");
+            LOG_DEBUG("Multilevel Way [ID:" + std::to_string(way.way_id()) +
+                      "] - Additional edge created");
           }
         }
       } // If this edge has a signal not at a intersection

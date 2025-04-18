@@ -161,6 +161,32 @@ constexpr uint16_t kDisallowSimpleRestriction = 0x4;
 constexpr uint16_t kDisallowClosure = 0x8;
 constexpr uint16_t kDisallowShortcut = 0x10;
 
+constexpr std::array<float, 253> populate_speedfactor() {
+  std::array<float, 253> speedfactor{};
+  speedfactor[0] = midgard::kSecPerHour; // TODO - what to make speed=0?
+  for (uint32_t s = 1; s <= baldr::kMaxSpeedKph; s++) {
+    speedfactor[s] = (midgard::kSecPerHour * 0.001f) / static_cast<float>(s);
+  }
+
+  return speedfactor;
+}
+constexpr std::array<float, 253> kSpeedFactor = populate_speedfactor();
+
+constexpr std::array<float, 16> populate_densityfactor() {
+  std::array<float, 16> densityfactor{};
+  // Set density factors - used to penalize edges in dense, urban areas
+  for (uint32_t d = 0; d < 16; d++) {
+    densityfactor[d] = 0.85f + (d * 0.025f);
+  }
+
+  return densityfactor;
+}
+constexpr std::array<float, 16> kDensityFactor = populate_densityfactor(); // Density factor
+
+constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
+                                                       1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
+                                                       2.5f, 2.8f, 3.1f, 3.5f};
+
 /**
  * Base class for dynamic edge costing. This class defines the interface for
  * costing methods and includes a few base methods that define default behavior

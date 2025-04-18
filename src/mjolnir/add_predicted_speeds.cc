@@ -29,6 +29,8 @@ struct TrafficStats {
   uint32_t compressed_count = 0;
   uint32_t updated_count = 0;
   uint32_t dup_count = 0;
+  uint32_t lower_bound_count = 0;
+  uint32_t upper_bound_count = 0;
 
   // Accumulate counts from all threads
   TrafficStats& operator+=(const TrafficStats& other) {
@@ -37,6 +39,8 @@ struct TrafficStats {
     compressed_count += other.compressed_count;
     updated_count += other.updated_count;
     dup_count += other.dup_count;
+    lower_bound_count += other.lower_bound_count;
+    upper_bound_count += other.upper_bound_count;
     return *this;
   }
 };
@@ -45,6 +49,11 @@ struct TrafficSpeeds {
   uint8_t free_flow_speed = 0;
   std::optional<std::array<int16_t, valhalla::baldr::kCoefficientCount>> coefficients;
 };
+
+inline bool is_possible_outlier(float speed) {
+  return speed < kMinSpeedKph || speed > kMaxAssumedSpeed;
+}
+
 /**
  * Read speed CSV file and update the tile_speeds in unique_data
  */
@@ -114,6 +123,20 @@ ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) 
                 try {
                   // Decode the base64 predicted speeds
                   traffic->second.coefficients = decode_compressed_speeds(t);
+
+                  // Look at the decompressed speeds warn about possible outlier values.
+                  // The reason we do this is previously these outlier speeds were
+                  // discarded during path finding, but now the user bears responsibility
+                  // for handling outliers in their data.
+                  // (see https://github.com/valhalla/valhalla/pull/5087)
+                  for (size_t i = 0; i < kBucketsPerWeek; ++i) {
+                    if (float speed =
+                            decompress_speed_bucket((*traffic->second.coefficients).data(), i);
+                        is_possible_outlier(speed)) {
+                      stat.lower_bound_count += speed < kMinSpeedKph;
+                      stat.upper_bound_count += speed > kMaxAssumedSpeed;
+                    }
+                  }
                   stat.compressed_count++;
                 } catch (std::exception& e) {
                   LOG_WARN("Invalid compressed speeds in file: " + full_filename + " line number " +
@@ -380,6 +403,8 @@ void ProcessTrafficTiles(const std::string& tile_dir,
   LOG_INFO("Parsed " + std::to_string(final_stats.compressed_count) + " compressed records.");
   LOG_INFO("Updated " + std::to_string(final_stats.updated_count) + " directed edges.");
   LOG_INFO("Duplicate count " + std::to_string(final_stats.dup_count) + ".");
+  LOG_INFO("Speeds below lower bound count " + std::to_string(final_stats.lower_bound_count) + ".");
+  LOG_INFO("Speeds above upper bound count " + std::to_string(final_stats.upper_bound_count) + ".");
   LOG_INFO("Finished");
   // Optional summary
   if (summary) {

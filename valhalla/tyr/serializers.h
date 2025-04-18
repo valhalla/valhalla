@@ -45,6 +45,9 @@ using PointLL = GeoPoint<double>;
 } // namespace midgard
 namespace tyr {
 
+constexpr unsigned int kDefaultPrecision = 3;
+constexpr unsigned int kCoordinatePrecision = 6;
+
 /**
  * Turn path and directions into a route that one can follow
  */
@@ -155,6 +158,7 @@ baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
  * @returns The GeoJSON geometry of the LineString
  */
 baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape);
+void geojson_shape(const std::vector<midgard::PointLL> shape, rapidjson::writer_wrapper_t& writer);
 
 // Elevation serialization support
 
@@ -210,6 +214,10 @@ namespace osrm {
  */
 valhalla::baldr::json::MapPtr
 waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is_optimized = false);
+void waypoint(const valhalla::Location& location,
+              rapidjson::writer_wrapper_t& writer,
+              bool is_tracepoint = false,
+              bool is_optimized = false);
 
 /*
  * Serialize locations into osrm waypoints
@@ -217,6 +225,9 @@ waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is
 valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
+void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+               rapidjson::writer_wrapper_t& writer,
+               bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 
