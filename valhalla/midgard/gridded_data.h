@@ -7,14 +7,16 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <vector>
+
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/polyline2.h>
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/util.h>
-#include <vector>
 
 namespace valhalla {
 namespace midgard {
+using contour_interval_t = std::tuple<size_t, float, std::string, std::string>;
 
 // A special generalization value indicating that the application should
 // compute an optimal generalization factor when creating contours.
@@ -73,7 +75,6 @@ public:
   using feature_t = std::list<contour_t>;
   using contours_t = std::vector<std::list<feature_t>>;
   // dimension, value (seconds/meters), name (time/distance), color
-  using contour_interval_t = std::tuple<size_t, float, std::string, std::string>;
   /**
    * TODO: implement two versions of this, leave this one for linestring contours
    * and make another for polygons

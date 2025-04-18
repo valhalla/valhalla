@@ -4,12 +4,15 @@
 #include <unordered_map>
 #include <vector>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
 
 namespace valhalla {
+namespace baldr {
+class GraphReader;
+}
+
 namespace mjolnir {
 
 // Structure holding an edge Id and forward flag

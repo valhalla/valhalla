@@ -2,10 +2,10 @@
 #define __VALHALLA_ODIN_SERVICE_H__
 
 #include <valhalla/odin/markup_formatter.h>
-#include <valhalla/proto/api.pb.h>
 #include <valhalla/worker.h>
 
 namespace valhalla {
+class Api;
 namespace odin {
 
 #ifdef ENABLE_SERVICES

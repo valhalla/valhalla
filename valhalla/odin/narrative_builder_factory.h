@@ -3,13 +3,12 @@
 
 #include <memory>
 
-#include <valhalla/odin/enhancedtrippath.h>
-#include <valhalla/odin/markup_formatter.h>
-#include <valhalla/odin/narrativebuilder.h>
-#include <valhalla/proto/options.pb.h>
-
 namespace valhalla {
+class Options;
 namespace odin {
+class EnhancedTripLeg;
+class MarkupFormatter;
+class NarrativeBuilder;
 
 /**
  * A factory class that creates a specific NarrativeBuilder pointer

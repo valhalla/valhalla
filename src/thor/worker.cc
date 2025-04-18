@@ -3,14 +3,16 @@
 #include <string>
 #include <unordered_map>
 
-#include "midgard/constants.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "thor/isochrone.h"
-#include "thor/worker.h"
-#include "tyr/actor.h"
-
 #include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/meili/map_matcher.h>
+#include <valhalla/meili/map_matcher_factory.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/util.h>
+#include <valhalla/thor/isochrone.h>
+#include <valhalla/thor/worker.h>
+#include <valhalla/tyr/actor.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

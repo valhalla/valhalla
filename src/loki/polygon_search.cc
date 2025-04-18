@@ -2,12 +2,18 @@
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/ring.hpp>
 
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/loki/polygon_search.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/sif/dynamiccost.h>
 #include <valhalla/worker.h>
 
 namespace bg = boost::geometry;

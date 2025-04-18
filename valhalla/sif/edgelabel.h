@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <string.h>
+
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>

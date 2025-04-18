@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHENHANCER_H
 #define VALHALLA_MJOLNIR_GRAPHENHANCER_H
 
-#include <boost/property_tree/ptree.hpp>
-#include <valhalla/mjolnir/osmdata.h>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
 namespace mjolnir {
+class OSMData;
 
 /**
  * Class used to enhance graph tile information at the local level.

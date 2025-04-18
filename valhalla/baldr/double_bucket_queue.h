@@ -3,9 +3,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/util.h>
+#include <stdexcept>
 #include <vector>
+
+#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace baldr {

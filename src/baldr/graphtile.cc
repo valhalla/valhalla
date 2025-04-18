@@ -1,16 +1,3 @@
-#include "baldr/graphtile.h"
-
-#include "baldr/compression_utils.h"
-#include "baldr/curl_tilegetter.h"
-#include "baldr/datetime.h"
-#include "baldr/sign.h"
-#include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-#include "midgard/aabb2.h"
-#include "midgard/pointll.h"
-#include "midgard/tiles.h"
-
-#include <boost/algorithm/string.hpp>
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -22,6 +9,30 @@
 #include <thread>
 #include <utility>
 #include <vector>
+
+#include <boost/algorithm/string.hpp>
+
+#include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/admin.h>
+#include <valhalla/baldr/admininfo.h>
+#include <valhalla/baldr/complexrestriction.h>
+#include <valhalla/baldr/compression_utils.h>
+#include <valhalla/baldr/curl_tilegetter.h>
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/sign.h>
+#include <valhalla/baldr/signinfo.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/baldr/transitroute.h>
+#include <valhalla/baldr/transitschedule.h>
+#include <valhalla/baldr/transitstop.h>
+#include <valhalla/baldr/transittransfer.h>
+#include <valhalla/filesystem.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/tiles.h>
 
 using namespace valhalla::midgard;
 

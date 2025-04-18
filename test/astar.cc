@@ -274,7 +274,8 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
   set_hierarchy_limits(mode_costing[int(mode)], true);
   ASSERT_TRUE(bool(mode_costing[int(mode)]));
 
-  auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode);
+  auto options = Options::default_instance();
+  auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode, options);
 
   int32_t time = 0;
   for (const auto& path : paths) {
@@ -1055,12 +1056,12 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
 
   // Set departure date for timedep forward
   options.mutable_locations(0)->set_date_time("2019-11-21T13:05");
-
+  auto options_default = Options::default_instance();
   {
     vt::TimeDepForward astar;
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                                  *reader, costs, mode)
+                                  *reader, costs, mode, options_default)
                      .front();
 
     verify_paths(paths);
@@ -1069,7 +1070,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     vt::TimeDepReverse astar;
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                                  *reader, costs, mode)
+                                  *reader, costs, mode, options_default)
                      .front();
 
     verify_paths(paths);
@@ -1078,7 +1079,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     vt::BidirectionalAStar astar;
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                                  *reader, costs, mode)
+                                  *reader, costs, mode, options_default)
                      .front();
 
     verify_paths(paths);
@@ -1295,7 +1296,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
   // Two tests where start and end lives on a partial complex restriction
   //      Under this circumstance the restriction should _not_ trigger
-
+  auto options_default = Options::default_instance();
   auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode);
 
   std::vector<uint32_t> visited;
@@ -1319,7 +1320,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   // For the second test, just switch origin/destination and reverse expected,
   // result should be the same
   std::cout << "reversed test" << std::endl;
-  paths = astar.GetBestPath(dest, origin, *reader, costs, mode);
+  paths = astar.GetBestPath(dest, origin, *reader, costs, mode, options_default);
 
   visited.clear();
   for (auto& path_infos : paths) {
@@ -1560,9 +1561,10 @@ TEST(Astar, BiDirTrivial) {
   }
 
   vt::BidirectionalAStar astar;
+  auto options_default = Options::default_instance();
   auto path = astar
                   .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
-                               graph_reader, mode_costing, mode)
+                               graph_reader, mode_costing, mode, options_default)
                   .front();
 
   ASSERT_TRUE(path.size() == 1);
@@ -1660,9 +1662,11 @@ TEST(BiDiAstar, test_recost_path) {
   auto config = test::make_config("");
   vt::BidirectionalAStar astar;
 
-  const auto path =
-      astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
-          .front();
+  auto options_default = Options::default_instance();
+  const auto path = astar
+                        .GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing,
+                                     travel_mode, options_default)
+                        .front();
 
   // check that final path doesn't contain shortcuts
   for (const auto& info : path) {
@@ -1741,6 +1745,7 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
 
   vt::BidirectionalAStar astar;
+  auto options_default = Options::default_instance();
 
   // hack hierarchy limits to allow to go through the shortcut
   {
@@ -1750,9 +1755,10 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
       sif::RelaxHierarchyLimits(hierarchy, 0.f, 0.f);
     }
   }
-  const auto path =
-      astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
-          .front();
+  const auto path = astar
+                        .GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing,
+                                     travel_mode, options_default)
+                        .front();
 
   // collect names of base edges
   std::vector<std::string> expected_names = {"1A", "AB", "BC", "CD", "DE", "E2"};

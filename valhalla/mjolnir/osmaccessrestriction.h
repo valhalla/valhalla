@@ -2,10 +2,11 @@
 #define VALHALLA_MJOLNIR_OSMACCESSRESTRICTION_H
 
 #include <cstdint>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
 
 namespace valhalla {
+namespace baldr {
+enum class AccessType : uint8_t;
+}
 namespace mjolnir {
 
 // Used for access restrictions. Conveys the direction in which the access restriction applies

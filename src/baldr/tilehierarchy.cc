@@ -1,6 +1,8 @@
-#include "baldr/tilehierarchy.h"
-#include "baldr/graphtileheader.h"
-#include "midgard/vector2.h"
+#include <cassert>
+
+#include <valhalla/baldr/graphtileheader.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/vector2.h>
 
 using namespace valhalla::midgard;
 

@@ -1,17 +1,13 @@
 #pragma once
 
 #include <cstdint>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/linesegment2.h>
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/pointll.h>
-
 #include <tuple>
 #include <unordered_set>
 #include <vector>
 
 namespace valhalla {
 namespace midgard {
+template <class T> class AABB2;
 
 /**
  * 2-D polyline. This is a template class that works with Point2

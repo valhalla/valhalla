@@ -1,24 +1,27 @@
-#include "mjolnir/elevationbuilder.h"
-
+#include <filesystem>
 #include <random>
 #include <thread>
 #include <utility>
 
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "filesystem.h"
-#include "midgard/elevation_encoding.h"
-#include "midgard/encoded.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/polyline2.h"
-#include "midgard/util.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
+#include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/filesystem.h>
+#include <valhalla/midgard/elevation_encoding.h>
+#include <valhalla/midgard/encoded.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/polyline2.h>
+#include <valhalla/midgard/util.h>
+#include <valhalla/mjolnir/elevationbuilder.h>
+#include <valhalla/mjolnir/graphtilebuilder.h>
+#include <valhalla/mjolnir/util.h>
+#include <valhalla/skadi/sample.h>
+#include <valhalla/skadi/util.h>
+
 #include "scoped_timer.h"
-#include "skadi/sample.h"
-#include "skadi/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -316,7 +319,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
                              std::deque<baldr::GraphId> tile_ids) {
 
   auto elevation = pt.get_optional<std::string>("additional_data.elevation");
-  if (!elevation || !filesystem::exists(*elevation)) {
+  if (!elevation || !std::filesystem::exists(*elevation)) {
     LOG_WARN("Elevation storage directory does not exist");
     return;
   }

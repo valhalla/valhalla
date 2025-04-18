@@ -3,14 +3,12 @@
 #include <cstdint>
 #include <vector>
 
-#include <valhalla/midgard/util.h>
-#include <valhalla/sif/costconstants.h>
-#include <valhalla/sif/dynamiccost.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/thor/dijkstras.h>
-#include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
 namespace thor {
+class PathInfo;
 
 /*
  * This is a simple structure which stores the edges at which paths have intersected (ie potential

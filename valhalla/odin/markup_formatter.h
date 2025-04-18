@@ -5,11 +5,14 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/baldr/streetname.h>
-#include <valhalla/odin/sign.h>
-
 namespace valhalla {
+enum Pronunciation_Alphabet : int;
+namespace baldr {
+class Pronunciation;
+class StreetName;
+} // namespace baldr
 namespace odin {
+class Sign;
 
 class MarkupFormatter {
 public:

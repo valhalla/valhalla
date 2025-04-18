@@ -1,20 +1,21 @@
-
-#include "mjolnir/pbfadminparser.h"
-#include "admin_lua_proc.h"
-#include "idtable.h"
-#include "midgard/logging.h"
-#include "mjolnir/luatagtransform.h"
-#include "mjolnir/osmadmindata.h"
-
-#include <boost/algorithm/string.hpp>
-#include <osmium/io/pbf_input.hpp>
-
-#include <osmium/osm/entity_bits.hpp>
 #include <string>
 #include <utility>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <osmium/io/pbf_input.hpp>
+#include <osmium/osm/entity_bits.hpp>
+
+#include <valhalla/midgard/logging.h>
+#include <valhalla/mjolnir/luatagtransform.h>
+#include <valhalla/mjolnir/osmadmindata.h>
+#include <valhalla/mjolnir/osmdata.h>
+#include <valhalla/mjolnir/pbfadminparser.h>
+
+#include "admin_lua_proc.h"
+#include "idtable.h"
+
 using namespace valhalla::midgard;
-using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {

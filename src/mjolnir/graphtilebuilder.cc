@@ -1,20 +1,25 @@
-#include "mjolnir/graphtilebuilder.h"
-
-#include "baldr/datetime.h"
-#include "baldr/edgeinfo.h"
-#include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
 #include <algorithm>
 #include <boost/format.hpp>
 #include <list>
 #include <set>
 #include <stdexcept>
 
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
+#include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/admin.h>
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/landmark.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/filesystem.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/mjolnir/complexrestrictionbuilder.h>
+#include <valhalla/mjolnir/edgeinfobuilder.h>
+#include <valhalla/mjolnir/graphtilebuilder.h>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace mjolnir {

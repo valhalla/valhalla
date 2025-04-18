@@ -6,12 +6,9 @@
 #include <string>
 #include <unordered_map>
 
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/odin/narrative_dictionary.h>
-#include <valhalla/proto/options.pb.h>
-
 namespace valhalla {
 namespace odin {
+class NarrativeDictionary;
 
 const bool kLimitByConseuctiveCount = true;
 constexpr uint32_t kElementMaxCount = 4;

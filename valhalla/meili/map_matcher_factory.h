@@ -2,18 +2,18 @@
 #ifndef MMP_MAP_MATCHER_FACTORY_H_
 #define MMP_MAP_MATCHER_FACTORY_H_
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/meili/candidate_search.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/costfactory.h>
 
-#include <valhalla/meili/candidate_search.h>
 #include <valhalla/meili/config.h>
-#include <valhalla/meili/map_matcher.h>
 
 namespace valhalla {
 namespace meili {
+class MapMatcher;
 
 class MapMatcherFactory final {
 public:

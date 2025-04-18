@@ -17,7 +17,7 @@ std::string thor_worker_t::isochrones(Api& request) {
   auto costing = parse_costing(request);
 
   // name of the metric (time/distance, value, color)
-  std::vector<GriddedData<2>::contour_interval_t> intervals;
+  std::vector<contour_interval_t> intervals;
   for (const auto& contour : options.contours()) {
     if (contour.has_time_case()) {
       intervals.emplace_back(0, contour.time(), "time", contour.color());

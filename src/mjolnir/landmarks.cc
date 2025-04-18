@@ -1,23 +1,24 @@
-#include "mjolnir/landmarks.h"
-#include "filesystem.h"
-
-#include "baldr/graphreader.h"
-#include "midgard/sequence.h"
-#include "mjolnir/util.h"
-
-#include "baldr/location.h"
-#include "baldr/pathlocation.h"
-#include "baldr/tilehierarchy.h"
-#include "loki/search.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "sif/nocost.h"
-
-#include <osmium/io/pbf_input.hpp>
-
+#include <filesystem>
 #include <future>
 #include <string_view>
 #include <thread>
 #include <tuple>
+
+#include <boost/property_tree/ptree.hpp>
+#include <osmium/io/pbf_input.hpp>
+
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/landmark.h>
+#include <valhalla/baldr/location.h>
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/loki/search.h>
+#include <valhalla/midgard/sequence.h>
+#include <valhalla/mjolnir/graphtilebuilder.h>
+#include <valhalla/mjolnir/landmarks.h>
+#include <valhalla/mjolnir/util.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/sif/nocost.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
@@ -58,18 +59,18 @@ struct LandmarkDatabase::db_pimpl {
   db_pimpl(const std::string& db_name, bool read_only)
       : insert_stmt(nullptr), bounding_box_stmt(nullptr) {
     // create parent directory if it doesn't exist
-    const filesystem::path parent_dir = filesystem::path(db_name).parent_path();
-    if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+    const std::filesystem::path parent_dir = std::filesystem::path(db_name).parent_path();
+    if (!std::filesystem::exists(parent_dir) && !std::filesystem::create_directories(parent_dir)) {
       throw std::runtime_error("Can't create parent directory " + parent_dir.string());
     }
 
     // figure out if we need to create database or can just open it up
     auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    if (!filesystem::exists(db_name)) {
+    if (!std::filesystem::exists(db_name)) {
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
     } else if (!read_only) {
-      filesystem::remove(db_name);
+      std::filesystem::remove(db_name);
       LOG_INFO("deleting existing landmark database " + db_name + ", creating a new one");
     }
 

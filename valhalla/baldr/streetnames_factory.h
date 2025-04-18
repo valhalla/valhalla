@@ -6,7 +6,10 @@
 #include <vector>
 
 #include <valhalla/baldr/streetnames.h>
-#include <valhalla/proto/common.pb.h>
+
+namespace google::protobuf {
+template <typename T> class RepeatedPtrField;
+}
 
 namespace valhalla {
 namespace baldr {

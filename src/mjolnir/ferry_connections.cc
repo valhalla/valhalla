@@ -1,10 +1,17 @@
 #include <queue>
 #include <unordered_map>
 
-#include "baldr/graphconstants.h"
-#include "midgard/util.h"
-#include "mjolnir/ferry_connections.h"
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/util.h>
+#include <valhalla/mjolnir/ferry_connections.h>
+#include <valhalla/mjolnir/node_expander.h>
+#include <valhalla/mjolnir/osmdata.h>
+
 #include "scoped_timer.h"
+
+using namespace valhalla::midgard;
+
+constexpr uint32_t kFerryUpClass = static_cast<uint32_t>(valhalla::baldr::RoadClass::kPrimary);
 
 namespace valhalla {
 namespace mjolnir {

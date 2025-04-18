@@ -1,7 +1,8 @@
-#include "baldr/attributes_controller.h"
-#include "midgard/logging.h"
-
 #include <string>
+
+#include <valhalla/baldr/attributes_controller.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/proto/options.pb.h>
 
 namespace valhalla {
 namespace baldr {

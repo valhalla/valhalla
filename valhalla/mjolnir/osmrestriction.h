@@ -2,13 +2,16 @@
 #define VALHALLA_MJOLNIR_OSMRESTRICTION_H
 
 #include <cstdint>
-#include <valhalla/baldr/complexrestriction.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
-
+#include <cstring>
 #include <vector>
 
+#include <valhalla/mjolnir/complexrestrictionbuilder.h>
+
 namespace valhalla {
+namespace baldr {
+class GraphId;
+enum class RestrictionType : uint8_t;
+} // namespace baldr
 namespace mjolnir {
 
 /**
@@ -160,7 +163,7 @@ struct OSMRestriction {
   ViaNode via_;
 
   // fixed size of vias.
-  uint64_t vias_[valhalla::baldr::kMaxViasPerRestriction];
+  uint64_t vias_[kMaxViasPerRestriction];
 
   // timed restriction information
   uint64_t time_domain_;

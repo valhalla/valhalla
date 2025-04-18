@@ -7,18 +7,23 @@
 #include <string>
 
 #include <valhalla/baldr/streetnames.h>
-#include <valhalla/baldr/verbal_text_formatter.h>
-
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
-#include <valhalla/proto/common.pb.h>
-#include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
 
 using namespace valhalla::baldr;
 
 namespace valhalla {
+enum DirectionsLeg_Maneuver_Type : int;
+enum DirectionsLeg_Maneuver_BssManeuverType : int;
+enum DirectionsLeg_Maneuver_CardinalDirection : int;
+class DirectionsLeg_GuidanceView;
+enum TripLeg_Node_Type : int;
+
+namespace baldr {
+class VerbalTextFormatter;
+}
+
 namespace odin {
 
 // Trail type - for cycleways, walkways, mountain bike trails
@@ -98,7 +103,7 @@ public:
   void set_instruction(const std::string& instruction);
   void set_instruction(std::string&& instruction);
 
-  float length(const Options::Units& units = Options::kilometers) const;
+  float length(const Options_Units& units = Options::kilometers) const;
   void set_length(float km_length); // Kilometers
 
   // Seconds

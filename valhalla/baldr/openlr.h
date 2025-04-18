@@ -1,15 +1,14 @@
 #ifndef VALHALLA_MIDGARD_OPENLR_H_
 #define VALHALLA_MIDGARD_OPENLR_H_
 
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/proto/trip.pb.h>
-
-#include <assert.h>
 #include <bitset>
+#include <cassert>
 #include <numeric>
 #include <stdexcept>
 #include <vector>
+
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {

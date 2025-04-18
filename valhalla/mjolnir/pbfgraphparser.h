@@ -1,14 +1,14 @@
 #ifndef VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 #define VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 
-#include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <vector>
 
-#include <valhalla/mjolnir/osmdata.h>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
 namespace mjolnir {
+class OSMData;
 
 /**
  * Class used to parse OSM protocol buffer extracts.

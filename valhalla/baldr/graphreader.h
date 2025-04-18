@@ -7,20 +7,25 @@
 #include <string>
 #include <unordered_map>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
+#include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/tilegetter.h>
 #include <valhalla/baldr/tilehierarchy.h>
-
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/sequence.h>
 
-#include <valhalla/proto/incidents.pb.h>
-
 namespace valhalla {
+class IncidentsTile;
+class IncidentsTile_Location;
+class IncidentsTile_Metadata;
+
+namespace midgard {
+template <class T> class AABB2;
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace baldr {
 
 struct tile_gone_error_t : public std::runtime_error {
@@ -1018,8 +1023,7 @@ protected:
 };
 
 // Given the Location relation, return the full metadata
-const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
-                    const valhalla::IncidentsTile::Location& incident_location);
+const IncidentsTile_Metadata& getIncidentMetadata(const std::shared_ptr<const IncidentsTile>& tile,
+                                                  const IncidentsTile_Location& incident_location);
 } // namespace baldr
 } // namespace valhalla

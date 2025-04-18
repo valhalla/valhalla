@@ -7,9 +7,14 @@
 #include <valhalla/meili/state.h>
 #include <valhalla/meili/topk_search.h>
 #include <valhalla/meili/viterbi_search.h>
-#include <valhalla/sif/dynamiccost.h>
+#include <valhalla/sif/costconstants.h>
 
 namespace valhalla {
+namespace sif {
+class DynamicCost;
+using cost_ptr_t = std::shared_ptr<DynamicCost>;
+using mode_costing_t = std::array<cost_ptr_t, static_cast<size_t>(TravelMode::kMaxTravelMode)>;
+} // namespace sif
 namespace meili {
 
 class TransitionCostModel {

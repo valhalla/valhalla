@@ -87,7 +87,9 @@ void try_path(GraphReader& reader,
   TimeDepForward astar;
   valhalla::Location origin = request.options().locations(0);
   valhalla::Location dest = request.options().locations(1);
-  auto pathedges = astar.GetBestPath(origin, dest, reader, mode_costing, mode).front();
+  auto options_default = Options::default_instance();
+  auto pathedges =
+      astar.GetBestPath(origin, dest, reader, mode_costing, mode, options_default).front();
   EXPECT_EQ(pathedges.size(), expected_edgecount);
 }
 

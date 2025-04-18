@@ -388,115 +388,165 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
   return via_waypoints;
 }
 
-void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
                                  const int begin_shape_index,
                                  const int end_shape_index,
                                  const std::string& road_class,
                                  const std::string& key_prefix) {
-  writer.Key(key_prefix + "id");
-  writer.String(std::to_string(incident_metadata.id()));
-  {
-    // Type is mandatory
-    writer.Key(key_prefix + "type");
-    writer.String(std::string(valhalla::incidentTypeToString(incident_metadata.type())));
-  }
+  writer(key_prefix + "id", std::to_string(incident_metadata.id()));
+  // Type is mandatory
+  writer(key_prefix + "type", std::string(valhalla::incidentTypeToString(incident_metadata.type())));
   if (!incident_metadata.iso_3166_1_alpha2().empty()) {
-    writer.Key(key_prefix + "iso_3166_1_alpha2");
-    writer.String(incident_metadata.iso_3166_1_alpha2());
+    writer(key_prefix + "iso_3166_1_alpha2", incident_metadata.iso_3166_1_alpha2());
   }
   if (!incident_metadata.iso_3166_1_alpha3().empty()) {
-    writer.Key(key_prefix + "iso_3166_1_alpha3");
-    writer.String(incident_metadata.iso_3166_1_alpha3());
+    writer(key_prefix + "iso_3166_1_alpha3", incident_metadata.iso_3166_1_alpha3());
   }
   if (!incident_metadata.description().empty()) {
-    writer.Key(key_prefix + "description");
-    writer.String(incident_metadata.description());
+    writer(key_prefix + "description", incident_metadata.description());
   }
   if (!incident_metadata.long_description().empty()) {
-    writer.Key(key_prefix + "long_description");
-    writer.String(incident_metadata.long_description());
+    writer(key_prefix + "long_description", incident_metadata.long_description());
   }
   if (incident_metadata.creation_time()) {
-    writer.Key(key_prefix + "creation_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
+    writer(key_prefix + "creation_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
   }
   if (incident_metadata.start_time() > 0) {
-    writer.Key(key_prefix + "start_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
+    writer(key_prefix + "start_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
   }
   if (incident_metadata.end_time()) {
-    writer.Key(key_prefix + "end_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
+    writer(key_prefix + "end_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
   }
   if (incident_metadata.impact()) {
-    writer.Key(key_prefix + "impact");
-    writer.String(std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
+    writer(key_prefix + "impact",
+           std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
   }
   if (!incident_metadata.sub_type().empty()) {
-    writer.Key(key_prefix + "sub_type");
-    writer.String(incident_metadata.sub_type());
+    writer(key_prefix + "sub_type", incident_metadata.sub_type());
   }
   if (!incident_metadata.sub_type_description().empty()) {
-    writer.Key(key_prefix + "sub_type_description");
-    writer.String(incident_metadata.sub_type_description());
+    writer(key_prefix + "sub_type_description", incident_metadata.sub_type_description());
   }
   if (incident_metadata.alertc_codes_size() > 0) {
-    writer.Key(key_prefix + "alertc_codes");
-    writer.StartArray();
+    writer.start_array(key_prefix + "alertc_codes");
     for (const auto& alertc_code : incident_metadata.alertc_codes()) {
-      writer.Uint64(static_cast<uint64_t>(alertc_code));
+      writer(static_cast<uint64_t>(alertc_code));
     }
-    writer.EndArray();
+    writer.end_array();
   }
   {
-    writer.Key(key_prefix + "lanes_blocked");
-    writer.StartArray();
+    writer.start_array(key_prefix + "lanes_blocked");
     for (const auto& blocked_lane : incident_metadata.lanes_blocked()) {
-      writer.String(blocked_lane);
+      writer(blocked_lane);
     }
-    writer.EndArray();
+    writer.end_array();
   }
   if (incident_metadata.num_lanes_blocked()) {
-    writer.Key(key_prefix + "num_lanes_blocked");
-    writer.Uint64(incident_metadata.num_lanes_blocked());
+    writer(key_prefix + "num_lanes_blocked", incident_metadata.num_lanes_blocked());
   }
   if (!incident_metadata.clear_lanes().empty()) {
-    writer.Key(key_prefix + "clear_lanes");
-    writer.String(incident_metadata.clear_lanes());
+    writer(key_prefix + "clear_lanes", incident_metadata.clear_lanes());
   }
 
   if (incident_metadata.length() > 0) {
-    writer.Key(key_prefix + "length");
-    writer.Uint(incident_metadata.length());
+    writer(key_prefix + "length", static_cast<uint64_t>(incident_metadata.length()));
   }
 
   if (incident_metadata.road_closed()) {
-    writer.Key(key_prefix + "closed");
-    writer.Bool(incident_metadata.road_closed());
+    writer(key_prefix + "closed", incident_metadata.road_closed());
   }
   if (!road_class.empty()) {
-    writer.Key(key_prefix + "class");
-    writer.String(road_class);
+    writer(key_prefix + "class", road_class);
   }
 
   if (incident_metadata.has_congestion()) {
-    writer.Key(key_prefix + "congestion");
-    writer.StartObject();
-    writer.Key("value");
-    writer.Uint(incident_metadata.congestion().value());
-    writer.EndObject();
+    writer.start_object(key_prefix + "congestion");
+    writer("value", static_cast<uint64_t>(incident_metadata.congestion().value()));
+    writer.end_object();
   }
 
   if (begin_shape_index >= 0) {
-    writer.Key(key_prefix + "geometry_index_start");
-    writer.Int(begin_shape_index);
+    writer(key_prefix + "geometry_index_start", static_cast<int64_t>(begin_shape_index));
   }
   if (end_shape_index >= 0) {
-    writer.Key(key_prefix + "geometry_index_end");
-    writer.Int(end_shape_index);
+    writer(key_prefix + "geometry_index_end", static_cast<int64_t>(end_shape_index));
   }
   // TODO Add test of lanes blocked and add missing properties
+}
+
+std::vector<float>
+get_elevation(const TripLeg& path_leg, const float interval, const float start_distance = 0.0f) {
+  // Store the first elevation if start_distance == 0
+  std::vector<float> elevation;
+  auto first_elevation = path_leg.node(0).edge().elevation(0);
+  if (start_distance == 0.0f) {
+    elevation.push_back(first_elevation);
+  }
+
+  uint32_t bridge_edge_count = 0;
+  uint32_t first_bridge_index;
+  float distance = 0.0f;             // Distance from prior elevation posting
+  float remaining = -start_distance; // How much of the current edge interval remains
+  float prior_elevation = first_elevation;
+  std::vector<std::pair<uint32_t, uint32_t>> bridges;
+  for (const auto& node : path_leg.node()) {
+    // Get the edge on the path, the starting elevation and sampling interval
+    auto path_edge = node.edge();
+    float edge_interval = path_edge.elevation_sampling_interval();
+
+    // Identify consecutive bridge/tunnel edges and store elevation indexes at start and end.
+    if (path_edge.bridge() || path_edge.tunnel()) {
+      if (bridge_edge_count == 0) {
+        first_bridge_index = elevation.size();
+      }
+      ++bridge_edge_count;
+    } else {
+      // Not a bridge/tunnel. Add a bridge elevation pair if more than 1 consecutive bridge/tunnel
+      // exists prior to this edge. Make sure elevation size > 0 - may have very short tunnel edges
+      // after an unmatched section (no new elevation added).
+      if (bridge_edge_count > 1 && elevation.size() > 0) {
+        bridges.emplace_back(first_bridge_index, elevation.size() - 1);
+      }
+      bridge_edge_count = 0;
+    }
+
+    // Iterate through the edge elevation (skip the first)
+    for (int32_t i = 1; i < path_edge.elevation_size(); ++i) {
+      auto elev = path_edge.elevation(i);
+
+      // Update distance from prior elevation posting
+      distance = interval - remaining;
+      remaining += edge_interval;
+
+      // Store elevation while distance remaining > interval
+      while (remaining > interval) {
+        // Linear interpolation between prior elevation
+        float p1 = distance / edge_interval;
+        elevation.push_back(prior_elevation * (1.0f - p1) + elev * p1);
+        remaining -= interval;
+        distance += interval;
+      }
+
+      // Update prior elevation
+      prior_elevation = elev;
+    }
+  }
+
+  // Store the last elevation
+  elevation.push_back(prior_elevation);
+
+  // Update elevations along consecutive bridges/tunnels. Update bridges if
+  // last edge was a bridge (and edge before was also a bridge).
+  if (bridge_edge_count > 1) {
+    bridges.emplace_back(first_bridge_index, elevation.size() - 1);
+  }
+  update_bridge_elevations(elevation, bridges);
+
+  return elevation;
 }
 
 } // namespace osrm

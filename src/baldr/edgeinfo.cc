@@ -1,6 +1,9 @@
-#include "baldr/edgeinfo.h"
-#include "baldr/graphconstants.h"
-#include "midgard/elevation_encoding.h"
+#include <valhalla/baldr/conditional_speed_limit.h>
+#include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/midgard/elevation_encoding.h>
+#include <valhalla/midgard/logging.h>
 
 using namespace valhalla::baldr;
 

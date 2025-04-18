@@ -1,13 +1,13 @@
-#include "loki/search.h"
-#include "loki/worker.h"
-
-#include "baldr/rapidjson_utils.h"
-#include "midgard/encoded.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "tyr/actor.h"
-
 #include <cmath>
+
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/loki/search.h>
+#include <valhalla/loki/worker.h>
+#include <valhalla/midgard/encoded.h>
+#include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/tyr/actor.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

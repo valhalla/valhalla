@@ -1,9 +1,9 @@
 #include <unordered_set>
-
-#include "baldr/connectivity_map.h"
-#include "loki/worker.h"
-#include "midgard/distanceapproximator.h"
-#include "tyr/serializers.h"
+#include <valhalla/baldr/connectivity_map.h>
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/loki/worker.h>
+#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/tyr/serializers.h>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

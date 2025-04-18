@@ -1,13 +1,13 @@
-#include "loki/search.h"
-#include "loki/worker.h"
-
 #include <unordered_map>
 
-#include "baldr/datetime.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/logging.h"
-#include "tyr/actor.h"
+#include <valhalla/baldr/connectivity_map.h>
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/loki/search.h>
+#include <valhalla/loki/worker.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/tyr/actor.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

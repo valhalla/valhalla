@@ -9,10 +9,10 @@
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/mjolnir/osmlinguistic.h>
-#include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
 namespace mjolnir {
+class UniqueNames;
 
 // OSM way
 struct OSMWay {

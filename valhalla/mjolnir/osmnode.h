@@ -1,6 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_OSMNODE_H
 #define VALHALLA_MJOLNIR_OSMNODE_H
 
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 

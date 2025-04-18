@@ -1,11 +1,17 @@
 #pragma once
 
+#include <unordered_set>
 #include <vector>
 
-#include "thor/bidirectional_astar.h"
-
 namespace valhalla {
+class Location;
+namespace baldr {
+class GraphId;
+}
 namespace thor {
+class CandidateConnection;
+class PathInfo;
+
 float get_max_sharing(const valhalla::Location& origin, const valhalla::Location& destination);
 
 void filter_alternates_by_stretch(std::vector<CandidateConnection>& connections);

@@ -1,6 +1,8 @@
-#include "mjolnir/dataquality.h"
 #include <fstream>
 #include <vector>
+
+#include <valhalla/midgard/logging.h>
+#include <valhalla/mjolnir/dataquality.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

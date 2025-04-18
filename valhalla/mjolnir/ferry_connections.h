@@ -4,10 +4,6 @@
 #include <cstdint>
 #include <string>
 
-#include <valhalla/mjolnir/dataquality.h>
-#include <valhalla/mjolnir/node_expander.h>
-#include <valhalla/mjolnir/osmdata.h>
-
 namespace valhalla {
 namespace mjolnir {
 
@@ -29,8 +25,6 @@ constexpr uint32_t kPermanent = 1;
 // still be a shorter path to this node. This node will
 // be "adjacent" to an node that is permanently labeled.
 constexpr uint32_t kTemporary = 2;
-
-constexpr uint32_t kFerryUpClass = static_cast<uint32_t>(baldr::RoadClass::kPrimary);
 
 // NodeLabel - for simple shortest path
 struct NodeLabel {

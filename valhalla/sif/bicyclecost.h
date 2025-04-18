@@ -1,12 +1,15 @@
 #ifndef VALHALLA_SIF_BICYCLECOST_H_
 #define VALHALLA_SIF_BICYCLECOST_H_
 
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/sif/dynamiccost.h>
+#include <memory>
+
+#include <valhalla/baldr/rapidjson_fwd.h>
 
 namespace valhalla {
+class Costing;
 namespace sif {
+class DynamicCost;
+using cost_ptr_t = std::shared_ptr<DynamicCost>;
 
 /**
  * Parses the bicycle cost options from json and stores values in pbf.

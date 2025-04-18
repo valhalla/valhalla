@@ -5,25 +5,30 @@
 #include <unordered_map>
 #include <vector>
 
-#include "baldr/json.h"
-#include "midgard/encoded.h"
-#include "midgard/pointll.h"
-#include "midgard/polyline2.h"
-#include "midgard/util.h"
-#include "odin/enhancedtrippath.h"
-#include "odin/narrative_builder_factory.h"
-#include "odin/narrativebuilder.h"
-#include "odin/util.h"
+#include <valhalla/baldr/admin.h>
+#include <valhalla/baldr/attributes_controller.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/turnlanes.h>
+#include <valhalla/midgard/encoded.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/polyline2.h>
+#include <valhalla/midgard/util.h>
+#include <valhalla/odin/enhancedtrippath.h>
+#include <valhalla/odin/narrative_builder_factory.h>
+#include <valhalla/odin/narrativebuilder.h>
+#include <valhalla/odin/util.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
+#include <valhalla/proto_conversions.h>
+#include <valhalla/tyr/serializer_constants.h>
+#include <valhalla/tyr/serializers.h>
+#include <valhalla/worker.h>
+
 #include "route_serializer_osrm.h"
 #include "route_summary_cache.h"
-#include "tyr/serializer_constants.h"
-#include "tyr/serializers.h"
-#include "worker.h"
 
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
-#include "proto_conversions.h"
 #ifdef INLINE_TEST
 #include "test.h"
 #endif
@@ -684,13 +689,12 @@ std::string exits(const valhalla::TripSign& sign) {
 }
 
 valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incident) {
-  rapidjson::StringBuffer stringbuffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
-  writer.StartObject();
+  rapidjson::writer_wrapper_t writer(1024);
+  writer.start_object();
   osrm::serializeIncidentProperties(writer, incident.metadata(), incident.begin_shape_index(),
                                     incident.end_shape_index(), "", "");
-  writer.EndObject();
-  return {stringbuffer.GetString()};
+  writer.end_object();
+  return {writer.get_buffer()};
 }
 
 // Serializes incidents and adds to json-document

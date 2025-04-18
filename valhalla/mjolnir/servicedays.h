@@ -8,9 +8,11 @@
 #include <vector>
 
 #include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
+namespace baldr {
+enum class MONTH : uint8_t;
+}
 namespace mjolnir {
 
 std::string to_iso_extended_string(const date::sys_days& d);

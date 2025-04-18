@@ -1,5 +1,6 @@
-#include "sif/recost.h"
-#include "baldr/time_info.h"
+#include <valhalla/baldr/time_info.h>
+#include <valhalla/sif/dynamiccost.h>
+#include <valhalla/sif/recost.h>
 
 namespace valhalla {
 namespace sif {

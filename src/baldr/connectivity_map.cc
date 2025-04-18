@@ -3,15 +3,14 @@
 #include <sstream>
 #include <unordered_set>
 
-#include "baldr/connectivity_map.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/json.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/constants.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/util.h"
+#include <valhalla/baldr/connectivity_map.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/util.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

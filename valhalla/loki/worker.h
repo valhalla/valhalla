@@ -5,19 +5,24 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/skadi/sample.h>
-#include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
 
 namespace valhalla {
+class Api;
+namespace baldr {
+class connectivity_map_t;
+class Location;
+class PathLocation;
+} // namespace baldr
+
+namespace midgard {
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace loki {
 
 #ifdef ENABLE_SERVICES

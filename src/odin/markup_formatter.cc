@@ -5,8 +5,10 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
-#include "odin/markup_formatter.h"
-#include "proto/common.pb.h"
+#include <valhalla/baldr/streetname.h>
+#include <valhalla/odin/markup_formatter.h>
+#include <valhalla/odin/sign.h>
+#include <valhalla/proto/common.pb.h>
 
 namespace {
 constexpr auto kQuotesTag = "<QUOTES>";

@@ -32,6 +32,9 @@
 #include <valhalla/worker.h>
 
 namespace valhalla {
+namespace meili {
+class Measurement;
+}
 namespace thor {
 
 #ifdef ENABLE_SERVICES

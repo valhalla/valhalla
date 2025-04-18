@@ -2,14 +2,18 @@
 #define VALHALLA_BALDR_GRAPHID_H_
 
 #include <cstdint>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/json.h>
 
 namespace valhalla {
 namespace baldr {
+namespace json {
+using MapPtr = std::shared_ptr<class Jmap>;
+}
 
 // Maximum of 8 (0-7) graph hierarchies are supported.
 constexpr uint32_t kMaxGraphHierarchy = 7;
@@ -171,7 +175,7 @@ public:
    * The json representation of the id
    * @return  json
    */
-  json::Value json() const;
+  json::MapPtr json() const;
 
   /**
    * Post increments the id.

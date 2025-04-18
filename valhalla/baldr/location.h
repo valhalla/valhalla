@@ -6,7 +6,6 @@
 #include <string>
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/common.pb.h>
 

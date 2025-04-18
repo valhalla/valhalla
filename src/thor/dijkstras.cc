@@ -1,8 +1,11 @@
-#include "thor/dijkstras.h"
-#include "baldr/datetime.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/logging.h"
 #include <algorithm>
+
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/baldr/transitroute.h>
+#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/thor/dijkstras.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -3,19 +3,26 @@
 
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include <valhalla/baldr/conditional_speed_limit.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
+namespace midgard {
+template <typename PrecisionT> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace baldr {
+namespace json {
+class Jmap;
+using MapPtr = std::shared_ptr<Jmap>;
+} // namespace json
+union ConditionalSpeedLimit;
+enum class TaggedValue : uint8_t;
 
 constexpr size_t kMaxNamesPerEdge = 15;
 constexpr size_t kMaxEncodedShapeSize = 65535;

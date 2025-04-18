@@ -3,15 +3,11 @@
 
 #include <cstdint>
 
-#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {
-
-constexpr size_t kMaxViasPerRestriction = 31;
+enum class RestrictionType : uint8_t;
 
 enum class WalkingVia {
   KeepWalking,

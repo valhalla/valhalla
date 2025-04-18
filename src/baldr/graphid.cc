@@ -1,10 +1,11 @@
-#include "baldr/graphid.h"
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/json.h>
 
 namespace valhalla {
 namespace baldr {
 
 // The json representation of the Id
-json::Value GraphId::json() const {
+json::MapPtr GraphId::json() const {
   if (Is_Valid()) {
     return json::map({
         {"level", static_cast<uint64_t>(level())},

@@ -1,6 +1,7 @@
-
-#include "baldr/rapidjson_utils.h"
-#include "tyr/serializers.h"
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/proto/api.pb.h>
+#include <valhalla/proto_conversions.h>
+#include <valhalla/tyr/serializers.h>
 
 using namespace valhalla;
 using namespace rapidjson;

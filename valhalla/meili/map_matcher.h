@@ -15,9 +15,12 @@
 #include <valhalla/meili/state.h>
 #include <valhalla/meili/topk_search.h>
 #include <valhalla/meili/transition_cost_model.h>
-#include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
+namespace midgard {
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace meili {
 
 // A facade that connects everything

@@ -1,9 +1,17 @@
 #ifndef VALHALLA_LOKI_NODE_SEARCH_H_
 #define VALHALLA_LOKI_NODE_SEARCH_H_
 
-#include <valhalla/baldr/graphreader.h>
-
+#include <vector>
 namespace valhalla {
+namespace baldr {
+class GraphId;
+class GraphReader;
+} // namespace baldr
+namespace midgard {
+template <class T> class AABB2;
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace loki {
 
 /**

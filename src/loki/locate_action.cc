@@ -1,6 +1,7 @@
-#include "loki/search.h"
-#include "loki/worker.h"
-#include "tyr/serializers.h"
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/loki/search.h>
+#include <valhalla/loki/worker.h>
+#include <valhalla/tyr/serializers.h>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

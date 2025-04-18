@@ -3,6 +3,7 @@
 #define MMP_STATE_H_
 
 #include <algorithm>
+#include <iomanip>
 #include <unordered_map>
 #include <vector>
 
@@ -10,7 +11,7 @@
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/routing.h>
 #include <valhalla/meili/stateid.h>
-#include <valhalla/proto/common.pb.h>
+#include <valhalla/midgard/logging.h>
 
 namespace valhalla {
 namespace meili {

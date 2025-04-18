@@ -3,13 +3,14 @@
 
 #include <list>
 
-#include <valhalla/odin/enhancedtrippath.h>
-#include <valhalla/odin/maneuver.h>
-#include <valhalla/odin/markup_formatter.h>
-#include <valhalla/proto/api.pb.h>
-
 namespace valhalla {
+class Api;
+class Options;
+class DirectionsLeg;
 namespace odin {
+class EnhancedTripLeg;
+class Maneuver;
+class MarkupFormatter;
 
 /**
  * Builds the trip directions based on the specified directions options

@@ -1,7 +1,8 @@
-#include "midgard/pointll.h"
-#include "midgard/util.h"
-
 #include <list>
+
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace midgard {

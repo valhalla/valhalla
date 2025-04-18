@@ -2,15 +2,20 @@
 #define VALHALLA_BALDR_NODEINFO_H_
 
 #include <cstdint>
+
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {
+namespace json {
+class Jmap;
+using MapPtr = std::shared_ptr<Jmap>;
+} // namespace json
 
 constexpr uint32_t kMaxEdgesPerNode = 127;    // Maximum edges per node
 constexpr uint32_t kMaxAdminsPerTile = 4095;  // Maximum Admins per tile

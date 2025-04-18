@@ -1,17 +1,15 @@
 // -*- mode: c++ -*-
 #pragma once
 #include <cmath>
-
 #include <vector>
 
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
-
 namespace valhalla {
+namespace midgard {
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
+template <class T> class Shape7Decoder;
+class projector_t;
+} // namespace midgard
 namespace meili {
 namespace helpers {
 

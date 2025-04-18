@@ -3,22 +3,46 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
-#include <valhalla/baldr/attributes_controller.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/meili/match_result.h>
-#include <valhalla/midgard/gridded_data.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/api.pb.h>
-#include <valhalla/proto_conversions.h>
-#include <valhalla/tyr/actor.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
+
+namespace google {
+namespace protobuf {
+template <typename T> class RepeatedPtrField;
+}
+} // namespace google
 
 namespace valhalla {
+class Api;
+class IncidentsTile_Metadata;
+class Location;
+class Options;
+class Trip;
+class TripLeg;
+class TripRoute;
+namespace baldr {
+class AttributesController;
+class GraphReader;
+class Location;
+class PathLocation;
+namespace json {
+class Jmap;
+using MapPtr = std::shared_ptr<Jmap>;
+class Jarray;
+using ArrayPtr = std::shared_ptr<Jarray>;
+} // namespace json
+} // namespace baldr
+namespace meili {
+class MatchResult;
+}
+namespace midgard {
+using contour_interval_t = std::tuple<size_t, float, std::string, std::string>;
+template <std::size_t T> class GriddedData;
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace tyr {
 
 /**
@@ -38,7 +62,7 @@ std::string serializeMatrix(Api& request);
  * @param colors           the #ABC123 hex string color used in geojson fill color
  */
 std::string serializeIsochrones(Api& request,
-                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                                std::vector<midgard::contour_interval_t>& intervals,
                                 const std::shared_ptr<const midgard::GriddedData<2>>& isogrid);
 /**
  * Write GeoJSON from expansion pbf
@@ -173,77 +197,8 @@ inline void update_bridge_elevations(std::vector<float>& elevation,
  *                         interval is preserved.
  * @return  Returns an array of elevation postings along the path.
  */
-inline std::vector<float>
-get_elevation(const TripLeg& path_leg, const float interval, const float start_distance = 0.0f) {
-  // Store the first elevation if start_distance == 0
-  std::vector<float> elevation;
-  auto first_elevation = path_leg.node(0).edge().elevation(0);
-  if (start_distance == 0.0f) {
-    elevation.push_back(first_elevation);
-  }
-
-  uint32_t bridge_edge_count = 0;
-  uint32_t first_bridge_index;
-  float distance = 0.0f;             // Distance from prior elevation posting
-  float remaining = -start_distance; // How much of the current edge interval remains
-  float prior_elevation = first_elevation;
-  std::vector<std::pair<uint32_t, uint32_t>> bridges;
-  for (const auto& node : path_leg.node()) {
-    // Get the edge on the path, the starting elevation and sampling interval
-    auto path_edge = node.edge();
-    float edge_interval = path_edge.elevation_sampling_interval();
-
-    // Identify consecutive bridge/tunnel edges and store elevation indexes at start and end.
-    if (path_edge.bridge() || path_edge.tunnel()) {
-      if (bridge_edge_count == 0) {
-        first_bridge_index = elevation.size();
-      }
-      ++bridge_edge_count;
-    } else {
-      // Not a bridge/tunnel. Add a bridge elevation pair if more than 1 consecutive bridge/tunnel
-      // exists prior to this edge. Make sure elevation size > 0 - may have very short tunnel edges
-      // after an unmatched section (no new elevation added).
-      if (bridge_edge_count > 1 && elevation.size() > 0) {
-        bridges.emplace_back(first_bridge_index, elevation.size() - 1);
-      }
-      bridge_edge_count = 0;
-    }
-
-    // Iterate through the edge elevation (skip the first)
-    for (int32_t i = 1; i < path_edge.elevation_size(); ++i) {
-      auto elev = path_edge.elevation(i);
-
-      // Update distance from prior elevation posting
-      distance = interval - remaining;
-      remaining += edge_interval;
-
-      // Store elevation while distance remaining > interval
-      while (remaining > interval) {
-        // Linear interpolation between prior elevation
-        float p1 = distance / edge_interval;
-        elevation.push_back(prior_elevation * (1.0f - p1) + elev * p1);
-        remaining -= interval;
-        distance += interval;
-      }
-
-      // Update prior elevation
-      prior_elevation = elev;
-    }
-  }
-
-  // Store the last elevation
-  elevation.push_back(prior_elevation);
-
-  // Update elevations along consecutive bridges/tunnels. Update bridges if
-  // last edge was a bridge (and edge before was also a bridge).
-  if (bridge_edge_count > 1) {
-    bridges.emplace_back(first_bridge_index, elevation.size() - 1);
-  }
-  update_bridge_elevations(elevation, bridges);
-
-  return elevation;
-}
-
+std::vector<float>
+get_elevation(const TripLeg& path_leg, const float interval, const float start_distance = 0.0f);
 } // namespace tyr
 } // namespace valhalla
 
@@ -265,8 +220,8 @@ waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& location
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 
-void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
-                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
+                                 const valhalla::IncidentsTile_Metadata& incident_metadata,
                                  const int begin_shape_index,
                                  const int end_shape_index,
                                  const std::string& road_class,

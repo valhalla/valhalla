@@ -1,7 +1,6 @@
 #ifndef VALHALLA_BALDR_JSON_H_
 #define VALHALLA_BALDR_JSON_H_
 
-#include <boost/variant.hpp>
 #include <cctype>
 #include <cinttypes>
 #include <cmath>
@@ -12,6 +11,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include <boost/variant.hpp>
 
 namespace valhalla {
 namespace baldr {

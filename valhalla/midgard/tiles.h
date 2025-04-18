@@ -8,10 +8,10 @@
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/ellipse.h>
 
 namespace valhalla {
 namespace midgard {
+template <class coord_t> class Ellipse;
 
 /**
  * A class that provides a uniform (square) tiling system for a specified

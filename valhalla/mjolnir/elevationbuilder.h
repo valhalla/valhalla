@@ -3,11 +3,12 @@
 
 #include <deque>
 
-#include <boost/property_tree/ptree.hpp>
-
-#include "baldr/graphid.h"
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
+namespace baldr {
+class GraphId;
+}
 namespace mjolnir {
 
 /**

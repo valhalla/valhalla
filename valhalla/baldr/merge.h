@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <deque>
 #include <utility>
+
 #include <valhalla/baldr/edgetracker.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>

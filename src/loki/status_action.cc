@@ -1,8 +1,9 @@
-#include "baldr/tilehierarchy.h"
-#include "config.h"
-#include "filesystem.h"
-#include "loki/worker.h"
-#include "proto/status.pb.h"
+#include <valhalla/baldr/connectivity_map.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/config.h>
+#include <valhalla/filesystem.h>
+#include <valhalla/loki/worker.h>
+#include <valhalla/proto/status.pb.h>
 
 using namespace valhalla::baldr;
 

@@ -2,7 +2,11 @@
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
 #include <cstdint>
+#include <memory>
+#include <unordered_map>
+
 #include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
@@ -14,17 +18,10 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/baldr/timedomain.h>
-#include <valhalla/baldr/transitdeparture.h>
-#include <valhalla/midgard/logging.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/edgestatus.h>
-
-#include <memory>
-#include <rapidjson/document.h>
-#include <unordered_map>
 
 // macros aren't great but writing these out for every option is an abomination worse than this macro
 
@@ -111,6 +108,10 @@
 using namespace valhalla::midgard;
 
 namespace valhalla {
+class HierarchyLimits;
+namespace baldr {
+class TransitDeparture;
+}
 namespace sif {
 
 const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingTypeMapping{

@@ -5,8 +5,6 @@
 #include <optional>
 #include <string>
 
-#include <valhalla/baldr/streetname.h>
-
 namespace valhalla {
 namespace odin {
 

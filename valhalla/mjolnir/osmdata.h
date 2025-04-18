@@ -5,17 +5,17 @@
 #include <string>
 #include <unordered_set>
 
-#include <valhalla/baldr/conditional_speed_limit.h>
-#include <valhalla/mjolnir/osmaccessrestriction.h>
-#include <valhalla/mjolnir/osmlinguistic.h>
 #include <valhalla/mjolnir/osmnode.h>
-#include <valhalla/mjolnir/osmnodelinguistic.h>
-#include <valhalla/mjolnir/osmrestriction.h>
-#include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
+namespace baldr {
+union ConditionalSpeedLimit;
+}
 namespace mjolnir {
+class OSMAccessRestriction;
+class OSMLinguistic;
+class OSMRestriction;
 
 // OSM record type
 enum class OSMType : uint8_t { kNode, kWay, kRelation };

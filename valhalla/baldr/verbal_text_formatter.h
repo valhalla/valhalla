@@ -4,11 +4,16 @@
 #include <regex>
 #include <string>
 
-#include <valhalla/odin/markup_formatter.h>
-#include <valhalla/odin/sign.h>
+#include <valhalla/baldr/streetname.h>
 
 namespace valhalla {
+
+namespace odin {
+class Sign;
+class MarkupFormatter;
+} // namespace odin
 namespace baldr {
+class StreetName;
 
 // Regular expression to find numbers
 const std::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");

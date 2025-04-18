@@ -1,13 +1,17 @@
 #pragma once
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/time_info.h>
-#include <valhalla/sif/dynamiccost.h>
-#include <valhalla/sif/edgelabel.h>
 
 #include <functional>
 
+#include <valhalla/baldr/time_info.h>
+
 namespace valhalla {
+namespace baldr {
+class GraphId;
+class GraphReader;
+} // namespace baldr
 namespace sif {
+class PathEdgeLabel;
+class DynamicCost;
 
 // what this function calls to get the next edge
 using EdgeCallback = std::function<baldr::GraphId(void)>;

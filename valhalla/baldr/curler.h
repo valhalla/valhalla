@@ -1,12 +1,12 @@
 #pragma once
 
-#include <valhalla/baldr/tilegetter.h>
-
 #include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
+
+#include <valhalla/baldr/tilegetter.h>
 
 namespace valhalla {
 namespace baldr {

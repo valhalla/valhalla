@@ -1,5 +1,7 @@
 #include "mjolnir/node_expander.h"
 
+using namespace valhalla::midgard;
+
 namespace valhalla {
 namespace mjolnir {
 
