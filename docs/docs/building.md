@@ -4,7 +4,7 @@ We aim to make Valhalla installable on every half-modern hardware, platform and 
 
 ## Build Configuration (all platforms)
 
-Valhalla uses [CMake](https://cmake.org/) as the build system. When compiling with `gcc` (GNU Compiler Collection), currently version 5 or newer is supported.
+Valhalla uses [CMake](https://cmake.org/) as the build system, the compiler needs C++17 support.
 
 Important build options include:
 
