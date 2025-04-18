@@ -11,7 +11,7 @@
 // Because we now throw exceptions, we need to turn off RAPIDJSON_NOEXCEPT
 #undef RAPIDJSON_HAS_CXX11_NOEXCEPT
 #define RAPIDJSON_HAS_CXX11_NOEXCEPT 0
-// Enbale std::string overloads
+// Enable std::string overloads
 #undef RAPIDJSON_HAS_STDSTRING
 #define RAPIDJSON_HAS_STDSTRING 1
 
