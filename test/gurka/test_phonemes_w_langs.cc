@@ -4,6 +4,8 @@
 #include "gurka.h"
 #include "test/test.h"
 
+#include <filesystem>
+
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif
@@ -20,12 +22,12 @@ const std::string sqlite = {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite
 constexpr double gridsize = 100;
 
 void CreateWorkdir() {
-  if (filesystem::is_directory(workdir)) {
-    filesystem::remove_all(workdir);
+  if (std::filesystem::is_directory(workdir)) {
+    std::filesystem::remove_all(workdir);
   }
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 }

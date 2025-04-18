@@ -1,8 +1,11 @@
-#include "baldr/attributes_controller.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/time_info.h"
-#include "proto/api.pb.h"
+#include <valhalla/baldr/attributes_controller.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/time_info.h>
+#include <valhalla/baldr/transitdeparture.h>
+#include <valhalla/baldr/transitschedule.h>
+#include <valhalla/baldr/transitstop.h>
+#include <valhalla/proto/api.pb.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

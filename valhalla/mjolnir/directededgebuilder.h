@@ -3,14 +3,15 @@
 
 #include <cstdint>
 #include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/mjolnir/osmway.h>
 
 using namespace valhalla::baldr;
 
 namespace valhalla {
+namespace baldr {
+enum class RoadClass : uint8_t;
+}
 namespace mjolnir {
+class OSMWay;
 
 /**
  * Derived class to build a directed edge given OSM way and other properties.

@@ -7,11 +7,12 @@
 #include <unordered_set>
 #include <vector>
 
+#include <boost/property_tree/ptree.hpp>
 #include <sqlite3.h>
 
-#include "baldr/graphconstants.h"
-#include "midgard/aabb2.h"
-#include <boost/property_tree/ptree.hpp>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

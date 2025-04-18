@@ -4,9 +4,10 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/graphconstants.h>
-
 namespace valhalla {
+namespace baldr {
+enum class DOW : uint8_t;
+}
 namespace mjolnir {
 
 /**

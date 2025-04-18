@@ -12,6 +12,8 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
+#include "mjolnir/osmway.h"
+#include "proto/options.pb.h"
 #include "sif/nocost.h"
 
 #include "test.h"

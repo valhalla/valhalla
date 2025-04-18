@@ -1,14 +1,17 @@
-#include "sif/motorcyclecost.h"
-#include "baldr/accessrestriction.h"
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
-#include "baldr/nodeinfo.h"
-#include "midgard/constants.h"
-#include "midgard/util.h"
-#include "proto_conversions.h"
-#include "sif/costconstants.h"
-#include "sif/osrm_car_duration.h"
 #include <cassert>
+
+#include <cassert>
+#include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/util.h>
+#include <valhalla/proto_conversions.h>
+#include <valhalla/sif/costconstants.h>
+#include <valhalla/sif/dynamiccost.h>
+#include <valhalla/sif/motorcyclecost.h>
+#include <valhalla/sif/osrm_car_duration.h>
 
 #ifdef INLINE_TEST
 #include "test.h"

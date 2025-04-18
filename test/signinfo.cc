@@ -1,5 +1,14 @@
-#include "baldr/signinfo.h"
+#include <filesystem>
+
+#include "baldr/conditional_speed_limit.h"
 #include "baldr/graphid.h"
+#include "baldr/signinfo.h"
+#include "mjolnir/osmaccessrestriction.h"
+#include "mjolnir/osmdata.h"
+#include "mjolnir/osmnode.h"
+#include "mjolnir/osmnodelinguistic.h"
+#include "mjolnir/osmrestriction.h"
+#include "mjolnir/osmway.h"
 #include "mjolnir/uniquenames.h"
 
 #include "test.h"
@@ -242,7 +251,7 @@ TEST(Signinfo, ExitToTest) {
     FAIL() << "destination ref I 695 North failed to create exist sign.  No exit 5 should exist.";
   }
 
-  filesystem::remove(linguistic_node_file);
+  std::filesystem::remove(linguistic_node_file);
 }
 
 } // namespace

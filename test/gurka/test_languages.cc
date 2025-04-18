@@ -4,6 +4,8 @@
 #include "gurka.h"
 #include "test/test.h"
 
+#include <filesystem>
+
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif
@@ -106,8 +108,8 @@ protected:
 
     const gurka::nodes nodes = {{"M", {{"highway", "traffic_signals"}, {"name", "M Junction"}}}};
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -128,8 +130,8 @@ TEST_F(RouteWithStreetnameAndSign_en_UnitedStates, CheckStreetNamesAndSigns1) {
 
   const std::string workdir = "test/data/gurka_language_with_streetname_and_sign_en_UnitedStates";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -669,8 +671,8 @@ protected:
 
     const gurka::nodes nodes = {{"M", {{"highway", "traffic_signals"}, {"name", "Zaventem"}}}};
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -692,8 +694,8 @@ TEST_F(RouteWithStreetnameAndSign_fr_nl_BrusselsBelgium, CheckStreetNamesAndSign
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_fr_nl_BrusselsBelgium";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -1274,8 +1276,8 @@ protected:
 
     const gurka::nodes nodes = {{"M", {{"highway", "traffic_signals"}, {"name", "Zaventem"}}}};
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -1296,8 +1298,8 @@ TEST_F(RouteWithStreetnameAndSign_ru_be_MinskBelarus, CheckStreetNamesAndSigns1)
 
   const std::string workdir = "test/data/gurka_language_with_streetname_and_sign_ru_be_MinskBelarus";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -1879,8 +1881,8 @@ protected:
 
     const gurka::nodes nodes = {{"M", {{"highway", "traffic_signals"}, {"name", "M Junction"}}}};
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -1901,8 +1903,8 @@ TEST_F(RouteWithStreetnameAndSign_cy_en_Wales, CheckStreetNamesAndSigns1) {
 
   const std::string workdir = "test/data/gurka_language_with_streetname_and_sign_cy_en_Wales";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -2423,8 +2425,8 @@ protected:
           {"name:right:nl", "Steenweg op Gent"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -2446,8 +2448,8 @@ TEST_F(RouteWithStreetnameAndSign_fr_nl_BrusselsBelgiumRightLeft, CheckRightName
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_fr_nl_BrusselsBelgiumRightLeft";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -2596,8 +2598,8 @@ protected:
          }},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -2619,8 +2621,8 @@ TEST_F(RouteWithStreetnameAndSign_en_USForwardBackwardWithName, CheckForwardName
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_en_USForwardBackwardwithName";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -2748,8 +2750,8 @@ protected:
           {"name:backward", "Quarry Road"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -2771,8 +2773,8 @@ TEST_F(RouteWithStreetnameAndSign_en_USForwardBackwardNoName, CheckForwardNames)
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_en_USForwardBackwardwithName";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -2883,8 +2885,8 @@ protected:
           {"name:right", "Komenstraat"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -2914,8 +2916,8 @@ TEST_F(RouteWithStreetnameAndSign_fr_nl_MesenBelgiumRightLeft, CheckRightNames) 
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_fr_nl_MesenBelgiumRightLeft";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -3019,8 +3021,8 @@ protected:
           {"name:de", "Alpenstrasse"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -3042,8 +3044,8 @@ TEST_F(RouteWithStreetnameAndSign_fr_de_FribourgSwitzerlandMulti, CheckForwardNa
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_fr_de_FribourgSwitzerlandMulti";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -3166,8 +3168,8 @@ protected:
           {"name:rm", "Via digl Gelgia"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -3193,8 +3195,8 @@ TEST_F(RouteWithStreetnameAndSign_rm_de_BivioSwitzerland, CheckForwardNames) {
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_rm_de_BivioSwitzerland";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -3319,8 +3321,8 @@ protected:
         {"OPMQ", {{"highway", "secondary"}, {"osm_id", "103"}, {"name", "Werdstrasse"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -3342,8 +3344,8 @@ TEST_F(RouteWithStreetnameAndSign_de_ZurichSwitzerland, CheckForwardNames) {
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_de_ZurichSwitzerland";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -3458,8 +3460,8 @@ protected:
           {"destination:street:lang:nl", "Lebeaustraat"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -3484,8 +3486,8 @@ TEST_F(RouteWithStreetnameAndSign_fr_nl_EupenBelgium, CheckLingusticPoly) {
   // See https://www.openstreetmap.org/relation/2425209#map=10/50.4440/6.1805 and
   // https://www.openstreetmap.org/relation/90348
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -3719,8 +3721,8 @@ protected:
         {"M",
          {{"highway", "traffic_signals"}, {"name", "両国二丁目"}, {"name:en", "Ryogoku 2-chome"}}}};
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -3741,8 +3743,8 @@ TEST_F(RouteWithStreetnameAndSign_ja_en_Japan, CheckStreetNamesAndSigns1) {
 
   const std::string workdir = "test/data/gurka_language_with_streetname_and_sign_ja_en_Japan";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -4526,8 +4528,8 @@ protected:
 
     const gurka::nodes nodes = {{"M", {{"highway", "traffic_signals"}, {"name", "M Junction"}}}};
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -4548,8 +4550,8 @@ TEST_F(RouteWithStreetnameAndSign_en_fr_OttawaCanada, CheckStreetNamesAndSigns1)
 
   const std::string workdir = "test/data/gurka_language_with_streetname_and_sign_en_fr_OttawaCanada";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -5212,8 +5214,8 @@ protected:
 
     const gurka::nodes nodes = {{"M", {{"highway", "traffic_signals"}, {"name", "M Junction"}}}};
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -5234,8 +5236,8 @@ TEST_F(RouteWithStreetnameAndSign_en_fr_QuebecCanada, CheckStreetNamesAndSigns1)
 
   const std::string workdir = "test/data/gurka_language_with_streetname_and_sign_en_fr_QuebecCanada";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -5806,8 +5808,8 @@ protected:
           {"name:pronunciation:jeita", "Native Language pronunciation"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -5829,8 +5831,8 @@ TEST_F(RouteWithStreetnameAndSign_en_ms_ta_zh_Singapore, CheckForwardNames) {
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_en_ms_ta_zh_Singapore";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -6106,8 +6108,8 @@ protected:
         {"M",
          {{"highway", "traffic_signals"}, {"name", "両国二丁目"}, {"name:en", "Ryogoku 2-chome"}}}};
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -6129,8 +6131,8 @@ TEST_F(RouteWithStreetnameAndSign_ja_en_JapanPronunciations, CheckStreetNamesAnd
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_ja_en_JapanPronunciations";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -6596,8 +6598,8 @@ protected:
           {"name:en", "Pamplona South - Airport"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -6619,8 +6621,8 @@ TEST_F(RouteWithStreetnameAndSign_en_USMultiWithNameDash, CheckForwardNames) {
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_en_USMultiWithNameDash";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -6747,8 +6749,8 @@ protected:
           {"name:en", "Pamplona South / Airport"}}},
     };
 
-    if (!filesystem::exists(workdir)) {
-      bool created = filesystem::create_directories(workdir);
+    if (!std::filesystem::exists(workdir)) {
+      bool created = std::filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
 
@@ -6770,8 +6772,8 @@ TEST_F(RouteWithStreetnameAndSign_en_USMultiWithNameSlash, CheckForwardNames) {
   const std::string workdir =
       "test/data/gurka_language_with_streetname_and_sign_en_USMultiWithNameSlash";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 

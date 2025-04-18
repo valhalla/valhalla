@@ -1,28 +1,40 @@
-#include "mjolnir/util.h"
-
-#include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-#include "midgard/aabb2.h"
-#include "midgard/logging.h"
-#include "midgard/point2.h"
-#include "midgard/polyline2.h"
-#include "mjolnir/bssbuilder.h"
-#include "mjolnir/elevationbuilder.h"
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/graphenhancer.h"
-#include "mjolnir/graphfilter.h"
-#include "mjolnir/graphvalidator.h"
-#include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/pbfgraphparser.h"
-#include "mjolnir/restrictionbuilder.h"
-#include "mjolnir/shortcutbuilder.h"
-#include "mjolnir/transitbuilder.h"
-#include "scoped_timer.h"
+#include <filesystem>
+#include <fstream>
+#include <regex>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <regex>
+
+#include <valhalla/baldr/conditional_speed_limit.h>
+#include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/point2.h>
+#include <valhalla/midgard/polyline2.h>
+#include <valhalla/mjolnir/bssbuilder.h>
+#include <valhalla/mjolnir/elevationbuilder.h>
+#include <valhalla/mjolnir/graphbuilder.h>
+#include <valhalla/mjolnir/graphenhancer.h>
+#include <valhalla/mjolnir/graphfilter.h>
+#include <valhalla/mjolnir/graphvalidator.h>
+#include <valhalla/mjolnir/hierarchybuilder.h>
+#include <valhalla/mjolnir/osmaccessrestriction.h>
+#include <valhalla/mjolnir/osmdata.h>
+#include <valhalla/mjolnir/osmlinguistic.h>
+#include <valhalla/mjolnir/osmrestriction.h>
+#include <valhalla/mjolnir/pbfgraphparser.h>
+#include <valhalla/mjolnir/restrictionbuilder.h>
+#include <valhalla/mjolnir/shortcutbuilder.h>
+#include <valhalla/mjolnir/transitbuilder.h>
+#include <valhalla/mjolnir/util.h>
+
+#include "scoped_timer.h"
 
 using namespace valhalla::midgard;
 
@@ -235,8 +247,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const BuildStage end_stage) {
   SCOPED_TIMER();
   auto remove_temp_file = [](const std::string& fname) {
-    if (filesystem::exists(fname)) {
-      filesystem::remove(fname);
+    if (std::filesystem::exists(fname)) {
+      std::filesystem::remove(fname);
     }
   };
 
@@ -253,8 +265,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Get the tile directory (make sure it ends with the preferred separator
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
-  if (tile_dir.back() != filesystem::path::preferred_separator) {
-    tile_dir.push_back(filesystem::path::preferred_separator);
+  if (tile_dir.back() != std::filesystem::path::preferred_separator) {
+    tile_dir.push_back(std::filesystem::path::preferred_separator);
   }
 
   // During the initialize stage the tile directory will be purged (if it already exists)
@@ -263,22 +275,22 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // set up the directories and purge old tiles if starting at the parsing stage
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
       auto level_dir = tile_dir + std::to_string(level.level);
-      if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
+      if (std::filesystem::exists(level_dir) && !std::filesystem::is_empty(level_dir)) {
         LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-        filesystem::remove_all(level_dir);
+        std::filesystem::remove_all(level_dir);
       }
     }
 
     // check for transit level.
     auto level_dir =
         tile_dir + std::to_string(valhalla::baldr::TileHierarchy::GetTransitLevel().level);
-    if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
+    if (std::filesystem::exists(level_dir) && !std::filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-      filesystem::remove_all(level_dir);
+      std::filesystem::remove_all(level_dir);
     }
 
     // Create the directory if it does not exist
-    filesystem::create_directories(tile_dir);
+    std::filesystem::create_directories(tile_dir);
   }
 
   // Set up the temporary (*.bin) files used during processing
@@ -356,7 +368,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (start_stage == BuildStage::kBuild) {
       // Read OSMData from files if building tiles is the first stage
       osm_data.read_from_temp_files(tile_dir);
-      if (filesystem::exists(tile_manifest)) {
+      if (std::filesystem::exists(tile_manifest)) {
         tiles = TileManifest::ReadFromFile(tile_manifest).tileset;
       } else {
         // TODO: Remove this backfill in the future, and make calling constructedges stage
@@ -459,6 +471,43 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   }
   return true;
 }
+
+std::string TileManifest::ToString() const {
+  baldr::json::ArrayPtr array = baldr::json::array({});
+  for (const auto& tile : tileset) {
+    const baldr::json::Value& graphid = tile.first.json();
+    const baldr::json::MapPtr& item =
+        baldr::json::map({{"graphid", graphid}, {"node_index", static_cast<uint64_t>(tile.second)}});
+    array->emplace_back(item);
+  }
+  std::stringstream manifest;
+  manifest << *baldr::json::map({{"tiles", array}});
+  return manifest.str();
+}
+
+void TileManifest::LogToFile(const std::string& filename) const {
+  std::ofstream handle;
+  handle.open(filename);
+  handle << ToString();
+  handle.close();
+  LOG_INFO("Writing tile manifest to " + filename);
+}
+
+TileManifest TileManifest::ReadFromFile(const std::string& filename) {
+  ptree manifest;
+  rapidjson::read_json(filename, manifest);
+  LOG_INFO("Reading tile manifest from " + filename);
+  std::map<baldr::GraphId, size_t> tileset;
+  for (const auto& tile_info : manifest.get_child("tiles")) {
+    const ptree& graph_id = tile_info.second.get_child("graphid");
+    const baldr::GraphId id(graph_id.get<uint64_t>("value"));
+    const size_t node_index = tile_info.second.get<size_t>("node_index");
+    tileset.insert({id, node_index});
+  }
+  LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
+           filename);
+  return TileManifest{tileset};
+};
 
 } // namespace mjolnir
 } // namespace valhalla

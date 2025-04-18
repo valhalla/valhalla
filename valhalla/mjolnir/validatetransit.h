@@ -1,14 +1,13 @@
 #ifndef VALHALLA_MJOLNIR_VALIDATETRANSIT_H
 #define VALHALLA_MJOLNIR_VALIDATETRANSIT_H
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 #include <unordered_set>
 
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/mjolnir/util.h>
-
 namespace valhalla {
+namespace baldr {
+class GraphId;
+}
 namespace mjolnir {
 
 struct OneStopTest {

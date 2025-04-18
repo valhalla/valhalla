@@ -7,6 +7,8 @@
 #include <utility>
 #include <vector>
 
+#include <boost/property_tree/ptree_fwd.hpp>
+
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -31,7 +33,7 @@ public:
    * Constructor.
    * @param config A config object of key, value pairs
    */
-  explicit AStarBSSAlgorithm(const boost::property_tree::ptree& config = {});
+  explicit AStarBSSAlgorithm(const boost::property_tree::ptree& config);
 
   /**
    * Destructor
@@ -49,13 +51,12 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  virtual std::vector<std::vector<PathInfo>>
-  GetBestPath(valhalla::Location& origin,
-              valhalla::Location& dest,
-              baldr::GraphReader& graphreader,
-              const sif::mode_costing_t& mode_costing,
-              const sif::TravelMode mode,
-              const Options& options = Options::default_instance()) override;
+  virtual std::vector<std::vector<PathInfo>> GetBestPath(valhalla::Location& origin,
+                                                         valhalla::Location& dest,
+                                                         baldr::GraphReader& graphreader,
+                                                         const sif::mode_costing_t& mode_costing,
+                                                         const sif::TravelMode mode,
+                                                         const Options& options) override;
 
   /**
    * Returns the name of the algorithm

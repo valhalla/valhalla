@@ -14,6 +14,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <boost/property_tree/ptree.hpp>
+
 using namespace valhalla;
 
 zmq::context_t context;

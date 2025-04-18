@@ -11,6 +11,10 @@
 #include <valhalla/baldr/verbal_text_formatter_us.h>
 #include <valhalla/proto/common.pb.h>
 
+namespace google::protobuf {
+template <typename T> class RepeatedPtrField;
+}
+
 namespace valhalla {
 namespace baldr {
 

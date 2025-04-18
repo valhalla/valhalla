@@ -1,6 +1,10 @@
+#include <algorithm>
 #include <vector>
 
-#include "thor/alternates.h"
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/thor/alternates.h>
+#include <valhalla/thor/bidirectional_astar.h>
 
 using namespace valhalla::thor;
 using namespace valhalla::baldr;

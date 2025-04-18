@@ -1,12 +1,16 @@
-#include "mjolnir/admin.h"
-#include "baldr/datetime.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
-#include "mjolnir/util.h"
-#include <sqlite3.h>
+#include <filesystem>
 #include <unordered_map>
 
+#include <sqlite3.h>
+
 #include <spatialite.h>
+
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/mjolnir/admin.h>
+#include <valhalla/mjolnir/graphtilebuilder.h>
+#include <valhalla/mjolnir/util.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -16,7 +20,7 @@ sqlite3* GetDBHandle(const std::string& database) {
 
   // Initialize the admin DB (if it exists)
   sqlite3* db_handle = nullptr;
-  if (!database.empty() && filesystem::exists(database)) {
+  if (!database.empty() && std::filesystem::exists(database)) {
     uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
                                    SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
     if (ret != SQLITE_OK) {

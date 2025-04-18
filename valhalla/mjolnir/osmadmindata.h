@@ -3,10 +3,13 @@
 #include <cstdint>
 #include <vector>
 
-#include <valhalla/midgard/pointll.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
+namespace midgard {
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace mjolnir {
 
 // OSM Admin

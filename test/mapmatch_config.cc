@@ -1,3 +1,5 @@
+#include <boost/property_tree/ptree.hpp>
+
 #include "meili/config.h"
 
 #include "test.h"

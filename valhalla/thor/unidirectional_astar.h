@@ -47,13 +47,12 @@ public:
    * @return Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<std::vector<PathInfo>>
-  GetBestPath(valhalla::Location& origin,
-              valhalla::Location& dest,
-              baldr::GraphReader& graphreader,
-              const sif::mode_costing_t& mode_costing,
-              const sif::TravelMode mode,
-              const Options& options = Options::default_instance()) override;
+  std::vector<std::vector<PathInfo>> GetBestPath(valhalla::Location& origin,
+                                                 valhalla::Location& dest,
+                                                 baldr::GraphReader& graphreader,
+                                                 const sif::mode_costing_t& mode_costing,
+                                                 const sif::TravelMode mode,
+                                                 const Options& options) override;
 
   /**
    * Clear the temporary information generated during path construction.

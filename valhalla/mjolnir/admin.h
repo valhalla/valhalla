@@ -1,26 +1,31 @@
 #ifndef VALHALLA_MJOLNIR_ADMIN_H_
 #define VALHALLA_MJOLNIR_ADMIN_H_
 
+#include <cstdint>
+#include <unordered_map>
+
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/multi_polygon.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
-
-#include <cstdint>
 #include <sqlite3.h>
-#include <unordered_map>
+
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/mjolnir/graphtilebuilder.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 namespace bg = boost::geometry;
 
 namespace valhalla {
+namespace midgard {
+template <class T> class AABB2;
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace mjolnir {
+class GraphTileBuilder;
 
 // Geometry types for admin queries
 typedef bg::model::d2::point_xy<double> point_type;

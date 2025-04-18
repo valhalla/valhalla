@@ -1,11 +1,12 @@
 #include <vector>
 
-#include "midgard/aabb2.h"
-#include "midgard/logging.h"
-#include "odin/enhancedtrippath.h"
-#include "odin/util.h"
-#include "proto_conversions.h"
-#include "tyr/serializers.h"
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/odin/enhancedtrippath.h>
+#include <valhalla/odin/util.h>
+#include <valhalla/proto_conversions.h>
+#include <valhalla/tyr/serializers.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

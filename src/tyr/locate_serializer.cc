@@ -1,7 +1,17 @@
-#include "baldr/json.h"
-#include "baldr/openlr.h"
-#include "tyr/serializers.h"
 #include <cstdint>
+
+#include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/graphtileptr.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/openlr.h>
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/proto/api.pb.h>
+#include <valhalla/tyr/serializers.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

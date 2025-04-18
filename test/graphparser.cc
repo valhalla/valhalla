@@ -1,11 +1,17 @@
+#include "baldr/conditional_speed_limit.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/sequence.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/osmaccessrestriction.h"
+#include "mjolnir/osmdata.h"
 #include "mjolnir/osmnode.h"
+#include "mjolnir/osmrestriction.h"
+#include "mjolnir/osmway.h"
 #include "mjolnir/pbfgraphparser.h"
+#include "proto/common.pb.h"
 #include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
