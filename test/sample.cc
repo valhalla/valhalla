@@ -6,6 +6,7 @@
 #include "midgard/util.h"
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <list>
 #include <lz4frame.h>
@@ -244,9 +245,9 @@ TEST(Sample, store) {
   // empty file
   EXPECT_FALSE(s.store("/N00/N00E009.hgt", {}));
 
-  filesystem::remove("test/data/sample/N00/N00E009.hgt");
-  filesystem::remove("test/data/sample/N00/N00E005.hgt");
-  filesystem::remove("test/data/sample/N00/N00E005.hgt.gz");
+  std::filesystem::remove("test/data/sample/N00/N00E009.hgt");
+  std::filesystem::remove("test/data/sample/N00/N00E005.hgt");
+  std::filesystem::remove("test/data/sample/N00/N00E005.hgt.gz");
 }
 
 } // namespace

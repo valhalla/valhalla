@@ -1,5 +1,8 @@
 #include "test.h"
 
+#include <boost/property_tree/ptree.hpp>
+
+#include "baldr/rapidjson_utils.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"

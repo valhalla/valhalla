@@ -7,6 +7,7 @@
 #include "mjolnir/graphtilebuilder.h"
 
 using namespace valhalla;
+using namespace valhalla::baldr;
 
 // Here 2 shortcuts should be created: from A to C all edges have speed 80 and from C to A all have
 // speed 90

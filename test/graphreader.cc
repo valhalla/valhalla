@@ -1,5 +1,7 @@
 #include <cstdint>
 
+#include <boost/property_tree/ptree.hpp>
+
 #include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"

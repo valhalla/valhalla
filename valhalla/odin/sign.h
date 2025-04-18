@@ -5,7 +5,12 @@
 #include <optional>
 #include <string>
 
+#include <valhalla/baldr/streetname.h>
+
 namespace valhalla {
+namespace baldr {
+class Pronunciation;
+}
 namespace odin {
 
 class Sign {

@@ -2,7 +2,7 @@
 #pragma once
 
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
+#include "baldr/rapidjson_fwd.h"
 #include "baldr/traffictile.h"
 #include "config.h"
 #include "midgard/polyline2.h"

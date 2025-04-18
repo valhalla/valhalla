@@ -6,12 +6,16 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <unordered_set>
 
 #include <boost/property_tree/ptree.hpp>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
 #include <valhalla/filesystem.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/sequence.h>
 #include <valhalla/proto/incidents.pb.h>
 

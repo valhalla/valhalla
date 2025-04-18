@@ -12,6 +12,7 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
+#include "mjolnir/osmway.h"
 
 #include "test.h"
 

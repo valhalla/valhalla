@@ -267,7 +267,7 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   }
 
   const auto costing = valhalla::sif::CostFactory{}.Create(co);
-  GraphReader reader(avoid_map.config.get_child("mjolnir"));
+  baldr::GraphReader reader(avoid_map.config.get_child("mjolnir"));
 
   // should return the shortcut edge ID as well
   size_t found_shortcuts = 0;

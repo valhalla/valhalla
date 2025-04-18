@@ -2,6 +2,7 @@
 #define VALHALLA_MJOLNIR_GRAPHBUILDER_H
 
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -9,8 +10,11 @@
 
 namespace valhalla {
 namespace baldr {
+class GraphId;
+enum class Language : uint8_t;
+enum class PronunciationAlphabet : uint8_t;
 class SignInfo;
-}
+} // namespace baldr
 namespace midgard {
 template <class T> class sequence;
 }

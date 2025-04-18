@@ -1,7 +1,12 @@
 #pragma once
 
+#include <cassert>
 #include <stdint.h>
 #include <unordered_map>
+
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/graphtileptr.h>
 
 // handy macro for shifting the 7bit path index value so that it can be or'd with the tile/level id
 #define SHIFT_path_id(x) (static_cast<uint32_t>(x) << 25u)

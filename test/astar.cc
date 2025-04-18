@@ -274,8 +274,8 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
   set_hierarchy_limits(mode_costing[int(mode)], true);
   ASSERT_TRUE(bool(mode_costing[int(mode)]));
 
-  auto options = Options::default_instance();
-  auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode, options);
+  auto default_options = Options::default_instance();
+  auto paths = astar.GetBestPath(origin, dest, *reader, mode_costing, mode, default_options);
 
   int32_t time = 0;
   for (const auto& path : paths) {
@@ -1076,7 +1076,7 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
     verify_paths(paths);
   }
   {
-    vt::BidirectionalAStar astar;
+    vt::BidirectionalAStar astar{{}};
     auto paths = astar
                      .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
                                   *reader, costs, mode, options_default)
@@ -1292,12 +1292,12 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
   // Test Bidirectional both for forward and reverse expansion
   boost::property_tree::ptree conf = test::make_config("");
-  vt::BidirectionalAStar astar;
+  vt::BidirectionalAStar astar{{}};
 
   // Two tests where start and end lives on a partial complex restriction
   //      Under this circumstance the restriction should _not_ trigger
   auto options_default = Options::default_instance();
-  auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode);
+  auto paths = astar.GetBestPath(origin, dest, *reader, costs, mode, options_default);
 
   std::vector<uint32_t> visited;
   for (auto& path_infos : paths) {
@@ -1560,7 +1560,7 @@ TEST(Astar, BiDirTrivial) {
         << "fail_invalid_origin";
   }
 
-  vt::BidirectionalAStar astar;
+  vt::BidirectionalAStar astar{{}};
   auto options_default = Options::default_instance();
   auto path = astar
                   .GetBestPath(*options.mutable_locations(0), *options.mutable_locations(1),
@@ -1660,7 +1660,7 @@ TEST(BiDiAstar, test_recost_path) {
   locations.push_back({nodes["2"]});
   auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
   auto config = test::make_config("");
-  vt::BidirectionalAStar astar;
+  vt::BidirectionalAStar astar{{}};
 
   auto options_default = Options::default_instance();
   const auto path = astar
@@ -1744,7 +1744,7 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   locations.push_back({nodes["2"]});
   auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
 
-  vt::BidirectionalAStar astar;
+  vt::BidirectionalAStar astar{{}};
   auto options_default = Options::default_instance();
 
   // hack hierarchy limits to allow to go through the shortcut

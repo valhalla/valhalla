@@ -1,7 +1,12 @@
 #include <filesystem>
 
+#include "baldr/conditional_speed_limit.h"
 #include "midgard/sequence.h"
+#include "mjolnir/osmaccessrestriction.h"
+#include "mjolnir/osmdata.h"
 #include "mjolnir/osmnode.h"
+#include "mjolnir/osmrestriction.h"
+#include "mjolnir/osmway.h"
 #include "mjolnir/pbfgraphparser.h"
 #include <cstdint>
 
