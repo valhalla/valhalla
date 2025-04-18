@@ -1,6 +1,7 @@
 #ifndef VALHALLA_SIF_EDGELABEL_H_
 #define VALHALLA_SIF_EDGELABEL_H_
 
+#include <cassert>
 #include <cstdint>
 #include <string.h>
 

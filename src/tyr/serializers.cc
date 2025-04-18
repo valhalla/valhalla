@@ -269,6 +269,77 @@ baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape) {
   geojson->emplace("coordinates", coords);
   return geojson;
 }
+
+std::vector<float>
+get_elevation(const TripLeg& path_leg, const float interval, const float start_distance) {
+  // Store the first elevation if start_distance == 0
+  std::vector<float> elevation;
+  auto first_elevation = path_leg.node(0).edge().elevation(0);
+  if (start_distance == 0.0f) {
+    elevation.push_back(first_elevation);
+  }
+
+  uint32_t bridge_edge_count = 0;
+  uint32_t first_bridge_index;
+  float distance = 0.0f;             // Distance from prior elevation posting
+  float remaining = -start_distance; // How much of the current edge interval remains
+  float prior_elevation = first_elevation;
+  std::vector<std::pair<uint32_t, uint32_t>> bridges;
+  for (const auto& node : path_leg.node()) {
+    // Get the edge on the path, the starting elevation and sampling interval
+    auto path_edge = node.edge();
+    float edge_interval = path_edge.elevation_sampling_interval();
+
+    // Identify consecutive bridge/tunnel edges and store elevation indexes at start and end.
+    if (path_edge.bridge() || path_edge.tunnel()) {
+      if (bridge_edge_count == 0) {
+        first_bridge_index = elevation.size();
+      }
+      ++bridge_edge_count;
+    } else {
+      // Not a bridge/tunnel. Add a bridge elevation pair if more than 1 consecutive bridge/tunnel
+      // exists prior to this edge. Make sure elevation size > 0 - may have very short tunnel edges
+      // after an unmatched section (no new elevation added).
+      if (bridge_edge_count > 1 && elevation.size() > 0) {
+        bridges.emplace_back(first_bridge_index, elevation.size() - 1);
+      }
+      bridge_edge_count = 0;
+    }
+
+    // Iterate through the edge elevation (skip the first)
+    for (int32_t i = 1; i < path_edge.elevation_size(); ++i) {
+      auto elev = path_edge.elevation(i);
+
+      // Update distance from prior elevation posting
+      distance = interval - remaining;
+      remaining += edge_interval;
+
+      // Store elevation while distance remaining > interval
+      while (remaining > interval) {
+        // Linear interpolation between prior elevation
+        float p1 = distance / edge_interval;
+        elevation.push_back(prior_elevation * (1.0f - p1) + elev * p1);
+        remaining -= interval;
+        distance += interval;
+      }
+
+      // Update prior elevation
+      prior_elevation = elev;
+    }
+  }
+
+  // Store the last elevation
+  elevation.push_back(prior_elevation);
+
+  // Update elevations along consecutive bridges/tunnels. Update bridges if
+  // last edge was a bridge (and edge before was also a bridge).
+  if (bridge_edge_count > 1) {
+    bridges.emplace_back(first_bridge_index, elevation.size() - 1);
+  }
+  update_bridge_elevations(elevation, bridges);
+
+  return elevation;
+}
 } // namespace tyr
 } // namespace valhalla
 
@@ -477,76 +548,4 @@ void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
   }
   // TODO Add test of lanes blocked and add missing properties
 }
-
-std::vector<float>
-get_elevation(const TripLeg& path_leg, const float interval, const float start_distance = 0.0f) {
-  // Store the first elevation if start_distance == 0
-  std::vector<float> elevation;
-  auto first_elevation = path_leg.node(0).edge().elevation(0);
-  if (start_distance == 0.0f) {
-    elevation.push_back(first_elevation);
-  }
-
-  uint32_t bridge_edge_count = 0;
-  uint32_t first_bridge_index;
-  float distance = 0.0f;             // Distance from prior elevation posting
-  float remaining = -start_distance; // How much of the current edge interval remains
-  float prior_elevation = first_elevation;
-  std::vector<std::pair<uint32_t, uint32_t>> bridges;
-  for (const auto& node : path_leg.node()) {
-    // Get the edge on the path, the starting elevation and sampling interval
-    auto path_edge = node.edge();
-    float edge_interval = path_edge.elevation_sampling_interval();
-
-    // Identify consecutive bridge/tunnel edges and store elevation indexes at start and end.
-    if (path_edge.bridge() || path_edge.tunnel()) {
-      if (bridge_edge_count == 0) {
-        first_bridge_index = elevation.size();
-      }
-      ++bridge_edge_count;
-    } else {
-      // Not a bridge/tunnel. Add a bridge elevation pair if more than 1 consecutive bridge/tunnel
-      // exists prior to this edge. Make sure elevation size > 0 - may have very short tunnel edges
-      // after an unmatched section (no new elevation added).
-      if (bridge_edge_count > 1 && elevation.size() > 0) {
-        bridges.emplace_back(first_bridge_index, elevation.size() - 1);
-      }
-      bridge_edge_count = 0;
-    }
-
-    // Iterate through the edge elevation (skip the first)
-    for (int32_t i = 1; i < path_edge.elevation_size(); ++i) {
-      auto elev = path_edge.elevation(i);
-
-      // Update distance from prior elevation posting
-      distance = interval - remaining;
-      remaining += edge_interval;
-
-      // Store elevation while distance remaining > interval
-      while (remaining > interval) {
-        // Linear interpolation between prior elevation
-        float p1 = distance / edge_interval;
-        elevation.push_back(prior_elevation * (1.0f - p1) + elev * p1);
-        remaining -= interval;
-        distance += interval;
-      }
-
-      // Update prior elevation
-      prior_elevation = elev;
-    }
-  }
-
-  // Store the last elevation
-  elevation.push_back(prior_elevation);
-
-  // Update elevations along consecutive bridges/tunnels. Update bridges if
-  // last edge was a bridge (and edge before was also a bridge).
-  if (bridge_edge_count > 1) {
-    bridges.emplace_back(first_bridge_index, elevation.size() - 1);
-  }
-  update_bridge_elevations(elevation, bridges);
-
-  return elevation;
-}
-
 } // namespace osrm

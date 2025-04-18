@@ -23,6 +23,7 @@
 #include <boost/property_tree/ptree_fwd.hpp>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace test {
 

@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <atomic>
+#include <filesystem>
 #include <fstream>
 #include <future>
 #include <list>
@@ -12,13 +13,14 @@
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
-#include "loki/search.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "sif/costfactory.h"
-#include "worker.h"
+#include <valhalla/baldr/location.h>
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/loki/search.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/sif/costfactory.h>
+#include <valhalla/worker.h>
 
 #include "argparse_utils.h"
 
@@ -122,7 +124,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 }
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   size_t batch, isolated, radius;
   bool extrema = false;

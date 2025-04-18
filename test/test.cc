@@ -22,6 +22,7 @@
 #include <gtest/gtest.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "microtar.h"
 

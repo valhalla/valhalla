@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <unordered_map>
 
 // handy macro for shifting the 7bit path index value so that it can be or'd with the tile/level id

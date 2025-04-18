@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <list>
+#include <mutex>
 #include <string>
 
 #include <boost/property_tree/ptree_fwd.hpp>

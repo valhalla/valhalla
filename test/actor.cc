@@ -1,7 +1,9 @@
 #include <functional>
 #include <string>
 
-#include "tyr/actor.h"
+#include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/tyr/actor.h>
 
 #include "test.h"
 
