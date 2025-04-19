@@ -3,10 +3,14 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
-#include <sqlite3.h>
-#include <unordered_map>
 
+#include <cstddef>
+#include <geos_c.h>
+#include <memory>
 #include <spatialite.h>
+#include <sqlite3.h>
+
+#include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
@@ -31,13 +35,15 @@ sqlite3* GetDBHandle(const std::string& database) {
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
 // poly.
-uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys,
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, geometry_type>& polys,
+                        geos_context_type context,
                         const PointLL& ll,
                         GraphTileBuilder& graphtile) {
   uint32_t index = 0;
-  point_type p(ll.lng(), ll.lat());
+  auto pt = geometry_type(GEOSGeom_createPointFromXY_r(context.get(), ll.lng(), ll.lat()),
+                          GEOSDeleter(context));
   for (const auto& poly : polys) {
-    if (bg::covered_by(p, poly.second, bg::strategy::within::crossings_multiply<point_type>())) {
+    if (GEOSIntersects_r(context.get(), poly.second.get(), pt.get())) {
       const auto& admin = graphtile.admins_builder(poly.first);
       if (!admin.state_offset())
         index = poly.first;
@@ -50,16 +56,17 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
 // poly.
-uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys, const PointLL& ll) {
-  uint32_t index = 0;
-  point_type p(ll.lng(), ll.lat());
-  for (const auto& poly : polys) {
-    // TODO: we recently discovered that boost::geometry doesn't do bbox checks to speed things up
-    if (bg::covered_by(p, poly.second, bg::strategy::within::crossings_multiply<point_type>())) {
-      return poly.first;
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, geometry_type>& polys,
+                        geos_context_type context,
+                        const PointLL& ll) {
+  auto pt = geometry_type(GEOSGeom_createPointFromXY_r(context.get(), ll.lng(), ll.lat()),
+                          GEOSDeleter(context));
+  for (const auto& [index, poly] : polys) {
+    if (GEOSIntersects_r(context.get(), poly.get(), pt.get())) {
+      return index;
     }
   }
-  return index;
+  return 0; // default index
 }
 
 // This function returns a vector pairs.  The pair is a string and boolean {language,
@@ -71,21 +78,18 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
 // languages that will be considered for any name* or destination* keys.  Basically, we only support
 // the languages that are on the signs in that area. Note:  The first pair always contains an empty
 // language which makes the name key with no language the most important key.
-std::vector<std::pair<std::string, bool>> GetMultiPolyIndexes(const language_poly_index& polys,
-                                                              const PointLL& ll) {
+std::vector<std::pair<std::string, bool>>
+GetMultiPolyIndexes(const language_poly_index& polys, geos_context_type context, const PointLL& ll) {
   std::vector<std::pair<std::string, bool>> languages;
 
   // first entry is blank for the default name
   languages.emplace_back("", false);
 
-  point_type p(ll.lng(), ll.lat());
+  auto pt = geometry_type(GEOSGeom_createPointFromXY_r(context.get(), ll.lng(), ll.lat()),
+                          GEOSDeleter(context));
 
-  for (auto it = polys.qbegin(bg::index::covers(p)); it != polys.qend(); ++it) {
-    // Make sure the point is in the admin poly (not just its envelope)
-    if (bg::covered_by(p, std::get<1>(*it), bg::strategy::within::crossings_multiply<point_type>())) {
-      auto& langs = std::get<2>(*it);
-      bool is_default = std::get<3>(*it);
-
+  for (const auto& [poly, langs, is_default] : polys) {
+    if (GEOSIntersects_r(context.get(), poly.get(), pt.get())) {
       for (const auto& l : langs) {
         if (stringLanguage(l) != Language::kNone) {
           auto needle =
@@ -106,9 +110,9 @@ std::vector<std::pair<std::string, bool>> GetMultiPolyIndexes(const language_pol
 }
 
 // Get the timezone polys from the db
-std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
-                                                         const AABB2<PointLL>& aabb) {
-  std::multimap<uint32_t, multi_polygon_type> polys;
+std::multimap<uint32_t, geometry_type>
+GetTimeZones(sqlite3* db_handle, geos_context_type context, const AABB2<PointLL>& aabb) {
+  std::multimap<uint32_t, geometry_type> polys;
   if (!db_handle) {
     return polys;
   }
@@ -117,7 +121,7 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
   uint32_t ret;
   uint32_t result = 0;
 
-  std::string sql = "select TZID, st_astext(geom) as geom_text from tz_world where ";
+  std::string sql = "select TZID, ST_AsBinary(geom) as geom_text from tz_world where ";
   sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) ";
@@ -131,15 +135,21 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
   if (ret == SQLITE_OK) {
     result = sqlite3_step(stmt);
 
+    auto wkb_reader =
+        std::unique_ptr<GEOSWKBReader, GEOSDeleter>(GEOSWKBReader_create_r(context.get()),
+                                                    GEOSDeleter(context));
+
     while (result == SQLITE_ROW) {
       std::string tz_id;
-      std::string geom;
+      const unsigned char* wkb_blob = nullptr;
+      int wkb_size = 0;
 
       if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT) {
         tz_id = (char*)sqlite3_column_text(stmt, 0);
       }
-      if (sqlite3_column_type(stmt, 1) == SQLITE_TEXT) {
-        geom = (char*)sqlite3_column_text(stmt, 1);
+      if (sqlite3_column_type(stmt, 1) == SQLITE_BLOB) {
+        wkb_blob = static_cast<const unsigned char*>(sqlite3_column_blob(stmt, 1));
+        wkb_size = sqlite3_column_bytes(stmt, 1);
       }
 
       uint32_t idx = DateTime::get_tz_db().to_index(tz_id);
@@ -148,9 +158,15 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
         throw std::runtime_error("Can't find timezone ID " + std::string(tz_id));
       }
 
-      multi_polygon_type multi_poly;
-      boost::geometry::read_wkt(geom, multi_poly);
-      polys.emplace(idx, multi_poly);
+      auto geom =
+          geometry_type(GEOSWKBReader_read_r(context.get(), wkb_reader.get(), wkb_blob, wkb_size),
+                        GEOSDeleter(context));
+
+      auto clipped = geometry_type(GEOSClipByRect_r(context.get(), geom.get(), aabb.minx(),
+                                                    aabb.miny(), aabb.maxx(), aabb.maxy()),
+                                   GEOSDeleter(context));
+
+      polys.emplace(idx, std::move(clipped));
       result = sqlite3_step(stmt);
     }
   }
@@ -176,8 +192,10 @@ std::vector<std::string> ParseLanguageTokens(const std::string& lang_tag) {
 void GetData(sqlite3* db_handle,
              sqlite3_stmt* stmt,
              const std::string& sql,
+             geos_context_type context,
+             const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder,
-             std::multimap<uint32_t, multi_polygon_type>& polys,
+             std::multimap<uint32_t, geometry_type>& polys,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
              language_poly_index& language_ploys,
@@ -196,6 +214,9 @@ void GetData(sqlite3* db_handle,
       return;
     }
   }
+
+  auto wkb_reader = std::unique_ptr<GEOSWKBReader, GEOSDeleter>(GEOSWKBReader_create_r(context.get()),
+                                                                GEOSDeleter(context));
 
   while (result == SQLITE_ROW) {
 
@@ -238,28 +259,39 @@ void GetData(sqlite3* db_handle,
         default_language = (char*)sqlite3_column_text(stmt, 8);
       }
 
-      std::string geom;
-      if (sqlite3_column_type(stmt, 9) == SQLITE_TEXT) {
-        geom = (char*)sqlite3_column_text(stmt, 9);
+      const unsigned char* wkb_blob = nullptr;
+      int wkb_size = 0;
+      if (sqlite3_column_type(stmt, 9) == SQLITE_BLOB) {
+        wkb_blob = static_cast<const unsigned char*>(sqlite3_column_blob(stmt, 9));
+        wkb_size = sqlite3_column_bytes(stmt, 9);
       }
 
       uint32_t index = tilebuilder.AddAdmin(country_name, state_name, country_iso, state_iso);
-      multi_polygon_type multi_poly;
-      bg::read_wkt(geom, multi_poly);
-      polys.emplace(index, multi_poly);
-      drive_on_right.emplace(index, dor);
-      allow_intersection_names.emplace(index, intersection_name);
 
-      bg::model::box<point_type> box{};
-      bg::envelope(multi_poly, box);
+      auto geom =
+          geometry_type(GEOSWKBReader_read_r(context.get(), wkb_reader.get(), wkb_blob, wkb_size),
+                        GEOSDeleter(context));
+
+      auto clipped = geometry_type(GEOSClipByRect_r(context.get(), geom.get(), aabb.minx(),
+                                                    aabb.miny(), aabb.maxx(), aabb.maxy()),
+                                   GEOSDeleter(context));
+
       if (!default_language.empty()) {
         auto langs = ParseLanguageTokens(default_language);
-        language_ploys.insert(std::make_tuple(box, multi_poly, langs, true));
+        auto clone =
+            geometry_type(GEOSGeom_clone_r(context.get(), clipped.get()), GEOSDeleter(context));
+        language_ploys.push_back(std::make_tuple(std::move(clone), langs, true));
       }
       if (!supported_languages.empty()) {
         auto langs = ParseLanguageTokens(supported_languages);
-        language_ploys.insert(std::make_tuple(box, multi_poly, langs, false));
+        auto clone =
+            geometry_type(GEOSGeom_clone_r(context.get(), clipped.get()), GEOSDeleter(context));
+        language_ploys.push_back(std::make_tuple(std::move(clone), langs, false));
       }
+
+      polys.emplace(index, std::move(clipped));
+      drive_on_right.emplace(index, dor);
+      allow_intersection_names.emplace(index, intersection_name);
 
     } else {
 
@@ -273,23 +305,29 @@ void GetData(sqlite3* db_handle,
         default_language = (char*)sqlite3_column_text(stmt, 2);
       }
 
-      std::string geom;
-      if (sqlite3_column_type(stmt, 3) == SQLITE_TEXT) {
-        geom = (char*)sqlite3_column_text(stmt, 3);
+      const unsigned char* wkb_blob = nullptr;
+      int wkb_size = 0;
+      if (sqlite3_column_type(stmt, 3) == SQLITE_BLOB) {
+        wkb_blob = static_cast<const unsigned char*>(sqlite3_column_blob(stmt, 3));
+        wkb_size = sqlite3_column_bytes(stmt, 3);
       }
 
-      multi_polygon_type multi_poly;
-      bg::read_wkt(geom, multi_poly);
-      bg::model::box<point_type> box{};
-      bg::envelope(multi_poly, box);
+      auto geom =
+          geometry_type(GEOSWKBReader_read_r(context.get(), wkb_reader.get(), wkb_blob, wkb_size),
+                        GEOSDeleter(context));
+      auto clipped = geometry_type(GEOSClipByRect_r(context.get(), geom.get(), aabb.minx(),
+                                                    aabb.miny(), aabb.maxx(), aabb.maxy()),
+                                   GEOSDeleter(context));
 
       if (!default_language.empty()) {
         auto langs = ParseLanguageTokens(default_language);
-        language_ploys.insert(std::make_tuple(box, multi_poly, langs, true));
+        auto clone =
+            geometry_type(GEOSGeom_clone_r(context.get(), clipped.get()), GEOSDeleter(context));
+        language_ploys.push_back(std::make_tuple(std::move(clone), langs, true));
       }
       if (!supported_languages.empty()) {
         auto langs = ParseLanguageTokens(supported_languages);
-        language_ploys.insert(std::make_tuple(box, multi_poly, langs, false));
+        language_ploys.push_back(std::make_tuple(std::move(clipped), langs, false));
       }
     }
 
@@ -303,14 +341,15 @@ void GetData(sqlite3* db_handle,
 }
 
 // Get the admin polys that intersect with the tile bounding box.
-std::multimap<uint32_t, multi_polygon_type>
+std::multimap<uint32_t, geometry_type>
 GetAdminInfo(sqlite3* db_handle,
+             geos_context_type context,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
              language_poly_index& language_polys,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder) {
-  std::multimap<uint32_t, multi_polygon_type> polys;
+  std::multimap<uint32_t, geometry_type> polys;
   if (!db_handle) {
     return polys;
   }
@@ -319,7 +358,7 @@ GetAdminInfo(sqlite3* db_handle,
 
   // default language query
   std::string sql =
-      "SELECT admin_level, supported_languages, default_language, st_astext(geom) from ";
+      "SELECT admin_level, supported_languages, default_language, ST_AsBinary(geom) from ";
   sql +=
       " admins where (supported_languages is NOT NULL or default_language is NOT NULL) and ST_Intersects(geom, BuildMBR(" +
       std::to_string(aabb.minx()) + ",";
@@ -329,14 +368,14 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) order by admin_level desc, name;";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
-          language_polys, true);
+  GetData(db_handle, stmt, sql, context, aabb, tilebuilder, polys, drive_on_right,
+          allow_intersection_names, language_polys, true);
 
   // state query
   sql = "SELECT country.name, state.name, country.iso_code, ";
   sql += "state.iso_code, state.drive_on_right, state.allow_intersection_names, state.admin_level, ";
   sql +=
-      "state.supported_languages, state.default_language, st_astext(state.geom) from admins state, admins country where ";
+      "state.supported_languages, state.default_language, ST_AsBinary(state.geom) from admins state, admins country where ";
   sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) and ";
@@ -345,13 +384,13 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) order by state.name, country.name;";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
-          language_polys);
+  GetData(db_handle, stmt, sql, context, aabb, tilebuilder, polys, drive_on_right,
+          allow_intersection_names, language_polys);
 
   // country query
   sql = "SELECT name, \"\", iso_code, \"\", drive_on_right, allow_intersection_names, admin_level, ";
   sql +=
-      "supported_languages, default_language, st_astext(geom) from  admins where ST_Intersects(geom, BuildMBR(" +
+      "supported_languages, default_language, ST_AsBinary(geom) from  admins where ST_Intersects(geom, BuildMBR(" +
       std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
@@ -359,8 +398,8 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) order by name;";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
-          language_polys);
+  GetData(db_handle, stmt, sql, std::move(context), aabb, tilebuilder, polys, drive_on_right,
+          allow_intersection_names, language_polys);
 
   if (stmt) { // just in case something bad happened.
     sqlite3_finalize(stmt);
