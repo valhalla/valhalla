@@ -29,7 +29,11 @@ namespace valhalla {
 namespace mjolnir {
 
 Sqlite3 Sqlite3::open(const std::string& path, int flags) {
-  if (path.empty() || !filesystem::exists(path)) {
+  if (path.empty()) {
+    return Sqlite3{nullptr, nullptr};
+  }
+
+  if (!(flags & SQLITE_OPEN_CREATE) && !filesystem::exists(path)) {
     return Sqlite3{nullptr, nullptr};
   }
 

@@ -391,7 +391,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   std::string sql;
 
   // In-memory database that will be dumped to disk at the end
-  Sqlite3 db = Sqlite3::open(":memory:", SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX);
+  Sqlite3 db = Sqlite3::open(":memory:", SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
   // TODO: these blocks are the same like 20 times or so
   // let's abstract the sqlite commands somewhere
   if (!db) {
