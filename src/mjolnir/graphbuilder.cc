@@ -439,7 +439,6 @@ void BuildTileSet(const std::string& ways_file,
     LOG_WARN("Admin db " + *database + " not found. Not saving admin information.");
   }
 
-
   database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
   Sqlite3 tz_db = database ? Sqlite3::open(*database) : Sqlite3();
@@ -509,8 +508,8 @@ void BuildTileSet(const std::string& ways_file,
       language_poly_index language_polys;
 
       if (admin_db) {
-        admin_polys = GetAdminInfo(admin_db, drive_on_right, allow_intersection_names,
-                                   language_polys, tiling.TileBounds(id), graphtile);
+        admin_polys = GetAdminInfo(admin_db, drive_on_right, allow_intersection_names, language_polys,
+                                   tiling.TileBounds(id), graphtile);
         if (admin_polys.size() == 1) {
           // TODO - check if tile bounding box is entirely inside the polygon...
           tile_within_one_admin = true;

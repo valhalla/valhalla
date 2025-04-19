@@ -1003,7 +1003,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
   }
 
-
   const auto& tiles = TileHierarchy::levels().back().tiles;
   // Iterate through the tiles in the queue and find any that include stops
   for (; tile_start != tile_end; ++tile_start) {
