@@ -59,7 +59,8 @@
    * ADDED: Mutithreaded `PBFGraphParser::ParseWays()` [#5143](https://github.com/valhalla/valhalla/pull/5143)
    * CHANGED: "Multilevel Way" message logging level changed from WARN to DEBUG [#5188](https://github.com/valhalla/valhalla/pull/5188)
    * CHANGED: Use rapidjson for matrix serializers [#5189](https://github.com/valhalla/valhalla/pull/5189)
-   * CHANGED: Make static factor vectors/arrays in sif constexpr [#5200](https://github.com/valhalla/valhalla/pull/5200) 
+   * CHANGED: Make static factor vectors/arrays in sif constexpr [#5200](https://github.com/valhalla/valhalla/pull/5200)
+   * CHANGED: Replace `boost::geometry` by GEOS for operations with admin/tz polygons and clip them by tile bbox [#5204](https://github.com/valhalla/valhalla/pull/5204)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
