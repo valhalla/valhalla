@@ -1,33 +1,11 @@
 #include "mjolnir/admin.h"
 #include "baldr/datetime.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
 #include "mjolnir/util.h"
-#include <sqlite3.h>
-#include <unordered_map>
 
-#include <spatialite.h>
+#include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
-
-// Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
-sqlite3* GetDBHandle(const std::string& database) {
-
-  // Initialize the admin DB (if it exists)
-  sqlite3* db_handle = nullptr;
-  if (!database.empty() && filesystem::exists(database)) {
-    uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
-                                   SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + database);
-      sqlite3_close(db_handle);
-      return nullptr;
-    }
-    sqlite3_extended_result_codes(db_handle, 1);
-  }
-  return db_handle;
-}
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
 // poly.
@@ -106,13 +84,8 @@ std::vector<std::pair<std::string, bool>> GetMultiPolyIndexes(const language_pol
 }
 
 // Get the timezone polys from the db
-std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
-                                                         const AABB2<PointLL>& aabb) {
+std::multimap<uint32_t, multi_polygon_type> GetTimeZones(Sqlite3& db, const AABB2<PointLL>& aabb) {
   std::multimap<uint32_t, multi_polygon_type> polys;
-  if (!db_handle) {
-    return polys;
-  }
-
   sqlite3_stmt* stmt = 0;
   uint32_t ret;
   uint32_t result = 0;
@@ -126,7 +99,7 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + "));";
 
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+  ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, 0);
 
   if (ret == SQLITE_OK) {
     result = sqlite3_step(stmt);
@@ -173,7 +146,7 @@ std::vector<std::string> ParseLanguageTokens(const std::string& lang_tag) {
   return langs;
 }
 
-void GetData(sqlite3* db_handle,
+void GetData(Sqlite3& db,
              sqlite3_stmt* stmt,
              const std::string& sql,
              GraphTileBuilder& tilebuilder,
@@ -185,7 +158,7 @@ void GetData(sqlite3* db_handle,
   uint32_t result = 0;
   bool dor = true;
   bool intersection_name = false;
-  uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+  uint32_t ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, 0);
 
   if (ret == SQLITE_OK || ret == SQLITE_ERROR) {
     result = sqlite3_step(stmt);
@@ -304,17 +277,13 @@ void GetData(sqlite3* db_handle,
 
 // Get the admin polys that intersect with the tile bounding box.
 std::multimap<uint32_t, multi_polygon_type>
-GetAdminInfo(sqlite3* db_handle,
+GetAdminInfo(Sqlite3& db,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
              language_poly_index& language_polys,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder) {
   std::multimap<uint32_t, multi_polygon_type> polys;
-  if (!db_handle) {
-    return polys;
-  }
-
   sqlite3_stmt* stmt = 0;
 
   // default language query
@@ -329,8 +298,8 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) order by admin_level desc, name;";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
-          language_polys, true);
+  GetData(db, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names, language_polys,
+          true);
 
   // state query
   sql = "SELECT country.name, state.name, country.iso_code, ";
@@ -345,7 +314,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) order by state.name, country.name;";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
+  GetData(db, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
           language_polys);
 
   // country query
@@ -359,7 +328,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) order by name;";
-  GetData(db_handle, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
+  GetData(db, stmt, sql, tilebuilder, polys, drive_on_right, allow_intersection_names,
           language_polys);
 
   if (stmt) { // just in case something bad happened.
@@ -370,21 +339,15 @@ GetAdminInfo(sqlite3* db_handle,
 }
 
 // Get all the country access records from the db and save them to a map.
-std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_handle) {
-
+std::unordered_map<std::string, std::vector<int>> GetCountryAccess(Sqlite3& db) {
   std::unordered_map<std::string, std::vector<int>> country_access;
-
-  if (!db_handle) {
-    return country_access;
-  }
-
   sqlite3_stmt* stmt = 0;
   uint32_t ret;
   uint32_t result = 0;
   std::string sql = "SELECT iso_code, trunk, trunk_link, track, footway, pedestrian, bridleway, "
                     "cycleway, path, motorroad from admin_access";
 
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+  ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, 0);
 
   if (ret == SQLITE_OK) {
     result = sqlite3_step(stmt);

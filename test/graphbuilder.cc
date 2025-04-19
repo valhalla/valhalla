@@ -129,26 +129,24 @@ public:
 
 TEST(Graphbuilder, NewTimezones) {
   TestNodeInfo test_node;
-  auto* sql_db = GetDBHandle(VALHALLA_BUILD_DIR "test/data/tz.sqlite");
+  auto sql_db = Sqlite3::open(VALHALLA_BUILD_DIR "test/data/tz.sqlite");
+  ASSERT_TRUE(sql_db);
 
-  auto sconn = make_spatialite_cache(sql_db);
   const auto& tzdb = DateTime::get_tz_db();
 
   // America/Ciudad_Juarez
-  auto ciudad_juarez_polys = GetTimeZones(sql_db, {-106.450948, 31.669746, -106.386046, 31.724371});
+  auto ciudad_juarez_polys = GetTimeZones(*sql_db, {-106.450948, 31.669746, -106.386046, 31.724371});
   EXPECT_EQ(ciudad_juarez_polys.begin()->first, tzdb.to_index("America/Ciudad_Juarez"));
   test_node.set_timezone(ciudad_juarez_polys.begin()->first);
   EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("America/Ojinaga"));
   EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
 
   // Asia/Qostanay
-  auto qostanay_polys = GetTimeZones(sql_db, {62.41766759, 51.37601571, 64.83104595, 52.71089583});
+  auto qostanay_polys = GetTimeZones(*sql_db, {62.41766759, 51.37601571, 64.83104595, 52.71089583});
   EXPECT_EQ(qostanay_polys.begin()->first, tzdb.to_index("Asia/Qostanay"));
   test_node.set_timezone(qostanay_polys.begin()->first);
   EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("Asia/Qyzylorda"));
   EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
-
-  sqlite3_close(sql_db);
 }
 
 class HarrisburgTestSuiteEnv : public ::testing::Environment {

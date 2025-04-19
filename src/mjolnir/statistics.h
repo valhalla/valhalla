@@ -7,11 +7,11 @@
 #include <unordered_set>
 #include <vector>
 
-#include <sqlite3.h>
-
 #include "baldr/graphconstants.h"
 #include "midgard/aabb2.h"
 #include <boost/property_tree/ptree.hpp>
+
+struct sqlite3_stmt;
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -28,6 +28,8 @@ const std::vector<RoadClass> rclasses = {RoadClass::kMotorway,     RoadClass::kP
 } // namespace
 namespace valhalla {
 namespace mjolnir {
+
+class Sqlite3;
 
 /**
  * This class gathers statistics on the road lengths within tile
@@ -280,17 +282,17 @@ public:
   void build_db();
 
 private:
-  void create_tile_tables(sqlite3* db_handle);
+  void create_tile_tables(Sqlite3& db);
 
-  void create_country_tables(sqlite3* db_handle);
+  void create_country_tables(Sqlite3& db);
 
-  void create_exit_tables(sqlite3* db_handle);
+  void create_exit_tables(Sqlite3& db);
 
-  void insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt);
+  void insert_tile_data(Sqlite3& db, sqlite3_stmt* stmt);
 
-  void insert_country_data(sqlite3* db_handle, sqlite3_stmt* stmt);
+  void insert_country_data(Sqlite3& db, sqlite3_stmt* stmt);
 
-  void insert_exit_data(sqlite3* db_handle, sqlite3_stmt* stmt);
+  void insert_exit_data(Sqlite3& db, sqlite3_stmt* stmt);
 };
 } // namespace mjolnir
 } // namespace valhalla

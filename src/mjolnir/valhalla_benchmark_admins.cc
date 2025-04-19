@@ -24,8 +24,7 @@
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
-#include "mjolnir/util.h"
+#include "mjolnir/sqlite3.h"
 
 #include "argparse_utils.h"
 
@@ -40,7 +39,7 @@ typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 filesystem::path config_file_path;
 
 std::unordered_map<uint32_t, multi_polygon_type>
-GetAdminInfo(sqlite3* db_handle,
+GetAdminInfo(valhalla::mjolnir::Sqlite3& db,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              const AABB2<PointLL>& aabb) {
   // Polys (return)
@@ -60,7 +59,7 @@ GetAdminInfo(sqlite3* db_handle,
   sql += std::to_string(aabb.maxy()) + "));";
 
   sqlite3_stmt* stmt = 0;
-  uint32_t ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+  uint32_t ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, 0);
   if (ret == SQLITE_OK) {
     uint32_t result = sqlite3_step(stmt);
     if (result == SQLITE_DONE) {
@@ -78,7 +77,7 @@ GetAdminInfo(sqlite3* db_handle,
 
       sqlite3_finalize(stmt);
       stmt = 0;
-      ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
+      ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, 0);
       if (ret == SQLITE_OK) {
         result = 0;
         result = sqlite3_step(stmt);
@@ -145,21 +144,11 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   // Initialize the admin DB (if it exists)
   auto database = pt.get_optional<std::string>("admin");
 
-  sqlite3* db_handle = nullptr;
-  if (filesystem::exists(*database)) {
-    sqlite3_stmt* stmt = 0;
-    uint32_t ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("cannot open " + *database);
-      sqlite3_close(db_handle);
-      return;
-    }
-
-  } else {
-    LOG_ERROR("Admin db " + *database + " not found.");
+  auto db = valhalla::mjolnir::Sqlite3::open(database.value(), SQLITE_OPEN_READONLY);
+  if (!db) {
+    LOG_ERROR("Unable to open admin db " + *database);
     return;
   }
-  auto admin_conn = valhalla::mjolnir::make_spatialite_cache(db_handle);
 
   // Graphreader
   GraphReader reader(pt);
@@ -173,7 +162,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
     // Get the admin polys if there is data for tiles that exist
     GraphId tile_id(id, local_level, 0);
     if (reader.DoesTileExist(tile_id)) {
-      polys = GetAdminInfo(db_handle, drive_on_right, tiles.TileBounds(id));
+      polys = GetAdminInfo(*db, drive_on_right, tiles.TileBounds(id));
       LOG_INFO("polys: " + std::to_string(polys.size()));
       if (polys.size() < 128) {
         counts[polys.size()]++;
@@ -185,7 +174,6 @@ void Benchmark(const boost::property_tree::ptree& pt) {
       LOG_INFO("Tiles with " + std::to_string(i) + " admin polys: " + std::to_string(counts[i]));
     }
   }
-  sqlite3_close(db_handle);
 }
 
 int main(int argc, char** argv) {
