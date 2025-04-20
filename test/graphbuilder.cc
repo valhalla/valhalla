@@ -129,9 +129,8 @@ public:
 
 TEST(Graphbuilder, NewTimezones) {
   TestNodeInfo test_node;
-  auto* sql_db = GetDBHandle(VALHALLA_BUILD_DIR "test/data/tz.sqlite");
+  Sqlite3 sql_db = Sqlite3::open(VALHALLA_BUILD_DIR "test/data/tz.sqlite");
 
-  auto sconn = make_spatialite_cache(sql_db);
   const auto& tzdb = DateTime::get_tz_db();
 
   // America/Ciudad_Juarez
@@ -147,8 +146,6 @@ TEST(Graphbuilder, NewTimezones) {
   test_node.set_timezone(qostanay_polys.begin()->first);
   EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("Asia/Qyzylorda"));
   EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
-
-  sqlite3_close(sql_db);
 }
 
 class HarrisburgTestSuiteEnv : public ::testing::Environment {
