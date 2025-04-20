@@ -61,7 +61,8 @@
    * ADDED: Mutithreaded `PBFGraphParser::ParseWays()` [#5143](https://github.com/valhalla/valhalla/pull/5143)
    * CHANGED: "Multilevel Way" message logging level changed from WARN to DEBUG [#5188](https://github.com/valhalla/valhalla/pull/5188)
    * CHANGED: Use rapidjson for matrix serializers [#5189](https://github.com/valhalla/valhalla/pull/5189)
-   * CHANGED: Make static factor vectors/arrays in sif constexpr [#5200](https://github.com/valhalla/valhalla/pull/5200) 
+   * CHANGED: Make static factor vectors/arrays in sif constexpr [#5200](https://github.com/valhalla/valhalla/pull/5200)
+   * ADDED: Sqlite3 RAII wrapper around sqlite3* and spatielite connection [#5206](https://github.com/valhalla/valhalla/pull/5206)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
