@@ -997,10 +997,9 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
   GraphReader reader(pt);
   auto database = pt.get_optional<std::string>("timezone");
-  // Initialize the tz DB (if it exists)
-  auto tz_db_handle = Sqlite3::open(*database);
-  if (!tz_db_handle) {
-    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
+  auto tz_db = Sqlite3::open(*database);
+  if (!tz_db) {
+    LOG_WARN("Time zone db " + *database + " not found. Not saving time zone information from db.");
   }
 
   const auto& tiles = TileHierarchy::levels().back().tiles;
@@ -1171,8 +1170,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
     auto tile_bounds = tiles.TileBounds(tile_id.tileid());
     bool tile_within_one_tz = false;
     std::multimap<uint32_t, multi_polygon_type> tz_polys;
-    if (tz_db_handle) {
-      tz_polys = GetTimeZones(*tz_db_handle, tile_bounds);
+    if (tz_db) {
+      tz_polys = GetTimeZones(*tz_db, tile_bounds);
       if (tz_polys.size() < 2) {
         tile_within_one_tz = true;
       }
