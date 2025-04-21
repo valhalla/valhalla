@@ -158,13 +158,9 @@ TEST(Graphbuilder, AdminBbox) {
   std::unordered_map<uint32_t, bool> allow_intersection_names;
   language_poly_index language_polys;
 
-  const AABB2<PointLL> tile_bounds = tiling.TileBounds(id);
-  const double eps = 1e-3;
-  const AABB2<PointLL> tile_bbox(tile_bounds.minx() - eps, tile_bounds.miny() - eps,
-                                 tile_bounds.maxx() + eps, tile_bounds.maxy() + eps);
-
+  const AABB2<PointLL> bbox = tiling.TileBounds(id);
   auto admin_polys = GetAdminInfo(*admin_db, drive_on_right, allow_intersection_names, language_polys,
-                                  tile_bbox, graphtile);
+                                  bbox, graphtile);
 
   const auto admin_name = [&](const Admin& admin) {
     return admin.country_iso() + "/" + admin.state_iso();
@@ -179,27 +175,22 @@ TEST(Graphbuilder, AdminBbox) {
   // fr, nl, nl, fr
   ASSERT_EQ(language_polys.size(), 4);
 
+  // Ensure that tile corners are handled correctly
   EXPECT_EQ(admin_name(graphtile.admins_builder(
-                GetMultiPolyId(admin_polys, PointLL(tile_bounds.minx(), tile_bounds.miny()),
-                               graphtile))),
+                GetMultiPolyId(admin_polys, PointLL(bbox.minx(), bbox.miny()), graphtile))),
             "BE/VLG");
   EXPECT_EQ(admin_name(graphtile.admins_builder(
-                GetMultiPolyId(admin_polys, PointLL(tile_bounds.maxx(), tile_bounds.miny()),
-                               graphtile))),
+                GetMultiPolyId(admin_polys, PointLL(bbox.maxx(), bbox.miny()), graphtile))),
             "BE/VLG");
   EXPECT_EQ(admin_name(graphtile.admins_builder(
-                GetMultiPolyId(admin_polys, PointLL(tile_bounds.minx(), tile_bounds.maxy()),
-                               graphtile))),
+                GetMultiPolyId(admin_polys, PointLL(bbox.minx(), bbox.maxy()), graphtile))),
             "BE/VLG");
   EXPECT_EQ(admin_name(graphtile.admins_builder(
-                GetMultiPolyId(admin_polys, PointLL(tile_bounds.maxx(), tile_bounds.maxy()),
-                               graphtile))),
+                GetMultiPolyId(admin_polys, PointLL(bbox.maxx(), bbox.maxy()), graphtile))),
             "BE/VLG");
 
   EXPECT_EQ(admin_name(graphtile.admins_builder(
-                GetMultiPolyId(admin_polys,
-                               PointLL((tile_bounds.minx() + tile_bounds.maxx()) / 2,
-                                       tile_bounds.miny()),
+                GetMultiPolyId(admin_polys, PointLL((bbox.minx() + bbox.maxx()) / 2, bbox.miny()),
                                graphtile))),
             "BE/WAL");
 }

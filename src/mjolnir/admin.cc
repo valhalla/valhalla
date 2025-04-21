@@ -10,6 +10,14 @@
 namespace valhalla {
 namespace mjolnir {
 
+namespace {
+
+// Tiles might have nodes slightly off the tile boundary. As for performance optimization the returned
+// geometry is clipped, a small buffer around should be added to handle edge cases.
+constexpr double kTileBboxBuffer = 1e-3;
+
+} // namespace
+
 Geometry::Geometry(geos_context_type ctx, GEOSGeometry* geom)
     : context(std::move(ctx)), geometry(geom) {
   prepared = GEOSPrepare_r(context.get(), geometry);
@@ -122,19 +130,21 @@ std::vector<std::pair<std::string, bool>> GetMultiPolyIndexes(const language_pol
 
 // Get the timezone polys from the db
 std::multimap<uint32_t, Geometry> GetTimeZones(AdminDB& db, const AABB2<PointLL>& aabb) {
+  const AABB2<PointLL> bbox(aabb.minx() - kTileBboxBuffer, aabb.miny() - kTileBboxBuffer,
+                            aabb.maxx() + kTileBboxBuffer, aabb.maxy() + kTileBboxBuffer);
   std::multimap<uint32_t, Geometry> polys;
   sqlite3_stmt* stmt = 0;
   uint32_t ret;
   uint32_t result = 0;
 
   std::string sql = "select TZID, ST_AsBinary(geom) as geom_text from tz_world where ";
-  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) ";
+  sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(bbox.minx()) + ",";
+  sql += std::to_string(bbox.miny()) + ", " + std::to_string(bbox.maxx()) + ",";
+  sql += std::to_string(bbox.maxy()) + ")) ";
   sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-  sql += "'tz_world' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + "));";
+  sql += "'tz_world' AND search_frame = BuildMBR(" + std::to_string(bbox.minx()) + ",";
+  sql += std::to_string(bbox.miny()) + ", " + std::to_string(bbox.maxx()) + ",";
+  sql += std::to_string(bbox.maxy()) + "));";
 
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, 0);
 
@@ -160,7 +170,7 @@ std::multimap<uint32_t, Geometry> GetTimeZones(AdminDB& db, const AABB2<PointLL>
         throw std::runtime_error("Can't find timezone ID " + std::string(tz_id));
       }
 
-      auto geom = db.read_wkb_and_clip(wkb_blob, wkb_size, aabb);
+      auto geom = db.read_wkb_and_clip(wkb_blob, wkb_size, bbox);
       polys.emplace(idx, std::move(geom));
       result = sqlite3_step(stmt);
     }
@@ -188,7 +198,7 @@ std::vector<std::string> ParseLanguageTokens(const std::string& lang_tag) {
 void GetData(AdminDB& db,
              sqlite3_stmt* stmt,
              const std::string& sql,
-             const AABB2<PointLL>& aabb,
+             const AABB2<PointLL>& bbox,
              GraphTileBuilder& tilebuilder,
              std::multimap<uint32_t, Geometry>& polys,
              std::unordered_map<uint32_t, bool>& drive_on_right,
@@ -260,7 +270,7 @@ void GetData(AdminDB& db,
 
       uint32_t index = tilebuilder.AddAdmin(country_name, state_name, country_iso, state_iso);
 
-      auto geom = db.read_wkb_and_clip(wkb_blob, wkb_size, aabb);
+      auto geom = db.read_wkb_and_clip(wkb_blob, wkb_size, bbox);
 
       if (!default_language.empty()) {
         auto langs = ParseLanguageTokens(default_language);
@@ -294,7 +304,7 @@ void GetData(AdminDB& db,
         wkb_size = sqlite3_column_bytes(stmt, 3);
       }
 
-      auto geom = db.read_wkb_and_clip(wkb_blob, wkb_size, aabb);
+      auto geom = db.read_wkb_and_clip(wkb_blob, wkb_size, bbox);
 
       if (!default_language.empty()) {
         auto langs = ParseLanguageTokens(default_language);
@@ -323,6 +333,9 @@ GetAdminInfo(AdminDB& db,
              language_poly_index& language_polys,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder) {
+  const AABB2<PointLL> bbox(aabb.minx() - kTileBboxBuffer, aabb.miny() - kTileBboxBuffer,
+                            aabb.maxx() + kTileBboxBuffer, aabb.maxy() + kTileBboxBuffer);
+
   std::multimap<uint32_t, Geometry> polys;
   sqlite3_stmt* stmt = 0;
 
@@ -331,14 +344,14 @@ GetAdminInfo(AdminDB& db,
       "SELECT admin_level, supported_languages, default_language, ST_AsBinary(geom) from ";
   sql +=
       " admins where (supported_languages is NOT NULL or default_language is NOT NULL) and ST_Intersects(geom, BuildMBR(" +
-      std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) and admin_level>4 ";
+      std::to_string(bbox.minx()) + ",";
+  sql += std::to_string(bbox.miny()) + ", " + std::to_string(bbox.maxx()) + ",";
+  sql += std::to_string(bbox.maxy()) + ")) and admin_level>4 ";
   sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) order by admin_level desc, name;";
-  GetData(db, stmt, sql, aabb, tilebuilder, polys, drive_on_right, allow_intersection_names,
+  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(bbox.minx()) + ",";
+  sql += std::to_string(bbox.miny()) + ", " + std::to_string(bbox.maxx()) + ",";
+  sql += std::to_string(bbox.maxy()) + ")) order by admin_level desc, name;";
+  GetData(db, stmt, sql, bbox, tilebuilder, polys, drive_on_right, allow_intersection_names,
           language_polys, true);
 
   // state query
@@ -346,29 +359,29 @@ GetAdminInfo(AdminDB& db,
   sql += "state.iso_code, state.drive_on_right, state.allow_intersection_names, state.admin_level, ";
   sql +=
       "state.supported_languages, state.default_language, ST_AsBinary(state.geom) from admins state, admins country where ";
-  sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) and ";
+  sql += "ST_Intersects(state.geom, BuildMBR(" + std::to_string(bbox.minx()) + ",";
+  sql += std::to_string(bbox.miny()) + ", " + std::to_string(bbox.maxx()) + ",";
+  sql += std::to_string(bbox.maxy()) + ")) and ";
   sql += "country.rowid = state.parent_admin and state.admin_level=4 ";
   sql += "and state.rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) order by state.name, country.name;";
-  GetData(db, stmt, sql, aabb, tilebuilder, polys, drive_on_right, allow_intersection_names,
+  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(bbox.minx()) + ",";
+  sql += std::to_string(bbox.miny()) + ", " + std::to_string(bbox.maxx()) + ",";
+  sql += std::to_string(bbox.maxy()) + ")) order by state.name, country.name;";
+  GetData(db, stmt, sql, bbox, tilebuilder, polys, drive_on_right, allow_intersection_names,
           language_polys);
 
   // country query
   sql = "SELECT name, \"\", iso_code, \"\", drive_on_right, allow_intersection_names, admin_level, ";
   sql +=
       "supported_languages, default_language, ST_AsBinary(geom) from  admins where ST_Intersects(geom, BuildMBR(" +
-      std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) and admin_level=2 ";
+      std::to_string(bbox.minx()) + ",";
+  sql += std::to_string(bbox.miny()) + ", " + std::to_string(bbox.maxx()) + ",";
+  sql += std::to_string(bbox.maxy()) + ")) and admin_level=2 ";
   sql += "and rowid IN (SELECT rowid FROM SpatialIndex WHERE f_table_name = ";
-  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(aabb.minx()) + ",";
-  sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
-  sql += std::to_string(aabb.maxy()) + ")) order by name;";
-  GetData(db, stmt, sql, aabb, tilebuilder, polys, drive_on_right, allow_intersection_names,
+  sql += "'admins' AND search_frame = BuildMBR(" + std::to_string(bbox.minx()) + ",";
+  sql += std::to_string(bbox.miny()) + ", " + std::to_string(bbox.maxx()) + ",";
+  sql += std::to_string(bbox.maxy()) + ")) order by name;";
+  GetData(db, stmt, sql, bbox, tilebuilder, polys, drive_on_right, allow_intersection_names,
           language_polys);
 
   if (stmt) { // just in case something bad happened.

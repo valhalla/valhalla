@@ -1168,11 +1168,10 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
     // Add routes to the tile. Get vector of route types.
     std::vector<uint32_t> route_types = AddRoutes(tile_pbf, tilebuilder_transit);
-    auto tile_bounds = tiles.TileBounds(tile_id.tileid());
     bool tile_within_one_tz = false;
     std::multimap<uint32_t, Geometry> tz_polys;
     if (tz_db) {
-      tz_polys = GetTimeZones(*tz_db, tile_bounds);
+      tz_polys = GetTimeZones(*tz_db, tiles.TileBounds(tile_id.tileid()));
       if (tz_polys.size() < 2) {
         tile_within_one_tz = true;
       }
