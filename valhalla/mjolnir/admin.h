@@ -7,10 +7,13 @@
 #include <valhalla/mjolnir/graphtilebuilder.h>
 #include <valhalla/mjolnir/sqlite3.h>
 
-#include <geos_c.h>
-
 #include <cstdint>
 #include <unordered_map>
+
+struct GEOSContextHandle_HS;
+struct GEOSGeom_t;
+struct GEOSPrepGeom_t;
+struct GEOSWKBReader_t;
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -25,10 +28,10 @@ typedef std::shared_ptr<GEOSContextHandle_HS> geos_context_type;
 // RAII wrapper for GEOSGeometry
 struct Geometry {
   geos_context_type context;
-  GEOSGeometry* geometry;
-  const GEOSPreparedGeometry* prepared;
+  GEOSGeom_t* geometry;
+  const GEOSPrepGeom_t* prepared;
 
-  Geometry(geos_context_type ctx, GEOSGeometry* geom);
+  Geometry(geos_context_type ctx, GEOSGeom_t* geom);
   ~Geometry();
 
   // This class cannot be copied, but can be moved
@@ -58,7 +61,7 @@ typedef std::vector<std::tuple<Geometry, std::vector<std::string>, bool>> langua
 class AdminDB {
   Sqlite3 db;
   geos_context_type geos_context;
-  GEOSWKBReader* wkb_reader;
+  GEOSWKBReader_t* wkb_reader;
 
   // Constructor is private, use `AdminDB::open()` instead.
   AdminDB(Sqlite3&& db);
