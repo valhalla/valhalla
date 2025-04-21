@@ -3,25 +3,24 @@
 #include "mjolnir/sqlite3.h"
 #include "mjolnir/util.h"
 
+#include <geos_c.h>
 #include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
 
+Geometry::Geometry(geos_context_type ctx, GEOSGeometry* geom)
+    : context(std::move(ctx)), geometry(geom) {
+  prepared = GEOSPrepare_r(context.get(), geometry);
+}
+
 Geometry::~Geometry() {
+  GEOSPreparedGeom_destroy_r(context.get(), prepared);
   GEOSGeom_destroy_r(context.get(), geometry);
 }
 
 bool Geometry::intersects(const PointLL& ll) const {
-  GEOSGeometry* point = GEOSGeom_createPointFromXY_r(context.get(), ll.lng(), ll.lat());
-  bool intersects = GEOSIntersects_r(context.get(), geometry, point);
-  GEOSGeom_destroy_r(context.get(), point);
-  return intersects;
-}
-
-Geometry Geometry::clip(const AABB2<PointLL>& bbox) {
-  return Geometry(context, GEOSClipByRect_r(context.get(), geometry, bbox.minx(), bbox.miny(),
-                                            bbox.maxx(), bbox.maxy()));
+  return GEOSPreparedIntersectsXY_r(context.get(), prepared, ll.lng(), ll.lat());
 }
 
 Geometry Geometry::clone() const {
@@ -45,9 +44,13 @@ std::optional<AdminDB> AdminDB::open(const std::string& path) {
   return {};
 }
 
-Geometry AdminDB::read_wkb(const unsigned char* wkb_blob, int wkb_size) {
-  return Geometry(geos_context,
-                  GEOSWKBReader_read_r(geos_context.get(), wkb_reader, wkb_blob, wkb_size));
+Geometry
+AdminDB::read_wkb_and_clip(const unsigned char* wkb_blob, int wkb_size, const AABB2<PointLL>& bbox) {
+  GEOSGeometry* geom = GEOSWKBReader_read_r(geos_context.get(), wkb_reader, wkb_blob, wkb_size);
+  GEOSGeometry* clipped =
+      GEOSClipByRect_r(geos_context.get(), geom, bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy());
+  GEOSGeom_destroy_r(geos_context.get(), geom);
+  return Geometry(geos_context, clipped);
 }
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
@@ -156,10 +159,8 @@ std::multimap<uint32_t, Geometry> GetTimeZones(AdminDB& db, const AABB2<PointLL>
         throw std::runtime_error("Can't find timezone ID " + std::string(tz_id));
       }
 
-      auto geom = db.read_wkb(wkb_blob, wkb_size);
-      auto clipped = geom.clip(aabb);
-
-      polys.emplace(idx, std::move(clipped));
+      auto geom = db.read_wkb_and_clip(wkb_blob, wkb_size, aabb);
+      polys.emplace(idx, std::move(geom));
       result = sqlite3_step(stmt);
     }
   }
@@ -258,19 +259,18 @@ void GetData(AdminDB& db,
 
       uint32_t index = tilebuilder.AddAdmin(country_name, state_name, country_iso, state_iso);
 
-      auto geom = db.read_wkb(wkb_blob, wkb_size);
-      auto clipped = geom.clip(aabb);
+      auto geom = db.read_wkb_and_clip(wkb_blob, wkb_size, aabb);
 
       if (!default_language.empty()) {
         auto langs = ParseLanguageTokens(default_language);
-        language_ploys.push_back(std::make_tuple(clipped.clone(), langs, true));
+        language_ploys.push_back(std::make_tuple(geom.clone(), langs, true));
       }
       if (!supported_languages.empty()) {
         auto langs = ParseLanguageTokens(supported_languages);
-        language_ploys.push_back(std::make_tuple(clipped.clone(), langs, false));
+        language_ploys.push_back(std::make_tuple(geom.clone(), langs, false));
       }
 
-      polys.emplace(index, std::move(clipped));
+      polys.emplace(index, std::move(geom));
       drive_on_right.emplace(index, dor);
       allow_intersection_names.emplace(index, intersection_name);
 
@@ -293,16 +293,15 @@ void GetData(AdminDB& db,
         wkb_size = sqlite3_column_bytes(stmt, 3);
       }
 
-      auto geom = db.read_wkb(wkb_blob, wkb_size);
-      auto clipped = geom.clip(aabb);
+      auto geom = db.read_wkb_and_clip(wkb_blob, wkb_size, aabb);
 
       if (!default_language.empty()) {
         auto langs = ParseLanguageTokens(default_language);
-        language_ploys.push_back(std::make_tuple(clipped.clone(), langs, true));
+        language_ploys.push_back(std::make_tuple(geom.clone(), langs, true));
       }
       if (!supported_languages.empty()) {
         auto langs = ParseLanguageTokens(supported_languages);
-        language_ploys.push_back(std::make_tuple(std::move(clipped), langs, false));
+        language_ploys.push_back(std::make_tuple(std::move(geom), langs, false));
       }
     }
 

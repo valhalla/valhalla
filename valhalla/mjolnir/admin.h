@@ -26,16 +26,18 @@ typedef std::shared_ptr<GEOSContextHandle_HS> geos_context_type;
 struct Geometry {
   geos_context_type context;
   GEOSGeometry* geometry;
+  const GEOSPreparedGeometry* prepared;
 
-  Geometry(geos_context_type ctx, GEOSGeometry* geom) : context(std::move(ctx)), geometry(geom) {
-  }
+  Geometry(geos_context_type ctx, GEOSGeometry* geom);
   ~Geometry();
 
   // This class cannot be copied, but can be moved
   Geometry(Geometry const&) = delete;
   Geometry& operator=(Geometry const&) = delete;
-  Geometry(Geometry&& other) noexcept : context(std::move(other.context)), geometry(other.geometry) {
+  Geometry(Geometry&& other) noexcept
+      : context(std::move(other.context)), geometry(other.geometry), prepared(other.prepared) {
     other.geometry = nullptr;
+    other.prepared = nullptr;
   }
   Geometry& operator=(Geometry&& other) noexcept {
     // move and swap idiom via local variable
@@ -47,8 +49,6 @@ struct Geometry {
 
   // Returns true if the geometry intersects the given point
   bool intersects(const PointLL& ll) const;
-  // Creates a new geometry - an intersection of the current geometry and the given bounding box
-  Geometry clip(const AABB2<PointLL>& bbox);
   // Creates a clone of the current geometry
   Geometry clone() const;
 };
@@ -89,7 +89,10 @@ public:
     return db.get();
   }
 
-  Geometry read_wkb(const unsigned char* wkb_blob, int wkb_size);
+  // Reads a WKB blob and clips it to the given bounding box.
+  // These two operations are combined into a single function to simplify amount of abstractions
+  // and leave `Geometry` always deal with GEOSPreparedGeometry without intermediate entity.
+  Geometry read_wkb_and_clip(const unsigned char* wkb_blob, int wkb_size, const AABB2<PointLL>& bbox);
 };
 
 /**
