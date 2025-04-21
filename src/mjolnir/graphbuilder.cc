@@ -517,10 +517,13 @@ void BuildTileSet(const std::string& ways_file,
         }
       }
 
+      std::multimap<uint32_t, multi_polygon_type> tz_polys;
       bool tile_within_one_tz = false;
-      auto tz_polys = GetTimeZones(*tz_db, tiling.TileBounds(id));
-      if (tz_polys.size() == 1) {
-        tile_within_one_tz = true;
+      if (tz_db) {
+        tz_polys = GetTimeZones(*tz_db, tiling.TileBounds(id));
+        if (tz_polys.size() == 1) {
+          tile_within_one_tz = true;
+        }
       }
 
       // Iterate through the nodes
