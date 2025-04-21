@@ -1290,7 +1290,7 @@ void enhance(const boost::property_tree::ptree& pt,
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
   // Initialize the admin DB (if it exists)
-  auto admin_db = (database && use_admin_db) ? Sqlite3::open(*database) : std::optional<Sqlite3>{};
+  auto admin_db = (database && use_admin_db) ? AdminDB::open(*database) : std::optional<AdminDB>{};
   if (!database && use_admin_db) {
     LOG_WARN("Admin db not found. Not saving admin information.");
   } else if (!admin_db && use_admin_db) {

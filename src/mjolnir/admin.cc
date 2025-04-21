@@ -378,7 +378,7 @@ GetAdminInfo(AdminDB& db,
 }
 
 // Get all the country access records from the db and save them to a map.
-std::unordered_map<std::string, std::vector<int>> GetCountryAccess(Sqlite3& db) {
+std::unordered_map<std::string, std::vector<int>> GetCountryAccess(AdminDB& db) {
   std::unordered_map<std::string, std::vector<int>> country_access;
   sqlite3_stmt* stmt = 0;
   uint32_t ret;
