@@ -502,7 +502,6 @@ void BuildTileSet(const std::string& ways_file,
 
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
-      bool tile_within_one_admin = false;
       std::multimap<uint32_t, Geometry> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       std::unordered_map<uint32_t, bool> allow_intersection_names;
@@ -511,19 +510,11 @@ void BuildTileSet(const std::string& ways_file,
       if (admin_db) {
         admin_polys = GetAdminInfo(*admin_db, drive_on_right, allow_intersection_names,
                                    language_polys, tiling.TileBounds(id), graphtile);
-        if (admin_polys.size() == 1) {
-          // TODO - check if tile bounding box is entirely inside the polygon...
-          tile_within_one_admin = true;
-        }
       }
 
       std::multimap<uint32_t, Geometry> tz_polys;
-      bool tile_within_one_tz = false;
       if (tz_db) {
         tz_polys = GetTimeZones(*tz_db, tiling.TileBounds(id));
-        if (tz_polys.size() == 1) {
-          tile_within_one_tz = true;
-        }
       }
 
       // Iterate through the nodes
@@ -558,8 +549,8 @@ void BuildTileSet(const std::string& ways_file,
         std::vector<std::pair<std::string, bool>> default_languages;
 
         if (use_admin_db) {
-          admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
-                                                : GetMultiPolyId(admin_polys, node_ll, graphtile);
+          admin_index = (admin_polys.size() == 1) ? admin_polys.begin()->first
+                                                  : GetMultiPolyId(admin_polys, node_ll, graphtile);
           dor = drive_on_right[admin_index];
           default_languages = GetMultiPolyIndexes(language_polys, node_ll);
 
@@ -1281,7 +1272,7 @@ void BuildTileSet(const std::string& ways_file,
 
         // Set the time zone index
         uint32_t tz_index =
-            (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
+            (tz_polys.size() == 1) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
 
         graphtile.nodes().back().set_timezone(tz_index);
 
