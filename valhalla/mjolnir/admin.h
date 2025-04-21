@@ -18,28 +18,79 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace mjolnir {
 
+// GEOS thread-safe API requires a context handle for each operation, that should be unique for every
+// thread. See https://libgeos.org/usage/c_api/#reentrantthreadsafe-api for more details.
 typedef std::shared_ptr<GEOSContextHandle_HS> geos_context_type;
-inline geos_context_type NewGEOSContext() {
-  return geos_context_type(GEOS_init_r(), GEOS_finish_r);
-}
 
-// Helper struct for simple wrapping of GEOS types by `std::unique_ptr`
-struct GEOSDeleter {
+// RAII wrapper for GEOSGeometry
+struct Geometry {
   geos_context_type context;
+  GEOSGeometry* geometry;
 
-  GEOSDeleter(geos_context_type ctx) : context(std::move(ctx)) {
+  Geometry(geos_context_type ctx, GEOSGeometry* geom) : context(std::move(ctx)), geometry(geom) {
+  }
+  ~Geometry();
+
+  // This class cannot be copied, but can be moved
+  Geometry(Geometry const&) = delete;
+  Geometry& operator=(Geometry const&) = delete;
+  Geometry(Geometry&& other) noexcept : context(std::move(other.context)), geometry(other.geometry) {
+    other.geometry = nullptr;
+  }
+  Geometry& operator=(Geometry&& other) noexcept {
+    // move and swap idiom via local variable
+    Geometry local = std::move(other);
+    std::swap(geometry, local.geometry);
+    std::swap(context, local.context);
+    return *this;
   }
 
-  void operator()(GEOSGeometry* p) const {
-    GEOSGeom_destroy_r(context.get(), p);
-  };
-  void operator()(GEOSWKBReader* p) const {
-    GEOSWKBReader_destroy_r(context.get(), p);
-  };
+  // Returns true if the geometry intersects the given point
+  bool intersects(const PointLL& ll) const;
+  // Creates a new geometry - an intersection of the current geometry and the given bounding box
+  Geometry clip(const AABB2<PointLL>& bbox);
+  // Creates a clone of the current geometry
+  Geometry clone() const;
 };
 
-typedef std::unique_ptr<GEOSGeometry, GEOSDeleter> geometry_type;
-typedef std::vector<std::tuple<geometry_type, std::vector<std::string>, bool>> language_poly_index;
+typedef std::vector<std::tuple<Geometry, std::vector<std::string>, bool>> language_poly_index;
+
+class AdminDB {
+  Sqlite3 db;
+  geos_context_type geos_context;
+  GEOSWKBReader* wkb_reader;
+
+  // Constructor is private, use `AdminDB::open()` instead.
+  AdminDB(Sqlite3&& db);
+
+public:
+  // Tries to open an AdminDB from the given path. Returns std::nullopt if failed.
+  static std::optional<AdminDB> open(const std::string& path);
+  ~AdminDB();
+
+  // This class cannot be copied, but can be moved
+  AdminDB(AdminDB const&) = delete;
+  AdminDB& operator=(AdminDB const&) = delete;
+  AdminDB(AdminDB&& other) noexcept
+      : db(std::move(other.db)), geos_context(std::move(other.geos_context)),
+        wkb_reader(other.wkb_reader) {
+    other.wkb_reader = nullptr;
+  }
+  AdminDB& operator=(AdminDB&& other) noexcept {
+    // move and swap idiom via local variable
+    AdminDB local = std::move(other);
+    std::swap(db, local.db);
+    std::swap(geos_context, local.geos_context);
+    std::swap(wkb_reader, local.wkb_reader);
+    return *this;
+  }
+
+  sqlite3* get() {
+    return db.get();
+  }
+
+  Geometry read_wkb(const unsigned char* wkb_blob, int wkb_size);
+};
 
 /**
  * Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
@@ -48,8 +99,7 @@ typedef std::vector<std::tuple<geometry_type, std::vector<std::string>, bool>> l
  * @param  ll         point that needs to be checked.
  * @param  graphtile  graphtilebuilder that is used to determine if we are a country poly or not.
  */
-uint32_t GetMultiPolyId(const std::multimap<uint32_t, geometry_type>& polys,
-                        geos_context_type context,
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, Geometry>& polys,
                         const PointLL& ll,
                         GraphTileBuilder& graphtile);
 
@@ -59,9 +109,7 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, geometry_type>& polys,
  * @param  polys      unordered map of polys.
  * @param  ll         point that needs to be checked.
  */
-uint32_t GetMultiPolyId(const std::multimap<uint32_t, geometry_type>& polys,
-                        geos_context_type context,
-                        const PointLL& ll);
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, Geometry>& polys, const PointLL& ll);
 
 /**
  * Get the vector of languages for this LL.  Used by admin areas.  Checks if the pointLL is covered_by
@@ -71,42 +119,14 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, geometry_type>& polys,
  * @return  Returns the vector of pairs {language, is_default_language}
  */
 std::vector<std::pair<std::string, bool>>
-GetMultiPolyIndexes(const language_poly_index& language_ploys,
-                    geos_context_type context,
-                    const PointLL& ll);
+GetMultiPolyIndexes(const language_poly_index& language_ploys, const PointLL& ll);
 
 /**
  * Get the timezone polys from the db
  * @param  db           sqlite3 db handle
  * @param  aabb         bb of the tile
  */
-std::multimap<uint32_t, geometry_type>
-GetTimeZones(Sqlite3& db, geos_context_type context, const AABB2<PointLL>& aabb);
-
-/**
- * Get the admin data from the spatialite db given an SQL statement
- * @param  db               sqlite3 db handle
- * @param  stmt             prepared statement object
- * @param  sql              sql commend to run.
- * @param  tilebuilder      Graph tile builder
- * @param  polys            unordered multimap of admin polys
- * @param  drive_on_right   unordered map that indicates if a country drives on right side of the
- * road
- * @param  default_languages ordered map that is used for lower admins that have an
- * default language set
- * @param  language_polys    ordered map that is used for lower admins that have an
- * default language set
- * @param  languages_only    should we only process the languages with this query
- */
-void GetData(Sqlite3& db,
-             sqlite3_stmt* stmt,
-             const std::string& sql,
-             geos_context_type context,
-             GraphTileBuilder& tilebuilder,
-             std::multimap<uint32_t, geometry_type>& polys,
-             std::unordered_map<uint32_t, bool>& drive_on_right,
-             language_poly_index& language_polys,
-             bool languages_only);
+std::multimap<uint32_t, Geometry> GetTimeZones(AdminDB& db, const AABB2<PointLL>& aabb);
 
 /**
  * Get the admin polys that intersect with the tile bounding box.
@@ -122,9 +142,8 @@ void GetData(Sqlite3& db,
  * @param  aabb              bb of the tile
  * @param  tilebuilder       Graph tile builder
  */
-std::multimap<uint32_t, geometry_type>
-GetAdminInfo(Sqlite3& db,
-             geos_context_type context,
+std::multimap<uint32_t, Geometry>
+GetAdminInfo(AdminDB& db,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
              language_poly_index& language_polys,
