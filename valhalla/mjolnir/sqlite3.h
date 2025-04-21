@@ -1,9 +1,9 @@
 #pragma once
 
-#include <sqlite3.h>
-
 #include <optional>
 #include <string>
+
+struct sqlite3;
 
 namespace valhalla {
 namespace mjolnir {
@@ -18,8 +18,7 @@ class Sqlite3 final {
   }
 
 public:
-  static std::optional<Sqlite3> open(const std::string& path,
-                                     int flags = SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX);
+  static std::optional<Sqlite3> open(const std::string& path, int flags);
   ~Sqlite3();
 
   // This class cannot be copied, but can be moved

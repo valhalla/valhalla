@@ -1,9 +1,5 @@
-#include <cstdint>
-#include <string>
-#include <vector>
-
-#include "filesystem.h"
 #include "mjolnir/adminbuilder.h"
+#include "filesystem.h"
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/sqlite3.h"
@@ -14,6 +10,11 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <geos_c.h>
+#include <sqlite3.h>
+
+#include <cstdint>
+#include <string>
+#include <vector>
 
 BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
                                  double,

@@ -10,6 +10,7 @@
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
+#include <sqlite3.h>
 
 #include "baldr/admininfo.h"
 #include "baldr/graphconstants.h"

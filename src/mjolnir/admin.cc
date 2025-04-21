@@ -1,9 +1,10 @@
 #include "mjolnir/admin.h"
 #include "baldr/datetime.h"
-#include "mjolnir/sqlite3.h"
 #include "mjolnir/util.h"
 
 #include <geos_c.h>
+#include <sqlite3.h>
+
 #include <unordered_map>
 
 namespace valhalla {
@@ -37,7 +38,7 @@ AdminDB::~AdminDB() {
 }
 
 std::optional<AdminDB> AdminDB::open(const std::string& path) {
-  auto db = Sqlite3::open(path);
+  auto db = Sqlite3::open(path, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX);
   if (db) {
     return AdminDB(std::move(*db));
   }

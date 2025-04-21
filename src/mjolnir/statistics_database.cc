@@ -5,6 +5,8 @@
 #include "midgard/logging.h"
 #include "mjolnir/sqlite3.h"
 
+#include <sqlite3.h>
+
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
