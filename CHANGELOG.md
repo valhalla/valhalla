@@ -25,6 +25,7 @@
    * FIXED: clang warning: bool literal returned from `main` `[-Wmain]` [#5173](https://github.com/valhalla/valhalla/pull/5173)
    * FIXED: normalize paths on valhalla_build_extract for windows  [#5176](https://github.com/valhalla/valhalla/pull/5176)
    * FIXED: level changes for multi-level start/end edges [#5126](https://github.com/valhalla/valhalla/pull/5126)
+   * FIXED: Fix edge walk across tiles when traffic or predicted speeds are used [#5198](https://github.com/valhalla/valhalla/pull/5198)
    * FIXED: multi-edge steps maneuvers [#5191](https://github.com/valhalla/valhalla/pull/5191)
    * FIXED: remove start maneuver if route starts on stairs/escalators [#5127](https://github.com/valhalla/valhalla/pull/5127)
    * FIXED: compilation with clang 20 [#5208](https://github.com/valhalla/valhalla/pull/5208)
