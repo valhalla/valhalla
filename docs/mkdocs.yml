@@ -12,7 +12,7 @@ theme:
   palette:
     - scheme: default
       toggle:
-        icon: material/brightness-7 
+        icon: material/brightness-7
         name: Switch to dark mode
       primary: black
       accent: deep purple
@@ -47,6 +47,8 @@ markdown_extensions:
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - pymdownx.details
 
 site_name: Valhalla Docs
 repo_url: https://github.com/valhalla/valhalla/
@@ -117,5 +119,6 @@ nav:
     - Administrative data: mjolnir/admins.md
     - Attribution requirements: mjolnir/attribution.md
   - Development:
+    - contributing.md
     - Changelog: https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md
     - releasing.md
