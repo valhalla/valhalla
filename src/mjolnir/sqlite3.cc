@@ -55,6 +55,10 @@ std::optional<Sqlite3> Sqlite3::open(const std::string& path, int flags) {
 }
 
 Sqlite3::~Sqlite3() {
+  if (!db) {
+    return; // No-op for moved-out objects.
+  }
+
   // Sadly, `spatialite_cleanup_ex` calls `xmlCleanupParser()` (via `free_internal_cache()`) which is
   // not thread-safe and may cause a crash on double-free if called from multiple threads.
   // This static mutex works around the issue until the spatialite library is fixed:
