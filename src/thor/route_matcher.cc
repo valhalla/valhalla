@@ -54,6 +54,30 @@ float length_comparison(const float length, const bool exact_match) {
   return length + tolerance;
 }
 
+// check if the intermediate shape points are also on the edge
+bool MatchShape(const graph_tile_ptr& tile,
+                const DirectedEdge* de,
+                const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
+                uint32_t from,
+                uint32_t to) {
+  if (to - from == 1 && de->length() == 0) {
+    return true;
+  }
+  const auto& edgeinfo = tile->edgeinfo(de);
+  const auto& edge_shape = edgeinfo.shape();
+  if (edge_shape.size() != to - from + 1) {
+    return false;
+  }
+  bool forward = de->forward();
+  for (uint32_t i = 1, j = from + 1; j < to; i++, j++) {
+    if (!to_ll(shape.Get(j).ll())
+             .ApproximatelyEqual(forward ? edge_shape[i] : edge_shape[edge_shape.size() - 1 - i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // TODO: we need to stop relying on loki::Search to pre populate edge candidates for the first and
 // last locations. Instead we need to do that here where we already know the edges in question and can
 // make a single path edge for the edge we are interested in. Its the only way to get multi-leg
@@ -174,7 +198,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
 
       // Found a match if shape equals directed edge LL within tolerance
       if (to_ll(shape.Get(index).ll()).ApproximatelyEqual(de_end_ll) &&
-          de->length() < length_comparison(length, true)) {
+          de->length() < length_comparison(length, true) &&
+          MatchShape(tile, de, shape, correlated_index, index)) {
 
         // Figure out what time it is right now, the first iteration is a no-op
         auto offset_time_info = nodeinfo
