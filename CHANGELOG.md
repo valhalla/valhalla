@@ -28,6 +28,7 @@
    * FIXED: Fix edge walk across tiles when traffic or predicted speeds are used [#5198](https://github.com/valhalla/valhalla/pull/5198)
    * FIXED: multi-edge steps maneuvers [#5191](https://github.com/valhalla/valhalla/pull/5191)
    * FIXED: remove start maneuver if route starts on stairs/escalators [#5127](https://github.com/valhalla/valhalla/pull/5127)
+   * FIXED: compilation with clang 20 [#5208](https://github.com/valhalla/valhalla/pull/5208)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
