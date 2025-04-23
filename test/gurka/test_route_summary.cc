@@ -51,7 +51,7 @@ TEST(TestRouteSummary, GetSummary) {
   valhalla::Api result0 = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
   EXPECT_EQ(result0.trip().routes_size(), 1);
   EXPECT_EQ(result0.trip().routes(0).legs_size(), 1);
-  gurka::assert::osrm::expect_steps(result0, {"RT 1", "RT 2", "RT 5"});
+  gurka::assert::osrm::expect_steps(result0, {"RT 1", "RT 5"});
   gurka::assert::osrm::expect_summaries(result0, {"RT 1, RT 5"});
 
   // Bikes avoid motorways, so the shortest route is not an option.
@@ -105,7 +105,7 @@ TEST(TestRouteSummary, GetSummary) {
   directions = result.mutable_directions()->mutable_routes()->Add();
   *directions = result2.directions().routes(0);
 
-  const std::string expected_route_summary0 = "RT 1, RT 2, RT 5";
+  const std::string expected_route_summary0 = "RT 1, RT 5";
   const std::string expected_route_summary1 = "RT 1, RT 4, RT 5";
   const std::string expected_route_summary2 = "RT 1, RT 3, RT 5";
   gurka::assert::osrm::expect_summaries(result, {expected_route_summary0, expected_route_summary1,

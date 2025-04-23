@@ -3136,7 +3136,7 @@ bool ManeuversBuilder::IsNextManeuverObvious(const std::list<Maneuver>& maneuver
   if (next_man->type() == DirectionsLeg_Maneuver_Type_kContinue ||
       next_man->type() == DirectionsLeg_Maneuver_Type_kSlightLeft ||
       next_man->type() == DirectionsLeg_Maneuver_Type_kSlightRight) {
-    // Get the node between the the current and next maneuver
+    // Get the node between the current and next maneuver
     auto node = trip_path_->GetEnhancedNode(next_man->begin_node_index());
 
     // Slight turn maneuvers may be obvious ONLY if there are no other forward intersecting edges.

@@ -178,9 +178,11 @@ TEST(Turnlanes, validate_turn_lanes) {
                   "[ *slight_left* VALID | *slight_left* ACTIVE | slight_right | right ]");
 
   // Test slight right active
+  // NOTE: This used to trigger a slight right maneuver, but this is not super useful to a driver to be honest.
+  // See discussion in https://github.com/valhalla/valhalla/pull/5095
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/slight_right_active_pinpoint.pbf"},
-                  expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ slight_left | slight_left | *slight_right* ACTIVE | right ]");
+                  expected_routes_size, expected_legs_size, expected_maneuvers_size - 1, maneuver_index,
+                  "");
 
   // Test left most left u-turn active
   test_turn_lanes({VALHALLA_SOURCE_DIR

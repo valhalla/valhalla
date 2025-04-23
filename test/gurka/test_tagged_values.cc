@@ -123,7 +123,7 @@ TEST_F(TaggedValues, test_taking_tunnel) {
   rapidjson::Document d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   auto steps = d["routes"][0]["legs"][0]["steps"].GetArray();
-  EXPECT_EQ(steps.Size(), 6);
+  EXPECT_EQ(steps.Size(), 5);
 
   int step_index = 0;
   // First step AB has no tunnels
@@ -141,7 +141,7 @@ TEST_F(TaggedValues, test_taking_tunnel) {
     EXPECT_STREQ(intersection["classes"][1].GetString(), "motorway");
   }
 
-  // Third step CD is tunnel
+  // Third step CE is tunnel
   step_index++;
   for (const auto& intersection : steps[step_index]["intersections"].GetArray()) {
     EXPECT_TRUE(intersection.HasMember("tunnel_name"));
@@ -150,23 +150,14 @@ TEST_F(TaggedValues, test_taking_tunnel) {
     EXPECT_STREQ(intersection["classes"][1].GetString(), "motorway");
   }
 
-  // Fourth step DE is tunnel
-  step_index++;
-  for (const auto& intersection : steps[step_index]["intersections"].GetArray()) {
-    EXPECT_TRUE(intersection.HasMember("tunnel_name"));
-    EXPECT_STREQ(intersection["tunnel_name"].GetString(), "Fort McHenry Tunnel");
-    EXPECT_STREQ(intersection["classes"][0].GetString(), "tunnel");
-    EXPECT_STREQ(intersection["classes"][1].GetString(), "motorway");
-  }
-
-  // Fifth step EF is not tunnel
+  // Fourth step EF is not tunnel
   step_index++;
   for (const auto& intersection : steps[step_index]["intersections"].GetArray()) {
     EXPECT_FALSE(intersection.HasMember("tunnel_name"));
     EXPECT_STREQ(intersection["classes"][0].GetString(), "motorway");
   }
 
-  // Sixth step is arrival
+  // Fifth step is arrival
   step_index++;
   for (const auto& intersection : steps[step_index]["intersections"].GetArray()) {
     EXPECT_FALSE(intersection.HasMember("tunnel_name"));
