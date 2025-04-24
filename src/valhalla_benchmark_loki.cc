@@ -124,7 +124,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  size_t batch, isolated, radius;
+  size_t batch, isolated, radius, cutoff;
   bool extrema = false;
   std::vector<std::string> input_files;
   boost::property_tree::ptree config;
@@ -148,6 +148,7 @@ int main(int argc, char** argv) {
       ("e,extrema", "Show the input locations of the extrema for a given statistic", cxxopts::value<bool>(extrema)->default_value("false"))
       ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>(isolated)->default_value("50"))
       ("r,radius", "How many meters to search away from the input location", cxxopts::value<size_t>(radius)->default_value("0"))
+      ("o,cutoff", "Search cutoff (meters)", cxxopts::value<size_t>(cutoff)->default_value("35000"))
       ("costing", "Which costing model to use.", cxxopts::value<std::string>(costing_str)->default_value("auto"))
       ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
     // clang-format on
@@ -192,6 +193,7 @@ int main(int argc, char** argv) {
       valhalla::baldr::Location loc(ll);
       loc.min_inbound_reach_ = loc.min_outbound_reach_ = isolated;
       loc.radius_ = radius;
+      loc.search_cutoff_ = cutoff;
       job.emplace_back(std::move(loc));
       if (job.size() == batch) {
         jobs.emplace_back(std::move(job));
