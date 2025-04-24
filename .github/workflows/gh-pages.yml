@@ -25,6 +25,5 @@ jobs:
           python -m pip install -r mkdocs_requirements.txt
 
       - name: Build and deploy to GitHub Pages 🏗️ 🚀
-        working-directory: docs
         run: |
           mkdocs gh-deploy --force --strict
