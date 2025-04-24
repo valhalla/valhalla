@@ -61,4 +61,5 @@ fi
 
 #Cleanup Blackduck sources
 rm -rf /root/.synopsys
+rm -rf /root/blackduck
 echo "Blackduck CleanUp done."
