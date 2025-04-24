@@ -1788,8 +1788,7 @@ TEST(ParseRequest, test_transport_type) {
   auto lowered = std::vector<std::string>{"foot", "wheelchair", "blind"};
   auto expected = lowered.begin();
   for (const auto& transport_type_value : {"Foot", "Wheelchair", "Blind"}) {
-    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                                *expected);
+    test_transport_type_parsing(costing, transport_type_key, transport_type_value, *expected);
     ++expected;
   }
 
