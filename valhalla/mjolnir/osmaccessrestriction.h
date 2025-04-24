@@ -20,12 +20,12 @@ public:
   /**
    * Constructor
    */
-  OSMAccessRestriction();
+  OSMAccessRestriction() = default;
 
   /**
    * Destructor.
    */
-  ~OSMAccessRestriction();
+  ~OSMAccessRestriction() = default;
 
   /**
    * Set the restriction type
@@ -69,16 +69,16 @@ public:
   void set_direction(AccessRestrictionDirection direction);
 
 protected:
-  uint64_t value_;
+  uint64_t value_ = 0;
 
   struct Attributes {
     uint16_t type_ : 4;
     uint16_t modes_ : 12;
   };
-  Attributes attributes_;
-  AccessRestrictionDirection direction_;
-  uint16_t spare_[2];
-  uint8_t spare2_;
+  Attributes attributes_ = {0, 0};
+  AccessRestrictionDirection direction_ = AccessRestrictionDirection::kBoth;
+  uint16_t spare_[2] = {0, 0};
+  uint8_t spare2_ = 0;
 };
 
 } // namespace mjolnir
