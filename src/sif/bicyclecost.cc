@@ -1,5 +1,4 @@
 #include "sif/bicyclecost.h"
-#include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
@@ -878,12 +877,12 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   BicycleType type;
   std::transform(co->mutable_transport_type()->begin(), co->mutable_transport_type()->end(),
                  co->mutable_transport_type()->begin(),
-                 [](unsigned char c) { return std::tolower(c); });
-  if (bicycle_type == "cross") {
+                 [](const unsigned char ch) { return std::tolower(ch); });
+  if (co->transport_type() == "cross") {
     type = BicycleType::kCross;
-  } else if (bicycle_type == "road") {
+  } else if (co->transport_type() == "road") {
     type = BicycleType::kRoad;
-  } else if (bicycle_type == "mountain") {
+  } else if (co->transport_type() == "mountain") {
     type = BicycleType::kMountain;
   } else {
     type = BicycleType::kHybrid;
@@ -891,7 +890,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
   // This is the average speed on smooth, flat roads. If not present or outside the
   // valid range use a default speed based on the bicycle type.
-  uint32_t t = static_cast<uint32_t>(type);
+  const auto t = static_cast<uint32_t>(type);
   ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
                                            kMaxCyclingSpeed};
 
