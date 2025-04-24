@@ -867,6 +867,9 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
 
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_DEFAULT(co, kDefaultPedestrianType, json, "/type", transport_type);
+  std::transform(co->mutable_transport_type()->begin(), co->mutable_transport_type()->end(),
+               co->mutable_transport_type()->begin(),
+               [](const unsigned char ch) { return std::tolower(ch); });
 
   // Set type specific defaults, override with json
   if (co->transport_type() == "wheelchair") {
