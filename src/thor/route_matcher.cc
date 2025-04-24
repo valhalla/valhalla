@@ -63,7 +63,7 @@ bool check_shape(const graph_tile_ptr& tile,
   if (to - from == 1 && de->length() == 0) {
     return true;
   }
-  const auto& edgeinfo = tile->edgeinfo(de);
+  const auto edgeinfo = tile->edgeinfo(de);
   const auto& edge_shape = edgeinfo.shape();
   int32_t i = edge_shape.size() - (to - from);
   if (i < 1 || (from > 0 && i != 1)) {
