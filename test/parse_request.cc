@@ -1785,21 +1785,21 @@ TEST(ParseRequest, test_transport_type) {
   std::string transport_type_key = "type";
 
   Costing::Type costing = Costing::pedestrian;
-  for (const auto& transport_type_value : {"foot", "wheelchair"}) {
+  auto lowered = std::vector<std::string>{"foot", "wheelchair"};
+  auto expected = lowered.begin();
+  for (const auto& transport_type_value : {"fOOt", "whEElchair"}) {
     test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                                transport_type_value);
+                                *expected);
+    ++expected;
   }
 
   costing = Costing::bicycle;
   transport_type_key = "bicycle_type";
-  for (const auto& transport_type_value : {"road", "cross", "hybrid", "mountain"}) {
-    // parsing does not change the caseness of the parameters, this has to be handled later
-    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                                transport_type_value);
-    std::string uppercased_transport_type_value{transport_type_value};
-    uppercased_transport_type_value[0] = std::toupper(uppercased_transport_type_value[0]);
-    test_transport_type_parsing(costing, transport_type_key, uppercased_transport_type_value,
-                                uppercased_transport_type_value);
+  lowered = std::vector<std::string>{"road", "cross", "hybrid", "mountain"};
+  expected = lowered.begin();
+  for (const auto& transport_type_value : {"RoAd", "cRoSs", "hybrid", "MOUNTAIN"}) {
+    test_transport_type_parsing(costing, transport_type_key, transport_type_value, *expected);
+    ++expected;
   }
 }
 
