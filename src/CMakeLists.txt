@@ -188,12 +188,15 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
+  PRIVATE
+    ${libvalhalla_include_directories}
+)
+target_include_directories(valhalla SYSTEM PUBLIC
     ${rapidjson_include_dir}
     ${date_include_dir}
     ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
     $<$<BOOL:${WIN32}>:${dirent_include_dir}>
-  PRIVATE
-    ${libvalhalla_include_directories})
+)
 
 target_link_libraries(valhalla
   PUBLIC
@@ -210,7 +213,7 @@ set_target_properties(valhalla PROPERTIES
 # pkg-config installation
 if(PKG_CONFIG_FOUND)
   include(ValhallaPkgConfig)
-  
+
   configure_valhalla_pc()
 
   install(FILES
