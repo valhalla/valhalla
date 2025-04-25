@@ -12,9 +12,10 @@
 namespace valhalla {
 namespace baldr {
 
-inline constexpr uint32_t kMaxEdgesPerNode = 127;    // Maximum edges per node
-inline constexpr uint32_t kMaxAdminsPerTile = 4095;  // Maximum Admins per tile
-inline constexpr uint32_t kMaxTimeZoneIdExt1 = 1023; // Maximum TimeZones index for first extension level
+inline constexpr uint32_t kMaxEdgesPerNode = 127;   // Maximum edges per node
+inline constexpr uint32_t kMaxAdminsPerTile = 4095; // Maximum Admins per tile
+inline constexpr uint32_t kMaxTimeZoneIdExt1 =
+    1023; // Maximum TimeZones index for first extension level
 // constexpr uint32_t kMaxTimeZoneIdExt2 =
 //    2047; // Maximum TimeZones index for second extension level; not needed yet
 inline constexpr uint32_t kMaxLocalEdgeIndex = 7; // Max. index of edges on local level

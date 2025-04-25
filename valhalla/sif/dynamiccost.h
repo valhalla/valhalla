@@ -183,8 +183,8 @@ inline constexpr std::array<float, 16> populate_densityfactor() {
 inline constexpr std::array<float, 16> kDensityFactor = populate_densityfactor(); // Density factor
 
 inline constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
-                                                       1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
-                                                       2.5f, 2.8f, 3.1f, 3.5f};
+                                                              1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
+                                                              2.5f, 2.8f, 3.1f, 3.5f};
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for

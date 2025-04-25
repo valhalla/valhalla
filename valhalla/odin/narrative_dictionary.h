@@ -51,11 +51,13 @@ inline constexpr auto kEnterFerryVerbalKey = "instructions.enter_ferry_verbal";
 inline constexpr auto kExitFerryKey = "instructions.exit_ferry";
 inline constexpr auto kExitFerryVerbalKey = "instructions.exit_ferry_verbal";
 inline constexpr auto kTransitConnectionStartKey = "instructions.transit_connection_start";
-inline constexpr auto kTransitConnectionStartVerbalKey = "instructions.transit_connection_start_verbal";
+inline constexpr auto kTransitConnectionStartVerbalKey =
+    "instructions.transit_connection_start_verbal";
 inline constexpr auto kTransitConnectionTransferKey = "instructions.transit_connection_transfer";
 inline constexpr auto kTransitConnectionTransferVerbalKey =
     "instructions.transit_connection_transfer_verbal";
-inline constexpr auto kTransitConnectionDestinationKey = "instructions.transit_connection_destination";
+inline constexpr auto kTransitConnectionDestinationKey =
+    "instructions.transit_connection_destination";
 inline constexpr auto kTransitConnectionDestinationVerbalKey =
     "instructions.transit_connection_destination_verbal";
 inline constexpr auto kDepartKey = "instructions.depart";

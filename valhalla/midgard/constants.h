@@ -45,10 +45,12 @@ inline constexpr float kPi = 3.14159265f;
 inline constexpr double kPiD = 3.14159265358979323846264338327950288;
 inline constexpr float kPiOver2 = (kPi * 0.5f);
 inline constexpr float kPiOver4 = (kPi * 0.25f);
-inline constexpr float kDegPerRad = (180.0f / kPi);   // Radians to degrees conversion
-inline constexpr double kDegPerRadD = (180.0 / kPiD); // Radians to degrees conversion in double precision
-inline constexpr float kRadPerDeg = (kPi / 180.0f);   // Degrees to radians conversion
-inline constexpr double kRadPerDegD = (kPiD / 180.0); // Degrees to radians conversion in double precision
+inline constexpr float kDegPerRad = (180.0f / kPi); // Radians to degrees conversion
+inline constexpr double kDegPerRadD =
+    (180.0 / kPiD); // Radians to degrees conversion in double precision
+inline constexpr float kRadPerDeg = (kPi / 180.0f); // Degrees to radians conversion
+inline constexpr double kRadPerDegD =
+    (kPiD / 180.0); // Degrees to radians conversion in double precision
 inline constexpr float kEpsilon = 0.000001f;
 
 // To avoid using M_PI
