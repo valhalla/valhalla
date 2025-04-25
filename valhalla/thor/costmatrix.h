@@ -22,16 +22,16 @@ namespace valhalla {
 namespace thor {
 
 enum class MatrixExpansionType { reverse = 0, forward = 1 };
-constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
-constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
+inline constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
+inline constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
 
 // These cost thresholds are in addition to the distance thresholds. If either forward or reverse
 // costs exceed the threshold the search is terminated.
-constexpr float kCostThresholdAutoDivisor =
+inline constexpr float kCostThresholdAutoDivisor =
     56.0f; // 400 km distance threshold will result in a cost threshold of ~7200 (2 hours)
-constexpr float kCostThresholdBicycleDivisor =
+inline constexpr float kCostThresholdBicycleDivisor =
     56.0f; // 200 km distance threshold will result in a cost threshold of ~3600 (1 hour)
-constexpr float kCostThresholdPedestrianDivisor =
+inline constexpr float kCostThresholdPedestrianDivisor =
     28.0f; // 200 km distance threshold will result in a cost threshold of ~7200 (2 hours)
 
 /**

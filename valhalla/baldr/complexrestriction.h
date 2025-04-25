@@ -11,7 +11,7 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr size_t kMaxViasPerRestriction = 31;
+inline constexpr size_t kMaxViasPerRestriction = 31;
 
 enum class WalkingVia {
   KeepWalking,

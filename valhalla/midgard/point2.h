@@ -10,7 +10,7 @@
 #include <valhalla/midgard/util_core.h>
 
 namespace {
-constexpr float LL_EPSILON = .00002f;
+inline constexpr float LL_EPSILON = .00002f;
 }
 
 namespace valhalla {

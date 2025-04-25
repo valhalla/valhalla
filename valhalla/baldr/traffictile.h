@@ -40,14 +40,14 @@ const uint8_t TRAFFIC_TILE_VERSION = VALHALLA_VERSION_MAJOR;
 
 // This value _of bitfield_ (not in kph) signals that the live speed is not known (max value of 7 bit
 // number)
-constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_RAW = (1 << 7) - 1;
+inline constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_RAW = (1 << 7) - 1;
 // Traffic speeds are encoded as 7 bits in `TrafficSpeed` below with a 2kph multiplier
-constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = (UNKNOWN_TRAFFIC_SPEED_RAW - 1) << 1;
+inline constexpr uint32_t MAX_TRAFFIC_SPEED_KPH = (UNKNOWN_TRAFFIC_SPEED_RAW - 1) << 1;
 // This is the value in kph that signifies a traffic speed is unknown
-constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_KPH = UNKNOWN_TRAFFIC_SPEED_RAW << 1;
+inline constexpr uint32_t UNKNOWN_TRAFFIC_SPEED_KPH = UNKNOWN_TRAFFIC_SPEED_RAW << 1;
 
-constexpr uint8_t UNKNOWN_CONGESTION_VAL = 0;
-constexpr uint8_t MAX_CONGESTION_VAL = 63;
+inline constexpr uint8_t UNKNOWN_CONGESTION_VAL = 0;
+inline constexpr uint8_t MAX_CONGESTION_VAL = 63;
 
 struct TrafficSpeed {
   uint64_t

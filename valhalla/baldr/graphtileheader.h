@@ -18,24 +18,24 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 11;
+inline constexpr size_t kEmptySlots = 11;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
-constexpr size_t kMaxVersionSize = 16;
+inline constexpr size_t kMaxVersionSize = 16;
 
 // Maximum value used for quality metrics
-constexpr uint32_t kMaxQualityMeasure = 15;
+inline constexpr uint32_t kMaxQualityMeasure = 15;
 
 // Maximum number of node transitions per tile (22 bits)
-constexpr uint32_t kMaxNodeTransitions = 4194303;
+inline constexpr uint32_t kMaxNodeTransitions = 4194303;
 
 // Maximum number of signs (24 bits).
-constexpr uint32_t kMaxSigns = 16777215;
+inline constexpr uint32_t kMaxSigns = 16777215;
 
 // Total number of binned edge bins in the tile
-constexpr size_t kBinsDim = 5;
-constexpr size_t kBinCount = kBinsDim * kBinsDim;
+inline constexpr size_t kBinsDim = 5;
+inline constexpr size_t kBinCount = kBinsDim * kBinsDim;
 
 /**
  * Summary information about the graph tile. Includes version

@@ -12,14 +12,14 @@ namespace valhalla {
 namespace baldr {
 
 // Maximum of 8 (0-7) graph hierarchies are supported.
-constexpr uint32_t kMaxGraphHierarchy = 7;
+inline constexpr uint32_t kMaxGraphHierarchy = 7;
 
 // 46 bits are used for the non-spare part of a graph Id. Fill all of them.
 // If we ever change the size of GraphId fields this will also need to change.
-constexpr uint64_t kInvalidGraphId = 0x3fffffffffff;
+inline constexpr uint64_t kInvalidGraphId = 0x3fffffffffff;
 
 // Value used to increment an Id by 1
-constexpr uint64_t kIdIncrement = 1 << 25;
+inline constexpr uint64_t kIdIncrement = 1 << 25;
 
 /**
  * Identifier of a node or an edge within the tiled, hierarchical graph.

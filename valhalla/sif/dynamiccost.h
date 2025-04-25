@@ -131,36 +131,36 @@ const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingType
 const sif::Cost kNoCost(0.0f, 0.0f);
 
 // Default unit size (seconds) for cost sorting.
-constexpr uint32_t kDefaultUnitSize = 1;
+inline constexpr uint32_t kDefaultUnitSize = 1;
 
 // Maximum penalty allowed. Cannot be too high because sometimes one cannot avoid a particular
 // attribute or condition to complete a route.
-constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
+inline constexpr float kMaxPenalty = 12.0f * midgard::kSecPerHour; // 12 hours
 
 // Maximum ferry penalty (when use_ferry == 0 or use_rail_ferry == 0). Can't make this too large
 // since a ferry is sometimes required to complete a route.
-constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
+inline constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 
 // Default uturn costs
-constexpr float kTCUnfavorablePencilPointUturn = 15.f;
-constexpr float kTCUnfavorableUturn = 600.f;
+inline constexpr float kTCUnfavorablePencilPointUturn = 15.f;
+inline constexpr float kTCUnfavorableUturn = 600.f;
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
-constexpr float kMaxHighwayBiasFactor = 8.0f;
+inline constexpr float kMaxHighwayBiasFactor = 8.0f;
 
 /**
  * Mask values used in the allowed function by loki::reach to control how conservative
  * the decision should be. By default allowed methods will not disallow start/end/simple
  * restrictions/shortcuts and closures are determined by the costing configuration
  */
-constexpr uint16_t kDisallowNone = 0x0;
-constexpr uint16_t kDisallowStartRestriction = 0x1;
-constexpr uint16_t kDisallowEndRestriction = 0x2;
-constexpr uint16_t kDisallowSimpleRestriction = 0x4;
-constexpr uint16_t kDisallowClosure = 0x8;
-constexpr uint16_t kDisallowShortcut = 0x10;
+inline constexpr uint16_t kDisallowNone = 0x0;
+inline constexpr uint16_t kDisallowStartRestriction = 0x1;
+inline constexpr uint16_t kDisallowEndRestriction = 0x2;
+inline constexpr uint16_t kDisallowSimpleRestriction = 0x4;
+inline constexpr uint16_t kDisallowClosure = 0x8;
+inline constexpr uint16_t kDisallowShortcut = 0x10;
 
-constexpr std::array<float, 253> populate_speedfactor() {
+inline constexpr std::array<float, 253> populate_speedfactor() {
   std::array<float, 253> speedfactor{};
   speedfactor[0] = midgard::kSecPerHour; // TODO - what to make speed=0?
   for (uint32_t s = 1; s <= baldr::kMaxSpeedKph; s++) {
@@ -169,9 +169,9 @@ constexpr std::array<float, 253> populate_speedfactor() {
 
   return speedfactor;
 }
-constexpr std::array<float, 253> kSpeedFactor = populate_speedfactor();
+inline constexpr std::array<float, 253> kSpeedFactor = populate_speedfactor();
 
-constexpr std::array<float, 16> populate_densityfactor() {
+inline constexpr std::array<float, 16> populate_densityfactor() {
   std::array<float, 16> densityfactor{};
   // Set density factors - used to penalize edges in dense, urban areas
   for (uint32_t d = 0; d < 16; d++) {
@@ -180,9 +180,9 @@ constexpr std::array<float, 16> populate_densityfactor() {
 
   return densityfactor;
 }
-constexpr std::array<float, 16> kDensityFactor = populate_densityfactor(); // Density factor
+inline constexpr std::array<float, 16> kDensityFactor = populate_densityfactor(); // Density factor
 
-constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
+inline constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
                                                        1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
                                                        2.5f, 2.8f, 3.1f, 3.5f};
 

@@ -12,25 +12,25 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kMaxEdgesPerNode = 127;    // Maximum edges per node
-constexpr uint32_t kMaxAdminsPerTile = 4095;  // Maximum Admins per tile
-constexpr uint32_t kMaxTimeZoneIdExt1 = 1023; // Maximum TimeZones index for first extension level
+inline constexpr uint32_t kMaxEdgesPerNode = 127;    // Maximum edges per node
+inline constexpr uint32_t kMaxAdminsPerTile = 4095;  // Maximum Admins per tile
+inline constexpr uint32_t kMaxTimeZoneIdExt1 = 1023; // Maximum TimeZones index for first extension level
 // constexpr uint32_t kMaxTimeZoneIdExt2 =
 //    2047; // Maximum TimeZones index for second extension level; not needed yet
-constexpr uint32_t kMaxLocalEdgeIndex = 7; // Max. index of edges on local level
+inline constexpr uint32_t kMaxLocalEdgeIndex = 7; // Max. index of edges on local level
 
 // Elevation precision. Elevation is clamped to a range of -500 meters to 7683 meters
-constexpr uint32_t kNodeMaxStoredElevation = 32767; // 15 bits
-constexpr float kNodeElevationPrecision = 0.25f;
-constexpr float kNodeMinElevation = -500.0f;
-constexpr float kNodeMaxElevation =
+inline constexpr uint32_t kNodeMaxStoredElevation = 32767; // 15 bits
+inline constexpr float kNodeElevationPrecision = 0.25f;
+inline constexpr float kNodeMinElevation = -500.0f;
+inline constexpr float kNodeMaxElevation =
     kNodeMinElevation + (kNodeElevationPrecision * kNodeMaxStoredElevation);
 
 // Heading shrink factor to reduce max heading of 359 to 255
-constexpr float kHeadingShrinkFactor = (255.0f / 359.0f);
+inline constexpr float kHeadingShrinkFactor = (255.0f / 359.0f);
 
 // Heading expand factor to increase max heading of 255 to 359
-constexpr float kHeadingExpandFactor = (359.0f / 255.0f);
+inline constexpr float kHeadingExpandFactor = (359.0f / 255.0f);
 
 /**
  * Information held for each node within the graph. The graph uses a forward

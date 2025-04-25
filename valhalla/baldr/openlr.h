@@ -17,7 +17,7 @@ namespace OpenLR {
 
 namespace {
 
-constexpr double geom_scale = 100000;
+inline constexpr double geom_scale = 100000;
 
 template <typename T, typename std::enable_if<std::is_signed<T>::value, int>::type = 0>
 inline int sgn(const T val) {

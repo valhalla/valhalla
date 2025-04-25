@@ -11,8 +11,8 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr size_t kStateIso = 3;
-constexpr size_t kCountryIso = 2;
+inline constexpr size_t kStateIso = 3;
+inline constexpr size_t kCountryIso = 2;
 
 // Returns the 3-char equivalent of the 2-char country code (iso_3166_1_alpha2) or an empty string
 // if the 2-char code is unknown

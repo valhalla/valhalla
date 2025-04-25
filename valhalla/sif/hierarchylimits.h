@@ -10,21 +10,21 @@
 // updates to the defaults.
 namespace {
 
-constexpr uint32_t kUnlimitedTransitions = std::numeric_limits<uint32_t>::max();
-constexpr float kMaxDistance = std::numeric_limits<float>::max();
+inline constexpr uint32_t kUnlimitedTransitions = std::numeric_limits<uint32_t>::max();
+inline constexpr float kMaxDistance = std::numeric_limits<float>::max();
 
 // Default default maximum upward transitions (per level). These are optimized
 // for bidirectional to allow enough expansion on local and arterial to account
 // for routes where more direct paths are available near the origin and
 // destination.
-constexpr uint32_t kDefaultMaxUpTransitions[] = {0, 400, 100, 0, 0, 0, 0, 0};
+inline constexpr uint32_t kDefaultMaxUpTransitions[] = {0, 400, 100, 0, 0, 0, 0, 0};
 
 // Default distances within which expansion is always allowed (per level). It's optimized
 // for unidirectional search and can be modified by the path algorithm in case of
 // bidirectional search.
-constexpr float kDefaultExpansionWithinDist[] = {kMaxDistance, 100000.0f, 5000.0f, 0.0f,
+inline constexpr float kDefaultExpansionWithinDist[] = {kMaxDistance, 100000.0f, 5000.0f, 0.0f,
                                                  0.0f,         0.0f,      0.0f,    0.0f};
-constexpr float kDefaultExpansionWithinDistBidir[] = {kMaxDistance, 20000.0f, 5000.0f, 0.0f,
+inline constexpr float kDefaultExpansionWithinDistBidir[] = {kMaxDistance, 20000.0f, 5000.0f, 0.0f,
                                                       0.0f,         0.0f,     0.0f,    0.0f};
 } // namespace
 

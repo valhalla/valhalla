@@ -45,9 +45,9 @@ enum class BuildStage : int8_t {
   kCleanup = 15
 };
 
-constexpr uint8_t kMinor = 1;
-constexpr uint8_t kStopSign = 2;
-constexpr uint8_t kYieldSign = 4;
+inline constexpr uint8_t kMinor = 1;
+inline constexpr uint8_t kStopSign = 2;
+inline constexpr uint8_t kYieldSign = 4;
 
 // Convert string to BuildStage
 inline BuildStage string_to_buildstage(const std::string& s) {

@@ -12,68 +12,68 @@ namespace baldr {
 
 // OSM Ids can exceed 32 bits, but these are currently only Node Ids. Way Ids should still have
 // room to grow before exceeding an unsigned 32 bit word.
-constexpr uint32_t kMaxOSMWayId = 4294967295;
+inline constexpr uint32_t kMaxOSMWayId = 4294967295;
 
 // Maximum tile id/index supported. 22 bits
-constexpr uint32_t kMaxGraphTileId = 4194303;
+inline constexpr uint32_t kMaxGraphTileId = 4194303;
 // Maximum id/index within a tile. 21 bits
-constexpr uint32_t kMaxGraphId = 2097151;
+inline constexpr uint32_t kMaxGraphId = 2097151;
 
 // Invalid edge label index
-constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
+inline constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
 
 // The largest path id that can be used in a multi path expansion
 // Up to this many separate paths can be tracked concurrently with a single labelset/edgestatus
 // The value is limited to fit into the 7 spare bits of a 32 bit tile/level id in edgestatus
-constexpr uint8_t kMaxMultiPathId = 127;
+inline constexpr uint8_t kMaxMultiPathId = 127;
 
 // Invalid restriction index
-constexpr uint8_t kInvalidRestriction = std::numeric_limits<uint8_t>::max();
+inline constexpr uint8_t kInvalidRestriction = std::numeric_limits<uint8_t>::max();
 
 // Access bit field constants. Access in directed edge allows 12 bits.
-constexpr uint16_t kAutoAccess = 1;
-constexpr uint16_t kPedestrianAccess = 2;
-constexpr uint16_t kBicycleAccess = 4;
-constexpr uint16_t kTruckAccess = 8;
-constexpr uint16_t kEmergencyAccess = 16;
-constexpr uint16_t kTaxiAccess = 32;
-constexpr uint16_t kBusAccess = 64;
-constexpr uint16_t kHOVAccess = 128;
-constexpr uint16_t kWheelchairAccess = 256;
-constexpr uint16_t kMopedAccess = 512;
-constexpr uint16_t kMotorcycleAccess = 1024;
-constexpr uint16_t kAllAccess = 4095;
+inline constexpr uint16_t kAutoAccess = 1;
+inline constexpr uint16_t kPedestrianAccess = 2;
+inline constexpr uint16_t kBicycleAccess = 4;
+inline constexpr uint16_t kTruckAccess = 8;
+inline constexpr uint16_t kEmergencyAccess = 16;
+inline constexpr uint16_t kTaxiAccess = 32;
+inline constexpr uint16_t kBusAccess = 64;
+inline constexpr uint16_t kHOVAccess = 128;
+inline constexpr uint16_t kWheelchairAccess = 256;
+inline constexpr uint16_t kMopedAccess = 512;
+inline constexpr uint16_t kMotorcycleAccess = 1024;
+inline constexpr uint16_t kAllAccess = 4095;
 
 // Constant representing vehicular access types
-constexpr uint16_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
+inline constexpr uint16_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
                                       kTaxiAccess | kBusAccess | kHOVAccess;
 
 // Maximum number of transit records per tile and other max. transit
 // field values.
-constexpr uint32_t kMaxTransitDepartures = 16777215;
-constexpr uint32_t kMaxTransitStops = 65535;
-constexpr uint32_t kMaxTransitRoutes = 4095;
-constexpr uint32_t kMaxTransitSchedules = 4095;
-constexpr uint32_t kMaxTransitBlockId = 1048575;
-constexpr uint32_t kMaxTransitLineId = 1048575;
-constexpr uint32_t kMaxTransitDepartureTime = 131071;
-constexpr uint32_t kMaxTransitElapsedTime = 131071;
-constexpr uint32_t kMaxStartTime = 131071;
-constexpr uint32_t kMaxEndTime = 131071;
-constexpr uint32_t kMaxEndDay = 63;
-constexpr uint32_t kScheduleEndDay = 60;
-constexpr uint32_t kMaxFrequency = 8191;
-constexpr uint32_t kMaxTransfers = 65535;
-constexpr uint32_t kMaxTransferTime = 65535;
-constexpr uint32_t kMaxTripId = 536870912; // 29 bits
+inline constexpr uint32_t kMaxTransitDepartures = 16777215;
+inline constexpr uint32_t kMaxTransitStops = 65535;
+inline constexpr uint32_t kMaxTransitRoutes = 4095;
+inline constexpr uint32_t kMaxTransitSchedules = 4095;
+inline constexpr uint32_t kMaxTransitBlockId = 1048575;
+inline constexpr uint32_t kMaxTransitLineId = 1048575;
+inline constexpr uint32_t kMaxTransitDepartureTime = 131071;
+inline constexpr uint32_t kMaxTransitElapsedTime = 131071;
+inline constexpr uint32_t kMaxStartTime = 131071;
+inline constexpr uint32_t kMaxEndTime = 131071;
+inline constexpr uint32_t kMaxEndDay = 63;
+inline constexpr uint32_t kScheduleEndDay = 60;
+inline constexpr uint32_t kMaxFrequency = 8191;
+inline constexpr uint32_t kMaxTransfers = 65535;
+inline constexpr uint32_t kMaxTransferTime = 65535;
+inline constexpr uint32_t kMaxTripId = 536870912; // 29 bits
 
 // Maximum offset into the text/name list
-constexpr uint32_t kMaxNameOffset = 16777215; // 24 bits
+inline constexpr uint32_t kMaxNameOffset = 16777215; // 24 bits
 
 // Payment constants. Bit constants.
-constexpr uint8_t kCoins = 1; // Coins
-constexpr uint8_t kNotes = 2; // Bills
-constexpr uint8_t kETC = 4;   // Electronic Toll Collector
+inline constexpr uint8_t kCoins = 1; // Coins
+inline constexpr uint8_t kNotes = 2; // Bills
+inline constexpr uint8_t kETC = 4;   // Electronic Toll Collector
 
 // Edge traversability
 enum class Traversability {
@@ -84,45 +84,45 @@ enum class Traversability {
 };
 
 // Maximum relative density at a node or within a tile
-constexpr uint32_t kMaxDensity = 15;
+inline constexpr uint32_t kMaxDensity = 15;
 
 // Unlimited speed limit. In OSM maxspeed=none. Set to max value to signify
 // unlimited.
-constexpr uint8_t kUnlimitedSpeedLimit = std::numeric_limits<uint8_t>::max();
+inline constexpr uint8_t kUnlimitedSpeedLimit = std::numeric_limits<uint8_t>::max();
 
 // The max assumed speed we know from static data
-constexpr uint8_t kMaxAssumedSpeed = 140; // ~85 MPH
+inline constexpr uint8_t kMaxAssumedSpeed = 140; // ~85 MPH
 // Actual speed from traffic
-constexpr uint8_t kMaxTrafficSpeed = 252; // ~157 MPH
+inline constexpr uint8_t kMaxTrafficSpeed = 252; // ~157 MPH
 // Maximum speed. This impacts the effectiveness of A* for driving routes
 // so it should be set as low as is reasonable. Speeds above this in OSM are
 // clamped to this maximum value.
-constexpr uint32_t kMaxSpeedKph = std::max(kMaxTrafficSpeed, kMaxAssumedSpeed);
+inline constexpr uint32_t kMaxSpeedKph = std::max(kMaxTrafficSpeed, kMaxAssumedSpeed);
 
-constexpr uint32_t kMaxAssumedTruckSpeed = 120; // ~75 MPH
+inline constexpr uint32_t kMaxAssumedTruckSpeed = 120; // ~75 MPH
 
 // Minimum speed. This is a stop gap for dubious traffic data. While its possible
 // to measure a probe going this slow via stop and go traffic over a long enough
 // stretch, its unlikely to be good signal below this value
-constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
-constexpr uint32_t kMinValidSpeedKph = 1;
+inline constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
+inline constexpr uint32_t kMinValidSpeedKph = 1;
 
 // Default Fixed Speed. This is the default fixed speed that is assumed.
 // Unless otherwised specified no fixed speed will be assumed and speed will be
 // calculated from costing algorithm.
-constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
+inline constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
 
 inline bool valid_speed(uint32_t speed) {
   return speed >= kMinValidSpeedKph;
 }
 
 // Maximum ferry speed
-constexpr uint32_t kMaxFerrySpeedKph = 40; // 21 knots
+inline constexpr uint32_t kMaxFerrySpeedKph = 40; // 21 knots
 
 // Special speeds for use with parking aisles, driveways, and drive thrus
-constexpr uint32_t kParkingAisleSpeed = 15; // 15 KPH (10MPH)
-constexpr uint32_t kDriveThruSpeed = 10;    // 10 KPH
-constexpr uint32_t kDrivewaySpeed = 10;     // 10 KPH
+inline constexpr uint32_t kParkingAisleSpeed = 15; // 15 KPH (10MPH)
+inline constexpr uint32_t kDriveThruSpeed = 10;    // 10 KPH
+inline constexpr uint32_t kDrivewaySpeed = 10;     // 10 KPH
 
 // Road class or importance of an edge
 enum class RoadClass : uint8_t {
@@ -164,60 +164,60 @@ inline std::string to_string(RoadClass r) {
 }
 
 // Maximum length in meters of an internal intersection edge
-constexpr float kMaxInternalLength = 32.0f;
+inline constexpr float kMaxInternalLength = 32.0f;
 
 // Maximum length in meters of a "link" that can be assigned use=kTurnChannel
 // (vs. kRamp)
-constexpr float kMaxTurnChannelLength = 200.0f;
+inline constexpr float kMaxTurnChannelLength = 200.0f;
 
 // Bicycle Network constants. Bit constants.
-constexpr uint8_t kNcn = 1; // Part of national bicycle network
-constexpr uint8_t kRcn = 2; // Part of regional bicycle network
-constexpr uint8_t kLcn = 4; // Part of local bicycle network
-constexpr uint8_t kMcn = 8; // Part of mountain bicycle network
-constexpr uint8_t kMaxBicycleNetwork = 15;
+inline constexpr uint8_t kNcn = 1; // Part of national bicycle network
+inline constexpr uint8_t kRcn = 2; // Part of regional bicycle network
+inline constexpr uint8_t kLcn = 4; // Part of local bicycle network
+inline constexpr uint8_t kMcn = 8; // Part of mountain bicycle network
+inline constexpr uint8_t kMaxBicycleNetwork = 15;
 
 // Maximum offset to edge information
-constexpr uint32_t kMaxEdgeInfoOffset = 33554431; // 2^25 bytes
+inline constexpr uint32_t kMaxEdgeInfoOffset = 33554431; // 2^25 bytes
 
 // Maximum length of an edge
-constexpr uint32_t kMaxEdgeLength = 16777215; // 2^24 meters
+inline constexpr uint32_t kMaxEdgeLength = 16777215; // 2^24 meters
 
 // Maximum number of edges allowed in a turn restriction mask
-constexpr uint32_t kMaxTurnRestrictionEdges = 8;
+inline constexpr uint32_t kMaxTurnRestrictionEdges = 8;
 
 // Maximum lane count
-constexpr uint32_t kMaxLaneCount = 15;
+inline constexpr uint32_t kMaxLaneCount = 15;
 
 // Number of edges considered for edge transitions
-constexpr uint32_t kNumberOfEdgeTransitions = 8;
+inline constexpr uint32_t kNumberOfEdgeTransitions = 8;
 
 // Maximum shortcuts edges from a node. More than this can be
 // added but this is the max. that can supersede an edge
-constexpr uint32_t kMaxShortcutsFromNode = 7;
+inline constexpr uint32_t kMaxShortcutsFromNode = 7;
 
 // Maximum stop impact
-constexpr uint32_t kMaxStopImpact = 7;
+inline constexpr uint32_t kMaxStopImpact = 7;
 
 // Maximum grade and curvature factors.
-constexpr uint32_t kMaxGradeFactor = 15;
-constexpr uint32_t kMaxCurvatureFactor = 15;
+inline constexpr uint32_t kMaxGradeFactor = 15;
+inline constexpr uint32_t kMaxCurvatureFactor = 15;
 
 // Maximum added time along shortcuts to approximate transition costs
-constexpr uint32_t kMaxAddedTime = 255;
+inline constexpr uint32_t kMaxAddedTime = 255;
 
 // Elevation constants
 // this is the minimum we support, i.e. -500 m would result in "no elevation"
-constexpr float kNoElevationData = -500.0f;
+inline constexpr float kNoElevationData = -500.0f;
 
-constexpr uint32_t kDefaultIndoorSearchCutoff = 300;
-constexpr uint32_t kMaxIndoorSearchCutoff = 1000;
+inline constexpr uint32_t kDefaultIndoorSearchCutoff = 300;
+inline constexpr uint32_t kMaxIndoorSearchCutoff = 1000;
 
 // (building) level constants
 // highest 3-byte value
-constexpr float kLevelRangeSeparator = 1048575.0f;
-constexpr float kMinLevel = std::numeric_limits<float>::min();
-constexpr float kMaxLevel = std::numeric_limits<float>::max();
+inline constexpr float kLevelRangeSeparator = 1048575.0f;
+inline constexpr float kMinLevel = std::numeric_limits<float>::min();
+inline constexpr float kMaxLevel = std::numeric_limits<float>::max();
 
 // Node types.
 enum class NodeType : uint8_t {
@@ -712,15 +712,15 @@ enum class TransitType : uint8_t {
 const std::string kPivotDate = "2014-01-01"; // January 1, 2014
 
 // Used for day of week mask.
-constexpr uint8_t kDOWNone = 0;
-constexpr uint8_t kSunday = 1;
-constexpr uint8_t kMonday = 2;
-constexpr uint8_t kTuesday = 4;
-constexpr uint8_t kWednesday = 8;
-constexpr uint8_t kThursday = 16;
-constexpr uint8_t kFriday = 32;
-constexpr uint8_t kSaturday = 64;
-constexpr uint8_t kAllDaysOfWeek = 127;
+inline constexpr uint8_t kDOWNone = 0;
+inline constexpr uint8_t kSunday = 1;
+inline constexpr uint8_t kMonday = 2;
+inline constexpr uint8_t kTuesday = 4;
+inline constexpr uint8_t kWednesday = 8;
+inline constexpr uint8_t kThursday = 16;
+inline constexpr uint8_t kFriday = 32;
+inline constexpr uint8_t kSaturday = 64;
+inline constexpr uint8_t kAllDaysOfWeek = 127;
 
 // Restriction types. If a restriction exists this value will be set.
 // Restrictions with "Only" will restrict all turns not adhering to the
@@ -755,7 +755,7 @@ enum class AccessType : uint8_t {
 };
 
 // Minimum meters offset from start/end of shape for finding heading
-constexpr float kMinMetersOffsetForHeading = 15.0f;
+inline constexpr float kMinMetersOffsetForHeading = 15.0f;
 inline float GetOffsetForHeading(RoadClass road_class, Use use) {
   uint8_t rc = static_cast<uint8_t>(road_class);
   float offset = kMinMetersOffsetForHeading;
@@ -787,7 +787,7 @@ inline float GetOffsetForHeading(RoadClass road_class, Use use) {
 
 // ------------------------------- Transit information --------------------- //
 
-constexpr uint32_t kOneStopIdSize = 256;
+inline constexpr uint32_t kOneStopIdSize = 256;
 
 // Transit transfer types
 enum class TransferType : uint8_t {
@@ -807,16 +807,16 @@ enum class CalendarExceptionType : uint8_t {
 // --------------------- Traffic information ------------------------ //
 
 // Traffic type constants
-constexpr uint8_t kNoFlowMask = 0;
-constexpr uint8_t kFreeFlowMask = 1;
-constexpr uint8_t kConstrainedFlowMask = 2;
-constexpr uint8_t kPredictedFlowMask = 4;
-constexpr uint8_t kCurrentFlowMask = 8;
-constexpr uint8_t kDefaultFlowMask =
+inline constexpr uint8_t kNoFlowMask = 0;
+inline constexpr uint8_t kFreeFlowMask = 1;
+inline constexpr uint8_t kConstrainedFlowMask = 2;
+inline constexpr uint8_t kPredictedFlowMask = 4;
+inline constexpr uint8_t kCurrentFlowMask = 8;
+inline constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
-constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
-constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
-constexpr uint64_t kInvalidSecondsOfWeek =
+inline constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
+inline constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
+inline constexpr uint64_t kInvalidSecondsOfWeek =
     1048575; // invalid (20 bits - 1), Sunday 23:59:59 is 604799
 
 // There is only 1 bit to store these values, do not exceed the value 1.

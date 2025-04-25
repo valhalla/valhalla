@@ -14,7 +14,7 @@ namespace midgard {
 const uint32_t kMaxEdgeElevationSampling = 32;
 
 // NO_DATA elevation value (occurs where no elevation data exists, e.g. high latitudes)
-constexpr int32_t ELEVATION_NO_DATA_VALUE = -32768;
+inline constexpr int32_t ELEVATION_NO_DATA_VALUE = -32768;
 
 // Use fixed precision (0.25 degrees)
 const double kElevationPrecision = 0.25f;

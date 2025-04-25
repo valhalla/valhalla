@@ -7,8 +7,8 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kFixedSchedule = 0;
-constexpr uint32_t kFrequencySchedule = 1;
+inline constexpr uint32_t kFixedSchedule = 0;
+inline constexpr uint32_t kFrequencySchedule = 1;
 
 struct FixedDeparture {
   uint64_t departure_time_ : 17; // Departure time (seconds from midnight)

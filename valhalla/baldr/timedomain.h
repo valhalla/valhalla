@@ -8,15 +8,15 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kYMD = 0;
-constexpr uint32_t kNthDow = 1;
-constexpr uint32_t kMaxDateRangeWeek = 5;
-constexpr uint32_t kMaxDateRangeDowMask = 127;
-constexpr uint32_t kMaxDateRangeHrs = 23;
-constexpr uint32_t kMaxDateRangeMins = 59;
-constexpr uint32_t kMaxDateRangeMonth = 12;
-constexpr uint32_t kMaxDateRangeDay = 31;
-constexpr uint32_t kMaxDateRangeDow = 7;
+inline constexpr uint32_t kYMD = 0;
+inline constexpr uint32_t kNthDow = 1;
+inline constexpr uint32_t kMaxDateRangeWeek = 5;
+inline constexpr uint32_t kMaxDateRangeDowMask = 127;
+inline constexpr uint32_t kMaxDateRangeHrs = 23;
+inline constexpr uint32_t kMaxDateRangeMins = 59;
+inline constexpr uint32_t kMaxDateRangeMonth = 12;
+inline constexpr uint32_t kMaxDateRangeDay = 31;
+inline constexpr uint32_t kMaxDateRangeDow = 7;
 union TimeDomain {
 public:
   /**

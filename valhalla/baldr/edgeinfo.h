@@ -17,15 +17,15 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr size_t kMaxNamesPerEdge = 15;
-constexpr size_t kMaxEncodedShapeSize = 65535;
+inline constexpr size_t kMaxNamesPerEdge = 15;
+inline constexpr size_t kMaxEncodedShapeSize = 65535;
 
 // Use elevation bins of 2 meters to store mean elevation. Clamp to a range
 // from -500 meters to 7683 meters.
-constexpr uint32_t kMaxStoredElevation = 4095; // 12 bits
-constexpr float kElevationBinSize = 2.0f;
-constexpr float kMinElevation = -500.0f;
-constexpr float kMaxElevation = kMinElevation + (kElevationBinSize * kMaxStoredElevation);
+inline constexpr uint32_t kMaxStoredElevation = 4095; // 12 bits
+inline constexpr float kElevationBinSize = 2.0f;
+inline constexpr float kMinElevation = -500.0f;
+inline constexpr float kMaxElevation = kMinElevation + (kElevationBinSize * kMaxStoredElevation);
 
 // Name information. Information about names added to the names list within
 // the tile. A name can have a textual representation followed by optional
@@ -56,10 +56,10 @@ struct NameInfo {
 };
 
 // indexes of linguistic attributes in the linguistic map value-tuple
-constexpr size_t kLinguisticMapTupleLanguageIndex = 0;
-constexpr size_t kLinguisticMapTuplePhoneticAlphabetIndex = 1;
-constexpr size_t kLinguisticMapTuplePronunciationIndex = 2;
-constexpr size_t kLinguisticHeaderSize = 3;
+inline constexpr size_t kLinguisticMapTupleLanguageIndex = 0;
+inline constexpr size_t kLinguisticMapTuplePhoneticAlphabetIndex = 1;
+inline constexpr size_t kLinguisticMapTuplePronunciationIndex = 2;
+inline constexpr size_t kLinguisticHeaderSize = 3;
 
 // Unfortunately a bug was found where we were returning a blank phoneme (kNone = 0) for a linguistic
 // record where it just contained a language and no phoneme.  This caused us to stop reading the

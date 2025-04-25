@@ -20,17 +20,17 @@ namespace mjolnir {
 // ---------------------------------------------------------------------------
 
 // Unreached - not yet encountered in search
-constexpr uint32_t kUnreached = 0;
+inline constexpr uint32_t kUnreached = 0;
 
 // Permanent - shortest path to this edge has been found
-constexpr uint32_t kPermanent = 1;
+inline constexpr uint32_t kPermanent = 1;
 
 // Temporary - edge has been encountered but there could
 // still be a shorter path to this node. This node will
 // be "adjacent" to an node that is permanently labeled.
-constexpr uint32_t kTemporary = 2;
+inline constexpr uint32_t kTemporary = 2;
 
-constexpr uint32_t kFerryUpClass = static_cast<uint32_t>(baldr::RoadClass::kPrimary);
+inline constexpr uint32_t kFerryUpClass = static_cast<uint32_t>(baldr::RoadClass::kPrimary);
 
 // NodeLabel - for simple shortest path
 struct NodeLabel {

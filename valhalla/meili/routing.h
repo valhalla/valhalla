@@ -21,7 +21,7 @@
 namespace valhalla {
 namespace meili {
 
-constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
+inline constexpr uint16_t kInvalidDestination = std::numeric_limits<uint16_t>::max();
 
 /**
  * Label used to mark edges within the map-matching routing algorithm.

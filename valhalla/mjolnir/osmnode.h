@@ -10,7 +10,7 @@
 namespace valhalla {
 namespace mjolnir {
 
-constexpr uint32_t kMaxNodeNameIndex = 2097151;
+inline constexpr uint32_t kMaxNodeNameIndex = 2097151;
 
 /**
  * OSM node information. Result of parsing an OSM node.

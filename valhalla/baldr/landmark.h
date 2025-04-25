@@ -64,8 +64,8 @@ enum class LandmarkType : uint8_t {
   casino = 18,
 };
 
-constexpr uint8_t LandmarkTypeFirstValue = static_cast<uint8_t>(LandmarkType::fuel);
-constexpr uint8_t LandmarkTypeLastValue = static_cast<uint8_t>(LandmarkType::casino);
+inline constexpr uint8_t LandmarkTypeFirstValue = static_cast<uint8_t>(LandmarkType::fuel);
+inline constexpr uint8_t LandmarkTypeLastValue = static_cast<uint8_t>(LandmarkType::casino);
 
 inline LandmarkType string_to_landmark_type(const std::string& s) {
   static const std::unordered_map<std::string, LandmarkType> string_to_landmark_type =
