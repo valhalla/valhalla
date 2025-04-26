@@ -123,6 +123,10 @@ protected:
   uint32_t max_reserved_locations_count_;
   bool check_reverse_connections_;
 
+  // upper bound for the number of additional iterations per expansion once a connection has been
+  // found
+  uint32_t max_iterations_;
+
   // Access mode used by the costing method
   uint32_t access_mode_;
 
