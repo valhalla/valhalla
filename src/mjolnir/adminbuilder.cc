@@ -693,6 +693,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Done updating allow intersection names column.");
 
+  sql = "CREATE INDEX IdxAllowIntersectionNames ON admins (allow_intersection_names)";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
