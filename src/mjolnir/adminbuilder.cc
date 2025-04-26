@@ -647,8 +647,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   sql = "UPDATE admins AS child SET parent_admin = (SELECT parent.rowid from admins";
   sql +=
-      " AS parent WHERE parent.admin_level != child.admin_level AND ST_Covers(parent.geom, child.geom) ";
-  sql += " AND parent.rowid != child.rowid)";
+      " AS parent WHERE parent.admin_level < child.admin_level AND ST_Covers(parent.geom, child.geom) ";
+  sql += " ORDER BY parent.admin_level ASC LIMIT 1)";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
