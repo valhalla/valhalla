@@ -635,20 +635,6 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Created spatial index");
 
-  sql = "UPDATE admins SET parent_admin = (SELECT a.rowid from admins";
-  sql += " a WHERE ST_Covers(a.geom, admins.geom) AND admins.admin_level != ";
-  sql += "a.admin_level) WHERE rowid = ";
-  sql += "(SELECT admins.rowid FROM admins a WHERE ST_Covers(a.geom, admins.geom) ";
-  sql += "AND admins.admin_level != a.admin_level)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return false;
-  }
-  LOG_INFO("Done updating parent admin");
-
   sql = "CREATE INDEX IdxLevel ON admins (admin_level)";
   ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -658,6 +644,19 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return false;
   }
   LOG_INFO("Created Level index");
+
+  sql = "UPDATE admins AS child SET parent_admin = (SELECT parent.rowid from admins";
+  sql +=
+      " AS parent WHERE parent.admin_level != child.admin_level AND ST_Covers(parent.geom, child.geom) ";
+  sql += " AND parent.rowid != child.rowid)";
+  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db_handle);
+    return false;
+  }
+  LOG_INFO("Done updating parent admin");
 
   sql = "UPDATE admins AS child SET drive_on_right = (SELECT parent.drive_on_right FROM ";
   sql += "admins AS parent WHERE parent.rowid = child.parent_admin) WHERE parent_admin IS NOT NULL;";
