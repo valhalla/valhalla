@@ -2165,6 +2165,21 @@ struct OSMWay {
   bool drive_on_right() const {
     return drive_on_right_;
   }
+  /**
+   * Set multiple_levels flag.
+   * @param multiple_levels Is there a multiple levels?
+   */
+  void set_multiple_levels(const bool multiple_levels) {
+    multiple_levels_ = multiple_levels;
+  }
+
+  /**
+   * Get the multiple levels flag.
+   * @return Returns drive on right flag.
+   */
+  bool multiple_levels() const {
+    return multiple_levels_;
+  }
 
   /**
    * Sets the bike network.
@@ -2629,7 +2644,7 @@ struct OSMWay {
   uint32_t tunnel_ : 1;
   uint32_t toll_ : 1;
   uint32_t bridge_ : 1;
-  uint32_t spare1_ : 1;
+  uint32_t multiple_levels_ : 1;
   uint32_t drive_on_right_ : 1;
   uint32_t bike_network_ : 4;
   uint32_t exit_ : 1;
