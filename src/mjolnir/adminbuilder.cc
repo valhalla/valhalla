@@ -495,7 +495,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
   sql +=
       "drive_on_right, allow_intersection_names, default_language, supported_languages, geom) VALUES (?,?,?,?,?,?,?,?,?,";
-  sql += "CastToMulti(GeomFromText(?, 4326)))";
+  sql += "ST_MakeValid(CastToMulti(GeomFromText(?, 4326))))";
 
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
