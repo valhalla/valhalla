@@ -571,10 +571,13 @@ struct bin_handler_t {
       // reset the prefiltered flag, in order to not carry over information
       // from the previous edge, because we might bail the first pre-filtered
       // check early
-      std::for_each(bin_candidates.begin(), bin_candidates.end(),
-                    [](candidate_t& c) { c.prefiltered = false; });
+
       decltype(begin) p_itr;
       auto c_itr = bin_candidates.begin();
+      for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
+        c_itr->prefiltered = false;
+      }
+      c_itr = bin_candidates.begin();
 
       // radius = 0 means no circle
       if (circle.second != 0) {
