@@ -269,6 +269,20 @@ baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape) {
   geojson->emplace("coordinates", coords);
   return geojson;
 }
+
+void geojson_shape(const std::vector<midgard::PointLL> shape, rapidjson::writer_wrapper_t& writer) {
+  writer("type", "LineString");
+  writer.start_array("coordinates");
+  writer.set_precision(tyr::kCoordinatePrecision);
+  for (const auto& p : shape) {
+    writer.start_array();
+    writer(p.lng());
+    writer(p.lat());
+    writer.end_array();
+  }
+  writer.set_precision(kDefaultPrecision);
+  writer.end_array();
+}
 } // namespace tyr
 } // namespace valhalla
 
@@ -330,6 +344,55 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
 
   return waypoint;
 }
+void waypoint(const valhalla::Location& location,
+              rapidjson::writer_wrapper_t& writer,
+              bool is_tracepoint,
+              bool is_optimized) {
+  // Output location as a lon,lat array. Note this is the projected
+  // lon,lat on the nearest road.
+  writer.start_object();
+  writer.start_array("location");
+  writer.set_precision(kCoordinatePrecision);
+  writer(location.correlation().edges(0).ll().lng());
+  writer(location.correlation().edges(0).ll().lat());
+  writer.end_array();
+  writer.set_precision(kDefaultPrecision);
+
+  // Add street name.
+  std::string name =
+      location.correlation().edges_size() && location.correlation().edges(0).names_size()
+          ? location.correlation().edges(0).names(0)
+          : "";
+  writer("name", name);
+
+  // Add distance in meters from the input location to the nearest
+  // point on the road used in the route
+  // TODO: since distance was normalized in thor - need to recalculate here
+  //       in the future we shall have store separately from score
+  writer("distance", to_ll(location.ll()).Distance(to_ll(location.correlation().edges(0).ll())));
+
+  // If the location was used for a tracepoint we trigger extra serialization
+  if (is_tracepoint) {
+    writer("alternatives_count", location.correlation().edges_size() - 1);
+    if (location.correlation().waypoint_index() == numeric_limits<uint32_t>::max()) {
+      // when tracepoint is neither a break nor leg's starting/ending
+      // point (shape_index is uint32_t max), we assign null to its waypoint_index
+      writer("waypoint_index", nullptr);
+    } else {
+      writer("waypoint_index", location.correlation().waypoint_index());
+    }
+    writer("matchings_index", location.correlation().route_index());
+  }
+
+  // If the location was used for optimized route we add trips_index and waypoint
+  // index (index of the waypoint in the trip)
+  if (is_optimized) {
+    int trips_index = 0; // TODO
+    writer("trips_index", trips_index);
+    writer("waypoint_index", location.correlation().waypoint_index());
+  }
+  writer.end_object();
+}
 
 // Serialize locations (called waypoints in OSRM). Waypoints are described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
@@ -344,6 +407,18 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
     }
   }
   return waypoints;
+}
+
+void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+               rapidjson::writer_wrapper_t& writer,
+               bool is_tracepoint) {
+  for (const auto& location : locations) {
+    if (location.correlation().edges().size() == 0) {
+      writer(nullptr);
+    } else {
+      waypoint(location, writer, is_tracepoint, false);
+    }
+  }
 }
 
 json::ArrayPtr waypoints(const valhalla::Trip& trip) {

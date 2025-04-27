@@ -311,11 +311,9 @@ public:
   }
 
 public:
-  VehicleType type_; // Vehicle type: truck
-  std::vector<float> speedfactor_;
-  float density_factor_[16]; // Density factor
-  float toll_factor_;        // Factor applied when road has a toll
-  float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
+  VehicleType type_;        // Vehicle type: truck
+  float toll_factor_;       // Factor applied when road has a toll
+  float low_class_penalty_; // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
   bool hazmat_;                  // Carrying hazardous materials
@@ -328,18 +326,13 @@ public:
   float non_truck_route_factor_; // Factor applied when road is not part of a designated truck route
   uint8_t axle_count_;           // Vehicle axle count
 
-  // Density factor used in edge transition costing
-  std::vector<float> trans_density_factor_;
-
   // determine if we should allow hgv=no edges and penalize them instead
   float no_hgv_access_penalty_;
 };
 
 // Constructor
 TruckCost::TruckCost(const Costing& costing)
-    : DynamicCost(costing, TravelMode::kDrive, kTruckAccess, true),
-      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
-                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+    : DynamicCost(costing, TravelMode::kDrive, kTruckAccess, true) {
   const auto& costing_options = costing.options();
 
   type_ = VehicleType::kTruck;
@@ -363,12 +356,6 @@ TruckCost::TruckCost(const Costing& costing)
   axle_count_ = costing_options.axle_count();
 
   // Create speed cost table
-  speedfactor_.resize(kMaxSpeedKph + 1, 0);
-  speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
-  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-    speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
-  }
-
   // Preference to use highways. Is a value from 0 to 1
   // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
   // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
@@ -390,10 +377,6 @@ TruckCost::TruckCost(const Costing& costing)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
-
-  for (uint32_t d = 0; d < 16; d++) {
-    density_factor_[d] = 0.85f + (d * 0.025f);
-  }
 
   // determine what to do with hgv=no edges
   bool no_hgv_access_penalty_active = !(costing_options.hgv_no_access_penalty() == kMaxPenalty);
@@ -522,7 +505,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
       std::min(edge_speed,
                edge->truck_speed() ? std::min(edge->truck_speed(), top_speed_) : top_speed_);
 
-  float sec = edge->length() * speedfactor_[final_speed];
+  float sec = edge->length() * kSpeedFactor[final_speed];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
@@ -537,7 +520,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
       factor = rail_ferry_factor_;
       break;
     default:
-      factor = density_factor_[edge->density()] +
+      factor = kDensityFactor[edge->density()] +
                highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
                kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
                SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
@@ -634,7 +617,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!pred.has_measured_speed()) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
-      seconds *= trans_density_factor_[node->density()];
+      seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
   }
@@ -713,7 +696,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     if (!has_measured_speed) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
-      seconds *= trans_density_factor_[node->density()];
+      seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
   }
@@ -727,7 +710,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  return speedfactor_[top_speed_];
+  return kSpeedFactor[top_speed_];
 }
 
 // Returns the current travel type.

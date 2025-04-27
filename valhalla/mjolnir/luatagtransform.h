@@ -29,6 +29,11 @@ public:
    */
   LuaTagTransform(const std::string& lua);
 
+  LuaTagTransform(const LuaTagTransform&) = delete;
+  LuaTagTransform& operator=(const LuaTagTransform&) = delete;
+  LuaTagTransform(LuaTagTransform&&) = delete;
+  LuaTagTransform& operator=(LuaTagTransform&&) = delete;
+
   ~LuaTagTransform();
 
   Tags Transform(OSMType type, uint64_t osmid, const osmium::TagList& tags);

@@ -1,0 +1,123 @@
+# https://www.mkdocs.org/user-guide/configuration/
+
+theme:
+  name: material
+  logo: images/valhalla.png
+  favicon: images/valhalla.png
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - toc.follow
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+      primary: black
+      accent: deep purple
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: white
+      accent: lime
+
+markdown_extensions:
+  - toc:
+      permalink: True
+  - attr_list
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.tilde
+  - pymdownx.caret
+  - pymdownx.highlight
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - pymdownx.details
+
+site_name: Valhalla Docs
+repo_url: https://github.com/valhalla/valhalla/
+edit_uri: edit/master/docs/
+site_url: https://valhalla.github.io/valhalla
+nav:
+  - Home: README.md
+  - Introduction for Users: docs/valhalla-intro.md
+  - Build from Source: docs/building.md
+  - Terminology: docs/terminology.md
+  - Public APIs:
+    - API Overview: docs/api/index.md
+    - Protocol Buffers: docs/api/protocol-buffers.md
+    - Turn-by-Turn Route API:
+        - Overview: docs/api/turn-by-turn/overview.md
+        - API Reference: docs/api/turn-by-turn/api-reference.md
+    - Optimized Route API: docs/api/optimized/api-reference.md
+    - Matrix API: docs/api/matrix/api-reference.md
+    - Isochrone API: docs/api/isochrone/api-reference.md
+    - Map Matching API: docs/api/map-matching/api-reference.md
+    - Locate API: docs/api/locate/api-reference.md
+    - Elevation API: docs/api/elevation/api-reference.md
+    - Expansion API: docs/api/expansion/api-reference.md
+    - Status API: docs/api/status/api-reference.md
+  - Internal topics:
+    - "Why tiles?": docs/mjolnir/why_tiles.md
+    - docs/route_overview.md
+    - Decoding shape: docs/decoding.md
+    - Tile structure: docs/tiles.md
+    - Speed information: docs/speeds.md
+    - Dynamic costing: docs/sif/dynamic-costing.md
+    - Elevation influenced bicycle routing: docs/sif/elevation_costing.md
+    - docs/elevation.md
+    - docs/testing.md
+    - docs/tzdb_update.md
+  - Internal components:
+    - Baldr (routing data strutures/algorithms): docs/baldr.md
+    - Loki (associate locations with graph edges): docs/loki.md
+    - Midgard (data structures for geography/geometry): docs/midgard.md
+    - Odin (route narrative/maneuver generation): docs/odin.md
+    - Sif (costing for edges/transitions): docs/sif.md
+    - Skadi (digital elevation model usage): docs/skadi.md
+    - Tyr (service layer): docs/tyr.md
+    - Meili (map matching):
+      - docs/meili.md
+      - Overview: docs/meili/overview.md
+      - Algorithms: docs/meili/algorithms.md
+      - Configuration: docs/meili/configuration.md
+      - docs/meili/implementation_details.md
+      - docs/meili/library_api.md
+      - docs/meili/service_api.md
+    - Mjolnir (routing graph/tile generation):
+      - docs/mjolnir.md
+      - docs/mjolnir/geojson.md
+      - docs/mjolnir/getting_started_guide.md
+      - docs/mjolnir/map_roulette.md
+      - docs/mjolnir/map_roulette_blog.md
+      - docs/mjolnir/tag_parsing.md
+      - docs/mjolnir/historical_traffic.md
+    - Thor (routing algorithms):
+      - docs/thor.md
+      - docs/thor/isochrones.md
+      - docs/thor/path-algorithm.md
+      - docs/incidents.md
+  - Data sources:
+    - Data sources: docs/mjolnir/data_sources.md
+    - Administrative data: docs/mjolnir/admins.md
+    - Attribution requirements: docs/mjolnir/attribution.md
+  - Development:
+    - CONTRIBUTING.md
+    - Changelog: https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md
+    - docs/releasing.md

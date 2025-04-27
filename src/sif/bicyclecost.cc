@@ -1,5 +1,4 @@
 #include "sif/bicyclecost.h"
-#include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
@@ -34,7 +33,7 @@ constexpr float kDefaultBssPenalty = 0.0f;    // Seconds
 constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
 constexpr float kDefaultAvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
-const std::string kDefaultBicycleType = "Hybrid"; // Bicycle type
+const std::string kDefaultBicycleType = "hybrid"; // Bicycle type
 
 // Default turn costs - modified by the stop impact.
 constexpr float kTCStraight = 0.15f;
@@ -371,7 +370,7 @@ public:
    */
   virtual float AStarCostFactor() const override {
     // Assume max speed of 2 * the average speed set for costing
-    return speedfactor_[static_cast<uint32_t>(2 * speed_)];
+    return kSpeedFactor[static_cast<uint32_t>(2 * speed_)];
   }
 
   /**
@@ -389,14 +388,13 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 
-  std::vector<float> speedfactor_; // Cost factors based on speed in kph
-  float use_roads_;                // Preference of using roads between 0 and 1
-  float avoid_roads_;              // Inverse of use roads
-  float road_factor_;              // Road factor based on use_roads_
-  float sidepath_factor_;          // Factor to use when use_sidepath is set on an edge
-  float livingstreet_factor_;      // Factor to use for living streets
-  float track_factor_;             // Factor to use tracks
-  float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
+  float use_roads_;           // Preference of using roads between 0 and 1
+  float avoid_roads_;         // Inverse of use roads
+  float road_factor_;         // Road factor based on use_roads_
+  float sidepath_factor_;     // Factor to use when use_sidepath is set on an edge
+  float livingstreet_factor_; // Factor to use for living streets
+  float track_factor_;        // Factor to use tracks
+  float avoid_bad_surfaces_;  // Preference of avoiding bad surfaces for the bike type
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -459,11 +457,11 @@ BicycleCost::BicycleCost(const Costing& costing)
 
   // Get the bicycle type - enter as string and convert to enum
   const std::string& bicycle_type = costing_options.transport_type();
-  if (bicycle_type == "Cross") {
+  if (bicycle_type == "cross") {
     type_ = BicycleType::kCross;
-  } else if (bicycle_type == "Road") {
+  } else if (bicycle_type == "road") {
     type_ = BicycleType::kRoad;
-  } else if (bicycle_type == "Mountain") {
+  } else if (bicycle_type == "mountain") {
     type_ = BicycleType::kMountain;
   } else {
     type_ = BicycleType::kHybrid;
@@ -517,11 +515,8 @@ BicycleCost::BicycleCost(const Costing& costing)
 
   // Create speed cost table and penalty table (to avoid division in costing)
   float avoid_roads = (1.0f - use_roads_) * 0.75f + 0.25;
-  speedfactor_.resize(kMaxSpeedKph + 1, 0);
-  speedfactor_[0] = kSecPerHour;
   speedpenalty_[0] = 0.0f;
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-    speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
 
     float base_pen = 0.0f;
     if (s <= 40) {
@@ -617,15 +612,15 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            uint8_t&) const {
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
-    float sec = (edge->length() * speedfactor_[1]);
+    float sec = (edge->length() * kSpeedFactor[1]);
     return {shortest_ ? edge->length() : sec * kBicycleStepsFactor, sec};
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
-    assert(edge->speed() < speedfactor_.size());
-    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    assert(edge->speed() < kSpeedFactor.size());
+    float sec = (edge->length() * kSpeedFactor[edge->speed()]);
     return {shortest_ ? edge->length() : sec * ferry_factor_, sec};
   }
 
@@ -706,7 +701,7 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                              0.5f);
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
-  float sec = (edge->length() * speedfactor_[bike_speed]);
+  float sec = (edge->length() * kSpeedFactor[bike_speed]);
   return {shortest_ ? edge->length() : sec * factor, sec};
 }
 
@@ -876,11 +871,14 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
   // convert string to enum, set ranges and defaults based on enum
   BicycleType type;
-  if (co->transport_type() == "Cross") {
+  std::transform(co->mutable_transport_type()->begin(), co->mutable_transport_type()->end(),
+                 co->mutable_transport_type()->begin(),
+                 [](const unsigned char ch) { return std::tolower(ch); });
+  if (co->transport_type() == "cross") {
     type = BicycleType::kCross;
-  } else if (co->transport_type() == "Road") {
+  } else if (co->transport_type() == "road") {
     type = BicycleType::kRoad;
-  } else if (co->transport_type() == "Mountain") {
+  } else if (co->transport_type() == "mountain") {
     type = BicycleType::kMountain;
   } else {
     type = BicycleType::kHybrid;
@@ -888,7 +886,7 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 
   // This is the average speed on smooth, flat roads. If not present or outside the
   // valid range use a default speed based on the bicycle type.
-  uint32_t t = static_cast<uint32_t>(type);
+  const auto t = static_cast<uint32_t>(type);
   ranged_default_t<float> kCycleSpeedRange{kMinCyclingSpeed, kDefaultCyclingSpeed[t],
                                            kMaxCyclingSpeed};
 
