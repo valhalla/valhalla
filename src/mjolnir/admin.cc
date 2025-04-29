@@ -203,7 +203,7 @@ void GetData(AdminDB& db,
              std::multimap<uint32_t, Geometry>& polys,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
-             language_poly_index& language_ploys,
+             language_poly_index& language_polys,
              bool languages_only = false) {
   uint32_t result = 0;
   bool dor = true;
@@ -274,11 +274,11 @@ void GetData(AdminDB& db,
 
       if (!default_language.empty()) {
         auto langs = ParseLanguageTokens(default_language);
-        language_ploys.push_back(std::make_tuple(geom.clone(), langs, true));
+        language_polys.push_back(std::make_tuple(geom.clone(), std::move(langs), true));
       }
       if (!supported_languages.empty()) {
         auto langs = ParseLanguageTokens(supported_languages);
-        language_ploys.push_back(std::make_tuple(geom.clone(), langs, false));
+        language_polys.push_back(std::make_tuple(geom.clone(), std::move(langs), false));
       }
 
       polys.emplace(index, std::move(geom));
@@ -308,11 +308,11 @@ void GetData(AdminDB& db,
 
       if (!default_language.empty()) {
         auto langs = ParseLanguageTokens(default_language);
-        language_ploys.push_back(std::make_tuple(geom.clone(), langs, true));
+        language_polys.push_back(std::make_tuple(geom.clone(), std::move(langs), true));
       }
       if (!supported_languages.empty()) {
         auto langs = ParseLanguageTokens(supported_languages);
-        language_ploys.push_back(std::make_tuple(std::move(geom), langs, false));
+        language_polys.push_back(std::make_tuple(std::move(geom), std::move(langs), false));
       }
     }
 
