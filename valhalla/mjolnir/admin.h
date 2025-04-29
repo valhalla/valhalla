@@ -8,12 +8,12 @@
 #include <boost/geometry/io/wkt/wkt.hpp>
 
 #include <cstdint>
-#include <sqlite3.h>
 #include <unordered_map>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/mjolnir/graphtilebuilder.h>
+#include <valhalla/mjolnir/sqlite3.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -30,12 +30,6 @@ typedef bg::index::rtree<
     std::tuple<bg::model::box<point_type>, multi_polygon_type, std::vector<std::string>, bool>,
     bg::index::rstar<16>>
     language_poly_index;
-
-/**
- * Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
- * @param  database   db file location.
- */
-sqlite3* GetDBHandle(const std::string& database);
 
 /**
  * Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
@@ -68,14 +62,13 @@ GetMultiPolyIndexes(const language_poly_index& language_ploys, const PointLL& ll
 
 /**
  * Get the timezone polys from the db
- * @param  db_handle    sqlite3 db handle
+ * @param  db           sqlite3 db handle
  * @param  aabb         bb of the tile
  */
-std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
-                                                         const AABB2<PointLL>& aabb);
+std::multimap<uint32_t, multi_polygon_type> GetTimeZones(Sqlite3& db, const AABB2<PointLL>& aabb);
 /**
  * Get the admin data from the spatialite db given an SQL statement
- * @param  db_handle        sqlite3 db handle
+ * @param  db               sqlite3 db handle
  * @param  stmt             prepared statement object
  * @param  sql              sql commend to run.
  * @param  tilebuilder      Graph tile builder
@@ -88,7 +81,7 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
  * default language set
  * @param  languages_only    should we only process the languages with this query
  */
-void GetData(sqlite3* db_handle,
+void GetData(Sqlite3& db,
              sqlite3_stmt* stmt,
              const std::string& sql,
              GraphTileBuilder& tilebuilder,
@@ -99,7 +92,7 @@ void GetData(sqlite3* db_handle,
 
 /**
  * Get the admin polys that intersect with the tile bounding box.
- * @param  db_handle        sqlite3 db handle
+ * @param  db               sqlite3 db handle
  * @param  drive_on_right   unordered map that indicates if a country drives on right side of the
  * road
  * @param  allow_intersection_names   unordered map that indicates if we call out intersections
@@ -112,7 +105,7 @@ void GetData(sqlite3* db_handle,
  * @param  tilebuilder       Graph tile builder
  */
 std::multimap<uint32_t, multi_polygon_type>
-GetAdminInfo(sqlite3* db_handle,
+GetAdminInfo(Sqlite3& db,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
              language_poly_index& language_polys,
@@ -121,9 +114,9 @@ GetAdminInfo(sqlite3* db_handle,
 
 /**
  * Get all the country access records from the db and save them to a map.
- * @param  db_handle    sqlite3 db handle
+ * @param  db    sqlite3 db handle
  */
-std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_handle);
+std::unordered_map<std::string, std::vector<int>> GetCountryAccess(Sqlite3& db);
 
 } // namespace mjolnir
 } // namespace valhalla
