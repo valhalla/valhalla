@@ -28,7 +28,6 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
-#include "mjolnir/util.h"
 
 #include "proto/transit.pb.h"
 
@@ -998,12 +997,10 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
   GraphReader reader(pt);
   auto database = pt.get_optional<std::string>("timezone");
-  // Initialize the tz DB (if it exists)
-  sqlite3* tz_db_handle = GetDBHandle(*database);
-  if (!tz_db_handle) {
-    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
+  auto tz_db = Sqlite3::open(*database);
+  if (!tz_db) {
+    LOG_WARN("Time zone db " + *database + " not found. Not saving time zone information from db.");
   }
-  auto tz_conn = make_spatialite_cache(tz_db_handle);
 
   const auto& tiles = TileHierarchy::levels().back().tiles;
   // Iterate through the tiles in the queue and find any that include stops
@@ -1173,8 +1170,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
     auto tile_bounds = tiles.TileBounds(tile_id.tileid());
     bool tile_within_one_tz = false;
     std::multimap<uint32_t, multi_polygon_type> tz_polys;
-    if (tz_db_handle) {
-      tz_polys = GetTimeZones(tz_db_handle, tile_bounds);
+    if (tz_db) {
+      tz_polys = GetTimeZones(*tz_db, tile_bounds);
       if (tz_polys.size() < 2) {
         tile_within_one_tz = true;
       }
@@ -1195,10 +1192,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
     lock.lock();
     tilebuilder_transit.StoreTileData();
     lock.unlock();
-  }
-
-  if (tz_db_handle) {
-    sqlite3_close(tz_db_handle);
   }
 
   // Send back the statistics
