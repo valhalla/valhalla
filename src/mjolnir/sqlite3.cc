@@ -2,11 +2,27 @@
 #include "midgard/logging.h"
 #include "valhalla/filesystem.h"
 
+#include <sqlite3.h>
+// needs to be after sqlite include
 #include <spatialite.h>
 
 #include <mutex>
 
 namespace {
+
+struct sqlite_singleton_t {
+  static const sqlite_singleton_t& get_instance() {
+    static sqlite_singleton_t s;
+    return s;
+  }
+
+private:
+  sqlite_singleton_t() {
+    // Disable sqlite3 internal memory tracking (results in a high-contention mutex, and we don't care
+    // about marginal sqlite memory usage).
+    sqlite3_config(SQLITE_CONFIG_MEMSTATUS, false);
+  }
+};
 
 struct spatialite_singleton_t {
   static const spatialite_singleton_t& get_instance() {
@@ -36,6 +52,8 @@ std::optional<Sqlite3> Sqlite3::open(const std::string& path, int flags) {
   if (!(flags & SQLITE_OPEN_CREATE) && !filesystem::exists(path)) {
     return {};
   }
+
+  sqlite_singleton_t::get_instance();
 
   sqlite3* db = nullptr;
   uint32_t ret = sqlite3_open_v2(path.c_str(), &db, flags, nullptr);

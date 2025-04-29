@@ -8,10 +8,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <sqlite3.h>
-// needs to be after sqlite include
-#include <spatialite.h>
-
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>

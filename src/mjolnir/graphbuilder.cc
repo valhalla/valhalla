@@ -433,7 +433,7 @@ void BuildTileSet(const std::string& ways_file,
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
   // Initialize the admin DB (if it exists)
-  auto admin_db = (database && use_admin_db) ? Sqlite3::open(*database) : std::optional<Sqlite3>{};
+  auto admin_db = (database && use_admin_db) ? AdminDB::open(*database) : std::optional<AdminDB>{};
   if (!database && use_admin_db) {
     LOG_WARN("Admin db not found. Not saving admin information.");
   } else if (!admin_db && use_admin_db) {
@@ -442,7 +442,7 @@ void BuildTileSet(const std::string& ways_file,
 
   database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
-  auto tz_db = database ? Sqlite3::open(*database) : std::optional<Sqlite3>{};
+  auto tz_db = database ? AdminDB::open(*database) : std::optional<AdminDB>{};
   if (!database) {
     LOG_WARN("Time zone db not found.  Not saving time zone information.");
   } else if (!tz_db) {
@@ -502,8 +502,7 @@ void BuildTileSet(const std::string& ways_file,
 
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
-      bool tile_within_one_admin = false;
-      std::multimap<uint32_t, multi_polygon_type> admin_polys;
+      std::multimap<uint32_t, Geometry> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       std::unordered_map<uint32_t, bool> allow_intersection_names;
       language_poly_index language_polys;
@@ -511,19 +510,11 @@ void BuildTileSet(const std::string& ways_file,
       if (admin_db) {
         admin_polys = GetAdminInfo(*admin_db, drive_on_right, allow_intersection_names,
                                    language_polys, tiling.TileBounds(id), graphtile);
-        if (admin_polys.size() == 1) {
-          // TODO - check if tile bounding box is entirely inside the polygon...
-          tile_within_one_admin = true;
-        }
       }
 
-      std::multimap<uint32_t, multi_polygon_type> tz_polys;
-      bool tile_within_one_tz = false;
+      std::multimap<uint32_t, Geometry> tz_polys;
       if (tz_db) {
         tz_polys = GetTimeZones(*tz_db, tiling.TileBounds(id));
-        if (tz_polys.size() == 1) {
-          tile_within_one_tz = true;
-        }
       }
 
       // Iterate through the nodes
@@ -558,8 +549,8 @@ void BuildTileSet(const std::string& ways_file,
         std::vector<std::pair<std::string, bool>> default_languages;
 
         if (use_admin_db) {
-          admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
-                                                : GetMultiPolyId(admin_polys, node_ll, graphtile);
+          admin_index = (admin_polys.size() == 1) ? admin_polys.begin()->first
+                                                  : GetMultiPolyId(admin_polys, node_ll, graphtile);
           dor = drive_on_right[admin_index];
           default_languages = GetMultiPolyIndexes(language_polys, node_ll);
 
@@ -1281,7 +1272,7 @@ void BuildTileSet(const std::string& ways_file,
 
         // Set the time zone index
         uint32_t tz_index =
-            (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
+            (tz_polys.size() == 1) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
 
         graphtile.nodes().back().set_timezone(tz_index);
 
@@ -1489,9 +1480,6 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
 
   auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  // Disable sqlite3 internal memory tracking (results in a high-contention mutex, and we don't care
-  // about marginal sqlite memory usage).
-  sqlite3_config(SQLITE_CONFIG_MEMSTATUS, false);
 
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, linguistic_node_file,
