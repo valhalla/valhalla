@@ -2,12 +2,11 @@
 #include <string>
 #include <vector>
 
-#include "baldr/graphconstants.h"
 #include "filesystem.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/pbfadminparser.h"
-#include "mjolnir/util.h"
+#include "mjolnir/sqlite3.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
@@ -386,24 +385,19 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // relations are defined within the PBFParser class
   OSMAdminData admin_data = PBFAdminParser::Parse(pt, input_files);
 
-  sqlite3* db_handle;
   sqlite3_stmt* stmt;
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
 
   // In-memory database that will be dumped to disk at the end
-  ret = sqlite3_open(":memory:", &db_handle);
+  auto db = Sqlite3::open(":memory:", SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
   // TODO: these blocks are the same like 20 times or so
   // let's abstract the sqlite commands somewhere
-  if (ret != SQLITE_OK) {
+  if (!db) {
     LOG_ERROR("cannot create in-memory database");
-    sqlite3_close(db_handle);
     return false;
   }
-
-  // loading SpatiaLite as an extension
-  auto db_conn = make_spatialite_cache(db_handle);
 
   /* creating an admin POLYGON table */
   sql = "SELECT InitSpatialMetaData(1); CREATE TABLE admins (";
@@ -417,22 +411,20 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "default_language TEXT,";
   sql += "supported_languages TEXT)";
 
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
 
   /* creating a MULTIPOLYGON Geometry column */
   sql = "SELECT AddGeometryColumn('admins', ";
   sql += "'geom', 4326, 'MULTIPOLYGON', 2)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
 
@@ -477,11 +469,10 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "path INTEGER DEFAULT NULL,";
   sql += "motorroad INTEGER DEFAULT NULL)";
 
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
 
@@ -497,16 +488,15 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       "drive_on_right, allow_intersection_names, default_language, supported_languages, geom) VALUES (?,?,?,?,?,?,?,?,?,";
   sql += "CastToMulti(GeomFromText(?, 4326)))";
 
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
+  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+    LOG_ERROR(std::string(sqlite3_errmsg(db->get())));
   }
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "BEGIN", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
 
@@ -603,7 +593,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
       continue;
     }
-    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db->get())));
     LOG_ERROR("sqlite3_step() Name: " + admin_data.name_offset_map.name(admin.name_index));
     LOG_ERROR("sqlite3_step() Name:en: " + admin_data.name_offset_map.name(admin.name_en_index));
     LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level));
@@ -615,52 +605,46 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   sqlite3_finalize(stmt);
-  ret = sqlite3_exec(db_handle, "COMMIT", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "COMMIT", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
-    ;
   }
   LOG_INFO("Inserted " + std::to_string(count) + " admin areas");
 
   sql = "SELECT CreateSpatialIndex('admins', 'geom')";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
   LOG_INFO("Created spatial index");
 
   sql = "CREATE INDEX IdxLevel ON admins (admin_level)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
   LOG_INFO("Created Level index");
 
   sql = "CREATE INDEX IdxDriveOnRight ON admins (drive_on_right)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
   LOG_INFO("Created Drive On Right index");
 
   sql = "CREATE INDEX IdxAllowIntersectionNames ON admins (allow_intersection_names)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
   LOG_INFO("Created allow intersection names index");
@@ -670,11 +654,10 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "a.admin_level and a.drive_on_right=0) where rowid = ";
   sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
   sql += "and admins.admin_level != a.admin_level and a.drive_on_right=0)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
   LOG_INFO("Done updating drive on right column.");
@@ -684,11 +667,10 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "a.admin_level and a.allow_intersection_names=1) where rowid = ";
   sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
   sql += "and admins.admin_level != a.admin_level and a.allow_intersection_names=1)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
   LOG_INFO("Done updating allow intersection names column.");
@@ -698,11 +680,10 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "a.admin_level) where rowid = ";
   sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
   sql += "and admins.admin_level != a.admin_level)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
   LOG_INFO("Done updating parent admin");
@@ -710,16 +691,15 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql = "update admins set supported_languages = ? ";
   sql += "where (name = ? or name_en = ?) and admin_level = ? ";
 
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
+  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+    LOG_ERROR(std::string(sqlite3_errmsg(db->get())));
   }
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "BEGIN", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
 
@@ -738,17 +718,16 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
       continue;
     }
-    LOG_ERROR("Supported Languages: sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)) +
+    LOG_ERROR("Supported Languages: sqlite3_step() error: " + std::string(sqlite3_errmsg(db->get())) +
               ".  Ignore if not using a planet extract or check if there was a name change for " +
               languages.first.c_str());
   }
 
   sqlite3_finalize(stmt);
-  ret = sqlite3_exec(db_handle, "COMMIT", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "COMMIT", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
 
@@ -760,16 +739,15 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql += "(select iso_code from admins where (name = ? or name_en = ?)), ";
   sql += "?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
+  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+    LOG_ERROR(std::string(sqlite3_errmsg(db->get())));
   }
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "BEGIN", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
 
@@ -798,17 +776,16 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
       continue;
     }
-    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)) +
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db->get())) +
               ".  Ignore if not using a planet extract or check if there was a name change for " +
               access.first.c_str());
   }
 
   sqlite3_finalize(stmt);
-  ret = sqlite3_exec(db_handle, "COMMIT", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "COMMIT", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
     return false;
   }
 
@@ -817,31 +794,22 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     filesystem::remove(*database);
   }
 
-  sqlite3* db_on_disk;
-  ret = sqlite3_open_v2((*database).c_str(), &db_on_disk, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                        NULL);
-  if (ret != SQLITE_OK) {
+  auto db_on_disk = Sqlite3::open((*database).c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+  if (!db_on_disk) {
     LOG_ERROR("cannot open " + (*database));
-    sqlite3_close(db_handle);
-    sqlite3_close(db_on_disk);
     return false;
   }
 
-  sqlite3_backup* backup = sqlite3_backup_init(db_on_disk, "main", db_handle, "main");
+  sqlite3_backup* backup = sqlite3_backup_init(db_on_disk->get(), "main", db->get(), "main");
   if (backup) {
     sqlite3_backup_step(backup, -1);
     sqlite3_backup_finish(backup);
   }
-  ret = sqlite3_errcode(db_on_disk);
+  ret = sqlite3_errcode(db_on_disk->get());
   if (ret != SQLITE_OK) {
     LOG_ERROR("failed to save database to " + (*database));
-    sqlite3_close(db_handle);
-    sqlite3_close(db_on_disk);
     return false;
   }
-
-  sqlite3_close(db_on_disk);
-  sqlite3_close(db_handle);
 
   LOG_INFO("Finished.");
 

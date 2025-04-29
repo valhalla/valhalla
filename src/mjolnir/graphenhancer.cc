@@ -1290,16 +1290,17 @@ void enhance(const boost::property_tree::ptree& pt,
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
   // Initialize the admin DB (if it exists)
-  sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
+  auto admin_db = (database && use_admin_db) ? Sqlite3::open(*database) : std::optional<Sqlite3>{};
   if (!database && use_admin_db) {
-    LOG_WARN("Admin db not found.  Not saving admin information.");
-  } else if (!admin_db_handle && use_admin_db) {
-    LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
+    LOG_WARN("Admin db not found. Not saving admin information.");
+  } else if (!admin_db && use_admin_db) {
+    LOG_WARN("Admin db " + *database + " not found. Not saving admin information.");
   }
-  auto admin_conn = make_spatialite_cache(admin_db_handle);
 
-  std::unordered_map<std::string, std::vector<int>> country_access =
-      GetCountryAccess(admin_db_handle);
+  std::unordered_map<std::string, std::vector<int>> country_access;
+  if (admin_db) {
+    country_access = GetCountryAccess(*admin_db);
+  }
 
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
@@ -1697,10 +1698,6 @@ void enhance(const boost::property_tree::ptree& pt,
       reader.Trim();
     }
     lock.unlock();
-  }
-
-  if (admin_db_handle) {
-    sqlite3_close(admin_db_handle);
   }
 
   // Send back the statistics
