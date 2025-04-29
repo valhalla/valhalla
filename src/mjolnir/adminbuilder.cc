@@ -486,7 +486,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
   sql +=
       "drive_on_right, allow_intersection_names, default_language, supported_languages, geom) VALUES (?,?,?,?,?,?,?,?,?,";
-  sql += "CastToMulti(GeomFromText(?, 4326)))";
+  sql += "ST_MakeValid(CastToMulti(GeomFromText(?, 4326))))";
 
   ret = sqlite3_prepare_v2(db->get(), sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
@@ -631,6 +631,29 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Created Level index");
 
+  sql = "UPDATE admins AS child SET parent_admin = (SELECT parent.rowid from admins";
+  sql +=
+      " AS parent WHERE parent.admin_level < child.admin_level AND ST_Covers(parent.geom, child.geom) ";
+  sql += " ORDER BY parent.admin_level DESC LIMIT 1)"; // if multiple candidates, get the one with the
+                                                       // lowest admin_level
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+  LOG_INFO("Done updating parent admin");
+
+  sql = "UPDATE admins AS child SET drive_on_right = (SELECT parent.drive_on_right FROM ";
+  sql += "admins AS parent WHERE parent.rowid = child.parent_admin) WHERE parent_admin IS NOT NULL;";
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+  LOG_INFO("Done updating drive on right column.");
+
   sql = "CREATE INDEX IdxDriveOnRight ON admins (drive_on_right)";
   ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -640,33 +663,10 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Created Drive On Right index");
 
-  sql = "CREATE INDEX IdxAllowIntersectionNames ON admins (allow_intersection_names)";
-  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    return false;
-  }
-  LOG_INFO("Created allow intersection names index");
-
-  sql = "update admins set drive_on_right = (select a.drive_on_right from admins";
-  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
-  sql += "a.admin_level and a.drive_on_right=0) where rowid = ";
-  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
-  sql += "and admins.admin_level != a.admin_level and a.drive_on_right=0)";
-  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    return false;
-  }
-  LOG_INFO("Done updating drive on right column.");
-
-  sql = "update admins set allow_intersection_names = (select a.allow_intersection_names from admins";
-  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
-  sql += "a.admin_level and a.allow_intersection_names=1) where rowid = ";
-  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
-  sql += "and admins.admin_level != a.admin_level and a.allow_intersection_names=1)";
+  sql =
+      "UPDATE admins AS child SET allow_intersection_names = (SELECT parent.allow_intersection_names ";
+  sql +=
+      "FROM admins AS parent WHERE parent.rowid = child.parent_admin) WHERE parent_admin IS NOT NULL;";
   ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -675,18 +675,14 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Done updating allow intersection names column.");
 
-  sql = "update admins set parent_admin = (select a.rowid from admins";
-  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
-  sql += "a.admin_level) where rowid = ";
-  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
-  sql += "and admins.admin_level != a.admin_level)";
+  sql = "CREATE INDEX IdxAllowIntersectionNames ON admins (allow_intersection_names)";
   ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     return false;
   }
-  LOG_INFO("Done updating parent admin");
+  LOG_INFO("Created allow intersection names index");
 
   sql = "update admins set supported_languages = ? ";
   sql += "where (name = ? or name_en = ?) and admin_level = ? ";

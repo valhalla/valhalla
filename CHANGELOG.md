@@ -63,6 +63,7 @@
    * CHANGED: Use rapidjson for matrix serializers [#5189](https://github.com/valhalla/valhalla/pull/5189)
    * CHANGED: Make static factor vectors/arrays in sif constexpr [#5200](https://github.com/valhalla/valhalla/pull/5200)
    * ADDED: Sqlite3 RAII wrapper around sqlite3* and spatielite connection [#5206](https://github.com/valhalla/valhalla/pull/5206)
+   * CHANGED: Improved SQL statements when building admins [#5219](https://github.com/valhalla/valhalla/pull/5219)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
