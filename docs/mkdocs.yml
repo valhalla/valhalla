@@ -120,7 +120,7 @@ nav:
       - Attribution requirements: mjolnir/attribution.md
   - Development:
       - contributing.md
-      - Testing: test/gurka/README.md
-      - Locales: locales/README.md
+      - Testing: test/gurka.md
+      - Locales: locales.md
       - Changelog: https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md
       - releasing.md
