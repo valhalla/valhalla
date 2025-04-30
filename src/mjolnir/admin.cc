@@ -29,11 +29,14 @@ Geometry::~Geometry() {
 }
 
 bool Geometry::intersects(const PointLL& ll) const {
-  // TODO: use GEOSPreparedIntersectsXY_r in the future
+#if GEOS_VERSION_MINOR < 12
   auto* p = GEOSGeom_createPointFromXY_r(context.get(), ll.lng(), ll.lat());
   bool intersects = GEOSPreparedIntersects_r(context.get(), prepared, p);
   GEOSGeom_destroy_r(context.get(), p);
   return intersects;
+#else
+  return GEOSPreparedIntersectsXY_r(context.get(), prepared, ll.lng(), ll.lat());
+#endif
 }
 
 Geometry Geometry::clone() const {
