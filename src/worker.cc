@@ -1081,9 +1081,35 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
   if (rings_req) {
-    if (!rings_req->IsArray()) {
+    if (!rings_req->IsArray() && !rings_req->IsObject()) {
       add_warning(api, 204);
-    } else {
+    } else if (rings_req->IsObject()) {
+      auto json_rings = rapidjson::get_child_optional(doc, "/coordinates");
+      if (json_rings->IsArray()) {
+        auto* rings_pbf = options.mutable_exclude_polygons();
+        try {
+          for (const auto& req_poly : json_rings->GetArray()) {
+            if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
+              continue;
+            }
+            auto* ring = rings_pbf->Add();
+            parse_ring(ring, req_poly);
+          }
+        } catch (...) { throw valhalla_exception_t{137}; }
+
+        // get the levels
+        auto json_levels = rapidjson::get_child_optional(doc, "/levels");
+        if (json_levels->IsArray()) {
+          for (const auto& level : json_levels->GetArray()) {
+            level.GetInt64()
+          }
+        }
+
+      } else {
+        add_warning(api, 204);
+      }
+
+    } else { // keep this for backwards compatibility
       auto* rings_pbf = options.mutable_exclude_polygons();
       try {
         for (const auto& req_poly : rings_req->GetArray()) {
