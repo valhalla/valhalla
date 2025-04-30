@@ -1386,7 +1386,7 @@ namespace valhalla::mjolnir {
 
 // Returns the grid Id within the tile. A tile is subdivided into a nxn grid.
 // The grid Id within the tile is used to sort nodes spatially.
-uint32_t GetGridId(const midgard::PointLL& pointll,
+uint32_t GetGridId(const OSMNode& node,
                    const midgard::Tiles<midgard::PointLL>& tiling,
                    const uint32_t grid_divisions) {
   // By default grid_divisions is set to 0 to indicate no spatial sorting within a tile
@@ -1394,19 +1394,20 @@ uint32_t GetGridId(const midgard::PointLL& pointll,
     return 0;
   }
 
-  auto tile_id = tiling.TileId(pointll);
+  auto tile_id = tiling.TileId(node.latlng());
   if (tile_id >= 0) {
     auto base_ll = tiling.Base(tile_id);
     float grid_size = tiling.TileSize() / static_cast<float>(grid_divisions);
-    uint32_t row = static_cast<uint32_t>(std::max(pointll.lat() - base_ll.lat(), 0.) / grid_size);
-    uint32_t col = static_cast<uint32_t>(std::max(pointll.lng() - base_ll.lng(), 0.) / grid_size);
+    uint32_t row = static_cast<uint32_t>((node.latlng().lat() - base_ll.lat()) / grid_size);
+    uint32_t col = static_cast<uint32_t>((node.latlng().lng() - base_ll.lng()) / grid_size);
     if (row > grid_divisions || col > grid_divisions) {
-      LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col));
+      LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col) +
+                " node osm id = " + std::to_string(node.osmid_));
       return 0;
     }
     return (row * grid_divisions + col);
   } else {
-    LOG_ERROR("GetGridId: Invalid tile id");
+    LOG_ERROR("GetGridId: Invalid tile id, node osm id = " + std::to_string(node.osmid_));
     return 0;
   }
 }
@@ -1433,7 +1434,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
       ways_file, way_nodes_file, nodes_file, edges_file,
       [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
       [&tiling, &grid_divisions](const OSMNode& node) {
-        return GetGridId(node.latlng(), tiling, grid_divisions);
+        return GetGridId(node, tiling, grid_divisions);
       },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
