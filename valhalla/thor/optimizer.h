@@ -13,7 +13,7 @@ namespace thor {
 // annealing step. Recommend setting this to a value between 0.85 and 0.95.
 // Cool too slowly and the probability of escaping local optima decreases and
 // setting too high takes longer to converge on a solution.
-constexpr float kCoolingRate = 0.93f;
+inline constexpr float kCoolingRate = 0.93f;
 
 // Alteration type.
 // kRotate  - Alters a portion of the tour by rotating the locations about

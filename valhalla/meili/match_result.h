@@ -14,7 +14,7 @@
 namespace valhalla {
 namespace meili {
 
-constexpr size_t kInvalidEdgeIndex = std::numeric_limits<size_t>::max();
+inline constexpr size_t kInvalidEdgeIndex = std::numeric_limits<size_t>::max();
 
 struct MatchResult {
   // Coordinate of the match point

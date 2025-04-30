@@ -16,9 +16,9 @@ namespace valhalla {
 namespace thor {
 
 // Default for time distance matrix is to find all locations
-constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
-constexpr float kInvalidHeading = std::numeric_limits<float>::max();
-constexpr float kMaxCost = 99999999.9999f;
+inline constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
+inline constexpr float kInvalidHeading = std::numeric_limits<float>::max();
+inline constexpr float kMaxCost = 99999999.9999f;
 
 /**
  * Pure virtual class defining the interface for MatrixAlgorithm

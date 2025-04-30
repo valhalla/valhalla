@@ -7,16 +7,16 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kSpeedBucketSizeMinutes = 5;
-constexpr uint32_t kSpeedBucketSizeSeconds = kSpeedBucketSizeMinutes * 60;
-constexpr uint32_t kBucketsPerWeek = (7 * 24 * 60) / kSpeedBucketSizeMinutes;
+inline constexpr uint32_t kSpeedBucketSizeMinutes = 5;
+inline constexpr uint32_t kSpeedBucketSizeSeconds = kSpeedBucketSizeMinutes * 60;
+inline constexpr uint32_t kBucketsPerWeek = (7 * 24 * 60) / kSpeedBucketSizeMinutes;
 
 // Length of transformed speed buckets array.
-constexpr uint32_t kCoefficientCount = 200;
+inline constexpr uint32_t kCoefficientCount = 200;
 
 // Expected size of base64-encoded predicted speeds coefficients. Each int16_t coefficient is
 // encoded by two bytes in an array of uint8_t's.
-constexpr uint32_t kDecodedSpeedSize = 2 * kCoefficientCount;
+inline constexpr uint32_t kDecodedSpeedSize = 2 * kCoefficientCount;
 
 /**
  * Compress speed buckets by truncating its DCT-II transform.

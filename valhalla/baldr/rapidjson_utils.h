@@ -40,7 +40,7 @@ namespace {
 template <class... T> constexpr bool always_false = false;
 
 template <typename T>
-constexpr bool is_string_like_v =
+inline constexpr bool is_string_like_v =
     std::is_constructible_v<std::string, std::remove_cv_t<std::remove_reference_t<T>>>;
 } // namespace
 

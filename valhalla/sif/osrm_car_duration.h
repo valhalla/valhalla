@@ -6,11 +6,11 @@
 
 namespace {
 
-constexpr double kTurnPenalty = 7.5;
-constexpr double kUTurnPenalty = 20;
-constexpr double kTurnBias = 1.075;
-constexpr double kTurnBiasInv = 1.0 / kTurnBias;
-constexpr double kTrafficLightPenalty = 2;
+inline constexpr double kTurnPenalty = 7.5;
+inline constexpr double kUTurnPenalty = 20;
+inline constexpr double kTurnBias = 1.075;
+inline constexpr double kTurnBiasInv = 1.0 / kTurnBias;
+inline constexpr double kTrafficLightPenalty = 2;
 
 inline uint32_t CalculateTurnDegree(const valhalla::baldr::DirectedEdge* edge,
                                     const valhalla::baldr::NodeInfo* node,

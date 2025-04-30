@@ -7,8 +7,8 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr size_t kMaxLanesPerConnectionBits = 4;
-constexpr size_t kMaxLanesPerConnection = (1 << kMaxLanesPerConnectionBits) - 1;
+inline constexpr size_t kMaxLanesPerConnectionBits = 4;
+inline constexpr size_t kMaxLanesPerConnection = (1 << kMaxLanesPerConnectionBits) - 1;
 
 /**
  * Structure to compactly store lane mask.

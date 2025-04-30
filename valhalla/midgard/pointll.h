@@ -12,9 +12,9 @@ namespace valhalla {
 namespace midgard {
 
 namespace {
-constexpr double RAD_PER_METER = 1.0 / 6378160.187;
+inline constexpr double RAD_PER_METER = 1.0 / 6378160.187;
 } // namespace
-constexpr double INVALID_LL = (double)0xBADBADBAD;
+inline constexpr double INVALID_LL = (double)0xBADBADBAD;
 /**
  * Longitude, Latitude  point. Derives from Point2 and allows access methods
  * using lng,lat naming. Extends functionality to add heading, curvature,

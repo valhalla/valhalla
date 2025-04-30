@@ -14,10 +14,10 @@ namespace valhalla {
 namespace odin {
 
 const bool kLimitByConseuctiveCount = true;
-constexpr uint32_t kElementMaxCount = 4;
-constexpr uint32_t kVerbalAlertElementMaxCount = 1;
-constexpr uint32_t kVerbalPreElementMaxCount = 2;
-constexpr uint32_t kVerbalPostElementMaxCount = 2;
+inline constexpr uint32_t kElementMaxCount = 4;
+inline constexpr uint32_t kVerbalAlertElementMaxCount = 1;
+inline constexpr uint32_t kVerbalPreElementMaxCount = 2;
+inline constexpr uint32_t kVerbalPostElementMaxCount = 2;
 const std::string kVerbalDelim = ", ";
 
 struct Bcp47Locale {

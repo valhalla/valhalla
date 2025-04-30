@@ -5,8 +5,8 @@
 #include <valhalla/loki/search.h>
 #include <valhalla/thor/dijkstras.h>
 
-constexpr uint8_t kInbound = 1;
-constexpr uint8_t kOutbound = 2;
+inline constexpr uint8_t kInbound = 1;
+inline constexpr uint8_t kOutbound = 2;
 
 namespace valhalla {
 namespace loki {

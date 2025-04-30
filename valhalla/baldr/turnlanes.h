@@ -13,25 +13,25 @@ namespace valhalla {
 namespace baldr {
 
 // Lane delimiter
-constexpr char kLaneDelimiter = '|';
+inline constexpr char kLaneDelimiter = '|';
 
 // Turn lane delimiter (within a lane)
-constexpr char kTurnLaneDelimiter = ';';
+inline constexpr char kTurnLaneDelimiter = ';';
 
 // Turn lane masks
-constexpr uint16_t kTurnLaneTypeCount = 11;
-constexpr uint16_t kTurnLaneEmpty = 0u;
-constexpr uint16_t kTurnLaneNone = 1u << 0u;
-constexpr uint16_t kTurnLaneThrough = 1u << 1u;
-constexpr uint16_t kTurnLaneSharpLeft = 1u << 2u;
-constexpr uint16_t kTurnLaneLeft = 1u << 3u;
-constexpr uint16_t kTurnLaneSlightLeft = 1u << 4u;
-constexpr uint16_t kTurnLaneSlightRight = 1u << 5u;
-constexpr uint16_t kTurnLaneRight = 1u << 6u;
-constexpr uint16_t kTurnLaneSharpRight = 1u << 7u;
-constexpr uint16_t kTurnLaneReverse = 1u << 8u;
-constexpr uint16_t kTurnLaneMergeToLeft = 1u << 9u;
-constexpr uint16_t kTurnLaneMergeToRight = 1u << 10u;
+inline constexpr uint16_t kTurnLaneTypeCount = 11;
+inline constexpr uint16_t kTurnLaneEmpty = 0u;
+inline constexpr uint16_t kTurnLaneNone = 1u << 0u;
+inline constexpr uint16_t kTurnLaneThrough = 1u << 1u;
+inline constexpr uint16_t kTurnLaneSharpLeft = 1u << 2u;
+inline constexpr uint16_t kTurnLaneLeft = 1u << 3u;
+inline constexpr uint16_t kTurnLaneSlightLeft = 1u << 4u;
+inline constexpr uint16_t kTurnLaneSlightRight = 1u << 5u;
+inline constexpr uint16_t kTurnLaneRight = 1u << 6u;
+inline constexpr uint16_t kTurnLaneSharpRight = 1u << 7u;
+inline constexpr uint16_t kTurnLaneReverse = 1u << 8u;
+inline constexpr uint16_t kTurnLaneMergeToLeft = 1u << 9u;
+inline constexpr uint16_t kTurnLaneMergeToRight = 1u << 10u;
 
 const static std::unordered_map<uint16_t, std::string> kTurnLaneNames =
     {{0, "|"},

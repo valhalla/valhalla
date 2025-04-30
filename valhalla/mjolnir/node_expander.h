@@ -15,7 +15,7 @@ namespace valhalla {
 namespace mjolnir {
 
 // Absurd classification.
-constexpr uint32_t kAbsurdRoadClass = 777777;
+inline constexpr uint32_t kAbsurdRoadClass = 777777;
 
 /**
  * An edge in the graph. Connects 2 nodes that have 2 or more "uses" - meaning

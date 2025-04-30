@@ -14,10 +14,10 @@ namespace meili {
 
 using IEmissionCostModel = std::function<float(const StateId& stateid)>;
 using ITransitionCostModel = std::function<float(const StateId& lhs, const StateId& rhs)>;
-constexpr float DefaultEmissionCostModel(const StateId&) {
+inline constexpr float DefaultEmissionCostModel(const StateId&) {
   return 0.0;
 }
-constexpr float DefaultTransitionCostModel(const StateId&, const StateId&) {
+inline constexpr float DefaultTransitionCostModel(const StateId&, const StateId&) {
   return 1.0;
 }
 

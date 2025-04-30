@@ -21,8 +21,8 @@
 namespace valhalla {
 namespace tyr {
 
-constexpr unsigned int kDefaultPrecision = 3;
-constexpr unsigned int kCoordinatePrecision = 6;
+inline constexpr unsigned int kDefaultPrecision = 3;
+inline constexpr unsigned int kCoordinatePrecision = 6;
 
 /**
  * Turn path and directions into a route that one can follow

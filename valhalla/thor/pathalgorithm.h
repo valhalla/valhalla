@@ -15,8 +15,8 @@
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kBucketCount = 20000;
-constexpr size_t kInterruptIterationsInterval = 5000;
+inline constexpr uint32_t kBucketCount = 20000;
+inline constexpr size_t kInterruptIterationsInterval = 5000;
 
 enum class ExpansionType { forward = 0, reverse = 1, multimodal = 2 };
 
