@@ -56,15 +56,14 @@ struct BestCandidate {
   baldr::GraphId edgeid;
   baldr::GraphId opp_edgeid;
   sif::Cost cost;
-  uint32_t distance;
+  float distance;
   uint32_t max_iterations;
 
-  BestCandidate(const baldr::GraphId& e1, baldr::GraphId& e2, const sif::Cost& c, const uint32_t d)
+  BestCandidate(const baldr::GraphId& e1, baldr::GraphId& e2, const sif::Cost& c, const float d)
       : found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d), max_iterations(0) {
   }
 
-  void
-  Update(const baldr::GraphId& e1, const baldr::GraphId& e2, const sif::Cost& c, const uint32_t d) {
+  void Update(const baldr::GraphId& e1, const baldr::GraphId& e2, const sif::Cost& c, const float d) {
     edgeid = e1;
     opp_edgeid = e2;
     cost = c;

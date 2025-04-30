@@ -55,9 +55,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix.check_reverse_connection", false)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -282,7 +282,8 @@ bool CostMatrix::SourceToTarget(Api& request,
 
     matrix.mutable_from_indices()->Set(connection_idx, source_idx);
     matrix.mutable_to_indices()->Set(connection_idx, target_idx);
-    matrix.mutable_distances()->Set(connection_idx, best_connection.distance);
+    matrix.mutable_distances_double()->Set(connection_idx, best_connection.distance);
+    LOG_ERROR("matrix: " + std::to_string(best_connection.distance) + " km");
     matrix.mutable_times()->Set(connection_idx, time);
     *matrix.mutable_shapes(connection_idx) = shape;
   }
@@ -819,9 +820,9 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
       // Update best connection and set found = true.
       // distance computation only works with the casts.
-      uint32_t d = std::abs(static_cast<int>(fwd_pred.path_distance()) +
-                            static_cast<int>(rev_label.path_distance()) -
-                            static_cast<int>(rev_label.transition_cost().secs));
+      float d = std::abs(static_cast<float>(fwd_pred.path_distance()) +
+                         static_cast<float>(rev_label.path_distance()) -
+                         static_cast<float>(rev_label.transition_cost().secs));
       best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, Cost(s, s), d);
       best_connection_[idx].found = true;
 
@@ -838,7 +839,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
         uint32_t oppdist =
             (rev_predidx == kInvalidLabel) ? 0U : rev_edgelabels[rev_predidx].path_distance();
         float s = fwd_pred.cost().secs + oppsec + rev_label.transition_cost().secs;
-        uint32_t d = fwd_pred.path_distance() + oppdist;
+        float d = fwd_pred.path_distance() + oppdist;
 
         // Update best connection and set a threshold
         best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, Cost(c, s), d);
@@ -1260,6 +1261,23 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
       find_correlated_edge(request.options().targets(target_idx), path_edges.back());
   float source_pct = static_cast<float>(source_edge.percent_along());
   float target_pct = static_cast<float>(target_edge.percent_along());
+
+  float dist = 0;
+  for (const auto& edge : path_edges) {
+    auto* de = graphreader.directededge(edge);
+    if (edge == source_edge.graph_id()) {
+      dist += de->length() * (1 - source_pct);
+    }
+    if (edge == target_edge.graph_id()) {
+      LOG_ERROR("HWLLO");
+      dist += de->length() * target_pct;
+    }
+    if (edge != target_edge.graph_id() && edge != source_edge.graph_id()) {
+      dist += de->length();
+    }
+  }
+
+  connection.distance = dist;
 
   // recost the path if this was a time-dependent expansion
   if (has_time_) {

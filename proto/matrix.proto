@@ -26,4 +26,5 @@ message Matrix {
   repeated double begin_lon = 15;
   repeated double end_lat = 16;
   repeated double end_lon = 17;
+  repeated double distances_double = 18; 
 }

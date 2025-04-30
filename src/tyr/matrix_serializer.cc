@@ -19,7 +19,7 @@ void serialize_duration(const valhalla::Matrix& matrix,
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for time in matrix result
     if (matrix.times()[i] != kMaxCost) {
-      writer(static_cast<uint64_t>(matrix.times()[i]));
+      writer(matrix.times()[i]);
     } else {
       writer(nullptr);
     }
@@ -34,7 +34,7 @@ void serialize_distance(const valhalla::Matrix& matrix,
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for distance in matrix result
     if (matrix.distances()[i] != kMaxCost) {
-      writer(static_cast<uint64_t>(matrix.distances()[i]) * distance_scale);
+      writer(matrix.distances_double()[i] * distance_scale);
     } else {
       writer(nullptr);
     }
@@ -154,8 +154,8 @@ void serialize_row(const valhalla::Matrix& matrix,
     if (time != kMaxCost) {
       writer("from_index", source_index);
       writer("to_index", target_index + (i - start_td));
-      writer("time", static_cast<uint64_t>(time));
-      writer("distance", static_cast<double>(matrix.distances()[i] * distance_scale));
+      writer("time", time);
+      writer("distance", static_cast<double>(matrix.distances_double()[i] * distance_scale));
       if (!date_time.empty()) {
         writer("date_time", date_time);
       }
@@ -217,6 +217,7 @@ void serialize_row(const valhalla::Matrix& matrix,
 
 std::string serialize(const Api& request, double distance_scale) {
   rapidjson::writer_wrapper_t writer(4096);
+  writer.set_precision(tyr::kDefaultPrecision);
   writer.start_object();
   const auto& options = request.options();
 

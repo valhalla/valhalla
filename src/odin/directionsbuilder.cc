@@ -412,6 +412,7 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
 
   // Populate summary
   trip_directions.mutable_summary()->set_length(etp->GetLength(options.units()));
+  LOG_ERROR("route: " + std::to_string(etp->GetLength(options.units())) + " km");
   trip_directions.mutable_summary()->set_time(
       etp->node(etp->GetLastNodeIndex()).cost().elapsed_cost().seconds());
   auto mutable_bbox = trip_directions.mutable_summary()->mutable_bbox();

@@ -158,6 +158,7 @@ protected:
       matrix.mutable_from_indices()->Resize(size, 0U);
       matrix.mutable_to_indices()->Resize(size, 0U);
       matrix.mutable_distances()->Resize(size, 0U);
+      matrix.mutable_distances_double()->Resize(size, 0U);
       matrix.mutable_times()->Resize(size, 0U);
       matrix.mutable_second_pass()->Resize(size, false);
       // repeated strings don't support Resize()
