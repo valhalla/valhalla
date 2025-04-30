@@ -1398,8 +1398,8 @@ uint32_t GetGridId(const midgard::PointLL& pointll,
   if (tile_id >= 0) {
     auto base_ll = tiling.Base(tile_id);
     float grid_size = tiling.TileSize() / static_cast<float>(grid_divisions);
-    uint32_t row = static_cast<uint32_t>((pointll.lat() - base_ll.lat()) / grid_size);
-    uint32_t col = static_cast<uint32_t>((pointll.lng() - base_ll.lng()) / grid_size);
+    uint32_t row = static_cast<uint32_t>(std::max(pointll.lat() - base_ll.lat(), 0.) / grid_size);
+    uint32_t col = static_cast<uint32_t>(std::max(pointll.lng() - base_ll.lng(), 0.) / grid_size);
     if (row > grid_divisions || col > grid_divisions) {
       LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col));
       return 0;
