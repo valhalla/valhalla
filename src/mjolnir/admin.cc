@@ -29,7 +29,8 @@ Geometry::~Geometry() {
 }
 
 bool Geometry::intersects(const PointLL& ll) const {
-  auto* p = GEOSGeom_createPointFromXY_r(context.get(), ll.lat(), ll.lng());
+  // TODO: use GEOSPreparedIntersectsXY_r in the future
+  auto* p = GEOSGeom_createPointFromXY_r(context.get(), ll.lng(), ll.lat());
   bool intersects = GEOSPreparedIntersects_r(context.get(), prepared, p);
   GEOSGeom_destroy_r(context.get(), p);
   return intersects;
