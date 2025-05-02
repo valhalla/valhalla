@@ -9,7 +9,6 @@
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
-#include "midgard/sequence_writer.h"
 #include "midgard/tiles.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"

@@ -17,7 +17,6 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
-#include "midgard/sequence_writer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

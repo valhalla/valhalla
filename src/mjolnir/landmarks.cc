@@ -3,7 +3,6 @@
 
 #include "baldr/graphreader.h"
 #include "midgard/sequence.h"
-#include "midgard/sequence_writer.h"
 #include "mjolnir/util.h"
 
 #include "baldr/location.h"

@@ -1,5 +1,4 @@
 #include "midgard/sequence.h"
-#include "midgard/sequence_writer.h"
 #include <cstdint>
 
 #include "test.h"
