@@ -1087,12 +1087,14 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       auto json_rings = rapidjson::get_child_optional(doc, "/coordinates");
       if (json_rings->IsArray()) {
         auto* rings_pbf = options.mutable_exclude_polygons();
+        auto* levels_pbf = options.mutable_exclude_levels();
         try {
           for (const auto& req_poly : json_rings->GetArray()) {
             if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
               continue;
             }
             auto* ring = rings_pbf->Add();
+            levels_pbf->Add();
             parse_ring(ring, req_poly);
           }
         } catch (...) { throw valhalla_exception_t{137}; }
@@ -1100,8 +1102,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
         // get the levels
         auto json_levels = rapidjson::get_child_optional(doc, "/levels");
         if (json_levels->IsArray()) {
-          for (const auto& level : json_levels->GetArray()) {
-            level.GetInt64()
+          for (const auto& per_ring_levels : json_levels->GetArray()) {
+            auto levels = per_ring_levels.GetArray();
           }
         }
 
