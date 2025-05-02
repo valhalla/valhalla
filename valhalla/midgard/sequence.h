@@ -262,20 +262,20 @@ protected:
 template <class T> class sequence_writer {
   std::ofstream file;
 
-  // Buffers that are swapped between the worker thread and the user thread.
-  // It can be considered as a channel with capacity of 1.
-  std::vector<T> write_buffer;
-  std::vector<T> shadow_buffer;
+  // Double-buffering implementation: one buffer is being filled by the main thread (front_buffer)
+  // while the other is being written to disk by the worker thread (back_buffer)
+  std::vector<T> front_buffer; // Main thread writes to this buffer
+  std::vector<T> back_buffer;  // Worker thread reads from this buffer and writes to disk
 
   // Items counter for a `size()` method
   size_t count = 0;
 
-  // Guards `shadow_buffer` and the `running` flag
+  // Guards `back_buffer` and the `running` flag
   std::mutex queue_mutex;
-  // Gets notified when the main thread has written to the shadow buffer
-  std::condition_variable write_cv;
-  // Gets notified when the shadow buffer is written to the file and is empty
-  std::condition_variable written_cv;
+  // Gets notified when the buffers have been swapped and back_buffer is ready for writing
+  std::condition_variable back_buffer_ready_cv;
+  // Gets notified when the back_buffer has been written to the file and is empty
+  std::condition_variable back_buffer_empty_cv;
 
   bool running = true;
   std::thread worker;
@@ -288,10 +288,10 @@ public:
       throw std::runtime_error("sequence_writer: " + filename + ": " + strerror(errno));
     }
 
-    write_buffer.reserve(buffer_size);
-    shadow_buffer.reserve(buffer_size);
+    front_buffer.reserve(buffer_size);
+    back_buffer.reserve(buffer_size);
 
-    worker = std::thread(&sequence_writer::write_shadow_buffer, this);
+    worker = std::thread(&sequence_writer::write_back_buffer, this);
   }
 
   // Non-copyable
@@ -303,22 +303,22 @@ public:
     {
       std::lock_guard lock(queue_mutex);
       running = false;
-      write_cv.notify_one();
+      back_buffer_ready_cv.notify_one();
     }
     worker.join();
   }
 
   // Add an element to the sequence
   void push_back(const T& item) {
-    write_buffer.push_back(item);
+    front_buffer.push_back(item);
     count += 1;
 
-    // If buffer is full, send it to the worker thread
-    if (write_buffer.size() >= write_buffer.capacity()) {
+    // If front buffer is full, swap with back buffer and notify worker thread
+    if (front_buffer.size() >= front_buffer.capacity()) {
       std::unique_lock lock(queue_mutex);
-      written_cv.wait(lock, [this]() { return shadow_buffer.empty(); });
-      std::swap(write_buffer, shadow_buffer);
-      write_cv.notify_one();
+      back_buffer_empty_cv.wait(lock, [this]() { return back_buffer.empty(); });
+      std::swap(front_buffer, back_buffer);
+      back_buffer_ready_cv.notify_one();
     }
   }
 
@@ -330,32 +330,32 @@ public:
   // Flush any pending writes and wait until they're complete
   void flush() {
     std::unique_lock lock(queue_mutex);
-    written_cv.wait(lock, [this]() { return shadow_buffer.empty(); });
+    back_buffer_empty_cv.wait(lock, [this]() { return back_buffer.empty(); });
 
-    if (!write_buffer.empty()) {
-      std::swap(write_buffer, shadow_buffer);
-      write_cv.notify_one();
+    if (!front_buffer.empty()) {
+      std::swap(front_buffer, back_buffer);
+      back_buffer_ready_cv.notify_one();
 
-      // Wait until the worker thread has written the shadow buffer
-      written_cv.wait(lock, [this]() { return shadow_buffer.empty(); });
+      // Wait until the worker thread has written the back buffer
+      back_buffer_empty_cv.wait(lock, [this]() { return back_buffer.empty(); });
     }
   }
 
 private:
-  void write_shadow_buffer() {
+  void write_back_buffer() {
     std::unique_lock lock(queue_mutex);
     while (true) {
-      write_cv.wait(lock, [this]() { return !shadow_buffer.empty() || !running; });
-      if (shadow_buffer.empty() && !running) {
+      back_buffer_ready_cv.wait(lock, [this]() { return !back_buffer.empty() || !running; });
+      if (back_buffer.empty() && !running) {
         break; // Exit if we're shutting down and buffer is empty
       }
 
-      file.write(static_cast<const char*>(static_cast<const void*>(shadow_buffer.data())),
-                 shadow_buffer.size() * sizeof(T));
+      file.write(static_cast<const char*>(static_cast<const void*>(back_buffer.data())),
+                 back_buffer.size() * sizeof(T));
       file.flush();
-      shadow_buffer.clear();
+      back_buffer.clear();
 
-      written_cv.notify_all();
+      back_buffer_empty_cv.notify_all();
     }
   }
 };
