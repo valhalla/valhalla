@@ -440,7 +440,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -448,7 +448,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -456,7 +456,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -464,7 +464,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
 	{
       "key": "barrier",
@@ -472,7 +472,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
 	{
       "key": "barrier",
@@ -480,7 +480,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
 	{
       "key": "barrier",
@@ -488,15 +488,15 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
 	{
       "key": "barrier",
-      "value": "fence",
+      "value": "chain",
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
 	{
       "key": "barrier",
@@ -504,7 +504,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
 	{
       "key": "barrier",
@@ -512,7 +512,23 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	{
+      "key": "barrier",
+      "value": "fence",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	{
+      "key": "barrier",
+      "value": "debris",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -520,7 +536,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set sump_buster flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set sump_buster flag to true.  Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",

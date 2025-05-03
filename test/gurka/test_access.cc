@@ -394,6 +394,34 @@ TEST_F(MultipleBarriers, BollardNoAccessInformation) {
   }
 }
 
+TEST_F(MultipleBarriers, CycleBarrier) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "cycle_barrier"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_cycle_barrier");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "bicycle");
+  gurka::assert::raw::expect_path(result, {"A1", "1B"});
+}
+
+TEST_F(MultipleBarriers, BarrierWall) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "fence"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_wall");
+  check_auto_path(map, {"AC2", "2DB"});
+}
+
+TEST_F(MultipleBarriers, BarrierWallWithAccess) {
+  const gurka::nodes nodes = {
+      {"1", {{"barrier", "debris"}, {"motor_vehicle", "yes"}}},
+  };
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_wall");
+  check_auto_path(map, {"A1", "1B"});
+}
+
 class AccessibleBarriers : public ::testing::Test {
 protected:
   static gurka::map map;
