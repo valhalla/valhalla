@@ -96,6 +96,7 @@ constexpr auto kFerryLabelKey = "ferry_label";
 constexpr auto kStationLabelKey = "station_label";
 constexpr auto kEmptyTransitNameLabelsKey = "empty_transit_name_labels";
 constexpr auto kTransitStopCountLabelsKey = "transit_stop_count_labels";
+constexpr auto kLandmarkTypesKey = "landmark_types";
 constexpr auto kObjectLabelsKey = "object_labels";
 
 constexpr auto kPluralCategoryZeroKey = "zero";
@@ -168,7 +169,17 @@ constexpr auto kTransitHeadSignTag = "<TRANSIT_HEADSIGN>";
 constexpr auto kTransitPlatformCountTag = "<TRANSIT_STOP_COUNT>";
 constexpr auto kTransitPlatformCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
 constexpr auto kLevelTag = "<LEVEL>";
+constexpr auto kLandmarkNameTag = "<LANDMARK_NAME>";
+constexpr auto kLandmarkTypeTag = "<LANDMARK_TYPE>";
 
+// TurnSubset type enum
+enum class TurnSubsetType : uint8_t {
+  kSharp,
+  kBear,
+  kTurn,
+  kUturn,
+  kMerge,
+};
 } // namespace
 
 namespace valhalla {
@@ -204,6 +215,7 @@ struct ContinueVerbalSubset : ContinueSubset {
 struct TurnSubset : PhraseSet {
   std::vector<std::string> relative_directions;
   std::vector<std::string> empty_street_name_labels;
+  std::vector<std::string> landmark_types;
 };
 
 struct RampSubset : PhraseSet {
@@ -497,8 +509,11 @@ protected:
    *
    * @param  turn_handle  The 'turn' structure to populate.
    * @param  turn_subset_pt  The 'turn' property tree.
+   * @param  turn_type The 'turn' type.
    */
-  void Load(TurnSubset& turn_handle, const boost::property_tree::ptree& turn_subset_pt);
+  void Load(TurnSubset& turn_handle,
+            const boost::property_tree::ptree& turn_subset_pt,
+            TurnSubsetType turn_type);
 
   /**
    * Loads the specified 'ramp' instruction subset with the localized
