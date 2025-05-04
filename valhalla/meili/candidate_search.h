@@ -5,10 +5,10 @@
 #include <algorithm>
 #include <cmath>
 
-#include <valhalla/baldr/location.h>
-#include <valhalla/sif/dynamiccost.h>
+#include "valhalla/baldr/location.h"
+#include "valhalla/sif/dynamiccost.h"
 
-#include <valhalla/meili/grid_range_query.h>
+#include "valhalla/meili/grid_range_query.h"
 
 namespace valhalla {
 namespace baldr {

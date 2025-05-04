@@ -5,7 +5,7 @@
 #include <optional>
 #include <string>
 
-#include <valhalla/baldr/streetname.h>
+#include "valhalla/baldr/streetname.h"
 
 namespace valhalla {
 namespace baldr {

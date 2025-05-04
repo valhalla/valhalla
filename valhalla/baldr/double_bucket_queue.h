@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include <valhalla/baldr/graphconstants.h>
+#include "valhalla/baldr/graphconstants.h"
 
 namespace valhalla {
 namespace baldr {

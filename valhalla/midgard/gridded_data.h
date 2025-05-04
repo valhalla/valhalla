@@ -9,10 +9,10 @@
 #include <map>
 #include <vector>
 
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/polyline2.h>
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/util.h>
+#include "valhalla/midgard/pointll.h"
+#include "valhalla/midgard/polyline2.h"
+#include "valhalla/midgard/tiles.h"
+#include "valhalla/midgard/util.h"
 
 namespace valhalla {
 namespace midgard {

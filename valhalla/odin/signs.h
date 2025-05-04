@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <vector>
 
-#include <valhalla/odin/sign.h>
+#include "valhalla/odin/sign.h"
 
 using namespace valhalla::baldr;
 

@@ -4,12 +4,12 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/meili/candidate_search.h>
-#include <valhalla/sif/costconstants.h>
-#include <valhalla/sif/costfactory.h>
+#include "valhalla/baldr/graphreader.h"
+#include "valhalla/meili/candidate_search.h"
+#include "valhalla/sif/costconstants.h"
+#include "valhalla/sif/costfactory.h"
 
-#include <valhalla/meili/config.h>
+#include "valhalla/meili/config.h"
 
 namespace valhalla {
 namespace meili {

@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include <valhalla/baldr/time_info.h>
+#include "valhalla/baldr/time_info.h"
 
 namespace valhalla {
 namespace baldr {

@@ -6,8 +6,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include <valhalla/meili/priority_queue.h>
-#include <valhalla/meili/stateid.h>
+#include "valhalla/meili/priority_queue.h"
+#include "valhalla/meili/stateid.h"
 
 namespace valhalla {
 namespace meili {

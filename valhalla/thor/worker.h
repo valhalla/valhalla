@@ -6,30 +6,30 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/baldr/attributes_controller.h>
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/meili/map_matcher_factory.h>
-#include <valhalla/meili/match_result.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
-#include <valhalla/sif/costfactory.h>
-#include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/astar_bss.h>
-#include <valhalla/thor/bidirectional_astar.h>
-#include <valhalla/thor/centroid.h>
-#include <valhalla/thor/costmatrix.h>
-#include <valhalla/thor/isochrone.h>
-#include <valhalla/thor/multimodal.h>
-#include <valhalla/thor/timedistancebssmatrix.h>
-#include <valhalla/thor/timedistancematrix.h>
-#include <valhalla/thor/triplegbuilder.h>
-#include <valhalla/thor/unidirectional_astar.h>
-#include <valhalla/tyr/actor.h>
-#include <valhalla/worker.h>
+#include "valhalla/tyr/actor.h"
+#include "valhalla/worker.h"
+#include "valhalla/baldr/attributes_controller.h"
+#include "valhalla/baldr/directededge.h"
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/graphreader.h"
+#include "valhalla/baldr/graphtile.h"
+#include "valhalla/baldr/location.h"
+#include "valhalla/meili/map_matcher_factory.h"
+#include "valhalla/meili/match_result.h"
+#include "valhalla/proto/options.pb.h"
+#include "valhalla/proto/trip.pb.h"
+#include "valhalla/sif/costfactory.h"
+#include "valhalla/sif/edgelabel.h"
+#include "valhalla/thor/astar_bss.h"
+#include "valhalla/thor/bidirectional_astar.h"
+#include "valhalla/thor/centroid.h"
+#include "valhalla/thor/costmatrix.h"
+#include "valhalla/thor/isochrone.h"
+#include "valhalla/thor/multimodal.h"
+#include "valhalla/thor/timedistancebssmatrix.h"
+#include "valhalla/thor/timedistancematrix.h"
+#include "valhalla/thor/triplegbuilder.h"
+#include "valhalla/thor/unidirectional_astar.h"
 
 namespace valhalla {
 namespace meili {

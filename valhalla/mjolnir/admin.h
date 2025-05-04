@@ -11,8 +11,8 @@
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <sqlite3.h>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/pointll.h>
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/midgard/pointll.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

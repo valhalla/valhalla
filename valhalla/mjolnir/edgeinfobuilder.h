@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/edgeinfo.h>
+#include "valhalla/baldr/edgeinfo.h"
 
 namespace valhalla {
 namespace mjolnir {

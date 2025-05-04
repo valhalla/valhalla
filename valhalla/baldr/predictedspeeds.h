@@ -1,8 +1,8 @@
 #ifndef VALHALLA_BALDR_PREDICTEDSPEEDS_H_
 #define VALHALLA_BALDR_PREDICTEDSPEEDS_H_
 
+#include "valhalla/midgard/util.h"
 #include <array>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {

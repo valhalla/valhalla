@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <valhalla/baldr/rapidjson_fwd.h>
+#include "valhalla/baldr/rapidjson_fwd.h"
 
 namespace google {
 namespace protobuf {

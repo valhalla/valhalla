@@ -7,14 +7,14 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
-#include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/baldr/time_info.h>
-#include <valhalla/proto/api.pb.h>
-#include <valhalla/sif/edgelabel.h>
-#include <valhalla/sif/hierarchylimits.h>
-#include <valhalla/thor/astarheuristic.h>
-#include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/pathalgorithm.h>
+#include "valhalla/baldr/double_bucket_queue.h"
+#include "valhalla/baldr/time_info.h"
+#include "valhalla/proto/api.pb.h"
+#include "valhalla/sif/edgelabel.h"
+#include "valhalla/sif/hierarchylimits.h"
+#include "valhalla/thor/astarheuristic.h"
+#include "valhalla/thor/edgestatus.h"
+#include "valhalla/thor/pathalgorithm.h"
 
 namespace valhalla {
 namespace thor {

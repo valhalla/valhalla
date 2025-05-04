@@ -4,20 +4,20 @@
 #include <iterator>
 #include <memory>
 
-#include <valhalla/baldr/admin.h>
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphtileheader.h>
-#include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/baldr/laneconnectivity.h>
-#include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/baldr/nodetransition.h>
-#include <valhalla/baldr/predictedspeeds.h>
-#include <valhalla/baldr/traffictile.h>
-#include <valhalla/baldr/turnlanes.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
+#include "valhalla/baldr/admin.h"
+#include "valhalla/baldr/directededge.h"
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/graphtileheader.h"
+#include "valhalla/baldr/graphtileptr.h"
+#include "valhalla/baldr/laneconnectivity.h"
+#include "valhalla/baldr/nodeinfo.h"
+#include "valhalla/baldr/nodetransition.h"
+#include "valhalla/baldr/predictedspeeds.h"
+#include "valhalla/baldr/traffictile.h"
+#include "valhalla/baldr/turnlanes.h"
+#include "valhalla/midgard/logging.h"
+#include "valhalla/midgard/util.h"
 
 namespace valhalla {
 namespace midgard {

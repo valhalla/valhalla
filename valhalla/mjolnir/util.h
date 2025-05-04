@@ -12,7 +12,7 @@
 // needs to be after sqlite include
 #include <spatialite.h>
 
-#include <valhalla/baldr/graphtileptr.h>
+#include "valhalla/baldr/graphtileptr.h"
 
 namespace valhalla {
 namespace baldr {

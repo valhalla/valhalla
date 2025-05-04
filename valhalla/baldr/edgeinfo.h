@@ -8,8 +8,8 @@
 #include <tuple>
 #include <vector>
 
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/util.h>
+#include "valhalla/midgard/encoded.h"
+#include "valhalla/midgard/util.h"
 
 namespace valhalla {
 namespace midgard {

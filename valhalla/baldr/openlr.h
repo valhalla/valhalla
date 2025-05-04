@@ -7,8 +7,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
+#include "valhalla/midgard/pointll.h"
+#include "valhalla/midgard/util.h"
 
 namespace valhalla {
 namespace baldr {

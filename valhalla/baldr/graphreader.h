@@ -9,12 +9,12 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
-#include <valhalla/baldr/edgeinfo.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/tilegetter.h>
-#include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/midgard/sequence.h>
+#include "valhalla/baldr/edgeinfo.h"
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/graphtile.h"
+#include "valhalla/baldr/tilegetter.h"
+#include "valhalla/baldr/tilehierarchy.h"
+#include "valhalla/midgard/sequence.h"
 
 namespace valhalla {
 class IncidentsTile;

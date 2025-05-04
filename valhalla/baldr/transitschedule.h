@@ -1,8 +1,8 @@
 #ifndef VALHALLA_BALDR_TRANSITSCHEDULE_H_
 #define VALHALLA_BALDR_TRANSITSCHEDULE_H_
 
+#include "valhalla/baldr/graphconstants.h"
 #include <cstdint>
-#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace baldr {

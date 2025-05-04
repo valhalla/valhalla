@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include <valhalla/baldr/graphid.h>
+#include "valhalla/baldr/graphid.h"
 
 namespace valhalla {
 namespace baldr {

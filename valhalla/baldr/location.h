@@ -5,9 +5,9 @@
 #include <optional>
 #include <string>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/common.pb.h>
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/midgard/pointll.h"
+#include "valhalla/proto/common.pb.h"
 
 namespace valhalla {
 namespace baldr {

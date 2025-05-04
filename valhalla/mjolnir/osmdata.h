@@ -5,8 +5,8 @@
 #include <string>
 #include <unordered_set>
 
-#include <valhalla/mjolnir/osmnode.h>
-#include <valhalla/mjolnir/uniquenames.h>
+#include "valhalla/mjolnir/osmnode.h"
+#include "valhalla/mjolnir/uniquenames.h"
 
 namespace valhalla {
 namespace baldr {

@@ -5,9 +5,9 @@
 #include <memory>
 #include <strings.h>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/turn.h>
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/turn.h"
 
 namespace valhalla {
 namespace baldr {

@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/datetime.h>
+#include "valhalla/baldr/datetime.h"
 
 namespace valhalla {
 namespace baldr {

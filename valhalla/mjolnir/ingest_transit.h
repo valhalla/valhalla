@@ -6,10 +6,10 @@
 #include <mutex>
 #include <string>
 
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/midgard/pointll.h"
+#include "valhalla/proto/transit.pb.h"
 #include <boost/property_tree/ptree_fwd.hpp>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/transit.pb.h>
 
 namespace valhalla {
 namespace mjolnir {

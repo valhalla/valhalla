@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include <valhalla/mjolnir/uniquenames.h>
+#include "valhalla/mjolnir/uniquenames.h"
 
 namespace valhalla {
 namespace midgard {

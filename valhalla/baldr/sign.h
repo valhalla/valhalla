@@ -1,9 +1,9 @@
 #ifndef VALHALLA_BALDR_SIGN_H_
 #define VALHALLA_BALDR_SIGN_H_
 
+#include "valhalla/midgard/util.h"
 #include <cstdint>
 #include <stdint.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {

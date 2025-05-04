@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <valhalla/baldr/graphconstants.h>
+#include "valhalla/baldr/graphconstants.h"
 
 using namespace valhalla::baldr;
 

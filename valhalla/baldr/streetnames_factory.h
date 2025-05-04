@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/streetnames.h>
+#include "valhalla/baldr/streetnames.h"
 
 namespace google::protobuf {
 template <typename T> class RepeatedPtrField;

@@ -7,11 +7,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/meili/measurement.h>
-#include <valhalla/meili/routing.h>
-#include <valhalla/meili/stateid.h>
-#include <valhalla/midgard/logging.h>
+#include "valhalla/baldr/pathlocation.h"
+#include "valhalla/meili/measurement.h"
+#include "valhalla/meili/routing.h"
+#include "valhalla/meili/stateid.h"
+#include "valhalla/midgard/logging.h"
 
 namespace valhalla {
 namespace meili {

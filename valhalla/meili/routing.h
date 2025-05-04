@@ -8,11 +8,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/sif/costconstants.h>
-#include <valhalla/sif/edgelabel.h>
+#include "valhalla/baldr/double_bucket_queue.h"
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/midgard/pointll.h"
+#include "valhalla/sif/costconstants.h"
+#include "valhalla/sif/edgelabel.h"
 
 namespace valhalla {
 

@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <vector>
 
-#include <valhalla/baldr/complexrestriction.h>
-#include <valhalla/baldr/graphconstants.h>
+#include "valhalla/baldr/complexrestriction.h"
+#include "valhalla/baldr/graphconstants.h"
 
 namespace valhalla {
 namespace mjolnir {

@@ -4,7 +4,7 @@
 
 #include <cmath>
 
-#include <valhalla/midgard/constants.h>
+#include "valhalla/midgard/constants.h"
 
 namespace valhalla {
 namespace midgard {

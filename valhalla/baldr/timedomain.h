@@ -1,7 +1,7 @@
 #ifndef VALHALLA_BALDR_TIMEDOMAIN_H_
 #define VALHALLA_BALDR_TIMEDOMAIN_H_
 
-#include <valhalla/baldr/graphconstants.h>
+#include "valhalla/baldr/graphconstants.h"
 
 #include <stdexcept>
 

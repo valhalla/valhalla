@@ -6,10 +6,10 @@
 #include <memory>
 #include <vector>
 
-#include <valhalla/baldr/streetname.h>
-#include <valhalla/baldr/verbal_text_formatter.h>
-#include <valhalla/baldr/verbal_text_formatter_us.h>
-#include <valhalla/proto/common.pb.h>
+#include "valhalla/baldr/streetname.h"
+#include "valhalla/baldr/verbal_text_formatter.h"
+#include "valhalla/baldr/verbal_text_formatter_us.h"
+#include "valhalla/proto/common.pb.h"
 
 namespace google::protobuf {
 template <typename T> class RepeatedPtrField;

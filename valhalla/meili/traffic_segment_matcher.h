@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/meili/map_matcher_factory.h>
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/meili/map_matcher_factory.h"
 
 namespace valhalla {
 namespace baldr {

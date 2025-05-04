@@ -11,18 +11,18 @@
 
 #include <boost/functional/hash.hpp>
 
-#include <valhalla/baldr/accessrestriction.h>
-#include <valhalla/baldr/complexrestriction.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/predictedspeeds.h>
-#include <valhalla/baldr/sign.h>
-#include <valhalla/baldr/signinfo.h>
-#include <valhalla/baldr/transitdeparture.h>
-#include <valhalla/baldr/transitroute.h>
-#include <valhalla/baldr/transitschedule.h>
-#include <valhalla/baldr/transitstop.h>
-#include <valhalla/mjolnir/complexrestrictionbuilder.h>
-#include <valhalla/mjolnir/edgeinfobuilder.h>
+#include "valhalla/baldr/accessrestriction.h"
+#include "valhalla/baldr/complexrestriction.h"
+#include "valhalla/baldr/graphtile.h"
+#include "valhalla/baldr/predictedspeeds.h"
+#include "valhalla/baldr/sign.h"
+#include "valhalla/baldr/signinfo.h"
+#include "valhalla/baldr/transitdeparture.h"
+#include "valhalla/baldr/transitroute.h"
+#include "valhalla/baldr/transitschedule.h"
+#include "valhalla/baldr/transitstop.h"
+#include "valhalla/mjolnir/complexrestrictionbuilder.h"
+#include "valhalla/mjolnir/edgeinfobuilder.h"
 
 namespace valhalla {
 namespace baldr {

@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include <valhalla/baldr/rapidjson_fwd.h>
+#include "valhalla/baldr/rapidjson_fwd.h"
 
 namespace valhalla {
 

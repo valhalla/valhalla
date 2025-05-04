@@ -1,8 +1,8 @@
 #ifndef VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 #define VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 
+#include "valhalla/baldr/directededge.h"
 #include <cstdint>
-#include <valhalla/baldr/directededge.h>
 
 using namespace valhalla::baldr;
 

@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <vector>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/thor/dijkstras.h>
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/thor/dijkstras.h"
 
 namespace valhalla {
 namespace thor {

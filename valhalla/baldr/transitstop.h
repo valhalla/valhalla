@@ -1,9 +1,9 @@
 #ifndef VALHALLA_BALDR_TRANSITSTOP_H_
 #define VALHALLA_BALDR_TRANSITSTOP_H_
 
+#include "valhalla/baldr/graphconstants.h"
 #include <cstdint>
 #include <stdexcept>
-#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace baldr {

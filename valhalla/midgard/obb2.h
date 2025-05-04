@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdarg.h>
 
-#include <valhalla/midgard/vector2.h>
+#include "valhalla/midgard/vector2.h"
 
 namespace valhalla {
 namespace midgard {

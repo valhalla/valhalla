@@ -6,10 +6,10 @@
 #include <memory>
 #include <string>
 
-#include <valhalla/baldr/streetnames.h>
-#include <valhalla/odin/signs.h>
-#include <valhalla/odin/transitrouteinfo.h>
-#include <valhalla/proto/options.pb.h>
+#include "valhalla/baldr/streetnames.h"
+#include "valhalla/odin/signs.h"
+#include "valhalla/odin/transitrouteinfo.h"
+#include "valhalla/proto/options.pb.h"
 
 using namespace valhalla::baldr;
 

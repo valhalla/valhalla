@@ -5,7 +5,7 @@
 #include <cstring>
 #include <vector>
 
-#include <valhalla/mjolnir/complexrestrictionbuilder.h>
+#include "valhalla/mjolnir/complexrestrictionbuilder.h"
 
 namespace valhalla {
 namespace baldr {

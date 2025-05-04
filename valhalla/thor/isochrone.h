@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <memory>
 
-#include <valhalla/midgard/gridded_data.h>
-#include <valhalla/thor/dijkstras.h>
+#include "valhalla/midgard/gridded_data.h"
+#include "valhalla/thor/dijkstras.h"
 
 namespace valhalla {
 namespace thor {

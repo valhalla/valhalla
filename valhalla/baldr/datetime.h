@@ -27,8 +27,8 @@
 #pragma GCC diagnostic pop
 #endif
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/constants.h>
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/midgard/constants.h"
 
 namespace valhalla {
 namespace baldr {

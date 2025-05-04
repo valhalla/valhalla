@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/mjolnir/osmlinguistic.h>
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/mjolnir/osmlinguistic.h"
 
 namespace valhalla {
 namespace mjolnir {

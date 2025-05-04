@@ -3,12 +3,12 @@
 
 #include <cstdint>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/graphtileptr.h"
+#include "valhalla/midgard/logging.h"
+#include "valhalla/midgard/pointll.h"
+#include "valhalla/midgard/util.h"
 
 namespace valhalla {
 namespace baldr {

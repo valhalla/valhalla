@@ -4,8 +4,8 @@
 #include <cstdint>
 #include <vector>
 
-#include <valhalla/odin/markup_formatter.h>
-#include <valhalla/odin/util.h>
+#include "valhalla/odin/markup_formatter.h"
+#include "valhalla/odin/util.h"
 
 namespace valhalla {
 class Options;

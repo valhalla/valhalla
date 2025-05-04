@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-#include <valhalla/thor/dijkstras.h>
+#include "valhalla/thor/dijkstras.h"
 
 constexpr uint8_t kInbound = 1;
 constexpr uint8_t kOutbound = 2;

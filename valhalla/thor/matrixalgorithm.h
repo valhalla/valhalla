@@ -5,12 +5,12 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/proto/api.pb.h>
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/graphreader.h"
+#include "valhalla/proto/api.pb.h"
 // TODO(nils): should abstract more so we don't pull this in
-#include <valhalla/thor/pathalgorithm.h>
-#include <valhalla/worker.h>
+#include "valhalla/worker.h"
+#include "valhalla/thor/pathalgorithm.h"
 
 namespace valhalla {
 namespace thor {

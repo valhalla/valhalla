@@ -3,8 +3,8 @@
 
 #include <vector>
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/location.h>
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/location.h"
 
 namespace valhalla {
 namespace baldr {

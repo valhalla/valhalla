@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/tilegetter.h>
+#include "valhalla/baldr/tilegetter.h"
 
 namespace valhalla {
 namespace baldr {

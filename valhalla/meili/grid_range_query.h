@@ -9,10 +9,10 @@
 #include <unordered_set>
 #include <vector>
 
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/linesegment2.h>
+#include "valhalla/midgard/aabb2.h"
+#include "valhalla/midgard/linesegment2.h"
 
-#include <valhalla/meili/grid_traversal.h>
+#include "valhalla/meili/grid_traversal.h"
 
 namespace valhalla {
 namespace meili {

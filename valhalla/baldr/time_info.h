@@ -2,12 +2,12 @@
 
 #include <chrono>
 
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/proto/common.pb.h>
+#include "valhalla/baldr/datetime.h"
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/graphreader.h"
+#include "valhalla/midgard/logging.h"
+#include "valhalla/proto/common.pb.h"
 
 namespace dt = valhalla::baldr::DateTime;
 namespace sc = std::chrono;
