@@ -1,8 +1,7 @@
-#include "midgard/logging.h"
+#include "odin/sign.h"
 
 #include "baldr/streetname.h"
-
-#include "odin/sign.h"
+#include "midgard/logging.h"
 #include "odin/util.h"
 
 namespace valhalla {

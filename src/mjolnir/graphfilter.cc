@@ -1,12 +1,4 @@
 #include "mjolnir/graphfilter.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
-#include "scoped_timer.h"
-
-#include <boost/property_tree/ptree.hpp>
-#include <iostream>
-#include <unordered_map>
-#include <vector>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -18,6 +10,15 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
+#include "scoped_timer.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <iostream>
+#include <unordered_map>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

@@ -1,13 +1,13 @@
 #ifndef VALHALLA_MJOLNIR_NODE_EXPANDER_H_
 #define VALHALLA_MJOLNIR_NODE_EXPANDER_H_
 
-#include <map>
-
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/sequence.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
+
+#include <map>
 
 using namespace valhalla::midgard;
 

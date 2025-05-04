@@ -1,10 +1,9 @@
 #include "baldr/signinfo.h"
+
 #include "baldr/graphid.h"
-#include "mjolnir/uniquenames.h"
-
-#include "test.h"
-
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/uniquenames.h"
+#include "test.h"
 
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;

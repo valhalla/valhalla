@@ -1,4 +1,5 @@
 #include "baldr/verbal_text_formatter_factory.h"
+
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
 #include "baldr/verbal_text_formatter_us_co.h"

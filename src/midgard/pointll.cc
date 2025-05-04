@@ -1,4 +1,5 @@
 #include "midgard/pointll.h"
+
 #include "midgard/util.h"
 
 #include <list>

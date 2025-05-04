@@ -1,9 +1,10 @@
 #include "gurka.h"
+#include "odin/util.h"
+
 #include <gtest/gtest.h>
+
 #include <utility>
 #include <vector>
-
-#include "odin/util.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

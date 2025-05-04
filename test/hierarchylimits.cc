@@ -1,18 +1,18 @@
-#include "gurka/gurka.h"
-#include "test.h"
-
-#include <boost/format.hpp>
-#include <string>
-#include <vector>
-
 #include "baldr/rapidjson_utils.h"
+#include "gurka/gurka.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
+#include "test.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
+#include <boost/format.hpp>
+
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -40,10 +40,10 @@ struct HierarchyLimitsTestParams {
                             bool use_pbf,
                             std::unordered_map<std::string, std::string> overrides = {})
       : request(req), cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(""),
-        expected_hierarchy_limits(hl), pbf(use_pbf){};
+        expected_hierarchy_limits(hl), pbf(use_pbf) {};
   HierarchyLimitsTestParams(std::unordered_map<std::string, std::string> overrides,
                             std::string& config_path)
-      : cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(config_path){};
+      : cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(config_path) {};
 
   std::string request;
   boost::property_tree::ptree cfg;

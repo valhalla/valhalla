@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <boost/algorithm/string/join.hpp>
 #include <gtest/gtest.h>
 

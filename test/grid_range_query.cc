@@ -1,10 +1,9 @@
 // -*- mode: c++ -*-
 
-#include "midgard/linesegment2.h"
-#include "midgard/pointll.h"
-
 #include "meili/grid_range_query.h"
 
+#include "midgard/linesegment2.h"
+#include "midgard/pointll.h"
 #include "test.h"
 
 namespace {

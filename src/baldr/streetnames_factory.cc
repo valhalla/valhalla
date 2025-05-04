@@ -1,11 +1,12 @@
-#include <utility>
-#include <vector>
+#include "baldr/streetnames_factory.h"
 
 #include "baldr/streetnames.h"
-#include "baldr/streetnames_factory.h"
 #include "baldr/streetnames_us.h"
 #include "midgard/util.h"
 #include "proto/common.pb.h"
+
+#include <utility>
+#include <vector>
 
 namespace valhalla {
 namespace baldr {

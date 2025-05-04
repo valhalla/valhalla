@@ -1,16 +1,17 @@
-#include <functional>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
+#include "thor/worker.h"
 
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "thor/isochrone.h"
-#include "thor/worker.h"
 #include "tyr/actor.h"
 
 #include <boost/property_tree/ptree.hpp>
+
+#include <functional>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

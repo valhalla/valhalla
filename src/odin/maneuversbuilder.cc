@@ -1,12 +1,4 @@
-#include <algorithm>
-#include <cstdint>
-#include <iterator>
-#include <optional>
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include <boost/format.hpp>
+#include "odin/maneuversbuilder.h"
 
 #include "baldr/graphconstants.h"
 #include "baldr/streetname.h"
@@ -22,15 +14,22 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "worker.h"
-
-#include "odin/maneuversbuilder.h"
 #include "odin/sign.h"
 #include "odin/signs.h"
 #include "odin/util.h"
-
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
+#include "worker.h"
+
+#include <boost/format.hpp>
+
+#include <algorithm>
+#include <cstdint>
+#include <iterator>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

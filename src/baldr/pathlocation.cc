@@ -1,4 +1,5 @@
 #include "baldr/pathlocation.h"
+
 #include "midgard/util.h"
 
 namespace valhalla {

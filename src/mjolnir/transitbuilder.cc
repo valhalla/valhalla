@@ -1,16 +1,4 @@
 #include "mjolnir/transitbuilder.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "scoped_timer.h"
-
-#include <fstream>
-#include <future>
-#include <list>
-#include <mutex>
-#include <thread>
-#include <tuple>
-#include <vector>
-
-#include <boost/algorithm/string.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphreader.h"
@@ -20,6 +8,18 @@
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
+
+#include <boost/algorithm/string.hpp>
+
+#include <fstream>
+#include <future>
+#include <list>
+#include <mutex>
+#include <thread>
+#include <tuple>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

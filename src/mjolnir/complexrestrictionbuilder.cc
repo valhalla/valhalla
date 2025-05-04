@@ -1,10 +1,11 @@
-#include <algorithm>
-#include <ostream>
+#include "mjolnir/complexrestrictionbuilder.h"
 
 #include "baldr/complexrestriction.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
-#include "mjolnir/complexrestrictionbuilder.h"
+
+#include <algorithm>
+#include <ostream>
 
 namespace valhalla {
 namespace mjolnir {

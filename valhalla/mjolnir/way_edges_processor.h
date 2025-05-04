@@ -1,13 +1,13 @@
 #pragma once
 
-#include <cstdint>
-#include <unordered_map>
-#include <vector>
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include <cstdint>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace mjolnir {

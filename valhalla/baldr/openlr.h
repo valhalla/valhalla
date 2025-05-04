@@ -6,6 +6,7 @@
 #include <valhalla/proto/trip.pb.h>
 
 #include <assert.h>
+
 #include <bitset>
 #include <numeric>
 #include <stdexcept>
@@ -197,7 +198,7 @@ struct OpenLrStatus {
   uint8_t rfu : 1;
 
   constexpr OpenLrStatus()
-      : version(OPENLR_VERSION), has_attributes(0), ArF0(0), is_point(0), ArF1(0), rfu(0){};
+      : version(OPENLR_VERSION), has_attributes(0), ArF0(0), is_point(0), ArF1(0), rfu(0) {};
 
   // Status-byte of a Line segment (page 53)
   constexpr static OpenLrStatus Line() {

@@ -1,17 +1,16 @@
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 
-#include "argparse_utils.h"
+#include <boost/property_tree/ptree.hpp>
+
+#include <cxxopts.hpp>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla::mjolnir;
 

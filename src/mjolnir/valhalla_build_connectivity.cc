@@ -1,19 +1,18 @@
-#include <cassert>
-#include <cstdint>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/connectivity_map.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 
-#include "argparse_utils.h"
+#include <boost/property_tree/ptree.hpp>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <cassert>
+#include <cstdint>
+#include <cxxopts.hpp>
+#include <string>
+#include <vector>
 
 using namespace valhalla::baldr;
 

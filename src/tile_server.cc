@@ -1,15 +1,13 @@
 #include "valhalla/tile_server.h"
 
-#include "valhalla/filesystem.h"
-
 #include "baldr/compression_utils.h"
-
-#include <prime_server/http_protocol.hpp>
-#include <prime_server/http_util.hpp>
-#include <prime_server/prime_server.hpp>
+#include "valhalla/filesystem.h"
 
 #include <chrono>
 #include <fstream>
+#include <prime_server/http_protocol.hpp>
+#include <prime_server/http_util.hpp>
+#include <prime_server/prime_server.hpp>
 #include <stdexcept>
 #include <thread>
 

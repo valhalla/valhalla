@@ -1,4 +1,5 @@
 #include "mjolnir/pbfgraphparser.h"
+
 #include "baldr/complexrestriction.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -20,6 +21,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
+
 #include <osmium/io/pbf_input.hpp>
 #include <thread>
 #include <utility>
@@ -4181,7 +4183,7 @@ struct graph_parser {
                   return; // should not make it here; has to be bad data.
                 }
               } // else
-            }   // if (condition.empty())
+            } // if (condition.empty())
 
             std::vector<std::string> conditions = GetTagTokens(condition, ';');
 
@@ -4208,7 +4210,7 @@ struct graph_parser {
             }
             return;
           } // if (isConditional)
-        }   // end turning into complex restriction
+        } // end turning into complex restriction
 
         restriction.set_modes(modes);
 

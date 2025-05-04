@@ -1,16 +1,17 @@
+#include "midgard/tiles.h"
+
+#include "midgard/distanceapproximator.h"
+#include "midgard/ellipse.h"
+#include "midgard/polyline2.h"
+#include "midgard/util.h"
+
+#include <robin_hood.h>
+
 #include <array>
 #include <cmath>
 #include <queue>
 #include <unordered_set>
 #include <vector>
-
-#include "midgard/distanceapproximator.h"
-#include "midgard/ellipse.h"
-#include "midgard/polyline2.h"
-#include "midgard/tiles.h"
-#include "midgard/util.h"
-
-#include <robin_hood.h>
 
 namespace {
 

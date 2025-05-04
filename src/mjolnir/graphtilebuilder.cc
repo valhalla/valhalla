@@ -1,18 +1,19 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include "baldr/datetime.h"
+#include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
-#include <algorithm>
+
 #include <boost/format.hpp>
+
+#include <algorithm>
 #include <list>
 #include <set>
 #include <stdexcept>
-
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
 
 using namespace valhalla::baldr;
 

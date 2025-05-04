@@ -1,17 +1,16 @@
+#include "baldr/datetime.h"
 #include "gurka.h"
 #include "just_gtfs/just_gtfs.h"
-
-#include "baldr/datetime.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/ingest_transit.h"
 #include "proto/common.pb.h"
 #include "proto/transit.pb.h"
 #include "test.h"
-#include <gtest/gtest.h>
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+#include <gtest/gtest.h>
 
 using point_type = boost::geometry::model::d2::point_xy<double>;
 using polygon_type = boost::geometry::model::polygon<point_type>;
@@ -201,16 +200,16 @@ TEST(GtfsExample, WriteGtfs) {
   }
 
   // write agency.txt
-  struct Agency ttc {
-    .agency_id = a1_id, .agency_name = "Toronto Commission", .agency_url = "http://www.ttc.ca",
-    .agency_timezone = "America/Toronto"
-  };
+  struct Agency ttc{.agency_id = a1_id,
+                    .agency_name = "Toronto Commission",
+                    .agency_url = "http://www.ttc.ca",
+                    .agency_timezone = "America/Toronto"};
   f1.add_agency(ttc);
 
-  struct Agency ttc2 {
-    .agency_id = a2_id, .agency_name = "Toronto Commission Next Gen",
-    .agency_url = "http://www.ttc-next.ca", .agency_timezone = "America/Toronto"
-  };
+  struct Agency ttc2{.agency_id = a2_id,
+                     .agency_name = "Toronto Commission Next Gen",
+                     .agency_url = "http://www.ttc-next.ca",
+                     .agency_timezone = "America/Toronto"};
   f2.add_agency(ttc2);
 
   f1.write_agencies(f1_path);
@@ -220,57 +219,90 @@ TEST(GtfsExample, WriteGtfs) {
   // 1st has all stop objects, egress/station/platform
   // 2nd has only platform, station
   // 3rd has only platform
-  struct gtfs::Stop e1 {
-    .stop_id = st1_id + "_egress", .stop_name = gtfs::Text("FIRST EGRESS"),
-    .coordinates_present = true, .stop_lat = st1_ll->second.second, .stop_lon = st1_ll->second.first,
-    .parent_station = st1_id, .location_type = gtfs::StopLocationType::EntranceExit,
-    .wheelchair_boarding = "1",
+  struct gtfs::Stop e1{
+      .stop_id = st1_id + "_egress",
+      .stop_name = gtfs::Text("FIRST EGRESS"),
+      .coordinates_present = true,
+      .stop_lat = st1_ll->second.second,
+      .stop_lon = st1_ll->second.first,
+      .parent_station = st1_id,
+      .location_type = gtfs::StopLocationType::EntranceExit,
+      .wheelchair_boarding = "1",
   };
   f1.add_stop(e1);
-  struct gtfs::Stop st1 {
-    .stop_id = st1_id, .stop_name = gtfs::Text("FIRST STATION"), .coordinates_present = true,
-    .stop_lat = st1_ll->second.second, .stop_lon = st1_ll->second.first, .parent_station = "",
-    .location_type = gtfs::StopLocationType::Station, .wheelchair_boarding = "1",
+  struct gtfs::Stop st1{
+      .stop_id = st1_id,
+      .stop_name = gtfs::Text("FIRST STATION"),
+      .coordinates_present = true,
+      .stop_lat = st1_ll->second.second,
+      .stop_lon = st1_ll->second.first,
+      .parent_station = "",
+      .location_type = gtfs::StopLocationType::Station,
+      .wheelchair_boarding = "1",
   };
   f1.add_stop(st1);
-  struct gtfs::Stop p1 {
-    .stop_id = st1_id + "_platform", .stop_name = gtfs::Text("FIRST STOP"),
-    .coordinates_present = true, .stop_lat = st1_ll->second.second, .stop_lon = st1_ll->second.first,
-    .parent_station = st1_id, .location_type = gtfs::StopLocationType::StopOrPlatform,
-    .wheelchair_boarding = "1",
+  struct gtfs::Stop p1{
+      .stop_id = st1_id + "_platform",
+      .stop_name = gtfs::Text("FIRST STOP"),
+      .coordinates_present = true,
+      .stop_lat = st1_ll->second.second,
+      .stop_lon = st1_ll->second.first,
+      .parent_station = st1_id,
+      .location_type = gtfs::StopLocationType::StopOrPlatform,
+      .wheelchair_boarding = "1",
   };
   f1.add_stop(p1);
 
-  struct gtfs::Stop st2 {
-    .stop_id = st2_id, .stop_name = gtfs::Text("SECOND STATION"), .coordinates_present = true,
-    .stop_lat = st2_ll->second.second, .stop_lon = st2_ll->second.first, .parent_station = "",
-    .location_type = gtfs::StopLocationType::Station, .stop_timezone = "America/Toronto",
-    .wheelchair_boarding = "1",
+  struct gtfs::Stop st2{
+      .stop_id = st2_id,
+      .stop_name = gtfs::Text("SECOND STATION"),
+      .coordinates_present = true,
+      .stop_lat = st2_ll->second.second,
+      .stop_lon = st2_ll->second.first,
+      .parent_station = "",
+      .location_type = gtfs::StopLocationType::Station,
+      .stop_timezone = "America/Toronto",
+      .wheelchair_boarding = "1",
   };
   f1.add_stop(st2);
   f2.add_stop(st2);
-  struct gtfs::Stop p2 {
-    .stop_id = st2_id + "_platform", .stop_name = gtfs::Text("SECOND STOP"),
-    .coordinates_present = true, .stop_lat = st2_ll->second.second, .stop_lon = st2_ll->second.first,
-    .parent_station = st2_id, .location_type = gtfs::StopLocationType::StopOrPlatform,
-    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
+  struct gtfs::Stop p2{
+      .stop_id = st2_id + "_platform",
+      .stop_name = gtfs::Text("SECOND STOP"),
+      .coordinates_present = true,
+      .stop_lat = st2_ll->second.second,
+      .stop_lon = st2_ll->second.first,
+      .parent_station = st2_id,
+      .location_type = gtfs::StopLocationType::StopOrPlatform,
+      .stop_timezone = "America/Toronto",
+      .wheelchair_boarding = "1",
   };
   f1.add_stop(p2);
   f2.add_stop(p2);
 
-  struct gtfs::Stop p3 {
-    .stop_id = st3_id, .stop_name = gtfs::Text("THIRD STOP"), .coordinates_present = true,
-    .stop_lat = st3_ll->second.second, .stop_lon = st3_ll->second.first, .parent_station = "",
-    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
-    .wheelchair_boarding = "1",
+  struct gtfs::Stop p3{
+      .stop_id = st3_id,
+      .stop_name = gtfs::Text("THIRD STOP"),
+      .coordinates_present = true,
+      .stop_lat = st3_ll->second.second,
+      .stop_lon = st3_ll->second.first,
+      .parent_station = "",
+      .location_type = gtfs::StopLocationType::StopOrPlatform,
+      .stop_timezone = "America/Toronto",
+      .wheelchair_boarding = "1",
   };
   f1.add_stop(p3);
 
-  struct gtfs::Stop p4 {
-    .stop_id = st4_id, .stop_name = gtfs::Text("FOURTH STOP"), .coordinates_present = true,
-    .stop_lat = st4_ll->second.second, .stop_lon = st4_ll->second.first, .parent_station = "",
-    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
-    .wheelchair_boarding = "1",
+  struct gtfs::Stop p4{
+      .stop_id = st4_id,
+      .stop_name = gtfs::Text("FOURTH STOP"),
+      .coordinates_present = true,
+      .stop_lat = st4_ll->second.second,
+      .stop_lon = st4_ll->second.first,
+      .parent_station = "",
+      .location_type = gtfs::StopLocationType::StopOrPlatform,
+      .stop_timezone = "America/Toronto",
+      .wheelchair_boarding = "1",
   };
   f2.add_stop(p4);
 
@@ -278,124 +310,186 @@ TEST(GtfsExample, WriteGtfs) {
   f2.write_stops(f2_path);
 
   // write routes.txt
-  struct Route r1 {
-    .route_id = r1_id, .route_type = RouteType::Subway, .agency_id = a1_id, .route_short_name = "ba",
-    .route_long_name = "bababa", .route_desc = "this is the first route for TTC",
-    .route_color = "ff0000", .route_text_color = "00ff00"
-  };
+  struct Route r1{.route_id = r1_id,
+                  .route_type = RouteType::Subway,
+                  .agency_id = a1_id,
+                  .route_short_name = "ba",
+                  .route_long_name = "bababa",
+                  .route_desc = "this is the first route for TTC",
+                  .route_color = "ff0000",
+                  .route_text_color = "00ff00"};
   f1.add_route(r1);
 
-  struct Route r2 {
-    .route_id = r2_id, .route_type = RouteType::Subway, .agency_id = a2_id, .route_short_name = "ba2",
-    .route_long_name = "bababa2", .route_desc = "this is the first route for TTC2",
-    .route_color = "0000ff", .route_text_color = "001100"
-  };
+  struct Route r2{.route_id = r2_id,
+                  .route_type = RouteType::Subway,
+                  .agency_id = a2_id,
+                  .route_short_name = "ba2",
+                  .route_long_name = "bababa2",
+                  .route_desc = "this is the first route for TTC2",
+                  .route_color = "0000ff",
+                  .route_text_color = "001100"};
   f2.add_route(r2);
 
   f1.write_routes(f1_path);
   f2.write_routes(f2_path);
 
   // write trips.txt
-  struct gtfs::Trip t1 {
-    .route_id = r1_id, .service_id = sv1_id, .trip_id = t1_id, .trip_headsign = "hello",
-    .block_id = b1_id, .shape_id = sh1_id, .wheelchair_accessible = gtfs::TripAccess::Yes,
-    .bikes_allowed = gtfs::TripAccess::No,
+  struct gtfs::Trip t1{
+      .route_id = r1_id,
+      .service_id = sv1_id,
+      .trip_id = t1_id,
+      .trip_headsign = "hello",
+      .block_id = b1_id,
+      .shape_id = sh1_id,
+      .wheelchair_accessible = gtfs::TripAccess::Yes,
+      .bikes_allowed = gtfs::TripAccess::No,
   };
   f1.add_trip(t1);
 
-  struct gtfs::Trip t2 {
-    .route_id = r1_id, .service_id = sv2_id, .trip_id = t2_id, .trip_headsign = "bonjour",
-    .block_id = b2_id, .wheelchair_accessible = gtfs::TripAccess::Yes,
-    .bikes_allowed = gtfs::TripAccess::No,
+  struct gtfs::Trip t2{
+      .route_id = r1_id,
+      .service_id = sv2_id,
+      .trip_id = t2_id,
+      .trip_headsign = "bonjour",
+      .block_id = b2_id,
+      .wheelchair_accessible = gtfs::TripAccess::Yes,
+      .bikes_allowed = gtfs::TripAccess::No,
   };
   f1.add_trip(t2);
 
-  struct gtfs::Trip t3 {
-    .route_id = r2_id, .service_id = sv3_id, .trip_id = t3_id, .trip_headsign = "grüß gott!",
-    .wheelchair_accessible = gtfs::TripAccess::Yes, .bikes_allowed = gtfs::TripAccess::No
-  };
+  struct gtfs::Trip t3{.route_id = r2_id,
+                       .service_id = sv3_id,
+                       .trip_id = t3_id,
+                       .trip_headsign = "grüß gott!",
+                       .wheelchair_accessible = gtfs::TripAccess::Yes,
+                       .bikes_allowed = gtfs::TripAccess::No};
   f2.add_trip(t3);
 
-  struct gtfs::Trip t4 {
-    .route_id = r2_id, .service_id = sv3_id, .trip_id = t4_id, .trip_headsign = "grüß gott!",
-    .wheelchair_accessible = gtfs::TripAccess::Yes, .bikes_allowed = gtfs::TripAccess::No
-  };
+  struct gtfs::Trip t4{.route_id = r2_id,
+                       .service_id = sv3_id,
+                       .trip_id = t4_id,
+                       .trip_headsign = "grüß gott!",
+                       .wheelchair_accessible = gtfs::TripAccess::Yes,
+                       .bikes_allowed = gtfs::TripAccess::No};
   f2.add_trip(t4);
 
   f1.write_trips(f1_path);
   f2.write_trips(f2_path);
 
   // write stop_times.txt
-  struct StopTime t1p1 {
-    .trip_id = t1_id, .stop_id = st1_id + "_platform", .stop_sequence = 0,
-    .arrival_time = Time("6:00:00"), .departure_time = Time("6:00:00"), .stop_headsign = "t1p1",
-    .shape_dist_traveled = 0.0, .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t1p1{
+      .trip_id = t1_id,
+      .stop_id = st1_id + "_platform",
+      .stop_sequence = 0,
+      .arrival_time = Time("6:00:00"),
+      .departure_time = Time("6:00:00"),
+      .stop_headsign = "t1p1",
+      .shape_dist_traveled = 0.0,
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t1p1);
 
-  struct StopTime t1p2 {
-    .trip_id = t1_id, .stop_id = st2_id + "_platform", .stop_sequence = 1,
-    .arrival_time = Time("6:03:00"), .departure_time = Time("6:03:00"), .stop_headsign = "t1p2",
-    .shape_dist_traveled = 3.0, .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t1p2{
+      .trip_id = t1_id,
+      .stop_id = st2_id + "_platform",
+      .stop_sequence = 1,
+      .arrival_time = Time("6:03:00"),
+      .departure_time = Time("6:03:00"),
+      .stop_headsign = "t1p2",
+      .shape_dist_traveled = 3.0,
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t1p2);
 
-  struct StopTime t1p3 {
-    .trip_id = t1_id, .stop_id = st3_id, .stop_sequence = 2, .arrival_time = Time("6:06:00"),
-    .departure_time = Time("6:06:00"), .stop_headsign = "t1p3", .shape_dist_traveled = 6.0,
-    .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t1p3{
+      .trip_id = t1_id,
+      .stop_id = st3_id,
+      .stop_sequence = 2,
+      .arrival_time = Time("6:06:00"),
+      .departure_time = Time("6:06:00"),
+      .stop_headsign = "t1p3",
+      .shape_dist_traveled = 6.0,
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t1p3);
 
-  struct StopTime t2p1 {
-    .trip_id = t2_id, .stop_id = st1_id + "_platform", .stop_sequence = 0,
-    .arrival_time = Time("10:00:00"), .departure_time = Time("10:00:00"), .stop_headsign = "t2p1",
-    .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t2p1{
+      .trip_id = t2_id,
+      .stop_id = st1_id + "_platform",
+      .stop_sequence = 0,
+      .arrival_time = Time("10:00:00"),
+      .departure_time = Time("10:00:00"),
+      .stop_headsign = "t2p1",
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t2p1);
 
-  struct StopTime t2p2 {
-    .trip_id = t2_id, .stop_id = st2_id + "_platform", .stop_sequence = 1,
-    .arrival_time = Time("10:03:00"), .departure_time = Time("10:03:00"), .stop_headsign = "t2p2",
-    .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t2p2{
+      .trip_id = t2_id,
+      .stop_id = st2_id + "_platform",
+      .stop_sequence = 1,
+      .arrival_time = Time("10:03:00"),
+      .departure_time = Time("10:03:00"),
+      .stop_headsign = "t2p2",
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t2p2);
 
-  struct StopTime t2p3 {
-    .trip_id = t2_id, .stop_id = st3_id, .stop_sequence = 2, .arrival_time = Time("10:06:00"),
-    .departure_time = Time("10:06:00"), .stop_headsign = "t2p3",
-    .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t2p3{
+      .trip_id = t2_id,
+      .stop_id = st3_id,
+      .stop_sequence = 2,
+      .arrival_time = Time("10:06:00"),
+      .departure_time = Time("10:06:00"),
+      .stop_headsign = "t2p3",
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t2p3);
 
   // add one stop_pair which has the same
-  struct StopTime t3p1 {
-    .trip_id = t3_id, .stop_id = st2_id + "_platform", .stop_sequence = 0,
-    .arrival_time = Time("10:03:00"), .departure_time = Time("10:03:00"), .stop_headsign = "t3p1",
-    .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t3p1{
+      .trip_id = t3_id,
+      .stop_id = st2_id + "_platform",
+      .stop_sequence = 0,
+      .arrival_time = Time("10:03:00"),
+      .departure_time = Time("10:03:00"),
+      .stop_headsign = "t3p1",
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f2.add_stop_time(t3p1);
 
-  struct StopTime t3p2 {
-    .trip_id = t3_id, .stop_id = st4_id, .stop_sequence = 1, .arrival_time = Time("10:06:00"),
-    .departure_time = Time("10:06:00"), .stop_headsign = "t3p2",
-    .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t3p2{
+      .trip_id = t3_id,
+      .stop_id = st4_id,
+      .stop_sequence = 1,
+      .arrival_time = Time("10:06:00"),
+      .departure_time = Time("10:06:00"),
+      .stop_headsign = "t3p2",
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f2.add_stop_time(t3p2);
 
   // TODO: smth doesn't work here, we fail some departures' elapsed_time test and there's 2 more
   // transit edges all of a sudden
-  struct StopTime t3p3 {
-    .trip_id = t4_id, .stop_id = st2_id + "_platform", .stop_sequence = 0,
-    .arrival_time = Time("23:58:00"), .departure_time = Time("23:58:00"), .stop_headsign = "t3p3",
-    .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t3p3{
+      .trip_id = t4_id,
+      .stop_id = st2_id + "_platform",
+      .stop_sequence = 0,
+      .arrival_time = Time("23:58:00"),
+      .departure_time = Time("23:58:00"),
+      .stop_headsign = "t3p3",
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f2.add_stop_time(t3p3);
 
-  struct StopTime t3p4 {
-    .trip_id = t4_id, .stop_id = st4_id, .stop_sequence = 1, .arrival_time = Time("24:02:00"),
-    .departure_time = Time("24:02:00"), .stop_headsign = "t3p4",
-    .timepoint = gtfs::StopTimePoint::Exact,
+  struct StopTime t3p4{
+      .trip_id = t4_id,
+      .stop_id = st4_id,
+      .stop_sequence = 1,
+      .arrival_time = Time("24:02:00"),
+      .departure_time = Time("24:02:00"),
+      .stop_headsign = "t3p4",
+      .timepoint = gtfs::StopTimePoint::Exact,
   };
   f2.add_stop_time(t3p4);
 
@@ -403,32 +497,47 @@ TEST(GtfsExample, WriteGtfs) {
   f2.write_stop_times(f2_path);
 
   // write calendar.txt
-  struct CalendarItem c1 {
-    .service_id = sv1_id, .monday = CalendarAvailability::Available,
-    .tuesday = CalendarAvailability::Available, .wednesday = CalendarAvailability::Available,
-    .thursday = CalendarAvailability::Available, .friday = CalendarAvailability::Available,
-    .saturday = CalendarAvailability::Available, .sunday = CalendarAvailability::Available,
-    .start_date = Date(sv_start), .end_date = Date(sv_end),
+  struct CalendarItem c1{
+      .service_id = sv1_id,
+      .monday = CalendarAvailability::Available,
+      .tuesday = CalendarAvailability::Available,
+      .wednesday = CalendarAvailability::Available,
+      .thursday = CalendarAvailability::Available,
+      .friday = CalendarAvailability::Available,
+      .saturday = CalendarAvailability::Available,
+      .sunday = CalendarAvailability::Available,
+      .start_date = Date(sv_start),
+      .end_date = Date(sv_end),
   };
   f1.add_calendar_item(c1);
 
   // only week days are available, no service on weekends, add to both feeds
-  struct CalendarItem c2 {
-    .service_id = sv2_id, .monday = CalendarAvailability::Available,
-    .tuesday = CalendarAvailability::Available, .wednesday = CalendarAvailability::Available,
-    .thursday = CalendarAvailability::Available, .friday = CalendarAvailability::Available,
-    .saturday = CalendarAvailability::NotAvailable, .sunday = CalendarAvailability::NotAvailable,
-    .start_date = Date(sv_start), .end_date = Date(sv_end),
+  struct CalendarItem c2{
+      .service_id = sv2_id,
+      .monday = CalendarAvailability::Available,
+      .tuesday = CalendarAvailability::Available,
+      .wednesday = CalendarAvailability::Available,
+      .thursday = CalendarAvailability::Available,
+      .friday = CalendarAvailability::Available,
+      .saturday = CalendarAvailability::NotAvailable,
+      .sunday = CalendarAvailability::NotAvailable,
+      .start_date = Date(sv_start),
+      .end_date = Date(sv_end),
   };
   f1.add_calendar_item(c2);
 
   // only week days are available, no service on weekends, add to both feeds
-  struct CalendarItem c3 {
-    .service_id = sv3_id, .monday = CalendarAvailability::Available,
-    .tuesday = CalendarAvailability::Available, .wednesday = CalendarAvailability::Available,
-    .thursday = CalendarAvailability::Available, .friday = CalendarAvailability::Available,
-    .saturday = CalendarAvailability::Available, .sunday = CalendarAvailability::NotAvailable,
-    .start_date = Date(sv_start), .end_date = Date(sv_end),
+  struct CalendarItem c3{
+      .service_id = sv3_id,
+      .monday = CalendarAvailability::Available,
+      .tuesday = CalendarAvailability::Available,
+      .wednesday = CalendarAvailability::Available,
+      .thursday = CalendarAvailability::Available,
+      .friday = CalendarAvailability::Available,
+      .saturday = CalendarAvailability::Available,
+      .sunday = CalendarAvailability::NotAvailable,
+      .start_date = Date(sv_start),
+      .end_date = Date(sv_end),
   };
   f2.add_calendar_item(c3);
 
@@ -436,13 +545,15 @@ TEST(GtfsExample, WriteGtfs) {
   f2.write_calendar(f2_path);
 
   // write calendar_dates.txt
-  struct CalendarDate servAdded {
-    .service_id = sv1_id, .date = Date(added_date),
-    .exception_type = gtfs::CalendarDateException::Added,
+  struct CalendarDate servAdded{
+      .service_id = sv1_id,
+      .date = Date(added_date),
+      .exception_type = gtfs::CalendarDateException::Added,
   };
-  struct CalendarDate servRemoved {
-    .service_id = sv1_id, .date = Date(removed_date),
-    .exception_type = gtfs::CalendarDateException::Removed,
+  struct CalendarDate servRemoved{
+      .service_id = sv1_id,
+      .date = Date(removed_date),
+      .exception_type = gtfs::CalendarDateException::Removed,
   };
 
   f1.add_calendar_date(servAdded);
@@ -461,13 +572,19 @@ TEST(GtfsExample, WriteGtfs) {
   f1.write_shapes(f1_path);
 
   // write frequencies.txt
-  struct Frequency freqBased {
-    .trip_id = t1_id, .start_time = Time(6, 0, 0), .end_time = Time(22, 0, 0),
-    .headway_secs = t1_headsecs, .exact_times = gtfs::FrequencyTripService::FrequencyBased,
+  struct Frequency freqBased{
+      .trip_id = t1_id,
+      .start_time = Time(6, 0, 0),
+      .end_time = Time(22, 0, 0),
+      .headway_secs = t1_headsecs,
+      .exact_times = gtfs::FrequencyTripService::FrequencyBased,
   };
-  struct Frequency schedBased {
-    .trip_id = t2_id, .start_time = Time(10, 0, 0), .end_time = Time(22, 0, 0),
-    .headway_secs = t2_headsecs, .exact_times = gtfs::FrequencyTripService::FrequencyBased,
+  struct Frequency schedBased{
+      .trip_id = t2_id,
+      .start_time = Time(10, 0, 0),
+      .end_time = Time(22, 0, 0),
+      .headway_secs = t2_headsecs,
+      .exact_times = gtfs::FrequencyTripService::FrequencyBased,
   };
 
   f1.add_frequency(freqBased);

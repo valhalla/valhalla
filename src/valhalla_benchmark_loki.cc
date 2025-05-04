@@ -1,17 +1,4 @@
-#include <algorithm>
-#include <atomic>
-#include <fstream>
-#include <future>
-#include <list>
-#include <set>
-#include <string>
-#include <thread>
-#include <tuple>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 #include "loki/search.h"
@@ -20,7 +7,19 @@
 #include "sif/costfactory.h"
 #include "worker.h"
 
-#include "argparse_utils.h"
+#include <boost/property_tree/ptree.hpp>
+
+#include <algorithm>
+#include <atomic>
+#include <cxxopts.hpp>
+#include <fstream>
+#include <future>
+#include <list>
+#include <set>
+#include <string>
+#include <thread>
+#include <tuple>
+#include <vector>
 
 std::string costing_str;
 

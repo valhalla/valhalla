@@ -1,8 +1,8 @@
 #include "mjolnir/way_edges_processor.h"
 
-#include <fstream>
-
 #include "baldr/edgeinfo.h"
+
+#include <fstream>
 
 namespace valhalla {
 namespace mjolnir {

@@ -1,16 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
-#include <unordered_map>
-
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/way_edges_processor.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <cxxopts.hpp>
+#include <string>
+#include <unordered_map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

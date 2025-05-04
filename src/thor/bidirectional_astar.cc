@@ -1,4 +1,5 @@
 #include "thor/bidirectional_astar.h"
+
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
@@ -8,6 +9,7 @@
 #include "sif/recost.h"
 #include "thor/alternates.h"
 #include "worker.h"
+
 #include <algorithm>
 
 using namespace valhalla::midgard;

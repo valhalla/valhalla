@@ -1,8 +1,10 @@
 #include "loki/node_search.h"
+
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
+
 #include <cmath>
 
 namespace vm = valhalla::midgard;

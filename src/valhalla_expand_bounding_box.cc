@@ -1,14 +1,13 @@
-#include <string>
-
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
 #include "filesystem.h"
 
-#include "argparse_utils.h"
+#include <boost/property_tree/ptree.hpp>
+
+#include <cxxopts.hpp>
+#include <string>
 
 namespace bpt = boost::property_tree;
 

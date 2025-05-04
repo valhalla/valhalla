@@ -1,7 +1,9 @@
 #include "midgard/gridded_data.h"
+
 #include "midgard/pointll.h"
+
 #include <limits>
-//#include <iostream>
+// #include <iostream>
 
 #include "test.h"
 

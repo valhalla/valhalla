@@ -7,11 +7,11 @@ extern "C" {
 #include <lualib.h>
 }
 
-#include <osmium/osm/tag.hpp>
 #include <valhalla/mjolnir/osmdata.h>
 
 #include <robin_hood.h>
 
+#include <osmium/osm/tag.hpp>
 #include <string>
 
 namespace valhalla {

@@ -1,8 +1,8 @@
 #include "baldr/laneconnectivity.h"
 
-#include <string>
-
 #include "test.h"
+
+#include <string>
 
 using namespace std;
 using namespace valhalla::baldr;

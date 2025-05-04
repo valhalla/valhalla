@@ -1,10 +1,18 @@
 #include "midgard/util.h"
+
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/point2.h"
 #include "midgard/polyline2.h"
 #include "midgard/vector2.h"
+
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/remove_whitespace.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <stdlib.h>
+#include <sys/stat.h>
 
 #include <algorithm>
 #include <array>
@@ -14,14 +22,7 @@
 #include <fstream>
 #include <list>
 #include <random>
-#include <stdlib.h>
-#include <sys/stat.h>
 #include <vector>
-
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/remove_whitespace.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
 
 namespace {
 

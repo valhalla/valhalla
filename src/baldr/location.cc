@@ -1,4 +1,5 @@
 #include "baldr/location.h"
+
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"

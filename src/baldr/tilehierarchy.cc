@@ -1,4 +1,5 @@
 #include "baldr/tilehierarchy.h"
+
 #include "baldr/graphtileheader.h"
 #include "midgard/vector2.h"
 

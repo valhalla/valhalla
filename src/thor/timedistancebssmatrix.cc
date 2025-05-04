@@ -1,5 +1,7 @@
 #include "thor/timedistancebssmatrix.h"
+
 #include "midgard/logging.h"
+
 #include <algorithm>
 #include <vector>
 

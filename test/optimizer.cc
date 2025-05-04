@@ -1,9 +1,10 @@
 #include "thor/optimizer.h"
+
 #include "config.h"
+#include "test.h"
+
 #include <cstdint>
 #include <vector>
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla::thor;

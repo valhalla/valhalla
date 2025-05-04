@@ -1,7 +1,7 @@
 
 #include "baldr/graphid.h"
-#include "midgard/point2.h"
 
+#include "midgard/point2.h"
 #include "test.h"
 
 using namespace std;

@@ -1,12 +1,11 @@
-#include <algorithm>
-#include <cmath>
-
-#include "midgard/logging.h"
+#include "odin/signs.h"
 
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
+#include "midgard/logging.h"
 
-#include "odin/signs.h"
+#include <algorithm>
+#include <cmath>
 
 using namespace valhalla::baldr;
 

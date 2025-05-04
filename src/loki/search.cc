@@ -1,4 +1,5 @@
 #include "loki/search.h"
+
 #include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/reach.h"

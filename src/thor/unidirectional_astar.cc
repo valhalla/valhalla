@@ -1,9 +1,11 @@
 #include "thor/unidirectional_astar.h"
+
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "worker.h"
+
 #include <algorithm>
 
 using namespace valhalla::baldr;

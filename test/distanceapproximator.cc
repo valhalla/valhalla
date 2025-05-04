@@ -2,7 +2,6 @@
 
 #include "midgard/constants.h"
 #include "midgard/pointll.h"
-
 #include "test.h"
 
 using namespace std;

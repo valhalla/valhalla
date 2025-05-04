@@ -1,16 +1,16 @@
-#include <iomanip>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-
 #include "baldr/openlr.h"
+
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "proto/common.pb.h"
 #include "proto/trip.pb.h"
+#include "test.h"
 #include "tyr/serializers.h"
 
-#include "test.h"
+#include <iomanip>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 
 namespace {
 

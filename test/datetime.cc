@@ -1,13 +1,13 @@
 
-#include <cstdint>
-#include <string>
-
 #include "baldr/datetime.h"
+
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "midgard/constants.h"
-
 #include "test.h"
+
+#include <cstdint>
+#include <string>
 
 using namespace std;
 using namespace valhalla::baldr;

@@ -1,6 +1,6 @@
 #include "baldr/nodeinfo.h"
-#include "midgard/util.h"
 
+#include "midgard/util.h"
 #include "test.h"
 
 using namespace std;

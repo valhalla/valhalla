@@ -1,4 +1,5 @@
 #include "thor/route_matcher.h"
+
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"

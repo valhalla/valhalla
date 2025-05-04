@@ -1,9 +1,19 @@
 #include "mjolnir/bssbuilder.h"
+
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/osmdata.h"
 #include "scoped_timer.h"
+
+#include <boost/range/algorithm.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -11,17 +21,6 @@
 #include <thread>
 #include <tuple>
 #include <vector>
-
-#include <boost/range/algorithm.hpp>
-
-#include "baldr/graphconstants.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/logging.h"
-#include "midgard/sequence.h"
-#include "midgard/util.h"
-#include "mjolnir/osmdata.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

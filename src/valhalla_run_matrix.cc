@@ -1,17 +1,7 @@
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <cxxopts.hpp>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
+#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
@@ -21,6 +11,16 @@
 #include "thor/optimizer.h"
 #include "thor/timedistancematrix.h"
 #include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <cxxopts.hpp>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

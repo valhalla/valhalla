@@ -1,19 +1,20 @@
 #ifndef VALHALLA_MJOLNIR_UTIL_H_
 #define VALHALLA_MJOLNIR_UTIL_H_
 
-#include <boost/property_tree/ptree.hpp>
-#include <list>
-#include <map>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <list>
+#include <map>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace mjolnir {

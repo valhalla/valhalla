@@ -1,15 +1,17 @@
-#include <string>
-#include <sys/stat.h>
-#include <utility>
+#include "baldr/graphreader.h"
 
 #include "baldr/connectivity_map.h"
 #include "baldr/curl_tilegetter.h"
-#include "baldr/graphreader.h"
 #include "filesystem.h"
 #include "incident_singleton.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "shortcut_recovery.h"
+
+#include <sys/stat.h>
+
+#include <string>
+#include <utility>
 
 using namespace valhalla::midgard;
 

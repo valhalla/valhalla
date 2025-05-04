@@ -1,13 +1,14 @@
-#include <cctype>
-#include <cstdint>
-#include <fstream>
-
-#include <boost/algorithm/string.hpp>
+#include "mjolnir/osmdata.h"
 
 #include "filesystem.h"
 #include "midgard/logging.h"
-#include "mjolnir/osmdata.h"
 #include "scoped_timer.h"
+
+#include <boost/algorithm/string.hpp>
+
+#include <cctype>
+#include <cstdint>
+#include <fstream>
 
 using namespace valhalla::mjolnir;
 using valhalla::baldr::ConditionalSpeedLimit;

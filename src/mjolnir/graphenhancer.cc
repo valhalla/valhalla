@@ -1,31 +1,4 @@
 #include "mjolnir/graphenhancer.h"
-#include "mjolnir/admin.h"
-#include "mjolnir/countryaccess.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
-#include "speed_assigner.h"
-
-#include <cinttypes>
-#include <future>
-#include <limits>
-#include <list>
-#include <memory>
-#include <mutex>
-#include <queue>
-#include <random>
-#include <set>
-#include <stdexcept>
-#include <thread>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
-#include <vector>
-
-#include <boost/format.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/io/wkt/wkt.hpp>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -42,8 +15,35 @@
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
+#include "mjolnir/admin.h"
+#include "mjolnir/countryaccess.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmaccess.h"
+#include "mjolnir/util.h"
 #include "scoped_timer.h"
+#include "speed_assigner.h"
+
+#include <boost/format.hpp>
+#include <boost/geometry/geometries/multi_polygon.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/io/wkt/wkt.hpp>
+
+#include <cinttypes>
+#include <future>
+#include <limits>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <random>
+#include <set>
+#include <stdexcept>
+#include <thread>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

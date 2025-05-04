@@ -1,16 +1,16 @@
 #pragma once
 
+#include "baldr/graphid.h"
+#include "baldr/predictedspeeds.h"
 #include "filesystem.h"
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
 #include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
-#include "baldr/graphid.h"
-#include "baldr/predictedspeeds.h"
 
 namespace valhalla {
 namespace mjolnir {

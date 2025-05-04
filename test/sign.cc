@@ -1,13 +1,12 @@
+#include "baldr/sign.h"
+
+#include "baldr/signinfo.h"
+#include "odin/sign.h"
+#include "test.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <vector>
-
-#include "baldr/sign.h"
-#include "baldr/signinfo.h"
-
-#include "odin/sign.h"
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla::odin;

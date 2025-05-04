@@ -2,9 +2,9 @@
 #ifndef MMP_PRIORITY_QUEUE_H_
 #define MMP_PRIORITY_QUEUE_H_
 
-#include <unordered_map>
-
 #include <boost/heap/fibonacci_heap.hpp>
+
+#include <unordered_map>
 
 // Shortest-path-specific priority queue
 // (A friendly wrapper of boost::heap::fibonacci_heap)

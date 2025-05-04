@@ -1,16 +1,16 @@
 #include "skadi/sample.h"
-#include "pixels.h"
 
 #include "baldr/compression_utils.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
+#include "pixels.h"
+#include "test.h"
+
+#include <lz4frame.h>
 
 #include <cmath>
 #include <fstream>
 #include <list>
-#include <lz4frame.h>
-
-#include "test.h"
 
 using namespace valhalla;
 

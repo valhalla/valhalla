@@ -1,13 +1,13 @@
-#include <cstdint>
+#include "baldr/graphreader.h"
 
 #include "baldr/connectivity_map.h"
-#include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
+#include "test.h"
 
 #include <fcntl.h>
 
-#include "test.h"
+#include <cstdint>
 
 using namespace valhalla::baldr;
 

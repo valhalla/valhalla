@@ -1,4 +1,5 @@
 #include "mjolnir/directededgebuilder.h"
+
 #include "midgard/logging.h"
 
 #include <algorithm>

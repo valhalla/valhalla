@@ -1,7 +1,8 @@
-#include <algorithm>
+#include "skadi/util.h"
 
 #include "skadi/sample.h"
-#include "skadi/util.h"
+
+#include <algorithm>
 
 namespace {
 

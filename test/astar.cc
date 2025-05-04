@@ -1,13 +1,10 @@
-#include "midgard/logging.h"
-#include "test.h"
-#include <cstdint>
-
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
+#include "gurka.h"
 #include "loki/search.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
@@ -21,9 +18,13 @@
 #include "mjolnir/util.h"
 #include "odin/directionsbuilder.h"
 #include "odin/worker.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/pedestriancost.h"
+#include "test.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
 #include "thor/triplegbuilder.h"
@@ -33,14 +34,10 @@
 #include "tyr/serializers.h"
 #include "worker.h"
 
-#include "gurka.h"
-
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
-
 #include <boost/algorithm/string/join.hpp>
 #include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

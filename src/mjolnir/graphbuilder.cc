@@ -1,20 +1,13 @@
-#include <future>
-#include <memory>
-#include <thread>
-#include <utility>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
+#include "mjolnir/graphbuilder.h"
 
 #include "baldr/conditional_speed_limit.h"
-#include "filesystem.h"
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -25,13 +18,20 @@
 #include "mjolnir/admin.h"
 #include "mjolnir/edgeinfobuilder.h"
 #include "mjolnir/ferry_connections.h"
-#include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/sqlite3.h"
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
+
+#include <future>
+#include <memory>
+#include <thread>
+#include <utility>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -1,10 +1,10 @@
 #include "odin/enhancedtrippath.h"
+
 #include "baldr/turnlanes.h"
 #include "midgard/util.h"
+#include "test.h"
 
 #include <cstdint>
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla;

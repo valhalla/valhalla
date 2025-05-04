@@ -1,4 +1,5 @@
 #include "sif/transitcost.h"
+
 #include "baldr/accessrestriction.h"
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"
@@ -8,6 +9,7 @@
 
 #ifdef INLINE_TEST
 #include "test.h"
+
 #include <random>
 #endif
 

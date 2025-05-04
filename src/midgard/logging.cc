@@ -1,4 +1,5 @@
 #include "midgard/logging.h"
+
 #include "filesystem.h"
 
 #include <cassert>
@@ -114,10 +115,10 @@ bool RegisterLogger(const std::string& name, LoggerCreator function_ptr) {
 }
 
 // logger base class, not pure virtual so you can use as a null logger if you want
-Logger::Logger(const LoggingConfig& /*config*/){};
-Logger::~Logger(){};
-void Logger::Log(const std::string&, const LogLevel){};
-void Logger::Log(const std::string&, const std::string&){};
+Logger::Logger(const LoggingConfig& /*config*/) {};
+Logger::~Logger() {};
+void Logger::Log(const std::string&, const LogLevel) {};
+void Logger::Log(const std::string&, const std::string&) {};
 bool logger_registered = RegisterLogger("", [](const LoggingConfig& config) {
   Logger* l = new Logger(config);
   return l;

@@ -1,10 +1,20 @@
 #include "mjolnir/graphvalidator.h"
+
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/nodeinfo.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
 
-#include <algorithm>
 #include <boost/format.hpp>
+
+#include <algorithm>
 #include <future>
 #include <list>
 #include <mutex>
@@ -16,15 +26,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/nodeinfo.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

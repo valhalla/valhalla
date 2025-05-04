@@ -1,16 +1,17 @@
 #ifndef VALHALLA_MIDGARD_GRIDDEDDATA_H_
 #define VALHALLA_MIDGARD_GRIDDEDDATA_H_
 
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/polyline2.h>
+#include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util.h>
+
 #include <algorithm>
 #include <array>
 #include <functional>
 #include <limits>
 #include <list>
 #include <map>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/polyline2.h>
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/util.h>
 #include <vector>
 
 namespace valhalla {
@@ -361,9 +362,9 @@ public:
               }
             }
           } // Each contour
-        }   // Each tile col
-      }     // Each tile row
-    }       // Each dimension of the grid
+        } // Each tile col
+      } // Each tile row
+    } // Each dimension of the grid
 
     // If the generalization value equals kOptimalGeneralization then set
     // the generalization factor to 1/4 of the grid size

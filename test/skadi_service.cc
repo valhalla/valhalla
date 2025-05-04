@@ -2,12 +2,12 @@
 #include "pixels.h"
 #include "test.h"
 
-#include <prime_server/http_protocol.hpp>
-#include <prime_server/prime_server.hpp>
+#include <unistd.h>
 
 #include <fstream>
+#include <prime_server/http_protocol.hpp>
+#include <prime_server/prime_server.hpp>
 #include <thread>
-#include <unistd.h>
 
 using namespace valhalla;
 using namespace prime_server;

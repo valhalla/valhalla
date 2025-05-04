@@ -1,15 +1,15 @@
 #ifndef VALHALLA_BALDR_RAPIDJSON_UTILS_H_
 #define VALHALLA_BALDR_RAPIDJSON_UTILS_H_
 
+#include <boost/lexical_cast.hpp>
+#include <boost/optional.hpp>
+
 #include <fstream>
 #include <istream>
 #include <locale>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-
-#include <boost/lexical_cast.hpp>
-#include <boost/optional.hpp>
 
 // rapidjson asserts by default but we dont want to crash running server
 // its more useful to throw and catch for our use case

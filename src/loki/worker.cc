@@ -1,12 +1,9 @@
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <functional>
-#include <stdexcept>
-#include <string>
-#include <unordered_set>
+#include "loki/worker.h"
 
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
+#include "loki/polygon_search.h"
+#include "loki/search.h"
 #include "midgard/logging.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
@@ -15,9 +12,13 @@
 #include "sif/pedestriancost.h"
 #include "tyr/actor.h"
 
-#include "loki/polygon_search.h"
-#include "loki/search.h"
-#include "loki/worker.h"
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <functional>
+#include <stdexcept>
+#include <string>
+#include <unordered_set>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

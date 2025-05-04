@@ -1,14 +1,15 @@
-#include <ctime>
-#include <regex>
-#include <sstream>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/range/algorithm/remove_if.hpp>
+#include "mjolnir/timeparsing.h"
 
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "midgard/logging.h"
-#include "mjolnir/timeparsing.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/range/algorithm/remove_if.hpp>
+
+#include <ctime>
+#include <regex>
+#include <sstream>
 
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;

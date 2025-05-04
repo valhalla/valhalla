@@ -1,9 +1,10 @@
-#include <algorithm>
-#include <vector>
+#include "thor/timedistancematrix.h"
 
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
-#include "thor/timedistancematrix.h"
+
+#include <algorithm>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

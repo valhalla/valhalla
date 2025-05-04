@@ -1,9 +1,9 @@
-#include <cstdint>
-
 #include "baldr/json.h"
 #include "proto_conversions.h"
 #include "thor/matrixalgorithm.h"
 #include "tyr/serializers.h"
+
+#include <cstdint>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

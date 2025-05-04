@@ -5,6 +5,7 @@
 #include "thor/pathalgorithm.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
 #include <robin_hood.h>
 
 using namespace rapidjson;
@@ -74,7 +75,7 @@ struct expansion_properties_t {
                          float cost,
                          Expansion_ExpansionType expansion_type)
       : prev_edgeid(prev_edgeid), status(status), duration(duration), distance(distance),
-        shape(std::move(shape)), cost(cost), expansion_type(expansion_type){};
+        shape(std::move(shape)), cost(cost), expansion_type(expansion_type) {};
 
   // check if status is higher or same – as we will keep track of the latest one
   static bool is_latest_status(Expansion_EdgeStatus current, Expansion_EdgeStatus candidate) {

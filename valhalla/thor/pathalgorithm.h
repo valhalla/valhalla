@@ -1,8 +1,5 @@
 #pragma once
 
-#include <functional>
-#include <vector>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/tilehierarchy.h>
@@ -11,6 +8,9 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <functional>
+#include <vector>
 
 namespace valhalla {
 namespace thor {

@@ -1,5 +1,15 @@
 #include "skadi/sample.h"
 
+#include "baldr/compression_utils.h"
+#include "filesystem.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "valhalla/baldr/curl_tilegetter.h"
+
+#include <lz4frame.h>
+#include <sys/stat.h>
+
 #include <cmath>
 #include <cstddef>
 #include <future>
@@ -8,16 +18,6 @@
 #include <regex>
 #include <unordered_map>
 #include <unordered_set>
-
-#include <lz4frame.h>
-#include <sys/stat.h>
-
-#include "baldr/compression_utils.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/sequence.h"
-#include "valhalla/baldr/curl_tilegetter.h"
 
 namespace {
 // srtmgl1 holds 1x1 degree tiles but oversamples the edge of the tile
@@ -42,7 +42,7 @@ int16_t flip(int16_t value) {
 
 uint64_t file_size(const std::string& file_name) {
   // TODO: detect gzip and actually validate the uncompressed size?
-  struct stat s {};
+  struct stat s{};
   int rc = stat(file_name.c_str(), &s);
   return rc == 0 ? s.st_size : -1;
 }

@@ -5,11 +5,10 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "speed_assigner.h"
 
-#include <cxxopts.hpp>
-
 #include <boost/property_tree/ptree.hpp>
 
 #include <algorithm>
+#include <cxxopts.hpp>
 #include <future>
 #include <memory>
 #include <random>
