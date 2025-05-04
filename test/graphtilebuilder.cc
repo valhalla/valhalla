@@ -1,6 +1,7 @@
 #include "test.h"
 
 #include "baldr/graphid.h"
+#include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
