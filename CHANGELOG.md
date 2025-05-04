@@ -66,6 +66,7 @@
    * ADDED: Sqlite3 RAII wrapper around sqlite3* and spatielite connection [#5206](https://github.com/valhalla/valhalla/pull/5206)
    * CHANGED: Improved SQL statements when building admins [#5219](https://github.com/valhalla/valhalla/pull/5219)
    * CHANGED: Replace `boost::geometry` by GEOS for operations with admin/tz polygons and clip them by tile bbox [#5204](https://github.com/valhalla/valhalla/pull/5204)
+   * ADDED: Enforce includes order via `clang-format` [5230](https://github.com/valhalla/valhalla/pull/5230)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
