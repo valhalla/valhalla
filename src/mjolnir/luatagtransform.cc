@@ -4,8 +4,8 @@
 #include "mjolnir/osmdata.h"
 
 #include <boost/format.hpp>
-
 #include <osmium/osm/tag.hpp>
+
 #include <stdexcept>
 
 using namespace valhalla::mjolnir;

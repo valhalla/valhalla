@@ -4,9 +4,9 @@
 #include "mjolnir/add_predicted_speeds.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <cstdint>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <string>
 

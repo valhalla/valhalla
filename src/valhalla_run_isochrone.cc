@@ -11,10 +11,10 @@
 #include "worker.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <cmath>
 #include <cstdint>
-#include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>

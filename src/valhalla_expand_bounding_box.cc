@@ -5,8 +5,8 @@
 #include "filesystem.h"
 
 #include <boost/property_tree/ptree.hpp>
-
 #include <cxxopts.hpp>
+
 #include <string>
 
 namespace bpt = boost::property_tree;

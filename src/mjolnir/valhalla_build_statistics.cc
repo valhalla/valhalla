@@ -13,9 +13,9 @@
 #include "statistics.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <cstdint>
-#include <cxxopts.hpp>
 #include <future>
 #include <iostream>
 #include <list>

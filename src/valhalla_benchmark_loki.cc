@@ -8,10 +8,10 @@
 #include "worker.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <algorithm>
 #include <atomic>
-#include <cxxopts.hpp>
 #include <fstream>
 #include <future>
 #include <list>

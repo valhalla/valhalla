@@ -4,8 +4,9 @@
 #include "midgard/util.h"
 #include "sif/edgelabel.h"
 
-#include <cstdint>
 #include <cxxopts.hpp>
+
+#include <cstdint>
 #include <iostream>
 #include <queue>
 #include <random>

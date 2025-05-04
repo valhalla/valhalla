@@ -6,8 +6,8 @@
 #include "mjolnir/util.h"
 
 #include <boost/property_tree/ptree.hpp>
-
 #include <cxxopts.hpp>
+
 #include <iostream>
 #include <string>
 #include <vector>

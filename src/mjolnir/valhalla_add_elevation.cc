@@ -6,9 +6,9 @@
 #include "mjolnir/elevationbuilder.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <cstdlib>
-#include <cxxopts.hpp>
 #include <deque>
 #include <iostream>
 #include <vector>

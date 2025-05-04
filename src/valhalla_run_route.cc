@@ -26,11 +26,11 @@
 
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>

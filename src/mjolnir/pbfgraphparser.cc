@@ -21,8 +21,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
-
 #include <osmium/io/pbf_input.hpp>
+
 #include <thread>
 #include <utility>
 

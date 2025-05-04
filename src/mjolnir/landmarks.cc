@@ -12,10 +12,10 @@
 #include "mjolnir/util.h"
 #include "sif/nocost.h"
 
+#include <osmium/io/pbf_input.hpp>
 #include <sqlite3.h>
 
 #include <future>
-#include <osmium/io/pbf_input.hpp>
 #include <string_view>
 #include <thread>
 #include <tuple>

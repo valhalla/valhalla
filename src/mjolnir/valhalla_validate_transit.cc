@@ -10,8 +10,8 @@
 #include "mjolnir/validatetransit.h"
 
 #include <boost/property_tree/ptree.hpp>
-
 #include <cxxopts.hpp>
+
 #include <string>
 #include <vector>
 

@@ -56,6 +56,8 @@ IncludeCategories:
     Priority:        3
   - Regex:           '^<.*\.h>'
     Priority:        3
+  - Regex:           '^<.*\.hpp>'
+    Priority:        3
   - Regex:           '^<'
     Priority:        4
   - Regex:           '.*'

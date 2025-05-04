@@ -5,10 +5,10 @@
 #include "mjolnir/way_edges_processor.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <cxxopts.hpp>
 #include <string>
 #include <unordered_map>
 

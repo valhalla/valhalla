@@ -20,11 +20,11 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 #include <sqlite3.h>
 
 #include <cinttypes>
 #include <cstdint>
-#include <cxxopts.hpp>
 #include <unordered_map>
 #include <vector>
 

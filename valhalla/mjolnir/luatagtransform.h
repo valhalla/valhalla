@@ -9,9 +9,9 @@ extern "C" {
 
 #include <valhalla/mjolnir/osmdata.h>
 
+#include <osmium/osm/tag.hpp>
 #include <robin_hood.h>
 
-#include <osmium/osm/tag.hpp>
 #include <string>
 
 namespace valhalla {

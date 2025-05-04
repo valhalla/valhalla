@@ -7,10 +7,10 @@
 #include "midgard/logging.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <algorithm>
 #include <cstdint>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <unordered_map>
 

@@ -6,9 +6,9 @@
 #include "speed_assigner.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <algorithm>
-#include <cxxopts.hpp>
 #include <future>
 #include <memory>
 #include <random>
