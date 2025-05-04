@@ -14,8 +14,12 @@
 
 struct sqlite3_stmt;
 
-using namespace valhalla::baldr;
+namespace valhalla {
+namespace mjolnir {
+
 using namespace valhalla::midgard;
+using ::valhalla::baldr::RoadClass;
+
 namespace {
 const std::map<RoadClass, std::string> roadClassToString =
     {{RoadClass::kMotorway, "Motorway"},       {RoadClass::kTrunk, "Trunk"},
@@ -27,8 +31,6 @@ const std::vector<RoadClass> rclasses = {RoadClass::kMotorway,     RoadClass::kP
                                          RoadClass::kTrunk,        RoadClass::kResidential,
                                          RoadClass::kServiceOther, RoadClass::kUnclassified};
 } // namespace
-namespace valhalla {
-namespace mjolnir {
 
 class Sqlite3;
 
