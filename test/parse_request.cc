@@ -1,3 +1,4 @@
+#include <cctype>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -118,7 +119,7 @@ constexpr float kDefaultBicycle_UseHills = 0.25f;
 constexpr float kDefaultBicycle_AvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultBicycle_UseLivingStreets = 0.5f;  // Factor between 0 and 1
 constexpr float kDefaultBicycle_ServicePenalty = 15.0f;   // Seconds
-const std::string kDefaultBicycle_BicycleType = "Hybrid"; // Bicycle type
+const std::string kDefaultBicycle_BicycleType = "hybrid"; // Bicycle type
 constexpr float kDefaultBicycle_CyclingSpeed[] = {
     25.0f, // Road bicycle: ~15.5 MPH
     20.0f, // Cross bicycle: ~13 MPH
@@ -1785,16 +1786,20 @@ TEST(ParseRequest, test_transport_type) {
   std::string transport_type_key = "type";
 
   Costing::Type costing = Costing::pedestrian;
-  for (const auto& transport_type_value : {"foot", "wheelchair"}) {
-    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                                transport_type_value);
+  auto lowered = std::vector<std::string>{"foot", "wheelchair", "blind"};
+  auto expected = lowered.begin();
+  for (const auto& transport_type_value : {"Foot", "Wheelchair", "Blind"}) {
+    test_transport_type_parsing(costing, transport_type_key, transport_type_value, *expected);
+    ++expected;
   }
 
   costing = Costing::bicycle;
   transport_type_key = "bicycle_type";
-  for (const auto& transport_type_value : {"Road", "Cross", "Hybrid", "Mountain"}) {
-    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                                transport_type_value);
+  lowered = std::vector<std::string>{"road", "cross", "hybrid", "mountain"};
+  expected = lowered.begin();
+  for (const auto& transport_type_value : {"Road", "Cross", "hybrid", "Mountain"}) {
+    test_transport_type_parsing(costing, transport_type_key, transport_type_value, *expected);
+    ++expected;
   }
 }
 
@@ -2657,7 +2662,7 @@ TEST(ParseRequest, test_avoid_bad_surfaces) {
 TEST(ParseRequest, test_cycling_speed) {
   Costing::Type costing = Costing::bicycle;
 
-  std::string transport_type = "Road";
+  std::string transport_type = "road";
   float default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kRoad)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
@@ -2666,7 +2671,7 @@ TEST(ParseRequest, test_cycling_speed) {
   test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
   test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
 
-  transport_type = "Cross";
+  transport_type = "cross";
   default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kCross)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
@@ -2675,7 +2680,7 @@ TEST(ParseRequest, test_cycling_speed) {
   test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
   test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
 
-  transport_type = "Hybrid";
+  transport_type = "hybrid";
   default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kHybrid)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
@@ -2684,7 +2689,7 @@ TEST(ParseRequest, test_cycling_speed) {
   test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
   test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
 
-  transport_type = "Mountain";
+  transport_type = "mountain";
   default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kMountain)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);

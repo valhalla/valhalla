@@ -8,9 +8,6 @@
 #include <vector>
 
 #include <boost/property_tree/ptree_fwd.hpp>
-#include <sqlite3.h>
-// needs to be after sqlite include
-#include <spatialite.h>
 
 #include "valhalla/baldr/graphtileptr.h"
 
@@ -152,14 +149,6 @@ uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
  *         more curved and tighter turns.
  */
 uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
-
-/**
- * Will allocate a spatialite connection
- *
- * @param handle The sqlite database handle
- * @return a shared pointer to the connection which cleans up after itself when destructed
- */
-std::shared_ptr<void> make_spatialite_cache(sqlite3* handle);
 
 /**
  * Build an entire valhalla tileset give a config file and some input pbfs. The

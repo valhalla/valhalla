@@ -1,6 +1,7 @@
 #include <filesystem>
 
 #include <gtest/gtest.h>
+#include <sqlite3.h>
 
 #include "baldr/admin.h"
 #include "baldr/admininfo.h"

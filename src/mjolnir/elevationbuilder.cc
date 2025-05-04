@@ -5,23 +5,20 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/filesystem.h>
-#include <valhalla/midgard/elevation_encoding.h>
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/polyline2.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/mjolnir/elevationbuilder.h>
-#include <valhalla/mjolnir/graphtilebuilder.h>
-#include <valhalla/mjolnir/util.h>
-#include <valhalla/skadi/sample.h>
-#include <valhalla/skadi/util.h>
-
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "midgard/elevation_encoding.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/polyline2.h"
+#include "midgard/util.h"
+#include "mjolnir/elevationbuilder.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "scoped_timer.h"
+#include "skadi/sample.h"
+#include "skadi/util.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
