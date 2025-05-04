@@ -536,7 +536,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set sump_buster flag to true.  Access for all motor vehicles is turned off, unless the override is set."
+      "description": "Set sump_buster flag to true. Access for auto, hov and taxi is turned off, unless the override is set."
     },
     {
       "key": "barrier",
