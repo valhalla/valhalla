@@ -3,7 +3,10 @@
 
 #include <cstdint>
 #include <memory>
+
+#ifndef _WIN32
 #include <strings.h>
+#endif
 
 #include "valhalla/baldr/graphconstants.h"
 #include "valhalla/baldr/graphid.h"
