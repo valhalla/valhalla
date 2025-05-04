@@ -7,10 +7,11 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "test.h"
 
+#include <prime_server/prime_server.hpp>
+
 #include <algorithm>
 #include <fstream>
 #include <iterator>
-#include <prime_server/prime_server.hpp>
 #include <string>
 #include <unordered_set>
 #include "mjolnir/util.h

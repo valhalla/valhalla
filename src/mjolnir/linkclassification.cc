@@ -872,7 +872,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
         element = edge;
       }
     } // for each leaf parent
-  } // for each leaf
+  }   // for each leaf
 
   return {reclass_count, tc_count};
 }

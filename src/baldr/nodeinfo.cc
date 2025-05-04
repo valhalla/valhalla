@@ -1,9 +1,8 @@
 #include "baldr/nodeinfo.h"
 
+#include "baldr/datetime.h"
+#include "baldr/graphtile.h"
 #include "midgard/logging.h"
-
-#include <baldr/datetime.h>
-#include <baldr/graphtile.h>
 
 #include <cmath>
 

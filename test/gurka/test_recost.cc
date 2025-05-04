@@ -447,7 +447,8 @@ TEST(recosting, throwing) {
                std::runtime_error);
 
   // this edge id is not valid
-  sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
+  sif::recost_forward(
+      *reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
   EXPECT_EQ(called, false);
 
   // this path isnt possible with a car because the second edge doesnt have auto access

@@ -4,6 +4,7 @@
 #include "test.h"
 
 #include <osmium/builder/osm_object_builder.hpp>
+
 #include <string>
 
 using namespace valhalla;

@@ -10,7 +10,6 @@
 #include <stdlib.h>
 
 #include <string>
-#include <unordered_map>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;

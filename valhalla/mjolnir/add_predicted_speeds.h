@@ -6,11 +6,8 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <array>
-#include <cstdint>
 #include <optional>
 #include <string>
-#include <vector>
 
 namespace valhalla {
 namespace mjolnir {

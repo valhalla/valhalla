@@ -3,8 +3,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 
-#include <boost/property_tree/ptree.hpp>
-
 #include <cstdint>
 #include <unordered_map>
 #include <vector>

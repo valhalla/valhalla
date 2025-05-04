@@ -1,15 +1,16 @@
 #ifndef VALHALLA_MJOLNIR_STATISTICS_H_
 #define VALHALLA_MJOLNIR_STATISTICS_H_
 
+#include "baldr/graphconstants.h"
+#include "midgard/aabb2.h"
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include "baldr/graphconstants.h"
-#include "midgard/aabb2.h"
-#include <boost/property_tree/ptree.hpp>
 
 struct sqlite3_stmt;
 

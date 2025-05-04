@@ -42,7 +42,7 @@ int16_t flip(int16_t value) {
 
 uint64_t file_size(const std::string& file_name) {
   // TODO: detect gzip and actually validate the uncompressed size?
-  struct stat s{};
+  struct stat s {};
   int rc = stat(file_name.c_str(), &s);
   return rc == 0 ? s.st_size : -1;
 }

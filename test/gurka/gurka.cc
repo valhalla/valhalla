@@ -21,14 +21,14 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <gtest/gtest.h>
-
-#include <filesystem>
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/output_iterator.hpp>
 #include <osmium/io/pbf_output.hpp>
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/osm/object_comparisons.hpp>
+
+#include <filesystem>
 #include <regex>
 #include <string>
 #include <tuple>

@@ -26,8 +26,8 @@ TransitionCostModel::TransitionCostModel(baldr::GraphReader& graphreader,
     : graphreader_(graphreader), vs_(vs), ts_(ts), container_(container), mode_costing_(mode_costing),
       travelmode_(travelmode), beta_(beta), inv_beta_(1.f / beta_),
       breakage_distance_(breakage_distance), max_route_distance_factor_(max_route_distance_factor),
-      max_route_time_factor_(max_route_time_factor), turn_penalty_factor_(turn_penalty_factor),
-      turn_cost_table_{0.f} {
+      max_route_time_factor_(max_route_time_factor),
+      turn_penalty_factor_(turn_penalty_factor), turn_cost_table_{0.f} {
   if (beta_ <= 0.f) {
     throw std::invalid_argument("Expect beta to be positive");
   }

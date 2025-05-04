@@ -362,9 +362,9 @@ public:
               }
             }
           } // Each contour
-        } // Each tile col
-      } // Each tile row
-    } // Each dimension of the grid
+        }   // Each tile col
+      }     // Each tile row
+    }       // Each dimension of the grid
 
     // If the generalization value equals kOptimalGeneralization then set
     // the generalization factor to 1/4 of the grid size

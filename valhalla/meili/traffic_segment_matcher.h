@@ -53,7 +53,7 @@ public:
   /**
    * Do-nothing-destructor
    */
-  virtual ~TrafficSegmentMatcher() {};
+  virtual ~TrafficSegmentMatcher(){};
 
   /**
    * Matches the GPS trace to Valhalla edges and then associates those
