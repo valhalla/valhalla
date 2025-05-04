@@ -24,6 +24,7 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
+  add_predicted_speeds.cc
   admin.cc
   adminbuilder.cc
   bssbuilder.cc
@@ -43,12 +44,11 @@ set(sources
   hierarchybuilder.cc
   ingest_transit.cc
   landmarks.cc
-  add_predicted_speeds.cc
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc
-  osmdata.cc
   osmaccessrestriction.cc
+  osmdata.cc
   osmrestriction.cc
   osmway.cc
   pbfadminparser.cc
@@ -57,11 +57,13 @@ set(sources
   servicedays.cc
   shortcutbuilder.cc
   speed_assigner.h
+  sqlite3.cc
   timeparsing.cc
   transitbuilder.cc
-  way_edges_processor.cc
   util.cc
-  validatetransit.cc)
+  validatetransit.cc
+  way_edges_processor.cc
+)
 
 set(system_includes
   ${date_include_dir}
