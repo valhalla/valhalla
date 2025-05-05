@@ -41,7 +41,7 @@ export ASAN_OPTIONS=detect_leaks=0
 
 ### Unit/integration Tests
 
-We highly encourage running and updating the tests to make sure no regressions have been made. We use the [GoogleTest](https://google.github.io/googletest/)
+We highly encourage running and updating the tests to make sure no regressions have been made. We use the [GoogleTest](https://google.github.io/googletest/) suite and also created our own test framework called "gurka" (the Norsk counterpart to OSRM's "cucumber"), to easily test custom-built maps. Check out more information in the [test docs](https://github.com/valhalla/valhalla/blob/master/test/gurka.md).
 
 To build and run all tests:
 
