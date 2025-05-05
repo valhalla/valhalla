@@ -6,7 +6,7 @@ set -o errexit -o pipefail -o nounset
 readonly base=$(git merge-base refs/remotes/origin/master HEAD)
 readonly build_dir=build
 
-readonly CLANG_TIDY_VERSION=7.0.0
+readonly CLANG_TIDY_VERSION=11.0.0
 
 source scripts/bash_utils.sh
 setup_mason
