@@ -1,5 +1,4 @@
 #include "loki/worker.h"
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/location.h"

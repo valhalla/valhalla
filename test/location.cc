@@ -1,5 +1,4 @@
 #include "baldr/location.h"
-
 #include "midgard/util.h"
 #include "test.h"
 

@@ -1,5 +1,4 @@
 #include "baldr/graphtileheader.h"
-
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"

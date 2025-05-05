@@ -1,5 +1,4 @@
 #include "valhalla/midgard/ellipse.h"
-
 #include "valhalla/midgard/util.h"
 
 #include <cmath>

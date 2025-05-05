@@ -1,5 +1,4 @@
 #include "sif/dynamiccost.h"
-
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
 #include "proto_conversions.h"

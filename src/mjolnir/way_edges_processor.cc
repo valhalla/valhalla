@@ -1,5 +1,4 @@
 #include "mjolnir/way_edges_processor.h"
-
 #include "baldr/edgeinfo.h"
 
 #include <fstream>

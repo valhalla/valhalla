@@ -1,5 +1,4 @@
 #include "baldr/edgeinfo.h"
-
 #include "baldr/graphconstants.h"
 #include "midgard/elevation_encoding.h"
 

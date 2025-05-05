@@ -1,5 +1,4 @@
 #include "valhalla/tile_server.h"
-
 #include "baldr/compression_utils.h"
 #include "valhalla/filesystem.h"
 

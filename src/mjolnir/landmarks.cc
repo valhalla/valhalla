@@ -1,5 +1,4 @@
 #include "mjolnir/landmarks.h"
-
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"

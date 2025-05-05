@@ -1,5 +1,4 @@
 #include "odin/markup_formatter.h"
-
 #include "proto/common.pb.h"
 
 #include <boost/algorithm/string/predicate.hpp>

@@ -1,5 +1,4 @@
 #include "skadi/sample.h"
-
 #include "baldr/compression_utils.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"

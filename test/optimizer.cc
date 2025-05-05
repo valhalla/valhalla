@@ -1,5 +1,4 @@
 #include "thor/optimizer.h"
-
 #include "config.h"
 #include "test.h"
 

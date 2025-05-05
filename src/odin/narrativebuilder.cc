@@ -1,5 +1,4 @@
 #include "odin/narrativebuilder.h"
-
 #include "baldr/verbal_text_formatter.h"
 #include "midgard/constants.h"
 #include "odin/enhancedtrippath.h"

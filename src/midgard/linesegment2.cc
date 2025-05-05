@@ -1,5 +1,4 @@
 #include "midgard/linesegment2.h"
-
 #include "midgard/point2.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"

@@ -1,5 +1,4 @@
 #include "thor/timedistancematrix.h"
-
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
 

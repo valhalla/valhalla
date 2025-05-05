@@ -1,5 +1,4 @@
 #include "thor/unidirectional_astar.h"
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"

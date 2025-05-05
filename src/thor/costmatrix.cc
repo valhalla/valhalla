@@ -1,5 +1,4 @@
 #include "thor/costmatrix.h"
-
 #include "baldr/datetime.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"

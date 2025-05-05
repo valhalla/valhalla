@@ -1,5 +1,4 @@
 #include "thor/astar_bss.h"
-
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
 

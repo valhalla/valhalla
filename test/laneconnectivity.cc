@@ -1,5 +1,4 @@
 #include "baldr/laneconnectivity.h"
-
 #include "test.h"
 
 #include <string>

@@ -1,5 +1,4 @@
 #include "test.h"
-
 #include "baldr/graphmemory.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"

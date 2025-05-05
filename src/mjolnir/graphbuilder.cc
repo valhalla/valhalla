@@ -1,5 +1,4 @@
 #include "mjolnir/graphbuilder.h"
-
 #include "baldr/conditional_speed_limit.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"

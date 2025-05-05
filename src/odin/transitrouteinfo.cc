@@ -1,5 +1,4 @@
 #include "odin/transitrouteinfo.h"
-
 #include "midgard/logging.h"
 #include "odin/util.h"
 

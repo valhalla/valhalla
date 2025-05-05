@@ -1,5 +1,4 @@
 #include "midgard/tiles.h"
-
 #include "midgard/distanceapproximator.h"
 #include "midgard/ellipse.h"
 #include "midgard/polyline2.h"

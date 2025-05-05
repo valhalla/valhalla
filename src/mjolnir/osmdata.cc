@@ -1,5 +1,4 @@
 #include "mjolnir/osmdata.h"
-
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "scoped_timer.h"

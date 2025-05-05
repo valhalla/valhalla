@@ -1,5 +1,4 @@
 #include "baldr/signinfo.h"
-
 #include "baldr/graphid.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/uniquenames.h"

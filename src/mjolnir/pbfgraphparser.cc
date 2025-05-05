@@ -1,5 +1,4 @@
 #include "mjolnir/pbfgraphparser.h"
-
 #include "baldr/complexrestriction.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"

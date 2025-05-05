@@ -1,5 +1,4 @@
 #include "loki/node_search.h"
-
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"

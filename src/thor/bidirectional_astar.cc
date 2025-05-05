@@ -1,5 +1,4 @@
 #include "thor/bidirectional_astar.h"
-
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"

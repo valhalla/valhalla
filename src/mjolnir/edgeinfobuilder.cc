@@ -1,5 +1,4 @@
 #include "mjolnir/edgeinfobuilder.h"
-
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 #include "midgard/encoded.h"

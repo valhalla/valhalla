@@ -1,6 +1,5 @@
 // -*- mode: c++ -*-
 #include "meili/map_matcher_factory.h"
-
 #include "baldr/rapidjson_utils.h"
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"

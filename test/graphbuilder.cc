@@ -1,5 +1,4 @@
 #include "mjolnir/graphbuilder.h"
-
 #include "baldr/graphreader.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/directededgebuilder.h"

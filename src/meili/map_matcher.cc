@@ -1,5 +1,4 @@
 #include "meili/map_matcher.h"
-
 #include "meili/emission_cost_model.h"
 #include "meili/geometry_helpers.h"
 #include "meili/routing.h"

@@ -1,5 +1,4 @@
 #include "midgard/tiles.h"
-
 #include "midgard/aabb2.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"

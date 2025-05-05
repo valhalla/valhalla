@@ -1,5 +1,4 @@
 #include "mjolnir/util.h"
-
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/aabb2.h"

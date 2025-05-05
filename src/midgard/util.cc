@@ -1,5 +1,4 @@
 #include "midgard/util.h"
-
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"

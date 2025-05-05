@@ -1,5 +1,4 @@
 #include "odin/narrativebuilder.h"
-
 #include "baldr/verbal_text_formatter_factory.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"

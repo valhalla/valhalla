@@ -1,5 +1,4 @@
 #include "proto_conversions.h"
-
 #include "midgard/logging.h"
 
 using namespace valhalla;

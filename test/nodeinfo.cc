@@ -1,5 +1,4 @@
 #include "baldr/nodeinfo.h"
-
 #include "midgard/util.h"
 #include "test.h"
 

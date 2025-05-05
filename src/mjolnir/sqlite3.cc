@@ -1,5 +1,4 @@
 #include "mjolnir/sqlite3.h"
-
 #include "midgard/logging.h"
 #include "valhalla/filesystem.h"
 

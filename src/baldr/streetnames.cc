@@ -1,5 +1,4 @@
 #include "baldr/streetnames.h"
-
 #include "baldr/streetname.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"

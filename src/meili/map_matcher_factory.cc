@@ -1,5 +1,4 @@
 #include "meili/map_matcher_factory.h"
-
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "meili/candidate_search.h"

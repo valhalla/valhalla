@@ -1,5 +1,4 @@
 #include "sif/transitcost.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"

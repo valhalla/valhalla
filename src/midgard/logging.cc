@@ -1,5 +1,4 @@
 #include "midgard/logging.h"
-
 #include "filesystem.h"
 
 #include <cassert>

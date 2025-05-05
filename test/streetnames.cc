@@ -1,5 +1,4 @@
 #include "baldr/streetnames.h"
-
 #include "baldr/streetname.h"
 #include "test.h"
 

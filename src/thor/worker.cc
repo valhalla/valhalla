@@ -1,5 +1,4 @@
 #include "thor/worker.h"
-
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"

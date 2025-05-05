@@ -1,5 +1,4 @@
 #include "tyr/serializers.h"
-
 #include "baldr/datetime.h"
 #include "baldr/json.h"
 #include "baldr/openlr.h"

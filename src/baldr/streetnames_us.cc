@@ -1,5 +1,4 @@
 #include "baldr/streetnames_us.h"
-
 #include "baldr/streetname.h"
 #include "midgard/util.h"
 #include "proto/common.pb.h"

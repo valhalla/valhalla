@@ -1,5 +1,4 @@
 #include "mjolnir/graphtilebuilder.h"
-
 #include "baldr/graphid.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"

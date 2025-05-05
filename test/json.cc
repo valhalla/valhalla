@@ -1,5 +1,4 @@
 #include "baldr/json.h"
-
 #include "baldr/rapidjson_utils.h"
 #include "test.h"
 

@@ -1,5 +1,4 @@
 #include "mjolnir/transitbuilder.h"
-
 #include "baldr/datetime.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"

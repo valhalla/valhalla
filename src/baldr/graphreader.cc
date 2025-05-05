@@ -1,5 +1,4 @@
 #include "baldr/graphreader.h"
-
 #include "baldr/connectivity_map.h"
 #include "baldr/curl_tilegetter.h"
 #include "filesystem.h"

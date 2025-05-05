@@ -1,5 +1,4 @@
 #include "baldr/streetname_us.h"
-
 #include "baldr/streetname.h"
 
 namespace valhalla {

@@ -1,5 +1,4 @@
 #include "statistics.h"
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/json.h"

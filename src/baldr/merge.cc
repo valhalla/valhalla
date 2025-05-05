@@ -1,5 +1,4 @@
 #include "baldr/merge.h"
-
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 

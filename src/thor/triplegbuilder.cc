@@ -1,5 +1,4 @@
 #include "thor/triplegbuilder.h"
-
 #include "baldr/admin.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"

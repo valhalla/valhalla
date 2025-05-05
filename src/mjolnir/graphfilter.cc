@@ -1,5 +1,4 @@
 #include "mjolnir/graphfilter.h"
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"

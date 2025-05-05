@@ -1,5 +1,4 @@
 #include "sif/bicyclecost.h"
-
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"

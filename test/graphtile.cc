@@ -1,5 +1,4 @@
 #include "baldr/graphtile.h"
-
 #include "test.h"
 
 #include <cstdint>

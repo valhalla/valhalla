@@ -1,5 +1,4 @@
 #include "mjolnir/ingest_transit.h"
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphtile.h"

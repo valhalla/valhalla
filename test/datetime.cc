@@ -1,6 +1,5 @@
 
 #include "baldr/datetime.h"
-
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "midgard/constants.h"

@@ -1,5 +1,4 @@
 #include "mjolnir/adminbuilder.h"
-
 #include "filesystem.h"
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/pbfadminparser.h"

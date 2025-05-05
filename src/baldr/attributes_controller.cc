@@ -1,5 +1,4 @@
 #include "baldr/attributes_controller.h"
-
 #include "midgard/logging.h"
 
 #include <string>

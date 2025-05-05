@@ -1,5 +1,4 @@
 #include "mjolnir/convert_transit.h"
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"

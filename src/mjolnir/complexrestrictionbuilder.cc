@@ -1,5 +1,4 @@
 #include "mjolnir/complexrestrictionbuilder.h"
-
 #include "baldr/complexrestriction.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"

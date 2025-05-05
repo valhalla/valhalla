@@ -1,5 +1,4 @@
 #include "mjolnir/timeparsing.h"
-
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "midgard/logging.h"

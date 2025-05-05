@@ -1,5 +1,4 @@
 #include "mjolnir/osmway.h"
-
 #include "baldr/edgeinfo.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"

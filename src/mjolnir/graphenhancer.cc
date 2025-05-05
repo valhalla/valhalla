@@ -1,5 +1,4 @@
 #include "mjolnir/graphenhancer.h"
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"

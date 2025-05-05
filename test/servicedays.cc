@@ -1,5 +1,4 @@
 #include "mjolnir/servicedays.h"
-
 #include "baldr/graphconstants.h"
 #include "test.h"
 

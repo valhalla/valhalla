@@ -1,5 +1,4 @@
 #include "midgard/polyline2.h"
-
 #include "midgard/distanceapproximator.h"
 #include "midgard/point2.h"
 #include "midgard/point_tile_index.h"

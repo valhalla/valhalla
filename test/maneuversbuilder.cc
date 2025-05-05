@@ -1,5 +1,4 @@
 #include "odin/maneuversbuilder.h"
-
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/maneuver.h"

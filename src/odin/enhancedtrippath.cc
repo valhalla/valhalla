@@ -1,5 +1,4 @@
 #include "odin/enhancedtrippath.h"
-
 #include "baldr/edgeinfo.h"
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"

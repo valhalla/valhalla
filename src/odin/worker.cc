@@ -1,5 +1,4 @@
 #include "odin/worker.h"
-
 #include "baldr/json.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"

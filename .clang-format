@@ -49,7 +49,8 @@ ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
 IncludeBlocks: Regroup
 IncludeCategories:
   - Regex:           '^"'
-    Priority:        1
+    Priority:        0
+    SortPriority:    1
   - Regex:           '^<valhalla/'
     Priority:        2
   - Regex:           '^<(boost|protobuf|sqlite3|curl|zmq)/'

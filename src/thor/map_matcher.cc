@@ -1,5 +1,4 @@
 #include "thor/map_matcher.h"
-
 #include "baldr/datetime.h"
 #include "baldr/time_info.h"
 #include "midgard/logging.h"

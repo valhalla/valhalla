@@ -1,5 +1,4 @@
 #include "baldr/directededge.h"
-
 #include "baldr/nodeinfo.h"
 #include "midgard/logging.h"
 

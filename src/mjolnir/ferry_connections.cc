@@ -1,5 +1,4 @@
 #include "mjolnir/ferry_connections.h"
-
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
 #include "scoped_timer.h"

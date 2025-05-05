@@ -1,6 +1,5 @@
 
 #include "baldr/attributes_controller.h"
-
 #include "config.h"
 #include "test.h"
 

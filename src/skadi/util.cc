@@ -1,5 +1,4 @@
 #include "skadi/util.h"
-
 #include "skadi/sample.h"
 
 #include <algorithm>

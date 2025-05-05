@@ -1,5 +1,4 @@
 #include "midgard/gridded_data.h"
-
 #include "midgard/pointll.h"
 
 #include <limits>

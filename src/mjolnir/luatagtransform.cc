@@ -1,5 +1,4 @@
 #include "mjolnir/luatagtransform.h"
-
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
 

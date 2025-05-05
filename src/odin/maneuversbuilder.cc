@@ -1,5 +1,4 @@
 #include "odin/maneuversbuilder.h"
-
 #include "baldr/graphconstants.h"
 #include "baldr/streetname.h"
 #include "baldr/streetnames.h"

@@ -1,5 +1,4 @@
 #include "sif/pedestriancost.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/graphconstants.h"
 #include "midgard/constants.h"

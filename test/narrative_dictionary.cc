@@ -1,5 +1,4 @@
 #include "odin/narrative_dictionary.h"
-
 #include "midgard/logging.h"
 #include "odin/util.h"
 #include "test.h"

@@ -1,5 +1,4 @@
 #include "loki/search.h"
-
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"

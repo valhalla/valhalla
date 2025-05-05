@@ -1,5 +1,4 @@
 #include "baldr/predictedspeeds.h"
-
 #include "midgard/util.h"
 #include "test.h"
 

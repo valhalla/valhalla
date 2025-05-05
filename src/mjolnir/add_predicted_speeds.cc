@@ -1,5 +1,4 @@
 #include "mjolnir/add_predicted_speeds.h"
-
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"

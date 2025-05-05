@@ -1,5 +1,4 @@
 #include "loki/reach.h"
-
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "gurka/gurka.h"

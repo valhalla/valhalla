@@ -1,5 +1,4 @@
 #include "gurka.h"
-
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"

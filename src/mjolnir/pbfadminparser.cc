@@ -1,5 +1,4 @@
 #include "mjolnir/pbfadminparser.h"
-
 #include "admin_lua_proc.h"
 #include "idtable.h"
 #include "midgard/logging.h"

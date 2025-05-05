@@ -1,5 +1,4 @@
 #include "baldr/turnlanes.h"
-
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/markup_formatter.h"

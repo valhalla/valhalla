@@ -1,5 +1,4 @@
 #include "baldr/openlr.h"
-
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "proto/common.pb.h"

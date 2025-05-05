@@ -1,5 +1,4 @@
 #include "baldr/laneconnectivity.h"
-
 #include "midgard/logging.h"
 
 #include <boost/algorithm/string/classification.hpp>

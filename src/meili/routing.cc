@@ -1,5 +1,4 @@
 #include "meili/routing.h"
-
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodetransition.h"

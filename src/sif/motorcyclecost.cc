@@ -1,5 +1,4 @@
 #include "sif/motorcyclecost.h"
-
 #include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"

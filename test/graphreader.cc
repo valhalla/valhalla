@@ -1,5 +1,4 @@
 #include "baldr/graphreader.h"
-
 #include "baldr/connectivity_map.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"

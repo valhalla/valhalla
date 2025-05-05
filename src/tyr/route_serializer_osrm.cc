@@ -1,5 +1,4 @@
 #include "route_serializer_osrm.h"
-
 #include "baldr/json.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"

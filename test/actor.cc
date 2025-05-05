@@ -1,5 +1,4 @@
 #include "tyr/actor.h"
-
 #include "test.h"
 
 #include <functional>

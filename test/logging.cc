@@ -1,5 +1,4 @@
 #include "midgard/logging.h"
-
 #include "test.h"
 
 #include <algorithm>
