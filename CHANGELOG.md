@@ -227,6 +227,7 @@
    * ADDED: Add option `edge.country_crossing` to trace attributes [#4825](https://github.com/valhalla/valhalla/pull/4825)
    * CHANGED: Unification of turn costs for ramps and roundabouts [#4827](https://github.com/valhalla/valhalla/pull/4827)
    * CHANGED: updated dockerfile to use ubuntu 24.04 [#4805](https://github.com/valhalla/valhalla/pull/4805)
+   * CHANGED: Bump clang-tidy version to 11.0.0 [#5231](https://github.com/valhalla/valhalla/pull/5231)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
