@@ -33,7 +33,7 @@ protected:
   valhalla::Api do_expansion_action(std::string* res,
                                     bool skip_opps,
                                     bool dedupe,
-                                    std::string action,
+                                    const std::string& action,
                                     const std::vector<std::string>& props,
                                     const std::vector<std::string>& waypoints,
                                     const bool pbf) {

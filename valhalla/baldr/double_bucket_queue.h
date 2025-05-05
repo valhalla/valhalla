@@ -48,8 +48,8 @@ public:
     reuse(mincost, range, bucketsize, labelcontainer);
   }
 
-  DoubleBucketQueue(DoubleBucketQueue&&) = default;
-  DoubleBucketQueue& operator=(DoubleBucketQueue&&) = default;
+  DoubleBucketQueue(DoubleBucketQueue&&) noexcept = default;
+  DoubleBucketQueue& operator=(DoubleBucketQueue&&) noexcept = default;
   DoubleBucketQueue(const DoubleBucketQueue&) = delete;
   DoubleBucketQueue& operator=(const DoubleBucketQueue&) = delete;
 

@@ -126,8 +126,8 @@ namespace midgard {
 template <class T> class mem_map {
 public:
   // non-copyable
-  mem_map(mem_map&&) = default;
-  mem_map& operator=(mem_map&&) = default;
+  mem_map(mem_map&&) noexcept = default;
+  mem_map& operator=(mem_map&&) noexcept = default;
   mem_map(const mem_map&) = delete;
   mem_map& operator=(const mem_map&) = delete;
 

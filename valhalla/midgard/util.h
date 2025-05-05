@@ -683,7 +683,7 @@ template <typename T> struct Finally {
   T t;
   explicit Finally(T t) : t(t){};
   Finally() = delete;
-  Finally(Finally&& f) = default;
+  Finally(Finally&& f) noexcept = default;
   Finally(const Finally&) = delete;
   Finally& operator=(const Finally&) = delete;
   Finally& operator=(Finally&&) = delete;

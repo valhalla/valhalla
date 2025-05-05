@@ -257,7 +257,7 @@ std::string serializePbf(Api& request) {
 }
 
 // Generate leg shape in geojson format.
-baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape) {
+baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape) {
   auto geojson = baldr::json::map({});
   auto coords = baldr::json::array({});
   coords->reserve(shape.size());
@@ -270,7 +270,7 @@ baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape) {
   return geojson;
 }
 
-void geojson_shape(const std::vector<midgard::PointLL> shape, rapidjson::writer_wrapper_t& writer) {
+void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer) {
   writer("type", "LineString");
   writer.start_array("coordinates");
   writer.set_precision(tyr::kCoordinatePrecision);
