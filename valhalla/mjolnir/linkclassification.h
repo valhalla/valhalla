@@ -6,6 +6,8 @@
 namespace valhalla {
 namespace mjolnir {
 
+struct OSMData;
+
 // Reclassify links (ramps and turn channels). OSM usually classifies links as
 // the best classification, while to more effectively create shortcuts it is
 // better to "downgrade" link edges to the lower classification.
