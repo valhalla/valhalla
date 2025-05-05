@@ -4,6 +4,7 @@
 #include "baldr/graphreader.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/directededgebuilder.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmaccessrestriction.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/osmlinguistic.h"
