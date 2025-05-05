@@ -1,4 +1,5 @@
 #include "gurka.h"
+#include "test.h"
 #include <boost/format.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/register/multi_polygon.hpp>
@@ -95,26 +96,37 @@ protected:
   static void SetUpTestSuite() {
     // several polygons and one location to avoid to reference in the tests
     const std::string ascii_map = R"(
-                                     A---x--B
-                                     |      |
-                                   h---i  l---m
-                                   | | |  | | |
+                                                  a---------------b
+                                     A---x--B---G-+--H----I----J  |
+                                     |      |     |  |         |  |
+                                   h---i  l---m   |  K----L----M  |
+                                   | | |  | | |   d---------------c
                                    k---j  o---n
                                      |      |   p-q
                                      C------D---|-|---E---F
                                                 s-r
                                      )";
 
-    const gurka::ways ways = {{"AB", {{"highway", "tertiary"}, {"name", "High"}}},
-                              {"CD", {{"highway", "tertiary"}, {"name", "Low"}}},
-                              {"AC", {{"highway", "tertiary"}, {"name", "1st"}}},
-                              {"BD", {{"highway", "tertiary"}, {"name", "2nd"}}},
-                              {"DE", {{"highway", "tertiary"}, {"name", "2nd"}}},
-                              {"EF", {{"highway", "tertiary"}, {"name", "2nd"}}}};
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {1.0, 1.0});
+    const gurka::ways ways = {
+        {"AB", {{"highway", "tertiary"}, {"name", "High"}}},
+        {"CD", {{"highway", "tertiary"}, {"name", "Low"}}},
+        {"AC", {{"highway", "tertiary"}, {"name", "1st"}}},
+        {"BD", {{"highway", "tertiary"}, {"name", "2nd"}}},
+        {"DE", {{"highway", "tertiary"}, {"name", "2nd"}}},
+        {"EF", {{"highway", "tertiary"}, {"name", "2nd"}}},
+        {"GH", {{"highway", "corridor"}, {"level", "5"}}},
+        {"HI", {{"highway", "corridor"}, {"level", "2"}}},
+        {"HK", {{"highway", "corridor"}, {"level", "3"}}},
+        {"KL", {{"highway", "corridor"}, {"level", "3"}}},
+        {"LM", {{"highway", "corridor"}, {"level", "3"}}},
+        {"IJ", {{"highway", "corridor"}, {"level", "2"}}},
+        {"JM", {{"highway", "corridor"}}},
+    };
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {1.01, 1.01});
     // Add low length limit for exclude_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
-                                  {{"service_limits.max_exclude_polygons_length", "1000"}});
+                                  {{"service_limits.max_exclude_polygons_length", "10000"},
+                                   {"mjolnir.shortcut_caching", "true"}});
   }
 };
 
@@ -162,6 +174,62 @@ TEST_P(AvoidTest, TestAvoidPolygonWithDeprecatedParam) {
   // will avoid 1st
   auto route = gurka::do_action(Options::route, avoid_map, req);
   gurka::assert::raw::expect_path(route, {"High", "2nd", "Low"});
+}
+
+TEST_F(AvoidTest, ExcludeLevels) {
+  auto options_factory =
+      [](std::vector<float> levels) -> std::pair<valhalla::Options, valhalla::sif::cost_ptr_t> {
+    valhalla::Options options;
+    options.set_costing_type(valhalla::Costing::pedestrian);
+    auto& co = (*options.mutable_costings())[Costing::pedestrian];
+    co.set_type(valhalla::Costing::pedestrian);
+
+    // create the polygon intersecting a shortcut
+    auto* rings = options.mutable_exclude_polygons();
+    auto* ring = rings->Add();
+    auto* option_levels = options.mutable_exclude_levels();
+    auto* level = option_levels->Add();
+    for (const auto& lvl : levels) {
+      level->add_levels(lvl);
+    }
+    for (const auto& coord :
+         {avoid_map.nodes.at("a"), avoid_map.nodes.at("b"), avoid_map.nodes.at("c"),
+          avoid_map.nodes.at("d"), avoid_map.nodes.at("a")}) {
+      auto* ll = ring->add_coords();
+      ll->set_lat(coord.lat());
+      ll->set_lng(coord.lng());
+    }
+    auto costing = valhalla::sif::CostFactory{}.Create(co);
+
+    return std::make_pair(options, costing);
+  };
+
+  using test_params = std::pair<std::vector<float>, size_t>;
+
+  std::vector<test_params> params = {{{2.f}, 4}, {{3.f}, 6},       {{5.f}, 2},     {{}, 14},
+                                     {{0.f}, 0}, {{2.f, 3.f}, 10}, {{0.f, 5.f}, 2}};
+
+  auto reader = test::make_clean_graphreader(avoid_map.config.get_child("mjolnir"));
+  for (const auto& param : params) {
+    auto options = options_factory(param.first);
+
+    auto edge_names = [&reader](const std::unordered_set<GraphId>& edge_ids) -> std::string {
+      std::stringstream ss;
+
+      std::string sep = "";
+      for (const auto& edge_id : edge_ids) {
+        ss << sep;
+        sep = ", ";
+        auto ei = reader->edgeinfo(edge_id);
+        ss << ei.GetNames()[0];
+      }
+      return ss.str();
+    };
+
+    // should return the shortcut edge ID as well
+    auto avoid_edges = vl::edges_in_rings(options.first, *reader, options.second, 10000);
+    ASSERT_EQ(avoid_edges.size(), param.second) << edge_names(avoid_edges);
+  }
 }
 
 TEST_P(AvoidTest, TestAvoid2Polygons) {
@@ -230,9 +298,9 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
   EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
 
   // a valid polygon and an empty object!
-  req_str =
-      req_base +
-      R"("avoid_polygons": [[[1.0, 1.0], [1.00001, 1.00001], [1.00002, 1.00002], [1.0, 1.0]], {}]})";
+  req_str = req_base +
+            R"("avoid_polygons": [[[1.0, 1.0], [1.00001, 1.00001], [1.00002, 1.00002], [1.0, 1.0]],
+      {}]})";
   ParseApi(req_str, Options::route, request);
   res = gurka::do_action(Options::route, avoid_map, req_str);
   EXPECT_TRUE(request.options().exclude_polygons_size() == 1);
@@ -267,13 +335,13 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   }
 
   const auto costing = valhalla::sif::CostFactory{}.Create(co);
-  GraphReader reader(avoid_map.config.get_child("mjolnir"));
+  auto reader = test::make_clean_graphreader(avoid_map.config.get_child("mjolnir"));
 
   // should return the shortcut edge ID as well
   size_t found_shortcuts = 0;
-  auto avoid_edges = vl::edges_in_rings(*rings, reader, costing, 10000);
+  auto avoid_edges = vl::edges_in_rings(options, *reader, costing, 10000);
   for (const auto& edge_id : avoid_edges) {
-    if (reader.GetGraphTile(edge_id)->directededge(edge_id)->is_shortcut()) {
+    if (reader->GetGraphTile(edge_id)->directededge(edge_id)->is_shortcut()) {
       found_shortcuts++;
     }
   }

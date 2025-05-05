@@ -16,7 +16,7 @@ namespace loki {
  *
  */
 std::unordered_set<valhalla::baldr::GraphId>
-edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings,
+edges_in_rings(const valhalla::Options& options,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length);

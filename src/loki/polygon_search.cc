@@ -94,16 +94,22 @@ std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::Grap
 namespace valhalla {
 namespace loki {
 
-std::unordered_set<vb::GraphId>
-edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_pbf,
-               baldr::GraphReader& reader,
-               const std::shared_ptr<sif::DynamicCost>& costing,
-               float max_length) {
+std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
+                                               baldr::GraphReader& reader,
+                                               const std::shared_ptr<sif::DynamicCost>& costing,
+                                               float max_length) {
   // protect for bogus input
+  const auto& rings_pbf = options.exclude_polygons();
   if (rings_pbf.empty() || rings_pbf.Get(0).coords().empty() ||
       !rings_pbf.Get(0).coords()[0].has_lat_case() || !rings_pbf.Get(0).coords()[0].has_lng_case()) {
     return {};
   }
+
+  // does the user want to exclude matching levels in a given ring?
+  std::vector<bool> has_exclude_levels(options.exclude_polygons_size());
+  std::transform(options.exclude_levels().begin(), options.exclude_levels().end(),
+                 has_exclude_levels.begin(),
+                 [](const valhalla::Levels& levels) { return levels.levels_size() > 0; });
 
   // convert to bg object and check length restriction
   double rings_length = 0;
@@ -168,15 +174,27 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
         // TODO: some logic to set percent_along for origin/destination edges
         // careful: polygon can intersect a single edge multiple times
         auto edge_info = tile->edgeinfo(edge);
-        bool intersects = false;
+        bool include = false;
         for (const auto& ring_loc : bin.second) {
-          intersects = bg::intersects(rings_bg[ring_loc],
-                                      line_bg_t(edge_info.shape().begin(), edge_info.shape().end()));
+          bool intersects = bg::intersects(rings_bg[ring_loc], line_bg_t(edge_info.shape().begin(),
+                                                                         edge_info.shape().end()));
           if (intersects) {
-            break;
+            if (has_exclude_levels[ring_loc]) {
+              const auto& levels = edge_info.levels();
+              for (const auto& level : levels.first) {
+                for (const auto& exclude_level : options.exclude_levels(ring_loc).levels()) {
+                  if (level.first == exclude_level || level.second == exclude_level)
+                    include = true;
+                }
+              }
+            } else {
+              include = true;
+            }
+            if (intersects && include)
+              break;
           }
         }
-        if (intersects) {
+        if (include) {
           avoid_edge_ids.emplace(edge_id);
           avoid_edge_ids.emplace(
               opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
