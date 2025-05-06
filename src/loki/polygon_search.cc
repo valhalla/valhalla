@@ -105,11 +105,12 @@ std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
     return {};
   }
 
-  // does the user want to exclude matching levels in a given ring?
-  std::vector<bool> has_exclude_levels(options.exclude_polygons_size());
-  std::transform(options.exclude_levels().begin(), options.exclude_levels().end(),
-                 has_exclude_levels.begin(),
-                 [](const valhalla::Levels& levels) { return levels.levels_size() > 0; });
+  std::vector<std::unordered_set<float>> exclude_levels(options.exclude_polygons_size());
+  for (size_t i = 0; i < options.exclude_levels_size(); ++i) {
+    for (size_t j = 0; j < options.exclude_levels().at(i).levels_size(); ++j) {
+      exclude_levels[i].insert(options.exclude_levels().at(i).levels().at(j));
+    }
+  }
 
   // convert to bg object and check length restriction
   double rings_length = 0;
@@ -179,12 +180,12 @@ std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
           bool intersects = bg::intersects(rings_bg[ring_loc], line_bg_t(edge_info.shape().begin(),
                                                                          edge_info.shape().end()));
           if (intersects) {
-            if (has_exclude_levels[ring_loc]) {
+            if (exclude_levels[ring_loc].size() > 0) {
               const auto& levels = edge_info.levels();
               for (const auto& level : levels.first) {
-                for (const auto& exclude_level : options.exclude_levels(ring_loc).levels()) {
-                  if (level.first == exclude_level || level.second == exclude_level)
-                    include = true;
+                if (exclude_levels[ring_loc].find(level.first) != exclude_levels[ring_loc].end() ||
+                    exclude_levels[ring_loc].find(level.second) != exclude_levels[ring_loc].end()) {
+                  include = true;
                 }
               }
             } else {
