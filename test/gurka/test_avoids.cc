@@ -60,6 +60,38 @@ rapidjson::Value get_avoid_polys(const std::vector<ring_bg_t>& rings,
   return rings_j;
 }
 
+rapidjson::Value build_exclude_level_polygons(const std::vector<ring_bg_t>& rings,
+                                              const std::vector<std::vector<float>>& levels,
+                                              rapidjson::MemoryPoolAllocator<>& alloc) {
+  assert(rings.size() == levels.size());
+  rapidjson::Value rings_j(rapidjson::kArrayType);
+  for (size_t i = 0; i < rings.size(); ++i) {
+    // one object per polygon
+    rapidjson::Value polygon_j(rapidjson::kObjectType);
+
+    // one ring per polygon
+    rapidjson::Value ring_j(rapidjson::kArrayType);
+    for (const auto& coord : rings.at(i)) {
+      rapidjson::Value coords(rapidjson::kArrayType);
+      coords.PushBack(coord.lng(), alloc);
+      coords.PushBack(coord.lat(), alloc);
+      ring_j.PushBack(coords, alloc);
+    }
+
+    // one level array per polygon
+    rapidjson::Value level_j(rapidjson::kArrayType);
+    for (const auto& level : levels.at(i)) {
+      level_j.PushBack(level, alloc);
+    }
+
+    polygon_j.AddMember("levels", level_j, alloc);
+    polygon_j.AddMember("coordinates", ring_j, alloc);
+    rings_j.PushBack(polygon_j, alloc);
+  }
+
+  return rings_j;
+}
+
 // common method can't deal with arrays of floats
 std::string build_local_req(rapidjson::Document& doc,
                             rapidjson::MemoryPoolAllocator<>& allocator,
@@ -100,10 +132,10 @@ protected:
                                      A---x--B---G-+--H----I----J  |
                                      |      |     |  |         |  |
                                    h---i  l---m   |  K----L----M  |
-                                   | | |  | | |   d---------------c
-                                   k---j  o---n
-                                     |      |   p-q
-                                     C------D---|-|---E---F
+                                   | | |  | | |   d-------+----+--c
+                                   k---j  o---n           |    |
+                                     |      |   p-q       |    |
+                                     C------D---|-|---E---F----N
                                                 s-r
                                      )";
 
@@ -114,12 +146,17 @@ protected:
         {"BD", {{"highway", "tertiary"}, {"name", "2nd"}}},
         {"DE", {{"highway", "tertiary"}, {"name", "2nd"}}},
         {"EF", {{"highway", "tertiary"}, {"name", "2nd"}}},
+        {"GB", {{"highway", "tertiary"}}},
         {"GH", {{"highway", "corridor"}, {"level", "5"}}},
         {"HI", {{"highway", "corridor"}, {"level", "2"}}},
         {"HK", {{"highway", "corridor"}, {"level", "3"}}},
         {"KL", {{"highway", "corridor"}, {"level", "3"}}},
         {"LM", {{"highway", "corridor"}, {"level", "3"}}},
         {"IJ", {{"highway", "corridor"}, {"level", "2"}}},
+        {"JM", {{"highway", "corridor"}}},
+        {"LF", {{"highway", "corridor"}}},
+        {"FN", {{"highway", "corridor"}}},
+        {"MN", {{"highway", "corridor"}}},
         {"JM", {{"highway", "corridor"}}},
     };
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {1.01, 1.01});
@@ -206,7 +243,8 @@ TEST_F(AvoidTest, ExcludeLevels) {
 
   using test_params = std::pair<std::vector<float>, size_t>;
 
-  std::vector<test_params> params = {{{2.f}, 4}, {{3.f}, 6},       {{5.f}, 2},     {{}, 14},
+  // make sure the correct amounts of edges are excluded given a list of levels per ring
+  std::vector<test_params> params = {{{2.f}, 4}, {{3.f}, 6},       {{5.f}, 2},     {{}, 18},
                                      {{0.f}, 0}, {{2.f, 3.f}, 10}, {{0.f, 5.f}, 2}};
 
   auto reader = test::make_clean_graphreader(avoid_map.config.get_child("mjolnir"));
@@ -230,6 +268,42 @@ TEST_F(AvoidTest, ExcludeLevels) {
     auto avoid_edges = vl::edges_in_rings(options.first, *reader, options.second, 10000);
     ASSERT_EQ(avoid_edges.size(), param.second) << edge_names(avoid_edges);
   }
+}
+
+TEST_F(AvoidTest, ExcludeLevelsJSON) {
+  std::vector<std::vector<PointLL>> exclude_ring = {{avoid_map.nodes.at("a"), avoid_map.nodes.at("b"),
+                                                     avoid_map.nodes.at("c"), avoid_map.nodes.at("d"),
+                                                     avoid_map.nodes.at("a")}};
+  std::vector<PointLL> waypoints = {avoid_map.nodes.at("M"), avoid_map.nodes.at("L")};
+
+  std::vector<std::vector<float>> levels = {{3.f}};
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto excludes_j = build_exclude_level_polygons(exclude_ring, levels, allocator);
+  auto req =
+      build_local_req(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
+
+  auto res = gurka::do_action(Options::route, avoid_map, req);
+  gurka::assert::raw::expect_path(res, {"MN", "FN", "LF"});
+}
+
+TEST_F(AvoidTest, ExcludeLevelsJSON_Multiple) {
+  std::vector<std::vector<PointLL>> exclude_ring = {{avoid_map.nodes.at("a"), avoid_map.nodes.at("b"),
+                                                     avoid_map.nodes.at("c"), avoid_map.nodes.at("d"),
+                                                     avoid_map.nodes.at("a")}};
+  std::vector<PointLL> waypoints = {avoid_map.nodes.at("G"), avoid_map.nodes.at("L")};
+
+  std::vector<std::vector<float>> levels = {{3.f, 2.f}};
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto excludes_j = build_exclude_level_polygons(exclude_ring, levels, allocator);
+  auto req =
+      build_local_req(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
+
+  auto res = gurka::do_action(Options::route, avoid_map, req);
+  gurka::assert::raw::expect_path(res, {"GB", "2nd", "2nd", "2nd", "LF"});
 }
 
 TEST_P(AvoidTest, TestAvoid2Polygons) {
