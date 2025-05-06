@@ -6,11 +6,11 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include <cassert>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <string>
 #include <vector>
 

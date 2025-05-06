@@ -6,9 +6,8 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
-#include <stdio.h>
-#include <stdlib.h>
 
+#include <cstdlib>
 #include <string>
 
 using namespace valhalla::baldr;

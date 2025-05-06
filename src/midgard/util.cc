@@ -10,7 +10,6 @@
 #include <boost/archive/iterators/binary_from_base64.hpp>
 #include <boost/archive/iterators/remove_whitespace.hpp>
 #include <boost/archive/iterators/transform_width.hpp>
-#include <stdlib.h>
 #include <sys/stat.h>
 
 #include <algorithm>
@@ -18,6 +17,7 @@
 #include <cctype>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <list>
 #include <random>
