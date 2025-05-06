@@ -35,7 +35,7 @@ public:
 
   void SetRoute(const std::vector<StateId>& stateids,
                 const std::unordered_map<uint16_t, uint32_t>& results,
-                labelset_ptr_t labelset) const {
+                const labelset_ptr_t& labelset) const {
     if (!labelset) {
       throw std::runtime_error("expect valid labelset but got nullptr");
     }

@@ -91,7 +91,7 @@ public:
   cost_ptr_t Create(const Costing& costing) const {
     auto itr = factory_funcs_.find(costing.type());
     if (itr == factory_funcs_.end()) {
-      auto costing_str = Costing_Enum_Name(costing.type());
+      const auto& costing_str = Costing_Enum_Name(costing.type());
       throw std::runtime_error("No costing method found for '" + costing_str + "'");
     }
     // create the cost using the function pointer

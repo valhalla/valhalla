@@ -966,7 +966,7 @@ TEST(GtfsExample, route_trip4) {
 
 TEST(GtfsExample, isochrones) {
 
-  auto WaypointToBoostPoint = [&](std::string waypoint) {
+  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
     auto point = map.nodes[waypoint];
     return point_type(point.x(), point.y());
   };

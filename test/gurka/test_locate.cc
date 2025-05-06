@@ -43,7 +43,7 @@ TEST(locate, basic_properties) {
   test::build_live_traffic_data(map.config);
 
   // turn on some traffic for fun
-  auto traffic_cb = [](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
+  auto traffic_cb = [](baldr::GraphReader& /*reader*/, baldr::TrafficTile& /*tile*/, int /*index*/,
                        valhalla::baldr::TrafficSpeed* current) -> void {
     current->overall_encoded_speed = 124 >> 1;
     current->encoded_speed1 = 126 >> 1;

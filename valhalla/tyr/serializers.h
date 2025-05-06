@@ -133,8 +133,8 @@ baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
  * @param shape  The points making up the line.
  * @returns The GeoJSON geometry of the LineString
  */
-baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape);
-void geojson_shape(const std::vector<midgard::PointLL> shape, rapidjson::writer_wrapper_t& writer);
+baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape);
+void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer);
 
 // Elevation serialization support
 
@@ -194,7 +194,7 @@ get_elevation(const TripLeg& path_leg, const float interval, const float start_d
   std::vector<std::pair<uint32_t, uint32_t>> bridges;
   for (const auto& node : path_leg.node()) {
     // Get the edge on the path, the starting elevation and sampling interval
-    auto path_edge = node.edge();
+    const auto& path_edge = node.edge();
     float edge_interval = path_edge.elevation_sampling_interval();
 
     // Identify consecutive bridge/tunnel edges and store elevation indexes at start and end.

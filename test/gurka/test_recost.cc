@@ -433,7 +433,9 @@ TEST(recosting, throwing) {
 
   // setup a callback for the recosting to tell us about the new label each made
   bool called = false;
-  sif::LabelCallback label_cb = [&called](const sif::PathEdgeLabel& label) -> void { called = true; };
+  sif::LabelCallback label_cb = [&called](const sif::PathEdgeLabel& /*label*/) -> void {
+    called = true;
+  };
 
   // build up the costing object
   auto costing = sif::CostFactory().Create(Costing::auto_);
