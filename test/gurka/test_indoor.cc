@@ -13,8 +13,8 @@ using namespace mjolnir;
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
-  range_t(float s, float e) : start(s), end(e){};
-  range_t(float s) : start(s), end(s){};
+  range_t(float s, float e) : start(s), end(e) {};
+  range_t(float s) : start(s), end(s) {};
 
   float start;
   float end;
@@ -526,7 +526,7 @@ TEST(Standalone, MultiEdgeSteps) {
 }
 /****************************************************************************************/
 
-class Levels : public ::testing::Test {
+class TestLevels : public ::testing::Test {
 protected:
   static gurka::map map;
   static std::string ascii_map;
@@ -556,11 +556,11 @@ protected:
   }
 };
 
-gurka::map Levels::map = {};
-std::string Levels::ascii_map = {};
-gurka::nodelayout Levels::layout = {};
+gurka::map TestLevels::map = {};
+std::string TestLevels::ascii_map = {};
+gurka::nodelayout TestLevels::layout = {};
 
-TEST_F(Levels, EdgeInfoIncludes) {
+TEST_F(TestLevels, EdgeInfoIncludes) {
   baldr::GraphReader graphreader(map.config.get_child("mjolnir"));
 
   std::vector<std::pair<std::array<std::string, 2>, std::vector<float>>> values = {
@@ -586,7 +586,7 @@ TEST_F(Levels, EdgeInfoIncludes) {
   }
 }
 
-TEST_F(Levels, EdgeInfoJson) {
+TEST_F(TestLevels, EdgeInfoJson) {
   auto graphreader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   std::string json;
   std::vector<std::string> locs = {
