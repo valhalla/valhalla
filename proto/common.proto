@@ -67,6 +67,14 @@ message SearchFilter {
   oneof has_level {
     float level = 9; // level to filter edges by
   }
+
+  // use
+  oneof has_min_use {
+    RoadUse min_use = 10;
+  }
+  oneof has_max_use {
+    RoadUse max_use = 11;
+  }
 }
 
 message PathEdge {
@@ -340,6 +348,58 @@ enum RoadClass {
   kServiceOther = 7;
 }
 
+enum RoadUse {
+  kRoadUse = 0;
+  kRampUse = 1;              // Link - exits/entrance ramps.
+  kTurnChannelUse = 2;       // Link - turn lane.
+  kTrackUse = 3;             // Agricultural use; forest tracks
+  kDrivewayUse = 4;          // Driveway/private service
+  kAlleyUse = 5;             // Service road - limited route use
+  kParkingAisleUse = 6;      // Access roads in parking areas
+  kEmergencyAccessUse = 7;   // Emergency vehicles only
+  kDriveThruUse = 8;         // Commercial drive-thru (banks/fast-food)
+  kCuldesacUse = 9;          // Cul-de-sac (edge that forms a loop and is only
+                             // connected at one node to another edge.
+  kLivingStreetUse = 10;     // Shared space for cars, bikes, pedestrians
+  kServiceRoadUse = 11;      // Generic service road (not driveway, alley, parking aisle, etc.)
+
+  // Bicycle specific uses
+  kCyclewayUse = 20;          // Dedicated bicycle path
+  kMountainBikeUse = 21;      // Mountain bike trail
+
+  kSidewalkUse = 24;
+
+  // Pedestrian specific uses
+  kFootwayUse = 25;
+  kStepsUse = 26;             // Stairs
+  kPathUse = 27;
+  kPedestrianUse = 28;
+  kBridlewayUse = 29;
+  kPedestrianCrossingUse = 32;
+  kElevatorUse = 33;
+  kEscalatorUse = 34;
+  kPlatformUse = 35;
+
+  //Rest/Service Areas
+  kRestAreaUse = 30;
+  kServiceAreaUse = 31;
+
+  // Other...
+  kOtherUse = 40;
+
+  // Ferry and rail ferry
+  kFerryUse = 41;
+  kRailFerryUse = 42;
+
+  kConstructionUse = 43;       // Road under construction
+
+  // Transit specific uses. Must be last in the list
+  kRailUse = 50;               // Rail line
+  kBusUse = 51;                // Bus line
+  kEgressConnectionUse = 52;   // Connection between transit station and transit egress
+  kPlatformConnectionUse = 53; // Connection between transit station and transit platform
+  kTransitConnectionUse = 54;  // Connection between road network and transit egress
+}
 message TaggedValue {
   // dont renumber these they match the c++ definitions
   enum Type {

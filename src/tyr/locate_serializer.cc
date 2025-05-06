@@ -80,7 +80,8 @@ std::string get_edge_shape(const DirectedEdge* de, GraphReader& reader) {
 json::MapPtr get_full_road_segment(const DirectedEdge* de,
                                    const std::shared_ptr<sif::DynamicCost>& costing,
                                    const double percent_along,
-                                   GraphReader& reader) {
+                                   GraphReader& reader,
+                                   const valhalla::baldr::Location::SearchFilter& search_filter) {
   // first, find the beginning of the road segment
   // things we need: the opposing edge and its start node
   if (de == nullptr)
@@ -119,7 +120,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
                             sif::kDisallowShortcut) ||
            costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
           !(costing->ExcludePrivate() && ei.private_access()) &&
-          incoming_edge->use() < baldr::Use::kAlley) {
+          (incoming_edge->use() < search_filter.min_use_)) {
 
         allowed_cnt++;
         outgoing_pred = outgoing_edge;
@@ -147,7 +148,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
                               sif::kDisallowShortcut) ||
              costing->Allowed(outgoing_edge, reader.GetGraphTile(node_id), sif::kDisallowShortcut)) &&
             !(costing->ExcludePrivate() && ei.private_access()) &&
-            incoming_edge->use() < baldr::Use::kAlley) {
+            (incoming_edge->use() < search_filter.min_use_)) {
 
           allowed_cnt++;
           incoming_pred = incoming_edge;
@@ -224,7 +225,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
            costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
                             sif::kDisallowShortcut)) &&
           !(costing->ExcludePrivate() && ei.private_access()) &&
-          candidate_edge->use() < baldr::Use::kAlley) {
+          (candidate_edge->use() < search_filter.min_use_)) {
         allowed_cnt++;
         possible_next = candidate_edge;
       }
@@ -246,7 +247,7 @@ json::MapPtr get_full_road_segment(const DirectedEdge* de,
              costing->Allowed(opp_candidate_edge, reader.GetGraphTile(candidate_edge->endnode()),
                               sif::kDisallowShortcut)) &&
             !(costing->ExcludePrivate() && ei.private_access()) &&
-            candidate_edge->use() < baldr::Use::kAlley) {
+            (candidate_edge->use() < search_filter.min_use_)) {
           allowed_cnt++;
           possible_next = candidate_edge;
         }
@@ -425,8 +426,9 @@ json::ArrayPtr serialize_edges(const PathLocation& location,
         });
 
         if (full_road_segments)
-          info->insert({"full_road_segment",
-                        get_full_road_segment(directed_edge, costing, edge.percent_along, reader)});
+          info->insert(
+              {"full_road_segment", get_full_road_segment(directed_edge, costing, edge.percent_along,
+                                                          reader, location.search_filter_)});
 
         array->emplace_back(info);
       } // they want it lean and mean
@@ -443,8 +445,9 @@ json::ArrayPtr serialize_edges(const PathLocation& location,
         });
 
         if (full_road_segments)
-          info->insert({"full_road_segment",
-                        get_full_road_segment(directed_edge, costing, edge.percent_along, reader)});
+          info->insert(
+              {"full_road_segment", get_full_road_segment(directed_edge, costing, edge.percent_along,
+                                                          reader, location.search_filter_)});
 
         array->emplace_back(info);
       }

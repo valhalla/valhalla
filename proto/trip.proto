@@ -44,6 +44,7 @@ message TripLeg {
     kPedestrianCrossingUse = 32;
     kElevatorUse = 33;
     kEscalatorUse = 34;
+    kPlatformUse = 35;
 
     //Rest/Service Areas
     kRestAreaUse = 30;

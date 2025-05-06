@@ -7,6 +7,9 @@
 #include <valhalla/sif/costconstants.h>
 
 namespace valhalla {
+
+bool Use_Enum_parse(const std::string& use_name, valhalla::TripLeg_Use* use);
+
 // Associate RoadClass values to TripLeg proto
 constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotorway,
                                                      valhalla::RoadClass::kTrunk,

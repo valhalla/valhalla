@@ -42,6 +42,8 @@ public:
   public:
     SearchFilter(valhalla::RoadClass min_road_class = valhalla::RoadClass::kServiceOther,
                  valhalla::RoadClass max_road_class = valhalla::RoadClass::kMotorway,
+                 valhalla::baldr::Use min_use = valhalla::baldr::Use::kTransitConnection,
+                 valhalla::baldr::Use max_use = valhalla::baldr::Use::kRoad,
                  bool exclude_tunnel = false,
                  bool exclude_bridge = false,
                  bool exclude_toll_ = false,
@@ -52,6 +54,8 @@ public:
 
     valhalla::RoadClass min_road_class_;
     valhalla::RoadClass max_road_class_;
+    valhalla::baldr::Use min_use_;
+    valhalla::baldr::Use max_use_;
     bool exclude_tunnel_;
     bool exclude_bridge_;
     bool exclude_toll_;

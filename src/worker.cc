@@ -404,6 +404,19 @@ void parse_location(valhalla::Location* location,
     if (RoadClass_Enum_Parse(max_road_class, &max_rc)) {
       location->mutable_search_filter()->set_max_road_class(max_rc);
     }
+    // search_filter.min_use
+    auto min_use = rapidjson::get<std::string>(*search_filter, "/min_use", "transit_connection");
+    valhalla::TripLeg_Use minu;
+    if (valhalla::Use_Enum_parse(min_use, &minu)) {
+      location->mutable_search_filter()->set_min_use(static_cast<valhalla::RoadUse>(minu));
+    }
+    // search_filter.max_use
+    auto max_use = rapidjson::get<std::string>(*search_filter, "/max_use", "road");
+    valhalla::TripLeg_Use maxu;
+    if (valhalla::Use_Enum_parse(max_road_class, &maxu)) {
+      location->mutable_search_filter()->set_max_use(static_cast<valhalla::RoadUse>(maxu));
+    }
+
     // search_filter.exclude_tunnel
     location->mutable_search_filter()->set_exclude_tunnel(
         rapidjson::get<bool>(*search_filter, "/exclude_tunnel", false));
