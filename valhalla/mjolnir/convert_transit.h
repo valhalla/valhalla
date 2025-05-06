@@ -1,9 +1,10 @@
 #pragma once
 
-#include <boost/property_tree/ptree.hpp>
-#include <unordered_set>
-
 #include <valhalla/baldr/graphid.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <unordered_set>
 
 namespace valhalla {
 namespace mjolnir {

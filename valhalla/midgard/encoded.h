@@ -8,7 +8,7 @@
 
 // we store 6 digits of precision in the tiles, changing to 7 digits is a breaking change
 // if you want to try out 7 digits of precision you can uncomment this definition
-//#define USE_7DIGITS_DEFAULT
+// #define USE_7DIGITS_DEFAULT
 #ifdef USE_7DIGITS_DEFAULT
 constexpr double DECODE_PRECISION = 1e-7;
 constexpr int ENCODE_PRECISION = 1e7;

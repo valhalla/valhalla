@@ -1,18 +1,17 @@
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "loki/worker.h"
-#include "thor/worker.h"
-
 #include "gurka/gurka.h"
+#include "loki/worker.h"
 #include "test.h"
+#include "thor/worker.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 #ifdef ENABLE_GDAL
 #include <gdal_priv.h>

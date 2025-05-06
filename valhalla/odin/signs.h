@@ -1,14 +1,13 @@
 #ifndef VALHALLA_ODIN_SIGNS_H_
 #define VALHALLA_ODIN_SIGNS_H_
 
-#include <cstdint>
-#include <vector>
-
 #include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/baldr/verbal_text_formatter_us.h>
-
 #include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/sign.h>
+
+#include <cstdint>
+#include <vector>
 
 using namespace valhalla::baldr;
 

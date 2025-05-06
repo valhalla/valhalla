@@ -1,5 +1,4 @@
 #include "baldr/transitdeparture.h"
-
 #include "test.h"
 
 using namespace std;

@@ -1,8 +1,7 @@
-#include <vector>
-
 #include "midgard/point_tile_index.h"
-
 #include "test.h"
+
+#include <vector>
 
 using namespace std;
 using namespace valhalla::midgard;

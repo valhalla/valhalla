@@ -3,6 +3,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
+
 #include <cmath>
 
 namespace vm = valhalla::midgard;

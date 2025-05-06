@@ -1,7 +1,5 @@
 #include "baldr/signinfo.h"
-
 #include "mjolnir/graphbuilder.h"
-
 #include "test.h"
 
 using namespace std;

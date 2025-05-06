@@ -1,9 +1,4 @@
-#include <boost/algorithm/string/replace.hpp>
-#include <cstdint>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
+#include "tyr/serializers.h"
 #include "baldr/datetime.h"
 #include "baldr/json.h"
 #include "baldr/openlr.h"
@@ -15,12 +10,17 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "odin/util.h"
-#include "proto_conversions.h"
-#include "tyr/serializers.h"
-
 #include "proto/incidents.pb.h"
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
+#include "proto_conversions.h"
+
+#include <boost/algorithm/string/replace.hpp>
+
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

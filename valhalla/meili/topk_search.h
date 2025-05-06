@@ -1,13 +1,13 @@
 #ifndef MMP_TOPK_SEAECH_H_
 #define MMP_TOPK_SEAECH_H_
 
+#include <valhalla/meili/stateid.h>
+#include <valhalla/meili/viterbi_search.h>
+
 #include <functional>
 #include <memory>
 #include <unordered_map>
 #include <vector>
-
-#include <valhalla/meili/stateid.h>
-#include <valhalla/meili/viterbi_search.h>
 
 namespace valhalla {
 namespace meili {

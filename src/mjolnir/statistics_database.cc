@@ -1,11 +1,11 @@
-#include "statistics.h"
-#include <cstdint>
-
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/sqlite3.h"
+#include "statistics.h"
 
 #include <sqlite3.h>
+
+#include <cstdint>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

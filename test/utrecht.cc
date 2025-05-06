@@ -1,16 +1,14 @@
-#include <filesystem>
-
+#include "baldr/directededge.h"
+#include "baldr/graphconstants.h"
 #include "midgard/sequence.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
-#include <cstdint>
+#include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
-
-#include "test.h"
+#include <cstdint>
+#include <filesystem>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

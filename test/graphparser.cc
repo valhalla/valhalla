@@ -1,3 +1,5 @@
+#include "baldr/directededge.h"
+#include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
@@ -9,12 +11,10 @@
 #include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
+
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
-
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

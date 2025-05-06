@@ -1,7 +1,6 @@
 #include <cstdint>
 // -*- mode: c++ -*-
 #include "meili/routing.h"
-
 #include "test.h"
 
 using namespace valhalla;

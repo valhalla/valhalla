@@ -5,9 +5,8 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "speed_assigner.h"
 
-#include <cxxopts.hpp>
-
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include <algorithm>
 #include <future>

@@ -1,10 +1,10 @@
-#include "test.h"
-
+#include "mjolnir/graphtilebuilder.h"
 #include "baldr/graphid.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
+#include "test.h"
+
 #include <fstream>
 #include <streambuf>
 #include <string>

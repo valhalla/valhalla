@@ -1,13 +1,12 @@
-#include <filesystem>
-#include <sstream>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include "baldr/graphid.h"
 #include "baldr/rapidjson_utils.h"
 #include "mjolnir/util.h"
-
 #include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
+#include <sstream>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

@@ -1,22 +1,19 @@
-#include <cstdint>
-
+#include "odin/narrativebuilder.h"
 #include "baldr/verbal_text_formatter_factory.h"
-
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
 #include "odin/markup_formatter.h"
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrative_dictionary.h"
-#include "odin/narrativebuilder.h"
 #include "odin/sign.h"
 #include "odin/signs.h"
 #include "odin/util.h"
-
 #include "proto/common.pb.h"
 #include "proto/directions.pb.h"
 #include "proto/trip.pb.h"
-
 #include "test.h"
+
+#include <cstdint>
 
 using namespace std;
 using namespace valhalla;

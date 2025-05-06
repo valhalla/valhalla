@@ -1,14 +1,14 @@
 #pragma once
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/util.h>
+
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {

@@ -26,7 +26,7 @@
 #include "tyr/serializers.h"
 
 #include <boost/property_tree/ptree.hpp>
-
+#include <gtest/gtest.h>
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/output_iterator.hpp>
@@ -36,8 +36,6 @@
 
 #include <string>
 #include <tuple>
-
-#include <gtest/gtest.h>
 
 namespace valhalla {
 namespace gurka {

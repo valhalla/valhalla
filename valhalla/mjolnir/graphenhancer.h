@@ -1,8 +1,9 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHENHANCER_H
 #define VALHALLA_MJOLNIR_GRAPHENHANCER_H
 
-#include <boost/property_tree/ptree.hpp>
 #include <valhalla/mjolnir/osmdata.h>
+
+#include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
 namespace mjolnir {

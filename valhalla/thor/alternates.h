@@ -1,8 +1,8 @@
 #pragma once
 
-#include <vector>
-
 #include "thor/bidirectional_astar.h"
+
+#include <vector>
 
 namespace valhalla {
 namespace thor {

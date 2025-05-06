@@ -8,7 +8,6 @@
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/property_tree/ptree.hpp>
-
 #include <geos_c.h>
 #include <sqlite3.h>
 

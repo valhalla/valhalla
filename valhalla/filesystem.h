@@ -6,18 +6,19 @@
  * version missing the stuff we dont make use of. it should work on posix and windows
  */
 
+#include <dirent.h>
+#include <sys/stat.h>
+
 #include <cerrno>
 #include <chrono>
 #include <cstdio>
 #include <cstring>
-#include <dirent.h>
 #include <fstream>
 #include <iomanip>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sys/stat.h>
 #include <thread>
 #include <vector>
 

@@ -1,12 +1,6 @@
 #ifndef VALHALLA_THOR_MULTIMODAL_H_
 #define VALHALLA_THOR_MULTIMODAL_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -18,6 +12,12 @@
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace thor {

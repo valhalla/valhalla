@@ -1,11 +1,6 @@
 #ifndef VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 #define VALHALLA_THOR_TIMEDISTANCEMATRIX_H_
 
-#include <cstdint>
-#include <memory>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -14,6 +9,11 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
+
+#include <cstdint>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace thor {

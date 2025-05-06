@@ -1,10 +1,10 @@
 #ifndef MMP_EMISSION_COST_MODEL_H_
 #define MMP_EMISSION_COST_MODEL_H_
 
-#include <functional>
-
 #include <valhalla/meili/config.h>
 #include <valhalla/meili/state.h>
+
+#include <functional>
 
 namespace valhalla {
 namespace meili {

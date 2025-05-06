@@ -1,12 +1,12 @@
 #ifndef VALHALLA_ODIN_NARRATIVE_BUILDER_FACTORY_H_
 #define VALHALLA_ODIN_NARRATIVE_BUILDER_FACTORY_H_
 
-#include <memory>
-
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/narrativebuilder.h>
 #include <valhalla/proto/options.pb.h>
+
+#include <memory>
 
 namespace valhalla {
 namespace odin {

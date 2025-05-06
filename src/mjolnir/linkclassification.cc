@@ -1,8 +1,3 @@
-#include <optional>
-#include <queue>
-#include <unordered_set>
-#include <vector>
-
 #include "baldr/graphid.h"
 #include "baldr/json.h"
 #include "midgard/util.h"
@@ -10,6 +5,11 @@
 #include "mjolnir/node_expander.h"
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
+
+#include <optional>
+#include <queue>
+#include <unordered_set>
+#include <vector>
 
 using namespace valhalla::baldr;
 

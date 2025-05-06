@@ -1,12 +1,12 @@
 #ifndef VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_
 #define VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <locale>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include <boost/property_tree/ptree.hpp>
 
 namespace {
 

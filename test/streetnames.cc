@@ -1,9 +1,8 @@
 #include "baldr/streetnames.h"
 #include "baldr/streetname.h"
+#include "test.h"
 
 #include <vector>
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;

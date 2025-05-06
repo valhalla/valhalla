@@ -1,13 +1,12 @@
+#include "meili/viterbi_search.h"
+#include "meili/topk_search.h"
+#include "test.h"
+
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <iostream>
 #include <random>
-
-#include "meili/topk_search.h"
-#include "meili/viterbi_search.h"
-
-#include "test.h"
 
 // Viterbi and topK search tests
 

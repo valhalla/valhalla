@@ -1,15 +1,15 @@
-#include "test.h"
-#include <cstdint>
-
-#include <fstream>
-#include <vector>
-
+#include "mjolnir/edgeinfobuilder.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphid.h"
 #include "baldr/sign.h"
-#include "mjolnir/edgeinfobuilder.h"
+#include "test.h"
+
 #include <boost/shared_array.hpp>
+
+#include <cstdint>
+#include <fstream>
 #include <memory>
+#include <vector>
 
 using namespace std;
 using namespace valhalla::baldr;

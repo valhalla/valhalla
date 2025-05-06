@@ -1,14 +1,13 @@
-#include "test.h"
-
-#include <string>
-#include <vector>
-
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/util.h"
 #include "odin/worker.h"
 #include "sif/autocost.h"
+#include "test.h"
 #include "thor/worker.h"
+
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::thor;

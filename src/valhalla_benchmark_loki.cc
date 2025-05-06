@@ -1,3 +1,15 @@
+#include "argparse_utils.h"
+#include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
+#include "loki/search.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "sif/costfactory.h"
+#include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
 #include <algorithm>
 #include <atomic>
 #include <fstream>
@@ -8,19 +20,6 @@
 #include <thread>
 #include <tuple>
 #include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
-#include "loki/search.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "sif/costfactory.h"
-#include "worker.h"
-
-#include "argparse_utils.h"
 
 std::string costing_str;
 

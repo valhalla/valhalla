@@ -1,8 +1,8 @@
-#include <optional>
+#include "baldr/streetname.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 
-#include "baldr/streetname.h"
+#include <optional>
 
 namespace valhalla {
 namespace baldr {

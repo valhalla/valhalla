@@ -1,7 +1,6 @@
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphid.h"
 #include "midgard/pointll.h"
-
 #include "test.h"
 
 using namespace std;

@@ -1,9 +1,9 @@
 #include "mjolnir/osmway.h"
 #include "baldr/edgeinfo.h"
+#include "midgard/logging.h"
 #include "mjolnir/util.h"
 #include "regex"
 
-#include "midgard/logging.h"
 #include <boost/algorithm/string.hpp>
 
 using namespace valhalla::baldr;

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <string>
-#include <vector>
+#include <valhalla/baldr/landmark.h>
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <valhalla/baldr/landmark.h>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace valhalla {
 namespace mjolnir {

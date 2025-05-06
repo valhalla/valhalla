@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_OSMNODE_H
 #define VALHALLA_MJOLNIR_OSMNODE_H
 
-#include <cstdint>
-#include <cstring>
-
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <cstdint>
+#include <cstring>
 
 namespace valhalla {
 namespace mjolnir {

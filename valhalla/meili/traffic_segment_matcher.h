@@ -1,17 +1,18 @@
 #ifndef MMP_TRAFFIC_SEGMENT_MATCHER_H_
 #define MMP_TRAFFIC_SEGMENT_MATCHER_H_
 
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <list>
-#include <string>
-#include <vector>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/map_matcher_factory.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <list>
+#include <string>
+#include <vector>
 
 namespace valhalla {
 namespace meili {

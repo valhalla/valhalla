@@ -3,9 +3,10 @@
 #ifndef MMP_MEASUREMENT_H_
 #define MMP_MEASUREMENT_H_
 
-#include <cinttypes>
 #include <valhalla/baldr/location.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <cinttypes>
 
 namespace valhalla {
 

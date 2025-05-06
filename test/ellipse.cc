@@ -1,11 +1,10 @@
 #include "midgard/ellipse.h"
-#include "midgard/point2.h"
-#include <cstdint>
-
 #include "midgard/aabb2.h"
 #include "midgard/linesegment2.h"
-
+#include "midgard/point2.h"
 #include "test.h"
+
+#include <cstdint>
 
 using namespace std;
 using namespace valhalla::midgard;

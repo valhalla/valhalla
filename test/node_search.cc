@@ -1,19 +1,17 @@
 #include "loki/node_search.h"
-
-#include <cstdint>
-#include <filesystem>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
-
 #include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <filesystem>
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;

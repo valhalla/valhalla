@@ -1,6 +1,7 @@
 #include "gurka.h"
 #include "mjolnir/adminbuilder.h"
 #include "test.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)

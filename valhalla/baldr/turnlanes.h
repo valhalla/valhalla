@@ -1,12 +1,14 @@
 #ifndef VALHALLA_BALDR_TURNLANES_H_
 #define VALHALLA_BALDR_TURNLANES_H_
 
+#include <valhalla/midgard/util.h>
+
+#include <stdint.h>
+
 #include <cstdint>
 #include <sstream>
-#include <stdint.h>
 #include <string>
 #include <unordered_map>
-#include <valhalla/midgard/util.h>
 #include <vector>
 
 namespace valhalla {

@@ -1,8 +1,7 @@
-#include <cstdint>
-
 #include "mjolnir/uniquenames.h"
-
 #include "test.h"
+
+#include <cstdint>
 
 using namespace std;
 using namespace valhalla::mjolnir;

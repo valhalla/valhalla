@@ -1,11 +1,9 @@
+#include "odin/narrative_builder_factory.h"
 #include "midgard/util.h"
-
 #include "odin/enhancedtrippath.h"
 #include "odin/markup_formatter.h"
-#include "odin/narrative_builder_factory.h"
 #include "odin/narrativebuilder.h"
 #include "odin/util.h"
-
 #include "proto/options.pb.h"
 
 namespace valhalla {

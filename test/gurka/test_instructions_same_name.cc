@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -7,7 +8,7 @@
 
 using namespace valhalla;
 
-//#############################################################################
+// #############################################################################
 class InstructionsSameNameTurnLeft : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -64,7 +65,7 @@ TEST_F(InstructionsSameNameTurnLeft, SameNameTurnLeft) {
                                                             "Continue for 5 kilometers.");
 }
 
-//#############################################################################
+// #############################################################################
 class InstructionsSameNameTurnLeft302 : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -121,7 +122,7 @@ TEST_F(InstructionsSameNameTurnLeft302, SameNameTurnLeft) {
                                                             "Continue for 5 kilometers.");
 }
 
-//#############################################################################
+// #############################################################################
 class InstructionsSameNameLeftForward : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -169,7 +170,7 @@ TEST_F(InstructionsSameNameLeftForward, SameNameNoLeft) {
                                                 DirectionsLeg_Maneuver_Type_kDestination});
 }
 
-//#############################################################################
+// #############################################################################
 class InstructionsSameNameTurnLeftToward : public ::testing::Test {
 protected:
   static gurka::map map;

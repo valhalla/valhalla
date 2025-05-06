@@ -1,8 +1,8 @@
-#include <cstdint>
-#include <unordered_set>
-
 #include "baldr/json.h"
 #include "tyr/serializers.h"
+
+#include <cstdint>
+#include <unordered_set>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

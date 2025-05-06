@@ -1,18 +1,17 @@
-#include <cstdlib>
-#include <deque>
-#include <iostream>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
 #include "mjolnir/elevationbuilder.h"
 
-#include "argparse_utils.h"
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cstdlib>
+#include <deque>
+#include <iostream>
+#include <vector>
 
 namespace opt = cxxopts;
 

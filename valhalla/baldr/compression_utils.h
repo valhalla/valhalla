@@ -1,7 +1,8 @@
 #pragma once
 
-#include <functional>
 #include <zlib.h>
+
+#include <functional>
 
 namespace valhalla {
 namespace baldr {

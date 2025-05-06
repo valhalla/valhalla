@@ -1,9 +1,8 @@
-#include <iostream>
-
 #include "baldr/predictedspeeds.h"
 #include "midgard/util.h"
-
 #include "test.h"
+
+#include <iostream>
 
 using namespace std;
 using namespace valhalla::baldr;

@@ -1,13 +1,3 @@
-#include "test.h"
-
-#include <algorithm>
-#include <fstream>
-#include <iterator>
-#include <string>
-#include <unordered_set>
-
-#include <prime_server/prime_server.hpp>
-
 #include "baldr/curl_tilegetter.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
@@ -15,6 +5,15 @@
 #include "midgard/sequence.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "test.h"
+
+#include <prime_server/prime_server.hpp>
+
+#include <algorithm>
+#include <fstream>
+#include <iterator>
+#include <string>
+#include <unordered_set>
 #include "mjolnir/util.h
 #include "pixels.h"
 #include "skadi/sample.h"

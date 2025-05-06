@@ -1,6 +1,7 @@
 #include "baldr/json.h"
 #include "baldr/openlr.h"
 #include "tyr/serializers.h"
+
 #include <cstdint>
 
 using namespace valhalla;

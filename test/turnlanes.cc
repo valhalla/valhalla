@@ -1,27 +1,25 @@
+#include "baldr/turnlanes.h"
+#include "odin/directionsbuilder.h"
+#include "odin/enhancedtrippath.h"
+#include "odin/markup_formatter.h"
+#include "proto/api.pb.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
+#include "test.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <fstream>
 #include <string>
 #include <vector>
 
-#include "baldr/turnlanes.h"
-#include "odin/directionsbuilder.h"
-#include "odin/enhancedtrippath.h"
-#include "odin/markup_formatter.h"
-
-#include "proto/api.pb.h"
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
-
-#include "test.h"
-
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif
 
 // this is useful when you modify the Options proto and need to restore it
-//#include "worker.h"
+// #include "worker.h"
 // void fix_request(const std::string& filename, valhalla::Api& request) {
 //  auto txt = filename;
 //  txt.replace(txt.size() - 3, 3, "txt");

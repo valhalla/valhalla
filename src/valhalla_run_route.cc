@@ -1,16 +1,4 @@
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <cxxopts.hpp>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/attributes_controller.h"
 #include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
@@ -24,6 +12,10 @@
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
+#include "proto/api.pb.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 #include "sif/costfactory.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
@@ -32,12 +24,18 @@
 #include "thor/unidirectional_astar.h"
 #include "worker.h"
 
-#include "proto/api.pb.h"
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
+#include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
-#include "argparse_utils.h"
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

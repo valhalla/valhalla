@@ -1,5 +1,4 @@
 #include "mjolnir/util.h"
-
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/aabb2.h"
@@ -22,6 +21,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
+
 #include <regex>
 
 using namespace valhalla::midgard;

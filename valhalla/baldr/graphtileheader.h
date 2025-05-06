@@ -1,15 +1,15 @@
 #ifndef VALHALLA_BALDR_GRAPHTILEHEADER_H_
 #define VALHALLA_BALDR_GRAPHTILEHEADER_H_
 
-#include <array>
-#include <cstdint>
-#include <cstdlib>
-#include <string>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <array>
+#include <cstdint>
+#include <cstdlib>
+#include <string>
 
 namespace valhalla {
 namespace baldr {

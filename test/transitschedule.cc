@@ -1,5 +1,4 @@
 #include "baldr/transitschedule.h"
-
 #include "test.h"
 
 using namespace std;

@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -7,7 +8,7 @@
 
 using namespace valhalla;
 
-//#############################################################################
+// #############################################################################
 class InstructionsKeepHighwaySigns : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -198,7 +199,7 @@ TEST_F(InstructionsKeepHighwaySigns, KeepStraightExitNumberBranchToward) {
       "Continue for 4 kilometers.");
 }
 
-//#############################################################################
+// #############################################################################
 class InstructionsKeepHighway4LanesTo2And2 : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -309,7 +310,7 @@ TEST_F(InstructionsKeepHighway4LanesTo2And2, KeepRightExitBranchToward) {
       "Continue for 6 kilometers.");
 }
 
-//#############################################################################
+// #############################################################################
 class InstructionsKeepHighway3LanesTo2And2 : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -406,7 +407,7 @@ TEST_F(InstructionsKeepHighway3LanesTo2And2, KeepRightExitBranchToward) {
       "Keep right to take exit 208 onto I 280 South toward Cleveland.", "Continue for 6 kilometers.");
 }
 
-//#############################################################################
+// #############################################################################
 class InstructionsKeepHighway2LanesTo1And1 : public ::testing::Test {
 protected:
   static gurka::map map;

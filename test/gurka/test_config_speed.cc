@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "src/mjolnir/speed_assigner.h"
+
 #include <gtest/gtest.h>
 
 #include <filesystem>

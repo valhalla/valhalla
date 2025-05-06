@@ -2,6 +2,7 @@
 #include "midgard/logging.h"
 #include "odin/util.h"
 #include "test.h"
+
 #include <locale>
 #include <regex>
 #include <set>

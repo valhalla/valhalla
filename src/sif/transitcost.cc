@@ -8,6 +8,7 @@
 
 #ifdef INLINE_TEST
 #include "test.h"
+
 #include <random>
 #endif
 

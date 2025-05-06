@@ -1,17 +1,16 @@
+#include "baldr/datetime.h"
 #include "gurka.h"
 #include "just_gtfs/just_gtfs.h"
-
-#include "baldr/datetime.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/ingest_transit.h"
 #include "proto/common.pb.h"
 #include "proto/transit.pb.h"
 #include "test.h"
-#include <gtest/gtest.h>
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+#include <gtest/gtest.h>
 
 using point_type = boost::geometry::model::d2::point_xy<double>;
 using polygon_type = boost::geometry::model::polygon<point_type>;

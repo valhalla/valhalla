@@ -1,9 +1,11 @@
 #ifndef VALHALLA_BALDR_NODETRANSITION_H_
 #define VALHALLA_BALDR_NODETRANSITION_H_
 
-#include <cstdint>
-#include <stdint.h>
 #include <valhalla/baldr/graphid.h>
+
+#include <stdint.h>
+
+#include <cstdint>
 
 namespace valhalla {
 namespace baldr {

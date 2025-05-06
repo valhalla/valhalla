@@ -1,9 +1,8 @@
+#include "./route_summary_cache.h"
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 #include "proto_conversions.h"
-
-#include "./route_summary_cache.h"
 
 namespace valhalla {
 namespace tyr {

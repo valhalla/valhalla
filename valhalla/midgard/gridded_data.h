@@ -1,16 +1,17 @@
 #ifndef VALHALLA_MIDGARD_GRIDDEDDATA_H_
 #define VALHALLA_MIDGARD_GRIDDEDDATA_H_
 
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/polyline2.h>
+#include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util.h>
+
 #include <algorithm>
 #include <array>
 #include <functional>
 #include <limits>
 #include <list>
 #include <map>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/polyline2.h>
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/util.h>
 #include <vector>
 
 namespace valhalla {

@@ -1,15 +1,15 @@
-#include <algorithm>
-#include <cmath>
-#include <vector>
-
+#include "thor/costmatrix.h"
 #include "baldr/datetime.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/recost.h"
-#include "thor/costmatrix.h"
 #include "worker.h"
 
 #include <robin_hood.h>
+
+#include <algorithm>
+#include <cmath>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

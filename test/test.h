@@ -14,13 +14,11 @@
 #ifndef _MSC_VER
 #include <sys/mman.h>
 #endif
-#include <sys/stat.h>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <sys/stat.h>
 
 namespace test {
 

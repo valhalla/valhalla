@@ -1,5 +1,4 @@
 #include "test.h"
-
 #include "baldr/graphmemory.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
@@ -16,14 +15,12 @@
 #ifndef _MSC_VER
 #include <sys/mman.h>
 #endif
-#include <sys/stat.h>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "microtar.h"
 
 #include <boost/algorithm/string.hpp>
-
-#include "microtar.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <sys/stat.h>
 
 namespace {
 // TODO: this should support boost::property_tree::path

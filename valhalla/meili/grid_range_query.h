@@ -2,17 +2,16 @@
 #ifndef MMP_GRID_RANGE_QUERY_H_
 #define MMP_GRID_RANGE_QUERY_H_
 
+#include <valhalla/meili/grid_traversal.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/linesegment2.h>
+
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/linesegment2.h>
-
-#include <valhalla/meili/grid_traversal.h>
 
 namespace valhalla {
 namespace meili {

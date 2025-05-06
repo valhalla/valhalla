@@ -1,5 +1,4 @@
 #include "baldr/admin.h"
-
 #include "test.h"
 
 using namespace std;

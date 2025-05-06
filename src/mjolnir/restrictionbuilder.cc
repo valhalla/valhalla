@@ -1,4 +1,13 @@
 #include "mjolnir/restrictionbuilder.h"
+#include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
+#include "baldr/timedomain.h"
+#include "midgard/logging.h"
+#include "midgard/sequence.h"
 #include "mjolnir/complexrestrictionbuilder.h"
 #include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -10,16 +19,6 @@
 #include <random>
 #include <thread>
 #include <unordered_set>
-
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/tilehierarchy.h"
-#include "baldr/timedomain.h"
-#include "midgard/logging.h"
-#include "midgard/sequence.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -1,18 +1,18 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHBUILDER_H
 #define VALHALLA_MJOLNIR_GRAPHBUILDER_H
 
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <string>
-#include <vector>
-
 #include <valhalla/baldr/signinfo.h>
 #include <valhalla/midgard/sequence.h>
-
 #include <valhalla/mjolnir/osmdata.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmnodelinguistic.h>
 #include <valhalla/mjolnir/osmway.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <string>
+#include <vector>
 
 namespace valhalla {
 namespace mjolnir {

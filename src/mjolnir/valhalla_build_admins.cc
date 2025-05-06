@@ -1,13 +1,11 @@
-#include "filesystem.h"
-
-#include <cxxopts.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/adminbuilder.h"
 
-#include "argparse_utils.h"
+#include <cxxopts.hpp>
 
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();

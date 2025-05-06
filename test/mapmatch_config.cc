@@ -1,5 +1,4 @@
 #include "meili/config.h"
-
 #include "test.h"
 
 namespace {

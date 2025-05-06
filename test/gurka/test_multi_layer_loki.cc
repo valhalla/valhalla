@@ -1,10 +1,10 @@
-#include <optional>
-#include <unordered_map>
+#include "baldr/rapidjson_utils.h"
+#include "gurka.h"
 
 #include <gtest/gtest.h>
 
-#include "baldr/rapidjson_utils.h"
-#include "gurka.h"
+#include <optional>
+#include <unordered_map>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

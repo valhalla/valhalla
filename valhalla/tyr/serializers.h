@@ -1,10 +1,6 @@
 #ifndef __VALHALLA_TYR_SERVICE_H__
 #define __VALHALLA_TYR_SERVICE_H__
 
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
@@ -17,6 +13,10 @@
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto_conversions.h>
 #include <valhalla/tyr/actor.h>
+
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace tyr {

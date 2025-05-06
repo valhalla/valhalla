@@ -6,11 +6,13 @@
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
+
 #include <cassert>
 
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
+
 #include <random>
 #endif
 

@@ -1,5 +1,4 @@
 #include "midgard/obb2.h"
-
 #include "test.h"
 
 using namespace std;

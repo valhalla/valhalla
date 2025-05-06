@@ -1,19 +1,18 @@
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-
+#include "argparse_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 
-#include <algorithm>
+#include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
+
+#include <algorithm>
+#include <cstdint>
 #include <iostream>
 #include <unordered_map>
-
-#include "argparse_utils.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

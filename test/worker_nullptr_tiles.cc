@@ -1,7 +1,6 @@
-#include "test.h"
-
 #include "baldr/graphreader.h"
 #include "loki/worker.h"
+#include "test.h"
 #include "thor/worker.h"
 #include "worker.h"
 

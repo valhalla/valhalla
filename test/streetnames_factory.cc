@@ -1,11 +1,10 @@
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
+#include "test.h"
 
 #include <memory>
 #include <vector>
-
-#include "test.h"
 
 using namespace valhalla::baldr;
 

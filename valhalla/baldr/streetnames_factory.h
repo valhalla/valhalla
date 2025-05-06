@@ -1,12 +1,12 @@
 #ifndef VALHALLA_BALDR_STREETNAMES_FACTORY_H_
 #define VALHALLA_BALDR_STREETNAMES_FACTORY_H_
 
+#include <valhalla/baldr/streetnames.h>
+#include <valhalla/proto/common.pb.h>
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/streetnames.h>
-#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace baldr {

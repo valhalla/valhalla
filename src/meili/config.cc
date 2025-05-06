@@ -1,5 +1,4 @@
 #include "meili/config.h"
-
 #include "macro.h"
 #include "midgard/logging.h"
 

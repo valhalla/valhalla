@@ -1,12 +1,12 @@
+#include "baldr/graphreader.h"
+#include "baldr/traffictile.h"
 #include "gurka.h"
 #include "test.h"
 
-#include "baldr/graphreader.h"
-#include "baldr/traffictile.h"
-
-#include <cmath>
 #include <sys/mman.h>
 #include <sys/stat.h>
+
+#include <cmath>
 
 using namespace valhalla;
 using LiveTrafficCustomize = test::LiveTrafficCustomize;

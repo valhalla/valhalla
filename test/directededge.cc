@@ -1,6 +1,5 @@
 
 #include "baldr/directededge.h"
-
 #include "test.h"
 
 using namespace std;

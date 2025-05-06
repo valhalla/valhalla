@@ -1,9 +1,3 @@
-#include <algorithm>
-#include <iostream>
-#include <random>
-#include <utility>
-#include <vector>
-
 #include "baldr/json.h"
 #include "loki/worker.h"
 #include "midgard/distanceapproximator.h"
@@ -11,11 +5,16 @@
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/worker.h"
+#include "test.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "worker.h"
 
-#include "test.h"
+#include <algorithm>
+#include <iostream>
+#include <random>
+#include <utility>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
