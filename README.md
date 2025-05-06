@@ -16,6 +16,11 @@ Hiermit können optional private Straßen (also solche mit `access|motor_vehicle
 Hiermit können beim Graphbuild nicht nur driveways, die als `private` markiert sind vom Graphen ausgeschlossen werden, sondern optional alle (`include_driveways` muss `false` sein).
 
 
+##### `search_filter.{min,max}_road_use` (Parameter pro Location)
+
+Hiermit lassen sich Edges nach Use (auch Form of Way genannt) filtern. Der Default ist "transit_connection" für min  und "road" für max (sprich alle Edges werden zurückgegeben). Es werden nur Edges zurückgegeben, deren Use-Wert höchstens so groß ist wie der des angegeben min Use-Wertes bzw. mindestens so niedrig ist wie der des max Use-Wertes (volle Tabelle [hier](https://github.com/valhalla/valhalla/blob/ecaf6c9c40e84d079e394bd8917cb6613a637da3/valhalla/baldr/graphconstants.h#L292), Text-Equivalente finden sich direkt darunter). 
+
+
 
      ██▒   █▓ ▄▄▄       ██▓     ██░ ██  ▄▄▄       ██▓     ██▓    ▄▄▄
     ▓██░   █▒▒████▄    ▓██▒    ▓██░ ██▒▒████▄    ▓██▒    ▓██▒   ▒████▄
