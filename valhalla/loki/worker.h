@@ -10,6 +10,7 @@
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/loki/polygon_search.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costfactory.h>
@@ -68,6 +69,7 @@ protected:
   sif::CostFactory factory;
   sif::cost_ptr_t costing;
   std::shared_ptr<baldr::GraphReader> reader;
+  geos_t geos_helper;
   std::shared_ptr<baldr::connectivity_map_t> connectivity_map;
   std::unordered_set<Options::Action> actions;
   std::string action_str;

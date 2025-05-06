@@ -124,8 +124,8 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
   if (options.exclude_polygons_size()) {
-    const auto edges =
-        edges_in_rings(options.exclude_polygons(), *reader, costing, max_exclude_polygons_length);
+    const auto edges = edges_in_polygons(options.exclude_polygons(), *reader, costing,
+                                         max_exclude_polygons_length, geos_helper);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
     for (const auto& edge_id : edges) {
       auto* avoid = co.add_exclude_edges();
