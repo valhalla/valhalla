@@ -7,7 +7,7 @@ set -o errexit -o pipefail -o nounset
 #  - 1 there are files to be formatted
 #  - 0 everything looks fine
 
-
+# see https://pypi.org/project/clang-format/#history
 readonly CLANG_FORMAT_VERSION=11.0.1
 
 if [[ $(uname -i) == 'aarch64' ]]; then
@@ -18,8 +18,8 @@ source scripts/bash_utils.sh
 
 # Python setup
 py=$(setup_python)
-if [[ $(python3 -m pip list | grep -c "black\|flake8") -ne 2 ]]; then
-  if [[ $(python3 -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
+if [[ $(${py} -m pip list | grep -c "black\|flake8\|clang-format") -ne 2 ]]; then
+  if [[ $(${py} -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
     ${py} -m pip install black==24.10.0 flake8==7.1.1 clang-format=="$CLANG_FORMAT_VERSION"
   else
     sudo PIP_BREAK_SYSTEM_PACKAGES=1 ${py} -m pip install black==24.10.0 flake8==7.1.1
@@ -37,6 +37,16 @@ ${py} -m flake8 --max-line-length=105 --extend-ignore=E501,E731,E203 --extend-ex
 readonly CLANG_FORMAT="$(${py} -c 'import sys; print(sys.prefix)')"/bin/clang-format
 
 echo "Using clang-format $CLANG_FORMAT_VERSION from ${CLANG_FORMAT}"
+
+# determine how many threads to use
+readonly OS=$(uname)
+if [[ $OS = "Linux" ]] ; then
+    readonly NPROC=$(nproc)
+elif [[ ${OS} = "Darwin" ]] ; then
+    readonly NPROC=$(sysctl -n hw.physicalcpu)
+else
+    readonly NPROC=1
+fi
 
 find src valhalla test -type f -name '*.h' -o -name '*.cc' \
   | xargs -I{} -P ${NPROC} ${CLANG_FORMAT} -i -style=file {}

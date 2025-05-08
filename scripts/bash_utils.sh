@@ -2,15 +2,6 @@
 
 set -o errexit -o pipefail -o nounset
 
-readonly OS=$(uname)
-if [[ $OS = "Linux" ]] ; then
-    readonly NPROC=$(nproc)
-elif [[ ${OS} = "Darwin" ]] ; then
-    readonly NPROC=$(sysctl -n hw.physicalcpu)
-else
-    readonly NPROC=1
-fi
-
 function setup_mason {
 
   if [ ! -f mason/mason ] ; then
