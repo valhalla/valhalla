@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 
 #include "baldr/admin.h"
+#include "baldr/admininfo.h"
 #include "gurka.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/pbfgraphparser.h"

@@ -6,11 +6,12 @@
 #include <string>
 #include <vector>
 
-#include <boost/property_tree/ptree.hpp>
-
-#include "valhalla/baldr/tilegetter.h"
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
+namespace baldr {
+class tile_getter_t;
+}
 namespace skadi {
 
 struct cache_t;

@@ -3,8 +3,8 @@
 #include <string>
 #include <utility>
 
-#include <valhalla/baldr/curler.h>
-#include <valhalla/baldr/tilegetter.h>
+#include "valhalla/baldr/curler.h"
+#include "valhalla/baldr/tilegetter.h"
 
 namespace valhalla {
 namespace baldr {

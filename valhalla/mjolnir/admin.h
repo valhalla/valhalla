@@ -1,13 +1,13 @@
 #ifndef VALHALLA_MJOLNIR_ADMIN_H_
 #define VALHALLA_MJOLNIR_ADMIN_H_
 
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/mjolnir/graphtilebuilder.h>
-#include <valhalla/mjolnir/sqlite3.h>
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/midgard/pointll.h"
+#include "valhalla/mjolnir/sqlite3.h"
 
 #include <cstdint>
+#include <map>
+#include <optional>
 #include <unordered_map>
 
 struct GEOSContextHandle_HS;
@@ -19,7 +19,13 @@ using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 namespace valhalla {
+namespace midgard {
+template <class T> class AABB2;
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
+} // namespace midgard
 namespace mjolnir {
+class GraphTileBuilder;
 
 // GEOS thread-safe API requires a context handle for each operation, that should be unique for every
 // thread. See https://libgeos.org/usage/c_api/#reentrantthreadsafe-api for more details.

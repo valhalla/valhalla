@@ -6,16 +6,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/time_info.h>
-#include <valhalla/proto/common.pb.h>
-#include <valhalla/sif/dynamiccost.h>
-#include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/pathalgorithm.h>
+#include <boost/property_tree/ptree.hpp>
+
+#include "valhalla/baldr/double_bucket_queue.h"
+#include "valhalla/baldr/graphreader.h"
+#include "valhalla/baldr/time_info.h"
+#include "valhalla/thor/pathalgorithm.h"
 
 namespace valhalla {
 namespace thor {

@@ -1,22 +1,29 @@
 #ifndef __VALHALLA_SERVICE_H__
 #define __VALHALLA_SERVICE_H__
-#include <string>
 
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/proto/api.pb.h>
-#include <valhalla/sif/dynamiccost.h>
-#include <valhalla/valhalla.h>
+#include <string>
 
 #ifdef ENABLE_SERVICES
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 #endif
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
+class Api;
+enum Options_Action : int;
+class Costing_Options;
+class HierarchyLimits;
+
+namespace midgard {
+template <typename T> class Finally;
+}
+
+namespace sif {
+class DynamicCost;
+using cost_ptr_t = std::shared_ptr<DynamicCost>;
+} // namespace sif
 
 struct hierarchy_limits_config_t {
   std::vector<HierarchyLimits> max_limits;
@@ -64,7 +71,7 @@ struct valhalla_exception_t : public std::runtime_error {
  * @param api           The pbf request, this will be modified either with the json provided or, if
  *                      already filled out, it will be validated and the json will be ignored
  */
-void ParseApi(const std::string& json_request, Options::Action action, Api& api);
+void ParseApi(const std::string& json_request, Options_Action action, Api& api);
 
 /**
  * Parse hierarchy limits from config. Falls back to default values if none are found at the

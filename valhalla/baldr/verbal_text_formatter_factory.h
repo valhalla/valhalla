@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include <valhalla/baldr/verbal_text_formatter.h>
+#include "valhalla/baldr/verbal_text_formatter.h"
 
 namespace valhalla {
 namespace baldr {

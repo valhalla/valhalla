@@ -2,9 +2,10 @@
 #include <string>
 #include <unordered_map>
 
-#include <valhalla/proto/options.pb.h>
-
 namespace valhalla {
+
+class Options;
+
 namespace baldr {
 
 // Edge keys

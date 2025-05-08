@@ -1,10 +1,13 @@
-#include "mjolnir/osmway.h"
-#include "baldr/edgeinfo.h"
-#include "mjolnir/util.h"
-#include "regex"
 
-#include "midgard/logging.h"
+#include <regex>
+
 #include <boost/algorithm/string.hpp>
+
+#include <valhalla/baldr/edgeinfo.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/uniquenames.h>
+#include <valhalla/mjolnir/util.h>
 
 using namespace valhalla::baldr;
 

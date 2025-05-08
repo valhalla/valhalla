@@ -7,6 +7,7 @@
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
 
+#include "meili/map_matcher.h"
 #include "meili/map_matcher_factory.h"
 
 #include "test.h"

@@ -5,14 +5,16 @@
 #include <memory>
 #include <vector>
 
-#include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/baldr/time_info.h>
-#include <valhalla/proto/api.pb.h>
-#include <valhalla/sif/edgelabel.h>
-#include <valhalla/sif/hierarchylimits.h>
-#include <valhalla/thor/astarheuristic.h>
-#include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/pathalgorithm.h>
+#include <boost/property_tree/ptree_fwd.hpp>
+
+#include "valhalla/baldr/double_bucket_queue.h"
+#include "valhalla/baldr/time_info.h"
+#include "valhalla/proto/api.pb.h"
+#include "valhalla/sif/edgelabel.h"
+#include "valhalla/sif/hierarchylimits.h"
+#include "valhalla/thor/astarheuristic.h"
+#include "valhalla/thor/edgestatus.h"
+#include "valhalla/thor/pathalgorithm.h"
 
 namespace valhalla {
 namespace thor {
@@ -42,7 +44,7 @@ public:
    * Constructor.
    * @param config A config object of key, value pairs
    */
-  explicit BidirectionalAStar(const boost::property_tree::ptree& config = {});
+  explicit BidirectionalAStar(const boost::property_tree::ptree& config);
 
   /**
    * Destructor
@@ -60,13 +62,12 @@ public:
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<std::vector<PathInfo>>
-  GetBestPath(valhalla::Location& origin,
-              valhalla::Location& dest,
-              baldr::GraphReader& graphreader,
-              const sif::mode_costing_t& mode_costing,
-              const sif::TravelMode mode,
-              const Options& options = Options::default_instance()) override;
+  std::vector<std::vector<PathInfo>> GetBestPath(valhalla::Location& origin,
+                                                 valhalla::Location& dest,
+                                                 baldr::GraphReader& graphreader,
+                                                 const sif::mode_costing_t& mode_costing,
+                                                 const sif::TravelMode mode,
+                                                 const Options& options) override;
 
   /**
    * Returns the name of the algorithm

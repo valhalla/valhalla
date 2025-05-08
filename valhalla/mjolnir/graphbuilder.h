@@ -1,21 +1,29 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHBUILDER_H
 #define VALHALLA_MJOLNIR_GRAPHBUILDER_H
 
-#include <boost/property_tree/ptree.hpp>
 #include <cstdint>
+#include <map>
 #include <string>
 #include <vector>
 
-#include <valhalla/baldr/signinfo.h>
-#include <valhalla/midgard/sequence.h>
-
-#include <valhalla/mjolnir/osmdata.h>
-#include <valhalla/mjolnir/osmnode.h>
-#include <valhalla/mjolnir/osmnodelinguistic.h>
-#include <valhalla/mjolnir/osmway.h>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
+namespace baldr {
+class GraphId;
+enum class Language : uint8_t;
+enum class PronunciationAlphabet : uint8_t;
+class SignInfo;
+} // namespace baldr
+namespace midgard {
+template <class T> class sequence;
+}
 namespace mjolnir {
+class OSMData;
+class OSMNode;
+class OSMNodeLinguistic;
+class OSMWay;
+class UniqueNames;
 
 using boost::property_tree::ptree;
 

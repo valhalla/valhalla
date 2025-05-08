@@ -23,7 +23,7 @@ TEST(GriddedData, Basic) {
   }
 
   // make the contours
-  std::vector<GriddedData<1>::contour_interval_t> iso_markers{
+  std::vector<contour_interval_t> iso_markers{
       {0, 100000, "dist", ""}, {0, 200000, "dist", ""}, {0, 300000, "dist", ""},
       {0, 400000, "dist", ""}, {0, 500000, "dist", ""}, {0, 600000, "dist", ""},
   };

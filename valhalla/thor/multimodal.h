@@ -7,17 +7,19 @@
 #include <unordered_map>
 #include <vector>
 
-#include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/time_info.h>
-#include <valhalla/proto/common.pb.h>
-#include <valhalla/sif/dynamiccost.h>
-#include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/astarheuristic.h>
-#include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/pathalgorithm.h>
-#include <valhalla/thor/pathinfo.h>
+#include <boost/property_tree/ptree_fwd.hpp>
+
+#include "valhalla/baldr/double_bucket_queue.h"
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/baldr/graphreader.h"
+#include "valhalla/baldr/time_info.h"
+#include "valhalla/proto/common.pb.h"
+#include "valhalla/sif/dynamiccost.h"
+#include "valhalla/sif/edgelabel.h"
+#include "valhalla/thor/astarheuristic.h"
+#include "valhalla/thor/edgestatus.h"
+#include "valhalla/thor/pathalgorithm.h"
+#include "valhalla/thor/pathinfo.h"
 
 namespace valhalla {
 namespace thor {
@@ -32,7 +34,7 @@ public:
    * Constructor.
    * @param config A config object of key, value pairs
    */
-  explicit MultiModalPathAlgorithm(const boost::property_tree::ptree& config = {});
+  explicit MultiModalPathAlgorithm(const boost::property_tree::ptree& config);
 
   /**
    * Destructor
@@ -50,13 +52,12 @@ public:
    * @return  Returns the path edges (and elapsed time/modes at end of
    *          each edge).
    */
-  std::vector<std::vector<PathInfo>>
-  GetBestPath(valhalla::Location& origin,
-              valhalla::Location& dest,
-              baldr::GraphReader& graphreader,
-              const sif::mode_costing_t& mode_costing,
-              const sif::TravelMode mode,
-              const Options& options = Options::default_instance()) override;
+  std::vector<std::vector<PathInfo>> GetBestPath(valhalla::Location& origin,
+                                                 valhalla::Location& dest,
+                                                 baldr::GraphReader& graphreader,
+                                                 const sif::mode_costing_t& mode_costing,
+                                                 const sif::TravelMode mode,
+                                                 const Options& options) override;
 
   /**
    * Returns the name of the algorithm

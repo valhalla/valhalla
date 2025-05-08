@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <sstream>
+#include <thread>
 #include <utility>
 
 #ifdef ENABLE_GDAL
@@ -374,7 +375,7 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeIsochrones(Api& request,
-                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                                std::vector<midgard::contour_interval_t>& intervals,
                                 const std::shared_ptr<const midgard::GriddedData<2>>& isogrid) {
 
   // only generate if json or pbf output is requested

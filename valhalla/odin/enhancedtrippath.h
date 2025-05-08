@@ -10,11 +10,11 @@
 #include <utility>
 #include <vector>
 
-#include <valhalla/baldr/turn.h>
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/sign.pb.h>
-#include <valhalla/proto/trip.pb.h>
+#include "valhalla/baldr/turn.h"
+#include "valhalla/proto/directions.pb.h"
+#include "valhalla/proto/options.pb.h"
+#include "valhalla/proto/sign.pb.h"
+#include "valhalla/proto/trip.pb.h"
 
 namespace valhalla {
 namespace odin {

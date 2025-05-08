@@ -1,7 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_SHORTCUTBUILDER_H
 #define VALHALLA_MJOLNIR_SHORTCUTBUILDER_H
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
 namespace mjolnir {

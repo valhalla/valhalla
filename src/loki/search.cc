@@ -1,15 +1,16 @@
-#include "loki/search.h"
-#include "baldr/graphconstants.h"
-#include "baldr/tilehierarchy.h"
-#include "loki/reach.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/linesegment2.h"
-#include "midgard/util.h"
-
 #include <algorithm>
 #include <cmath>
 #include <iterator>
 #include <unordered_set>
+
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/loki/reach.h>
+#include <valhalla/loki/search.h>
+#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/util.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

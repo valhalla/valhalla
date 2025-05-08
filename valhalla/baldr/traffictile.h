@@ -7,19 +7,19 @@
 // If you do `-DC_ONLY_INTERFACE`, you'll get a header with
 // C99 stdint.h, and POD structs with no constructors
 #ifndef C_ONLY_INTERFACE
+#include "valhalla/baldr/graphconstants.h"
+#include "valhalla/baldr/graphmemory.h"
+#include "valhalla/baldr/json.h"
 #include <algorithm>
 #include <cstdint>
 #include <exception>
 #include <memory>
 #include <string>
 #include <type_traits>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphmemory.h>
-#include <valhalla/baldr/json.h>
 #else
 #include <stdint.h>
 #endif
-#include <valhalla/valhalla.h>
+#include "valhalla/valhalla.h"
 
 #ifndef C_ONLY_INTERFACE
 namespace valhalla {

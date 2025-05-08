@@ -6,12 +6,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/ellipse.h>
+#include "valhalla/midgard/aabb2.h"
+#include "valhalla/midgard/constants.h"
 
 namespace valhalla {
 namespace midgard {
+template <class coord_t> class Ellipse;
 
 /**
  * A class that provides a uniform (square) tiling system for a specified

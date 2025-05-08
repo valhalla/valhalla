@@ -1,15 +1,16 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <unordered_set>
-
-#include "midgard/linesegment2.h"
-#include "midgard/pointll.h"
-#include "midgard/tiles.h"
 
 namespace valhalla {
 
 namespace midgard {
+template <class T> class LineSegment2;
+template <class T> class Tiles;
+template <class T> class GeoPoint;
+using PointLL = GeoPoint<double>;
 
 /**
  * Provided a search width (tile_width_degrees) and a bunch of points,

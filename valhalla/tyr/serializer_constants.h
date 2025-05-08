@@ -1,5 +1,3 @@
-#ifndef VALHALLA_TYR_ROUTE_SERIALIZER_CONSTANTS_
-#define VALHALLA_TYR_ROUTE_SERIALIZER_CONSTANTS_
 #pragma once
 #include <string>
 
@@ -21,4 +19,3 @@ const std::string kModifierSharpRight = "sharp right";
 } // namespace osrmconstants
 } // namespace tyr
 } // namespace valhalla
-#endif // VALHALLA_TYR_ROUTE_SERIALIZER_CONSTANTS_

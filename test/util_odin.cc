@@ -7,6 +7,8 @@
 #include <set>
 #include <stdexcept>
 
+#include <boost/property_tree/ptree.hpp>
+
 using namespace valhalla::odin;
 
 namespace {

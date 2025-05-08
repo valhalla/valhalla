@@ -4,10 +4,8 @@
 #include <list>
 #include <string>
 
-#include <valhalla/proto/common.pb.h>
-#include <valhalla/proto/trip.pb.h>
-
 namespace valhalla {
+class TransitPlatformInfo;
 namespace odin {
 
 // TODO maybe rename later

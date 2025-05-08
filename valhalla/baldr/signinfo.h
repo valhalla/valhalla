@@ -1,7 +1,7 @@
 #ifndef VALHALLA_BALDR_SIGNINFO_H_
 #define VALHALLA_BALDR_SIGNINFO_H_
 
-#include <valhalla/baldr/sign.h>
+#include "valhalla/baldr/sign.h"
 
 namespace valhalla {
 namespace baldr {

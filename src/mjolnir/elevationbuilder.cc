@@ -1,19 +1,20 @@
-#include "mjolnir/elevationbuilder.h"
-
+#include <filesystem>
 #include <random>
 #include <thread>
 #include <utility>
 
+#include <boost/property_tree/ptree.hpp>
+
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "filesystem.h"
 #include "midgard/elevation_encoding.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
+#include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "scoped_timer.h"
 #include "skadi/sample.h"
@@ -315,7 +316,7 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
                              std::deque<baldr::GraphId> tile_ids) {
 
   auto elevation = pt.get_optional<std::string>("additional_data.elevation");
-  if (!elevation || !filesystem::exists(*elevation)) {
+  if (!elevation || !std::filesystem::exists(*elevation)) {
     LOG_WARN("Elevation storage directory does not exist");
     return;
   }

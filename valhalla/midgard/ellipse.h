@@ -4,13 +4,10 @@
 #include <cstdint>
 #include <math.h>
 
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/linesegment2.h>
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/pointll.h>
-
 namespace valhalla {
 namespace midgard {
+template <class T> class AABB2;
+template <class T> class LineSegment2;
 
 // Intersection cases.
 enum IntersectCase { kWithin, kContains, kOutside, kIntersects };

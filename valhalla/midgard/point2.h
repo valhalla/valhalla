@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include <valhalla/midgard/util_core.h>
+#include "valhalla/midgard/util_core.h"
 
 namespace {
 constexpr float LL_EPSILON = .00002f;

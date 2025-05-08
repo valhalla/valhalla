@@ -1,12 +1,11 @@
-#include "midgard/util.h"
-
-#include "odin/enhancedtrippath.h"
-#include "odin/markup_formatter.h"
-#include "odin/narrative_builder_factory.h"
-#include "odin/narrativebuilder.h"
-#include "odin/util.h"
-
-#include "proto/options.pb.h"
+#include <valhalla/midgard/util.h>
+#include <valhalla/odin/enhancedtrippath.h>
+#include <valhalla/odin/markup_formatter.h>
+#include <valhalla/odin/narrative_builder_factory.h>
+#include <valhalla/odin/narrative_dictionary.h>
+#include <valhalla/odin/narrativebuilder.h>
+#include <valhalla/odin/util.h>
+#include <valhalla/proto/options.pb.h>
 
 namespace valhalla {
 namespace odin {
