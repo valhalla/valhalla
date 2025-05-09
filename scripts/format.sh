@@ -18,11 +18,12 @@ source scripts/bash_utils.sh
 
 # Python setup
 py=$(setup_python)
+CLANG_FORMAT_CMD="${py} -c \"from clang_format import clang_format; clang_format()\""
 if [[ $(${py} -m pip list | grep -c "black\|flake8\|clang-format") -ne 2 ]]; then
   if [[ $(${py} -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
     ${py} -m pip install black==24.10.0 flake8==7.1.1 clang-format=="$CLANG_FORMAT_VERSION"
   else
-    sudo PIP_BREAK_SYSTEM_PACKAGES=1 ${py} -m pip install black==24.10.0 flake8==7.1.1
+    PIP_BREAK_SYSTEM_PACKAGES=1 ${py} -m pip install black==24.10.0 flake8==7.1.1 clang-format=="$CLANG_FORMAT_VERSION"
   fi
 fi
 python_sources=$(LANG=C find scripts src/bindings/python -type f -exec file {} \; | grep -F "Python script" | sed 's/:.*//')
@@ -34,9 +35,7 @@ ${py} -m black --line-length=105 --skip-string-normalization ${python_sources}
 ${py} -m flake8 --max-line-length=105 --extend-ignore=E501,E731,E203 --extend-exclude=src/bindings/python/__init__.py ${python_sources}
 
 # clang-format
-readonly CLANG_FORMAT="$(${py} -c 'import sys; print(sys.prefix)')"/bin/clang-format
-
-echo "Using clang-format $CLANG_FORMAT_VERSION from ${CLANG_FORMAT}"
+echo "Using $(eval "${CLANG_FORMAT_CMD}" --version)"
 
 # determine how many threads to use
 readonly OS=$(uname)
@@ -49,4 +48,4 @@ else
 fi
 
 find src valhalla test -type f -name '*.h' -o -name '*.cc' \
-  | xargs -I{} -P ${NPROC} ${CLANG_FORMAT} -i -style=file {}
+  | xargs -I{} -P ${NPROC} ${py} -c "from clang_format import clang_format; clang_format()" -style=file -i {}
