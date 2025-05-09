@@ -49,7 +49,5 @@ elif [[ ${OS} = "Darwin" ]] ; then
 else
     readonly NPROC=1
 fi
-
-# TODO: either put this in a script
 find src valhalla test -type f -name '*.h' -o -name '*.cc' \
   | xargs -I{} -P ${NPROC} ${py} scripts/clang_format_wrapper.py -style=file -i {}
