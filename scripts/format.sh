@@ -38,7 +38,7 @@ ${py} -m black --line-length=105 --skip-string-normalization ${python_sources}
 ${py} -m flake8 --max-line-length=105 --extend-ignore=E501,E731,E203 --extend-exclude=src/bindings/python/__init__.py ${python_sources}
 
 # clang-format
-echo "Using $(${py} scripts/clang_format_wrapper.py) --version)"
+echo "Using $(${py} scripts/clang_format_wrapper.py --version)"
 
 # determine how many threads to use
 readonly OS=$(uname)
@@ -49,5 +49,6 @@ elif [[ ${OS} = "Darwin" ]] ; then
 else
     readonly NPROC=1
 fi
+
 find src valhalla test -type f -name '*.h' -o -name '*.cc' \
   | xargs -I{} -P ${NPROC} ${py} scripts/clang_format_wrapper.py -style=file -i {}
