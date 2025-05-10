@@ -7,13 +7,6 @@ set -o errexit -o pipefail -o nounset
 #  - 1 there are files to be formatted
 #  - 0 everything looks fine
 
-# see https://pypi.org/project/black/#history
-readonly BLACK_VERSION=24.10.0
-# see https://pypi.org/project/flake8/#history
-readonly FLAKE8_VERSION=7.1.1
-# see https://pypi.org/project/clang-format/#history
-readonly CLANG_FORMAT_VERSION=11.0.1
-
 if [[ $(uname -i) == 'aarch64' ]]; then
   echo 'Formatting is disabled on arm for the time being'
   exit
@@ -22,13 +15,7 @@ source scripts/bash_utils.sh
 
 # Python setup
 py=$(setup_python)
-if [[ $(${py} -m pip list | grep -c "black\|flake8\|clang-format") -ne 2 ]]; then
-  if [[ $(${py} -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
-    ${py} -m pip install black==$BLACK_VERSION flake8==$FLAKE8_VERSION clang-format==$CLANG_FORMAT_VERSION
-  else
-    sudo PIP_BREAK_SYSTEM_PACKAGES=1 ${py} -m pip install black==$BLACK_VERSION flake8==$FLAKE8_VERSION clang-format==$CLANG_FORMAT_VERSION
-  fi
-fi
+install_py_packages $py
 python_sources=$(LANG=C find scripts src/bindings/python -type f -exec file {} \; | grep -F "Python script" | sed 's/:.*//')
 
 # Python formatter

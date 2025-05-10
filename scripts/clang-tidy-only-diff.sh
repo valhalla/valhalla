@@ -4,16 +4,9 @@
 set -o errexit -o pipefail -o nounset
 
 readonly base=$(git merge-base refs/remotes/origin/master HEAD)
-readonly build_dir=build
-
-readonly CLANG_TIDY_VERSION=7.0.0
+readonly build_dir=build/Release
 
 source scripts/bash_utils.sh
-setup_mason
-
-./mason/mason install clang-tidy $CLANG_TIDY_VERSION
-./mason/mason link clang-tidy $CLANG_TIDY_VERSION
-readonly CLANG_TIDY=$(pwd)/mason_packages/.link/bin/clang-tidy
 
 # Backup compile_commands and filter out protobuf generated .pb.cc files
 readonly tidy_dir=.tidytmp
@@ -42,6 +35,9 @@ if [ ${#modified_filepaths[@]} = 0 ]; then
 fi
 
 readonly FIX_ERRORS="-fix -fix-errors"
+py=$(setup_python)
+install_py_packages $py
+CLANG_TIDY_CMD="${py} -c \"from clang_tidy import clang_tidy; clang_tidy()\""
 
 readonly num_jobs="${1:-$(nproc)}"
 # -m specifies that `parallel` should distribute the arguments evenly across the executing jobs.
@@ -52,7 +48,7 @@ parallel \
   -m \
   -j $num_jobs \
   --halt-on-error now,fail=1 \
-  ${CLANG_TIDY} \
+  "${CLANG_TIDY_CMD}" \
   -p $tidy_dir \
   -header-filter "^$(pwd)/valhalla/[^/]+$" \
   ${FIX_ERRORS} \
