@@ -4,15 +4,6 @@ set -o errexit -o pipefail -o nounset
 
 function setup_mason {
 
-  readonly OS=$(uname)
-  if [[ $OS = "Linux" ]] ; then
-      readonly NPROC=$(nproc)
-  elif [[ ${OS} = "Darwin" ]] ; then
-      readonly NPROC=$(sysctl -n hw.physicalcpu)
-  else
-      readonly NPROC=1
-  fi
-
   if [ ! -f mason/mason ] ; then
       echo "Installing mason"
       mkdir -p ./mason
