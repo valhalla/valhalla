@@ -38,11 +38,11 @@ void print_trellis_diagram_vertically(const std::vector<Column>& columns) {
     uint32_t idx = 0;
     for (const auto& state : column) {
       print_state(StateId(time, idx), state);
-      std::cout << std::endl;
+      std::cout << '\n';
       idx++;
     }
     time++;
-    std::cout << std::endl;
+    std::cout << '\n';
   }
 }
 
@@ -51,9 +51,9 @@ void print_path_reversely(const std::vector<Column>& columns, iterator_t rbegin,
   for (auto stateid = rbegin; stateid != rend; stateid++) {
     if ((*stateid).IsValid()) {
       print_state(*stateid, columns[(*stateid).time()][(*stateid).id()]);
-      std::cout << std::endl;
+      std::cout << '\n';
     } else {
-      std::cout << "[NOT FOUND]" << std::endl;
+      std::cout << "[NOT FOUND]" << '\n';
     }
   }
 }
@@ -62,7 +62,7 @@ template <typename iterator_t> void print_path(iterator_t rbegin, iterator_t ren
   for (auto it = rbegin; it != rend; it++) {
     std::cout << it->time() << "/" << it->id() << " ";
   }
-  std::cout << std::endl;
+  std::cout << '\n';
 }
 
 void AddColumns(IViterbiSearch& vs, const std::vector<Column>& columns) {
@@ -179,6 +179,7 @@ std::vector<size_t> generate_column_counts(size_t column_length,
                                            std::uniform_int_distribution<size_t> count_distribution) {
   std::vector<size_t> counts;
 
+  counts.reserve(column_length);
   for (size_t i = 0; i < column_length; i++) {
     counts.push_back(count_distribution(COUNT_GENERATOR));
   }
@@ -188,7 +189,7 @@ std::vector<size_t> generate_column_counts(size_t column_length,
 
 std::vector<Column> generate_columns(std::uniform_int_distribution<int> transition_cost_distribution,
                                      std::uniform_int_distribution<int> emission_cost_distribution,
-                                     std::vector<size_t> column_counts) {
+                                     const std::vector<size_t>& column_counts) {
   std::vector<Column> columns;
 
   for (const auto count : column_counts) {
@@ -218,13 +219,13 @@ void test_viterbi_search(const std::vector<Column>& columns) {
       EXPECT_EQ(vs_winner.time(), time) << "time should be matched";
 
       if (na.AccumulatedCost(na_winner) != vs.AccumulatedCost(vs_winner)) {
-        std::cout << "GRAPH" << std::endl;
+        std::cout << "GRAPH" << '\n';
         print_trellis_diagram_vertically(columns);
 
-        std::cout << "PATH OF NA" << std::endl;
+        std::cout << "PATH OF NA" << '\n';
         print_path_reversely(columns, na.SearchPathVS(time), na.PathEnd());
 
-        std::cout << "PATH OF VS" << std::endl;
+        std::cout << "PATH OF VS" << '\n';
         print_path_reversely(columns, vs.SearchPathVS(time), vs.PathEnd());
       }
       EXPECT_EQ(na.AccumulatedCost(na_winner), vs.AccumulatedCost(vs_winner))

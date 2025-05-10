@@ -127,7 +127,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
 
   // first pull out all *unique* bins which intersect the rings
   for (size_t ring_idx = 0; ring_idx < rings_bg.size(); ring_idx++) {
-    auto ring = rings_bg[ring_idx];
+    const auto& ring = rings_bg[ring_idx];
     auto line_intersected = tiles.Intersect(ring);
     for (const auto& tb : line_intersected) {
       for (const auto& b : tb.second) {

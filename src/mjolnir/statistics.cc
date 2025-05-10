@@ -516,7 +516,7 @@ void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& 
   }
   std::ofstream file;
   file.open("maproulette_tasks.geojson");
-  file << *geo_json << std::endl;
+  file << *geo_json << '\n';
   file.close();
   LOG_INFO("MapRoulette tasks saved to maproulette_tasks.geojson");
   LOG_INFO(std::to_string(tasks->size()) + " tasks generated");

@@ -40,11 +40,11 @@ int main(int argc, char** argv) {
 
     if (!result.count("bounding-box")) {
       std::cerr << "You must provide a bounding box to expand.\n\n";
-      std::cerr << options.help() << std::endl;
+      std::cerr << options.help() << '\n';
       return EXIT_FAILURE;
     }
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << e.what() << '\n';
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
   bb = reader.GetMinimumBoundingBox(bb);
 
   std::cout << std::fixed << std::setprecision(6) << bb.minx() << "," << bb.miny() << "," << bb.maxx()
-            << "," << bb.maxy() << std::endl;
+            << "," << bb.maxy() << '\n';
 
   return EXIT_SUCCESS;
 }

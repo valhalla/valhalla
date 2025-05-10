@@ -145,6 +145,7 @@ TEST(Routing, Benchmark) {
   std::mt19937 gen(rd());
   std::vector<simple_label> costs;
   size_t N = 1000000;
+  costs.reserve(N);
   for (size_t i = 0; i < N; ++i) {
     costs.push_back({std::floor(test::rand01(gen) * N)});
   }
@@ -154,7 +155,7 @@ TEST(Routing, Benchmark) {
   Add(adjlist5, costs);
   TryRemove(adjlist5, costs.size(), costs);
   uint32_t ms = (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000);
-  std::cout << ms << std::endl;
+  std::cout << ms << '\n';
 }
 
 TEST(Routing, TestRoutePathIterator) {

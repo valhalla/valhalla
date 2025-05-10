@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
       filename = result["file"].as<std::string>();
     }
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << e.what() << '\n';
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
   auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find locations
-  std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+  const std::shared_ptr<DynamicCost>& cost = mode_costing[static_cast<uint32_t>(mode)];
   const auto projections = Search(locations, reader, cost);
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {
@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
     resOut << res;
     resOut.close();
   } else {
-    std::cout << "\n" << res << std::endl;
+    std::cout << "\n" << res << '\n';
   }
 
   // Shutdown protocol buffer library

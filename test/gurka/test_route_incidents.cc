@@ -93,6 +93,7 @@ void check_incident_locations(const valhalla::Api& api,
     // keep the distances between shape points for this leg
     auto shape = midgard::decode<std::vector<midgard::PointLL>>(leg.shape());
     std::vector<double> lengths;
+    lengths.reserve(shape.size());
     for (size_t i = 0; i < shape.size(); ++i) {
       lengths.push_back(i == 0 ? 0.0 : shape[i - 1].Distance(shape[i]) + lengths.back());
     }

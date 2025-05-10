@@ -246,7 +246,7 @@ TEST(Isochrones, OriginEdge) {
                                  {{"/contours/0/time", "10"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
-  auto WaypointToBoostPoint = [&](std::string waypoint) {
+  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
     auto point = map.nodes[waypoint];
     return point_type(point.x(), point.y());
   };
@@ -281,7 +281,7 @@ TEST(Isochrones, LongEdge) {
                                  {{"/contours/0/time", "15"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
-  auto WaypointToBoostPoint = [&](std::string waypoint) {
+  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
     auto point = map.nodes[waypoint];
     return point_type(point.x(), point.y());
   };
@@ -533,7 +533,7 @@ int main(int argc, char* argv[]) {
     Api request;
     ParseApi(argv[1], Options::isochrone, request);
     loki_worker.isochrones(request);
-    std::cout << thor_worker.isochrones(request) << std::endl;
+    std::cout << thor_worker.isochrones(request) << '\n';
     return EXIT_SUCCESS;
   }
   // Silence logs (especially long request logging)

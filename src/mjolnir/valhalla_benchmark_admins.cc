@@ -138,7 +138,7 @@ GetAdminInfo(valhalla::mjolnir::Sqlite3& db,
 
 // Benchmark the admin DB access
 void Benchmark(const boost::property_tree::ptree& pt) {
-  std::cout << "In Benchmark" << std::endl;
+  std::cout << "In Benchmark" << '\n';
 
   uint32_t counts[128] = {};
 
@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
     }
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << e.what() << '\n';
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
