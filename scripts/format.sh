@@ -22,7 +22,7 @@ source scripts/bash_utils.sh
 
 # Python setup
 py=$(setup_python)
-if [[ $(${py} -m pip list | grep -c "black\|flake8\|clang-format") -ne 2 ]]; then
+if [[ $(${py} -m pip list | grep -c "black\|flake8\|clang-format") -ne 3 ]]; then
   if [[ $(${py} -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
     ${py} -m pip install black==$BLACK_VERSION flake8==$FLAKE8_VERSION clang-format==$CLANG_FORMAT_VERSION
   else
