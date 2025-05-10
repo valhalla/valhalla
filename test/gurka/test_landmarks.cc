@@ -34,7 +34,7 @@ namespace {
 inline void DisplayLandmark(const Landmark& landmark) {
   std::cout << "landmark: id = " << landmark.id << ", name = " << landmark.name
             << ", type = " << static_cast<int>(landmark.type) << ", lng = " << landmark.lng
-            << ", lat = " << landmark.lat << std::endl;
+            << ", lat = " << landmark.lat << '\n';
 }
 
 void BuildPBF() {
@@ -370,7 +370,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       Landmark landmark(value.second);
 
       // check data correctness
-      std::vector<PointLL> shape = ei.shape();
+      const std::vector<PointLL>& shape = ei.shape();
       auto point = shape[shape.size() / 2];
       check_landmark(landmark, point);
     }
@@ -384,7 +384,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       Landmark landmark(v.substr(1));
 
       // check data correctness
-      std::vector<PointLL> shape = ei.shape();
+      const std::vector<PointLL>& shape = ei.shape();
       auto point = shape[shape.size() / 2];
       check_landmark(landmark, point);
     }

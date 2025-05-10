@@ -764,7 +764,7 @@ TEST(Astar, test_time_restricted_road_bidirectional) {
   const std::string payload = tyr::serializeDirections(response);
   rapidjson::Document response_json;
   response_json.Parse(payload.c_str());
-  std::cout << payload << std::endl;
+  std::cout << payload << '\n';
   {
     const char key[] = "/trip/legs/0/maneuvers/0/has_time_restrictions";
     EXPECT_TRUE(GetValueByPointerWithDefault(response_json, key, false) != true)
@@ -1318,7 +1318,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
   // For the second test, just switch origin/destination and reverse expected,
   // result should be the same
-  std::cout << "reversed test" << std::endl;
+  std::cout << "reversed test" << '\n';
   paths = astar.GetBestPath(dest, origin, *reader, costs, mode);
 
   visited.clear();
@@ -1546,7 +1546,7 @@ TEST(Astar, BiDirTrivial) {
   create_costing_options(options, Costing::auto_);
   vs::TravelMode mode;
   auto mode_costing = vs::CostFactory().CreateModeCosting(options, mode);
-  auto cost = mode_costing[int(mode)];
+  const auto& cost = mode_costing[int(mode)];
   set_hierarchy_limits(cost, true);
 
   // Loki

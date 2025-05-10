@@ -33,7 +33,7 @@ TEST(Traffic, BasicUpdates) {
   test::build_live_traffic_data(map.config);
 
   auto clean_reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-  std::cout << "[          ] Do a route with initial traffic" << std::endl;
+  std::cout << "[          ] Do a route with initial traffic" << '\n';
   {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto",
                                    {{"/date_time/type", "0"}}, clean_reader);
@@ -44,7 +44,7 @@ TEST(Traffic, BasicUpdates) {
   std::cout << "[          ] Make some updates to the traffic .tar file. "
                "Mostly just updates every edge in the file to 24km/h, except for one "
                "specific edge (B->D) where we simulate a closure (speed=0, congestion high)"
-            << std::endl;
+            << '\n';
   auto cb_setter_24kmh = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, uint32_t index,
                                 valhalla::baldr::TrafficSpeed* current) -> void {
     baldr::GraphId tile_id(tile.header->tile_id);
@@ -62,7 +62,7 @@ TEST(Traffic, BasicUpdates) {
 
   std::cout << "[          ] Now do another route with the same (not restarted) actor to see if"
                " it's noticed the changes in the live traffic file"
-            << std::endl;
+            << '\n';
   {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto",
                                    {{"/date_time/type", "0"}}, clean_reader);
@@ -73,7 +73,7 @@ TEST(Traffic, BasicUpdates) {
   }
 
   std::cout << "[          ] Next, set the speed to the highest possible to ensure nothing breaks"
-            << std::endl;
+            << '\n';
   auto cb_setter_max = [&map](baldr::GraphReader& reader, baldr::TrafficTile& tile, uint32_t index,
                               baldr::TrafficSpeed* current) -> void {
     baldr::GraphId tile_id(tile.header->tile_id);
@@ -94,7 +94,7 @@ TEST(Traffic, BasicUpdates) {
     gurka::assert::raw::expect_eta(result, 25.731991);
   }
 
-  std::cout << "[          ] Back to previous speed" << std::endl;
+  std::cout << "[          ] Back to previous speed" << '\n';
   test::customize_live_traffic_data(map.config, cb_setter_24kmh);
   // And verify that without the "current" timestamp, the live traffic
   // results aren't used
@@ -108,7 +108,7 @@ TEST(Traffic, BasicUpdates) {
 
   std::cout << "[          ] Now do another route with the same (not restarted) actor to see if "
                "it's noticed the changes in the live traffic file"
-            << std::endl;
+            << '\n';
   {
     auto result = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "auto",
                                    {{"/date_time/type", "0"}}, clean_reader);
@@ -129,7 +129,7 @@ TEST(Traffic, BasicUpdates) {
   std::cout
       << "[          ] Repeat the B->D route, but this time with no timestamp - this should disable "
          "using live traffc and the road should be open again"
-      << std::endl;
+      << '\n';
   {
     auto result =
         gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "auto", {}, clean_reader);

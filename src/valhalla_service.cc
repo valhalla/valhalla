@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
     // figure out which action
     valhalla::Options::Action action;
     if (!valhalla::Options_Action_Enum_Parse(argv[2], &action)) {
-      std::cerr << "Unknown action" << std::endl;
+      std::cerr << "Unknown action" << '\n';
       return 1;
     }
 
@@ -76,54 +76,53 @@ int main(int argc, char** argv) {
     try {
       switch (action) {
         case valhalla::Options::route:
-          std::cout << actor.route(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.route(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::locate:
-          std::cout << actor.locate(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.locate(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::sources_to_targets:
-          std::cout << actor.matrix(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.matrix(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::optimized_route:
-          std::cout << actor.optimized_route(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.optimized_route(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::isochrone:
-          std::cout << actor.isochrone(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.isochrone(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::trace_route:
-          std::cout << actor.trace_route(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.trace_route(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::trace_attributes:
-          std::cout << actor.trace_attributes(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.trace_attributes(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::height:
-          std::cout << actor.height(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.height(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::transit_available:
-          std::cout << actor.transit_available(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.transit_available(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::expansion:
-          std::cout << actor.expansion(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.expansion(request_str, nullptr, &request) << '\n';
           break;
         case valhalla::Options::status:
-          std::cout << actor.status(request_str, nullptr, &request) << std::endl;
+          std::cout << actor.status(request_str, nullptr, &request) << '\n';
           break;
         default:
-          std::cerr << "Unknown action" << std::endl;
+          std::cerr << "Unknown action" << '\n';
           return 1;
       }
     } // request processing error specific error condition
     catch (const valhalla::valhalla_exception_t& ve) {
-      std::cout << valhalla::serialize_error(ve, request) << std::endl;
+      std::cout << valhalla::serialize_error(ve, request) << '\n';
       return 1;
     } // it was a regular exception!?
     catch (const std::exception& e) {
-      std::cout << serialize_error({599, std::string(e.what())}, request) << std::endl;
+      std::cout << serialize_error({599, std::string(e.what())}, request) << '\n';
       return 1;
     } // anything else
     catch (...) {
-      std::cout << serialize_error({599, std::string("Unknown exception thrown")}, request)
-                << std::endl;
+      std::cout << serialize_error({599, std::string("Unknown exception thrown")}, request) << '\n';
       return 1;
     }
 

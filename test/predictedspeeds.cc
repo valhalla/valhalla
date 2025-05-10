@@ -175,7 +175,7 @@ TEST(PredictedSpeeds, test_decoding) {
   pred_speeds.set_profiles(coefficients);
 
   // Test against 5 minute bucket values
-  std::cout << std::endl;
+  std::cout << '\n';
   for (int i = 0; i < 2016; ++i) {
     uint32_t secs = i * 5 * 60;
     uint32_t s = static_cast<uint32_t>(pred_speeds.speed(0, secs) + 0.5f);
@@ -219,7 +219,7 @@ TEST(PredictedSpeeds, test_negative_speeds) {
   pred_speeds.set_profiles(coefficients);
 
   // Test against 5 minute bucket values
-  std::cout << std::endl;
+  std::cout << '\n';
   for (int i = 0; i < 2016; ++i) {
     uint32_t secs = i * 5 * 60;
     float s = pred_speeds.speed(0, secs);

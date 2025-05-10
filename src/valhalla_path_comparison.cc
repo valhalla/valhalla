@@ -47,8 +47,8 @@ void print_edge(GraphReader& reader,
     current_osmid = edgeinfo.wayid();
     std::string name = edgeinfo.GetNames().size() == 0 ? "unnamed" : edgeinfo.GetNames()[0];
     std::cout << "+++++++++++++++++++++++++++++++++++++\n";
-    std::cout << "wayid: " << current_osmid << std::endl;
-    std::cout << "name: " << name << std::endl;
+    std::cout << "wayid: " << current_osmid << '\n';
+    std::cout << "name: " << name << '\n';
     std::cout << "+++++++++++++++++++++++++++++++++++++\n\n";
   }
 
@@ -62,7 +62,7 @@ void print_edge(GraphReader& reader,
     EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, static_cast<sif::TravelMode>(0), 0,
                          kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     std::cout << "-------Transition-------\n";
-    std::cout << "Pred GraphId: " << pred_id << std::endl;
+    std::cout << "Pred GraphId: " << pred_id << '\n';
 
     auto reader_getter = [&reader]() { return baldr::LimitedGraphReader(reader); };
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label, tile, reader_getter);
@@ -74,8 +74,8 @@ void print_edge(GraphReader& reader,
   pred_id = current_id;
 
   std::cout << "----------Edge----------\n";
-  std::cout << "Edge GraphId: " << current_id << std::endl;
-  std::cout << "Edge length: " << edge->length() << std::endl;
+  std::cout << "Edge GraphId: " << current_id << '\n';
+  std::cout << "Edge length: " << edge->length() << '\n';
   Cost edge_cost = costing->EdgeCost(edge, tile);
   edge_total += edge_cost;
   std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";
@@ -86,12 +86,12 @@ void walk_edges(const std::string& shape,
                 GraphReader& reader,
                 const valhalla::sif::mode_costing_t& mode_costings,
                 valhalla::sif::TravelMode mode) {
-  auto cost = mode_costings[static_cast<uint32_t>(mode)];
+  const auto& cost = mode_costings[static_cast<uint32_t>(mode)];
 
   // Get shape
   std::vector<PointLL> shape_pts = decode<std::vector<PointLL>>(shape);
   if (shape_pts.size() <= 1) {
-    std::cerr << "Not enough shape points to compute the path...exiting" << std::endl;
+    std::cerr << "Not enough shape points to compute the path...exiting" << '\n';
   }
 
   // Use the shape to form a single edge correlation at the start and end of
@@ -126,7 +126,7 @@ void walk_edges(const std::string& shape,
   std::vector<PathLocation> correlated;
   bool rtn = RouteMatcher::FormPath(mode_costings, mode, reader, options, paths);
   if (!rtn) {
-    std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << std::endl;
+    std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << '\n';
   }
   GraphId pred_id;
   GraphId current_id;
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
           options.help());
     }
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << e.what() << '\n';
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
@@ -284,7 +284,7 @@ int main(int argc, char* argv[]) {
 
   valhalla::sif::TravelMode mode;
   auto mode_costings = valhalla::sif::CostFactory{}.CreateModeCosting(request.options(), mode);
-  auto cost_ptr = mode_costings[static_cast<uint32_t>(mode)];
+  const auto& cost_ptr = mode_costings[static_cast<uint32_t>(mode)];
 
   // If a shape is entered use edge walking
   if (!map_match) {
@@ -299,7 +299,7 @@ int main(int argc, char* argv[]) {
   uint32_t i = 0;
   for (const auto& path : paths) {
     std::cout << "==========================================================================\n";
-    std::cout << "                                 PATH " << i << std::endl;
+    std::cout << "                                 PATH " << i << '\n';
     std::cout << "==========================================================================\n\n";
     std::vector<Measurement> measurements;
     measurements.reserve(path.size());

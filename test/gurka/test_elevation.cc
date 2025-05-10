@@ -185,7 +185,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
       std::vector<float> elevation_along_edges;
       for (const auto& e : elevation->GetArray()) {
         elevation_along_edges.push_back(std::round(e.GetFloat() * 10) / 10);
-        std::cout << std::round(e.GetFloat() * 10) / 10 << std::endl;
+        std::cout << std::round(e.GetFloat() * 10) / 10 << '\n';
       }
 
       result.Parse(height_json.c_str());
@@ -195,7 +195,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
       std::vector<float> elevation_from_skadi;
       for (const auto& e : elevation->GetArray()) {
         elevation_from_skadi.push_back(std::round(e.GetFloat() * 10) / 10);
-        std::cout << std::round(e.GetFloat() * 10) / 10 << std::endl;
+        std::cout << std::round(e.GetFloat() * 10) / 10 << '\n';
       }
 
       EXPECT_EQ(elevation_along_edges.size(), elevation_from_skadi.size());

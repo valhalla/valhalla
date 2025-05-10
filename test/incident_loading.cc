@@ -26,10 +26,10 @@ struct testable_singleton : public incident_singleton_t {
   testable_singleton(const boost::property_tree::ptree& config, bool initialize)
       : incident_singleton_t(config,
                              {},
-                             [initialize](boost::property_tree::ptree,
-                                          std::unordered_set<valhalla::baldr::GraphId>,
-                                          std::shared_ptr<state_t> state,
-                                          std::function<bool(size_t)>) {
+                             [initialize](const boost::property_tree::ptree&,
+                                          const std::unordered_set<valhalla::baldr::GraphId>&,
+                                          const std::shared_ptr<state_t>& state,
+                                          const std::function<bool(size_t)>&) {
                                state->initialized.store(initialize);
                                state->signal.notify_one();
                              }) {

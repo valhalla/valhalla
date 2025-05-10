@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << e.what() << '\n';
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     std::string fname = "connectivity" + std::to_string(level) + ".geojson";
     std::ofstream geojson_file(fname, std::ios::out);
     if (!geojson_file) {
-      std::cout << "Unable to open output file: " << fname << std::endl;
+      std::cout << "Unable to open output file: " << fname << '\n';
       return EXIT_FAILURE;
     }
     geojson_file << connectivity_map.to_geojson(level);
@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
     fname = "connectivity" + std::to_string(level) + ".ppm";
     std::ofstream outfile(fname, std::ios::binary | std::ios::out);
     if (!outfile) {
-      std::cout << "Unable to open output file: " << fname << std::endl;
+      std::cout << "Unable to open output file: " << fname << '\n';
       return EXIT_FAILURE;
     }
 
@@ -136,9 +136,9 @@ int main(int argc, char** argv) {
     assert(ppm.size() == height * width);
 
     std::string tmp;
-    outfile << "P6" << std::endl; //  << “# foreground “ << std::endl;
-    outfile << std::to_string(width) << " " << std::to_string(height) << std::endl;
-    outfile << std::to_string(255) << std::endl;
+    outfile << "P6" << '\n'; //  << “# foreground “ << std::endl;
+    outfile << std::to_string(width) << " " << std::to_string(height) << '\n';
+    outfile << std::to_string(255) << '\n';
     outfile.write(reinterpret_cast<char*>(ppm.data()), height * width * 3);
     outfile.close();
   }

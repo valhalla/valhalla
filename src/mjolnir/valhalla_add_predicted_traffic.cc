@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
     }
     traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << e.what() << '\n';
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"

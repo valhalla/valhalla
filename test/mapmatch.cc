@@ -185,7 +185,7 @@ TEST(Mapmatch, test_matcher) {
       route_json = actor.route(test_case);
       route = test::json_to_pt(route_json);
     } catch (...) {
-      std::cout << "route failed" << std::endl;
+      std::cout << "route failed" << '\n';
       continue;
     }
     auto encoded_shape = route.get_child("trip.legs").front().second.get<std::string>("shape");
@@ -215,10 +215,10 @@ TEST(Mapmatch, test_matcher) {
       EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->correlation().edges_size(), 0);
       walked = test::json_to_pt(walked_json);
     } catch (...) {
-      std::cout << test_case << std::endl;
+      std::cout << test_case << '\n';
       std::cout << R"({"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
                        json_escape(encoded_shape) + "\"}"
-                << std::endl;
+                << '\n';
       FAIL() << "Edge walk failed with exact shape";
     }
 
@@ -276,7 +276,7 @@ TEST(Mapmatch, test_matcher) {
           R"(]},"type":"Feature","properties":{"stroke":"#ff0000","stroke-width":2}},{"geometry":{"type":"MultiPoint","coordinates":[)";
       geojson += print(std::vector<PointLL>{start, end});
       geojson += R"(]},"type":"Feature","properties":{}}]})";
-      std::cout << geojson << std::endl;
+      std::cout << geojson << '\n';
       FAIL() << "The match did not match the walk";
     }
 

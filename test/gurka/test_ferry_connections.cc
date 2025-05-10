@@ -53,7 +53,7 @@ public:
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
 
-    std::cerr << "Model " + allowed << std::endl;
+    std::cerr << "Model " + allowed << '\n';
 
     auto map =
         gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
@@ -223,7 +223,7 @@ TEST(Standalone, ReclassifyFerryConnectionRouteModes) {
     try {
       gurka::do_action(Options::route, map, {"A", "I"}, mode);
     } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
-      FAIL() << "Expected valhalla_exception_t." << std::endl;
+      FAIL() << "Expected valhalla_exception_t." << '\n';
     };
   }
 }

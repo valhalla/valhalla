@@ -344,6 +344,7 @@ inline void build_pbf(const nodelayout& node_locations,
     }
 
     std::vector<std::pair<std::string, std::string>> tags;
+    tags.reserve(relation.tags.size());
     for (const auto& tag : relation.tags) {
       tags.push_back({tag.first, tag.second});
     }
@@ -456,10 +457,10 @@ map buildtiles(const nodelayout& layout,
   std::filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
-  std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
+  std::cerr << "[          ] generating map PBF at " << pbf_filename << '\n';
   detail::build_pbf(result.nodes, ways, nodes, relations, pbf_filename);
   std::cerr << "[          ] building tiles in " << result.config.get<std::string>("mjolnir.tile_dir")
-            << std::endl;
+            << '\n';
   midgard::logging::Configure({{"type", ""}});
 
   mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
@@ -622,7 +623,7 @@ baldr::GraphId findNode(valhalla::baldr::GraphReader& reader,
 
 std::string
 do_action(const map& map, valhalla::Api& api, std::shared_ptr<valhalla::baldr::GraphReader> reader) {
-  std::cerr << "[          ] Valhalla request is pbf " << std::endl;
+  std::cerr << "[          ] Valhalla request is pbf " << '\n';
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -634,7 +635,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::string& request_json,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader,
                         std::string* response) {
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
+  std::cerr << "[          ] Valhalla request is: " << request_json << '\n';
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -707,7 +708,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
       std::cerr << ", ";
     std::cerr << waypoint;
   };
-  std::cerr << " with costing " << costing << std::endl;
+  std::cerr << " with costing " << costing << '\n';
   auto lls = detail::to_lls(map.nodes, waypoints);
   auto location_type = action == Options::trace_route || action == Options::trace_attributes ||
                                action == Options::height
@@ -749,7 +750,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
         std::cerr << ", ";
     }
   };
-  std::cerr << " with costing " << costing << std::endl;
+  std::cerr << " with costing " << costing << '\n';
 
   auto sources_lls = detail::to_lls(map.nodes, sources);
   auto targets_lls = detail::to_lls(map.nodes, targets);
