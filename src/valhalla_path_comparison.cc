@@ -47,8 +47,8 @@ void print_edge(GraphReader& reader,
     current_osmid = edgeinfo.wayid();
     std::string name = edgeinfo.GetNames().size() == 0 ? "unnamed" : edgeinfo.GetNames()[0];
     std::cout << "+++++++++++++++++++++++++++++++++++++\n";
-    std::cout << "wayid: " << current_osmid << '\n';
-    std::cout << "name: " << name << '\n';
+    std::cout << "wayid: " << current_osmid << std::endl;
+    std::cout << "name: " << name << std::endl;
     std::cout << "+++++++++++++++++++++++++++++++++++++\n\n";
   }
 
@@ -62,7 +62,7 @@ void print_edge(GraphReader& reader,
     EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, static_cast<sif::TravelMode>(0), 0,
                          kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     std::cout << "-------Transition-------\n";
-    std::cout << "Pred GraphId: " << pred_id << '\n';
+    std::cout << "Pred GraphId: " << pred_id << std::endl;
 
     auto reader_getter = [&reader]() { return baldr::LimitedGraphReader(reader); };
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label, tile, reader_getter);
@@ -74,8 +74,8 @@ void print_edge(GraphReader& reader,
   pred_id = current_id;
 
   std::cout << "----------Edge----------\n";
-  std::cout << "Edge GraphId: " << current_id << '\n';
-  std::cout << "Edge length: " << edge->length() << '\n';
+  std::cout << "Edge GraphId: " << current_id << std::endl;
+  std::cout << "Edge length: " << edge->length() << std::endl;
   Cost edge_cost = costing->EdgeCost(edge, tile);
   edge_total += edge_cost;
   std::cout << "EdgeCost cost: " << edge_cost.cost << " secs: " << edge_cost.secs << "\n";
@@ -91,7 +91,7 @@ void walk_edges(const std::string& shape,
   // Get shape
   std::vector<PointLL> shape_pts = decode<std::vector<PointLL>>(shape);
   if (shape_pts.size() <= 1) {
-    std::cerr << "Not enough shape points to compute the path...exiting" << '\n';
+    std::cerr << "Not enough shape points to compute the path...exiting" << std::endl;
   }
 
   // Use the shape to form a single edge correlation at the start and end of
@@ -126,7 +126,7 @@ void walk_edges(const std::string& shape,
   std::vector<PathLocation> correlated;
   bool rtn = RouteMatcher::FormPath(mode_costings, mode, reader, options, paths);
   if (!rtn) {
-    std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << '\n';
+    std::cerr << "ERROR: RouteMatcher returned false - did not match complete shape." << std::endl;
   }
   GraphId pred_id;
   GraphId current_id;
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
           options.help());
     }
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << '\n';
+    std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
@@ -299,7 +299,7 @@ int main(int argc, char* argv[]) {
   uint32_t i = 0;
   for (const auto& path : paths) {
     std::cout << "==========================================================================\n";
-    std::cout << "                                 PATH " << i << '\n';
+    std::cout << "                                 PATH " << i << std::endl;
     std::cout << "==========================================================================\n\n";
     std::vector<Measurement> measurements;
     measurements.reserve(path.size());

@@ -821,7 +821,7 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       if (iter == old_to_new.end()) {
         LOG_ERROR("UpdateEndNodes - failed to find associated node");
         std::cout << std::to_string(edge->endnode().value) << " "
-                  << std::to_string(tile->edgeinfo(edge).wayid()) << '\n';
+                  << std::to_string(tile->edgeinfo(edge).wayid()) << std::endl;
       } else {
         end_node = iter->second;
       }

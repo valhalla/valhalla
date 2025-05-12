@@ -208,7 +208,7 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
 
   // empty polygon
   auto req_str = req_base + R"("avoid_polygons": [[]]})";
-  std::cerr << req_str << '\n';
+  std::cerr << req_str << std::endl;
   ParseApi(req_str, Options::route, request);
   // loki would previously segfault on exclude_polygons=[[]]
   gurka::do_action(Options::route, avoid_map, req_str);
@@ -216,7 +216,7 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
 
   // an object!
   req_str = req_base + R"("avoid_polygons": {}})";
-  std::cerr << req_str << '\n';
+  std::cerr << req_str << std::endl;
   ParseApi(req_str, Options::route, request);
   auto res = gurka::do_action(Options::route, avoid_map, req_str);
   EXPECT_TRUE(request.options().exclude_polygons_size() == 0);

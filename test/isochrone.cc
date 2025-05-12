@@ -533,7 +533,7 @@ int main(int argc, char* argv[]) {
     Api request;
     ParseApi(argv[1], Options::isochrone, request);
     loki_worker.isochrones(request);
-    std::cout << thor_worker.isochrones(request) << '\n';
+    std::cout << thor_worker.isochrones(request) << std::endl;
     return EXIT_SUCCESS;
   }
   // Silence logs (especially long request logging)

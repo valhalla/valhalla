@@ -120,13 +120,13 @@ void test_request(const std::string& request,
 
   travel_modes.erase(std::unique(travel_modes.begin(), travel_modes.end()), travel_modes.end());
   std::copy(travel_modes.begin(), travel_modes.end(), std::ostream_iterator<int>(std::cout, ", "));
-  std::cout << '\n';
+  std::cout << std::endl;
   EXPECT_TRUE(std::equal(travel_modes.begin(), travel_modes.end(), expected_travel_modes.begin(),
                          expected_travel_modes.end()))
       << "Should have " + std::to_string(expected_travel_modes.size()) + " travel_modes";
 
   std::copy(route.begin(), route.end(), std::ostream_iterator<std::string>(std::cout, ", "));
-  std::cout << '\n';
+  std::cout << std::endl;
   EXPECT_TRUE(std::equal(route.begin(), route.end(), expected_route.begin(), expected_route.end()))
       << "The route is incorrect";
 }

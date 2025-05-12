@@ -17,10 +17,10 @@ using namespace valhalla::mjolnir;
 
 // List the build stages
 void list_stages() {
-  std::cout << "Build stage strings (in order)" << '\n';
+  std::cout << "Build stage strings (in order)" << std::endl;
   for (int i = static_cast<int>(BuildStage::kInitialize); i <= static_cast<int>(BuildStage::kCleanup);
        ++i) {
-    std::cout << "    " << to_string(static_cast<BuildStage>(i)) << '\n';
+    std::cout << "    " << to_string(static_cast<BuildStage>(i)) << std::endl;
   }
 }
 
@@ -89,7 +89,7 @@ int main(int argc, char** argv) {
       throw cxxopts::exceptions::exception("Input file is required\n\n" + options.help() + "\n\n");
     }
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << '\n';
+    std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"

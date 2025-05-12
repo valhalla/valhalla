@@ -84,9 +84,9 @@ void DataQuality::LogIssues() const {
   std::ofstream dupfile;
   std::sort(dups.begin(), dups.end());
   dupfile.open("duplicateways.txt", std::ofstream::out | std::ofstream::app);
-  dupfile << "WayID1   WayID2    DuplicateEdges" << '\n';
+  dupfile << "WayID1   WayID2    DuplicateEdges" << std::endl;
   for (const auto& dupway : dups) {
-    dupfile << dupway.wayid1 << "," << dupway.wayid2 << "," << dupway.edgecount << '\n';
+    dupfile << dupway.wayid1 << "," << dupway.wayid2 << "," << dupway.edgecount << std::endl;
   }
   dupfile.close();
 

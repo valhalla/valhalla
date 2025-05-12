@@ -8,7 +8,7 @@
 int main(int argc, char** argv) {
 
   if (argc < 2) {
-    std::cerr << "Usage: " << std::string(argv[0]) << " conf/valhalla.json" << '\n';
+    std::cerr << "Usage: " << std::string(argv[0]) << " conf/valhalla.json" << std::endl;
     return 1;
   }
 

@@ -302,7 +302,7 @@ bool memory_status::supported() {
 
 std::ostream& operator<<(std::ostream& stream, const memory_status& s) {
   for (const auto& metric : s.metrics) {
-    stream << metric.first << ": " << metric.second.first << metric.second.second << '\n';
+    stream << metric.first << ": " << metric.second.first << metric.second.second << std::endl;
   }
   return stream;
 }

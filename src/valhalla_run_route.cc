@@ -516,11 +516,11 @@ int main(int argc, char* argv[]) {
       throw cxxopts::exceptions::exception("Either json or json-file args must be set.");
     }
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << '\n';
+    std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << '\n';
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -641,7 +641,7 @@ int main(int argc, char* argv[]) {
           output_pbf.write(&path_bytes[0], path_bytes.size());
           output_pbf.close();
         } else {
-          std::cerr << "Failed to write " << pbf_filename << '\n';
+          std::cerr << "Failed to write " << pbf_filename << std::endl;
           return EXIT_FAILURE;
         }
       }

@@ -18,7 +18,7 @@ void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirec
     for (auto edge : way.second) {
       ways_file << "," << (uint32_t)edge.forward << "," << (uint64_t)edge.edgeid;
     }
-    ways_file << '\n';
+    ways_file << std::endl;
   }
   ways_file.close();
 }

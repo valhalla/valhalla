@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
       filename = result["file"].as<std::string>();
     }
   } catch (cxxopts::exceptions::exception& e) {
-    std::cerr << e.what() << '\n';
+    std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
@@ -207,7 +207,7 @@ int main(int argc, char* argv[]) {
     resOut << res;
     resOut.close();
   } else {
-    std::cout << "\n" << res << '\n';
+    std::cout << "\n" << res << std::endl;
   }
 
   // Shutdown protocol buffer library

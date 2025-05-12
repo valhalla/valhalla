@@ -37,7 +37,7 @@ ReadMeasurements(istream_t& istream, float default_gps_accuracy, float default_s
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
-    std::cout << "usage: map_matching CONFIG" << '\n';
+    std::cout << "usage: map_matching CONFIG" << std::endl;
     return 1;
   }
 
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
        measurements = ReadMeasurements(std::cin, default_gps_accuracy, default_search_radius)) {
 
     // Offline match
-    std::cout << "Sequence " << index++ << '\n';
+    std::cout << "Sequence " << index++ << std::endl;
     auto results = mapmatcher->OfflineMatch(measurements).front().results;
 
     // Show results
@@ -69,14 +69,14 @@ int main(int argc, char* argv[]) {
     for (const auto& result : results) {
       if (result.HasState()) {
         std::cout << mmt_id << " ";
-        std::cout << result.distance_from << '\n';
+        std::cout << result.distance_from << std::endl;
         count++;
       }
       mmt_id++;
     }
 
     // Summary
-    std::cout << count << "/" << measurements.size() << '\n' << '\n';
+    std::cout << count << "/" << measurements.size() << std::endl << std::endl;
 
     // Clean up
     measurements.clear();

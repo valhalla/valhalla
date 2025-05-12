@@ -61,7 +61,7 @@ protected:
 
   static void SetUpTestSuite() {
     randEngine_.seed(std::time(nullptr));
-    std::cout << "Random engine=" << randEngine_ << '\n';
+    std::cout << "Random engine=" << randEngine_ << std::endl;
   }
 
   static GraphReaderPtr_t createGraphReader() {

@@ -81,7 +81,7 @@ void TryConditionalRestrictions(const std::string& condition,
   EXPECT_EQ(res.end_mins(), end.minute);
 
   if (::testing::Test::HasFailure()) {
-    std::cerr << "Time domain: " << condition << '\n';
+    std::cerr << "Time domain: " << condition << std::endl;
   }
 }
 

@@ -2395,7 +2395,7 @@ TEST(RouteSerializerOsrm, testserializeAnnotationsEmpty) {
     std::stringstream ss;
     ss << *annotations;
     serialized_to_json.Parse(ss.str().c_str());
-    std::cout << *annotations << '\n';
+    std::cout << *annotations << std::endl;
   }
   rapidjson::Document expected_json;
   { expected_json.Parse(R"({})"); }

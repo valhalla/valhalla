@@ -329,7 +329,7 @@ std::vector<OneStopTest> ParseTestFile(const std::string& filename) {
     }
     file.close();
   } else {
-    std::cout << "One stop test file: " << filename << " not found" << '\n';
+    std::cout << "One stop test file: " << filename << " not found" << std::endl;
   }
 
   return onestoptests;
@@ -406,7 +406,7 @@ void ParseLogFile(const std::string& filename) {
 
               if (transit == "transit_route_stopid") {
                 if (route) {
-                  std::cout << origin << "," << dest << "," << tranisit_route << '\n';
+                  std::cout << origin << "," << dest << "," << tranisit_route << std::endl;
                   origin = "";
                   dest = "";
                   tranisit_route = "";
@@ -427,7 +427,7 @@ void ParseLogFile(const std::string& filename) {
               type = "";
               route = false;
             } else if (route) {
-              std::cout << origin << "," << dest << "," << tranisit_route << '\n';
+              std::cout << origin << "," << dest << "," << tranisit_route << std::endl;
               origin = "";
               dest = "";
               tranisit_route = "";
@@ -441,7 +441,7 @@ void ParseLogFile(const std::string& filename) {
     }
     file.close();
   } else {
-    std::cout << "One stop test file: " << filename << " not found" << '\n';
+    std::cout << "One stop test file: " << filename << " not found" << std::endl;
   }
 }
 

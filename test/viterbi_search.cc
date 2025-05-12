@@ -38,11 +38,11 @@ void print_trellis_diagram_vertically(const std::vector<Column>& columns) {
     uint32_t idx = 0;
     for (const auto& state : column) {
       print_state(StateId(time, idx), state);
-      std::cout << '\n';
+      std::cout << std::endl;
       idx++;
     }
     time++;
-    std::cout << '\n';
+    std::cout << std::endl;
   }
 }
 
@@ -51,9 +51,9 @@ void print_path_reversely(const std::vector<Column>& columns, iterator_t rbegin,
   for (auto stateid = rbegin; stateid != rend; stateid++) {
     if ((*stateid).IsValid()) {
       print_state(*stateid, columns[(*stateid).time()][(*stateid).id()]);
-      std::cout << '\n';
+      std::cout << std::endl;
     } else {
-      std::cout << "[NOT FOUND]" << '\n';
+      std::cout << "[NOT FOUND]" << std::endl;
     }
   }
 }
@@ -62,7 +62,7 @@ template <typename iterator_t> void print_path(iterator_t rbegin, iterator_t ren
   for (auto it = rbegin; it != rend; it++) {
     std::cout << it->time() << "/" << it->id() << " ";
   }
-  std::cout << '\n';
+  std::cout << std::endl;
 }
 
 void AddColumns(IViterbiSearch& vs, const std::vector<Column>& columns) {
@@ -219,13 +219,13 @@ void test_viterbi_search(const std::vector<Column>& columns) {
       EXPECT_EQ(vs_winner.time(), time) << "time should be matched";
 
       if (na.AccumulatedCost(na_winner) != vs.AccumulatedCost(vs_winner)) {
-        std::cout << "GRAPH" << '\n';
+        std::cout << "GRAPH" << std::endl;
         print_trellis_diagram_vertically(columns);
 
-        std::cout << "PATH OF NA" << '\n';
+        std::cout << "PATH OF NA" << std::endl;
         print_path_reversely(columns, na.SearchPathVS(time), na.PathEnd());
 
-        std::cout << "PATH OF VS" << '\n';
+        std::cout << "PATH OF VS" << std::endl;
         print_path_reversely(columns, vs.SearchPathVS(time), vs.PathEnd());
       }
       EXPECT_EQ(na.AccumulatedCost(na_winner), vs.AccumulatedCost(vs_winner))

@@ -353,7 +353,7 @@ std::string serializeIsochronePbf(Api& request,
 
         // construct a geometry
         for (const std::list<PointLL>* ring : group_ptr) {
-          std::cerr << "Rings: " << ring->size() << '\n';
+          std::cerr << "Rings: " << ring->size() << std::endl;
 
           auto* geom = contour_pbf->mutable_geometries()->Add();
           for (PointLL pair : *ring) {

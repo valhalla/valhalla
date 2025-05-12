@@ -34,7 +34,7 @@ namespace {
 inline void DisplayLandmark(const Landmark& landmark) {
   std::cout << "landmark: id = " << landmark.id << ", name = " << landmark.name
             << ", type = " << static_cast<int>(landmark.type) << ", lng = " << landmark.lng
-            << ", lat = " << landmark.lat << '\n';
+            << ", lat = " << landmark.lat << std::endl;
 }
 
 void BuildPBF() {

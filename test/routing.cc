@@ -155,7 +155,7 @@ TEST(Routing, Benchmark) {
   Add(adjlist5, costs);
   TryRemove(adjlist5, costs.size(), costs);
   uint32_t ms = (std::clock() - start) / static_cast<double>(CLOCKS_PER_SEC / 1000);
-  std::cout << ms << '\n';
+  std::cout << ms << std::endl;
 }
 
 TEST(Routing, TestRoutePathIterator) {
