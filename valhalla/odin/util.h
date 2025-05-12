@@ -5,9 +5,6 @@
 #include <locale>
 #include <string>
 #include <unordered_map>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/odin/narrative_dictionary.h>
@@ -57,7 +54,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
                          uint32_t turn_degree_threshold = 40);
 
 /**
- * Get the time from the inputed date.
+ * Get the time from the provided date.
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
  * @param   locale locale
@@ -66,7 +63,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
 std::string get_localized_time(const std::string& date_time, const std::locale& locale);
 
 /**
- * Get the date from the inputed date.
+ * Get the date from the provided date.
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
  * @param   locale locale

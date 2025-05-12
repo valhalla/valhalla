@@ -2,7 +2,6 @@
 #define VALHALLA_SIF_EDGELABEL_H_
 
 #include <cstdint>
-#include <limits>
 #include <string.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -18,13 +17,15 @@ constexpr uint32_t kInitialEdgeLabelCountDijkstras = 4000000;
 constexpr uint32_t kInitialEdgeLabelCountBidirDijkstra = 2000000;
 
 /**
- * Labeling information for shortest path algorithm. Contains cost,
- * predecessor, current time, and assorted information required during
- * construction of the shortest path and for reconstructing the path
- * upon completion.
+ * Labeling information for shortest path and graph expansion algorithms.
+ * Contains cost, predecessor, path distance, and assorted information
+ * required during construction of the shortest path and for reconstructing
+ * the path upon completion.
  * The base EdgeLabel class contains all necessary information for costing
- * and for an A* (forward search) algorithm. Derived classes support
- * additional information required other path algorithms.
+ * computations and for use with the double bucket priority queue. The base
+ * class is used in map-matching (routing part) and the time-distance matrix
+ * algorithms. Derived classes support additional information required by other
+ * path algorithms.
  */
 class EdgeLabel {
 public:
@@ -36,9 +37,8 @@ public:
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
         origin_(0), destination_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0),
-        closure_pruning_(0), has_measured_speed_(0), path_id_(0), restriction_idx_(0),
-        internal_turn_(0), unpaved_(0), cost_(0, 0), sortcost_(0), distance_(0),
-        transition_cost_(0, 0) {
+        closure_pruning_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
+        has_measured_speed_(0), hgv_access_(0), bridge_(0), tunnel_(0), cost_(0, 0), sortcost_(0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -50,10 +50,8 @@ public:
    * @param edge                Directed edge.
    * @param cost                True cost (cost and time in seconds) to the edge.
    * @param sortcost            Cost for sorting (includes A* heuristic)
-   * @param dist                Distance to the destination (meters)
    * @param mode                Mode of travel along this edge.
    * @param path_distance       Accumulated path distance
-   * @param transition_cost     Transition cost
    * @param restriction_idx     If this label has restrictions, the index where the restriction is
    * found
    * @param closure_pruning     Should closure pruning be enabled on this path?
@@ -61,56 +59,38 @@ public:
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
    */
   EdgeLabel(const uint32_t predecessor,
             const baldr::GraphId& edgeid,
             const baldr::DirectedEdge* edge,
             const Cost& cost,
             const float sortcost,
-            const float dist,
             const TravelMode mode,
             const uint32_t path_distance,
-            const Cost& transition_cost,
             const uint8_t restriction_idx,
             const bool closure_pruning,
             const bool has_measured_speed,
             const InternalTurn internal_turn,
-            const uint8_t path_id = 0)
+            const uint8_t path_id = 0,
+            const bool destonly = false,
+            const bool hgv_access = false)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
         use_(static_cast<uint32_t>(edge->use())),
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
-        dest_only_(edge->destonly()), origin_(0), destination_(0), toll_(edge->toll()),
-        not_thru_(edge->not_thru()), deadend_(edge->deadend()),
+        origin_(0), destination_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
+        deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
-        closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
-        restriction_idx_(restriction_idx), internal_turn_(static_cast<uint8_t>(internal_turn)),
-        unpaved_(edge->unpaved()), cost_(cost), sortcost_(sortcost), distance_(dist),
-        transition_cost_(transition_cost) {
+        closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
+        internal_turn_(static_cast<uint8_t>(internal_turn)), unpaved_(edge->unpaved()),
+        has_measured_speed_(has_measured_speed), hgv_access_(hgv_access), bridge_(edge->bridge()),
+        tunnel_(edge->tunnel()), cost_(cost), sortcost_(sortcost) {
+    dest_only_ = destonly ? destonly : edge->destonly();
     assert(path_id_ <= baldr::kMaxMultiPathId);
-  }
-
-  /**
-   * Update an existing edge label with new predecessor and cost information.
-   * The mode, edge Id, and end node remain the same.
-   * @param predecessor Predecessor directed edge in the shortest path.
-   * @param cost        True cost (and elapsed time in seconds) to the edge.
-   * @param sortcost    Cost for sorting (includes A* heuristic).
-   * @param transition_cost Transition cost
-   * @param restriction_idx Does the edge have time dependent restrictions.
-   */
-  void Update(const uint32_t predecessor,
-              const Cost& cost,
-              const float sortcost,
-              const Cost& transition_cost,
-              const uint8_t restriction_idx) {
-    predecessor_ = predecessor;
-    cost_ = cost;
-    sortcost_ = sortcost;
-    transition_cost_ = transition_cost;
-    restriction_idx_ = restriction_idx;
   }
 
   /**
@@ -122,20 +102,17 @@ public:
    * @param cost             True cost (and elapsed time in seconds) to the edge.
    * @param sortcost         Cost for sorting (includes A* heuristic).
    * @param path_distance    Accumulated path distance.
-   * @param transition_cost  Transition cost
    * @param restriction_idx  If this label has restrictions, the index where the restriction is found
    */
   void Update(const uint32_t predecessor,
               const Cost& cost,
               const float sortcost,
               const uint32_t path_distance,
-              const Cost& transition_cost,
               const uint8_t restriction_idx) {
     predecessor_ = predecessor;
     cost_ = cost;
     sortcost_ = sortcost;
     path_distance_ = path_distance;
-    transition_cost_ = transition_cost;
     restriction_idx_ = restriction_idx;
   }
 
@@ -190,16 +167,6 @@ public:
    */
   void SetSortCost(float sortcost) {
     sortcost_ = sortcost;
-  }
-
-  /**
-   * Get the distance to the destination.
-   * In case of bidirectional search it may represent the distance to the start point:
-   * origin for the forward search and destination for the reverse search.
-   * @return  Returns the distance in meters.
-   */
-  float distance() const {
-    return distance_;
   }
 
   /**
@@ -373,15 +340,6 @@ public:
   }
 
   /**
-   * Get the transition cost. This is used in the bidirectional A*
-   * to determine the cost at the connection. But is also used for general stats
-   * @return  Returns the transition cost (including penalties).
-   */
-  sif::Cost transition_cost() const {
-    return transition_cost_;
-  }
-
-  /**
    * Returns the location/path id (index) of the path that this label is tracking. Useful when your
    * algorithm tracks multiple path expansions at the same time
    *
@@ -413,6 +371,29 @@ public:
    */
   bool unpaved() const {
     return unpaved_;
+  }
+
+  /**
+   * Get the bridge flag.
+   * @return Returns true if the edge is a bridge, otherwise false.
+   */
+  bool bridge() const {
+    return bridge_;
+  }
+
+  /**
+   * Get the tunnel flag.
+   * @return Returns true if the edge is a tunnel, otherwise false.
+   */
+  bool tunnel() const {
+    return tunnel_;
+  }
+  /**
+   * Does it have HGV access?
+   * @return Returns true if the (opposing) edge had HGV access
+   */
+  bool has_hgv_access() const {
+    return hgv_access_;
   }
 
 protected:
@@ -454,7 +435,6 @@ protected:
    * deadend_:            Flag indicating edge is a dead-end.
    * on_complex_rest_:    Part of a complex restriction.
    * closure_pruning_:    Was closure pruning active on prior edge?
-   * has_measured_speed_: Do we have any of the measured speed types set?
    */
   uint64_t endnode_ : 46;
   uint64_t use_ : 6;
@@ -468,7 +448,6 @@ protected:
   uint64_t deadend_ : 1;
   uint64_t on_complex_rest_ : 1;
   uint64_t closure_pruning_ : 1;
-  uint64_t has_measured_speed_ : 1;
 
   // path id can be used to track more than one path at the same time in the same labelset
   // its limited to 7 bits because edgestatus only had 7 and matching made sense to reduce confusion
@@ -478,21 +457,106 @@ protected:
   uint32_t internal_turn_ : 2;
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
-  uint32_t spare : 13;
+  uint32_t has_measured_speed_ : 1;
+
+  // Flag if this edge had HGV access
+  uint32_t hgv_access_ : 1;
+  // Flag indicating edge is a bridge.
+  uint32_t bridge_ : 1;
+  // Flag indicating edge is a tunnel.
+  uint32_t tunnel_ : 1;
+
+  uint32_t spare : 10;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
-  float distance_; // Distance to the destination.
+};
 
-  // Was originally used for reverse search path to remove extra time where paths intersected
-  // but its now used everywhere to measure the difference in time along the edge vs at the node
+/**
+ * Derived label class used for recosting paths within the LabelCallback.
+ * transition_cost is added to the label for use when recosting a path.
+ */
+class PathEdgeLabel : public EdgeLabel {
+public:
+  // Default constructor
+  PathEdgeLabel() {
+  }
+
+  /**
+   * Constructor with values.
+   * @param predecessor         Index into the edge label list for the predecessor
+   *                            directed edge in the shortest path.
+   * @param edgeid              Directed edge Id.
+   * @param edge                Directed edge.
+   * @param cost                True cost (cost and time in seconds) to the edge.
+   * @param sortcost            Cost for sorting (includes A* heuristic)
+   * @param dist                Distance to the destination (meters)
+   * @param mode                Mode of travel along this edge.
+   * @param path_distance       Accumulated path distance
+   * @param transition_cost     Transition cost
+   * @param restriction_idx     If this label has restrictions, the index where the restriction is
+   * found
+   * @param closure_pruning     Should closure pruning be enabled on this path?
+   * @param has_measured_speed  Do we have any of the measured speed types set?
+   * @param internal_turn       Did we make an turn on a short internal edge.
+   * @param path_id             When searching more than one path at a time this denotes which path
+   * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
+   */
+  PathEdgeLabel(const uint32_t predecessor,
+                const baldr::GraphId& edgeid,
+                const baldr::DirectedEdge* edge,
+                const Cost& cost,
+                const float sortcost,
+                const TravelMode mode,
+                const uint32_t path_distance,
+                const Cost& transition_cost,
+                const uint8_t restriction_idx,
+                const bool closure_pruning,
+                const bool has_measured_speed,
+                const InternalTurn internal_turn,
+                const uint8_t path_id = 0,
+                const bool destonly = false,
+                const bool hgv_access = false)
+      : EdgeLabel(predecessor,
+                  edgeid,
+                  edge,
+                  cost,
+                  sortcost,
+                  mode,
+                  path_distance,
+                  restriction_idx,
+                  closure_pruning,
+                  has_measured_speed,
+                  internal_turn,
+                  path_id,
+                  destonly,
+                  hgv_access),
+        transition_cost_(transition_cost) {
+    assert(path_id_ <= baldr::kMaxMultiPathId);
+  }
+
+  /**
+   * Get the transition cost. This is used in the bidirectional A*
+   * to determine the cost at the connection. But is also used for general stats
+   * @return  Returns the transition cost (including penalties).
+   */
+  sif::Cost transition_cost() const {
+    return transition_cost_;
+  }
+
+protected:
+  // Used to measure the difference in time along the edge vs at the node
   Cost transition_cost_;
 };
 
 /**
- * EdgeLabel used for bidirectional path algorithms: Bidirectional A*
- * and CostMatrix (which does not use a heuristic based on distance
- * to the destination).
+ * Derived EdgeLabel class used for A* path algorithms and CostMatrix.
+ * NOTE - despite the name, this is also used by unidirectional A* algorithms
+ * (not simply bidirectional A*).
+ * transition_cost, distance (from the destination), and opposing edge index
+ * are included in the derived class.
  */
 class BDEdgeLabel : public EdgeLabel {
 public:
@@ -520,6 +584,8 @@ public:
    * found
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -535,22 +601,25 @@ public:
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
-              const uint8_t path_id = 0)
+              const uint8_t path_id = 0,
+              const bool destonly = false,
+              const bool hgv_access = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
                   cost,
                   sortcost,
-                  dist,
                   mode,
                   0,
-                  transition_cost,
                   restriction_idx,
                   closure_pruning,
                   has_measured_speed,
                   internal_turn,
-                  path_id),
-        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
+                  path_id,
+                  destonly,
+                  hgv_access),
+        transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
+        not_thru_pruning_(not_thru_pruning), distance_(dist) {
   }
 
   /**
@@ -573,6 +642,8 @@ public:
    * found
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -587,22 +658,25 @@ public:
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
-              const uint8_t path_id = 0)
+              const uint8_t path_id = 0,
+              const bool destonly = false,
+              const bool hgv_access = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
                   cost,
                   cost.cost,
-                  0,
                   mode,
                   path_distance,
-                  transition_cost,
                   restriction_idx,
                   closure_pruning,
                   has_measured_speed,
                   internal_turn,
-                  path_id),
-        opp_edgeid_(oppedgeid), not_thru_pruning_(not_thru_pruning) {
+                  path_id,
+                  destonly,
+                  hgv_access),
+        transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
+        not_thru_pruning_(not_thru_pruning), distance_(0.0f) {
   }
 
   /**
@@ -622,6 +696,8 @@ public:
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
+   * @param hgv_access          Whether HGV is allowed
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -634,22 +710,24 @@ public:
               const bool closure_pruning,
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
-              const uint8_t path_id = 0)
+              const uint8_t path_id = 0,
+              const bool destonly = false,
+              const bool hgv_access = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
                   cost,
                   sortcost,
-                  dist,
                   mode,
                   0,
-                  Cost{},
                   restriction_idx,
                   closure_pruning,
                   has_measured_speed,
                   internal_turn,
-                  path_id),
-        not_thru_pruning_(!edge->not_thru()) {
+                  path_id,
+                  destonly,
+                  hgv_access),
+        transition_cost_({}), not_thru_pruning_(!edge->not_thru()), distance_(dist) {
     opp_edgeid_ = {};
   }
 
@@ -699,6 +777,25 @@ public:
   }
 
   /**
+   * Get the distance to the destination.
+   * In case of bidirectional search it may represent the distance to the start point:
+   * origin for the forward search and destination for the reverse search.
+   * @return  Returns the distance in meters.
+   */
+  float distance() const {
+    return distance_;
+  }
+
+  /**
+   * Get the transition cost. This is used in the bidirectional A*
+   * to determine the cost at the connection. But is also used for general stats
+   * @return  Returns the transition cost (including penalties).
+   */
+  sif::Cost transition_cost() const {
+    return transition_cost_;
+  }
+
+  /**
    * Get the GraphId of the opposing directed edge.
    * @return  Returns the GraphId of the opposing directed edge.
    */
@@ -714,13 +811,27 @@ public:
     return not_thru_pruning_;
   }
 
+  /**
+   * Sets the path distance for this EdgeLabel.
+   * @param distance  Path distance.
+   */
+  void set_path_distance(const float distance) {
+    path_distance_ = distance;
+  }
+
 protected:
+  // Was originally used for reverse search path to remove extra time where paths intersected
+  // but its now used everywhere to measure the difference in time along the edge vs at the node
+  Cost transition_cost_;
+
   // Graph Id of the opposing edge.
   // not_thru_pruning_: Is not thru pruning enabled?
   uint64_t opp_edgeid_ : 63; // Could be 46 (to provide more spare)
   // TODO: Move not_thru_prunin to the base class - EdgeLabel so that we can
   // consolidate all pruning related properties at 1 place
   uint64_t not_thru_pruning_ : 1;
+
+  float distance_; // Distance to the destination.
 };
 
 /**
@@ -753,6 +864,7 @@ public:
    * @param restriction_idx  If this label has restrictions, the index where the restriction is found
    * @param path_id          When searching more than one path at a time this denotes which path the
    *                         this label is tracking
+   * @param destonly         Destination only, either mode-specific or general
    */
   MMEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -770,24 +882,24 @@ public:
               const bool has_transit,
               const Cost& transition_cost,
               const uint8_t restriction_idx,
-              const uint8_t path_id = 0)
+              const uint8_t path_id = 0,
+              const bool destonly = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
                   cost,
                   sortcost,
-                  dist,
                   mode,
                   path_distance,
-                  transition_cost,
                   restriction_idx,
                   true,
                   false,
                   InternalTurn::kNoTurn,
-                  path_id),
-        prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
-        transit_operator_(transit_operator), has_transit_(has_transit),
-        walking_distance_(walking_distance) {
+                  path_id,
+                  destonly),
+        transition_cost_(transition_cost), prior_stopid_(prior_stopid), tripid_(tripid),
+        blockid_(blockid), transit_operator_(transit_operator), has_transit_(has_transit),
+        walking_distance_(walking_distance), distance_(dist) {
   }
 
   /**
@@ -823,6 +935,25 @@ public:
     blockid_ = blockid;
     transition_cost_ = transition_cost;
     restriction_idx_ = restriction_idx;
+  }
+
+  /**
+   * Get the distance to the destination.
+   * In case of bidirectional search it may represent the distance to the start point:
+   * origin for the forward search and destination for the reverse search.
+   * @return  Returns the distance in meters.
+   */
+  float distance() const {
+    return distance_;
+  }
+
+  /**
+   * Get the transition cost. This is used in the bidirectional A*
+   * to determine the cost at the connection. But is also used for general stats
+   * @return  Returns the transition cost (including penalties).
+   */
+  sif::Cost transition_cost() const {
+    return transition_cost_;
   }
 
   /**
@@ -873,6 +1004,10 @@ public:
   }
 
 protected:
+  // Was originally used for reverse search path to remove extra time where paths intersected
+  // but its now used everywhere to measure the difference in time along the edge vs at the node
+  Cost transition_cost_;
+
   // GraphId of the predecessor transit stop.
   baldr::GraphId prior_stopid_;
 
@@ -888,6 +1023,8 @@ protected:
 
   // Accumulated walking distance to prune the expansion
   uint32_t walking_distance_;
+
+  float distance_; // Distance to the destination.
 };
 
 } // namespace sif

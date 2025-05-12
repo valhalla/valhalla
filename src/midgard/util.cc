@@ -13,7 +13,7 @@
 #include <cstdint>
 #include <fstream>
 #include <list>
-#include <sstream>
+#include <random>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <vector>
@@ -46,6 +46,70 @@ resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
   }
   return resampled;
 }
+
+/**
+ *  determines the quadrant of pt1 relative to pt2
+ *
+ *  +-----+-----+
+ *  |     |     |
+ *  |  1  |  0  |
+ *  |     |     |
+ *  +----pt2----+
+ *  |     |     |
+ *  |  2  |  3  |
+ *  |     |     |
+ *  +-----+-----+
+ *
+ */
+template <class coord_t> int8_t quadrant_type(const coord_t& pt1, const coord_t& pt2) {
+  return (pt1.first > pt2.first) ? ((pt1.second > pt2.second) ? 0 : 3)
+                                 : ((pt1.second > pt2.second) ? 1 : 2);
+}
+template int8_t quadrant_type<valhalla::midgard::PointLL>(const valhalla::midgard::PointLL&,
+                                                          const valhalla::midgard::PointLL&);
+
+/**
+ * get the x intercept of an edge {pt1, pt2} with a horizontal line at a given y
+ */
+template <class coord_t>
+typename coord_t::first_type
+x_intercept(const coord_t& pt1, const coord_t& pt2, const typename coord_t::first_type& y) {
+  return pt2.first - ((pt2.second - y) * ((pt1.first - pt2.first) / (pt1.second - pt2.second)));
+}
+
+template valhalla::midgard::PointLL::first_type
+x_intercept<valhalla::midgard::PointLL>(const valhalla::midgard::PointLL&,
+                                        const valhalla::midgard::PointLL&,
+                                        const valhalla::midgard::PointLL::first_type&);
+
+template <class coord_t>
+void adjust_delta(int8_t& delta,
+                  const coord_t& vertex,
+                  const coord_t& next_vertex,
+                  const coord_t& p) {
+  switch (delta) {
+      /* make quadrant deltas wrap around */
+    case 3:
+      delta = -1;
+      break;
+    case -3:
+      delta = 1;
+      break;
+      /* when a quadrant was skipped, check if clockwise or counter-clockwise  */
+    case 2:
+    case -2:
+      if (x_intercept(vertex, next_vertex, p.second) > p.first)
+        delta = -(delta);
+      break;
+  }
+}
+
+template void adjust_delta<valhalla::midgard::PointLL>(int8_t&,
+                                                       const valhalla::midgard::PointLL&,
+                                                       const valhalla::midgard::PointLL&,
+                                                       const valhalla::midgard::PointLL&
+
+);
 
 } // namespace
 
@@ -325,7 +389,7 @@ resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double,
 
 /* Resample a polyline at uniform intervals using more accurate spherical interpolation between
  * points. The length and number of samples is specified. The interval is computed based on
- * the number of samples and the algorithm guarantees that the secified number of samples
+ * the number of samples and the algorithm guarantees that the specified number of samples
  * is exactly produced.
  * This method makes use of several computations explained and demonstrated at:
  *   http://williams.best.vwh.net/avform.htm (reference no longer active)
@@ -544,6 +608,33 @@ template bool intersect<PointLL>(const PointLL& u,
                                  PointLL& i);
 template bool
 intersect<Point2>(const Point2& u, const Point2& v, const Point2& a, const Point2& b, Point2& i);
+
+template <class coord_t, class container_t>
+bool point_in_poly(const coord_t& pt, const container_t& poly) {
+  int8_t quad, next_quad, delta, angle;
+  quad = quadrant_type(poly.front(), pt);
+  angle = 0;
+
+  auto it = poly.begin();
+  for (size_t i = 0; i < poly.size(); ++i) {
+    const coord_t vertex = *it;
+    it++;
+    if (it == poly.end()) {
+      it = poly.begin();
+    }
+    const coord_t& next_vertex = *it;
+    next_quad = quadrant_type(next_vertex, pt);
+    delta = next_quad - quad;
+    adjust_delta(delta, vertex, next_vertex, pt);
+    angle = angle + delta;
+    quad = next_quad;
+  }
+  return (angle == 4) || (angle == -4);
+};
+
+template bool point_in_poly<valhalla::midgard::PointLL, std::list<valhalla::midgard::PointLL>>(
+    const valhalla::midgard::PointLL&,
+    const std::list<valhalla::midgard::PointLL>&);
 
 template <class container_t>
 typename container_t::value_type::first_type polygon_area(const container_t& polygon) {

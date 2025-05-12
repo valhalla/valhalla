@@ -1,5 +1,3 @@
-#include <fstream>
-#include <iostream>
 #include <string>
 #include <sys/stat.h>
 #include <utility>
@@ -105,7 +103,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       }
       // couldn't load it
       if (tiles.empty()) {
-        LOG_WARN("Tile extract contained no usuable tiles");
+        LOG_WARN("Tile extract contained no usable tiles");
         archive.reset();
       } // loaded ok but with possibly bad blocks
       else {
@@ -145,7 +143,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       }
       // couldn't load it
       if (traffic_tiles.empty()) {
-        LOG_WARN("Traffic tile extract contained no usuable tiles");
+        LOG_WARN("Traffic tile extract contained no usable tiles");
         archive.reset();
       } // loaded ok but with possibly bad blocks
       else {
@@ -786,10 +784,19 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   GraphId edgeid = id;
   const NodeInfo* node = nullptr;
   const DirectedEdge* cont_de = nullptr;
+  const DirectedEdge* first_de = GetOpposingEdge(id);
   while (true) {
     // Get the continuing directed edge. Initial case is to use the opposing
     // directed edge.
-    cont_de = (node == nullptr) ? GetOpposingEdge(id) : continuing_edge(tile, edgeid, node);
+    if (node) {
+      cont_de = continuing_edge(tile, edgeid, node);
+      if (cont_de == first_de) {
+        LOG_DEBUG("GraphReader::GetShortcut edges are in a loop and found no shortcut among them");
+        break;
+      }
+    } else {
+      cont_de = first_de;
+    }
     if (cont_de == nullptr) {
       LOG_DEBUG("GraphReader::GetShortcut found no clear continuing edge");
       break;
@@ -975,6 +982,16 @@ int GraphReader::GetTimezone(const baldr::GraphId& node, graph_tile_ptr& tile) {
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
 }
 
+int GraphReader::GetTimezoneFromEdge(const baldr::GraphId& edge, graph_tile_ptr& tile) {
+  auto nodes = GetDirectedEdgeNodes(edge, tile);
+  if (const auto* node = nodeinfo(nodes.first, tile))
+    return node->timezone();
+  else if (const auto* node = nodeinfo(nodes.second, tile))
+    return node->timezone();
+
+  return 0;
+}
+
 std::shared_ptr<const valhalla::IncidentsTile>
 GraphReader::GetIncidentTile(const GraphId& tile_id) const {
   return enable_incidents_ ? incident_singleton_t::get(tile_id.Tile_Base())
@@ -1008,6 +1025,10 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
   int end_index = end - itile->locations().begin();
 
   return {itile, begin_index, end_index};
+}
+
+graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
+  return reader_.GetGraphTile(graphid);
 }
 
 const valhalla::IncidentsTile::Metadata&

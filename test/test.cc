@@ -8,8 +8,8 @@
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
-#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -23,7 +23,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "filesystem.h"
 #include "microtar.h"
 
 namespace {
@@ -222,6 +221,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
       "mjolnir": {
         "concurrency": 1,
         "admin": "%%/admin.sqlite",
+        "landmarks": "%%/landmarks.sqlite",
         "data_processing": {
           "allow_alt_name": false,
           "apply_country_overrides": true,
@@ -296,6 +296,29 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "centroid": {
           "max_distance": 200000.0,
           "max_locations": 5
+        },
+        "hierarchy_limits": {
+            "allow_modification": false,
+            "costmatrix": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                }
+            },
+            "unidirectional_astar": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
+            },
+            "bidirectional_astar": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000}
+            }
         },
         "isochrone": {
           "max_contours": 4,
@@ -380,7 +403,36 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "service": {
           "proxy": "ipc://%%/thor"
         },
-        "source_to_target_algorithm": "select_optimal"
+        "source_to_target_algorithm": "select_optimal",
+        "costmatrix": {
+            "check_reverse_connections": false,
+            "allow_second_pass": false,
+            "max_reserved_locations": 25,
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                }
+            }
+        },
+        "bidirectional_astar": {
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000}
+            }
+        },
+        "unidirectional_astar": {
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
+            }
+        }
       }
     }
   )";
@@ -442,8 +494,8 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
   std::string traffic_extract = config.get<std::string>("mjolnir.traffic_extract");
 
-  filesystem::path parent_dir = filesystem::path(traffic_extract).parent_path();
-  if (!filesystem::exists(parent_dir)) {
+  std::filesystem::path parent_dir = std::filesystem::path(traffic_extract).parent_path();
+  if (!std::filesystem::exists(parent_dir)) {
     std::stringstream ss;
     ss << "Traffic extract directory " << parent_dir.string() << " does not exist";
     throw std::runtime_error(ss.str());

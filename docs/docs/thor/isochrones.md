@@ -9,7 +9,7 @@ In this image the green, yellow, orange and red contour lines represent 15, 30, 
 How are Isochrone Maps Useful?
 ------------------------------
 
-Isochrone maps can be used to make informed decisions about travel at both an individual level and en masse. You can get quantitative answeres to questions like:
+Isochrone maps can be used to make informed decisions about travel at both an individual level and en masse. You can get quantitative answers to questions like:
 
  * What are our lunch options within 5 minutes from here?
  * How much of the city lives within walking range of public transit?
@@ -27,7 +27,7 @@ The 2-D grid is used to find the isocrhone contours by using a well-known contou
 
 After forming sets of contour polygons, KEVIN -please write a paragraph or 2 to describe how the contours are formed and output!
 
-This 2-D grid of times can be useful for other purposes as well. It provides a very fast way to query a single location to see how long it takes to get there from the test location. Ultimately this could be a way to do very large one-to-many matrices. At this time we do not return the 2-D array of times, but this is a possibility in the future.
+This 2-D grid can be useful for other purposes as well. It provides a very fast way to query a single location to see how long it takes to get there from the test location. Ultimately this could be a way to do very large one-to-many matrices. 
 
 Where is it?
 ------------

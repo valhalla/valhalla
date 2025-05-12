@@ -5,7 +5,6 @@
 #include "mjolnir/servicedays.h"
 
 #include <future>
-#include <queue>
 #include <thread>
 
 #include <boost/algorithm/string.hpp>
@@ -260,7 +259,7 @@ void validate(const boost::property_tree::ptree& pt,
     }
   }
 
-  std::set<std::string> failures;
+  std::unordered_set<std::string> failures;
   for (auto p = failed_tests.begin(); p != failed_tests.end(); ++p) {
     bool bfound = false;
     auto tests = passed_tests.equal_range(p->first);
@@ -554,7 +553,7 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+  [[maybe_unused]] uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
   LOG_INFO("Finished validating transit network - took " + std::to_string(secs) + " secs");
 
   if (failure_count) {

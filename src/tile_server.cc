@@ -10,7 +10,6 @@
 
 #include <chrono>
 #include <fstream>
-#include <functional>
 #include <stdexcept>
 #include <thread>
 

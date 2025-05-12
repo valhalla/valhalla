@@ -9,7 +9,7 @@ import sys
 import os
 
 import valhalla_build_extract
-from valhalla_build_extract import TILE_SIZES, Bbox
+from valhalla_build_extract import TILE_SIZES, Bbox, TileResolver
 
 INDEX_BIN_SIZE = valhalla_build_extract.INDEX_BIN_SIZE
 INDEX_BIN_FORMAT = valhalla_build_extract.INDEX_BIN_FORMAT
@@ -37,41 +37,48 @@ def tile_base_to_path(base_x: int, base_y: int, level: int, fake_dir: Path) -> P
     level_tile_id = level | (tile_id << 3)
     path = str(level) + "{:,}".format(int(pow(10, TAR_PATH_LENGTHS[level])) + tile_id).replace(",", os.sep)[1:]
 
-    return fake_dir.joinpath(path + ".gph")
+    return Path(path + ".gph")
 
 
 class TestBuildExtract(unittest.TestCase):
     def test_tile_intersects_bbox(self):
         # bogus tile dir
-        tile_dir = Path("/home/")
+        tile_dir = Path("/foo/")
+        tile_resolver = TileResolver(tile_dir)
         
         # bbox with which to filter the tile paths
         bbox = "10.2,53.9,20,59.2"
-        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
+        input_paths = [tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (8, 50, 0),  # barely intersecting in the lower left
             (12, 54, 1),  # contained in bbox
             (20, 59, 2),  # barely intersecting in the upper right
-        )])
-        out_paths = valhalla_build_extract.get_tiles_with_bbox(input_paths, bbox, tile_dir)
-        self.assertSetEqual(input_paths, out_paths)
+        )]
+        tile_resolver.normalized_tile_paths = input_paths
+        tile_resolver.matched_paths = list()
+        valhalla_build_extract.get_tiles_with_bbox(tile_resolver, bbox)
+        self.assertListEqual(input_paths, tile_resolver.matched_paths)
 
         bbox = "-20,-59.2,-10.2,-53.9"
-        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
+        input_paths = [tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (-20, -59, 2),  # barely intersecting in the lower left
             (-12, -54, 1),  # contained in bbox
             (-12, -62, 0),
-        )])
-        out_paths = valhalla_build_extract.get_tiles_with_bbox(input_paths, bbox, tile_dir)
-        self.assertSetEqual(input_paths, out_paths)
+        )]
+        tile_resolver.normalized_tile_paths = input_paths
+        tile_resolver.matched_paths = list()
+        valhalla_build_extract.get_tiles_with_bbox(tile_resolver, bbox)
+        self.assertListEqual(input_paths, tile_resolver.matched_paths)
 
         # don't find the ones not intersecting
         bbox = "0,10,4,14"
-        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
+        input_paths = [tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (8, 14, 0),
             (-0.50, 9.75, 2)
-        )])
-        out_paths = valhalla_build_extract.get_tiles_with_bbox(input_paths, bbox, tile_dir)
-        self.assertSetEqual(out_paths, set())
+        )]
+        tile_resolver.normalized_tile_paths = input_paths
+        tile_resolver.matched_paths = list()
+        valhalla_build_extract.get_tiles_with_bbox(tile_resolver, bbox)
+        self.assertListEqual(tile_resolver.matched_paths, list())
 
     def test_tile_intersects_geojson(self):
         # create 1 polygon with 2 height & width, should leave out e.g. tile (2,2)
@@ -80,7 +87,8 @@ class TestBuildExtract(unittest.TestCase):
         # |___|
 
         # bogus tile dir
-        tile_dir = Path("/home/")
+        tile_dir = Path("/foo/")
+        tile_resolver = TileResolver(tile_dir)
 
         gj = {
             "type": "FeatureCollection",
@@ -102,7 +110,7 @@ class TestBuildExtract(unittest.TestCase):
         with open(gj_fp, 'w') as f:
             json.dump(gj, f)
 
-        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
+        input_paths = [tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (0, 2, 0),
             (0, 2, 1),
             (0, 3, 1),
@@ -110,19 +118,23 @@ class TestBuildExtract(unittest.TestCase):
             (0, 2, 2),
             (1.75, 2.75, 2),
             (0.75, 3.25, 2)
-        )])
-        out_paths = valhalla_build_extract.get_tiles_with_geojson(input_paths, gj_dir, tile_dir)
-        self.assertSetEqual(input_paths, out_paths)
+        )]
+        tile_resolver.normalized_tile_paths = input_paths
+        tile_resolver.matched_paths = list()
+        valhalla_build_extract.get_tiles_with_geojson(tile_resolver, gj_dir)
+        self.assertListEqual(input_paths, tile_resolver.matched_paths)
 
         # don't find the ones not intersecting
-        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
+        input_paths = [tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (4, 2, 0),
             (1, 3, 1),
             (1, 4.75, 2),
             (1, 3, 2),
-        )])
-        out_paths = valhalla_build_extract.get_tiles_with_geojson(input_paths, gj_dir, tile_dir)
-        self.assertSetEqual(out_paths, set())
+        )]
+        tile_resolver.normalized_tile_paths = input_paths
+        tile_resolver.matched_paths = list()
+        valhalla_build_extract.get_tiles_with_geojson(tile_resolver, gj_dir)
+        self.assertListEqual(tile_resolver.matched_paths, list())
 
         gj_fp.unlink()
         gj_dir.rmdir()
@@ -132,16 +144,26 @@ class TestBuildExtract(unittest.TestCase):
                               "traffic_extract": str(TRAFFIC_PATH)}}
 
         # it will open the tars in write mode, so other test output can't interfere
-        tile_paths = sorted(TILE_PATH.rglob('*.gph'))
-        valhalla_build_extract.create_extracts(config, True, tile_paths)
-        tile_count = len(tile_paths)
+        # tests the implementation using the tile_dir
+        tile_resolver = TileResolver(TILE_PATH)
+        tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
+        valhalla_build_extract.create_extracts(config, True, tile_resolver, EXTRACT_PATH)
+        tile_count = len(tile_resolver.matched_paths)
 
         # test that the index has the right offsets/sizes
-        exp_tuples = ((2560, 25568, 291912), (296448, 410441, 662496), (960512, 6549282, 6059792))
+        exp_tuples = ((2560, 25568, 296768), (301056, 410441, 665624), (968704, 6549282, 6137088))
         self.check_tar(EXTRACT_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
         # same for traffic.tar
-        exp_tuples = ((1536, 25568, 26416), (28672, 410441, 65552), (95232, 6549282, 604608))
+        exp_tuples = ((1536, 25568, 25856), (28160, 410441, 64400), (93184, 6549282, 604608))
         self.check_tar(TRAFFIC_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
+
+        # tests the implementation using the tile_dir
+        new_tile_extract = TILE_PATH.joinpath("tiles2.tar")
+        exp_tuples = ((2560, 25568, 296768), (301056, 410441, 665624), (968704, 6549282, 6137088))
+        tile_resolver = TileResolver(EXTRACT_PATH)
+        tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
+        valhalla_build_extract.create_extracts(config, True, tile_resolver, new_tile_extract)
+        self.check_tar(new_tile_extract, exp_tuples, tile_count * INDEX_BIN_SIZE)
 
     def check_tar(self, p: Path, exp_tuples, end_index):
         with open(p, 'r+b') as f:

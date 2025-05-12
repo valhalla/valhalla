@@ -1,8 +1,5 @@
 #include "test.h"
 
-#include <iostream>
-#include <stdexcept>
-
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -50,7 +47,7 @@ TEST(ShapeAttributes, test_shape_attributes_included) {
   EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
 
   // Measures the length between point
-  for (int i = 1; i < shape.size(); i++) {
+  for (size_t i = 1; i < shape.size(); i++) {
     auto distance = shape[i].Distance(shape[i - 1]) * .001f;
 
     // Measuring that the length between shape pts is approx. to the shape attributes length
@@ -59,7 +56,7 @@ TEST(ShapeAttributes, test_shape_attributes_included) {
 
   // Assert that the shape attributes (time, length, speed) are equal to their corresponding edge
   // attributes
-  for (int e = 0; e < edges.Size(); e++) {
+  for (rapidjson::SizeType e = 0; e < edges.Size(); e++) {
     auto edge_length = edges[e]["length"].GetDouble();
     auto edge_speed = edges[e]["speed"].GetDouble();
 
@@ -110,7 +107,7 @@ TEST(ShapeAttributes, test_shape_attributes_duplicated_point) {
   EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
 
   // Measures the length between point
-  for (int i = 1; i < shape.size(); i++) {
+  for (size_t i = 1; i < shape.size(); i++) {
     auto distance = shape[i].Distance(shape[i - 1]) * .001f;
 
     // Measuring that the length between shape pts is approx. to the shape attributes length
@@ -119,7 +116,7 @@ TEST(ShapeAttributes, test_shape_attributes_duplicated_point) {
 
   // Assert that the shape attributes (time, length, speed) are equal to their corresponding edge
   // attributes
-  for (int e = 0; e < edges.Size(); e++) {
+  for (rapidjson::SizeType e = 0; e < edges.Size(); e++) {
     auto edge_length = edges[e]["length"].GetDouble();
     auto edge_speed = edges[e]["speed"].GetDouble();
 
@@ -168,7 +165,7 @@ TEST(ShapeAttributes, test_shape_attributes_no_turncosts) {
   EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
 
   // Measures the length between point
-  for (int i = 1; i < shape.size(); i++) {
+  for (size_t i = 1; i < shape.size(); i++) {
     auto distance = shape[i].Distance(shape[i - 1]) * .001f;
 
     // Measuring that the length between shape pts is approx. to the shape attributes length

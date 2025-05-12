@@ -184,7 +184,9 @@ bool expand_from_node(const mode_costing_t& mode_costing,
 
         // get the cost of traversing the node and the edge
         auto& costing = mode_costing[static_cast<int>(mode)];
-        auto transition_cost = costing->TransitionCost(de, nodeinfo, prev_edge_label);
+        auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
+        auto transition_cost =
+            costing->TransitionCost(de, nodeinfo, prev_edge_label, tile, reader_getter);
         uint8_t flow_sources;
         auto cost =
             transition_cost + costing->EdgeCost(de, end_node_tile, offset_time_info, flow_sources);
@@ -205,10 +207,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                            de,
                            {},
                            0,
-                           0,
                            mode,
                            0,
-                           {},
                            kInvalidRestriction,
                            true,
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -411,10 +411,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                            de,
                            {},
                            0,
-                           0,
                            mode,
                            0,
-                           {},
                            baldr::kInvalidRestriction,
                            true,
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -476,7 +474,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           // get the cost of traversing the node and the remaining part of the edge
           auto& costing = mode_costing[static_cast<int>(mode)];
           nodeinfo = end_edge_tile->node(n->first);
-          auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label);
+          auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
+          auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label,
+                                                         end_edge_tile, reader_getter);
           uint8_t flow_sources;
           elapsed += transition_cost +
                      costing->EdgeCost(end_de, end_edge_tile, offset_time_info, flow_sources) *
@@ -496,20 +496,23 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
       index++;
     }
 
-    // Did not find the end of the origin edge. Check for trivial route on a single edge
-    for (const auto& end : end_nodes) {
-      if (end.second.first.graph_id() == edge.graph_id()) {
-        // Update the elapsed time based on edge cost
-        uint8_t flow_sources;
-        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, time_info,
-                                                                  flow_sources) *
-                   (end.second.first.percent_along() - edge.percent_along());
-        if (options.use_timestamps())
-          elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
+    // Look for trivial cases if we didn't bail based on checking more than the edge length
+    if (length <= de_length) {
+      // Did not find the end of the origin edge. Check for trivial route on a single edge
+      for (const auto& end : end_nodes) {
+        if (end.second.first.graph_id() == edge.graph_id()) {
+          // Update the elapsed time based on edge cost
+          uint8_t flow_sources;
+          elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, time_info,
+                                                                    flow_sources) *
+                     (end.second.first.percent_along() - edge.percent_along());
+          if (options.use_timestamps())
+            elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 
-        // Add end edge
-        path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, 0.f, -1);
-        return true;
+          // Add end edge
+          path_infos.emplace_back(mode, elapsed, GraphId(edge.graph_id()), 0, 0.f, -1);
+          return true;
+        }
       }
     }
   }

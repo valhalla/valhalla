@@ -1148,7 +1148,7 @@ TEST(Maneuversbuilder, TestLeftInternalUturnCombine) {
                valhalla::RoadClass::kPrimary, 36, 32, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  // node:1 TURN_CHANNNEL
+  // node:1 TURN_CHANNEL
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Devonshire Road", 0}}, 0.013000, 50.000000, valhalla::RoadClass::kTertiary,
@@ -1242,7 +1242,7 @@ TEST(Maneuversbuilder, TestLeftInternalUturnProperDirectionCombine) {
                valhalla::RoadClass::kPrimary, 48, 52, 0, 3, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  // node:1 TURN_CHANNNEL
+  // node:1 TURN_CHANNEL
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Moravia Park Drive", 0}}, 0.019000, 60.000000,
@@ -1343,7 +1343,7 @@ TEST(Maneuversbuilder, TestStraightInternalLeftInternalStraightInternalUturnComb
                valhalla::RoadClass::kTrunk, 335, 334, 0, 2, TripLeg_Traversability_kBoth, 0, 0, 0, 0,
                0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  // node:1 TURN_CHANNNEL
+  // node:1 TURN_CHANNEL
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"MD 24", 1}, {"Vietnam Veterans Memorial Highway", 0}}, 0.012000, 89.000000,
@@ -1452,7 +1452,7 @@ TEST(Maneuversbuilder, TestInternalPencilPointUturnProperDirectionCombine) {
                valhalla::RoadClass::kUnclassified, 352, 343, 0, 2, TripLeg_Traversability_kBoth, 0, 0,
                0, 0, 0, 0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  // node:1 TURN_CHANNNEL
+  // node:1 TURN_CHANNEL
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {{"Old Carolina Road", 0}}, 0.019000, 50.000000, valhalla::RoadClass::kTertiary,
@@ -1552,7 +1552,7 @@ TEST(Maneuversbuilder, TestSimpleRightTurnChannelCombine) {
                valhalla::RoadClass::kTrunk, 59, 94, 0, 4, TripLeg_Traversability_kBoth, 0, 0, 0, 0, 0,
                0, 0, 0, 0, 0, {}, {}, {}, {});
 
-  // node:1 TURN_CHANNNEL
+  // node:1 TURN_CHANNEL
   node = path.add_node();
   edge = node->mutable_edge();
   PopulateEdge(edge, {}, 0.142000, 113.000000, valhalla::RoadClass::kSecondary, 105, 179, 4, 11,

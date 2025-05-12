@@ -1,19 +1,13 @@
 #include <cmath>
 #include <cstdint>
-#include <fstream>
 #include <future>
-#include <iostream>
 #include <memory>
-#include <queue>
-#include <random>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <unordered_set>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -690,13 +684,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::vector<std::string> names, tagged_values, pronunciations;
+        std::vector<std::string> names, tagged_values, linguistics;
 
         std::list<PointLL> shape = {egress_ll, station_ll};
 
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_values, pronunciations, 0, added);
+                                            names, tagged_values, linguistics, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -738,13 +732,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         directededge.set_named(false);
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::vector<std::string> names, tagged_values, pronunciations;
+        std::vector<std::string> names, tagged_values, linguistics;
         std::list<PointLL> shape = {station_ll, egress_ll};
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_values, pronunciations, 0, added);
+                                            names, tagged_values, linguistics, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(false);
 
@@ -786,13 +780,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::vector<std::string> names, tagged_values, pronunciations;
+        std::vector<std::string> names, tagged_values, linguistics;
         std::list<PointLL> shape = {station_ll, platform_ll};
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_values, pronunciations, 0, added);
+                                            names, tagged_values, linguistics, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -865,13 +859,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     directededge.set_named(false);
     // Add edge info to the tile and set the offset in the directed edge
     bool added = false;
-    std::vector<std::string> names, tagged_values, pronunciations;
+    std::vector<std::string> names, tagged_values, linguistics;
     std::list<PointLL> shape = {platform_ll, station_ll};
 
     // TODO - these need to be valhalla graph Ids
     uint32_t edge_info_offset =
         tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, 0, 0, 0, shape,
-                                        names, tagged_values, pronunciations, 0, added);
+                                        names, tagged_values, linguistics, 0, added);
 
     directededge.set_edgeinfo_offset(edge_info_offset);
     directededge.set_forward(false);
@@ -934,7 +928,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Leave the name empty. Use the trip Id to look up the route Id and
       // route within TripLegBuilder.
       bool added = false;
-      std::vector<std::string> names, tagged_values, pronunciations;
+      std::vector<std::string> names, tagged_values, linguistics;
 
       std::vector<PointLL> points;
       std::vector<float> distance;
@@ -958,7 +952,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       uint32_t edge_info_offset =
           tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, end_platform_graphid,
-                                          0, 0, 0, 0, shape, names, tagged_values, pronunciations, 0,
+                                          0, 0, 0, 0, shape, names, tagged_values, linguistics, 0,
                                           added);
 
       directededge.set_edgeinfo_offset(edge_info_offset);
@@ -985,7 +979,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
   // Log the number of added nodes and edges
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  [[maybe_unused]] uint32_t msecs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Tile " + std::to_string(tileid.tileid()) + ": added " + std::to_string(transitedges) +
            " transit edges, and " + std::to_string(tilebuilder_transit.nodes().size()) +
            " nodes. time = " + std::to_string(msecs) + " ms");
@@ -1180,7 +1175,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::multimap<uint32_t, multi_polygon_type> tz_polys;
     if (tz_db_handle) {
       tz_polys = GetTimeZones(tz_db_handle, tile_bounds);
-      if (tz_polys.size() == 1) {
+      if (tz_polys.size() < 2) {
         tile_within_one_tz = true;
       }
     }
@@ -1324,7 +1319,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+  [[maybe_unused]] uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
   LOG_INFO("Finished building transit network - took " + std::to_string(secs) + " secs");
 
   return all_tiles;

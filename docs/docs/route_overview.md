@@ -44,7 +44,7 @@ The route narrative/guidance generating code is located in the *odin* directory.
   - route_serializer.cc 
     - **serializeDirections**(request, path_legs, directions_legs) → outputs a json string
       - toOSRM - Serialize route response in OSRM compatible format
-      - toJSON - Returns a trip object formated to JSON
+      - toJSON - Returns a trip object formatted to JSON
     - **jsonToProtoRoute**(json_route, proto_route) → used by navigator
       - Transfers the JSON route information returned from a route request into the Route pbf object passed in by reference.
   - To summarize, Valhalla builds a JSON “trip” object which contains the locations, route summary with basic info about the trip, a list of legs of the trip, status, units and language.

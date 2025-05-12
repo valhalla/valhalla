@@ -1,10 +1,10 @@
 #include "baldr/double_bucket_queue.h"
 #include "config.h"
 #include "midgard/util.h"
+#include "sif/edgelabel.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -13,6 +13,12 @@
 using namespace std;
 using namespace valhalla;
 using namespace valhalla::baldr;
+using namespace valhalla::sif;
+
+constexpr size_t kEdgeLabelExpectedSize = 40;
+constexpr size_t kPathEdgeLabelExpectedSize = 48;
+constexpr size_t kBDEdgeLabelExpectedSize = 64;
+constexpr size_t kMMEdgeLabelExpectedSize = 72;
 
 namespace {
 
@@ -91,7 +97,7 @@ TEST(DoubleBucketQueue, RC4FloatPrecisionErrors) {
 }
 
 /**
-   void TestDecreseCost() {
+   void TestDecreaseCost() {
    std::vector<uint32_t> costs = { 67, 325, 25, 466, 1000, 100005, 758, 167,
    258, 16442, 278, 111111000 };
    std::vector<uint32_t> expectedorder = costs;
@@ -201,6 +207,14 @@ TEST(DoubleBucketQueue, TestSimulation) {
     DoubleBucketQueue<simple_label> dbqueue4(0, 1, 1000, &costs);
     TrySimulation(dbqueue4, costs, 333, 60, 100);
   }
+}
+
+// Test EdgeLabel size
+TEST(EdgeLabel, test_sizeof) {
+  EXPECT_EQ(sizeof(EdgeLabel), kEdgeLabelExpectedSize);
+  EXPECT_EQ(sizeof(PathEdgeLabel), kPathEdgeLabelExpectedSize);
+  EXPECT_EQ(sizeof(BDEdgeLabel), kBDEdgeLabelExpectedSize);
+  EXPECT_EQ(sizeof(MMEdgeLabel), kMMEdgeLabelExpectedSize);
 }
 
 } // namespace

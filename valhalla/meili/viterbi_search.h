@@ -2,7 +2,6 @@
 #ifndef MMP_VITERBI_SEARCH_H_
 #define MMP_VITERBI_SEARCH_H_
 
-#include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>

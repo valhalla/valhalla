@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+#include <boost/format.hpp>
 
 using namespace valhalla;
 
@@ -318,7 +319,7 @@ uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTes
          AlgorithmTest::freeflow = 0;
 
 uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
-  uint32_t kmh = -1;
+  uint32_t kmh = invalid<uint32_t>();
   const auto& nodes = api.trip().routes(0).legs(0).node();
   for (int i = 0; i < nodes.size() - 1; ++i) {
     const auto& node = nodes.Get(i);
@@ -329,7 +330,7 @@ uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_ed
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (kmh != -1 && compare_with_previous_edge) {
+    if (is_valid(kmh) && compare_with_previous_edge) {
       EXPECT_EQ(kmh, new_kmh);
     }
     kmh = new_kmh;
@@ -996,4 +997,242 @@ TEST(AlgorithmTestDest, TestAlgoMultiOriginDestination) {
   check("7", "8", {"CD"});
 
   check("8", "8", {"CD"});
+}
+
+class DateTimeTest : public ::testing::Test {
+protected:
+  // check both with and without time zones present
+  static gurka::map map;
+  static gurka::map map_tz;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 1500;
+
+    // ~ are approximate time zone crossings
+    const std::string ascii_map = R"(
+      A----------B
+      |          |
+      C          D
+      |          |
+      ~          ~
+      |          |
+      |          |
+      E          F
+      |          |
+      G----------H
+    )";
+
+    const gurka::ways ways = {{"AC", {{"highway", "residential"}}},
+                              {"CE", {{"highway", "residential"}}},
+                              {"EG", {{"highway", "residential"}}},
+                              {"GH", {{"highway", "residential"}}},
+                              {"HF", {{"highway", "residential"}}},
+                              {"FD", {{"highway", "residential"}}},
+                              {"DB", {{"highway", "residential"}}},
+                              {"BA", {{"highway", "residential"}}}};
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-8.5755, 42.1079});
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_route_no_tz");
+    map_tz = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_route",
+                               {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
+  }
+};
+gurka::map DateTimeTest::map = {};
+gurka::map DateTimeTest::map_tz = {};
+
+TEST_F(DateTimeTest, DepartAt) {
+  {
+    // one time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T08:23");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");
+  }
+  {
+    // no time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "B"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:21");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+01:00");
+  }
+  {
+    // two time zone crossings
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G", "H", "B"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T08:23");
+    EXPECT_EQ(api.options().locations(2).date_time(), "2020-10-30T08:44");
+    EXPECT_EQ(api.options().locations(3).date_time(), "2020-10-30T10:07");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");
+    EXPECT_EQ(api.options().locations(2).time_zone_offset(), "+00:00");
+    EXPECT_EQ(api.options().locations(3).time_zone_offset(), "+01:00");
+  }
+}
+
+TEST_F(DateTimeTest, DepartAtNoTz) {
+  {
+    // one time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(1).date_time(), "");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "");
+  }
+}
+
+TEST_F(DateTimeTest, ArriveBy) {
+  {
+    // one time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:37");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");
+  }
+  {
+    // no time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "B"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T08:39");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+01:00");
+  }
+  {
+    // two time zone crossings
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G", "H", "B"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T07:53");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T07:16");
+    EXPECT_EQ(api.options().locations(2).date_time(), "2020-10-30T07:37");
+    EXPECT_EQ(api.options().locations(3).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");
+    EXPECT_EQ(api.options().locations(2).time_zone_offset(), "+00:00");
+    EXPECT_EQ(api.options().locations(3).time_zone_offset(), "+01:00");
+  }
+}
+
+TEST_F(DateTimeTest, ArriveByNoTz) {
+  {
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "");
+  }
+  {
+    // multiple locations to check we do not propagate date time
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G", "F", "D"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "");
+    EXPECT_EQ(api.options().locations(1).date_time(), "");
+    EXPECT_EQ(api.options().locations(2).date_time(), "");
+    EXPECT_EQ(api.options().locations(3).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(2).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(3).time_zone_offset(), "");
+  }
+}
+
+TEST_F(DateTimeTest, Invariant) {
+  {
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G", "D", "B"}, "auto",
+                                {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-30T09:00"}});
+    for (int i = 0; i < 4; ++i) {
+      EXPECT_EQ(api.options().locations(i).date_time(), "2020-10-30T09:00");
+      EXPECT_EQ(api.options().locations(i).time_zone_offset(), "");
+    }
+  }
+}
+
+TEST(StandAlone, HGVNoAccessPenalty) {
+  // if hgv_no_penalty is on we should still respect the maxweight restriction on CD
+  // so we should take the next-best hgv=no edge with JK
+  const std::string ascii_map = R"(
+    A-1--B----C----D----E--2-F----G----H--3-I
+              |    |
+              J----K
+              |    |
+              |    |
+              L----M
+           )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}, {"hgv", "no"}, {"maxweight", "3.5"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"FG", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"GH", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"HI", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"CJ", {{"highway", "residential"}}},
+      {"JK", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"JLMK", {{"highway", "residential"}}},
+      {"KD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hgv_no_access_penalty");
+
+  std::unordered_map<std::string, std::string> no_time = {
+      {"/costing_options/truck/hgv_no_access_penalty", "2000"}};
+  std::unordered_map<std::string, std::string> with_depart_at =
+      {{"/costing_options/truck/hgv_no_access_penalty", "2000"},
+       {"/locations/0/date_time", "2024-03-20T09:00"}};
+  std::unordered_map<std::string, std::string> with_arrive_by =
+      {{"/costing_options/truck/hgv_no_access_penalty", "2000"},
+       {"/locations/1/date_time", "2024-03-20T09:00"}};
+
+  auto get_leg_cost = [](const valhalla::Api& response) {
+    return response.trip().routes(0).legs(0).node().rbegin()->cost().elapsed_cost().cost();
+  };
+
+  // do both bidirectional & both unidirectional a*
+  std::vector<std::unordered_map<std::string, std::string>> options = {no_time, with_depart_at,
+                                                                       with_arrive_by};
+  for (auto& truck_options : options) {
+
+    // by default, take the detour via LM
+    // NOTE, we're not snapping to the hgv=no edges either
+    {
+      auto route = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "truck");
+      gurka::assert::raw::expect_path(route, {"BC", "CJ", "JLMK", "KD", "DE"});
+    }
+
+    // with a high hgv_no_penalty also take the detour via LM, but do snap to the hgv=no edges
+    {
+      auto route =
+          gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "truck", truck_options);
+      gurka::assert::raw::expect_path(route, {"AB", "BC", "CJ", "JLMK", "KD", "DE", "EF"});
+    }
+
+    // with a low hgv_no_penalty take the JK edge
+    {
+      truck_options["/costing_options/truck/hgv_no_access_penalty"] = "10";
+      auto route =
+          gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "truck", truck_options);
+      gurka::assert::raw::expect_path(route, {"AB", "BC", "CJ", "JK", "KD", "DE", "EF"});
+    }
+
+    // if all hgv=no and a high hgv_no_penalty, truck should not trigger the penalty at all
+    // so cost should be similar to car
+    {
+      truck_options["/costing_options/truck/hgv_no_access_penalty"] = "2000";
+      auto route_car = gurka::do_action(valhalla::Options::route, map, {"2", "3"}, "auto");
+      auto route_truck =
+          gurka::do_action(valhalla::Options::route, map, {"2", "3"}, "truck", truck_options);
+      EXPECT_NEAR(get_leg_cost(route_car), get_leg_cost(route_truck), 300.0);
+    }
+  }
 }

@@ -1,4 +1,5 @@
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
+
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
 set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
@@ -13,42 +14,38 @@ add_library(valhalla_test
   ${TEST_SRCS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4hc.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4frame.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/xxhash.c
   )
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
-  ${VALHALLA_SOURCE_DIR}/test/gurka
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
-  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+  ${VALHALLA_SOURCE_DIR}/test/gurka)
+target_include_directories(valhalla_test SYSTEM PUBLIC
+  ${robinhoodhashing_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread PkgConfig::LZ4)
 
 if(ENABLE_DATA_TOOLS)
-  target_link_libraries(valhalla_test GEOS::GEOS)
+  target_link_libraries(valhalla_test PkgConfig::GEOS)
 endif()
 
 
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
-  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
-  json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
+  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll pointtileindex
   polyline2 predictedspeeds queue routing sample sequence sign signs statsd streetname streetnames streetnames_factory
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile
-  incident_loading worker_nullptr_tiles tar_index curl_tilegetter)
+  incident_loading worker_nullptr_tiles curl_tilegetter)
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
-    graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
-    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
+    graphtilebuilder graphreader hierarchylimits isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
+    names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban tar_index
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
     list(APPEND tests http_tiles)
@@ -66,19 +63,39 @@ if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
 endif()
 
-if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(
-    openlr.cc
-    incidents.cc
-    incident_loading.cc
-    PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif()
+# tests files that have warning,
+# any other file not int this list will be processed with the
+# "-Werror" flag
+# Avoid adding a test to this list
+set(tests_with_warnings
+  filesystem
+  graphbuilder
+  graphtilebuilder
+  gridded_data
+  maneuversbuilder
+  narrativebuilder
+  parse_request
+  sample
+  sequence
+  statsd
+  traffictile
+  util_odin
+  timedep_paths
+  worker
+  )
 
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
+  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+    if (${test} IN_LIST tests_with_warnings)
+      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall")
+    else()
+      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+    endif()
+  endif()
+
+
   set_target_properties(${test} PROPERTIES FOLDER "Tests")
   target_compile_definitions(${test} PRIVATE
       VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
@@ -113,7 +130,7 @@ foreach(test ${tyr_tests})
 endforeach()
 
 ## Test-specific data, properties and dependencies
-set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
+target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
@@ -129,7 +146,7 @@ set_target_properties(build_timezones PROPERTIES FOLDER "Tests")
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.tar
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/utrecht_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
-      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""}}}'
+      --inline-config '{"mjolnir":{"id_table_size":1000,"tile_dir":"test/data/utrecht_tiles","timezone":"test/data/tz.sqlite","admin":"${VALHALLA_SOURCE_DIR}/test/data/netherlands_admin.sqlite","include_construction":true,"hierarchy":true,"shortcuts":true,"concurrency":1,"logging":{"type":""},"data_processing":{"grid_divisions_within_tile":32}}}'
       -s initialize -e parseways
       ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_tiles
@@ -149,7 +166,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.ta
       -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_extract
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","tile_extract":"test/data/utrecht_tiles/tiles.tar","traffic_extract":"test/data/utrecht_tiles/traffic.tar","concurrency":1,"logging":{"type":""}}}'
-      --with-traffic
+      --with-traffic --overwrite
   COMMENT "Building Utrecht Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf ${CMAKE_BINARY_DIR}/valhalla_build_extract)
@@ -320,6 +337,7 @@ endif()
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
   add_dependencies(run-mapmatch utrecht_tiles)
+  add_dependencies(run-hierarchylimits utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)
   add_dependencies(run-matrix utrecht_tiles)
   add_dependencies(run-matrix_bss paris_bss_tiles)
@@ -338,7 +356,8 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
-if(ENABLE_HTTP)
+  add_dependencies(run-graphbuilder build_timezones)
+  if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
 endif()

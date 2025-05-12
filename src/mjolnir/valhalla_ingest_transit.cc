@@ -1,69 +1,53 @@
+#include <cxxopts.hpp>
+
 #include "baldr/rapidjson_utils.h"
 #include "mjolnir/ingest_transit.h"
 
-#include "config.h"
-#include <cxxopts.hpp>
+#include "argparse_utils.h"
 
-filesystem::path config_file_path;
+int main(int argc, char** argv) {
+  const auto program = filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
 
-bool ParseArguments(int argc, char* argv[]) {
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_ingest_transit",
-      "valhalla_ingest_transit " VALHALLA_VERSION "\n\n"
-      "valhalla_ingest_transit is a program that reads GTFS data. It converts a directory of transit feeds into protobuf tiles."
+      program,
+      program + " " + VALHALLA_VERSION + "\n\n"
+      "a program that reads GTFS data. It converts a directory of transit feeds into protobuf tiles."
       "\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
-
-    if (result.count("version")) {
-      std::cout << "ingest_transit " << VALHALLA_VERSION << "\n";
-      exit(0);
-    }
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
-      exit(0);
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
-      return true;
-    } else {
-      std::cerr << "Configuration file is required\n" << options.help() << "\n\n";
-    }
-  } catch (cxxopts::OptionException& e) {
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+      return EXIT_SUCCESS;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-  }
-
-  return EXIT_FAILURE;
-}
-
-int main(int argc, char** argv) {
-
-  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
   }
 
-  // args and config file loading
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.string(), pt);
+  try {
+    // spawn threads to download all the tiles returning a list of
+    // tiles that ended up having dangling stop pairs
+    auto dangling_tiles = valhalla::mjolnir::ingest_transit(config);
 
-  // spawn threads to download all the tiles returning a list of
-  // tiles that ended up having dangling stop pairs
-  auto dangling_tiles = valhalla::mjolnir::ingest_transit(pt);
+    // spawn threads to connect dangling stop pairs to adjacent tiles' stops
+    valhalla::mjolnir::stitch_transit(config, dangling_tiles);
+  } catch (const std::runtime_error& e) {
+    LOG_ERROR(e.what());
+    return EXIT_FAILURE;
+  }
 
-  // spawn threads to connect dangling stop pairs to adjacent tiles' stops
-  valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
-
-  return 0;
+  return EXIT_SUCCESS;
 }

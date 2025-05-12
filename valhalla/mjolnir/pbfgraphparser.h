@@ -2,7 +2,6 @@
 #define VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 
 #include <boost/property_tree/ptree.hpp>
-#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -30,8 +29,7 @@ public:
                            const std::vector<std::string>& input_files,
                            const std::string& ways_file,
                            const std::string& way_nodes_file,
-                           const std::string& access_file,
-                           const std::string& pronunciation_file);
+                           const std::string& access_file);
 
   /**
    * Loads given input files
@@ -56,12 +54,16 @@ public:
    * @param  input_files                    the protobuf files to parse
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
    * @param  bss_nodes_file                 where to store the bss nodes so they are not in memory
+   * @param  linguistic_node_file           where to store the linguistic information for nodes so
+   * they are not in memory
+   *
    * @param  osmdata                        OSM data
    */
   static void ParseNodes(const boost::property_tree::ptree& pt,
                          const std::vector<std::string>& input_files,
                          const std::string& way_nodes_file,
                          const std::string& bss_nodes_file,
+                         const std::string& linguistic_node_file,
                          OSMData& osmdata);
 };
 

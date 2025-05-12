@@ -1,15 +1,15 @@
 #include "loki/search.h"
+
 #include <cstdint>
+#include <filesystem>
 
 #include <boost/property_tree/ptree.hpp>
-#include <unordered_set>
 
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 #include "sif/nocost.h"
@@ -26,20 +26,21 @@ namespace vs = valhalla::sif;
 
 namespace {
 
-// this is what it looks like
-//    b
-//    |\
-//  1 | \ 0
-//    |  \
-//  2 |   \ 7
-//    |    \
-//    a-3-8-d
-//    |    /
-//  4 |   / 9
-//    |  /
-//  5 | / 6
-//    |/
-//    c
+/* this is what it looks like
+    b
+    |\
+  1 | \ 0
+    |  \
+  2 |   \ 7
+    |    \
+    a-3-8-d
+    |    /
+  4 |   / 9
+    |  /
+  5 | / 6
+    |/
+    c
+*/
 const std::string tile_dir = "test/search_tiles";
 GraphId tile_id = TileHierarchy::GetGraphId({.125, .125}, 2);
 PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
@@ -49,8 +50,8 @@ std::pair<GraphId, PointLL> c({tile_id.tileid(), tile_id.level(), 2}, {.01, .01}
 std::pair<GraphId, PointLL> d({tile_id.tileid(), tile_id.level(), 3}, {.2, .1});
 
 void clean_tiles() {
-  if (filesystem::is_directory(tile_dir)) {
-    filesystem::remove_all(tile_dir);
+  if (std::filesystem::is_directory(tile_dir)) {
+    std::filesystem::remove_all(tile_dir);
   }
 }
 
@@ -106,23 +107,23 @@ void make_tile() {
     tile.directededges().emplace_back(edge_builder);
   };
 
-  // this is what it looks like
-  //    b 0
-  //    |\
-  //  1 | \ 0
-  //    |  \
-  //  2 |   \ 7
-  //    |    \
-  //   1a-3-8-d 3
-  //    |    /
-  //  4 |   / 9
-  //    |  /
-  //  5 | / 6
-  //    |/
-  //    c 2
+  /* this is what it looks like
+      b 0
+      |\
+    1 | \ 0
+      |  \
+    2 |   \ 7
+      |    \
+     1a-3-8-d 3
+      |    /
+    4 |   / 9
+      |  /
+    5 | / 6
+      |/
+      c 2
 
-  // NOTE: edge ids are in the order the edges are added, so b->d is 0, b->a is 1, a->b is 2 and so
-  // on
+   NOTE: edge ids are in the order the edges are added, so b->d is 0, b->a is 1, a->b is 2 and so
+   */
 
   // B
   {

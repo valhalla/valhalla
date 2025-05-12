@@ -128,7 +128,7 @@ private:
   GridTraversal<coord_t> grid_;
 
 // Using vector to represent the grid would be faster than using
-// unordered map but it consumes (much) more memeory as well
+// unordered map but it consumes (much) more memory as well
 #ifdef GRID_USE_VECTOR
   std::vector<std::vector<item_t>> items_;
 #else

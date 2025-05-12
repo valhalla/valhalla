@@ -1,12 +1,10 @@
-#include <fstream>
+#include <filesystem>
 #include <sstream>
-#include <unordered_map>
 
 #include <boost/property_tree/ptree.hpp>
 
 #include "baldr/graphid.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "mjolnir/util.h"
 
 #include "test.h"
@@ -36,8 +34,8 @@ TEST(UtilMjolnir, BuildTileSet) {
   EXPECT_TRUE(build_tile_set(config, {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
                              mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kCleanup));
   // Clear the tile directory so it doesn't interfere with the next test.
-  filesystem::remove_all(tile_dir);
-  EXPECT_TRUE(!filesystem::exists(tile_dir));
+  std::filesystem::remove_all(tile_dir);
+  EXPECT_TRUE(!std::filesystem::exists(tile_dir));
 }
 
 TEST(UtilMjolnir, TileManifestReadFromFile) {

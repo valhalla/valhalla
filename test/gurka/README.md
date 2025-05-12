@@ -222,7 +222,7 @@ low-level helper functions available in case you want to do something a little m
   - `gurka::detail::map_to_coordinates(ascii_map, gridsize);` - calculates coordinates for all the A-Za-z0-9 nodes in the `ascii_map` given the `gridsize`
   - `gurka::detail::build_pbf(node_locations, ways, nodes, relations, pbf_filename);` - generates an OSM PBF for the nodes, ways, and relations you've defined.  The `nodemap` is the result of `gurka::detail::map_to_coordinates`
   
-## Debuging help
+## Debugging help
 
 You can print your gurka map and visually inspect it at [geojson.io](https://geojson.io/) by dumping out the geojson via `dump_geojson_graph`.
 

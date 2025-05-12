@@ -1,25 +1,17 @@
 #include <fstream>
-#include <functional>
 #include <iostream>
 #include <list>
-#include <memory>
-#include <set>
-#include <sstream>
-#include <stdexcept>
 #include <streambuf>
 #include <string>
 #include <thread>
-#include <unordered_set>
 
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 using namespace prime_server;
 #endif
 
+#include "config.h"
 #include "midgard/logging.h"
 
 #include "loki/worker.h"
@@ -28,7 +20,7 @@ using namespace prime_server;
 #include "tyr/actor.h"
 
 int main(int argc, char** argv) {
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   if (argc < 2 || argc > 4) {
     LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json [concurrency]");
     LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json action json_request");
@@ -44,8 +36,7 @@ int main(int argc, char** argv) {
   // config file
   // TODO: validate the config
   std::string config_file(argv[1]);
-  boost::property_tree::ptree config;
-  rapidjson::read_json(config_file, config);
+  boost::property_tree::ptree config = valhalla::config(config_file);
 
   // one shot direct request mode
   if (argc == 4) {
@@ -140,7 +131,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
                         config.get<unsigned int>("httpd.service.shutting_seconds", 1));

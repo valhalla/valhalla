@@ -2,28 +2,26 @@
 #define VALHALLA_THOR_TIMEDISTANCEBSSMATRIX_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/matrix_common.h>
-#include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/matrixalgorithm.h>
 
 namespace valhalla {
 namespace thor {
 
 // Class to compute time + distance matrices among locations.
-class TimeDistanceBSSMatrix {
+class TimeDistanceBSSMatrix : public MatrixAlgorithm {
 public:
   /**
    * Default constructor. Most internal values are set when a query is made so
@@ -34,42 +32,35 @@ public:
   /**
    * Forms a time distance matrix from the set of source locations
    * to the set of target locations.
-   * @param  source_location_list  List of source/origin locations.
-   * @param  target_location_list  List of target/destination locations.
+   * @param  request               the full request
    * @param  graphreader           Graph reader for accessing routing graph.
    * @param  mode_costing          Costing methods.
    * @param  mode                  Travel mode to use. Actually It doesn't make sense in matrix_bss,
    * because the travel mode must be pedestrian and bicycle
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
-   *                               one request. This allows partial results: e.g. find time/distance
-   *                               to the closest 20 out of 50 locations).
    * @return time/distance from origin index to all other locations
    */
-  inline std::vector<TimeDistance>
-  SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                 baldr::GraphReader& graphreader,
-                 const sif::mode_costing_t& mode_costing,
-                 const sif::travel_mode_t /*mode*/,
-                 const float max_matrix_distance,
-                 const uint32_t matrix_locations = kAllLocations) {
+  inline bool SourceToTarget(Api& request,
+                             baldr::GraphReader& graphreader,
+                             const sif::mode_costing_t& mode_costing,
+                             const sif::travel_mode_t /*mode*/,
+                             const float max_matrix_distance) override {
 
-    LOG_INFO("matrix::TimeDistanceBSSMatrix");
+    request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
+
+    if (request.options().shape_format() != no_shape)
+      add_warning(request, 207);
 
     // Set the costings
     pedestrian_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kPedestrian)];
     bicycle_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kBicycle)];
 
-    const bool forward_search = source_location_list.size() <= target_location_list.size();
+    const bool forward_search =
+        request.options().sources().size() <= request.options().targets().size();
     if (forward_search) {
-      return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
-                                                   graphreader, max_matrix_distance,
-                                                   matrix_locations);
+      return ComputeMatrix<ExpansionType::forward>(request, graphreader, max_matrix_distance);
     } else {
-      return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
-                                                   graphreader, max_matrix_distance,
-                                                   matrix_locations);
+      return ComputeMatrix<ExpansionType::reverse>(request, graphreader, max_matrix_distance);
     }
   };
 
@@ -77,7 +68,7 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  inline void clear() {
+  inline void Clear() override {
     auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
     if (edgelabels_.size() > reservation) {
       edgelabels_.resize(max_reserved_labels_count_);
@@ -87,6 +78,14 @@ public:
     destinations_.clear();
     dest_edges_.clear();
   };
+
+  /**
+   * Get the algorithm's name
+   * @return the name of the algorithm
+   */
+  inline const std::string& name() override {
+    return MatrixAlgoToString(Matrix::TimeDistanceBSSMatrix);
+  }
 
 protected:
   // Number of destinations that have been found and settled (least cost path
@@ -153,12 +152,7 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  std::vector<TimeDistance>
-  ComputeMatrix(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                baldr::GraphReader& graphreader,
-                const float max_matrix_distance,
-                const uint32_t matrix_locations = kAllLocations);
+  bool ComputeMatrix(Api& request, baldr::GraphReader& graphreader, const float max_matrix_distance);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -201,7 +195,7 @@ protected:
   void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
-   * Initalize destinations for all origins.
+   * Initialize destinations for all origins.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
@@ -248,9 +242,10 @@ protected:
 
   /**
    * Form a time/distance matrix from the results.
-   * @return  Returns a time distance matrix among locations.
+   *
+   * @param request the request PBF
    */
-  std::vector<TimeDistance> FormTimeDistanceMatrix();
+  void FormTimeDistanceMatrix(Api& request, const bool forward, const uint32_t origin_index);
 };
 
 } // namespace thor

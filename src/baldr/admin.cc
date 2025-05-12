@@ -1,4 +1,5 @@
 #include "baldr/admin.h"
+#include <algorithm>
 
 namespace {
 

@@ -14,6 +14,8 @@ The `trace_route` action takes the costing mode and a list of latitude,longitude
 
 By default a single trip leg is returned in a trace_route response. You can split the route response into multiple legs by setting `"type":"break"` on any of the input shape objects in the `shape` parameter of your query. The first and last locations should always have type break. Note that setting breaks is not supported for encoded_polyline input, and is only supported for `map_snap` mode of the trace_route endpoint.
 
+If the path contains one or more discontinuities (i.e. no path can be found between two locations), it is split into multiple paths. Any remaining paths from the first discontinuity onwards are stored as route alternates on the response.
+
 ## Trace attributes action
 
 The `trace_attributes` action takes the costing mode and a GPS trace or latitude,longitude positions and returns detailed attribution along the portion of the route. This includes details for each section of road along the path, as well as any intersections along the path. Some of the use cases for `trace_attributes` include getting:
@@ -39,9 +41,7 @@ Note that the attributes that are returned are Valhalla routing attributes, not 
 
 ### Costing models and other options
 
-Valhalla Map Matching uses the `auto`, `auto_shorter`, `bicycle`, `bus`, and `pedestrian` costing models available in the Valhalla route service. Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
-
-Costing for `multimodal` is not supported for map matching because it would be difficult to get favorable GPS traces.
+Valhalla Map Matching can use any costing model available in the Valhalla route service except for `multimodal` (it would be difficult to get a GPS trace and detect certain mode changes). Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 You can also set `directions_options` to specify output units, language, and whether or not to return directions in a narrative form. Refer to the [route options](../turn-by-turn/api-reference.md#directions-options) documentation for examples.
 
@@ -72,7 +72,7 @@ These are the available filter keys. Review their [descriptions](#outputs-of-tra
 ```
 // Edge filter Keys
 edge.names
-edge.length
+edge.length  # can also set source/target_percent_along
 edge.speed
 edge.road_class
 edge.begin_heading
@@ -115,6 +115,8 @@ edge.density
 edge.speed_limit
 edge.truck_speed
 edge.truck_route
+edge.country_crossing
+edge.forward
 
 // Node filter keys
 node.intersecting_edge.begin_heading
@@ -130,6 +132,7 @@ node.elapsed_time
 node.node_id
 node.admin_index
 node.type
+node.traffic_signal
 node.fork
 node.time_zone
 
@@ -176,7 +179,9 @@ Each `edge` may include:
 | Edge item | Description |
 | :--------- | :---------- |
 | `names` | List of names. |
-| `length` | Edge length in the units specified. The default is kilometers. |
+| `source_percent_along` | The start of an edge's match as percentage of its length in (0, 1) range. If an edge was fully matched, we omit this value.
+| `target_percent_along` | The end of an edge's match as percentage of its length in (0, 1) range. If an edge was fully matched, we omit this value.
+| `length` | The **matched** edge length in the units specified (default is kilometers). If `source_percent_along` and/or `target_percent_along` are present, this represents the partially matched edge length, otherwise the full edge length. |
 | `speed` | Edge speed in the units specified. The default is kilometers per hour. |
 | `road_class` | Road class values:<ul><li>`motorway`</li><li>`trunk`</li><li>`primary`</li><li>`secondary`</li><li>`tertiary`</li><li>`unclassified`</li><li>`residential`</li><li>`service_other`</li></ul> |
 | `begin_heading` | The direction at the beginning of an edge. The units are degrees from north in a clockwise direction. |
@@ -184,7 +189,7 @@ Each `edge` may include:
 | `begin_shape_index` | Index into the list of shape points for the start of the edge. |
 | `end_shape_index` | Index into the list of shape points for the end of the edge. |
 | `traversability` | Traversability values, if available:<ul><li>`forward`</li><li>`backward`</li><li>`both`</li></ul> |
-| `use` | Use values: <ul><li>`tram`</li><li>`road`</li><li>`ramp`</li><li>`turn_channel`</li><li>`track`</li><li>`driveway`</li><li>`alley`</li><li>`parking_aisle`</li><li>`emergency_access`</li><li>`drive_through`</li><li>`culdesac`</li><li>`cycleway`</li><li>`mountain_bike`</li><li>`sidewalk`</li><li>`footway`</li><li>`steps`</li><li>`other`</li><li>`rail-ferry`</li><li>`ferry`</li><li>`rail`</li><li>`bus`</li><li>`rail_connection`</li><li>`bus_connnection`</li><li>`transit_connection`</li></ul> |
+| `use` | Use values: <ul><li>`tram`</li><li>`road`</li><li>`ramp`</li><li>`turn_channel`</li><li>`track`</li><li>`driveway`</li><li>`alley`</li><li>`parking_aisle`</li><li>`emergency_access`</li><li>`drive_through`</li><li>`culdesac`</li><li>`cycleway`</li><li>`mountain_bike`</li><li>`sidewalk`</li><li>`footway`</li><li>`steps`</li><li>`other`</li><li>`rail-ferry`</li><li>`ferry`</li><li>`rail`</li><li>`bus`</li><li>`egress_connection`</li><li>`platform_connection`</li><li>`transit_connection`</li></ul> |
 | `toll` | True if the edge has any toll. |
 | `unpaved` | True if the edge is unpaved or rough pavement. |
 | `tunnel` | True if the edge is a tunnel. |
@@ -217,6 +222,10 @@ Each `edge` may include:
 | `truck_speed` | Edge truck speed in the units specified. The default is kilometers per hour. |
 | `truck_route` | True if edge is part of a truck network/route. |
 | `end_node` | The node at the end of this edge. See the list of [end node items](#end-node-items) for details. |
+| `landmarks` | List of landmarks along the edge. They are used as direction support in navigation. |                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `country_crossing` | True if the edge is a country crossing. |                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `forward` | True if the edge is traversed forwards and False if it is traversed backwards with respect to the reference shape/geometry (ie. the direction in which it was digitized). |
+
 
 #### Sign items
 
@@ -240,6 +249,7 @@ Each `end_node` may include:
 | `node_id` | Node identifier of the OpenStreetMap base data. |
 | `admin_index` | Index value in the admin list. |
 | `type` | Node type values: <ul><li>`street_intersection`</li><li>`gate`</li><li>`bollard`</li><li>`toll_booth`</li><li>`multi_use_transit_stop`</li><li>`bike_share`</li><li>`parking`</li><li>`motor_way_junction`</li><li>`border_control`</li></ul> |
+| `traffic_signal` | A boolean value indicating whether the node is a traffic signal (`true` or `false`) |
 | `fork` | True if this node is a fork. |
 | `time_zone` | Time zone string for this node. |
 
@@ -255,7 +265,7 @@ Each `intersecting_edge` may include:
 | `driveability` | Driveability values, if available:<ul><li>`forward`</li><li>`backward`</li><li>`both`</li></ul> |
 | `cyclability` | Cyclability values, if available:<ul><li>`forward`</li><li>`backward`</li><li>`both`</li></ul> |
 | `walkability` | Walkability values, if available:<ul><li>`forward`</li><li>`backward`</li><li>`both`</li></ul> |
-| `use` | Use values: <ul><li>`tram`</li><li>`road`</li><li>`ramp`</li><li>`turn_channel`</li><li>`track`</li><li>`driveway`</li><li>`alley`</li><li>`parking_aisle`</li><li>`emergency_access`</li><li>`drive_through`</li><li>`culdesac`</li><li>`cycleway`</li><li>`mountain_bike`</li><li>`sidewalk`</li><li>`footway`</li><li>`steps`</li><li>`other`</li><li>`rail-ferry`</li><li>`ferry`</li><li>`rail`</li><li>`bus`</li><li>`rail_connection`</li><li>`bus_connnection`</li><li>`transit_connection`</li></ul> |
+| `use` | Use values: <ul><li>`tram`</li><li>`road`</li><li>`ramp`</li><li>`turn_channel`</li><li>`track`</li><li>`driveway`</li><li>`alley`</li><li>`parking_aisle`</li><li>`emergency_access`</li><li>`drive_through`</li><li>`culdesac`</li><li>`cycleway`</li><li>`mountain_bike`</li><li>`sidewalk`</li><li>`footway`</li><li>`steps`</li><li>`other`</li><li>`rail-ferry`</li><li>`ferry`</li><li>`rail`</li><li>`bus`</li><li>`egress_connection`</li><li>`platform_connection`</li><li>`transit_connection`</li></ul> |
 | `road_class` | Road class values:<ul><li>`motorway`</li><li>`trunk`</li><li>`primary`</li><li>`secondary`</li><li>`tertiary`</li><li>`unclassified`</li><li>`residential`</li><li>`service_other`</li></ul> |
 
 #### Admin items

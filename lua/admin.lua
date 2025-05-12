@@ -126,17 +126,39 @@ end
 
   --we save admins as 2(country) or 4(state/prov).  
 function rels_proc (kv, nokeys)
+
+  if (kv["type"] == "boundary" and kv["default_language"] and
+     (((kv["boundary"] == "administrative" or kv["boundary"] == "territorial") and (kv["admin_level"] and tonumber(kv["admin_level"]) > 4)) or
+     (kv["boundary"] == "political" or kv["political_division"] == "linguistic_community"))) then
+
+     kv["iso_code"] = nil
+     kv["admin_level"] = kv["admin_level"] or "15" --assign a high admin level for linguistic_community
+     kv["drive_on_right"] = "false"
+     kv["allow_intersection_names"] = "false"
+
+     delete_tags = { 'FIXME', 'note', 'source' }
+
+     for i,k in ipairs(delete_tags) do
+        kv[k] = nil
+     end
+
+     return 0, kv
+  end
+
   if (kv["type"] == "boundary" and (kv["boundary"] == "administrative" or kv["boundary"] == "territorial") and
      (kv["admin_level"] == "2" or kv["admin_level"] == "3" or kv["admin_level"] == "4" or kv["admin_level"] == "6")) then
 
-
-     if (kv["admin_level"] == "3" and kv["name"] ~= "Guyane" and kv["name"] ~= "Guadeloupe" and  kv["name"] ~= "La Réunion" and  
-         kv["name"] ~= "Martinique" and kv["name"] ~= "Mayotte" and kv["name"] ~= "Saint-Pierre-et-Miquelon" and
-         kv["name"] ~= "Saint-Barthélemy" and  kv["name"] ~= "Saint-Martin (France)" and kv["name"] ~= "Polynésie Française" and 
-         kv["name"] ~= "Wallis-et-Futuna" and kv["name"] ~= "Nouvelle-Calédonie" and kv["name"] ~= "Île de Clipperton" and 
-         kv["name"] ~= "Terres australes et antarctiques françaises" and kv["name:en"] ~= "Metropolitan France" and
-         kv["name:en"] ~= "Hong Kong" and kv["name"] ~= "Metro Manila") then
-        return 1, kv
+     if (kv["admin_level"] == "3") then
+        if (kv["name"] ~= "Guyane" and kv["name"] ~= "Guadeloupe" and  kv["name"] ~= "La Réunion" and
+            kv["name"] ~= "Martinique" and kv["name"] ~= "Mayotte" and kv["name"] ~= "Saint-Pierre-et-Miquelon" and
+            kv["name"] ~= "Saint-Barthélemy" and  kv["name"] ~= "Saint-Martin (France)" and kv["name"] ~= "Polynésie Française" and
+            kv["name"] ~= "Wallis-et-Futuna" and kv["name"] ~= "Nouvelle-Calédonie" and kv["name"] ~= "Île de Clipperton" and
+            kv["name"] ~= "Terres australes et antarctiques françaises" and kv["name:en"] ~= "Metropolitan France" and
+            kv["name:en"] ~= "Hong Kong" and kv["name"] ~= "Metro Manila") then
+               return 1, kv
+        elseif kv["default_language"] == nil and kv["name:en"] ~= "Hong Kong" and kv["name"] ~= "Metro Manila" then
+	    kv["default_language"] = "fr"
+        end
      end
 
      if kv["admin_level"] == "6" and kv["name"] ~= "District of Columbia" then

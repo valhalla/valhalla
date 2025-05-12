@@ -44,7 +44,7 @@ namespace valhalla {
 namespace loki {
 
 void loki_worker_t::init_route(Api& request) {
-  parse_locations(request.mutable_options()->mutable_locations());
+  parse_locations(request.mutable_options()->mutable_locations(), request);
   // need to check location size here instead of in parse_locations because of locate action needing
   // a different size
   if (request.options().locations_size() < 2) {

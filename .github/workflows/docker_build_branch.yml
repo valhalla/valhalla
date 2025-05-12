@@ -1,0 +1,31 @@
+name: Manually build Docker image and tag with branch name
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_image:
+    name: Manual docker image build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build latest image for given branch
+        run: |
+          sudo apt update --yes
+          sudo apt install --yes --quiet binfmt-support qemu-user-static qemu-system
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker buildx create --name mybuilder
+          docker buildx use mybuilder
+          docker buildx inspect --bootstrap
+          docker buildx build --push --platform linux/amd64,linux/arm64 --tag ghcr.io/valhalla/valhalla:branch-${{ github.ref_name }} .

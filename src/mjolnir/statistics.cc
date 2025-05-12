@@ -4,13 +4,8 @@
 #include "mjolnir/graphvalidator.h"
 #include "statistics.h"
 
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
-#include <iostream>
-#include <map>
-#include <ostream>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>

@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+#include <boost/format.hpp>
 
 using namespace valhalla;
 
@@ -381,7 +382,7 @@ TEST_F(RouteWithTraffic, LiveOnButNotUsed) {
         etas.emplace_back(calculate_eta(result));
       }
     }
-    for (int i = 0; i < etas.size() - 1; ++i) {
+    for (size_t i = 0; i < etas.size() - 1; ++i) {
       // Live traffic is not used, algos should return the same ETA.
       EXPECT_EQ(etas[i], etas[i + 1]);
     }
@@ -558,7 +559,7 @@ protected:
       traffic_speed->breakpoint1 = 255;
     });
 
-    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+    test::customize_historical_traffic(map.config, [](DirectedEdge&) {
       // speeds for every 5 min bucket of the week
       std::array<float, kBucketsPerWeek> historical;
       historical.fill(6);

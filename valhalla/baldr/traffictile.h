@@ -16,7 +16,6 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphmemory.h>
 #include <valhalla/baldr/json.h>
-#include <vector>
 #else
 #include <stdint.h>
 #endif

@@ -98,7 +98,7 @@ public:
   }
 
   /**
-   * Clear all labels from the low-level buckets and the overflow buckets and deallocates buckets
+   * Clear all labels from the low-level buckets and the overflow bucket and deallocate the buckets'
    * memory.
    */
   void clear() {

@@ -44,5 +44,13 @@ uint16_t OSMAccessRestriction::modes() const {
   return attributes_.modes_;
 }
 
+AccessRestrictionDirection OSMAccessRestriction::direction() const {
+  return static_cast<AccessRestrictionDirection>(direction_);
+}
+
+void OSMAccessRestriction::set_direction(AccessRestrictionDirection direction) {
+  direction_ = direction;
+};
+
 } // namespace mjolnir
 } // namespace valhalla

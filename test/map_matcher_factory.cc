@@ -23,8 +23,8 @@ using ptree = boost::property_tree::ptree;
 
 void create_costing_options(Costing::Type costing, Options& options) {
   const rapidjson::Document doc;
-  sif::ParseCosting(doc, "/costing_options", options);
   options.set_costing_type(costing);
+  sif::ParseCosting(doc, "/costing_options", options);
 }
 
 TEST(MapMatcherFactory, TestMapMatcherFactory) {
@@ -124,7 +124,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
 
       delete matcher;
 
-      options.set_costing_type(Costing::bicycle);
+      create_costing_options(Costing::bicycle, options);
       matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kBicycle)
           << "should read costing in options correctly again";
@@ -139,7 +139,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       meili::MapMatcherFactory factory(root);
       options.set_costing_type(Costing::pedestrian);
       auto matcher = factory.Create(options);
-      EXPECT_NE(matcher->costing()->travel_type(), (int)sif::PedestrianType::kSegway)
+      EXPECT_NE(matcher->costing()->travel_type(), (int)sif::PedestrianType::kWheelchair)
           << "should not have custom costing options when not set in preferences";
 
       delete matcher;
@@ -147,10 +147,10 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       options.mutable_costings()
           ->find(Costing::pedestrian)
           ->second.mutable_options()
-          ->set_transport_type("segway");
+          ->set_transport_type("wheelchair");
       matcher = factory.Create(options);
 
-      EXPECT_EQ(matcher->costing()->travel_type(), (int)sif::PedestrianType::kSegway)
+      EXPECT_EQ(matcher->costing()->travel_type(), (int)sif::PedestrianType::kWheelchair)
           << "should read custom costing options in preferences correctly";
 
       delete matcher;
@@ -167,7 +167,7 @@ TEST(MapMatcherFactory, TestMapMatcher) {
   Options options;
   create_costing_options(Costing::auto_, options);
   auto auto_matcher = factory.Create(options);
-  options.set_costing_type(Costing::pedestrian);
+  create_costing_options(Costing::pedestrian, options);
   auto pedestrian_matcher = factory.Create(options);
 
   // Share the same pool

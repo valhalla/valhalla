@@ -68,8 +68,7 @@ template <typename iterator_t> void print_path(iterator_t rbegin, iterator_t ren
 void AddColumns(IViterbiSearch& vs, const std::vector<Column>& columns) {
   StateId::Time time = 0;
   for (const auto& column : columns) {
-    uint32_t idx = 0;
-    for (const auto& state : column) {
+    for (uint32_t idx = 0; idx < column.size(); ++idx) {
       StateId stateid(time, idx);
       const auto added = vs.AddStateId(stateid);
 
@@ -77,7 +76,6 @@ void AddColumns(IViterbiSearch& vs, const std::vector<Column>& columns) {
                          << " must be added";
 
       ASSERT_TRUE(vs.HasStateId(stateid)) << "must contain it";
-      idx++;
     }
     time++;
   }
@@ -338,7 +336,6 @@ public:
 
   float operator()(const StateId& lhs, const StateId& rhs) const {
     const auto& left = get_state(columns_, lhs);
-    const auto& right = get_state(columns_, rhs);
     const auto it = left.transition_costs.find(rhs.id());
     if (it == left.transition_costs.end()) {
       return -1.0;
@@ -369,7 +366,7 @@ std::vector<PathWithCost> sort_all_paths(const std::vector<Column>& columns,
 
   const auto& sub_pcs = sort_all_paths(columns, since_time + 1);
   std::vector<PathWithCost> pcs;
-  for (auto id = 0; id < columns[since_time].size(); id++) {
+  for (size_t id = 0; id < columns[since_time].size(); id++) {
     const StateId stateid(since_time, id);
     const auto& state = get_state(columns, stateid);
     for (const auto& sub_pc : sub_pcs) {

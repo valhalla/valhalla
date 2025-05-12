@@ -1,7 +1,5 @@
 #include "baldr/streetname_us.h"
 
-#include <memory>
-
 #include "test.h"
 
 using namespace std;

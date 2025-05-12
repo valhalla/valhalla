@@ -1,18 +1,16 @@
-
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 
+#include <algorithm>
 #include <boost/format.hpp>
 #include <future>
-#include <iostream>
 #include <list>
 #include <mutex>
 #include <numeric>
-#include <ostream>
-#include <queue>
+#include <random>
 #include <set>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <tuple>
@@ -42,6 +40,13 @@ struct HGVRestrictionTypes {
   bool weight;
   bool width;
 };
+
+// Custom comparator to sort by GraphId (level desc, tile_id asc, id asc)
+inline bool graphid_less(GraphId a, GraphId b) {
+  return ((a.level() > b.level()) ||
+          ((a.level() == b.level()) &&
+           ((a.tileid() < b.tileid()) || ((a.tileid() == b.tileid()) && (a.id() < b.id())))));
+}
 
 // Get the GraphId of the opposing edge.
 uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
@@ -461,6 +466,12 @@ void validate(
     // Write the bins to it
     if (tile->header()->graphid().level() == TileHierarchy::levels().back().level) {
       auto reloaded = GraphTile::Create(graph_reader.tile_dir(), tile_id);
+      // Sort bins using a custom comparator in each vector of the array to make tile generation
+      // deterministic
+      for (auto& bin : bins) {
+        std::sort(bin.begin(), bin.end(),
+                  [](uint64_t a, uint64_t b) { return graphid_less(GraphId(a), GraphId(b)); });
+      }
       GraphTileBuilder::AddBins(graph_reader.tile_dir(), reloaded, bins);
     }
 
@@ -514,7 +525,7 @@ void bin_tweeners(const std::string& tile_dir,
       break;
     }
     // grab this tile and its extra bin edges
-    const auto& tile_bin = *start;
+    auto& tile_bin = *start;
     ++start;
     lock.unlock();
 
@@ -528,6 +539,13 @@ void bin_tweeners(const std::string& tile_dir,
       tile = GraphTile::Create(tile_dir, tile_bin.first);
     }
 
+    // Sort bins using a custom comparator in each vector of the array to make tile generation
+    // deterministic
+    for (auto& bin : tile_bin.second) {
+      std::sort(bin.begin(), bin.end(),
+                [](uint64_t a, uint64_t b) { return graphid_less(GraphId(a), GraphId(b)); });
+    }
+
     // keep the extra binned edges
     GraphTileBuilder::AddBins(tile_dir, tile, tile_bin.second);
   }
@@ -538,6 +556,7 @@ namespace valhalla {
 namespace mjolnir {
 
 void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
+  SCOPED_TIMER();
   LOG_INFO("Validating, finishing and binning tiles...");
   auto hierarchy_properties = pt.get_child("mjolnir");
   std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");

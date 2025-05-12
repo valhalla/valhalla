@@ -11,7 +11,7 @@ mock_parser.add_argument = MagicMock()
 class TestBuildConfig(unittest.TestCase):
     def test_add_leaf_types(self):
         # test all data types, except for bool & list
-        # they have costum lambdas we can't test this way
+        # they have custom lambdas we can't test this way
         help_text = {
             "str": "string",
             "int": "integer",
@@ -45,9 +45,14 @@ class TestBuildConfig(unittest.TestCase):
 
         # make sure the parser.add_argument was called with the right stuff while parsing the config
         for name, default in config.items():
-            mock_parser.add_argument.assert_any_call(
-                f'--{name.replace("_", "-")}', type=value_types[name], help=help_text[name], default=default
-            )
+            if "list" in name:
+                mock_parser.add_argument.assert_any_call(
+                    f'--{name.replace("_", "-")}', nargs="+", help=help_text[name], default=default
+                )
+            else:
+                mock_parser.add_argument.assert_any_call(
+                    f'--{name.replace("_", "-")}', type=value_types[name], help=help_text[name], default=default
+                )
 
     def test_nested_config(self):
         """tests if we get the values of nested dicts"""
@@ -74,12 +79,12 @@ class TestBuildConfig(unittest.TestCase):
         valhalla_build_config.add_leaf_args('', config, leaves, mock_parser, help_text)
 
         # create the args mock
-        args = {'0_bool': True, "0_opt_str": valhalla_build_config.Optional(str), "0_1_list": [3, 4, 5]}
+        args = {'0_bool': True, "0_opt_str": valhalla_build_config.Optional(str), "0_1_list": ["item1", "item2", "item3"]}
 
         valhalla_build_config.override_config(args, leaves, config)
         # the Optional arg should be removed
         self.assertEqual(len(config["0"]), 2)
-        self.assertEqual(config, {"0": {"bool": True, "1": {"list": [3, 4, 5]}}})
+        self.assertEqual(config, {"0": {"bool": True, "1": {"list": ["item1", "item2", "item3"]}}})
 
 
 if __name__ == '__main__':

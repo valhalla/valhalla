@@ -1,10 +1,8 @@
-#include <bitset>
 #include <ctime>
 #include <regex>
 #include <sstream>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/classification.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
 
 #include "baldr/graphconstants.h"
@@ -15,8 +13,78 @@
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
-namespace valhalla {
-namespace mjolnir {
+namespace {
+// Dec Su[-1]-Mar 3 => Dec#Su#[5]-Mar#3
+const std::pair<std::regex, std::string> kBeginWeekdayOfTheMonth =
+    {std::regex(
+         "(?:(January|February|March|April|May|June|July|"
+         "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+         "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
+         "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\])-"
+         "(?:(January|February|March|April|May|June|July|August|September|October|November"
+         "|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)) (\\d{1,2}))",
+         std::regex_constants::icase),
+     "$1#$2#$3-$4#$5"};
+
+// Mar 3-Dec Su[-1] => Mar#3-Dec#Su#[5]
+const std::pair<std::regex, std::string> kEndWeedkayOfTheMonth =
+    {std::regex(
+         "(?:(January|February|March|April|May|June|July|August|"
+         "September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|"
+         "Nov|Dec)) (\\d{1,2})-(?:(January|February|March|April|May|June|July|"
+         "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+         "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
+         "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\])"
+         ")",
+         std::regex_constants::icase),
+     "$1#$2-$3#$4#$5"};
+
+// Dec Su[-1] => Dec#Su#[5]
+const std::pair<std::regex, std::string> kWeekdayOfTheMonth =
+    {std::regex("(?:(January|February|March|April|May|June|July|"
+                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+                "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
+                "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]"
+                "\\]))",
+                std::regex_constants::icase),
+     "$1#$2#$3"};
+
+// Mon[-1] => Mon#[5], Tue[2] => Tue#[2]
+const std::pair<std::regex, std::string> kWeekdayOfEveryMonth =
+    {std::regex("(?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
+                "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|"
+                "Su)(\\[-?[0-9]\\]))",
+                std::regex_constants::icase),
+     "$1#$2"};
+
+// Feb 16-Oct 15 09:00-18:30 => Feb#16-Oct#15 09:00-18:30
+const std::pair<std::regex, std::string> kMonthDay =
+    {std::regex("(?:(January|February|March|April|May|June|July|"
+                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+                "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})",
+                std::regex_constants::icase),
+     "$1#$2"};
+
+// Feb 2-14 => Feb#2-Feb#14
+const std::pair<std::regex, std::string> kRangeWithinMonth =
+    {std::regex("(?:(January|February|March|April|May|June|July|"
+                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+                "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})-(\\d{1,2})",
+                std::regex_constants::icase),
+     "$1#$2-$1#$3"};
+
+// Nov - Mar => Nov-Mar
+const std::pair<std::regex, std::string> kMonthRange =
+    {std::regex("(?:(January|February|March|April|May|June|July|"
+                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+                "Sep|Sept|Oct|Nov|Dec)) - (?:(January|February|March|April|May|June|July|"
+                "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
+                "Sep|Sept|Oct|Nov|Dec))",
+                std::regex_constants::icase),
+     "$1-$2"};
+
+// fifth is the equivalent of last week in month (-1)
+const std::pair<std::regex, std::string> kLastWeekday = {std::regex("\\[-1\\]"), "[5]"};
 
 std::vector<std::string> GetTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
@@ -32,12 +100,17 @@ bool RegexFound(const std::string& source, const std::regex& regex) {
   return std::distance(begin, end);
 }
 
-std::string
-FormatCondition(const std::string& source, const std::regex& regex, const std::string& pattern) {
-  return std::regex_replace(source, regex, pattern);
+std::string FormatCondition(const std::string& source,
+                            const std::pair<std::regex, std::string>& regex_pattern) {
+  return std::regex_replace(source, regex_pattern.first, regex_pattern.second);
 }
 
-// get the dow mask from user inputed string.  try to handle most inputs
+} // namespace
+
+namespace valhalla {
+namespace mjolnir {
+
+// get the dow mask from the provided string.  try to handle most inputs
 uint8_t get_dow_mask(const std::string& dow) {
 
   std::string str = dow;
@@ -68,7 +141,7 @@ uint8_t get_dow_mask(const std::string& dow) {
   return kDOWNone;
 }
 
-// get the dow from user inputed string.  try to handle most inputs
+// get the dow from the provided string.  try to handle most inputs
 DOW get_dow(const std::string& dow) {
 
   std::string str = dow;
@@ -164,84 +237,44 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
       return time_domains;
     }
 
-    // Dec Su[-1]-Mar 3
-    std::regex regex = std::regex(
-        "(?:(January|February|March|April|May|June|July|"
-        "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-        "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-        "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\])-"
-        "(?:(January|February|March|April|May|June|July|August|September|October|November"
-        "|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)) (\\d{1,2}))",
-        std::regex_constants::icase);
-
-    if (RegexFound(condition, regex)) {
-      condition = FormatCondition(condition, regex, "$1#$2#$3-$4#$5");
-      // fifth is the equivalent of last week in month (-1)
-      condition = FormatCondition(condition, std::regex("\\[-1\\]"), "[5]");
+    // Dec Su[-1]-Mar 3 => Dec#Su#[5]-Mar#3
+    if (RegexFound(condition, kBeginWeekdayOfTheMonth.first)) {
+      condition = FormatCondition(condition, kBeginWeekdayOfTheMonth);
+      condition = FormatCondition(condition, kLastWeekday);
     } else {
 
-      // Mar 3-Dec Su[-1]
-      std::regex regex = std::regex(
-          "(?:(January|February|March|April|May|June|July|August|"
-          "September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|"
-          "Nov|Dec)) (\\d{1,2})-(?:(January|February|March|April|May|June|July|"
-          "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-          "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-          "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]\\])"
-          ")",
-          std::regex_constants::icase);
-
-      if (RegexFound(condition, regex)) {
-        condition = FormatCondition(condition, regex, "$1#$2-$3#$4#$5");
-        // fifth is the equivalent of last week in month (-1)
-        condition = FormatCondition(condition, std::regex("\\[-1\\]"), "[5]");
+      // Mar 3-Dec Su[-1] => Mar#3-Dec#Su#[5]
+      if (RegexFound(condition, kEndWeedkayOfTheMonth.first)) {
+        condition = FormatCondition(condition, kEndWeedkayOfTheMonth);
+        condition = FormatCondition(condition, kLastWeekday);
       } else {
 
-        // Dec Su[-1]
-        regex = std::regex(
-            "(?:(January|February|March|April|May|June|July|"
-            "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-            "Sep|Sept|Oct|Nov|Dec)) (?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-            "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|Su)(\\[-?[0-9]"
-            "\\]))",
-            std::regex_constants::icase);
-
-        if (RegexFound(condition, regex)) {
-          condition = FormatCondition(condition, regex, "$1#$2#$3");
-          // fifth is the equivalent of last week in month (-1)
-          condition = FormatCondition(condition, std::regex("\\[-1\\]"), "[5]");
+        // Dec Su[-1] => Dec#Su#[5]
+        if (RegexFound(condition, kWeekdayOfTheMonth.first)) {
+          condition = FormatCondition(condition, kWeekdayOfTheMonth);
+          condition = FormatCondition(condition, kLastWeekday);
         } else {
 
-          regex = std::regex("(?:(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|"
-                             "Sunday|Mon|Mo|Tues|Tue|Tu|Weds|Wed|We|Thurs|Thur|Th|Fri|Fr|Sat|Sa|Sun|"
-                             "Su)(\\[-?[0-9]\\]))",
-                             std::regex_constants::icase);
-
-          if (RegexFound(condition, regex)) {
-            condition = FormatCondition(condition, regex, "$1#$2");
-            // fifth is the equivalent of last week in month (-1)
-            condition = FormatCondition(condition, std::regex("\\[-1\\]"), "[5]");
+          // Mon[-1] => Mon#[5], Tue[2] => Tue#[2]
+          if (RegexFound(condition, kWeekdayOfEveryMonth.first)) {
+            condition = FormatCondition(condition, kWeekdayOfEveryMonth);
+            condition = FormatCondition(condition, kLastWeekday);
           } else {
 
-            // Feb 16-Oct 15 09:00-18:30
-            regex = std::
-                regex("(?:(January|February|March|April|May|June|July|"
-                      "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                      "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})",
-                      std::regex_constants::icase);
-
-            if (RegexFound(condition, regex)) {
-              condition = FormatCondition(condition, regex, "$1#$2");
+            // Feb 16-Oct 15 09:00-18:30 => Feb#16-Oct#15 09:00-18:30
+            if (RegexFound(condition, kMonthDay.first)) {
+              condition = FormatCondition(condition, kMonthDay);
             } else {
-              // Feb 2-14
-              regex = std::
-                  regex("(?:(January|February|March|April|May|June|July|"
-                        "August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|"
-                        "Sep|Sept|Oct|Nov|Dec)) (\\d{1,2})-(\\d{1,2})",
-                        std::regex_constants::icase);
 
-              if (RegexFound(condition, regex)) {
-                condition = FormatCondition(condition, regex, "$1#$2-$1#$3");
+              // Feb 2-14 => Feb#2-Feb#14
+              if (RegexFound(condition, kRangeWithinMonth.first)) {
+                condition = FormatCondition(condition, kRangeWithinMonth);
+              } else {
+
+                // Nov - Mar => Nov-Mar
+                if (RegexFound(condition, kMonthRange.first)) {
+                  condition = FormatCondition(condition, kMonthRange);
+                }
               }
             }
           }

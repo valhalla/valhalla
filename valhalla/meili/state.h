@@ -43,7 +43,7 @@ public:
     // Cache results
     label_idx_.clear();
     uint16_t dest = 1; // dest at 0 is reserved for the origin
-    uint16_t found = 0;
+    [[maybe_unused]] uint16_t found = 0;
     for (const auto& stateid : stateids) {
       const auto it = results.find(dest);
       if (it != results.end()) {

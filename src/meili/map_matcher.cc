@@ -397,7 +397,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
               ends_discontinuity};
     }
 
-    // when the instersection match fails, we do a more labor intensive search at transitions
+    // when the intersection match fails, we do a more labor intensive search at transitions
     // for both prev_edge's ending node and next_edge's starting node and see if we could do a
     // node snap match. We collect the info together and search both prev edge end node and next
     // edge start node in the below loop

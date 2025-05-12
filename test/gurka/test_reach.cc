@@ -4,7 +4,6 @@
 #include "sif/dynamiccost.h"
 #include "test.h"
 
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
 #include <valhalla/proto/options.pb.h>
 

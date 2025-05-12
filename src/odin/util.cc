@@ -98,7 +98,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
   return (turn_degree_delta <= turn_degree_threshold);
 }
 
-// Get the time from the inputed date.
+// Get the time from the provided date.
 // date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_time(const std::string& date_time, const std::locale& locale) {
   if (date_time.find('T') == std::string::npos) {
@@ -132,7 +132,7 @@ std::string get_localized_time(const std::string& date_time, const std::locale& 
   return time;
 }
 
-// Get the date from the inputed date.
+// Get the date from the provided date.
 // date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_date(const std::string& date_time, const std::locale& locale) {
   if (date_time.find('T') == std::string::npos) {

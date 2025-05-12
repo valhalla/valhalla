@@ -2,11 +2,7 @@
 
 #include <algorithm>
 #include <list>
-#include <queue>
 #include <string>
-#include <thread>
-#include <unordered_set>
-#include <vector>
 
 #include <boost/property_tree/ptree.hpp>
 #include <valhalla/baldr/graphid.h>

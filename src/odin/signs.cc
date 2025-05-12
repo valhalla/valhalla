@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cmath>
-#include <utility>
 
 #include "midgard/logging.h"
 

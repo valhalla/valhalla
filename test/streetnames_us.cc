@@ -1,7 +1,6 @@
 #include "baldr/streetnames_us.h"
 #include "baldr/streetname_us.h"
 
-#include <iostream>
 #include <vector>
 
 #include "test.h"

@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -71,15 +70,6 @@ public:
     } else {
       return "time_dependent_reverse_a*";
     }
-  }
-
-  /**
-   * Set a maximum label count. The path algorithm terminates if this
-   * is exceeded.
-   * @param  max_count  Maximum number of labels to allow.
-   */
-  void set_max_label_count(const uint32_t max_count) {
-    max_label_count_ = max_count;
   }
 
 protected:
@@ -166,12 +156,11 @@ protected:
    */
   std::vector<PathInfo> FormPath(const uint32_t dest);
 
-  uint32_t max_label_count_; // Max label count to allow
-  sif::TravelMode mode_;     // Current travel mode
-  uint8_t travel_type_;      // Current travel type
+  sif::TravelMode mode_; // Current travel mode
+  uint8_t travel_type_;  // Current travel type
 
   // Hierarchy limits.
-  std::vector<sif::HierarchyLimits> hierarchy_limits_;
+  std::vector<HierarchyLimits> hierarchy_limits_;
 
   // A* heuristic
   AStarHeuristic astarheuristic_;

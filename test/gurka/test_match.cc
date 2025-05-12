@@ -118,7 +118,7 @@ D--3--4--C--5--6--E)";
       map.nodes["2"], map.nodes["B"], map.nodes["C"], map.nodes["6"], map.nodes["C"], map.nodes["3"],
   };
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_TRUE(shape[i].ApproximatelyEqual(expected_shape[i]));
   }
 }
@@ -157,7 +157,7 @@ TEST(MapMatch, NodeSnapFix) {
 
   auto expected_shape = decltype(shape){map.nodes["B"], map.nodes["C"], map.nodes["F"]};
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_TRUE(shape[i].ApproximatelyEqual(expected_shape[i]));
   }
 }
@@ -251,7 +251,7 @@ uint32_t TrafficBasedTest::current = 0, TrafficBasedTest::historical = 0,
          TrafficBasedTest::constrained = 0, TrafficBasedTest::freeflow = 0;
 
 uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
-  uint32_t kmh = -1;
+  uint32_t kmh = invalid<uint32_t>();
   const auto& nodes = api.trip().routes(0).legs(0).node();
   for (int i = 0; i < nodes.size() - 1; ++i) {
     const auto& node = nodes.Get(i);
@@ -262,8 +262,9 @@ uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_ed
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (kmh != -1 && compare_with_previous_edge)
+    if (is_valid(kmh) && compare_with_previous_edge) {
       EXPECT_EQ(kmh, new_kmh);
+    }
     kmh = new_kmh;
   }
   return kmh;

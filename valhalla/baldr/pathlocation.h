@@ -1,8 +1,6 @@
 #ifndef VALHALLA_BALDR_PATHLOCATION_H_
 #define VALHALLA_BALDR_PATHLOCATION_H_
 
-#include <cstdint>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/graphid.h>
@@ -124,12 +122,16 @@ public:
     l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
     l->set_street_side_tolerance(pl.street_side_tolerance_);
     l->set_street_side_max_distance(pl.street_side_max_distance_);
+    l->set_street_side_cutoff(pl.street_side_cutoff_);
     l->mutable_search_filter()->set_min_road_class(pl.search_filter_.min_road_class_);
     l->mutable_search_filter()->set_max_road_class(pl.search_filter_.max_road_class_);
     l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
     l->mutable_search_filter()->set_exclude_bridge(pl.search_filter_.exclude_bridge_);
+    l->mutable_search_filter()->set_exclude_toll(pl.search_filter_.exclude_toll_);
     l->mutable_search_filter()->set_exclude_ramp(pl.search_filter_.exclude_ramp_);
+    l->mutable_search_filter()->set_exclude_ferry(pl.search_filter_.exclude_ferry_);
     l->mutable_search_filter()->set_exclude_closures(pl.search_filter_.exclude_closures_);
+    l->mutable_search_filter()->set_level(pl.search_filter_.level_);
 
     auto* path_edges = l->mutable_correlation()->mutable_edges();
     for (const auto& e : pl.edges) {
@@ -192,7 +194,8 @@ public:
 
     SearchFilter search_filter = SearchFilter();
     Location l({loc.ll().lng(), loc.ll().lat()}, fromPBF(loc.type()), loc.minimum_reachability(),
-               loc.minimum_reachability(), loc.radius(), side, search_filter);
+               loc.minimum_reachability(), loc.radius(), side, valhalla::RoadClass::kServiceOther,
+               search_filter);
 
     l.name_ = loc.name();
     l.street_ = loc.street();
@@ -218,13 +221,19 @@ public:
     if (loc.has_street_side_max_distance_case()) {
       l.street_side_max_distance_ = loc.street_side_max_distance();
     }
+    if (loc.has_street_side_cutoff_case()) {
+      l.street_side_cutoff_ = loc.street_side_cutoff();
+    }
     if (loc.has_search_filter()) {
       l.search_filter_.min_road_class_ = loc.search_filter().min_road_class();
       l.search_filter_.max_road_class_ = loc.search_filter().max_road_class();
       l.search_filter_.exclude_tunnel_ = loc.search_filter().exclude_tunnel();
       l.search_filter_.exclude_bridge_ = loc.search_filter().exclude_bridge();
+      l.search_filter_.exclude_toll_ = loc.search_filter().exclude_toll();
       l.search_filter_.exclude_ramp_ = loc.search_filter().exclude_ramp();
+      l.search_filter_.exclude_ferry_ = loc.search_filter().exclude_ferry();
       l.search_filter_.exclude_closures_ = loc.search_filter().exclude_closures();
+      l.search_filter_.level_ = loc.search_filter().level();
     }
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};

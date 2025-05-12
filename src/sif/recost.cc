@@ -8,7 +8,7 @@ namespace sif {
  * Will take a sequence of edges and create the set of edge labels that would represent it
  * Allows for the caller to essentially re-compute the costing of a given path
  *
- * @param reader            used to get access to graph data. modifyable because its got a cache
+ * @param reader            used to get access to graph data. modifiable because its got a cache
  * @param costing           single costing object to be used for costing/access computations
  * @param edge_cb           the callback used to get each edge in the path
  * @param label_cb          the callback used to emit each label in the path
@@ -57,7 +57,7 @@ void recost_forward(baldr::GraphReader& reader,
   const baldr::NodeInfo* node = nullptr;
 
   // keep grabbing edges while we get valid ids
-  EdgeLabel label;
+  PathEdgeLabel label;
   uint32_t predecessor = baldr::kInvalidLabel;
   Cost cost{};
   double length = 0;
@@ -91,7 +91,7 @@ void recost_forward(baldr::GraphReader& reader,
     // TODO: if this edge begins a restriction, we need to start popping off edges into queue
     // so that we can find if we reach the end of the restriction. then we need to replay the
     // queued edges as normal
-    uint8_t time_restrictions_TODO = -1;
+    uint8_t time_restrictions_TODO = baldr::kInvalidRestriction;
     // if its not time dependent set to 0 for Allowed method below
     const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
     // we should call 'Allowed' method even if 'ignore_access' flag is true in order to
@@ -118,7 +118,9 @@ void recost_forward(baldr::GraphReader& reader,
     }
 
     // the cost for traversing this intersection
-    Cost transition_cost = node ? costing.TransitionCost(edge, node, label) : Cost{};
+    auto reader_getter = [&reader]() { return baldr::LimitedGraphReader(reader); };
+    Cost transition_cost =
+        node ? costing.TransitionCost(edge, node, label, tile, reader_getter) : Cost{};
     // update the cost to the end of this edge
     uint8_t flow_sources;
     cost += transition_cost + costing.EdgeCost(edge, tile, offset_time, flow_sources) * edge_pct;
@@ -128,9 +130,9 @@ void recost_forward(baldr::GraphReader& reader,
 
     InternalTurn turn =
         node ? costing.TurnType(label.opp_local_idx(), node, edge) : InternalTurn::kNoTurn;
-    label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
-                      transition_cost, time_restrictions_TODO, !ignore_access,
-                      static_cast<bool>(flow_sources & baldr::kDefaultFlowMask), turn);
+    label = PathEdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, costing.travel_mode(),
+                          length, transition_cost, time_restrictions_TODO, !ignore_access,
+                          static_cast<bool>(flow_sources & baldr::kDefaultFlowMask), turn);
     // hand back the label
     label_cb(label);
     // next edge

@@ -17,9 +17,9 @@ struct simple_label {
 };
 
 void Add(baldr::DoubleBucketQueue<simple_label>& adjlist, const std::vector<simple_label>& costs) {
-  uint32_t idx = 0;
-  for (const auto cost : costs) {
-    adjlist.add(idx++);
+  // C++20 use iota
+  for (uint32_t idx = 0; idx < costs.size(); ++idx) {
+    adjlist.add(idx);
   }
 }
 

@@ -6,9 +6,10 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/proto/api.pb.h>
+#include <valhalla/sif/dynamiccost.h>
 #include <valhalla/valhalla.h>
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 #endif
@@ -16,6 +17,11 @@
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
+
+struct hierarchy_limits_config_t {
+  std::vector<HierarchyLimits> max_limits;
+  std::vector<HierarchyLimits> default_limits;
+};
 
 /**
  * Project specific error messages and codes that can be converted to http responses
@@ -59,7 +65,38 @@ struct valhalla_exception_t : public std::runtime_error {
  *                      already filled out, it will be validated and the json will be ignored
  */
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
-#ifdef HAVE_HTTP
+
+/**
+ * Parse hierarchy limits from config. Falls back to default values if none are found at the
+ * given path.
+ *
+ * @param config         the property tree to read from.
+ * @param hierarchy      name of the algorithm to parse from the right config section
+ * @param uses_dist      if true, also parses values for 'expansion within distance'
+ */
+hierarchy_limits_config_t
+parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
+                                   const std::string& path,
+                                   const bool uses_dist);
+
+/**
+ * See if the user supplied custom hierarchy limits and possible override with defaults or clamp
+ * to max allowed values.
+ *
+ * @param hierarchy_limits    user supplied hierarchy limits
+ * @param cost                mode costing
+ * @param config              the max allowed/default hierarchy limits
+ * @param allow_modifications whether modifications are allowed
+ *
+ * @return true if the user passed hierarchy limits but they needed to be tampered with
+ */
+bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
+                            sif::cost_ptr_t& cost,
+                            const valhalla::Costing_Options& options,
+                            const hierarchy_limits_config_t& config,
+                            const bool allow_modifications,
+                            const bool use_hierarchy_limits);
+#ifdef ENABLE_SERVICES
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
  * it is assumed that the body of the request is protobuf bytes and any json will be ignored. Likewise
@@ -75,10 +112,16 @@ void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& options);
 
-// function to add warnings to proto info object
-void add_warning(valhalla::Api& api, unsigned code);
+/**
+ * Adds a warning to the request PBF object.
+ *
+ * @param api   the full request
+ * @param code  the warning code
+ * @param extra an optional string to append to the hard-coded warning message
+ */
+void add_warning(valhalla::Api& api, unsigned code, const std::string& extra = "");
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t serialize_error(const valhalla_exception_t& exception,
                                                  prime_server::http_request_info_t& request_info,
                                                  Api& options);
@@ -102,7 +145,7 @@ public:
 
   virtual ~service_worker_t();
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   /**
    * The main work function that stages in the prime_server will call when responding to requests
    *

@@ -1,13 +1,13 @@
 #include "midgard/logging.h"
 #include "filesystem.h"
 
+#include <cassert>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <sstream>
 #include <stdexcept>
 
 #ifdef __ANDROID__
@@ -39,8 +39,11 @@ std::string TimeStamp() {
       (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);
   // format the string
   std::string buffer("year/mo/dy hr:mn:sc.xxxxxx0");
-  snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f", gmt.tm_year + 1900,
-           gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min, fractional_seconds.count());
+  [[maybe_unused]] int ret =
+      snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f",
+               gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
+               fractional_seconds.count());
+  assert(ret == static_cast<int>(buffer.length()) - 1);
 
   // Remove trailing null terminator added by snprintf.
   buffer.pop_back();

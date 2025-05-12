@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 #include <ostream>
 
 #include "baldr/edgeinfo.h"
@@ -50,6 +49,11 @@ void EdgeInfoBuilder::set_speed_limit(const uint32_t speed_limit) {
   }
 }
 
+// Sets the elevation flag.
+void EdgeInfoBuilder::set_has_elevation(const bool elevation) {
+  ei_.has_elevation_ = elevation;
+}
+
 // Set the list of name info (offsets, etc.) used by this edge.
 void EdgeInfoBuilder::set_name_info_list(const std::vector<NameInfo>& name_info_list) {
   if (name_info_list.size() > kMaxNamesPerEdge) {
@@ -80,12 +84,20 @@ void EdgeInfoBuilder::set_encoded_shape(const std::string& encoded_shape) {
   std::copy(encoded_shape.begin(), encoded_shape.end(), back_inserter(encoded_shape_));
 }
 
+// Set the encoded elevation vector.
+void EdgeInfoBuilder::set_encoded_elevation(const std::vector<int8_t>& encoded_elevation) {
+  if (!encoded_elevation.empty()) {
+    encoded_elevation_ = std::move(encoded_elevation);
+  }
+}
+
 // Get the size of the edge info (including name offsets and shape string)
 std::size_t EdgeInfoBuilder::BaseSizeOf() const {
   std::size_t size = sizeof(EdgeInfo::EdgeInfoInner);
   size += (name_info_list_.size() * sizeof(NameInfo));
   size += (encoded_shape_.size() * sizeof(std::string::value_type));
   size += ei_.extended_wayid_size_;
+  size += (encoded_elevation_.size() * sizeof(int8_t));
   return size;
 }
 
@@ -120,6 +132,9 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
     ei.encoded_shape_size_ = static_cast<uint32_t>(eib.encoded_shape_.size());
   }
 
+  // Set the has_elevation flag if encoded_elevation vector is not empty
+  ei.has_elevation_ = !eib.encoded_elevation_.empty();
+
   // Write out the bytes
   os.write(reinterpret_cast<const char*>(&ei), sizeof(ei));
   os.write(reinterpret_cast<const char*>(eib.name_info_list_.data()),
@@ -130,6 +145,10 @@ std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& eib) {
   }
   if (ei.extended_wayid_size_ > 1) {
     os.write(reinterpret_cast<const char*>(&eib.extended_wayid3_), sizeof(eib.extended_wayid3_));
+  }
+  if (!eib.encoded_elevation_.empty()) {
+    os.write(reinterpret_cast<const char*>(eib.encoded_elevation_.data()),
+             eib.encoded_elevation_.size());
   }
 
   // Pad to a 4 byte boundary

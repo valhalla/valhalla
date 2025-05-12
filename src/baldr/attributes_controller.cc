@@ -68,11 +68,13 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeLaneConnectivity, true},
     {kEdgeCycleLane, true},
     {kEdgeBicycleNetwork, true},
+    {kEdgeElevation, false},
     {kEdgeSacScale, true},
     {kEdgeShoulder, true},
     {kEdgeSidewalk, true},
     {kEdgeDensity, true},
     {kEdgeSpeedLimit, true},
+    {kEdgeConditionalSpeedLimits, true},
     {kEdgeTruckSpeed, true},
     {kEdgeTruckRoute, true},
     {kEdgeDefaultSpeed, true},
@@ -80,6 +82,10 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeIsUrban, false},
     {kEdgeTaggedValues, true},
     {kEdgeIndoor, true},
+    {kEdgeLandmarks, true},
+    {kEdgeCountryCrossing, true},
+    {kEdgeForward, true},
+    {kEdgeLevels, true},
 
     // Node keys
     {kIncidents, false},
@@ -96,6 +102,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kNodeElapsedTime, true},
     {kNodeAdminIndex, true},
     {kNodeType, true},
+    {kNodeTrafficSignal, true},
     {kNodeFork, true},
     {kNodeTransitPlatformInfoType, true},
     {kNodeTransitPlatformInfoOnestopId, true},
@@ -172,6 +179,9 @@ AttributesController::AttributesController(const Options& options, bool is_stric
     default:
       break;
   }
+
+  // Set the edge elevation attributes based on elevation interval being set
+  attributes.at(kEdgeElevation) = options.elevation_interval() > 0.0f;
 }
 
 void AttributesController::disable_all() {

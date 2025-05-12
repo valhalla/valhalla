@@ -2,11 +2,7 @@
 #define VALHALLA_THOR_ISOCHRONE_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>

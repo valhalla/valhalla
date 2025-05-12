@@ -1,8 +1,4 @@
-#include <cstdint>
-
 #include "baldr/turn.h"
-
-#include <string>
 
 #include "test.h"
 

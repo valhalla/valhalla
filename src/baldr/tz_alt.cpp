@@ -107,9 +107,7 @@
 #include "date_time_europe.h"
 #include "date_time_leapseconds.h"
 #include "date_time_northamerica.h"
-#include "date_time_pacificnew.h"
 #include "date_time_southamerica.h"
-#include "date_time_systemv.h"
 #include "date_time_windows_zones.h"
 
 #ifdef __APPLE__
@@ -527,7 +525,7 @@ bool
 native_to_standard_timezone_name(const std::string& native_tz_name,
                                  std::string& standard_tz_name)
 {
-    // TOOD! Need be a case insensitive compare?
+    // TODO! Need be a case insensitive compare?
     if (native_tz_name == "UTC")
     {
         standard_tz_name = "Etc/UTC";
@@ -2831,8 +2829,8 @@ static
 std::unique_ptr<CURL, curl_deleter>
 curl_init()
 {
-    static const auto curl_is_now_initiailized = curl_global();
-    (void)curl_is_now_initiailized;
+    static const auto curl_is_now_initialized = curl_global();
+    (void)curl_is_now_initialized;
     return std::unique_ptr<CURL, curl_deleter>{::curl_easy_init()};
 }
 
@@ -2944,12 +2942,12 @@ remove_folder_and_subfolders(const std::string& folder)
     from.assign(folder.begin(), folder.end());
     from.push_back('\0');
     from.push_back('\0');
-    SHFILEOPSTRUCT fo{}; // Zero initialize.
-    fo.wFunc = FO_DELETE;
-    fo.pFrom = from.data();
-    fo.fFlags = FOF_NO_UI;
-    int ret = SHFileOperation(&fo);
-    if (ret == 0 && !fo.fAnyOperationsAborted)
+    SHFILEOPSTRUCT file_op{}; // Zero initialize.
+    file_op.wFunc = FO_DELETE;
+    file_op.pFrom = from.data();
+    file_op.fFlags = FOF_NO_UI;
+    int ret = SHFileOperation(&file_op);
+    if (ret == 0 && !file_op.fAnyOperationsAborted)
         return true;
     return false;
 #    endif  // !USE_SHELL_API
@@ -3462,7 +3460,7 @@ init_tzdb()
     CONSTDATA char*const files[] =
     {
         "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
-        "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
+        "northamerica", "southamerica", "leapseconds"
     };
 
     for (const auto& filename : files)
@@ -4065,13 +4063,10 @@ static std::vector<std::string> get_tz_data_file_list() {
   tz_data_file_list.emplace_back(date_time_backward, date_time_backward + date_time_backward_len);
   tz_data_file_list.emplace_back(date_time_etcetera, date_time_etcetera + date_time_etcetera_len);
   tz_data_file_list.emplace_back(date_time_europe, date_time_europe + date_time_europe_len);
-  tz_data_file_list.emplace_back(date_time_pacificnew,
-                                 date_time_pacificnew + date_time_pacificnew_len);
   tz_data_file_list.emplace_back(date_time_northamerica,
                                  date_time_northamerica + date_time_northamerica_len);
   tz_data_file_list.emplace_back(date_time_southamerica,
                                  date_time_southamerica + date_time_southamerica_len);
-  tz_data_file_list.emplace_back(date_time_systemv, date_time_systemv + date_time_systemv_len);
   tz_data_file_list.emplace_back(date_time_leapseconds,
                                  date_time_leapseconds + date_time_leapseconds_len);
   return tz_data_file_list;

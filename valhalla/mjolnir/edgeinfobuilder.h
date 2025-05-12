@@ -2,8 +2,6 @@
 #define VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
 
 #include <cstdint>
-#include <iostream>
-#include <list>
 #include <string>
 #include <vector>
 
@@ -51,6 +49,12 @@ public:
   void set_speed_limit(const uint32_t speed_limit);
 
   /**
+   * Sets the elevation flag.
+   * @param  elevation  Flag indicating whether the edge has elevation data.
+   */
+  void set_has_elevation(const bool elevation);
+
+  /**
    * Get the bike network mask for this directed edge.
    * @return  Returns the bike network mask for this directed edge.
    */
@@ -91,6 +95,12 @@ public:
   void set_encoded_shape(const std::string& encoded_shape);
 
   /**
+   * Set encoded elevation.
+   * @param  encoded_elevation  Encoded elevation
+   */
+  void set_encoded_elevation(const std::vector<int8_t>& encoded_elevation);
+
+  /**
    * Get the size of this edge info (without padding).
    * @return  Returns the size in bytes of this object.
    */
@@ -102,6 +112,20 @@ public:
    * @return  Returns the size in bytes of this object.
    */
   std::size_t SizeOf() const;
+
+  /**
+   * Check if the given name_info exists in this edge info.
+   * @param  offset  The offset of the name info.
+   * @return  Returns true if the name info exists, false otherwise.
+   */
+  bool has_name_info(uint32_t offset) const {
+    for (const auto& name : name_info_list_) {
+      if (name.name_offset_ == offset) {
+        return true;
+      }
+    }
+    return false;
+  }
 
 protected:
   // Fixed size information
@@ -116,6 +140,9 @@ protected:
 
   // Lat,lng shape of the edge
   std::string encoded_shape_;
+
+  // Encoded elevation
+  std::vector<int8_t> encoded_elevation_;
 
   friend std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& id);
 };

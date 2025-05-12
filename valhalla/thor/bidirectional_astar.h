@@ -2,10 +2,7 @@
 #define VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
@@ -98,8 +95,8 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   // Hierarchy limits
-  std::vector<sif::HierarchyLimits> hierarchy_limits_forward_;
-  std::vector<sif::HierarchyLimits> hierarchy_limits_reverse_;
+  std::vector<HierarchyLimits> hierarchy_limits_forward_;
+  std::vector<HierarchyLimits> hierarchy_limits_reverse_;
   bool ignore_hierarchy_limits_;
 
   // A* heuristic
@@ -153,7 +150,7 @@ protected:
    * @return returns true if the expansion continued from this node
    */
   template <const ExpansionType expansion_direction>
-  bool Expand(baldr::GraphReader& graphreader,
+  void Expand(baldr::GraphReader& graphreader,
               const baldr::GraphId& node,
               sif::BDEdgeLabel& pred,
               const uint32_t pred_idx,
@@ -238,11 +235,6 @@ protected:
                                               const valhalla::Location& origin,
                                               const valhalla::Location& dest,
                                               const baldr::TimeInfo& time_info);
-
-  /**
-   * Modify default (optimized for unidirectional search) hierarchy limits.
-   */
-  void ModifyHierarchyLimits();
 };
 
 // This function checks if the path formed by the two expanding trees

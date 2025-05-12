@@ -1,14 +1,13 @@
 #include "mjolnir/transitbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
 
 #include <fstream>
 #include <future>
-#include <iostream>
 #include <list>
 #include <mutex>
 #include <thread>
 #include <tuple>
-#include <unordered_map>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
@@ -44,7 +43,7 @@ struct OSMConnectionEdge {
   std::vector<std::string> names;
   std::vector<PointLL> shape;
   std::vector<std::string> tagged_values;
-  std::vector<std::string> pronunciations;
+  std::vector<std::string> linguistics;
 };
 
 // Struct to hold stats information during each threads work
@@ -167,8 +166,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       bool added = false;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, conn.shape,
-                                        conn.names, conn.tagged_values, conn.pronunciations, 0,
-                                        added);
+                                        conn.names, conn.tagged_values, conn.linguistics, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -264,8 +262,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, conn.stop_node, conn.osm_node, conn.wayid, 0, 0, 0,
-                                            r_shape, conn.names, conn.tagged_values,
-                                            conn.pronunciations, 0, added);
+                                            r_shape, conn.names, conn.tagged_values, conn.linguistics,
+                                            0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
@@ -406,6 +404,7 @@ std::vector<OSMConnectionEdge> MakeConnections(const graph_tile_ptr& local_tile,
     if (!closest_edge) {
       LOG_WARN("Could not find connection point for in/egress near: " +
                std::to_string(egress_ll.second) + "," + std::to_string(egress_ll.first));
+      continue;
     }
 
     // TODO: if the point we found is further away than the tile edge then there could be a better
@@ -492,7 +491,7 @@ void build(const boost::property_tree::ptree& pt,
 
     // TODO - how to handle connections that reach nodes outside the tile? Need to break up the calls
     //  to MakeConnections and ConnectToGraph below. First we have threads find all the connections
-    //  even accross tile boundaries, we keep those in ram and then we run another pass where we add
+    //  even across tile boundaries, we keep those in ram and then we run another pass where we add
     //  those to the tiles when we rewrite them in ConnectToGraph. So two separate threaded steps
     //  rather than cramming both of them into the single build function
 
@@ -534,8 +533,6 @@ namespace mjolnir {
 
 // Add transit to the graph
 void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
-
-  auto t1 = std::chrono::high_resolution_clock::now();
   std::unordered_set<GraphId> tiles;
 
   // Bail if nothing
@@ -545,7 +542,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;
   }
-
+  SCOPED_TIMER();
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
   transit_dir->push_back(filesystem::path::preferred_separator);
   GraphReader reader(hierarchy_properties);
@@ -653,10 +650,6 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   if (total_conn_edges) {
     LOG_INFO("Found " + std::to_string(total_conn_edges) + " connection edges");
   }
-
-  auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-  LOG_INFO("Finished - TransitBuilder took " + std::to_string(secs) + " secs");
 }
 
 } // namespace mjolnir

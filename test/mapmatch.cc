@@ -115,18 +115,6 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-std::string output_shape(const valhalla::Api& api) {
-  std::stringstream shape;
-  for (const auto& r : api.directions().routes()) {
-    shape << "new route" << std::endl;
-    for (const auto& l : r.legs()) {
-      shape << std::fixed << std::setprecision(3) << "Time : " << l.summary().time()
-            << ", length : " << l.summary().length() << ", shape : " << l.shape() << std::endl;
-    }
-  }
-  return shape.str();
-}
-
 void compare_results(const valhalla::Api& expected, const valhalla::Api& result) {
   // check the number of routes match
   ASSERT_EQ(result.trip().routes_size(), expected.trip().routes_size())
@@ -1036,12 +1024,12 @@ TEST(Mapmatch, test_leg_duration_trimming) {
     EXPECT_EQ(route_api.trip().routes_size(), match_api.trip().routes_size())
         << "Number of routes differs";
 
-    for (size_t i = 0; i < route_api.trip().routes_size(); ++i) {
+    for (int i = 0; i < route_api.trip().routes_size(); ++i) {
       const auto& rlegs = route_api.trip().routes(i).legs();
       const auto& mlegs = match_api.trip().routes(i).legs();
       EXPECT_EQ(rlegs.size(), mlegs.size()) << "Number of legs differs";
-      printf("Route %zu\n", i);
-      for (size_t j = 0; j < rlegs.size(); ++j) {
+      printf("Route %d\n", i);
+      for (int j = 0; j < rlegs.size(); ++j) {
         auto rtime = rlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
         auto mtime = mlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
         printf("r: %.2f %s\n", rtime, rlegs.Get(j).shape().c_str());
@@ -1090,7 +1078,7 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto result = tester.match(test_cases[i]);
     EXPECT_EQ(result.trip().routes_size(), test_ans_num_routes[i]);
-    int j = 0, k = 0;
+    int j = 0;
     for (const auto& route : result.trip().routes()) {
       ASSERT_EQ(route.legs_size(), test_ans_num_legs[i][j++])
           << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +
@@ -1241,6 +1229,33 @@ TEST(Mapmatch, test_loop_matching) {
     auto routed = tester.route(route_case);
     auto matched = tester.match(test_cases[i]);
     compare_results(routed, matched);
+  }
+}
+
+TEST(Mapmatch, test_loop_matching_walk_or_snap) {
+  // The walk_or_snap case sometimes incorrectly identifies trivial cases where it can optimize away.
+  // This tests loops which are not trivial.
+  std::vector<std::string> test_cases = {
+      // Simple loop around a block; incorrectly identified as trivial in such a way that
+      // it caused an exception in TripLegBuilder (no maneuvers)
+      R"({"shape_match":"walk_or_snap", "shape":[
+          {"lat": 52.11870746741026, "lon": 5.117783546447755, "type": "break", "node_snap_tolerance": 0},
+          {"lat": 52.11905661947785, "lon": 5.118234157562257, "type": "via", "node_snap_tolerance": 0},
+          {"lat": 52.11934977334695, "lon": 5.117751359939576, "type": "via", "node_snap_tolerance": 0},
+          {"lat": 52.118852398789194, "lon": 5.116935968399049, "type": "via", "node_snap_tolerance": 0},
+          {"lat": 52.11852959643748, "lon": 5.117445588111878, "type": "via", "node_snap_tolerance": 0},
+          {"lat": 52.11870746741026, "lon": 5.117783546447755, "type": "break", "node_snap_tolerance": 0}],
+          "costing":"auto"})",
+  };
+
+  api_tester tester;
+  for (size_t i = 0; i < test_cases.size(); ++i) {
+    // Verify that the map_snap output matches the walk_or_snap output.
+    // This approach is inspired by the above.
+    auto map_snap_case = R"({"shape_match":"map_snap)" + test_cases[i].substr(28);
+    auto map_snapped = tester.match(map_snap_case);
+    auto matched = tester.match(test_cases[i]);
+    compare_results(map_snapped, matched);
   }
 }
 

@@ -5,13 +5,11 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
 #include "config.h"
+#include "midgard/polyline2.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
-#include <fstream>
 #include <random>
-#include <sstream>
-#include <stdexcept>
 #include <string>
 #ifndef _MSC_VER
 #include <sys/mman.h>
@@ -52,6 +50,23 @@ boost::property_tree::ptree
 make_config(const std::string& path_prefix,
             const std::unordered_map<std::string, std::string>& overrides = {},
             const std::unordered_set<std::string>& removes = {});
+
+template <typename container_t>
+testing::AssertionResult shape_equality(const container_t& expected,
+                                        const container_t& actual,
+                                        typename container_t::value_type::first_type tolerance = 1) {
+  auto hd = Polyline2<typename container_t::value_type>::HausdorffDistance(expected, actual);
+  if (hd > tolerance)
+    return testing::AssertionFailure() << "shape exceeds tolerance by " << hd - tolerance;
+  return testing::AssertionSuccess();
+}
+
+inline testing::AssertionResult
+encoded_shape_equality(const std::string& expected, const std::string& actual, double tolerance = 1) {
+  auto expected_shp = decode<std::vector<PointLL>>(expected);
+  auto actual_shp = decode<std::vector<PointLL>>(actual);
+  return shape_equality(expected_shp, actual_shp, tolerance);
+}
 
 /**
  * Generate a new GraphReader that doesn't re-use a previously

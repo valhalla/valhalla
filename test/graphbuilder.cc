@@ -1,12 +1,12 @@
 #include "mjolnir/graphbuilder.h"
 #include "baldr/graphreader.h"
 #include "midgard/sequence.h"
+#include "mjolnir/admin.h"
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
 
-#include <sstream>
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
@@ -33,11 +33,10 @@ using valhalla::mjolnir::TileManifest;
 namespace {
 
 const std::string pbf_file = {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"};
-const std::string tile_dir = "test/data/graphbuilder_tiles";
+const std::string tile_dir = {VALHALLA_BUILD_DIR "test/data/graphbuilder_tiles"};
 const size_t id_table_size = 1000;
 
 const std::string access_file = "test_access_harrisburg.bin";
-const std::string pronunciation_file = "test_pronunciation_harrisburg.bin";
 const std::string bss_file = "test_bss_nodes_harrisburg.bin";
 const std::string edges_file = "test_edges_harrisburg.bin";
 const std::string from_restriction_file = "test_from_complex_restrictions_harrisburg.bin";
@@ -45,6 +44,7 @@ const std::string nodes_file = "test_nodes_harrisburg.bin";
 const std::string to_restriction_file = "test_to_complex_restrictions_harrisburg.bin";
 const std::string way_nodes_file = "test_way_nodes_harrisburg.bin";
 const std::string ways_file = "test_ways_harrisburg.bin";
+const std::string linguistic_node_file = "test_linguistic_node_harrisburg.bin";
 
 // Test output from construct edges and that the expected number of tiles are produced from the
 // build tiles step that follows.
@@ -64,7 +64,7 @@ TEST(GraphBuilder, TestConstructEdges) {
   // This directory should be empty
   filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, pronunciation_file, tiles);
+                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 4);
   // Clear the tile directory so it doesn't interfere with the next test with graphreader.
@@ -86,7 +86,7 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   // This directory should be empty
   filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, pronunciation_file, tiles);
+                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 1);
   EXPECT_TRUE(reader.DoesTileExist(GraphId{5993698}));
@@ -113,6 +113,44 @@ TEST(Graphbuilder, TestDEBuilderLength) {
                std::runtime_error);
 }
 
+// test new timezones here instead of a new mjolnir test
+class TestNodeInfo : NodeInfo {
+public:
+  using NodeInfo::set_timezone;
+
+  uint32_t get_raw_timezone_field() const {
+    return timezone_;
+  }
+
+  uint32_t get_raw_timezone_ext1_field() const {
+    return timezone_ext_1_;
+  }
+};
+
+TEST(Graphbuilder, NewTimezones) {
+  TestNodeInfo test_node;
+  auto* sql_db = GetDBHandle(VALHALLA_BUILD_DIR "test/data/tz.sqlite");
+
+  auto sconn = make_spatialite_cache(sql_db);
+  const auto& tzdb = DateTime::get_tz_db();
+
+  // America/Ciudad_Juarez
+  auto ciudad_juarez_polys = GetTimeZones(sql_db, {-106.450948, 31.669746, -106.386046, 31.724371});
+  EXPECT_EQ(ciudad_juarez_polys.begin()->first, tzdb.to_index("America/Ciudad_Juarez"));
+  test_node.set_timezone(ciudad_juarez_polys.begin()->first);
+  EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("America/Ojinaga"));
+  EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
+
+  // Asia/Qostanay
+  auto qostanay_polys = GetTimeZones(sql_db, {62.41766759, 51.37601571, 64.83104595, 52.71089583});
+  EXPECT_EQ(qostanay_polys.begin()->first, tzdb.to_index("Asia/Qostanay"));
+  test_node.set_timezone(qostanay_polys.begin()->first);
+  EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("Asia/Qyzylorda"));
+  EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
+
+  sqlite3_close(sql_db);
+}
+
 class HarrisburgTestSuiteEnv : public ::testing::Environment {
 public:
   void SetUp() override {
@@ -122,10 +160,11 @@ public:
     const auto& mjolnir_config = config.get_child("mjolnir");
     const std::vector<std::string>& input_files = {pbf_file};
     OSMData osmdata = PBFGraphParser::ParseWays(mjolnir_config, input_files, ways_file,
-                                                way_nodes_file, access_file, pronunciation_file);
+                                                way_nodes_file, access_file);
     PBFGraphParser::ParseRelations(mjolnir_config, input_files, from_restriction_file,
                                    to_restriction_file, osmdata);
-    PBFGraphParser::ParseNodes(mjolnir_config, input_files, way_nodes_file, bss_file, osmdata);
+    PBFGraphParser::ParseNodes(mjolnir_config, input_files, way_nodes_file, bss_file,
+                               linguistic_node_file, osmdata);
   }
 
   void TearDown() override {
@@ -135,6 +174,7 @@ public:
     filesystem::remove(from_restriction_file);
     filesystem::remove(to_restriction_file);
     filesystem::remove(bss_file);
+    filesystem::remove(linguistic_node_file);
   }
 };
 

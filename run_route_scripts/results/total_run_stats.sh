@@ -29,7 +29,7 @@ then
 fi
 
 ### Example input
-###1:orgLat, 2:orgLng, 3:destLat, 4:destLng, 5:result, 6:#Passes, 7:runtime, 8:trip time, 9:length, 10:arcDistance, 11:#Manuevers
+###1:orgLat, 2:orgLng, 3:destLat, 4:destLng, 5:result, 6:#Passes, 7:runtime, 8:trip time, 9:length, 10:arcDistance, 11:#Maneuvers
 ###34.854443,40.608334,36.366665,36.983334,success,1,81,20031,273.763855,229.100693,44
 
 # Write total stats header

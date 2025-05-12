@@ -1,4 +1,5 @@
-#include "filesystem.h"
+#include <filesystem>
+
 #include "midgard/sequence.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
@@ -33,8 +34,8 @@ const std::string config_file = "test/test_config_country";
 
 // Remove a temporary file if it exists
 void remove_temp_file(const std::string& fname) {
-  if (filesystem::exists(fname)) {
-    filesystem::remove(fname);
+  if (std::filesystem::exists(fname)) {
+    std::filesystem::remove(fname);
   }
 }
 
@@ -55,24 +56,6 @@ void write_config(const std::string& filename) {
   file.close();
 }
 
-const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid_ < b.node.osmid_;
-};
-
-OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
-  auto found = way_nodes.find({node_id}, node_predicate);
-  EXPECT_NE(found, way_nodes.end()) << "Couldn't find node: " + std::to_string(node_id);
-  return (*found).node;
-}
-
-auto way_predicate = [](const OSMWay& a, const OSMWay& b) { return a.osmwayid_ < b.osmwayid_; };
-
-OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {
-  auto found = ways.find({way_id}, way_predicate);
-  EXPECT_NE(found, ways.end()) << "Couldn't find way: " + std::to_string(way_id);
-  return *found;
-}
-
 void CountryAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(config_file, conf);
@@ -81,8 +64,8 @@ void CountryAccess(const std::string& config_file) {
   GraphReader graph_reader(conf.get_child("mjolnir"));
   for (const auto& level : TileHierarchy::levels()) {
     auto level_dir = graph_reader.tile_dir() + "/" + std::to_string(level.level);
-    if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
-      filesystem::remove_all(level_dir);
+    if (std::filesystem::exists(level_dir) && !std::filesystem::is_empty(level_dir)) {
+      std::filesystem::remove_all(level_dir);
     }
   }
 
@@ -92,16 +75,15 @@ void CountryAccess(const std::string& config_file) {
   std::string nodes_file = "test_nodes_amsterdam.bin";
   std::string edges_file = "test_edges_amsterdam.bin";
   std::string access_file = "test_access_amsterdam.bin";
-  std::string pronunciation_file = "test_pronunciation_amsterdam.bin";
   std::string cr_from_file = "test_from_cr_amsterdam.bin";
   std::string cr_to_file = "test_to_cr_amsterdam.bin";
   std::string bss_nodes_file = "test_bss_nodes_amsterdam.bin";
+  std::string linguistic_node_file = "test_linguistic_node_amsterdam.bin";
 
   // Parse Amsterdam OSM data
-  auto osmdata =
-      PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
-                                {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, ways_file,
-                                way_nodes_file, access_file, pronunciation_file);
+  auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
+                                           {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"},
+                                           ways_file, way_nodes_file, access_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, cr_from_file,
@@ -109,7 +91,7 @@ void CountryAccess(const std::string& config_file) {
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/amsterdam.osm.pbf"}, way_nodes_file,
-                             bss_nodes_file, osmdata);
+                             bss_nodes_file, linguistic_node_file, osmdata);
 
   std::map<valhalla::baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(conf.get_child("mjolnir"), ways_file, way_nodes_file, nodes_file,
@@ -117,7 +99,7 @@ void CountryAccess(const std::string& config_file) {
 
   // Build the graph using the OSMNodes and OSMWays from the parser
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file, cr_from_file,
-                      cr_to_file, pronunciation_file, tiles);
+                      cr_to_file, linguistic_node_file, tiles);
 
   // load a tile and test the default access.
   GraphId id(820099, 2, 0);
@@ -255,6 +237,7 @@ void CountryAccess(const std::string& config_file) {
   remove_temp_file(access_file);
   remove_temp_file(cr_from_file);
   remove_temp_file(cr_to_file);
+  remove_temp_file(linguistic_node_file);
 }
 
 TEST(CountryAccess, Basic) {

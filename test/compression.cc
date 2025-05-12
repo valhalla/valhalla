@@ -68,11 +68,11 @@ TEST(Compression, roundtrip) {
 }
 
 TEST(Compression, fail_deflate) {
-  auto deflate_src_fail = [](z_stream& s) -> int {
+  auto deflate_src_fail = []([[maybe_unused]] z_stream& s) -> int {
     throw std::runtime_error("you cant catch me");
     return Z_FINISH;
   };
-  auto deflate_dst_fail = [](z_stream& s) -> void {
+  auto deflate_dst_fail = []([[maybe_unused]] z_stream& s) -> void {
     throw std::runtime_error("im the gingerbread man");
   };
 
@@ -89,16 +89,18 @@ TEST(Compression, fail_deflate) {
 }
 
 TEST(Compression, fail_inflate) {
-  auto inflate_src_fail = [](z_stream& s) -> void { throw std::runtime_error("you cant catch me"); };
+  auto inflate_src_fail = []([[maybe_unused]] z_stream& s) -> void {
+    throw std::runtime_error("you cant catch me");
+  };
   std::string bad = "this isn't gzipped";
   auto inflate_src_fail2 = [&bad](z_stream& s) -> void {
     s.next_in = static_cast<Byte*>(static_cast<void*>(&bad[0]));
     s.avail_in = static_cast<unsigned int>(bad.size() * sizeof(std::string::value_type));
   };
-  auto inflate_src_fail3 = [](z_stream& s) -> void {
+  auto inflate_src_fail3 = []([[maybe_unused]] z_stream& s) -> void {
     /* Nothing to do, simulates 'cannot inflate' - reproducible if no disk space. */
   };
-  auto inflate_dst_fail = [](z_stream& s) -> int {
+  auto inflate_dst_fail = []([[maybe_unused]] z_stream& s) -> int {
     throw std::runtime_error("im the gingerbread man");
     return Z_NO_FLUSH;
   };
@@ -128,7 +130,7 @@ TEST(Compression, fail_inflate) {
                                inflate_dst_fail))
       << "dst should fail";
 
-  bool inflate_result;
+  bool inflate_result{false};
   EXPECT_NO_THROW(
       inflate_result =
           valhalla::baldr::inflate(inflate_src_fail3, std::bind(inflate_dst, std::placeholders::_1,

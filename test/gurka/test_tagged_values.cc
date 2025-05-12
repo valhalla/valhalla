@@ -1,5 +1,4 @@
 #include "gurka.h"
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -31,6 +30,7 @@ protected:
                           H
     )";
 
+    // TODO: does the graphparser make sure we dont ever try to set layer to 0 since its the default
     const gurka::ways ways = {{"AB", {{"highway", "motorway"}}},
                               {"BC",
                                {{"highway", "motorway"},

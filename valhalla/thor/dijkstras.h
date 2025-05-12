@@ -2,10 +2,8 @@
 #define VALHALLA_THOR_Dijkstras_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include <valhalla/baldr/double_bucket_queue.h>
@@ -70,8 +68,15 @@ public:
    * @param  expansion_callback  the functor to call back when the Dijkstra makes progress
    *                             on a given edge
    */
-  using expansion_callback_t = std::function<
-      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, uint32_t, float)>;
+  using expansion_callback_t = std::function<void(baldr::GraphReader&,
+                                                  const baldr::GraphId,
+                                                  const baldr::GraphId,
+                                                  const char*,
+                                                  const Expansion::EdgeStatus,
+                                                  float,
+                                                  uint32_t,
+                                                  float,
+                                                  const Expansion_ExpansionType)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }

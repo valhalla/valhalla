@@ -1,3 +1,4 @@
+
 #include "gurka.h"
 #include "test.h"
 
@@ -17,6 +18,8 @@ protected:
   static void SetUpTestSuite() {
     constexpr double gridsize = 100;
 
+    // remark: without admin database, left-side driving is the
+    // default driving side.
     const std::string ascii_map = R"(
     B---------C
     |   2   8 |
@@ -28,6 +31,10 @@ protected:
       \ 5     |
        \   6  |
         F-----E
+        |     |      
+        |     y      
+        |     |      
+        G-x---H
          )";
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     const gurka::ways ways = {{"AB", {{"highway", "motorway"}}},
@@ -35,8 +42,11 @@ protected:
                               {"CD", {{"highway", "primary"}, {"oneway", "-1"}}},
                               {"AD", {{"highway", "primary"}}},
                               {"DE", {{"highway", "primary"}}},
-                              {"EF", {{"highway", "primary"}, {"bridge", "yes"}}},
-                              {"AF", {{"highway", "motorway_link"}}}};
+                              {"EF", {{"highway", "primary"}, {"bridge", "yes"}, {"toll", "yes"}}},
+                              {"AF", {{"highway", "motorway_link"}}},
+                              {"FG", {{"highway", "secondary"}}},
+                              {"GH", {{"route", "ferry"}}},
+                              {"HE", {{"highway", "secondary"}}}};
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/search_filter");
   }
 };
@@ -58,6 +68,23 @@ TEST_F(SearchFilter, Unfiltered) {
   // should take the shortest path
   gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
   gurka::assert::raw::expect_path(result, {"AB", "BC"});
+}
+TEST_F(SearchFilter, NodeSnapped) {
+  auto from = "B";
+  auto to = "C";
+
+  const std::string& request =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_tunnel":true}},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
+
+  // should take the shortest path
+  gurka::assert::osrm::expect_steps(result, {"AB", "AD", "CD"});
+  gurka::assert::raw::expect_path(result, {"AB", "AD", "CD"});
 }
 TEST_F(SearchFilter, Heading) {
   auto from = "1";
@@ -90,6 +117,22 @@ TEST_F(SearchFilter, PreferredSide) {
   // should take the long way around starting southbound due to preferred side at destination
   gurka::assert::osrm::expect_steps(result, {"AB", "AD", "CD", "BC"});
   gurka::assert::raw::expect_path(result, {"AB", "AD", "CD", "BC"});
+}
+TEST_F(SearchFilter, StreetSideCutoff) {
+  auto from = "7";
+  auto to = "8";
+
+  const std::string& request =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"preferred_side":"same","street_side_cutoff":"primary"}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
+
+  // should take the short way in the north
+  gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
 }
 TEST_F(SearchFilter, MaxRoadClass) {
   auto from = "1";
@@ -187,6 +230,51 @@ TEST_F(SearchFilter, ExcludeRamp) {
   gurka::assert::osrm::expect_steps(result_filtered, {"AD", "AB", "BC"});
   gurka::assert::raw::expect_path(result_filtered, {"AD", "AB", "BC"});
 }
+TEST_F(SearchFilter, ExcludeFerry) {
+  auto from = "x";
+  auto to = "y";
+  const std::string& request_unfiltered =
+      (boost::format(R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result_unfiltered = gurka::do_action(valhalla::Options::route, map, request_unfiltered);
+  gurka::assert::osrm::expect_steps(result_unfiltered, {"GH", "HE"});
+  gurka::assert::raw::expect_path(result_unfiltered, {"GH", "HE"});
+
+  const std::string& request_filtered =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_ferry":true}},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result_filtered = gurka::do_action(valhalla::Options::route, map, request_filtered);
+
+  gurka::assert::osrm::expect_steps(result_filtered, {"FG", "EF", "HE"});
+  gurka::assert::raw::expect_path(result_filtered, {"FG", "EF", "HE"});
+}
+TEST_F(SearchFilter, ExcludeToll) {
+  auto from = "6";
+  auto to = "3";
+  const std::string& request_unfiltered =
+      (boost::format(R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result_unfiltered = gurka::do_action(valhalla::Options::route, map, request_unfiltered);
+  gurka::assert::osrm::expect_steps(result_unfiltered, {"EF", "DE"});
+  gurka::assert::raw::expect_path(result_unfiltered, {"EF", "DE", "CD"});
+
+  const std::string& request_filtered =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s,"search_filter":{"exclude_toll":true}},{"lat":%s,"lon":%s}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result_filtered = gurka::do_action(valhalla::Options::route, map, request_filtered);
+  gurka::assert::osrm::expect_steps(result_filtered, {"AD", "CD"});
+  gurka::assert::raw::expect_path(result_filtered, {"AD", "CD"});
+}
 
 /*************************************************************/
 namespace {
@@ -243,7 +331,7 @@ protected:
             |
             H
 
-   L-4---5-M-6-N
+   L4----5-M-6-N
   )";
 
     const std::string speed_str = std::to_string(default_speed);
@@ -1106,3 +1194,131 @@ TEST_P(ClosuresWithTimedepRoutes, IgnoreClosureWithTimedepReverse) {
 }
 
 INSTANTIATE_TEST_SUITE_P(SearchFilter, ClosuresWithTimedepRoutes, ::testing::ValuesIn(buildParams()));
+
+/*********************************************************************/
+
+struct Waypoint {
+  std::string node;
+  int16_t preferred_level;
+};
+class LevelSearchFilter : public ::testing::Test {
+protected:
+  static gurka::map map;
+  static std::string ascii_map;
+  static gurka::nodelayout layout;
+  static void SetUpTestSuite() {
+    constexpr double gridsize_metres = 50;
+
+    /**
+     * Difficult to represent visually, so here is a stacked view:
+     *
+     * ground level:
+     *  C-----------------D
+     *  |                 |
+     *  |                 |
+     *  |                 |
+     * (A)---------------(B)
+     *
+     * first floor:
+     *   G---------------H
+     *   |               |
+     *   |               |
+     *   |               |
+     *  (E)-------------(F)
+     *
+     * () = connected via stairs
+     */
+    ascii_map = R"(
+      C-G-----------H-D
+      | |  x    y   | |
+      | |           | |
+      | |           | |                z
+      | |           | |                       w
+      | |           | |
+      A~E-----------F~B
+    )";
+
+    const gurka::ways ways = {
+        // ground floor
+        {"AB", {{"highway", "corridor"}, {"level", "0"}}},
+        {"AC", {{"highway", "corridor"}, {"level", "0"}}},
+        {"CD", {{"highway", "corridor"}, {"level", "0"}}},
+        {"DB", {{"highway", "corridor"}, {"level", "0"}}},
+        // level 1
+        {"EG", {{"highway", "corridor"}, {"level", "1"}}},
+        {"EF", {{"highway", "corridor"}, {"level", "1"}}},
+        {"GH", {{"highway", "corridor"}, {"level", "1"}}},
+        {"HF", {{"highway", "corridor"}, {"level", "1"}}},
+        // stairs
+        {"AE", {{"highway", "steps"}, {"level", "0;1"}}},
+        {"FB", {{"highway", "steps"}, {"level", "0;1"}}},
+
+    };
+
+    layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_multi_level_loki", {});
+  }
+
+  valhalla::Api Route(const std::vector<Waypoint>& waypoints, unsigned int cutoff = 0) {
+    std::vector<std::string> nodes;
+    std::unordered_map<std::string, std::string> options;
+    for (size_t index = 0; index < waypoints.size(); ++index) {
+      const auto& wp = waypoints[index];
+      nodes.emplace_back(wp.node);
+      options["/locations/" + std::to_string(index) + "/search_filter/level"] =
+          std::to_string(wp.preferred_level);
+      if (cutoff > 0) {
+        options["/locations/" + std::to_string(index) + "/search_cutoff"] = std::to_string(cutoff);
+      }
+    }
+    return gurka::do_action(valhalla::Options::route, map, nodes, "pedestrian", options);
+  }
+};
+gurka::map LevelSearchFilter::map = {};
+std::string LevelSearchFilter::ascii_map = {};
+gurka::nodelayout LevelSearchFilter::layout = {};
+
+TEST_F(LevelSearchFilter, TraverseLevels) {
+  auto result = Route({{"x", 0}, {"y", 1}});
+  ASSERT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings().Get(0).code(), 302);
+  gurka::assert::raw::expect_path(result, {"CD", "AC", "AE", "EG", "GH"});
+}
+
+TEST_F(LevelSearchFilter, NonExistentLevel) {
+  try {
+    auto result = Route({{"x", 0}, {"y", 6}});
+    FAIL() << "We should not get to here";
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, 171);
+    EXPECT_STREQ(e.what(), "No suitable edges near location");
+  } catch (...) { FAIL() << "Failed with unexpected exception type"; }
+}
+
+TEST_F(LevelSearchFilter, Cutoff) {
+  try {
+    auto result = Route({{"x", 0}, {"z", 1}});
+    FAIL() << "We should not get to here";
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_EQ(e.code, 171);
+    EXPECT_STREQ(e.what(), "No suitable edges near location");
+  } catch (...) { FAIL() << "Failed with unexpected exception type"; }
+}
+
+TEST_F(LevelSearchFilter, CutoffOverride) {
+  try {
+    auto result = Route({{"x", 0}, {"z", 1}}, 9000);
+    EXPECT_EQ(result.info().warnings().size(), 1);
+  } catch (...) { FAIL() << "Shoud succeed"; }
+}
+
+TEST_F(LevelSearchFilter, CutoffClamped) {
+  try {
+    // w is about 1300m away, so the search_cutoff being clamped to 1000 should result
+    // in an exception
+    auto result = Route({{"x", 0}, {"w", 1}}, 2000);
+    FAIL() << "Should fail";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 171); } catch (...) {
+    FAIL() << "Failed with unexpected exception type";
+  };
+}

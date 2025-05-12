@@ -1,5 +1,4 @@
 #include <iomanip>
-#include <list>
 #include <random>
 #include <sstream>
 #include <unordered_set>
@@ -181,10 +180,9 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(const baldr::TileLevel
       // Get a list of tiles required within the radius of the projected point
       const auto& ll = edge.projected;
       DistanceApproximator<PointLL> approximator(ll);
-      float latdeg = (radius / kMetersPerDegreeLat);
-      float lngdeg = (radius / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
-      AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
-                          Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
+      auto latdeg = (radius / kMetersPerDegreeLat);
+      auto lngdeg = (radius / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
+      AABB2<PointLL> bbox(ll.lng() - lngdeg, ll.lat() - latdeg, ll.lng() + lngdeg, ll.lat() + latdeg);
       std::vector<int32_t> tilelist = hierarchy_level.tiles.TileList(bbox);
       for (const auto& id : tilelist) {
         auto color = level->second.find(id);

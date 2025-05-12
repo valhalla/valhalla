@@ -1,5 +1,7 @@
 #include "test.h"
+
 #include <cstdint>
+#include <filesystem>
 
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
@@ -12,7 +14,6 @@
 #include <thread>
 #include <unistd.h>
 
-#include "filesystem.h"
 #include "loki/worker.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
@@ -379,9 +380,9 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
                                             "centroid",
                                             "status",
                                         }) {
-  auto run_dir = VALHALLA_BUILD_DIR "test" + std::string(1, filesystem::path::preferred_separator) +
-                 "loki_service_tmp";
-  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
+  auto run_dir = VALHALLA_BUILD_DIR "test" +
+                 std::string(1, std::filesystem::path::preferred_separator) + "loki_service_tmp";
+  if (!std::filesystem::is_directory(run_dir) && !std::filesystem::create_directories(run_dir))
     throw std::runtime_error("Couldnt make directory to run from");
 
   auto config = test::make_config(run_dir,
@@ -581,7 +582,7 @@ TEST(LokiService, test_actions_whitelist) {
 }
 
 TEST(LokiService, test_hierarchy_warning) {
-  // all actions involving disble_hierarchy_pruning
+  // all actions involving disable_hierarchy_pruning
   const std::vector<Options_Action> actions{Options_Action_route, Options_Action_sources_to_targets};
   // all relevant costing types, with or without warning
   const std::vector<Costing_Type> costing_types{Costing_Type_bicycle,       Costing_Type_bus,
@@ -606,9 +607,6 @@ public:
 
 // Elevation service
 int main(int argc, char* argv[]) {
-  // make this whole thing bail if it doesnt finish fast
-  alarm(180);
-
   testing::AddGlobalTestEnvironment(new LokiServiceEnv);
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

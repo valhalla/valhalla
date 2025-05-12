@@ -1,4 +1,3 @@
-#include <iostream>
 #include <vector>
 
 #include "thor/alternates.h"
@@ -10,7 +9,7 @@ using namespace valhalla::midgard;
 /*
  * Viability tests for alternate paths based on M. Kobitzsch's Alternative Route
  * Techniques (2015). Tests verify limited sharing between segments, bounded
- * stretch, and local optimiality. Any candidate path that meets all the criteria
+ * stretch, and local optimality. Any candidate path that meets all the criteria
  * may be considered a valid alternate to the shortest path.
  */
 namespace {

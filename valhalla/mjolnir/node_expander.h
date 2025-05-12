@@ -2,8 +2,6 @@
 #define VALHALLA_MJOLNIR_NODE_EXPANDER_H_
 
 #include <map>
-#include <string>
-#include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
@@ -53,9 +51,9 @@ struct Edge {
     uint64_t shortlink : 1;    // true if this is a link edge and is
                                //   short enough it may be internal to
                                //   an intersection
-    uint64_t driveable_ferry : 1;
+    uint64_t drivable_ferry : 1;
     uint64_t reclass_ferry : 1; // Has edge been reclassified due to
-                                // ferry connection
+                                // ferry connection, will remove dest_only tag from DE
     uint64_t turn_channel : 1;  // Link edge should be a turn channel
     uint64_t way_begin : 1;     // True if first edge of way
     uint64_t way_end : 1;       // True if last edge of way
@@ -103,12 +101,12 @@ struct Edge {
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
     e.attributes.link = way.link();
-    e.attributes.driveable_ferry = (way.ferry() || way.rail()) && (drive_fwd || drive_rev);
+    e.attributes.drivable_ferry = (way.ferry() || way.rail()) && (drive_fwd || drive_rev);
     e.attributes.reclass_link = false;
     e.attributes.reclass_ferry = false;
     e.attributes.has_names =
-        (way.name_index_ != 0 || way.name_en_index_ != 0 || way.alt_name_index_ != 0 ||
-         way.official_name_index_ != 0 || way.ref_index_ != 0 || way.int_ref_index_ != 0);
+        (way.name_index_ != 0 || way.alt_name_index_ != 0 || way.official_name_index_ != 0 ||
+         way.ref_index_ != 0 || way.int_ref_index_ != 0);
 
     // If this data has turn_channels set and we are not inferring turn channels then we need to
     // use the flag. Otherwise the turn_channel is set in the reclassify links.  Also, an edge can't
@@ -217,6 +215,8 @@ struct Node {
   uint32_t end_of;
   // the graphid of the node
   baldr::GraphId graph_id;
+  // grid Id within the tile (used for spatial node sorting)
+  uint32_t grid_id;
 
   bool is_start() const {
     return start_of != static_cast<uint32_t>(-1);

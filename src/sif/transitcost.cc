@@ -184,14 +184,19 @@ public:
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  edge  Directed edge (the to edge)
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  Predecessor edge information.
-   * @return  Returns the cost and time (seconds)
+   * @param  edge          Directed edge (the to edge)
+   * @param  node          Node (intersection) where transition occurs.
+   * @param  pred          Predecessor edge information.
+   * @param  tile          Pointer to the graph tile containing the to edge.
+   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
+   * @return Returns the cost and time (seconds)
    */
-  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
-                              const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const override;
+  virtual Cost
+  TransitionCost(const baldr::DirectedEdge* edge,
+                 const baldr::NodeInfo* node,
+                 const EdgeLabel& pred,
+                 const graph_tile_ptr& tile,
+                 const std::function<baldr::LimitedGraphReader()>& reader_getter) const override;
 
   /**
    * Returns the transfer cost between 2 transit stops.
@@ -237,7 +242,7 @@ public:
   }
 
   /**This method adds to the exclude list based on the
-   * user inputed exclude and include lists.
+   * user-provided exclude and include lists.
    */
   virtual void AddToExcludeList(const graph_tile_ptr& tile) override;
 
@@ -583,9 +588,12 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
-Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
-                                 const baldr::NodeInfo*,
-                                 const EdgeLabel& pred) const {
+Cost TransitCost::TransitionCost(
+    const baldr::DirectedEdge* edge,
+    const baldr::NodeInfo* /*node*/,
+    const EdgeLabel& pred,
+    const graph_tile_ptr& /*tile*/,
+    const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?
@@ -716,7 +724,8 @@ namespace {
 
 TransitCost* make_transitcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "transit", "costing_options":{"transit":{")" << property << R"(":)" << testVal
+     << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TransitCost(request.options().costings().find(Costing::transit)->second);

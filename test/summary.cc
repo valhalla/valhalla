@@ -1,8 +1,6 @@
 #include "test.h"
 
-#include <iostream>
 #include <string>
-#include <vector>
 
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
@@ -10,7 +8,6 @@
 #include "odin/worker.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
-#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -52,9 +49,11 @@ TEST(Summary, test_time_summary) {
           "filters":{"attributes":["shape_attributes.time"],"action":"include"}})";
   auto response = tester.test(request);
   const auto& leg = response.trip().routes(0).legs(0);
-  EXPECT_EQ(
-      leg.shape(),
-      "ibykbB}afxHWge@oAqh@y@sZoPy[{HuMeHmMgDgSq@iFS{@sDsIgAz@iR`LoHlEyIjFcSfF{P}@gJAmL{MqNkLaReSuUc^cIcPsIeUoOkf@sRqs@mKgg@_Qs~@kMy|@wHi{@sC__@y@{_@|@g^fEs_@lI}^lJaX|NqWjMyNpa@gYbk@yUto@_WnvAmn@~l@uVnc@mRdGcDnNaHza@kSfg@cUjqBs{@pdB}w@jrDsyAv`C}|@dZqKlWuL~{B}_Ajf@yOhgAy`@lr@q^fj@cYzp@qa@j]aU|ZaTv`@g[vmAobAjXyNp\\_PbPmAtTnA|UrJjNjKzMbQfM`XzKtZz\\p_BtQfbA~NhcAdJfj@~~@roEvn@dmC~DdPpKiJ~N_MdNsJdOkIbNmFx^iDlP\\hOdAdOpDzCnApChAnGhCbOvJlQjPdL`LfYnZpgAhnAd|@t{@xZlSne@x\\xaBfdAnd@xZ|uBjtAvKjHdkAfw@fWzNvJrF~IdGxLrIpLlIrSjQ`PdRbNlTlPzZvPjc@fK`Zbg@d{A~Pph@hXvv@tMb^j[zs@~Qz]jMnTtRx[nh@pu@~UzZ`UtZr^tc@na@tf@fYrZx`@j^n_@`X~]tSzyAzl@~|@l]~}Avm@zjAdd@|y@hZbgApa@rStJbJjIjElGpDnHhIzTxHjXrB`Mv@zZIzb@u@hXeQ~qBm_@`vDap@baFsHvm@sE|SsFzX_Kjd@eIj\\mHnXwHzZ{DrQqDzS{ApLyBp\\]dEYtDGtCb@jE|@zCxBxDtHfBno@pOr[hEbT|A`LWbGWhJeB`C]`S{EpWqKtHyDjeB}t@hViFpKk@|MtAnSdH~VdS~Wld@dKfSnJfWtIpa@b\\~yBrChQhGlVrH`UpLpV~@jBrCnGdInUdGjZ|Ejd@|Ala@dAxa@@d_@{Apc@kB`_@aCx^iAfKiBzKqB~LwCnQwHb]cHvWiHdU}[nz@kEbLaP`a@|F|GxDdFrl@~{@|n@``Ahi@~v@pUt_@dg@h~@b{@jaBj\\dp@bYjg@fWdd@vGnL}OtnAqCtd@uB`OaR~uAq@lDoCfMaC`NaAjFsAjKu@pHcCxUSlJ{ClXmB`H}@nF[fFIzHp@nH|CtKxDrGpDlC~WdO|CxBE~TaKh}@sVaLyBbAsFlh@A`FMt`@c@xC");
+  EXPECT_TRUE(
+      test::
+          encoded_shape_equality(
+              leg.shape(),
+              "ibykbB}afxHWge@oAqh@y@sZoPy[{HuMeHmMgDgSq@iFS{@sDsIgAz@iR`LoHlEyIjFcSfF{P}@gJAmL{MqNkLaReSuUc^cIcPsIeUoOkf@sRqs@mKgg@_Qs~@kMy|@wHi{@sC__@y@{_@|@g^fEs_@lI}^lJaX|NqWjMyNpa@gYbk@yUto@_WnvAmn@~l@uVnc@mRdGcDnNaHza@kSfg@cUjqBs{@pdB}w@jrDsyAv`C}|@dZqKlWuL~{B}_Ajf@yOhgAy`@lr@q^fj@cYzp@qa@j]aU|ZaTv`@g[vmAobAjXyNp\\_PbPmAtTnA|UrJjNjKzMbQfM`XzKtZz\\p_BtQfbA~NhcAdJfj@~~@roEvn@dmC~DdPpKiJ~N_MdNsJdOkIbNmFx^iDlP\\hOdAdOpDzCnApChAnGhCbOvJlQjPdL`LfYnZpgAhnAd|@t{@xZlSne@x\\xaBfdAnd@xZ|uBjtAvKjHdkAfw@fWzNvJrF~IdGxLrIpLlIrSjQ`PdRbNlTlPzZvPjc@fK`Zbg@d{A~Pph@hXvv@tMb^j[zs@~Qz]jMnTtRx[nh@pu@~UzZ`UtZr^tc@na@tf@fYrZx`@j^n_@`X~]tSzyAzl@~|@l]~}Avm@zjAdd@|y@hZbgApa@rStJbJjIjElGpDnHhIzTxHjXrB`Mv@zZIzb@u@hXeQ~qBm_@`vDap@baFsHvm@sE|SsFzX_Kjd@eIj\\mHnXwHzZ{DrQqDzS{ApLyBp\\]dEYtDGtCb@jE|@zCxBxDtHfBno@pOr[hEbT|A`LWbGWhJeB`C]`S{EpWqKtHyDjeB}t@hViFpKk@|MtAnSdH~VdS~Wld@dKfSnJfWtIpa@b\\~yBrChQhGlVrH`UpLpV~@jBrCnGdInUdGjZ|Ejd@|Ala@dAxa@@d_@{Apc@kB`_@aCx^iAfKiBzKqB~LwCnQwHb]cHvWiHdU}[nz@kEbLaP`a@|F|GxDdFrl@~{@|n@``Ahi@~v@pUt_@dg@h~@b{@jaBj\\dp@bYjg@fWdd@vGnL}OtnAqCtd@uB`OaR~uAq@lDoCfMaC`NaAjFsAjKu@pHcCxUSlJ{ClXmB`H}@nF[fFIzHp@nH|CtKxDrGpDlC~WdO|CxBE~TaKh}@sVaLyBbAsFlh@A`FMt`@c@xC"));
 
   // loop over all routes all legs
   auto trip_route = response.trip().routes().begin();

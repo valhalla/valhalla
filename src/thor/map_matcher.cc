@@ -1,6 +1,5 @@
 #include "midgard/logging.h"
 #include <algorithm>
-#include <exception>
 #include <vector>
 
 #include "baldr/datetime.h"
@@ -248,7 +247,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // get the cost of traversing the node, there is no turn cost the first time
     Cost transition_cost{};
     if (elapsed.secs > 0) {
-      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+      auto reader_getter = [&matcher]() { return baldr::LimitedGraphReader(matcher->graphreader()); };
+      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
       elapsed += transition_cost;
     }
 
@@ -283,14 +283,14 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
             directededge,
             elapsed,
             0,
-            0,
             mode,
             0,
-            {},
             baldr::kInvalidRestriction,
             true,
             static_cast<bool>(flow_sources & kDefaultFlowMask),
-            turn};
+            turn,
+            0,
+            directededge->destonly() || (costing->is_hgv() && directededge->destonly_hgv())};
     paths.back().first.emplace_back(
         PathInfo{mode, elapsed, edge_id, 0, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);

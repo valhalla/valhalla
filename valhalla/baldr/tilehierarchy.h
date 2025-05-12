@@ -2,7 +2,6 @@
 #define VALHALLA_MIDGARD_TILEHIERARCHY_H
 
 #include <cstdint>
-#include <map>
 #include <string>
 
 #include <valhalla/baldr/graphconstants.h>

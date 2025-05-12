@@ -8,7 +8,7 @@ When you [request a route](api-reference.md#inputs-of-a-route), you are sending 
 
 The service [route results](api-reference.md#outputs-of-a-route) provide details about the trip, including locations, a summary with basic information about the entire trip and a list of legs. Each leg has its own summary, a shape, which is an encoded polyline of the route path, and a list of maneuvers. These maneuvers provide written narrative instructions, plus verbal alerts that can be used as audio guidance in navigation apps.
 
-The JSON returned from the route query can be drawn on a map and shown as instructions for maneuvers along the route. You can [display Valhalla routes](add-routing-to-a-map.md) on web and mobile maps.
+The JSON returned from the route query can be drawn on a map and shown as instructions for maneuvers along the route. You can display Valhalla routes on web and mobile maps, e.g. [https://valhalla.openstreetmap.de](https://valhalla.openstreetmap.de).
 
 ## Data sources in Turn-by-Turn
 

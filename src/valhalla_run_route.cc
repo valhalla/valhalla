@@ -4,9 +4,7 @@
 #include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
-#include <queue>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -39,7 +37,7 @@
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 
-#include "config.h"
+#include "argparse_utils.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -68,14 +66,14 @@ class PathStatistics {
   uint32_t trip_time;
   float trip_dist;
   float arc_dist;
-  uint32_t manuevers;
+  uint32_t maneuvers;
   double elapsed_cost_seconds;
   double elapsed_cost_cost;
 
 public:
   PathStatistics(std::pair<float, float> p1, std::pair<float, float> p2)
       : origin(p1), destination(p2), success("false"), passes(0), runtime(), trip_time(), trip_dist(),
-        arc_dist(), manuevers(), elapsed_cost_seconds(0), elapsed_cost_cost(0) {
+        arc_dist(), maneuvers(), elapsed_cost_seconds(0), elapsed_cost_cost(0) {
   }
 
   void setSuccess(std::string s) {
@@ -96,8 +94,8 @@ public:
   void setArcDist(float d) {
     arc_dist = d;
   }
-  void setManuevers(uint32_t n) {
-    manuevers = n;
+  void setManeuvers(uint32_t n) {
+    maneuvers = n;
   }
   void setElapsedCostSeconds(double secs) {
     elapsed_cost_seconds = secs;
@@ -109,7 +107,7 @@ public:
     valhalla::midgard::logging::Log((boost::format("%f,%f,%f,%f,%s,%d,%d,%d,%f,%f,%d,%f,%f") %
                                      origin.first % origin.second % destination.first %
                                      destination.second % success % passes % runtime % trip_time %
-                                     trip_dist % arc_dist % manuevers % elapsed_cost_seconds %
+                                     trip_dist % arc_dist % maneuvers % elapsed_cost_seconds %
                                      elapsed_cost_cost)
                                         .str(),
                                     " [STATISTICS] ");
@@ -227,7 +225,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
-      LOG_ERROR("RouteMatcher failed");
+      LOG_ERROR("RouteMatcher failed.");
     }
   }
 
@@ -454,7 +452,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
   }
   data.setTripTime(trip_directions.summary().time());
   data.setTripDist(trip_directions.summary().length());
-  data.setManuevers(trip_directions.maneuver_size());
+  data.setManeuvers(trip_directions.maneuver_size());
   data.setElapsedCostSeconds(etl.node().rbegin()->cost().elapsed_cost().seconds());
   data.setElapsedCostCost(etl.node().rbegin()->cost().elapsed_cost().cost());
 
@@ -463,11 +461,11 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  std::string json_str, json_file, config;
-  filesystem::path config_file_path;
+  std::string json_str, json_file;
+  boost::property_tree::ptree config;
 
-  boost::property_tree::ptree pt;
   bool match_test, verbose_lanes;
   bool multi_run = false;
   uint32_t iterations;
@@ -475,9 +473,9 @@ int main(int argc, char* argv[]) {
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_run_route",
-      "valhalla_run_route " VALHALLA_VERSION "\n\n"
-      "valhalla_run_route is a command line test tool for shortest path routing.\n"
+      program,
+      program + " " + VALHALLA_VERSION + "\n\n"
+      "a command line test tool for shortest path routing.\n"
       "Use the -j option for specifying the locations and costing method and options.");
 
     options.add_options()
@@ -495,39 +493,13 @@ int main(int argc, char* argv[]) {
       ("match-test", "Test RouteMatcher with resulting shape.", cxxopts::value<bool>(match_test)->default_value("false"))
       ("multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>(iterations)->default_value("1"))
       ("verbose-lanes", "Include verbose lanes output in DirectionsTest.", cxxopts::value<bool>(verbose_lanes)->default_value("false"))
-      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>());
+      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_run_route " << VALHALLA_VERSION << "\n";
-      return EXIT_SUCCESS;
-    }
-
-    // parse the config
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
-      config = config_file_path.string();
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-    }
-    rapidjson::read_json(config.c_str(), pt);
-
-    // configure logging
-    auto logging_subtree = pt.get_child_optional("thor.logging");
-    if (logging_subtree) {
-      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                     std::unordered_map<std::string, std::string>>(
-          logging_subtree.get());
-      valhalla::midgard::logging::Configure(logging_config);
-    }
 
     if (iterations > 1) {
       multi_run = true;
@@ -541,11 +513,14 @@ int main(int argc, char* argv[]) {
     } else if (result.count("json")) {
       json_str = result["json"].as<std::string>();
     } else {
-      std::cerr << "Either json or json-file args must be set." << std::endl;
-      return EXIT_FAILURE;
+      throw cxxopts::exceptions::exception("Either json or json-file args must be set.");
     }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -574,11 +549,11 @@ int main(int argc, char* argv[]) {
     d1 += locations[i].latlng_.Distance(locations[i + 1].latlng_) * kKmPerMeter;
   }
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // Get the maximum distance for time dependent routes
   float max_timedep_distance =
-      pt.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
+      config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 
   auto t0 = std::chrono::high_resolution_clock::now();
 
@@ -590,7 +565,7 @@ int main(int argc, char* argv[]) {
 
   // Find path locations (loki) for sources and targets
   auto tw0 = std::chrono::high_resolution_clock::now();
-  loki_worker_t lw(pt);
+  loki_worker_t lw(config);
   auto tw1 = std::chrono::high_resolution_clock::now();
   auto msw = std::chrono::duration_cast<std::chrono::milliseconds>(tw1 - tw0).count();
   LOG_INFO("Location Worker construction took " + std::to_string(msw) + " ms");
@@ -602,11 +577,11 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
   // Get the route
-  BidirectionalAStar bd(pt.get_child("thor"));
-  MultiModalPathAlgorithm mm(pt.get_child("thor"));
-  TimeDepForward timedep_forward(pt.get_child("thor"));
-  TimeDepReverse timedep_reverse(pt.get_child("thor"));
-  MarkupFormatter markup_formatter(pt);
+  BidirectionalAStar bd(config.get_child("thor"));
+  MultiModalPathAlgorithm mm(config.get_child("thor"));
+  TimeDepForward timedep_forward(config.get_child("thor"));
+  TimeDepReverse timedep_reverse(config.get_child("thor"));
+  MarkupFormatter markup_formatter(config);
   for (uint32_t i = 0; i < n; i++) {
     // Set origin and destination for this segment
     valhalla::Location origin = options.locations(i);

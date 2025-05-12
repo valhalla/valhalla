@@ -1,13 +1,9 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
 
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include <iostream>
-#include <map>
-#include <ostream>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -69,6 +65,7 @@ bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
 }
 
 void SortSequences(const std::string& new_to_old_file, const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Sort the new nodes. Sort so highway level is first
   sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
   new_to_old.sort([](const std::pair<GraphId, GraphId>& a, const std::pair<GraphId, GraphId>& b) {
@@ -101,30 +98,11 @@ OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& nod
   }
 }
 
-/**
- * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
- * must be in the same tile as the directed edge.
- * @param  tile          Graph tile of the edge
- * @param  directededge  Directed edge to match.
- */
-bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
-  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
-  // true if a matching edgeinfo offset if found.
-  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    // Return true if the edge info matches (same name, shape, etc.)
-    if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 // Form tiles in the new level.
 void FormTilesInNewLevel(GraphReader& reader,
                          const std::string& new_to_old_file,
                          const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Use the sequence that associate new nodes to old nodes
   sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
 
@@ -308,11 +286,8 @@ void FormTilesInNewLevel(GraphReader& reader,
         tilebuilder->AddLaneConnectivity(laneconnectivity);
       }
 
-      // Do we need to force adding edgeinfo (opposing edge could have diff names)?
-      // If end node is in the same tile and there is no opposing edge with matching
-      // edge_info_offset).
-      bool diff_names = directededge->endnode().tile_value() == base_edge_id.tile_value() &&
-                        !OpposingEdgeInfoMatches(tile, directededge);
+      // Names can be different in the forward and backward direction
+      bool diff_names = tilebuilder->OpposingEdgeInfoDiffers(tile, directededge);
 
       // Get edge info, shape, and names from the old tile and add to the
       // new. Cannot use edge info offset since edges in arterial and
@@ -325,7 +300,7 @@ void FormTilesInNewLevel(GraphReader& reader,
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
                                    edgeinfo.GetNames(), edgeinfo.GetTaggedValues(),
-                                   edgeinfo.GetTaggedValues(true), edgeinfo.GetTypes(), added,
+                                   edgeinfo.GetLinguisticTaggedValues(), edgeinfo.GetTypes(), added,
                                    diff_names);
 
       newedge.set_edgeinfo_offset(edge_info_offset);
@@ -388,6 +363,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 void CreateNodeAssociations(GraphReader& reader,
                             const std::string& new_to_old_file,
                             const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Map of tiles vs. count of nodes. Used to construct new node Ids.
   std::unordered_map<GraphId, uint32_t> new_nodes;
 
@@ -497,6 +473,7 @@ void CreateNodeAssociations(GraphReader& reader,
  * Update end nodes of transit connection directed edges.
  */
 void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Use the sorted sequence that associates old nodes to new nodes
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
 
@@ -552,6 +529,7 @@ void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new
 // Remove any base tiles that no longer have any data (nodes and edges
 // only exist on arterial and highway levels)
 void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Iterate through the node association sequence
   std::unordered_map<GraphId, bool> tile_map;
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
@@ -592,6 +570,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   // TODO: thread this. Might be more possible now that we don't create
   // shortcuts in the HierarchyBuilder
 
+  SCOPED_TIMER();
   // Construct GraphReader
   LOG_INFO("HierarchyBuilder");
   GraphReader reader(pt.get_child("mjolnir"));

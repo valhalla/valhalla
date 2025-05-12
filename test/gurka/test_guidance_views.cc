@@ -12,7 +12,6 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
 
     // A--B-BASE-C--D-OVERLAY-E--F
     const std::string ascii_map = R"(

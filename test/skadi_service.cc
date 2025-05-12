@@ -2,7 +2,6 @@
 #include "pixels.h"
 #include "test.h"
 
-#include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 
@@ -155,7 +154,7 @@ const std::vector<std::string> responses{
         "244,243,240,239,239,238,239,241,241,239,236,221,221,225,224]}"),
 };
 
-const auto config =
+const auto cfg =
     test::make_config(VALHALLA_BUILD_DIR "test" +
                       std::string(1, filesystem::path::preferred_separator) + "skadi_service_tmp");
 
@@ -173,7 +172,7 @@ void create_tile() {
     tile[p.first] = p.second;
 
   // a place to store it
-  auto tile_dir = config.get<std::string>("additional_data.elevation");
+  auto tile_dir = cfg.get<std::string>("additional_data.elevation");
   if (!filesystem::is_directory(tile_dir) && !filesystem::create_directories(tile_dir))
     throw std::runtime_error("Couldnt make directory to store elevation");
 
@@ -188,26 +187,26 @@ void create_tile() {
 zmq::context_t context;
 void start_service() {
   // need a place to drop our sockets
-  auto run_dir = config.get<std::string>("mjolnir.tile_dir");
+  auto run_dir = cfg.get<std::string>("mjolnir.tile_dir");
   if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
     throw std::runtime_error("Couldnt make directory to run from");
 
   // server
   std::thread server(std::bind(&http_server_t::serve,
-                               http_server_t(context, config.get<std::string>("httpd.service.listen"),
-                                             config.get<std::string>("loki.service.proxy") + "_in",
-                                             config.get<std::string>("httpd.service.loopback"),
-                                             config.get<std::string>("httpd.service.interrupt"))));
+                               http_server_t(context, cfg.get<std::string>("httpd.service.listen"),
+                                             cfg.get<std::string>("loki.service.proxy") + "_in",
+                                             cfg.get<std::string>("httpd.service.loopback"),
+                                             cfg.get<std::string>("httpd.service.interrupt"))));
   server.detach();
 
   // load balancer
   std::thread proxy(std::bind(&proxy_t::forward,
-                              proxy_t(context, config.get<std::string>("loki.service.proxy") + "_in",
-                                      config.get<std::string>("loki.service.proxy") + "_out")));
+                              proxy_t(context, cfg.get<std::string>("loki.service.proxy") + "_in",
+                                      cfg.get<std::string>("loki.service.proxy") + "_out")));
   proxy.detach();
 
   // service worker
-  std::thread worker(valhalla::loki::run_service, config);
+  std::thread worker(valhalla::loki::run_service, cfg);
   worker.detach();
 }
 
@@ -224,7 +223,7 @@ TEST(SkadiService, test_requests) {
   auto request = requests.cbegin();
   std::string request_str;
   http_client_t client(
-      context, config.get<std::string>("httpd.service.listen"),
+      context, cfg.get<std::string>("httpd.service.listen"),
       [&request, &request_str]() {
         // we dont have any more requests so bail
         if (request == requests.cend())
@@ -240,9 +239,6 @@ TEST(SkadiService, test_requests) {
         return request != requests.cend();
       },
       1);
-
-  // make this whole thing bail if it doesnt finish fast
-  alarm(120);
 
   // request and receive
   client.batch();

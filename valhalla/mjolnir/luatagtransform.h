@@ -7,15 +7,17 @@ extern "C" {
 #include <lualib.h>
 }
 
+#include <osmium/osm/tag.hpp>
 #include <valhalla/mjolnir/osmdata.h>
 
+#include <robin_hood.h>
+
 #include <string>
-#include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
 
-using Tags = std::unordered_map<std::string, std::string>;
+using Tags = robin_hood::unordered_map<std::string, std::string>;
 
 /**
  */
@@ -27,9 +29,14 @@ public:
    */
   LuaTagTransform(const std::string& lua);
 
+  LuaTagTransform(const LuaTagTransform&) = delete;
+  LuaTagTransform& operator=(const LuaTagTransform&) = delete;
+  LuaTagTransform(LuaTagTransform&&) = delete;
+  LuaTagTransform& operator=(LuaTagTransform&&) = delete;
+
   ~LuaTagTransform();
 
-  Tags Transform(OSMType type, uint64_t osmid, const Tags& tags);
+  Tags Transform(OSMType type, uint64_t osmid, const osmium::TagList& tags);
 
 protected:
   lua_State* state_;

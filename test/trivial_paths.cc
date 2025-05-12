@@ -1,8 +1,6 @@
 #include "test.h"
 
-#include <iostream>
 #include <string>
-#include <vector>
 
 #include "loki/worker.h"
 #include "midgard/logging.h"
@@ -69,7 +67,7 @@ void adjust_scores(Options& options) {
   }
 }
 
-const auto config = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config("test/data/utrecht_tiles");
 
 void try_path(GraphReader& reader,
               loki_worker_t& loki_worker,
@@ -97,15 +95,15 @@ void try_path(GraphReader& reader,
 
 TEST(TrivialPaths, test_trivial_paths) {
   // Test setup
-  loki_worker_t loki_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(cfg);
+  GraphReader reader(cfg.get_child("mjolnir"));
 
-  // Simple path along oneway edge in the driveable direction - should return a single edge
+  // Simple path along oneway edge in the drivable direction - should return a single edge
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},
                {"lat":52.078937,"lon":5.115321}],"costing":"auto"})";
   try_path(reader, loki_worker, test_request1, 1);
 
-  // Simple path along oneway edge opposing the driveable direction -must not
+  // Simple path along oneway edge opposing the drivable direction -must not
   // return a single edge (edge count is 10)
   const auto test_request2 = R"({"locations":[{"lat":52.078937,"lon":5.115321},
                {"lat":52.079079,"lon":5.115197}],"costing":"auto"})";
@@ -117,13 +115,13 @@ TEST(TrivialPaths, test_trivial_paths) {
   try_path(reader, loki_worker, test_request3, 1);
 
   // Simple path along two way edge (opposite direction to request 3) - should edge opposing the
-  // driveable direction -must not return a single edge
+  // drivable direction -must not return a single edge
   const auto test_request4 = R"({"locations":[{"lat":52.078882,"lon":5.1104848},
                {"lat":52.0785070,"lon":5.110835}],"costing":"auto"})";
   try_path(reader, loki_worker, test_request4, 1);
 
   // Test avoidance of parking aisles. Path should avoid the shortcut via a parking aisle.
-  // driveable direction -must not return a single edge
+  // drivable direction -must not return a single edge
   const auto test_request5 = R"({"locations":[{"lat":52.072534,"lon":5.125980},
                {"lat":52.072862,"lon":5.124025}],"costing":"auto"})";
   try_path(reader, loki_worker, test_request5, 5);

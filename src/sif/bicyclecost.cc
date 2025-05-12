@@ -322,30 +322,42 @@ public:
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  edge  Directed edge (the to edge)
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  Predecessor edge information.
-   * @return  Returns the cost and time (seconds)
+   * @param  edge          Directed edge (the to edge)
+   * @param  node          Node (intersection) where transition occurs.
+   * @param  pred          Predecessor edge information.
+   * @param  tile          Pointer to the graph tile containing the to edge.
+   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
+   * @return Returns the cost and time (seconds)
    */
-  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
-                              const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const override;
+  virtual Cost
+  TransitionCost(const baldr::DirectedEdge* edge,
+                 const baldr::NodeInfo* node,
+                 const EdgeLabel& pred,
+                 const graph_tile_ptr& tile,
+                 const std::function<LimitedGraphReader()>& reader_getter) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
    * when using a reverse search (from destination towards the origin).
-   * @param  idx   Directed edge local index
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  the opposing current edge in the reverse tree.
-   * @param  edge  the opposing predecessor in the reverse tree
+   * @param  idx                Directed edge local index
+   * @param  node               Node (intersection) where transition occurs.
+   * @param  pred               the opposing current edge in the reverse tree.
+   * @param  edge               the opposing predecessor in the reverse tree
+   * @param  tile               Graphtile that contains the node and the opp_edge
+   * @param  edge_id            Graph ID of opp_pred_edge to get its tile if needed
+   * @param  reader_getter      Functor that facilitates access to a limited version of the graph
+   * reader
    * @param  has_measured_speed Do we have any of the measured speed types set?
-   * @param  internal_turn  Did we make an turn on a short internal edge.
+   * @param  internal_turn      Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
+                                     const graph_tile_ptr& tile,
+                                     const GraphId& pred_id,
+                                     const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool /*has_measured_speed*/,
                                      const InternalTurn /*internal_turn*/) const override;
 
@@ -359,7 +371,7 @@ public:
    */
   virtual float AStarCostFactor() const override {
     // Assume max speed of 2 * the average speed set for costing
-    return speedfactor_[static_cast<uint32_t>(2 * speed_)];
+    return kSpeedFactor[static_cast<uint32_t>(2 * speed_)];
   }
 
   /**
@@ -377,14 +389,13 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 
-  std::vector<float> speedfactor_; // Cost factors based on speed in kph
-  float use_roads_;                // Preference of using roads between 0 and 1
-  float avoid_roads_;              // Inverse of use roads
-  float road_factor_;              // Road factor based on use_roads_
-  float sidepath_factor_;          // Factor to use when use_sidepath is set on an edge
-  float livingstreet_factor_;      // Factor to use for living streets
-  float track_factor_;             // Factor to use tracks
-  float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
+  float use_roads_;           // Preference of using roads between 0 and 1
+  float avoid_roads_;         // Inverse of use roads
+  float road_factor_;         // Road factor based on use_roads_
+  float sidepath_factor_;     // Factor to use when use_sidepath is set on an edge
+  float livingstreet_factor_; // Factor to use for living streets
+  float track_factor_;        // Factor to use tracks
+  float avoid_bad_surfaces_;  // Preference of avoiding bad surfaces for the bike type
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -396,7 +407,7 @@ public:
   Surface minimal_surface_penalized_;
   Surface worst_allowed_surface_;
 
-  // Cycle lane accomodation factors
+  // Cycle lane accommodation factors
   float cyclelane_factor_[8];
   float path_cyclelane_factor_[4];
 
@@ -439,7 +450,7 @@ BicycleCost::BicycleCost(const Costing& costing)
 
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
-    h.max_up_transitions = kUnlimitedTransitions;
+    h.set_max_up_transitions(kUnlimitedTransitions);
   }
 
   // Get the base costs
@@ -505,11 +516,8 @@ BicycleCost::BicycleCost(const Costing& costing)
 
   // Create speed cost table and penalty table (to avoid division in costing)
   float avoid_roads = (1.0f - use_roads_) * 0.75f + 0.25;
-  speedfactor_.resize(kMaxSpeedKph + 1, 0);
-  speedfactor_[0] = kSecPerHour;
   speedpenalty_[0] = 0.0f;
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-    speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
 
     float base_pen = 0.0f;
     if (s <= 40) {
@@ -528,6 +536,8 @@ BicycleCost::BicycleCost(const Costing& costing)
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
     grade_penalty[i] = avoid_hills * kAvoidHillsStrength[i];
   }
+
+  use_hierarchy_limits = false;
 }
 
 // Check if access is allowed on the specified edge.
@@ -545,8 +555,8 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || edge->is_shortcut() ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
-      (!ignore_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
-      IsUserAvoidEdge(edgeid)) {
+      (!ignore_turn_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
+      IsUserAvoidEdge(edgeid) || CheckExclusions(edge, pred)) {
     return false;
   }
 
@@ -582,8 +592,8 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       opp_edge->use() == Use::kPlatformConnection ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
-      (!ignore_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
-      IsUserAvoidEdge(opp_edgeid)) {
+      (!ignore_turn_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
+      IsUserAvoidEdge(opp_edgeid) || CheckExclusions(opp_edge, pred)) {
     return false;
   }
 
@@ -591,8 +601,8 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (edge->surface() > worst_allowed_surface_) {
     return false;
   }
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
-                                           tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
+                                           current_time, tz_index, restriction_idx);
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time
@@ -603,15 +613,15 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                            uint8_t&) const {
   // Stairs/steps - high cost (travel speed = 1kph) so they are generally avoided.
   if (edge->use() == Use::kSteps) {
-    float sec = (edge->length() * speedfactor_[1]);
+    float sec = (edge->length() * kSpeedFactor[1]);
     return {shortest_ ? edge->length() : sec * kBicycleStepsFactor, sec};
   }
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
   if (edge->use() == Use::kFerry) {
     // Compute elapsed time based on speed. Modulate cost with weighting factors.
-    assert(edge->speed() < speedfactor_.size());
-    float sec = (edge->length() * speedfactor_[edge->speed()]);
+    assert(edge->speed() < kSpeedFactor.size());
+    float sec = (edge->length() * kSpeedFactor[edge->speed()]);
     return {shortest_ ? edge->length() : sec * ferry_factor_, sec};
   }
 
@@ -692,14 +702,16 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                              0.5f);
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
-  float sec = (edge->length() * speedfactor_[bike_speed]);
+  float sec = (edge->length() * kSpeedFactor[bike_speed]);
   return {shortest_ ? edge->length() : sec * factor, sec};
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
                                  const baldr::NodeInfo* node,
-                                 const EdgeLabel& pred) const {
+                                 const EdgeLabel& pred,
+                                 const graph_tile_ptr& /*tile*/,
+                                 const std::function<LimitedGraphReader()>& /*reader_getter*/) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -770,6 +782,9 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
                                         const baldr::NodeInfo* node,
                                         const baldr::DirectedEdge* pred,
                                         const baldr::DirectedEdge* edge,
+                                        const graph_tile_ptr& /*tile*/,
+                                        const GraphId& /*pred_id*/,
+                                        const std::function<LimitedGraphReader()>& /*reader_getter*/,
                                         const bool /*has_measured_speed*/,
                                         const InternalTurn /*internal_turn*/) const {
 
@@ -909,7 +924,8 @@ public:
 
 TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "bicycle", "costing_options":{"bicycle":{")" << property << R"(":)" << testVal
+     << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestBicycleCost(request.options().costings().find(Costing::bicycle)->second);

@@ -2,11 +2,9 @@
 
 #include <cstdint>
 #include <cstring>
-#include <functional>
 #include <limits>
-#include <memory>
+#include <list>
 #include <ostream>
-#include <random>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -299,7 +297,7 @@ float tangent_angle(size_t index,
                     size_t first_segment_index = 0,
                     size_t last_segment_index = std::numeric_limits<size_t>::max());
 
-// useful in converting from one iteratable map to another
+// useful in converting from one iterable map to another
 // for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string>
 // >(some_ptree)
 /*
@@ -403,7 +401,7 @@ resample_polyline(const std::vector<PointLL>& polyline, const float length, cons
 /**
  * Resample a polyline at uniform intervals using more accurate spherical interpolation between
  * points. The length and number of samples is specified. The interval is computed based on
- * the number of samples and the algorithm guarantees that the secified number of samples
+ * the number of samples and the algorithm guarantees that the specified number of samples
  * is exactly produced.
  * @param polyline   the list/vector of points in the line
  * @param length     Length (meters) of the polyline
@@ -467,6 +465,15 @@ protected:
  */
 template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i);
+
+/**
+ * Check whether a given point lies within a polygon. Uses the simplified winding number algorithm
+ * (http://www.graphicsgems.org/gemsiv/ptpoly_weiler/)
+ *
+ * @return true if the point lies within the given polygon
+ */
+template <class coord_t, class container_t>
+bool point_in_poly(const coord_t& pt, const container_t& poly);
 
 /**
  * Compute the area of a polygon. If your polygon is not twisted or self intersecting
@@ -698,7 +705,7 @@ unaligned_read(const void* ptr) {
 }
 
 /**
- * For some variables, an ivalid value needs to be set as: the maximum value it's type can get
+ * For some variables, an invalid value needs to be set as: the maximum value it's type can get
  * @returns the invalid value of the type
  */
 template <typename numeric_t> numeric_t invalid() {
@@ -706,7 +713,7 @@ template <typename numeric_t> numeric_t invalid() {
 }
 
 /**
- * For some variables, an ivalid value needs to be set as: the maximum value it's type can get
+ * For some variables, an invalid value needs to be set as: the maximum value it's type can get
  * @returns true when the value is invalid
  */
 template <typename numeric_t> bool is_invalid(numeric_t value) {
@@ -714,7 +721,7 @@ template <typename numeric_t> bool is_invalid(numeric_t value) {
 }
 
 /**
- * For some variables, an ivalid value needs to be set as: the maximum value it's type can get
+ * For some variables, an invalid value needs to be set as: the maximum value it's type can get
  * @returns true when the value is valid
  */
 template <typename numeric_t> bool is_valid(numeric_t value) {

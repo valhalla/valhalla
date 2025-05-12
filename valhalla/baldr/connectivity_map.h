@@ -42,7 +42,7 @@ public:
   /**
    * Returns the colors for the given level,point,radius
    *
-   * @param hierarchy_level  the hierarchy level whos connectivity you are querying
+   * @param hierarchy_level  the hierarchy level whose connectivity you are querying
    * @param location           the center of the circle
    * @param radius           the radius of the circle
    * @return colors          the colors of the tiles that intersect this circle at this level
@@ -54,7 +54,7 @@ public:
   /**
    * Returns the geojson representing the connectivity map
    *
-   * @param hierarchy_level the hierarchy level whos connectivity you want to see
+   * @param hierarchy_level the hierarchy level whose connectivity you want to see
    * @return string         the geojson
    */
   std::string to_geojson(const uint32_t hierarchy_level) const;
@@ -62,7 +62,7 @@ public:
   /**
    * Returns the vector of colors (one per tile) representing the connectivity map
    *
-   * @param hierarchy_level the hierarchy level whos connectivity you want to see
+   * @param hierarchy_level the hierarchy level whose connectivity you want to see
    * @return vector         the vector of colors per tile
    */
   std::vector<size_t> to_image(const uint32_t hierarchy_level) const;

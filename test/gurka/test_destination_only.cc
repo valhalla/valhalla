@@ -26,11 +26,56 @@ TEST(Standalone, DestinationOnly) {
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination");
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
 
-  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-  auto leg = result.trip().routes(0).legs(0);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+}
+
+TEST(Standalone, DestinationOnlyHGV) {
+  const std::string ascii_map = R"(
+      A----B----C----D----E
+           |         |    |
+           |         |    |
+           I----H----G----F
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FG", {{"highway", "residential"}}},
+      {"GH", {{"highway", "residential"}}},
+      {"HI", {{"highway", "residential"}}},
+      {"DG", {{"highway", "residential"}, {"hgv", "destination"}}},
+      {"BI", {{"highway", "residential"}, {"access", "private"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination_hgv");
+
+  // hgv route
+  {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "truck");
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+  }
+  // hgv matrix
+  {
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "truck");
+    EXPECT_EQ(result.matrix().distances(0), 3800);
+  }
+
+  // car route - doesn't take the hgv=destination road
+  {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI"});
+  }
+  // car matrix - doesn't take the hgv=destination road
+  {
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "auto");
+    EXPECT_EQ(result.matrix().distances(0), 2800);
+  }
 }
 
 TEST(Standalone, DestinationOnlyDrivewaysMidNoAlternatives) {

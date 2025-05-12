@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+
+message Expansion {
+
+  message Geometry {
+    repeated sint32 coords = 1 [packed=true];
+  }
+
+  enum EdgeStatus {
+    connected = 0;
+    settled = 1;
+    reached = 2;
+  }
+
+  enum ExpansionType {
+    forward = 0;
+    reverse = 1;
+  }
+
+  repeated uint32 costs = 1 [packed=true];
+  repeated uint32 durations = 2 [packed=true];
+  repeated uint32 distances = 3 [packed=true];
+  repeated EdgeStatus edge_status = 4;
+  repeated uint32 edge_id = 5 [packed=true];
+  repeated uint32 pred_edge_id = 6 [packed=true];
+  repeated ExpansionType expansion_type = 8;
+
+  repeated Geometry geometries = 7;
+}

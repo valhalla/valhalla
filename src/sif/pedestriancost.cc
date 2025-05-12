@@ -172,7 +172,7 @@ const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 // The recipe from DIN 33466 goes: For every 300m ascent/500m descent, add
 // one hour to bucket H. For every 4km distance, add one hour to bucket D.
 // Now add half of the value in the smaller bucket to the bigger bucket
-// to get the estimated duration. The method is recommeded by the DAV and
+// to get the estimated duration. The method is recommended by the DAV and
 // the OEAV for casual hiking.
 //
 // For comparison, value researched by the Mountain Tactical Institute
@@ -186,14 +186,24 @@ const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 // instead up the values of ascent/descent, e.g. 400/800 better matches
 // intermediate hikers. This will bring the uphill values quite close to the
 // ones from the exponential while still keeping downhill speed below flat speed.
+//
+// For negative angles (downhill), as per DIN 33466, speed decreases rapidly
+// as the slope becomes steeper. This behavior may hold true for mountain hikers
+// due to unpaved paths. However, it contradicts common sense for city walkers
+// when the speed factor drops below 1.0 (the walking speed on flat terrain)
+// even on a slight downhill slope. To address this, we employ a modified Tobler's
+// function to correct the factor for negative angles. Consequently, walk speed
+// slightly increases (faster than on flat terrain) when the angle is between
+// 0% and -5%, and then decreases as indicated by DIN 33466.
+// see https://gist.github.com/xlqian/0b25c8db6f45fb2c8bf68494e1ea54f1
 
 constexpr float kGradeBasedSpeedFactor[] = {
-    1.40f, // -10.0% - 0.67
-    1.32f, //  -8.0% - 0.73
-    1.26f, //  -6.5% - 0.77
-    1.20f, //  -5.0% - 0.82
-    1.12f, //  -3.0% - 0.89
-    1.06f, //  -1.5% - 0.94
+    1.33f, // -10.0% - 0.67
+    1.22f, //  -8.0% - 0.73
+    1.08f, //  -6.5% - 0.77
+    0.97f, //  -5.0% - 0.82
+    0.88f, //  -3.0% - 0.89
+    0.92f, //  -1.5% - 0.94
     1.00f, //   0.0% - 1.00
     1.10f, //   1.5% - 1.06
     1.20f, //   3.0% - 1.13
@@ -360,32 +370,44 @@ public:
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  edge  Directed edge (the to edge)
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  Predecessor edge information.
+   * @param  edge          Directed edge (the to edge)
+   * @param  node          Node (intersection) where transition occurs.
+   * @param  pred          Predecessor edge information.
+   * @param  tile          Pointer to the graph tile containing the to edge.
+   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
-                              const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const override;
+  virtual Cost
+  TransitionCost(const baldr::DirectedEdge* edge,
+                 const baldr::NodeInfo* node,
+                 const EdgeLabel& pred,
+                 const graph_tile_ptr& tile,
+                 const std::function<LimitedGraphReader()>& reader_getter) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
    * when using a reverse search (from destination towards the origin).
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  idx   Directed edge local index
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  the opposing current edge in the reverse tree.
-   * @param  edge  the opposing predecessor in the reverse tree
+   * @param  idx                Directed edge local index
+   * @param  node               Node (intersection) where transition occurs.
+   * @param  pred               the opposing current edge in the reverse tree.
+   * @param  edge               the opposing predecessor in the reverse tree
+   * @param  tile               Graphtile that contains the node and the opp_edge
+   * @param  edge_id            Graph ID of opp_pred_edge to get its tile if needed
+   * @param  reader_getter      Functor that facilitates access to a limited version of the graph
+   * reader
    * @param  has_measured_speed Do we have any of the measured speed types set?
-   * @param  internal_turn  Did we make an turn on a short internal edge.
+   * @param  internal_turn      Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
+                                     const graph_tile_ptr& tile,
+                                     const GraphId& edge_id,
+                                     const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool /*has_measured_speed*/,
                                      const InternalTurn /*internal_turn*/) const override;
 
@@ -567,7 +589,7 @@ PedestrianCost::PedestrianCost(const Costing& costing)
 
   // Set hierarchy to allow unlimited transitions
   for (auto& h : hierarchy_limits_) {
-    h.max_up_transitions = kUnlimitedTransitions;
+    h.set_max_up_transitions(kUnlimitedTransitions);
   }
 
   allow_transit_connections_ = false;
@@ -578,22 +600,17 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   // Get the pedestrian type - enter as string and convert to enum
   const std::string& type = costing_options.transport_type();
   if (type == "wheelchair") {
+    // TODO(nils): this needs to control much more in costing, e.g.
+    // we could add more AccessRestrictions for curb height or so
     type_ = PedestrianType::kWheelchair;
-  } else if (type == "segway") {
-    type_ = PedestrianType::kSegway;
-  } else {
-    type_ = PedestrianType::kFoot;
-  }
-
-  // Set type specific defaults, override with URL inputs
-  if (type_ == PedestrianType::kWheelchair) {
     access_mask_ = kWheelchairAccess;
     minimal_allowed_surface_ = Surface::kCompacted;
   } else {
-    // Assume type = foot
+    type_ = type == "blind" ? PedestrianType::kBlind : PedestrianType::kFoot;
     access_mask_ = kPedestrianAccess;
     minimal_allowed_surface_ = Surface::kPath;
   }
+
   max_distance_ = costing_options.max_distance();
   speed_ = costing_options.walking_speed();
   step_penalty_ = costing_options.step_penalty();
@@ -622,6 +639,8 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   for (uint32_t i = 0; i <= kMaxGradeFactor; i++) {
     grade_penalty[i] = avoid_hills * kAvoidHillsStrength[i];
   }
+
+  use_hierarchy_limits = false;
 }
 
 // Check if access is allowed on the specified edge. Disallow if no
@@ -643,7 +662,8 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       // path_distance for multimodal is currently checked inside the algorithm
-      (!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) {
+      ((!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) ||
+      CheckExclusions(edge, pred)) {
     return false;
   }
 
@@ -678,12 +698,12 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
-      opp_edge->use() == Use::kPlatformConnection) {
+      opp_edge->use() == Use::kPlatformConnection || CheckExclusions(opp_edge, pred)) {
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
-                                           tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
+                                           current_time, tz_index, restriction_idx);
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time
@@ -738,14 +758,31 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const baldr::NodeInfo* node,
-                                    const EdgeLabel& pred) const {
+                                    const EdgeLabel& pred,
+                                    const graph_tile_ptr& tile,
+                                    const std::function<LimitedGraphReader()>& reader_getter) const {
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return {step_penalty_, 0.0f};
   }
-  // fixed penalty for elevator
+  // fixed penalty for elevator edge
   if (edge->use() == Use::kElevator) {
     return {elevator_penalty_, 0.0f};
+  }
+
+  // fixed per level penalty for elevator
+  if (node->type() == NodeType::kElevator) {
+    auto reader = reader_getter();
+    auto pred_tile = reader.GetGraphTile(pred.edgeid());
+    auto levels = tile->edgeinfo(edge).levels();
+    auto other_de = pred_tile->directededge(pred.edgeid());
+    auto prev_levels = pred_tile->edgeinfo(other_de).levels();
+    unsigned int traversed_levels = levels.first.size() == 1 && prev_levels.first.size() == 1 &&
+                                            levels.first[0].first == levels.first[0].second &&
+                                            prev_levels.first[0].first == prev_levels.first[0].second
+                                        ? std::abs(prev_levels.first[0].first - levels.first[0].first)
+                                        : 1;
+    return {elevator_penalty_ * traversed_levels, 0.0f};
   }
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
@@ -770,6 +807,9 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::NodeInfo* node,
                                            const baldr::DirectedEdge* pred,
                                            const baldr::DirectedEdge* edge,
+                                           const graph_tile_ptr& tile,
+                                           const GraphId& edge_id,
+                                           const std::function<LimitedGraphReader()>& reader_getter,
                                            const bool /*has_measured_speed*/,
                                            const InternalTurn /*internal_turn*/) const {
 
@@ -782,8 +822,23 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
     return {step_penalty_, 0.0f};
   }
   // fixed penalty for elevator
-  if (edge->use() == Use::kElevator || node->type() == NodeType::kElevator) {
+  if (edge->use() == Use::kElevator) {
     return {elevator_penalty_, 0.0f};
+  }
+
+  // per level penalty for elevator node
+  if (node->type() == NodeType::kElevator) {
+    // call functor to get limited access to reader
+    baldr::LimitedGraphReader reader = reader_getter();
+    auto to_tile = reader.GetGraphTile(edge_id);
+    auto levels = tile->edgeinfo(pred).levels();
+    auto prev_levels = to_tile->edgeinfo(edge).levels();
+    unsigned int traversed_levels = levels.first.size() == 1 && prev_levels.first.size() == 1 &&
+                                            levels.first[0].first == levels.first[0].second &&
+                                            prev_levels.first[0].first == prev_levels.first[0].second
+                                        ? std::abs(prev_levels.first[0].first - levels.first[0].first)
+                                        : 1;
+    return {elevator_penalty_ * traversed_levels, 0.0f};
   }
 
   // Get the transition cost for country crossing, ferry, gate, toll booth,
@@ -883,7 +938,8 @@ TestPedestrianCost* make_pedestriancost_from_json(const std::string& property,
                                                   float testVal,
                                                   const std::string& /*type*/) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "pedestrian", "costing_options":{"pedestrian":{")" << property << R"(":)"
+     << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestPedestrianCost(request.options().costings().find(Costing::pedestrian)->second);

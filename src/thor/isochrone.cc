@@ -3,8 +3,6 @@
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include <algorithm>
-#include <iostream> // TODO remove if not needed
-#include <map>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -17,10 +15,18 @@ constexpr float METRIC_PADDING = 10.f;
 template <typename PrecisionT>
 std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<PrecisionT>>& pts,
                                                   double distance_along) {
+  // just the endpoint really
+  if (distance_along == 0)
+    return {pts.back(), pts.back()};
+
+  // consume shape until we reach the desired distance
   double suffix_len = 0;
   for (auto from = std::next(pts.rbegin()), to = pts.rbegin(); from != pts.rend(); ++from, ++to) {
+    // add whatever this segment of shape contributes to the overall distance
     PrecisionT len = from->Distance(*to);
     suffix_len += len;
+
+    // we have enough distance now, lets find the exact stopping point along the geom
     if (suffix_len >= distance_along) {
       auto interpolated = from->PointAlongSegment(*to, (suffix_len - distance_along) / len);
       std::vector<GeoPoint<PrecisionT>> res(pts.rbegin(), from);
@@ -29,6 +35,8 @@ std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<Pre
       return res;
     }
   }
+
+  // we got through the whole shape didnt reach the distance, floating point noise probably
   return pts;
 }
 
@@ -312,8 +320,10 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
   // max but need to consider others so we just continue here. Tells MMExpand function to skip
   // updating or pushing the label back
   // prune the edge if its start is above max contour
-  if (time > max_seconds_ && dist > max_meters_)
-    return ExpansionRecommendation::prune_expansion;
+
+  ExpansionRecommendation recommendation = (time > max_seconds_ && dist > max_meters_)
+                                               ? ExpansionRecommendation::prune_expansion
+                                               : ExpansionRecommendation::continue_expansion;
 
   // track expansion
   if (inner_expansion_callback_ && (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
@@ -324,8 +334,7 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
   } else if (expansion_callback_) {
     expansion_callback_ = nullptr;
   }
-
-  return ExpansionRecommendation::continue_expansion;
+  return recommendation;
 };
 
 void Isochrone::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {

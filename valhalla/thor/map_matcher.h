@@ -1,11 +1,7 @@
 #ifndef VALHALLA_THOR_MAP_MATCHER_H_
 #define VALHALLA_THOR_MAP_MATCHER_H_
 
-#include <cstdint>
 #include <deque>
-#include <map>
-#include <memory>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 

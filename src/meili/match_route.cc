@@ -73,7 +73,7 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
 
 /**
  * Here we return the vector of edge segments between the source and target states. If its a node to
- * node route (meaning no realy edge is traversed) then we use the target_result to say what edge the
+ * node route (meaning no real edge is traversed) then we use the target_result to say what edge the
  * segment should use
  *
  * TODO: we should modify this function to take the range of MatchResults between the source and

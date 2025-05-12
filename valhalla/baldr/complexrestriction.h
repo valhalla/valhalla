@@ -2,10 +2,6 @@
 #define VALHALLA_BALDR_COMPLEXRESTRICTION_H_
 
 #include <cstdint>
-#include <iostream>
-#include <ostream>
-#include <string>
-#include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>

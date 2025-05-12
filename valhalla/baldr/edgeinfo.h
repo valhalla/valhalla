@@ -7,6 +7,7 @@
 #include <tuple>
 #include <vector>
 
+#include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/encoded.h>
@@ -54,6 +55,15 @@ struct NameInfo {
   }
 };
 
+// indexes of linguistic attributes in the linguistic map value-tuple
+constexpr size_t kLinguisticMapTupleLanguageIndex = 0;
+constexpr size_t kLinguisticMapTuplePhoneticAlphabetIndex = 1;
+constexpr size_t kLinguisticMapTuplePronunciationIndex = 2;
+constexpr size_t kLinguisticHeaderSize = 3;
+
+// Unfortunately a bug was found where we were returning a blank phoneme (kNone = 0) for a linguistic
+// record where it just contained a language and no phoneme.  This caused us to stop reading the
+// header and in turn caused the name_index to be off.  This is why kNone is now equal to 5
 struct linguistic_text_header_t {
   uint32_t language_ : 8; // this is just the language as we will derive locale by getting admin info
   uint32_t length_ : 8;   // pronunciation length
@@ -62,6 +72,26 @@ struct linguistic_text_header_t {
   uint32_t spare_ : 1;
   uint32_t DO_NOT_USE_ : 8; // DONT EVER USE THIS WE DON'T ACTUALLY STORE IT IN THE TEXT LIST
 };
+
+/**
+ * Decode the level information encoded as variable length, variable precision numbers.
+ *
+ * The first varint denotes the string size, to avoid the value 0 from being interpreted
+ * as a null character. The second varint denotes the precision to apply to all values
+ * except for the sentinel value used as a separator of continuous ranges.
+ *
+ *
+ * The returned array includes level values and sentinel values. Ex.:
+ *  "12;14" translates to {12, 1048575, 14}
+ *  "0-12;14" translates to {0, 12, 1048575, 14}
+ *
+ * @param encoded the encoded varint array
+ *
+ * @return a tuple that contains
+ *   a) the decoded levels array and
+ *   b) the precision used
+ */
+std::pair<std::vector<std::pair<float, float>>, uint32_t> decode_levels(const std::string& encoded);
 
 /**
  * Edge information not required in shortest path algorithm and is
@@ -124,6 +154,14 @@ public:
   }
 
   /**
+   * Does this EdgeInfo have elevation data.
+   * @return Returns true if the EdgeInfo record has elevation along the edge.
+   */
+  bool has_elevation() const {
+    return ei_.has_elevation_;
+  }
+
+  /**
    * Get the number of names.
    * @return Returns the name count.
    */
@@ -163,12 +201,20 @@ public:
   std::vector<std::pair<std::string, bool>> GetNames(bool include_tagged_values) const;
 
   /**
-   * Convenience method to get the names for an edge
-   * @param  only_pronunciations  Bool indicating whether or not to return only the pronunciations
+   * Convenience method to get the non linguistic, tagged values for an edge.
+   *
    *
    * @return   Returns a list (vector) of tagged names.
    */
-  std::vector<std::string> GetTaggedValues(bool only_pronunciations = false) const;
+  std::vector<std::string> GetTaggedValues() const;
+
+  /**
+   * Convenience method to get the linguistic names for an edge
+   * @param  type  type of linguistic names we are interested in obtaining.
+   *
+   * @return   Returns a list (vector) of linguistic names.
+   */
+  std::vector<std::string> GetLinguisticTaggedValues() const;
 
   /**
    * Convenience method to get the names, route number flags and tag value type for an edge.
@@ -187,11 +233,12 @@ public:
   const std::multimap<TaggedValue, std::string>& GetTags() const;
 
   /**
-   * Convenience method to get a pronunciation map for an edge.
-   * @return   Returns a unordered_map of type/name pairs with a key that references the name
-   * index from GetNamesAndTypes
+   * Convenience method to get a Linguistic map for an edge.
+   * @return   Returns a unordered_map in which the key is a index into the name list from
+   * GetNamesAndTypes and the tuple contains a pronunciation (w/wo a language) or no pronunciation and
+   * just a language
    */
-  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
+  std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> GetLinguisticMap() const;
 
   /**
    * Convenience method to get the types for the names.
@@ -217,6 +264,21 @@ public:
   std::string encoded_shape() const;
 
   /**
+   * Returns the encoded elevation along the edge. The sampling interval is uniform
+   * (based on the length of the edge). The sampling interval is returned via argument.
+   * @param  length  Length of the edge. Used to determine sampling interval.
+   * @param  interval  Sampling interval (reference - value is returned).
+   * @return Returns a vector holding delta encoded elevation along the edge.
+   */
+  std::vector<int8_t> encoded_elevation(const uint32_t length, double& interval) const;
+
+  /**
+   * Returns the list of conditional speed limits for the edge.
+   * @return Conditional speed limits for the edge.
+   */
+  std::vector<ConditionalSpeedLimit> conditional_speed_limits() const;
+
+  /**
    * Get layer index of the edge relatively to other edges(Z-level). Can be negative.
    * @see https://wiki.openstreetmap.org/wiki/Key:layer
    * @return layer index of the edge
@@ -224,18 +286,24 @@ public:
   int8_t layer() const;
 
   /**
-   * Get level of the edge.
+   * Get levels of the edge.
    * @see https://wiki.openstreetmap.org/wiki/Key:level
-   * @return layer index of the edge
+   * @return a pair where the first member is a vector of contiguous level ranges (inclusive) and
+   * the the second member is the max precision found on any of the level tokens.
    */
+  std::pair<std::vector<std::pair<float, float>>, uint32_t> levels() const;
 
-  std::string level() const;
+  /**
+   * Convenience method that checks whether the edge connects the passed level.
+   */
+  bool includes_level(float lvl) const;
+
   /**
    * Get layer:ref of the edge.
    * @see https://wiki.openstreetmap.org/wiki/Key:level:ref
    * @return layer index of the edge
    */
-  std::string level_ref() const;
+  std::vector<std::string> level_ref() const;
 
   /**
    * Returns json representing this object
@@ -259,7 +327,8 @@ public:
     uint32_t encoded_shape_size_ : 16; // How many bytes long the encoded shape is
     uint32_t extended_wayid1_ : 8;     // Next next byte of the way id
     uint32_t extended_wayid_size_ : 2; // How many more bytes the way id is stored in
-    uint32_t spare0_ : 2;              // not used
+    uint32_t has_elevation_ : 1;       // Does the edgeinfo have elevation?
+    uint32_t spare0_ : 1;              // not used
   };
 
 protected:
@@ -278,6 +347,9 @@ protected:
 
   // Lng, lat shape of the edge
   mutable std::vector<midgard::PointLL> shape_;
+
+  // Encoded elevation
+  const int8_t* encoded_elevation_;
 
   // The list of names within the tile
   const char* names_list_;

@@ -5,7 +5,7 @@ import csv
 import sys
 
 
-STATS_TO_DIFF = ['#Passes', 'runtime', 'trip time', 'length', '#Manuevers', 'elapsedCostSeconds', 'elapsedCostCost']
+STATS_TO_DIFF = ['#Passes', 'runtime', 'trip time', 'length', '#Maneuvers', 'elapsedCostSeconds', 'elapsedCostCost']
 
 
 def main(old_stats_file, new_stats_file, output_file):

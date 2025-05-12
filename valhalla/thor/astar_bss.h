@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -71,19 +70,9 @@ public:
    */
   virtual void Clear() override;
 
-  /**
-   * Set a maximum label count. The path algorithm terminates if this
-   * is exceeded.
-   * @param  max_count  Maximum number of labels to allow.
-   */
-  void set_max_label_count(const uint32_t max_count) {
-    max_label_count_ = max_count;
-  }
-
 protected:
-  uint32_t max_label_count_; // Max label count to allow
-  sif::TravelMode mode_;     // Current travel mode
-  uint8_t travel_type_;      // Current travel type
+  sif::TravelMode mode_; // Current travel mode
+  uint8_t travel_type_;  // Current travel type
 
   // A* heuristic
   AStarHeuristic pedestrian_astarheuristic_;
@@ -94,10 +83,10 @@ protected:
   std::shared_ptr<sif::DynamicCost> bicycle_costing_;
 
   // Vector of edge labels (requires access by index).
-  std::vector<sif::EdgeLabel> edgelabels_;
+  std::vector<sif::BDEdgeLabel> edgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus pedestrian_edgestatus_;
@@ -128,7 +117,7 @@ protected:
    */
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
+                     const sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
                      const bool from_bss,
@@ -150,9 +139,8 @@ protected:
    * Set the destination edge(s).
    * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination.
-   * @return  Returns the relative density near the destination (0-15)
    */
-  uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  void SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

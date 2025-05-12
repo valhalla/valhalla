@@ -1,7 +1,7 @@
 #include <cmath>
 #include <cstdlib>
-#include <iostream>
 
+#include "baldr/edgeinfo.h"
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"
 #include "midgard/constants.h"
@@ -31,8 +31,8 @@ constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
 const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
   static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
       values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "kXKatakana"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "kXJeita"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kKatakana, "kKatakana"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kJeita, "kJeita"},
              {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "kNtSampa"}};
   auto f = values.find(alphabet);
   if (f == values.cend())
@@ -122,7 +122,7 @@ const std::string& TripLeg_TravelMode_Name(int v) {
 
 const std::string& TripLeg_VehicleType_Name(int v) {
   static const std::unordered_map<int, std::string> values{
-      {0, "kCar"}, {1, "kMotorcycle"}, {2, "kAutoBus"}, {3, "kTractorTrailer"}, {4, "kMotorScooter"},
+      {0, "kCar"}, {1, "kMotorcycle"}, {2, "kAutoBus"}, {3, "kTruck"}, {4, "kMotorScooter"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -131,11 +131,9 @@ const std::string& TripLeg_VehicleType_Name(int v) {
 }
 
 const std::string& TripLeg_PedestrianType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kFoot"},
-      {1, "kWheelchair"},
-      {2, "kSegway"},
-  };
+  static const std::unordered_map<int, std::string> values{{0, "kFoot"},
+                                                           {1, "kWheelchair"},
+                                                           {2, "kBlind"}};
   auto f = values.find(v);
   if (f == values.cend())
     throw std::runtime_error("Missing value in protobuf enum to string");
@@ -480,7 +478,7 @@ bool EnhancedTripLeg_Edge::IsUnnamedMountainBikeTrail() const {
 }
 
 bool EnhancedTripLeg_Edge::IsHighway() const {
-  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse()));
+  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse() && !IsTurnChannelUse()));
 }
 
 bool EnhancedTripLeg_Edge::IsOneway() const {
@@ -526,19 +524,31 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
   return name_list;
 }
 
-std::string EnhancedTripLeg_Edge::GetLevelRef() const {
-  std::string level_ref;
+std::vector<std::string> EnhancedTripLeg_Edge::GetLevelRef() const {
+  std::vector<std::string> level_refs;
+  std::vector<std::string> levels;
+
+  // try to get level_refs, else create some from levels as fallback
   if (!tagged_value().empty()) {
     for (int t = 0; t < tagged_value().size(); ++t) {
       if (tagged_value().Get(t).type() == TaggedValue_Type_kLevelRef) {
-        level_ref = tagged_value().Get(t).value();
-        break;
-      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevel) {
-        level_ref = "Level " + tagged_value().Get(t).value();
+        level_refs.emplace_back(tagged_value().Get(t).value());
+      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevels) {
+        // parse varint encoded levels, we're only interested in single
+        // level values though
+        const auto& encoded = tagged_value().Get(t).value();
+        std::vector<std::pair<float, float>> decoded;
+        uint32_t precision;
+        std::tie(decoded, precision) = baldr::decode_levels(encoded);
+        if (decoded.size() == 1 && decoded[0].first == decoded[0].second) {
+          std::stringstream ss;
+          ss << std::fixed << std::setprecision(precision) << decoded[0].first;
+          levels.emplace_back("Level " + ss.str());
+        }
       }
     }
   }
-  return level_ref;
+  return level_refs.empty() ? levels : level_refs;
 }
 
 float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
@@ -1373,7 +1383,8 @@ bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(const TravelMode tr
 }
 
 bool EnhancedTripLeg_IntersectingEdge::IsHighway() const {
-  return ((road_class() == RoadClass::kMotorway) && !(use() == TripLeg_Use_kRampUse));
+  return ((road_class() == RoadClass::kMotorway) &&
+          !(use() == TripLeg_Use_kRampUse || use() == TripLeg_Use_kTurnChannelUse));
 }
 
 std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
@@ -1550,7 +1561,7 @@ void EnhancedTripLeg_Node::CalculateRightLeftIntersectingEdgeCounts(
   }
 }
 
-bool EnhancedTripLeg_Node::HasFowardIntersectingEdge(uint32_t from_heading) {
+bool EnhancedTripLeg_Node::HasForwardIntersectingEdge(uint32_t from_heading) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading()))) {

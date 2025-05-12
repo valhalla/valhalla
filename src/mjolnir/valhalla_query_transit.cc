@@ -3,25 +3,23 @@
 #include "baldr/rapidjson_utils.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
-#include <map>
-#include <unordered_map>
 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
-#include "config.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/servicedays.h"
 #include "valhalla/proto/transit.pb.h"
+
+#include "argparse_utils.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -361,70 +359,57 @@ GraphId GetGraphId(Transit& transit, const std::string& onestop_id) {
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  std::string config;
-  float o_lng, o_lat, d_lng, d_lat;
+  double o_lng, o_lat, d_lng, d_lat;
   std::string o_onestop_id, d_onestop_id, time;
   int tripid;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_query_transit",
-      "valhalla_query_transit " VALHALLA_VERSION "\n\n"
-      "valhalla_query_transit is a simple command line test tool to log transit stop info.\n\n");
+      program,
+      program + " " + VALHALLA_VERSION + "\n\n"
+      "a simple command line test tool to log transit stop info.\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("o_lat", "Origin latitude", cxxopts::value<float>(o_lat))
-      ("o_lng", "Origin longitude", cxxopts::value<float>(o_lng))
-      ("d_lat", "Destination latitude", cxxopts::value<float>(d_lat))
-      ("d_lng", "Destination longitude", cxxopts::value<float>(d_lng))
+      ("o_lat", "Origin latitude", cxxopts::value<double>(o_lat))
+      ("o_lng", "Origin longitude", cxxopts::value<double>(o_lng))
+      ("d_lat", "Destination latitude", cxxopts::value<double>(d_lat))
+      ("d_lng", "Destination longitude", cxxopts::value<double>(d_lng))
       ("o,o_onestop_id", "Origin OneStop ID", cxxopts::value<std::string>(o_onestop_id))
       ("d,d_onestop_id", "Destination OneStop ID", cxxopts::value<std::string>(d_onestop_id))
       ("i,tripid", "Trip ID", cxxopts::value<int>(tripid)->default_value("0"))
       ("t,time", "Time", cxxopts::value<std::string>(time))
-      ("c,config", "Config path", cxxopts::value<std::string>(config));
+      ("c,config", "Config path", cxxopts::value<std::string>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
-
-    if (result.count("version")) {
-      std::cout << "valhalla_query_transit " << VALHALLA_VERSION << "\n";
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
-    }
 
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
-      return EXIT_SUCCESS;
-    }
-
-    if (!result.count("config") || !filesystem::is_regular_file(filesystem::path(config))) {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
-    }
-
-    for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng", "conf"}) {
+    for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng"}) {
       if (result.count(arg) == 0) {
-        std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
-        std::cerr << options.help() << "\n";
-        return EXIT_FAILURE;
+        const std::string msg = "The <" + arg + "> argument was not provided, but is mandatory\n\n";
+        throw cxxopts::exceptions::exception(msg + options.help());
       }
     }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
-
-  // Read config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config, pt);
 
   LOG_INFO("Read config");
 
   // Bail if no transit dir
-  auto transit_dir = pt.get_optional<std::string>("mjolnir.transit_dir");
+  auto transit_dir = config.get_optional<std::string>("mjolnir.transit_dir");
   if (!transit_dir || !filesystem::exists(*transit_dir) || !filesystem::is_directory(*transit_dir)) {
     LOG_INFO("Transit directory not found.");
     return 0;

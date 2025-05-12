@@ -20,7 +20,7 @@ void Reach::enqueue(const baldr::GraphId& node_id,
   // skip nodes which are done or invalid
   if (!node_id.Is_Valid() || done_.find(node_id) != done_.cend())
     return;
-  // if the node isnt accessable bail
+  // if the node isnt accessible bail
   if (!reader.GetGraphTile(node_id, tile))
     return;
   const auto* node = tile->node(node_id);

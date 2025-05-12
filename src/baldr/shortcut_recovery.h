@@ -136,6 +136,10 @@ protected:
     uint32_t accumulated_length = current_edge->length();
 
     // walk edges until we find the same ending node as the shortcut
+    // Use a roundoff error based on number of edges when comparing sum of individual
+    // edge lengths to shortcut length.
+    uint32_t edge_count = 1;
+    uint32_t roundoff_error = 1;
     while (current_edge->endnode() != shortcut->endnode()) {
       // get the node at the end of the last edge we added
       const NodeInfo* node = reader.GetEndNode(current_edge, tile);
@@ -158,6 +162,7 @@ protected:
             edge.use() == shortcut->use() && edge.classification() == shortcut->classification() &&
             edge.roundabout() == shortcut->roundabout() && edge.link() == shortcut->link() &&
             edge.toll() == shortcut->toll() && edge.destonly() == shortcut->destonly() &&
+            edge.destonly_hgv() == shortcut->destonly_hgv() &&
             edge.unpaved() == shortcut->unpaved() && edge.surface() == shortcut->surface() &&
             edge.use() != Use::kConstruction /*&& edge.speed() == shortcut->speed()*/) {
           // we are going to keep this edge
@@ -173,7 +178,9 @@ protected:
       }
 
       // if we didnt add an edge or we went over the length we failed
-      if (current_edge == nullptr || accumulated_length > shortcut->length()) {
+      ++edge_count;
+      roundoff_error = std::round(edge_count * 0.5) + 1;
+      if (current_edge == nullptr || accumulated_length > (shortcut->length() + roundoff_error)) {
         LOG_TRACE("Unable to recover shortcut for edgeid " + std::to_string(shortcut_id) +
                   " | accumulated_length: " + std::to_string(accumulated_length) +
                   " | shortcut_length: " + std::to_string(shortcut->length()));
@@ -182,7 +189,7 @@ protected:
     }
 
     // we somehow got to the end via a shorter path
-    if (accumulated_length < shortcut->length()) {
+    if (accumulated_length < (shortcut->length() - roundoff_error)) {
       LOG_TRACE("Unable to recover shortcut for edgeid (accumulated_length < shortcut->length()) " +
                 std::to_string(shortcut_id) +
                 " | accumulated_length: " + std::to_string(accumulated_length) +
@@ -206,7 +213,7 @@ public:
    * the reader is nullptr then the cache will not be filled and recovery will be on the fly
    *
    * @param reader       the reader used to initialize the cache the first time
-   * @return a filled cache mapping shortcuts to superceeded edges
+   * @return a filled cache mapping shortcuts to superseded edges
    */
   static shortcut_recovery_t& get_instance(valhalla::baldr::GraphReader* reader = nullptr) {
     static shortcut_recovery_t cache{reader};
@@ -214,11 +221,11 @@ public:
   }
 
   /**
-   * returns the list of graphids of the edges superceded by the provided shortcut. saddly because we
+   * returns the list of graphids of the edges superseded by the provided shortcut. sadly because we
    * may have to recover the shortcut on the fly we cannot return const reference here
    *
    * @param shortcut_id   the shortcuts edge id
-   * @return the list of superceded edges
+   * @return the list of superseded edges
    */
   std::vector<valhalla::baldr::GraphId> get(const valhalla::baldr::GraphId& shortcut_id,
                                             valhalla::baldr::GraphReader& reader) const {
