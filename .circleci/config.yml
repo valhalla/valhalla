@@ -50,7 +50,7 @@ jobs:
       - run:
           name: Run clang-tidy checks
           no_output_timeout: 30m
-          command: scripts/clang-tidy-only-diff.sh
+          command: scripts/clang-tidy-only-diff.sh 4
       - run: sudo make -C build install
       - run: make -C build package
       - run: |
