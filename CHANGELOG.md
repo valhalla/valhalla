@@ -28,6 +28,7 @@
    * FIXED: Fix edge walk across tiles when traffic or predicted speeds are used [#5198](https://github.com/valhalla/valhalla/pull/5198)
    * FIXED: multi-edge steps maneuvers [#5191](https://github.com/valhalla/valhalla/pull/5191)
    * FIXED: remove start maneuver if route starts on stairs/escalators [#5127](https://github.com/valhalla/valhalla/pull/5127)
+   * FIXED: Verify edge shapes in edge walking to find the correct edges when there are multiple path with approximately the same length (e.g. in a roundabout) [#5210](https://github.com/valhalla/valhalla/pull/5210)
    * FIXED: compilation with clang 20 [#5208](https://github.com/valhalla/valhalla/pull/5208)
    * FIXED: compatibility with GEOS <3.12 [#5224](https://github.com/valhalla/valhalla/pull/5224)
    * FIXED: gtest linkage errors with clang 17+ on MacOS [#5227](https://github.com/valhalla/valhalla/pull/5227)
