@@ -50,6 +50,7 @@ jobs:
       - run:
           name: Run clang-tidy checks
           no_output_timeout: 30m
+          # Limit concurrency to 4 to avoid OOMKills on CircleCI runners.
           command: scripts/clang-tidy-only-diff.sh 4
       - run: sudo make -C build install
       - run: make -C build package
