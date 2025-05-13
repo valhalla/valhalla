@@ -4,7 +4,8 @@
 set -o errexit -o pipefail -o nounset
 
 readonly base=$(git merge-base refs/remotes/origin/master HEAD)
-readonly build_dir=${1:-build}
+readonly concurrency=${1:-$(nproc)}
+readonly build_dir=${2:-build}
 
 source scripts/bash_utils.sh
 
@@ -45,7 +46,7 @@ CLANG_TIDY_CMD="${py} -c \"from clang_tidy import clang_tidy; clang_tidy()\""
 # `:::` separates the command `parallel` should execute from the arguments it should pass to the commands.
 parallel \
   -m \
-  -j $(nproc) \
+  -j ${concurrency} \
   --halt-on-error now,fail=1 \
   "${CLANG_TIDY_CMD}" \
   -p $tidy_dir \
