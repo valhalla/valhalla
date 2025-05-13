@@ -81,7 +81,7 @@ sudo make -C build install
 
 Both arm64 and x64 should build cleanly with the below commands.
 
-To install Valhalla on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
+To install Valhalla on macOS, you need to install its dependencies with [Homebrew](https://brew.sh):
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
@@ -163,7 +163,7 @@ The following script should be enough to make some routing data and start a serv
 ```bash
 # download some data and make tiles out of it
 # NOTE: you can feed multiple extracts into pbfgraphbuilder
-wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+wget https://download.geofabrik.de/europe/switzerland-latest.osm.pbf https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
 # get the config and setup
 mkdir -p valhalla_tiles
 valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
