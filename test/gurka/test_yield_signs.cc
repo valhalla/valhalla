@@ -15,7 +15,7 @@ using namespace valhalla::mjolnir;
 
 valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
-               
+
                F        G         H                 P
                |        |         |                 |
                |        |/-----2--D--------L--------M-----4--R--------S
@@ -88,8 +88,7 @@ TEST(Standalone, yieldSigns) {
 
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
 

@@ -55,8 +55,8 @@ struct OSMNode {
   uint32_t cash_only_toll_ : 1;
   uint32_t spare1_ : 5;
 
-  // bss information
-  uint32_t bss_info_;
+  // linguistic information
+  uint32_t linguistic_info_index_;
 
   // linguistic information
   uint32_t linguistic_info_index_;
@@ -530,22 +530,19 @@ struct OSMNode {
   }
 
   /**
-   * Sets the index for bss informations.
-   * @param  idx  Index for the bss informations.
+   * Sets the index for the linguistic info
+   * @param  idx  Index for the linguistic info.
    */
-  void set_bss_info_index(const uint32_t index) {
-    if (index > kMaxNodeNameIndex) {
-      throw std::runtime_error("OSMNode: exceeded maximum bss informations index");
-    }
-    bss_info_ = index;
+  void set_linguistic_info_index(const uint32_t idx) {
+    linguistic_info_index_ = idx;
   }
 
   /**
-   * Get the bss informations index.
-   * @return  Returns the index for the bss informations.
+   * Get the linguistic info index.
+   * @return  Returns the index for the linguistic info.
    */
-  uint32_t bss_info_index() const {
-    return bss_info_;
+  uint32_t linguistic_info_index() const {
+    return linguistic_info_index_;
   }
 
   /**

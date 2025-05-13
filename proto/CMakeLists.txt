@@ -22,7 +22,6 @@ if(ENABLE_DATA_TOOLS)
     ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/osmformat.proto)
 endif()
 
-
 protobuf_generate_cpp(protobuf_srcs protobuf_hdrs ${protobuf_descriptors})
 
 valhalla_module(NAME proto

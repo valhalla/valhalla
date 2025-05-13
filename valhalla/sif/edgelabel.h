@@ -388,7 +388,6 @@ public:
   bool tunnel() const {
     return tunnel_;
   }
-
   /**
    * Does it have HGV access?
    * @return Returns true if the (opposing) edge had HGV access

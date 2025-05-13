@@ -8,10 +8,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <sqlite3.h>
-// needs to be after sqlite include
-#include <spatialite.h>
-
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
@@ -153,14 +149,6 @@ uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
 uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
 
 /**
- * Will allocate a spatialite connection
- *
- * @param handle The sqlite database handle
- * @return a shared pointer to the connection which cleans up after itself when destructed
- */
-std::shared_ptr<void> make_spatialite_cache(sqlite3* handle);
-
-/**
  * Build an entire valhalla tileset give a config file and some input pbfs. The
  * tile building process is split into stages. This method allows either the entire
  * tile building pipeline to run (default) or a subset of the stages to run.
@@ -175,8 +163,7 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle);
 bool build_tile_set(const ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
-                    const BuildStage end_stage = BuildStage::kValidate,
-                    const bool release_osmpbf_memory = true);
+                    const BuildStage end_stage = BuildStage::kValidate);
 
 // The tile manifest is a JSON-serializable index of tiles to be processed during the build stage of
 // valhalla_build_tiles'. It can be used to distribute shard keys when building tiles with

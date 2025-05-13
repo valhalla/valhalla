@@ -27,6 +27,13 @@ struct OSMWayNode {
   uint32_t way_shape_node_index = 0;
 };
 
+// Structure to store OSM node information for BSS
+struct OSMBSSNode {
+  OSMNode node;
+  // Index with serialized `BikeShareStationInfo` within the node_names list
+  uint32_t bss_info_index;
+};
+
 // OSM bicycle data (stored within OSMData)
 struct OSMBike {
   uint8_t bike_network;

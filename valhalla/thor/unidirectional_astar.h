@@ -160,7 +160,7 @@ protected:
   uint8_t travel_type_;  // Current travel type
 
   // Hierarchy limits.
-  std::vector<sif::HierarchyLimits> hierarchy_limits_;
+  std::vector<HierarchyLimits> hierarchy_limits_;
 
   // A* heuristic
   AStarHeuristic astarheuristic_;

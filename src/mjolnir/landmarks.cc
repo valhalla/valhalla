@@ -3,7 +3,6 @@
 
 #include "baldr/graphreader.h"
 #include "midgard/sequence.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
 
 #include "baldr/location.h"
@@ -11,9 +10,14 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/sqlite3.h"
 #include "sif/nocost.h"
 
+#include <osmium/io/pbf_input.hpp>
+#include <sqlite3.h>
+
 #include <future>
+#include <string_view>
 #include <thread>
 #include <tuple>
 
@@ -32,51 +36,6 @@ constexpr float kLandmarkSearchCutoff = 75.;
 // a slight buffer to add to landmark queries to avoid near misses in the data due to precision
 constexpr double kLandmarkQueryBuffer = .000001;
 
-struct landmark_callback : public OSMPBF::Callback {
-public:
-  landmark_callback(const std::string& db_name) : db_(db_name, false) {
-  }
-  virtual ~landmark_callback() {
-  }
-
-  virtual void
-  node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
-    auto iter = tags.find("amenity");
-    if (iter != tags.cend() && !iter->second.empty()) {
-      try {
-        auto landmark_type = string_to_landmark_type(iter->second);
-
-        std::string name = "";
-        auto it = tags.find("name");
-        if (it != tags.cend() && !it->second.empty()) {
-          name = it->second;
-        }
-
-        // insert parsed landmark directly into database
-        db_.insert_landmark(name, landmark_type, lng, lat);
-      } catch (...) {}
-    }
-  }
-
-  virtual void changeset_callback(const uint64_t /*changeset_id*/) override {
-    LOG_WARN("landmark changeset callback shouldn't be called!");
-  }
-
-  virtual void way_callback(const uint64_t /*osmid*/,
-                            const OSMPBF::Tags& /*tags*/,
-                            const std::vector<uint64_t>& /*nodes*/) override {
-    LOG_WARN("landmark way callback shouldn't be called!");
-  }
-
-  virtual void relation_callback(const uint64_t /*osmid*/,
-                                 const OSMPBF::Tags& /*tags*/,
-                                 const std::vector<OSMPBF::Member>& /*members*/) override {
-    LOG_WARN("landmark relation callback shouldn't be called!");
-  }
-
-  valhalla::mjolnir::LandmarkDatabase db_;
-};
-
 // sort a sequence file to put the edges in the same tile together
 bool sort_seq_file(const std::pair<GraphId, uint64_t>& a, const std::pair<GraphId, uint64_t>& b) {
   if (a.first.Tile_Base() == b.first.Tile_Base()) {
@@ -92,7 +51,7 @@ namespace mjolnir {
 //  statements on the fly and retrievable by the caller, then anything in the code base that wants to
 //  use sqlite can make use of this utility class. for now its ok to be specific to landmarks though
 struct LandmarkDatabase::db_pimpl {
-  sqlite3* db;
+  std::optional<Sqlite3> db;
   sqlite3_stmt* insert_stmt;
   sqlite3_stmt* bounding_box_stmt;
   std::shared_ptr<void> spatial_lite;
@@ -107,7 +66,7 @@ struct LandmarkDatabase::db_pimpl {
     }
 
     // figure out if we need to create database or can just open it up
-    auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+    const auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
     if (!filesystem::exists(db_name)) {
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
@@ -117,13 +76,10 @@ struct LandmarkDatabase::db_pimpl {
     }
 
     // get a connection to the database
-    auto ret = sqlite3_open_v2(db_name.c_str(), &db, flags, NULL);
-    if (ret != SQLITE_OK) {
+    db = Sqlite3::open(db_name, flags);
+    if (!db) {
       throw std::runtime_error("Failed to open sqlite database: " + db_name);
     }
-
-    // loading spatiaLite as an extension
-    spatial_lite = make_spatialite_cache(db);
 
     // if the db was empty we need to initialize the schema
     char* err_msg = nullptr;
@@ -131,7 +87,7 @@ struct LandmarkDatabase::db_pimpl {
       // make the table
       const char* table =
           "SELECT InitSpatialMetaData(1); CREATE TABLE IF NOT EXISTS landmarks (id INTEGER PRIMARY KEY, name TEXT, type TEXT)";
-      ret = sqlite3_exec(db, table, NULL, NULL, &err_msg);
+      auto ret = sqlite3_exec(db->get(), table, NULL, NULL, &err_msg);
       if (ret != SQLITE_OK) {
         sqlite3_free(err_msg);
         throw std::runtime_error("Sqlite table creation error: " + std::string(err_msg));
@@ -139,7 +95,7 @@ struct LandmarkDatabase::db_pimpl {
 
       // add geom column
       const char* geom = "SELECT AddGeometryColumn('landmarks', 'geom', 4326, 'POINT', 2)";
-      ret = sqlite3_exec(db, geom, NULL, NULL, &err_msg);
+      ret = sqlite3_exec(db->get(), geom, NULL, NULL, &err_msg);
       if (ret != SQLITE_OK) {
         sqlite3_free(err_msg);
         throw std::runtime_error("Sqlite geom column creation error: " + std::string(err_msg));
@@ -147,7 +103,7 @@ struct LandmarkDatabase::db_pimpl {
 
       // make the index
       const char* index = "SELECT CreateSpatialIndex('landmarks', 'geom')";
-      ret = sqlite3_exec(db, index, NULL, NULL, &err_msg);
+      ret = sqlite3_exec(db->get(), index, NULL, NULL, &err_msg);
       if (ret != SQLITE_OK) {
         sqlite3_free(err_msg);
         throw std::runtime_error("Sqlite spatial index creation error: " + std::string(err_msg));
@@ -156,39 +112,38 @@ struct LandmarkDatabase::db_pimpl {
       // prep the insert statement
       const char* insert =
           "INSERT INTO landmarks (name, type, geom) VALUES (?, ?, MakePoint(?, ?, 4326))";
-      ret = sqlite3_prepare_v2(db, insert, strlen(insert), &insert_stmt, NULL);
+      ret = sqlite3_prepare_v2(db->get(), insert, strlen(insert), &insert_stmt, NULL);
       if (ret != SQLITE_OK)
         throw std::runtime_error("Sqlite prepared insert statement error: " +
-                                 std::string(sqlite3_errmsg(db)));
+                                 std::string(sqlite3_errmsg(db->get())));
     }
 
     // prep the select statement
     const char* select =
         "SELECT id, name, type, X(geom), Y(geom) FROM landmarks WHERE ST_Covers(BuildMbr(?, ?, ?, ?, 4326), geom)";
-    ret = sqlite3_prepare_v2(db, select, strlen(select), &bounding_box_stmt, NULL);
+    auto ret = sqlite3_prepare_v2(db->get(), select, strlen(select), &bounding_box_stmt, NULL);
     if (ret != SQLITE_OK) {
       throw std::runtime_error("Sqlite prepared select statement error: " +
-                               std::string(sqlite3_errmsg(db)));
+                               std::string(sqlite3_errmsg(db->get())));
     }
   }
   ~db_pimpl() {
     char* err_msg = nullptr;
-    if (vacuum_analyze && sqlite3_exec(db, "VACUUM", NULL, NULL, &err_msg) != SQLITE_OK) {
+    if (vacuum_analyze && sqlite3_exec(db->get(), "VACUUM", NULL, NULL, &err_msg) != SQLITE_OK) {
       sqlite3_free(err_msg);
       LOG_ERROR("Sqlite vacuum error: " + std::string(err_msg));
     }
 
-    if (vacuum_analyze && sqlite3_exec(db, "ANALYZE", NULL, NULL, &err_msg) != SQLITE_OK) {
+    if (vacuum_analyze && sqlite3_exec(db->get(), "ANALYZE", NULL, NULL, &err_msg) != SQLITE_OK) {
       sqlite3_free(err_msg);
       LOG_ERROR("Sqlite analyze error: " + std::string(err_msg));
     }
 
     sqlite3_finalize(insert_stmt);
     sqlite3_finalize(bounding_box_stmt);
-    sqlite3_close_v2(db);
   }
   std::string last_error() {
-    return std::string(sqlite3_errmsg(db));
+    return std::string(sqlite3_errmsg(db->get()));
   }
 };
 
@@ -256,7 +211,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   std::vector<Landmark> landmarks;
   char* err_msg = nullptr;
   // execute query
-  int ret = sqlite3_exec(pimpl->db, sql.c_str(), populate_landmarks, &landmarks, &err_msg);
+  int ret = sqlite3_exec(pimpl->db->get(), sql.c_str(), populate_landmarks, &landmarks, &err_msg);
 
   // check for errors in the sql execution
   if (ret != SQLITE_OK) {
@@ -309,23 +264,34 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
                           const std::vector<std::string>& input_files) {
   // parse pbf to get landmark nodes
   const std::string db_name = pt.get<std::string>("landmarks", "");
-  landmark_callback callback(db_name);
-
-  LOG_INFO("Parsing files...");
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
+  valhalla::mjolnir::LandmarkDatabase db(db_name, false);
 
   LOG_INFO("Parsing nodes and storing landmarks...");
-  for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
-                          callback);
+  for (auto& file : input_files) {
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
+    while (const osmium::memory::Buffer buffer = reader.read()) {
+      for (const osmium::memory::Item& item : buffer) {
+        const osmium::Node& node = static_cast<const osmium::Node&>(item);
+
+        std::string amenity, name;
+        for (const auto& tag : node.tags()) {
+          std::string_view key = tag.key();
+          if (key == "amenity") {
+            amenity = tag.value();
+          } else if (key == "name") {
+            name = tag.value();
+          }
+        }
+
+        if (!amenity.empty()) {
+          try {
+            db.insert_landmark(name, string_to_landmark_type(amenity), node.location().lon(),
+                               node.location().lat());
+          } catch (...) {}
+        }
+      }
+    }
+    reader.close(); // Explicit close to get an exception in case of an error.
   }
 
   LOG_INFO("Successfully built landmark database from PBF");

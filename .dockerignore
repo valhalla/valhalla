@@ -44,6 +44,7 @@ libvalhalla.la
 date_time_zonespec.csv
 mason/
 mason_packages/
+.DS_Store
 
 # scripts
 scripts/gdal-2.0.0/
@@ -60,9 +61,22 @@ CMakeLists.txt.user
 .idea
 /.tidytmp
 vcpkg*/
+overlay-ports-vcpkg/
+vcpkg-configuration.json
+run_route_scripts/
+test_requests/
 
-# documentation
-site/
-
-.DS_Store
+# docker
 Dockerfile
+
+# CI
+.github/
+.circleci/
+.pre-commit-config.yaml
+
+# docs etc
+site/
+docs/
+CONTRIBUTING.md
+NEWS 
+taginfo.json

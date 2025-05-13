@@ -455,7 +455,7 @@ TEST(Standalone, AdminAlongEdge) {
 
   // and finally the graph
   build_tile_set(map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   // get a test route
   std::string result_json;

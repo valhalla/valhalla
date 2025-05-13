@@ -203,7 +203,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
       min_resample(config.get<float>("service_limits.skadi.min_resample")),
-      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", true)) {
+      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)) {
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -227,7 +227,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
-        kv.first == "status" || kv.first == "allow_hard_exclusions") {
+        kv.first == "status" || kv.first == "allow_hard_exclusions" ||
+        kv.first == "hierarchy_limits") {
       continue;
     }
     if (kv.first != "trace") {
@@ -290,7 +291,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   // assign max_distance_disable_hierarchy_culling
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
-  allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", true);
+  allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
+
   // signal that the worker started successfully
   started();
 }

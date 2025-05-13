@@ -1,5 +1,6 @@
 #include "mjolnir/hierarchybuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -64,6 +65,7 @@ bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
 }
 
 void SortSequences(const std::string& new_to_old_file, const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Sort the new nodes. Sort so highway level is first
   sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
   new_to_old.sort([](const std::pair<GraphId, GraphId>& a, const std::pair<GraphId, GraphId>& b) {
@@ -100,6 +102,7 @@ OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& nod
 void FormTilesInNewLevel(GraphReader& reader,
                          const std::string& new_to_old_file,
                          const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Use the sequence that associate new nodes to old nodes
   sequence<std::pair<GraphId, GraphId>> new_to_old(new_to_old_file, false);
 
@@ -357,6 +360,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 void CreateNodeAssociations(GraphReader& reader,
                             const std::string& new_to_old_file,
                             const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Map of tiles vs. count of nodes. Used to construct new node Ids.
   std::unordered_map<GraphId, uint32_t> new_nodes;
 
@@ -466,6 +470,7 @@ void CreateNodeAssociations(GraphReader& reader,
  * Update end nodes of transit connection directed edges.
  */
 void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Use the sorted sequence that associates old nodes to new nodes
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
 
@@ -521,6 +526,7 @@ void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new
 // Remove any base tiles that no longer have any data (nodes and edges
 // only exist on arterial and highway levels)
 void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_to_new_file) {
+  SCOPED_TIMER();
   // Iterate through the node association sequence
   std::unordered_map<GraphId, bool> tile_map;
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
@@ -561,6 +567,7 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   // TODO: thread this. Might be more possible now that we don't create
   // shortcuts in the HierarchyBuilder
 
+  SCOPED_TIMER();
   // Construct GraphReader
   LOG_INFO("HierarchyBuilder");
   GraphReader reader(pt.get_child("mjolnir"));

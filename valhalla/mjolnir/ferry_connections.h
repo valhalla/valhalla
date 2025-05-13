@@ -39,9 +39,10 @@ struct NodeLabel {
   uint32_t pred_node_index;
   uint32_t way_index;
   bool dest_only;
+  uint16_t access;
 
-  NodeLabel(const float c, const uint32_t n, const uint32_t p, const uint32_t w, const bool d)
-      : cost(c), node_index(n), pred_node_index(p), way_index(w), dest_only(d) {
+  NodeLabel(float c, uint32_t n, uint32_t p, uint32_t w, bool d, uint16_t a)
+      : cost(c), node_index(n), pred_node_index(p), way_index(w), dest_only(d), access(a) {
   }
 };
 
