@@ -27,7 +27,7 @@ do
     modified_filepaths+=("$absolute_filepath")
   fi
 
-done < <(find src valhalla test -type f \( -name "*.cc" -o -name "*.h" \))
+done < <(git diff-tree --no-commit-id --diff-filter=d --name-only -r "$base" HEAD)
 
 if [ ${#modified_filepaths[@]} = 0 ]; then
   echo "No paths modified"
