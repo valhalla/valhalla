@@ -215,7 +215,7 @@ bool add_date_to_locations(Options& options,
     }
   }
 
-  return std::find_if(locations.begin(), locations.end(), [](valhalla::Location loc) {
+  return std::find_if(locations.begin(), locations.end(), [](const valhalla::Location& loc) {
            return !loc.date_time().empty();
          }) != locations.end();
 }

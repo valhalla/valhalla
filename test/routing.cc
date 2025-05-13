@@ -145,6 +145,7 @@ TEST(Routing, Benchmark) {
   std::mt19937 gen(rd());
   std::vector<simple_label> costs;
   size_t N = 1000000;
+  costs.reserve(N);
   for (size_t i = 0; i < N; ++i) {
     costs.push_back({std::floor(test::rand01(gen) * N)});
   }

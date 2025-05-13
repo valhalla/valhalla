@@ -323,6 +323,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
   // Get the way Ids of the edges at the endnode
   std::vector<uint64_t> wayids;
   auto bundle = collect_node_edges(node_itr, nodes, edges);
+  wayids.reserve(bundle.node_edges.size());
   for (const auto& edge : bundle.node_edges) {
     wayids.push_back((*ways[edge.first.wayindex_]).osmwayid_);
   }
@@ -1610,7 +1611,7 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
 
   auto get_pronunciations = [](const std::vector<std::string>& pronunciation_tokens,
                                const std::vector<baldr::Language>& pronunciation_langs,
-                               const std::map<size_t, size_t> indexMap, const size_t key,
+                               const std::map<size_t, size_t>& indexMap, const size_t key,
                                const baldr::PronunciationAlphabet verbal_type) {
     linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone),
                                     0,

@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
   auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find locations
-  std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+  const std::shared_ptr<DynamicCost>& cost = mode_costing[static_cast<uint32_t>(mode)];
   const auto projections = Search(locations, reader, cost);
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {

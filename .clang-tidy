@@ -1,5 +1,5 @@
 ---
-Checks:          'bugprone-throw-keyword-missing,clang-*,performance*,-performance-move-const-arg,misc-unused-parameters'
+Checks:          'bugprone-throw-keyword-missing,clang-*,performance*,-performance-move-const-arg,misc-unused-parameters,-performance-avoid-endl'
 WarningsAsErrors: ''
 CheckOptions:
   - key:             google-readability-braces-around-statements.ShortStatementLines

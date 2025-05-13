@@ -203,7 +203,7 @@ public:
   ~tile_data();
   tile_data& operator=(const tile_data& other);
 
-  tile_data& operator=(tile_data&& other) {
+  tile_data& operator=(tile_data&& other) noexcept {
     std::swap(c, other.c);
     std::swap(data, other.data);
     std::swap(index, other.index);
