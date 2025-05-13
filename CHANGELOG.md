@@ -66,6 +66,7 @@
    * CHANGED: "Multilevel Way" message logging level changed from WARN to DEBUG [#5188](https://github.com/valhalla/valhalla/pull/5188)
    * CHANGED: Use rapidjson for matrix serializers [#5189](https://github.com/valhalla/valhalla/pull/5189)
    * CHANGED: Make static factor vectors/arrays in sif constexpr [#5200](https://github.com/valhalla/valhalla/pull/5200)
+   * CHANGED: Forward declare as much as possible in public headers, including some code rearrangements [#5205](https://github.com/valhalla/valhalla/pull/5205)
    * ADDED: Sqlite3 RAII wrapper around sqlite3* and spatielite connection [#5206](https://github.com/valhalla/valhalla/pull/5206)
    * CHANGED: Improved SQL statements when building admins [#5219](https://github.com/valhalla/valhalla/pull/5219)
    * CHANGED: Replace `boost::geometry` by GEOS for operations with admin/tz polygons and clip them by tile bbox [#5204](https://github.com/valhalla/valhalla/pull/5204)

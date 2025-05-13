@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 
 #include "baldr/edgeinfo.h"
 #include "baldr/turn.h"

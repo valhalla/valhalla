@@ -1,10 +1,3 @@
-#include "mjolnir/graphenhancer.h"
-#include "mjolnir/admin.h"
-#include "mjolnir/countryaccess.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
-#include "speed_assigner.h"
-
 #include <cinttypes>
 #include <future>
 #include <limits>
@@ -26,24 +19,33 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
+#include <boost/property_tree/ptree.hpp>
 
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/streetnames.h"
-#include "baldr/streetnames_factory.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/aabb2.h"
-#include "midgard/constants.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/sequence.h"
-#include "midgard/util.h"
-#include "mjolnir/osmaccess.h"
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/streetnames.h>
+#include <valhalla/baldr/streetnames_factory.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/sequence.h>
+#include <valhalla/midgard/util.h>
+#include <valhalla/mjolnir/admin.h>
+#include <valhalla/mjolnir/countryaccess.h>
+#include <valhalla/mjolnir/graphenhancer.h>
+#include <valhalla/mjolnir/graphtilebuilder.h>
+#include <valhalla/mjolnir/osmaccess.h>
+#include <valhalla/mjolnir/osmdata.h>
+#include <valhalla/mjolnir/util.h>
+
 #include "scoped_timer.h"
+#include "speed_assigner.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -1,21 +1,19 @@
 #ifndef VALHALLA_MJOLNIR_LUA_H
 #define VALHALLA_MJOLNIR_LUA_H
 
+#include <string>
+
 extern "C" {
 #include <lauxlib.h>
 #include <lua.h>
 #include <lualib.h>
 }
-
 #include <osmium/osm/tag.hpp>
-#include <valhalla/mjolnir/osmdata.h>
-
 #include <robin_hood.h>
-
-#include <string>
 
 namespace valhalla {
 namespace mjolnir {
+enum class OSMType : uint8_t;
 
 using Tags = robin_hood::unordered_map<std::string, std::string>;
 

@@ -1,6 +1,9 @@
 #include "cpp-statsd-client/../../tests/StatsdServer.hpp"
+#include "proto/api.pb.h"
 #include "test.h"
 #include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <thread>
 

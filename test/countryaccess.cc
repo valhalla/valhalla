@@ -4,7 +4,10 @@
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/osmaccessrestriction.h"
+#include "mjolnir/osmlinguistic.h"
 #include "mjolnir/osmnode.h"
+#include "mjolnir/osmrestriction.h"
 #include "mjolnir/pbfgraphparser.h"
 
 #include <cstdint>
@@ -13,11 +16,13 @@
 #include <boost/property_tree/ptree.hpp>
 #include <fstream>
 
+#include "baldr/conditional_speed_limit.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
+#include "mjolnir/osmdata.h"
 
 #include "test.h"
 

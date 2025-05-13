@@ -10,6 +10,7 @@
 
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
+#include "baldr/verbal_text_formatter.h"
 
 #include "proto/common.pb.h"
 #include "proto/directions.pb.h"

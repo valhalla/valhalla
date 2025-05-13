@@ -1,28 +1,38 @@
-#include "mjolnir/pbfgraphparser.h"
-#include "baldr/complexrestriction.h"
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/tilehierarchy.h"
-#include "graph_lua_proc.h"
-#include "midgard/aabb2.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/polyline2.h"
-#include "midgard/sequence.h"
-#include "midgard/tiles.h"
-#include "mjolnir/luatagtransform.h"
-#include "mjolnir/osmaccess.h"
-#include "mjolnir/osmlinguistic.h"
-#include "mjolnir/timeparsing.h"
-#include "mjolnir/util.h"
-#include "proto/common.pb.h"
-#include "scoped_timer.h"
-
-#include <boost/algorithm/string.hpp>
-#include <boost/range/algorithm/remove_if.hpp>
-#include <osmium/io/pbf_input.hpp>
 #include <thread>
 #include <utility>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/range/algorithm/remove_if.hpp>
+#include <osmium/io/pbf_input.hpp>
+
+#include <valhalla/baldr/complexrestriction.h>
+#include <valhalla/baldr/conditional_speed_limit.h>
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/polyline2.h>
+#include <valhalla/midgard/sequence.h>
+#include <valhalla/midgard/tiles.h>
+#include <valhalla/mjolnir/complexrestrictionbuilder.h>
+#include <valhalla/mjolnir/luatagtransform.h>
+#include <valhalla/mjolnir/osmaccess.h>
+#include <valhalla/mjolnir/osmaccessrestriction.h>
+#include <valhalla/mjolnir/osmdata.h>
+#include <valhalla/mjolnir/osmlinguistic.h>
+#include <valhalla/mjolnir/osmnodelinguistic.h>
+#include <valhalla/mjolnir/osmrestriction.h>
+#include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/pbfgraphparser.h>
+#include <valhalla/mjolnir/timeparsing.h>
+#include <valhalla/mjolnir/util.h>
+#include <valhalla/proto/common.pb.h>
+
+#include "graph_lua_proc.h"
+#include "scoped_timer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -2,7 +2,7 @@
 #pragma once
 
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
+#include "baldr/rapidjson_fwd.h"
 #include "baldr/traffictile.h"
 #include "config.h"
 #include "midgard/polyline2.h"
@@ -20,7 +20,10 @@
 #include <gtest/gtest.h>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
+
+using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace test {
 

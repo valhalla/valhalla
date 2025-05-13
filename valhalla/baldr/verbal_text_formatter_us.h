@@ -6,7 +6,7 @@
 #include <string>
 #include <utility>
 
-#include <valhalla/baldr/verbal_text_formatter.h>
+#include "valhalla/baldr/verbal_text_formatter.h"
 
 namespace valhalla {
 namespace baldr {

@@ -1,4 +1,10 @@
-#include "config.h"
+#include <filesystem>
+#include <stdexcept>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/config.h>
 
 namespace {
 struct config_singleton_t {

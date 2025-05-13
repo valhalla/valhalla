@@ -1,9 +1,15 @@
-#include "loki/node_search.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/tiles.h"
 #include <cmath>
+
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/graphtileptr.h>
+#include <valhalla/baldr/nodeinfo.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/loki/node_search.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/tiles.h>
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;

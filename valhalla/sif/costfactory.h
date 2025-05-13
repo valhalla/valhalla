@@ -4,18 +4,17 @@
 #include <functional>
 #include <map>
 
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto_conversions.h>
-#include <valhalla/sif/autocost.h>
-#include <valhalla/sif/bicyclecost.h>
-#include <valhalla/sif/dynamiccost.h>
-#include <valhalla/sif/motorcyclecost.h>
-#include <valhalla/sif/motorscootercost.h>
-#include <valhalla/sif/nocost.h>
-#include <valhalla/sif/pedestriancost.h>
-#include <valhalla/sif/transitcost.h>
-#include <valhalla/sif/truckcost.h>
+#include "valhalla/proto/options.pb.h"
+#include "valhalla/proto_conversions.h"
+#include "valhalla/sif/autocost.h"
+#include "valhalla/sif/bicyclecost.h"
+#include "valhalla/sif/dynamiccost.h"
+#include "valhalla/sif/motorcyclecost.h"
+#include "valhalla/sif/motorscootercost.h"
+#include "valhalla/sif/nocost.h"
+#include "valhalla/sif/pedestriancost.h"
+#include "valhalla/sif/transitcost.h"
+#include "valhalla/sif/truckcost.h"
 
 namespace valhalla {
 namespace sif {

@@ -308,6 +308,10 @@ public:
     writer.StartObject();
   }
 
+  inline void start_object(const std::string& name) {
+    start_object(name.c_str());
+  }
+
   inline void start_array() {
     writer.StartArray();
   }
@@ -315,6 +319,10 @@ public:
   inline void start_array(const char* name) {
     writer.String(name);
     writer.StartArray();
+  }
+
+  inline void start_array(const std::string& name) {
+    start_array(name.c_str());
   }
 
   inline void end_object() {

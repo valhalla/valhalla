@@ -1,16 +1,20 @@
 #ifndef VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 #define VALHALLA_BALDR_CONNECTIVITY_MAP_H_
 
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/pathlocation.h>
-
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
+#include <boost/property_tree/ptree_fwd.hpp>
+
 namespace valhalla {
 namespace baldr {
+class GraphId;
+class GraphReader;
+class PathLocation;
+class TileLevel;
+
 // TODO: maintain consistent coloring of regions despite the connectivity changing
 class connectivity_map_t {
 public:

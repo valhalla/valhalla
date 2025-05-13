@@ -4,6 +4,7 @@
 
 #include "baldr/sign.h"
 #include "baldr/signinfo.h"
+#include "baldr/streetname.h"
 
 #include "odin/sign.h"
 

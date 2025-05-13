@@ -4,11 +4,14 @@
 #include <string>
 #include <vector>
 
-#include <boost/property_tree/ptree.hpp>
-
-#include <valhalla/baldr/landmark.h>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
+
+namespace baldr {
+enum class LandmarkType : uint8_t;
+class Landmark;
+} // namespace baldr
 namespace mjolnir {
 
 struct LandmarkDatabase {

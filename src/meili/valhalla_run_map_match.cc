@@ -1,8 +1,9 @@
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 
-#include "meili/map_matcher_factory.h"
-#include "meili/measurement.h"
+#include <valhalla/meili/map_matcher.h>
+#include <valhalla/meili/map_matcher_factory.h>
+#include <valhalla/meili/measurement.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::meili;

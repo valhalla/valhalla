@@ -7,6 +7,7 @@
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "proto/common.pb.h"
+#include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 #include "tyr/serializers.h"
 

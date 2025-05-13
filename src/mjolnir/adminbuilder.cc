@@ -1,20 +1,25 @@
-#include "mjolnir/adminbuilder.h"
-#include "filesystem.h"
-#include "mjolnir/adminconstants.h"
-#include "mjolnir/pbfadminparser.h"
-#include "mjolnir/sqlite3.h"
+#include <cstdint>
+#include <filesystem>
+#include <string>
+#include <vector>
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/property_tree/ptree.hpp>
-
 #include <geos_c.h>
 #include <sqlite3.h>
 
-#include <cstdint>
-#include <string>
-#include <vector>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/mjolnir/adminbuilder.h>
+#include <valhalla/mjolnir/adminconstants.h>
+#include <valhalla/mjolnir/osmadmindata.h>
+#include <valhalla/mjolnir/pbfadminparser.h>
+#include <valhalla/mjolnir/sqlite3.h>
+#include <valhalla/mjolnir/util.h>
 
 BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
                                  double,
@@ -376,8 +381,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return false;
   }
 
-  const filesystem::path parent_dir = filesystem::path(*database).parent_path();
-  if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+  const std::filesystem::path parent_dir = std::filesystem::path(*database).parent_path();
+  if (!std::filesystem::exists(parent_dir) && !std::filesystem::create_directories(parent_dir)) {
     LOG_ERROR("Can't create parent directory " + parent_dir.string());
     return false;
   }
@@ -787,8 +792,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   LOG_INFO("Writing database to disk.");
-  if (filesystem::exists(*database)) {
-    filesystem::remove(*database);
+  if (std::filesystem::exists(*database)) {
+    std::filesystem::remove(*database);
   }
 
   auto db_on_disk = Sqlite3::open((*database).c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);

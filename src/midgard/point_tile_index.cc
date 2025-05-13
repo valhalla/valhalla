@@ -1,6 +1,9 @@
-#include "midgard/point_tile_index.h"
-
 #include <list>
+
+#include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/point_tile_index.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/tiles.h>
 
 namespace valhalla {
 

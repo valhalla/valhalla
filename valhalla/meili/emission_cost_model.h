@@ -3,8 +3,8 @@
 
 #include <functional>
 
-#include <valhalla/meili/config.h>
-#include <valhalla/meili/state.h>
+#include "valhalla/meili/config.h"
+#include "valhalla/meili/state.h"
 
 namespace valhalla {
 namespace meili {
