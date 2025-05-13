@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <geos_c.h>
+
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/ellipse.h>
@@ -369,6 +371,9 @@ public:
   template <class container_t>
   std::unordered_map<int32_t, std::unordered_set<unsigned short>>
   Intersect(const container_t& line_string) const;
+
+  std::unordered_map<int32_t, std::unordered_set<unsigned short>>
+  Intersect(const GEOSGeometry* line_string) const;
 
   /**
    * Intersect the bounding box with the tiles to see which tiles and sub-cells
