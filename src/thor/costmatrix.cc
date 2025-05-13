@@ -1310,17 +1310,13 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
     std::vector<PointLL> shp = tile->edgeinfo(start_edge).shape();
     if (!start_edge->forward())
       std::reverse(shp.begin(), shp.end());
-    request.mutable_matrix()
-        ->mutable_begin_heading()
-        ->Set(connection_idx, PointLL::HeadingAlongPolyline(shp, start_edge->length() * source_pct));
+    request.mutable_matrix()->mutable_begin_heading()->Set(connection_idx, source_edge.heading());
     const DirectedEdge* end_edge =
         graphreader.directededge(static_cast<GraphId>(target_edge.graph_id()), tile);
     shp = tile->edgeinfo(end_edge).shape();
     if (!end_edge->forward())
       std::reverse(shp.begin(), shp.end());
-    request.mutable_matrix()
-        ->mutable_end_heading()
-        ->Set(connection_idx, PointLL::HeadingAlongPolyline(shp, end_edge->length() * target_pct));
+    request.mutable_matrix()->mutable_end_heading()->Set(connection_idx, target_edge.heading());
   }
 
   // bail if no shape was requested
