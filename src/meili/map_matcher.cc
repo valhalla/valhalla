@@ -449,6 +449,7 @@ std::vector<MatchResult> FindMatchResults(const MapMatcher& mapmatcher,
                                           const std::vector<StateId>& stateids,
                                           baldr::GraphReader& graph_reader) {
   std::vector<MatchResult> results;
+  results.reserve(stateids.size());
   for (StateId::Time time = 0; time < stateids.size(); time++) {
     results.push_back(FindMatchResult(mapmatcher, stateids, time, graph_reader));
   }

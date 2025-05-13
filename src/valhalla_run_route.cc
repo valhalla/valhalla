@@ -134,7 +134,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
   auto t1 = std::chrono::high_resolution_clock::now();
   auto paths =
       pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
-  cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+  const cost_ptr_t& cost = mode_costing[static_cast<uint32_t>(mode)];
 
   // If bidirectional A*, disable use of destination only edges on the first pass.
   // If there is a failure, we allow them on the second pass.
@@ -198,7 +198,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
-    std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+    const std::shared_ptr<DynamicCost>& cost = mode_costing[static_cast<uint32_t>(mode)];
     const auto projections = Search(locations, reader, cost);
     std::vector<PathLocation> path_location;
     valhalla::Options options;
