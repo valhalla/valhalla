@@ -28,6 +28,7 @@
    * FIXED: Fix edge walk across tiles when traffic or predicted speeds are used [#5198](https://github.com/valhalla/valhalla/pull/5198)
    * FIXED: multi-edge steps maneuvers [#5191](https://github.com/valhalla/valhalla/pull/5191)
    * FIXED: remove start maneuver if route starts on stairs/escalators [#5127](https://github.com/valhalla/valhalla/pull/5127)
+   * FIXED: Verify edge shapes in edge walking to find the correct edges when there are multiple path with approximately the same length (e.g. in a roundabout) [#5210](https://github.com/valhalla/valhalla/pull/5210)
    * FIXED: compilation with clang 20 [#5208](https://github.com/valhalla/valhalla/pull/5208)
    * FIXED: compatibility with GEOS <3.12 [#5224](https://github.com/valhalla/valhalla/pull/5224)
    * FIXED: gtest linkage errors with clang 17+ on MacOS [#5227](https://github.com/valhalla/valhalla/pull/5227)
@@ -67,6 +68,7 @@
    * ADDED: Sqlite3 RAII wrapper around sqlite3* and spatielite connection [#5206](https://github.com/valhalla/valhalla/pull/5206)
    * CHANGED: Improved SQL statements when building admins [#5219](https://github.com/valhalla/valhalla/pull/5219)
    * CHANGED: Replace `boost::geometry` by GEOS for operations with admin/tz polygons and clip them by tile bbox [#5204](https://github.com/valhalla/valhalla/pull/5204)
+   * UPDATED: bump cxxopts [#5243](https://github.com/valhalla/valhalla/pull/5243)
    * CHANGED: Switch to PyPI version of `clang-format` [#5237](https://github.com/valhalla/valhalla/pull/5237)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
