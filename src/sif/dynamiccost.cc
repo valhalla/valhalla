@@ -290,7 +290,7 @@ void DynamicCost::SetHierarchyLimits(const std::vector<HierarchyLimits>& hierarc
 void DynamicCost::RelaxHierarchyLimits(const bool using_bidirectional) {
   // since bidirectional A* does about half the expansion we can do half the relaxation here
   const float relax_factor = using_bidirectional ? 8.f : 16.f;
-  const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f; // changed
+  const float expansion_within_factor = using_bidirectional ? 2.0f : 4.0f;
 
   for (auto& hierarchy : hierarchy_limits_) {
     sif::RelaxHierarchyLimits(hierarchy, relax_factor, expansion_within_factor);
@@ -512,11 +512,6 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   JSON_PBF_DEFAULT(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
                    exclude_cash_only_tolls);
-
-  JSON_PBF_DEFAULT(co, cfg.exclude_highways_, json, "/exclude_highways", exclude_highways);
-  JSON_PBF_DEFAULT(co, cfg.exclude_tunnels_, json, "/exclude_tunnels", exclude_tunnels);
-  JSON_PBF_DEFAULT(co, cfg.exclude_tolls_, json, "/exclude_tolls", exclude_tolls);
-  JSON_PBF_DEFAULT(co, cfg.exclude_ferries_, json, "/exclude_ferries", exclude_ferries);
 
   // service_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty);

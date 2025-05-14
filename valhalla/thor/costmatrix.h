@@ -344,19 +344,6 @@ protected:
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   float GetAstarHeuristic(const uint32_t loc_idx, const PointLL& node_ll) const;
 
-  /**
-   * Get the minimum AStar heuristic for a given source/target, i.e. for a source we get
-   * the minimum heuristic of all targets for the forward expansion, so that we direct
-   * the search towards the closest target/source.
-   *
-   * @param loc_idx  either the source or target index
-   * @param node_ll  the current edge's end node's lat/lon
-   * @returns The heuristic for the closest target/source of the passed node
-   */
-  template <const MatrixExpansionType expansion_direction,
-            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
-  float GetAstarHeuristic(const uint32_t loc_idx, const PointLL& node_ll) const;
-
 private:
   class ReachedMap;
 

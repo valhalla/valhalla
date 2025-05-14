@@ -5051,9 +5051,6 @@ struct graph_parser {
   // node linguistics
   std::unique_ptr<sequence<OSMNodeLinguistic>> node_linguistics_;
 
-  // node linguistics
-  std::unique_ptr<sequence<OSMNodeLinguistic>> node_linguistics_;
-
   // used to set "culdesac" labels to loop roads correctly
   culdesac_processor culdesac_processor_;
 

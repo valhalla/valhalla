@@ -1,13 +1,5 @@
 ## UNRELEASED
 * **Removed**
-* **Bug Fix**
-   * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
-   * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
-* **Enhancement**
-   * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
-   * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
-   * ADDED: include level change info in `/route` response [#4942](https://github.com/valhalla/valhalla/pull/4942)
-   * ADDED: steps and elevator maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)
    * REMOVED: validity checks for historical speeds [#5087](https://github.com/valhalla/valhalla/pull/5087) 
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
@@ -156,7 +148,6 @@
    * FIXED: wrong index used in CostMatrix expansion callback inside reverse connection check [#4821](https://github.com/valhalla/valhalla/pull/4821)
    * FIXED: oneway ferry connections classification [#4828](https://github.com/valhalla/valhalla/pull/4828)
    * FIXED: location search_filter ignored in certain cases [#4835](https://github.com/valhalla/valhalla/pull/4835)
-
    * FIXED: Ferry reclassification finds shortest path that is blocked by inaccessible node [#4854](https://github.com/valhalla/valhalla/pull/4854)
    * FIXED: `(Nov - Mar)` (and similar, months with spaces) condition parsing [#4857](https://github.com/valhalla/valhalla/pull/4857)
 * **Enhancement**
@@ -174,7 +165,7 @@
    * ADDED: support for `:forward` and `:backward` for `motor_vehicle`, `vehicle`, `foot` and `bicycle` tag prefixes [#4204](https://github.com/valhalla/valhalla/pull/4204)
    * ADDED: add `valhalla_build_landmarks` to parse POIs from osm pbfs and store them as landmarks in the landmark sqlite database [#4201](https://github.com/valhalla/valhalla/pull/4201)
    * ADDED: add primary key in the landmark sqlite database and a method to retrieve landmarks via their primary keys [#4224](https://github.com/valhalla/valhalla/pull/4224)
-   * CHANGED: the boost property tree config is now read in to a singleton that doesn't need to be passed down anymore [#4220](https://github.com/valhalla/valhalla/pull/4220)   * ADDED: update graph tile to allow adding landmarks to edge info, and refactor edgeinfo.cc [#4233](https://github.com/valhalla/valhalla/pull/4233)
+   * ADDED: update graph tile to allow adding landmarks to edge info, and refactor edgeinfo.cc [#4233](https://github.com/valhalla/valhalla/pull/4233)
    * ADDED: `sources_to_targets` action for `/expansion` [#4263](https://github.com/valhalla/valhalla/pull/4263)
    * ADDED: option `--extract-tar` to `valhalla_build_extract` to create extracts from .tar files instead of tile directory [#4255](https://github.com/valhalla/valhalla/pull/4255)
    * ADDED: Support for `bannerInstructions` attribute in OSRM serializer via `banner_instructions` request parameter [#4093](https://github.com/valhalla/valhalla/pull/4093)
@@ -232,12 +223,6 @@
    * ADDED: Added ssmlAnnouncements for voice instructions and removed voice and banner instructions from last step. [#4644](https://github.com/valhalla/valhalla/pull/4644)
    * ADDED: deadend information in directed edge JSON for `/locate` [#4751](https://github.com/valhalla/valhalla/pull/4751) 
    * ADDED: Dedupe option for expansion, significantly reducing the response size. [#4601](https://github.com/valhalla/valhalla/issues/4601)
-   * FIXED: remove old code that allows bicycle access on hiking trails. [#4781](https://github.com/valhalla/valhalla/pull/4781)
-   * ADDED: `expansion_type` property to `/expansion` [#4784](https://github.com/valhalla/valhalla/pull/4784)
-   * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
-   * ADDED: `use_truck_route` [#4809](https://github.com/valhalla/valhalla/pull/4809)
-   * ADDED: Add option `edge.country_crossing` to trace attributes[4825](https://github.com/valhalla/valhalla/pull/4825)
-   * CHANGED: Unification of turn costs for ramps and roundabouts[4827](https://github.com/valhalla/valhalla/pull/4827)
    * ADDED: `expansion_type` property to `/expansion` [#4784](https://github.com/valhalla/valhalla/pull/4784)
    * ADDED: inline config arg for `valhalla_build_elevation` script [#4787](https://github.com/valhalla/valhalla/pull/4787)
    * ADDED: `use_truck_route` [#4809](https://github.com/valhalla/valhalla/pull/4809)
@@ -304,7 +289,6 @@
    * ADDED: "has_transit_tiles" & "osm_changeset" to verbose status response [#4062](https://github.com/valhalla/valhalla/pull/4062)
    * ADDED: time awareness to CostMatrix for e.g. traffic support [#4071](https://github.com/valhalla/valhalla/pull/4071)
    * UPDATED: transifex translations [#4102](https://github.com/valhalla/valhalla/pull/4102)
-   * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**

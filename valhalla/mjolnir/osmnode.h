@@ -58,9 +58,6 @@ struct OSMNode {
   // linguistic information
   uint32_t linguistic_info_index_;
 
-  // linguistic information
-  uint32_t linguistic_info_index_;
-
   // Lat,lng of the node at fixed 7digit precision
   uint32_t lng7_;
   uint32_t lat7_;
@@ -527,22 +524,6 @@ struct OSMNode {
    */
   bool cash_only_toll() const {
     return cash_only_toll_;
-  }
-
-  /**
-   * Sets the index for the linguistic info
-   * @param  idx  Index for the linguistic info.
-   */
-  void set_linguistic_info_index(const uint32_t idx) {
-    linguistic_info_index_ = idx;
-  }
-
-  /**
-   * Get the linguistic info index.
-   * @return  Returns the index for the linguistic info.
-   */
-  uint32_t linguistic_info_index() const {
-    return linguistic_info_index_;
   }
 
   /**

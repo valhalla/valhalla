@@ -17,7 +17,6 @@ struct GEOSWKBReader_t;
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-namespace bg = boost::geometry;
 
 namespace valhalla {
 namespace mjolnir {

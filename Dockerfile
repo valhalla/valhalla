@@ -1,3 +1,12 @@
+# TODO: we should make use of BUILDPLATFORM and TARGETPLATFORM to figure out cross compiling
+#  as mentioned here: docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide
+#  then we could use the host architecture to simply compile to the target architecture without
+#  emulating the target architecture (thereby making the build hyper slow). the general gist is
+#  we add arm (or whatever architecture) repositories to apt and then install our dependencies
+#  with the architecture suffix, eg. :arm64. then we just need to set a bunch of cmake variables
+#  probably with the use of a cmake toolchain file so that cmake can make sure to use the
+#  binaries that can target the target architecture. from there bob is your uncle maybe..
+
 ####################################################################
 FROM ubuntu:24.04 AS builder
 LABEL org.opencontainers.image.authors="Kevin Kreiser <kevinkreiser@gmail.com>"

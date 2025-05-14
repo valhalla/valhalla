@@ -415,3 +415,4 @@ message LevelChange {
   float level = 2; 
   uint32 precision = 3;
 }
+
