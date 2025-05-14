@@ -1543,7 +1543,7 @@ TEST(Astar, BiDirTrivial) {
   create_costing_options(options, Costing::auto_);
   vs::TravelMode mode;
   auto mode_costing = vs::CostFactory().CreateModeCosting(options, mode);
-  auto cost = mode_costing[int(mode)];
+  const auto& cost = mode_costing[int(mode)];
   set_hierarchy_limits(cost, true);
 
   // Loki

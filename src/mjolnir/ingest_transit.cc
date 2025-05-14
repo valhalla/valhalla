@@ -316,7 +316,7 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& f
     // Add the Egress
     int node_count = tile.nodes_size();
     for (const auto& child : tile_children) {
-      auto child_stop = feed.get_stop(child.second);
+      const auto& child_stop = feed.get_stop(child.second);
       if (child.first.id == station.id && child.first.feed == station.feed &&
           child_stop.location_type == gtfs::StopLocationType::EntranceExit) {
         setup_stops(tile, child_stop, node_id, platform_node_ids, station.feed,
@@ -346,7 +346,7 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& f
     node_count = tile.nodes_size();
     prev_id = GraphId(tile.nodes().rbegin()->graphid());
     for (const auto& child : tile_children) {
-      auto child_stop = feed.get_stop(child.second);
+      const auto& child_stop = feed.get_stop(child.second);
 
       if (child.first.id == station.id && child.first.feed == station.feed &&
           child_stop.location_type == gtfs::StopLocationType::StopOrPlatform) {

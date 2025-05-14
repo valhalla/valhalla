@@ -133,8 +133,8 @@ baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
  * @param shape  The points making up the line.
  * @returns The GeoJSON geometry of the LineString
  */
-baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape);
-void geojson_shape(const std::vector<midgard::PointLL> shape, rapidjson::writer_wrapper_t& writer);
+baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape);
+void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer);
 
 // Elevation serialization support
 

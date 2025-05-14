@@ -245,7 +245,7 @@ TEST(Isochrones, OriginEdge) {
                                  {{"/contours/0/time", "10"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
-  auto WaypointToBoostPoint = [&](std::string waypoint) {
+  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
     auto point = map.nodes[waypoint];
     return point_type(point.x(), point.y());
   };
@@ -280,7 +280,7 @@ TEST(Isochrones, LongEdge) {
                                  {{"/contours/0/time", "15"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
-  auto WaypointToBoostPoint = [&](std::string waypoint) {
+  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
     auto point = map.nodes[waypoint];
     return point_type(point.x(), point.y());
   };

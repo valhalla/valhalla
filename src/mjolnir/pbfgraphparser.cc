@@ -4470,7 +4470,7 @@ struct graph_parser {
     std::vector<std::string> tokens = GetTagTokens(t, ':');
     if (tokens.size() == 2) {
 
-      std::string lang = tokens.at(1);
+      const std::string& lang = tokens.at(1);
       if (stringLanguage(lang) != Language::kNone &&
           !tag.second.empty()) // name:en, name:ar, name:fr, etc
       {

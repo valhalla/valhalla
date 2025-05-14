@@ -1491,7 +1491,7 @@ void enhance(const boost::property_tree::ptree& pt,
                directededge.use() == Use::kPedestrianCrossing ||
                directededge.use() == Use::kSidewalk || directededge.use() == Use::kTrack)) {
 
-            std::vector<int> access = country_access.at(country_code);
+            const std::vector<int>& access = country_access.at(country_code);
             // leaves tile flag indicates that we have an access record for this edge.
             // leaves tile flag is updated later to the real value.
             if (directededge.leaves_tile()) {

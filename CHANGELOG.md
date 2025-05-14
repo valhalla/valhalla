@@ -72,6 +72,7 @@
    * UPDATED: bump cxxopts [#5243](https://github.com/valhalla/valhalla/pull/5243)
    * ADDED: Make iterations limit configurable in costmatrix [#5221](https://github.com/valhalla/valhalla/pull/5221)
    * ADDED: Enforce the order of includes via `clang-format` [5230](https://github.com/valhalla/valhalla/pull/5230)
+   * CHANGED: Switch to PyPI version of `clang-format` [#5237](https://github.com/valhalla/valhalla/pull/5237)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

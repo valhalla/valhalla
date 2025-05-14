@@ -192,7 +192,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   sql += ")";
 
   // callback for the sql query
-  auto populate_landmarks = [](void* data, int argc, char** argv, char** col_names) {
+  auto populate_landmarks = [](void* data, int /*argc*/, char** argv, char** /*col_names*/) {
     std::vector<Landmark>* landmarks = static_cast<std::vector<Landmark>*>(data);
 
     int64_t landmark_id = static_cast<int64_t>(std::stoi(argv[0]));

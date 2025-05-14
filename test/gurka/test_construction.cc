@@ -153,7 +153,7 @@ TEST_F(ConstructionRoutingTest, IgnoreConstruction) {
 }
 
 TEST_P(ConstructionRoutingTest, CheckAvoidRoadsUnderConstruction) {
-  const auto costing = GetParam();
+  const auto& costing = GetParam();
 
   auto result = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, costing);
   // road under construction "BC" should be avoided
