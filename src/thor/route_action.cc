@@ -1,6 +1,3 @@
-#include "thor/worker.h"
-#include <cstdint>
-
 #include "baldr/attributes_controller.h"
 #include "baldr/datetime.h"
 #include "baldr/json.h"
@@ -8,11 +5,13 @@
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "proto/common.pb.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
+#include "thor/worker.h"
 
-#include "proto/common.pb.h"
+#include <cstdint>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

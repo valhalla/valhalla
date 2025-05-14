@@ -1,21 +1,20 @@
-#include "proto/options.pb.h"
-#include "sif/costconstants.h"
-#include "test.h"
-
-#include <iostream>
-#include <string>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <vector>
-
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/worker.h"
-#include "thor/worker.h"
-
+#include "proto/options.pb.h"
+#include "sif/costconstants.h"
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
+#include "test.h"
 #include "thor/matrixalgorithm.h"
 #include "thor/timedistancebssmatrix.h"
+#include "thor/worker.h"
+
+#include <valhalla/baldr/rapidjson_utils.h>
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::thor;

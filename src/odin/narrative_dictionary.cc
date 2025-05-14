@@ -1,8 +1,7 @@
-#include <boost/property_tree/ptree.hpp>
-
+#include "odin/narrative_dictionary.h"
 #include "midgard/logging.h"
 
-#include "odin/narrative_dictionary.h"
+#include <boost/property_tree/ptree.hpp>
 
 namespace {
 

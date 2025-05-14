@@ -3,6 +3,7 @@
 #include "baldr/tilehierarchy.h"
 
 #include <boost/range/adaptor/map.hpp>
+
 #include <utility>
 
 namespace bra = boost::adaptors;

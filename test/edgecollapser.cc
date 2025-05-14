@@ -1,20 +1,19 @@
 
+#include "baldr/directededge.h"
+#include "baldr/graphreader.h"
+#include "baldr/merge.h"
+#include "baldr/nodeinfo.h"
+#include "baldr/rapidjson_utils.h"
+#include "baldr/tilehierarchy.h"
+#include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <cstdint>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
-#include "baldr/directededge.h"
-#include "baldr/graphreader.h"
-#include "baldr/merge.h"
-#include "baldr/nodeinfo.h"
-#include "baldr/tilehierarchy.h"
-
-#include "test.h"
 
 namespace vb = valhalla::baldr;
 

@@ -5,6 +5,7 @@
 #include "thor/pathalgorithm.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
 #include <robin_hood.h>
 
 using namespace rapidjson;

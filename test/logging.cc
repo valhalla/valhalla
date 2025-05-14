@@ -1,4 +1,5 @@
 #include "midgard/logging.h"
+#include "test.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -8,8 +9,6 @@
 #include <sstream>
 #include <thread>
 #include <vector>
-
-#include "test.h"
 
 using namespace valhalla::midgard;
 

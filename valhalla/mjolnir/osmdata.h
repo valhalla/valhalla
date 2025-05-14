@@ -1,10 +1,6 @@
 #ifndef VALHALLA_MJOLNIR_OSMDATA_H
 #define VALHALLA_MJOLNIR_OSMDATA_H
 
-#include <cstdint>
-#include <string>
-#include <unordered_set>
-
 #include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/mjolnir/osmaccessrestriction.h>
 #include <valhalla/mjolnir/osmlinguistic.h>
@@ -13,6 +9,10 @@
 #include <valhalla/mjolnir/osmrestriction.h>
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/uniquenames.h>
+
+#include <cstdint>
+#include <string>
+#include <unordered_set>
 
 namespace valhalla {
 namespace mjolnir {

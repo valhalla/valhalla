@@ -8,6 +8,7 @@
 #include "sif/recost.h"
 #include "thor/alternates.h"
 #include "worker.h"
+
 #include <algorithm>
 
 using namespace valhalla::midgard;

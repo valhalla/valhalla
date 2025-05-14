@@ -1,13 +1,6 @@
 // -*- mode: c++ -*-
 #ifndef MMP_ROUTING_H_
 #define MMP_ROUTING_H_
-#include <cstdint>
-
-#include <algorithm>
-#include <stdexcept>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -17,6 +10,12 @@
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <stdexcept>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace meili {
