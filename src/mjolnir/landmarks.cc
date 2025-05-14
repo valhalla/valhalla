@@ -1,16 +1,14 @@
 #include "mjolnir/landmarks.h"
-#include "filesystem.h"
-
 #include "baldr/graphreader.h"
-#include "midgard/sequence.h"
-#include "mjolnir/util.h"
-
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "loki/search.h"
+#include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/sqlite3.h"
+#include "mjolnir/util.h"
 #include "sif/nocost.h"
 
 #include <osmium/io/pbf_input.hpp>

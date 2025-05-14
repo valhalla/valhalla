@@ -1,15 +1,15 @@
-#include <algorithm>
-#include <sstream>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/join.hpp>
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/join.hpp>
+
+#include <algorithm>
+#include <sstream>
 
 namespace {
 const valhalla::baldr::DateTime::dt_info_t INVALID_DT = {"", "", ""};

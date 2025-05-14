@@ -1,17 +1,17 @@
-#include <cstdint>
+#include "argparse_utils.h"
+#include "baldr/double_bucket_queue.h"
+#include "midgard/logging.h"
+#include "midgard/util.h"
+#include "sif/edgelabel.h"
+
 #include <cxxopts.hpp>
+
+#include <cstdint>
 #include <iostream>
 #include <queue>
 #include <random>
 #include <string>
 #include <vector>
-
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "sif/edgelabel.h"
-
-#include "argparse_utils.h"
-#include "baldr/double_bucket_queue.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -1,5 +1,4 @@
 #include "baldr/turn.h"
-
 #include "test.h"
 
 using namespace std;

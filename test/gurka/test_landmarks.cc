@@ -1,8 +1,3 @@
-#include <filesystem>
-#include <gtest/gtest.h>
-#include <iomanip>
-#include <vector>
-
 #include "baldr/graphreader.h"
 #include "baldr/landmark.h"
 #include "gurka.h"
@@ -12,6 +7,11 @@
 #include "test/test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
+
+#include <filesystem>
+#include <iomanip>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

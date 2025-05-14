@@ -1,5 +1,7 @@
 #pragma once
 
+#include <valhalla/filesystem.h>
+
 #include <algorithm>
 #include <cerrno>
 #include <cmath>
@@ -17,8 +19,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <valhalla/filesystem.h>
 
 #ifdef _WIN32
 #include <io.h>

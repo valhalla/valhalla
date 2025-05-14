@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -7,7 +8,7 @@
 
 using namespace valhalla;
 
-//#############################################################################
+// #############################################################################
 class InstructionsSharpBendTrack : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -73,7 +74,7 @@ TEST_F(InstructionsSharpBendTrack, IgnoreRight) {
                                                             "Continue for 3 kilometers.");
 }
 
-//#############################################################################
+// #############################################################################
 class InstructionsSharpBendPath : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -138,7 +139,7 @@ TEST_F(InstructionsSharpBendPath, IgnoreRight) {
                                                             "Drive east on 船原西浦高原線, 127.",
                                                             "Continue for 3 kilometers.");
 }
-//#############################################################################
+// #############################################################################
 class InstructionsSharpBendFootway : public ::testing::Test {
 protected:
   static gurka::map map;

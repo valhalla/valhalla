@@ -1,10 +1,8 @@
-#include <cstdint>
-
 #include "baldr/graphtile.h"
-
-#include <vector>
-
 #include "test.h"
+
+#include <cstdint>
+#include <vector>
 
 using namespace valhalla::baldr;
 

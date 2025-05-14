@@ -63,7 +63,7 @@ function(BIN2H)
         math(EXPR pos "${pos}+1")
         string(SUBSTRING "${string}" ${pos} -1 string)
       endif()
-      
+
       string(LENGTH "${string}" arraySize)
       if(MSVC) # TODO: Effectively deactivated by earlier NOT MSVC, still on brainstorming
         # Alternative workaround for MSVC limits to generate long string literals with concatenation:
@@ -117,9 +117,10 @@ function(BIN2H)
     string(TOLOWER "${BIN2H_VARIABLE_NAME}" BIN2H_VARIABLE_NAME)
 
     # declares byte array and the length variables
+    set(includeDefinition "#include <cstddef>\n")
     set(arrayDefinition "const unsigned char ${BIN2H_VARIABLE_NAME}[] = ${arrayValues};")
     set(arraySizeDefinition "const size_t ${BIN2H_VARIABLE_NAME}_len = ${arraySize};")
-    set(declarations "${arrayDefinition}\n\n${arraySizeDefinition}\n\n")
+    set(declarations "${includeDefinition}\n${arrayDefinition}\n\n${arraySizeDefinition}\n\n")
     if(BIN2H_APPEND)
         file(APPEND ${BIN2H_HEADER_FILE} "${declarations}")
     else()

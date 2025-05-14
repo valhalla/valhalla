@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_JSON_H_
 
 #include <boost/variant.hpp>
+
 #include <cctype>
 #include <cinttypes>
 #include <cmath>

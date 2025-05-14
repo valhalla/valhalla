@@ -1,9 +1,5 @@
 #pragma once
 
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -13,6 +9,10 @@
 #include <valhalla/proto_conversions.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace valhalla {
 namespace thor {

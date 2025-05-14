@@ -1,9 +1,6 @@
 #ifndef VALHALLA_SIF_COSTFACTORY_H_
 #define VALHALLA_SIF_COSTFACTORY_H_
 
-#include <functional>
-#include <map>
-
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto_conversions.h>
@@ -16,6 +13,9 @@
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/sif/transitcost.h>
 #include <valhalla/sif/truckcost.h>
+
+#include <functional>
+#include <map>
 
 namespace valhalla {
 namespace sif {

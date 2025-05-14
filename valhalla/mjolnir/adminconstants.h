@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_ADMINCONSTANTS_H_
 #define VALHALLA_MJOLNIR_ADMINCONSTANTS_H_
 
+#include <valhalla/baldr/graphconstants.h>
+
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
 
 using namespace valhalla::baldr;
 

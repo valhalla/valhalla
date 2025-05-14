@@ -1,13 +1,13 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
-
 #include <valhalla/midgard/util.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/thor/dijkstras.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <cstdint>
+#include <vector>
 
 namespace valhalla {
 namespace thor {

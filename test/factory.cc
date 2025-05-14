@@ -3,7 +3,6 @@
 #include "sif/bicyclecost.h"
 #include "sif/costfactory.h"
 #include "sif/pedestriancost.h"
-
 #include "test.h"
 
 using namespace std;

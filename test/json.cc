@@ -1,9 +1,8 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
+#include "test.h"
 
 #include <cstdint>
-
-#include "test.h"
 
 namespace {
 
