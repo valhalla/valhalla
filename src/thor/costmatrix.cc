@@ -1,15 +1,15 @@
-#include <algorithm>
-#include <cmath>
-#include <vector>
-
+#include "thor/costmatrix.h"
 #include "baldr/datetime.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/recost.h"
-#include "thor/costmatrix.h"
 #include "worker.h"
 
 #include <robin_hood.h>
+
+#include <algorithm>
+#include <cmath>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -19,11 +19,17 @@ namespace {
 constexpr uint32_t kMaxMatrixIterations = 2000000;
 constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
 constexpr uint32_t kMaxLocationReservation = 25; // the default config for max matrix locations
+constexpr uint32_t kMinIterations = 100;
+constexpr uint32_t kDefaultIterations = 2800;
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
-int GetThreshold(const travel_mode_t mode, const int n) {
-  return (mode == travel_mode_t::kDrive) ? std::min(2800, std::max(100, n / 3)) : 500;
+int GetThreshold(const travel_mode_t mode,
+                 const uint32_t label_count,
+                 const uint32_t max_iterations) {
+  return (mode == travel_mode_t::kDrive)
+             ? std::min(max_iterations, std::max(kMinIterations, label_count / 3))
+             : 500;
 }
 
 bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
@@ -55,6 +61,8 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix.check_reverse_connection", false)),
+      max_iterations_(std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultIterations),
+                               static_cast<uint32_t>(1))),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
       current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
@@ -844,8 +852,10 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
         best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, Cost(c, s), d);
         if (best_connection_[idx].max_iterations == 0) {
           best_connection_[idx].max_iterations =
-              n + GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
-                                          edgelabel_[MATRIX_REV][target].size());
+              n + GetThreshold(mode_,
+                               edgelabel_[MATRIX_FORW][source].size() +
+                                   edgelabel_[MATRIX_REV][target].size(),
+                               max_iterations_);
         }
 
         // Update status and update threshold if this is the last location
@@ -959,8 +969,10 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
           best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(c, s), d);
           if (best_connection_[source_idx].max_iterations == 0) {
             best_connection_[source_idx].max_iterations =
-                n + GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
-                                            edgelabel_[MATRIX_REV][target].size());
+                n + GetThreshold(mode_,
+                                 edgelabel_[MATRIX_FORW][source].size() +
+                                     edgelabel_[MATRIX_REV][target].size(),
+                                 max_iterations_);
           }
 
           // Update status and update threshold if this is the last location
@@ -995,8 +1007,9 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
       // At least 1 connection has been found to each target for this source.
       // Set a threshold to continue search for a limited number of times.
       locs_status_[MATRIX_FORW][source].threshold =
-          GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
-                                  edgelabel_[MATRIX_REV][target].size());
+          GetThreshold(mode_,
+                       edgelabel_[MATRIX_FORW][source].size() + edgelabel_[MATRIX_REV][target].size(),
+                       max_iterations_);
     }
   }
 
@@ -1009,8 +1022,9 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
       // At least 1 connection has been found to each source for this target.
       // Set a threshold to continue search for a limited number of times.
       locs_status_[MATRIX_REV][target].threshold =
-          GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
-                                  edgelabel_[MATRIX_REV][target].size());
+          GetThreshold(mode_,
+                       edgelabel_[MATRIX_FORW][source].size() + edgelabel_[MATRIX_REV][target].size(),
+                       max_iterations_);
     }
   }
 }
@@ -1296,17 +1310,13 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
     std::vector<PointLL> shp = tile->edgeinfo(start_edge).shape();
     if (!start_edge->forward())
       std::reverse(shp.begin(), shp.end());
-    request.mutable_matrix()
-        ->mutable_begin_heading()
-        ->Set(connection_idx, PointLL::HeadingAlongPolyline(shp, start_edge->length() * source_pct));
+    request.mutable_matrix()->mutable_begin_heading()->Set(connection_idx, source_edge.heading());
     const DirectedEdge* end_edge =
         graphreader.directededge(static_cast<GraphId>(target_edge.graph_id()), tile);
     shp = tile->edgeinfo(end_edge).shape();
     if (!end_edge->forward())
       std::reverse(shp.begin(), shp.end());
-    request.mutable_matrix()
-        ->mutable_end_heading()
-        ->Set(connection_idx, PointLL::HeadingAlongPolyline(shp, end_edge->length() * target_pct));
+    request.mutable_matrix()->mutable_end_heading()->Set(connection_idx, target_edge.heading());
   }
 
   // bail if no shape was requested

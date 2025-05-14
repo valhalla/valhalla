@@ -1,9 +1,4 @@
 #include "mjolnir/elevationbuilder.h"
-
-#include <random>
-#include <thread>
-#include <utility>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -18,6 +13,10 @@
 #include "scoped_timer.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
+
+#include <random>
+#include <thread>
+#include <utility>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

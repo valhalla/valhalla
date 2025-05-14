@@ -1,17 +1,16 @@
-#include "gurka/gurka.h"
-#include "test.h"
-
-#include <string>
-#include <vector>
-
 #include "baldr/rapidjson_utils.h"
+#include "gurka/gurka.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
+#include "test.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::thor;

@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+
 #include <valhalla/midgard/encoded.h>
 #include <valhalla/thor/matrixalgorithm.h>
 
@@ -869,12 +870,17 @@ TEST(StandAlone, VerboseResponse) {
   const std::string ascii_map = R"(
     A-1-------B----C----D----E--2-------F
                    |    |
-                   J----K
-                   |    |             
-                   |    |             
-                   3    4             
-                   |    |
-                   L----M
+                   J----K--5------N
+                   |    |         \
+                   |    |          \
+                   3    4           6           
+                   |    |            \
+                   L----M             \
+                                       O
+                                       |
+                                       7
+                                       |
+                                       P
            )";
 
   const gurka::ways ways = {
@@ -882,15 +888,15 @@ TEST(StandAlone, VerboseResponse) {
       {"CD", {{"highway", "residential"}}}, {"DE", {{"highway", "residential"}}},
       {"FE", {{"highway", "residential"}}}, {"CJ", {{"highway", "residential"}}},
       {"JK", {{"highway", "residential"}}}, {"JLMK", {{"highway", "residential"}}},
-      {"KD", {{"highway", "residential"}}},
+      {"KD", {{"highway", "residential"}}}, {"KNOP", {{"highway", "residential"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_verbose_response",
                                      {{"service_limits.max_timedep_distance_matrix", "50000"}});
-  rapidjson::Document res_doc;
-  std::string res;
   {
+    rapidjson::Document res_doc;
+    std::string res;
     auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1", "2", "3", "4"},
                                 {"1", "2", "3", "4"}, "auto", {{"/prioritize_bidirectional", "1"}},
                                 nullptr, &res);
@@ -961,6 +967,94 @@ TEST(StandAlone, VerboseResponse) {
                   .GetObject()["end_heading"]
                   .GetDouble(),
               180);
+  }
+
+  // check heading at long and winding edges
+  {
+    rapidjson::Document res_doc;
+    std::string res;
+    auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1", "5", "6", "7"},
+                                {"1", "5", "6", "7"}, "auto",
+                                {{"/prioritize_bidirectional", "1"}, {"/shape_format", "polyline6"}},
+                                nullptr, &res);
+
+    res_doc.Parse(res.c_str());
+
+    // sanity check
+    EXPECT_EQ(api.matrix().algorithm(), Matrix::CostMatrix);
+
+    for (size_t i = 0; i < 4; ++i) {
+      for (size_t j = 0; j < 4; ++j) {
+        bool key_should_exist = true;
+        if (i == j)
+          key_should_exist = false;
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "begin_heading"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "end_heading"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "begin_lat"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "begin_lon"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "end_lat"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "end_lon"),
+                  key_should_exist);
+      }
+    }
+    size_t a, b;
+    auto get_shape = [&res_doc](size_t i, size_t j) {
+      return res_doc["sources_to_targets"]
+          .GetArray()[i]
+          .GetArray()[j]
+          .GetObject()["shape"]
+          .GetString();
+    };
+    auto get_heading = [&res_doc](size_t i, size_t j, const char* which) {
+      return res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject()[which].GetDouble();
+    };
+
+    // 1 -> 5
+    a = 0;
+    b = 1;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 90) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 90) << get_shape(a, b);
+
+    // 5 -> 1
+    a = 1;
+    b = 0;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 270) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 270) << get_shape(a, b);
+
+    // 1 -> 6
+    a = 0;
+    b = 2;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 90) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 140.1) << get_shape(a, b);
+
+    // 6 -> 1
+    a = 2;
+    b = 0;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 320.1) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 270) << get_shape(a, b);
+
+    // 1 -> 7
+    a = 0;
+    b = 3;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 90) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 180) << get_shape(a, b);
+
+    // 7 -> 1
+    a = 3;
+    b = 0;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 0) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 270) << get_shape(a, b);
   }
 }
 

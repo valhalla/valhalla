@@ -1,10 +1,4 @@
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <string>
-#include <unordered_map>
-#include <utility>
-
+#include "thor/triplegbuilder.h"
 #include "baldr/admin.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
@@ -23,8 +17,14 @@
 #include "proto/common.pb.h"
 #include "sif/costconstants.h"
 #include "sif/recost.h"
-#include "thor/triplegbuilder.h"
 #include "triplegbuilder_utils.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

@@ -32,6 +32,7 @@
    * FIXED: compilation with clang 20 [#5208](https://github.com/valhalla/valhalla/pull/5208)
    * FIXED: compatibility with GEOS <3.12 [#5224](https://github.com/valhalla/valhalla/pull/5224)
    * FIXED: gtest linkage errors with clang 17+ on MacOS [#5227](https://github.com/valhalla/valhalla/pull/5227)
+   * FIXED: matrix headings [#5244](https://github.com/valhalla/valhalla/pull/5244)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
@@ -68,6 +69,9 @@
    * ADDED: Sqlite3 RAII wrapper around sqlite3* and spatielite connection [#5206](https://github.com/valhalla/valhalla/pull/5206)
    * CHANGED: Improved SQL statements when building admins [#5219](https://github.com/valhalla/valhalla/pull/5219)
    * CHANGED: Replace `boost::geometry` by GEOS for operations with admin/tz polygons and clip them by tile bbox [#5204](https://github.com/valhalla/valhalla/pull/5204)
+   * UPDATED: bump cxxopts [#5243](https://github.com/valhalla/valhalla/pull/5243)
+   * ADDED: Make iterations limit configurable in costmatrix [#5221](https://github.com/valhalla/valhalla/pull/5221)
+   * ADDED: Enforce the order of includes via `clang-format` [5230](https://github.com/valhalla/valhalla/pull/5230)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

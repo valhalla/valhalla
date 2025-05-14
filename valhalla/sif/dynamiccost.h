@@ -1,7 +1,6 @@
 #ifndef VALHALLA_SIF_DYNAMICCOST_H_
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
-#include <cstdint>
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
@@ -22,8 +21,10 @@
 #include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/edgestatus.h>
 
-#include <memory>
 #include <rapidjson/document.h>
+
+#include <cstdint>
+#include <memory>
 #include <unordered_map>
 
 // macros aren't great but writing these out for every option is an abomination worse than this macro

@@ -1,11 +1,7 @@
-#include <sstream>
-#include <typeinfo>
-#include <unordered_map>
-
+#include "loki/worker.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/location.h"
-#include "loki/worker.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -19,6 +15,10 @@
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
+
+#include <sstream>
+#include <typeinfo>
+#include <unordered_map>
 
 using namespace valhalla;
 #ifdef ENABLE_SERVICES

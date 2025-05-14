@@ -1,17 +1,4 @@
-#include <cinttypes>
-#include <cstdint>
-#include <unordered_map>
-#include <vector>
-
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/io/wkt/wkt.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-#include <sqlite3.h>
-
+#include "argparse_utils.h"
 #include "baldr/admininfo.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -27,7 +14,19 @@
 #include "midgard/pointll.h"
 #include "mjolnir/sqlite3.h"
 
-#include "argparse_utils.h"
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/multi_polygon.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/io/wkt/wkt.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+#include <sqlite3.h>
+
+#include <cinttypes>
+#include <cstdint>
+#include <unordered_map>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

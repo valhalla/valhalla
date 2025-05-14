@@ -1,14 +1,13 @@
-#include <cmath>
-
+#include "meili/map_matcher.h"
 #include "meili/emission_cost_model.h"
 #include "meili/geometry_helpers.h"
-#include "meili/map_matcher.h"
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
 #include "worker.h"
 
 #include <array>
+#include <cmath>
 
 namespace {
 

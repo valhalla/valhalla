@@ -1,17 +1,6 @@
-#include <cstdint>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-#include <fstream>
-#include <iostream>
-
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-
+#include "argparse_utils.h"
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
@@ -19,7 +8,16 @@
 #include "mjolnir/servicedays.h"
 #include "valhalla/proto/transit.pb.h"
 
-#include "argparse_utils.h"
+#include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
+
+#include <cstdint>
+#include <fstream>
+#include <iostream>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

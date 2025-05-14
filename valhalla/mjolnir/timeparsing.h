@@ -1,10 +1,10 @@
 #pragma once
 
+#include <valhalla/baldr/graphconstants.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace mjolnir {

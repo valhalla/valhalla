@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -7,7 +8,7 @@
 
 using namespace valhalla;
 
-//#############################################################################
+// #############################################################################
 class InstructionsIsStraightest : public ::testing::Test {
 protected:
   static gurka::map map;

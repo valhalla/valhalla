@@ -1,3 +1,4 @@
+#include "gurka.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -11,16 +12,14 @@
 #include "mjolnir/util.h"
 #include "odin/worker.h"
 #include "proto/trip.pb.h"
+#include "test.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include "gurka.h"
-#include "test.h"
-
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-
+#include <gtest/gtest.h>
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/output_iterator.hpp>
@@ -33,8 +32,6 @@
 #include <string>
 #include <tuple>
 #include <utility>
-
-#include <gtest/gtest.h>
 
 namespace valhalla {
 namespace gurka {
