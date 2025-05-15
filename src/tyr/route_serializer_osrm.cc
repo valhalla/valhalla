@@ -1,10 +1,4 @@
-#include <numeric>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
+#include "route_serializer_osrm.h"
 #include "baldr/json.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
@@ -14,16 +8,21 @@
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrativebuilder.h"
 #include "odin/util.h"
-#include "route_serializer_osrm.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
+#include "proto_conversions.h"
 #include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
 #include "worker.h"
 
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
-#include "proto_conversions.h"
+#include <numeric>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <vector>
 #ifdef INLINE_TEST
 #include "test.h"
 #endif

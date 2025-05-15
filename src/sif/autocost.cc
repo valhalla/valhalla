@@ -9,11 +9,13 @@
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/osrm_car_duration.h"
+
 #include <cassert>
 
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
+
 #include <random>
 #endif
 
@@ -1050,8 +1052,9 @@ public:
 };
 
 template <class T>
-std::shared_ptr<TestAutoCost>
-make_autocost_from_json(const std::string& property, T testVal, const std::string& extra_json = "") {
+std::shared_ptr<TestAutoCost> make_autocost_from_json(const std::string& property,
+                                                      const T& testVal,
+                                                      const std::string& extra_json = "") {
   std::stringstream ss;
   ss << R"({"costing": "auto", "costing_options":{"auto":{")" << property << R"(":)" << testVal
      << "}}" << extra_json << "}";

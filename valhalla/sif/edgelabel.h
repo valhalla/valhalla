@@ -1,12 +1,13 @@
 #ifndef VALHALLA_SIF_EDGELABEL_H_
 #define VALHALLA_SIF_EDGELABEL_H_
 
-#include <cstdint>
-#include <string.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/sif/costconstants.h>
+
+#include <cstdint>
+#include <cstring>
 
 namespace valhalla {
 namespace sif {

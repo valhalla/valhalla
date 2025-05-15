@@ -1,6 +1,7 @@
 #include "meili/geometry_helpers.h"
 #include "midgard/encoded.h"
 #include "midgard/polyline2.h"
+
 #include <gtest/gtest.h>
 
 // Foundational geometric unit tests.

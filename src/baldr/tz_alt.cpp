@@ -169,7 +169,7 @@
 //#    include <wordexp.h>
 #  endif
 #  include <limits.h>
-#  include <string.h>
+#  include <cstring>
 #  if !USE_SHELL_API
 #    include <sys/stat.h>
 #    include <sys/fcntl.h>

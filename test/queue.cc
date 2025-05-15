@@ -1,11 +1,10 @@
 #include <cstdint>
 // -*- mode: c++ -*-
+#include "meili/priority_queue.h"
+#include "test.h"
+
 #include <cstdlib>
 #include <limits>
-
-#include "meili/priority_queue.h"
-
-#include "test.h"
 
 namespace {
 

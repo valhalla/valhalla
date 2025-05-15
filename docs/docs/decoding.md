@@ -6,7 +6,7 @@ Valhalla routing, map-matching, and elevation services use an encoded polyline f
 
 It is very important that you use six digits, rather than five as referenced in the Google algorithms documentation. With fewer than six digits, your locations are incorrectly placed (commonly, in the middle of an ocean), and you may receive errors with your API requests.
 
-Below are some sample algorithms to decode the string to create a list of latitude,longitude coordinates. Using this [demo tool](http://valhalla.github.io/demos/polyline/), you can also paste an encoded polyline string, decode it, and see the locations on a map (and save to GeoJSON). Use it to test and verify that your points are placed where you expected them.
+Below are some sample algorithms to decode the string to create a list of latitude,longitude coordinates. Using this [demo tool](https://valhalla.github.io/demos/polyline/), you can also paste an encoded polyline string, decode it, and see the locations on a map (and save to GeoJSON). Use it to test and verify that your points are placed where you expected them.
 
 ## JavaScript
 
@@ -174,52 +174,52 @@ decode <- function(encoded) {
   lats <- vector(mode = "integer", length = 1)
   lons <- vector(mode = "integer", length = 1)
   i <- 0
-  
+
   while (i < length(chars)){
     shift <- 0
     result <- 0
     byte <- 0x20L
-    
-    while (byte >= 0x20) {  
+
+    while (byte >= 0x20) {
       i <- i + 1
       byte <- chars[[i]] %>% utf8ToInt() - 63
       result <- bitwOr(result, bitwAnd(byte, 0x1f) %>% bitwShiftL(shift))
       shift <- shift + 5
       if (byte < 0x20) break
     }
-    
+
     if (bitwAnd(result, 1)) {
       result <- result %>% bitwShiftR(1) %>% bitwNot()
     } else {
       result <- result %>% bitwShiftR(1)
     }
-    
+
     lats <- c(lats, (lats[[length(lats)]] + result))
-    
+
     shift <- 0
     result <- 0
     byte <- 10000L
-    
-    while (byte >= 0x20) {  
+
+    while (byte >= 0x20) {
       i <- i + 1
       byte <- chars[[i]] %>% utf8ToInt() - 63
       result <- bitwOr(result, bitwAnd(byte, 0x1f) %>% bitwShiftL(shift))
       shift <- shift + 5
       if (byte < 0x20) break
     }
-    
+
     if (bitwAnd(result, 1)) {
       result <- result %>% bitwShiftR(1) %>% bitwNot()
     } else {
       result <- result %>% bitwShiftR(1)
     }
-    
+
     lons <- c(lons, (lons[[length(lons)]] + result))
   }
-  
+
   decoded <- tibble::tibble(lat = lats[2:length(lats)]/1000000,
                             lng = lons[2:length(lons)]/1000000)
-  
+
   return (decoded)
 }
 ```

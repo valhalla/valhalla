@@ -3,6 +3,7 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/landmarks.h"
+
 #include <cxxopts.hpp>
 
 int main(int argc, char** argv) {

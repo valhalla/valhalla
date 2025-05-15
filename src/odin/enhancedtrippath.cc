@@ -1,19 +1,16 @@
-#include <cmath>
-#include <cstdlib>
-
+#include "odin/enhancedtrippath.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
-
-#include "worker.h"
-
-#include "odin/enhancedtrippath.h"
 #include "odin/util.h"
-
 #include "proto/common.pb.h"
 #include "proto/trip.pb.h"
+#include "worker.h"
+
+#include <cmath>
+#include <cstdlib>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

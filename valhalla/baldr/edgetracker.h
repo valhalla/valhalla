@@ -1,9 +1,10 @@
 #ifndef VALHALLA_BALDR_EDGE_TRACKER_H_
 #define VALHALLA_BALDR_EDGE_TRACKER_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+
+#include <cstdint>
 
 namespace valhalla {
 namespace baldr {

@@ -19,8 +19,8 @@
 #include "scoped_timer.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/range/algorithm/remove_if.hpp>
 #include <osmium/io/pbf_input.hpp>
+
 #include <thread>
 #include <utility>
 
@@ -4470,7 +4470,7 @@ struct graph_parser {
     std::vector<std::string> tokens = GetTagTokens(t, ':');
     if (tokens.size() == 2) {
 
-      std::string lang = tokens.at(1);
+      const std::string& lang = tokens.at(1);
       if (stringLanguage(lang) != Language::kNone &&
           !tag.second.empty()) // name:en, name:ar, name:fr, etc
       {
