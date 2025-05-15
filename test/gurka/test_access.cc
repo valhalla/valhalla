@@ -419,7 +419,7 @@ TEST_F(MultipleBarriers, BarrierWallWithAccess) {
       {"1", {{"barrier", "debris"}, {"motor_vehicle", "yes"}}},
   };
   const gurka::map map =
-      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_wall");
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_wall_with_access");
   check_auto_path(map, {"A1", "1B"});
 }
 
