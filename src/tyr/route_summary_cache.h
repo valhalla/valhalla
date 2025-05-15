@@ -21,7 +21,8 @@ struct NamedSegment {
   NamedSegment(const NamedSegment& ns) : name(ns.name), index(ns.index), distance(ns.distance) {
   }
 
-  NamedSegment(NamedSegment&& ns) : name(std::move(ns.name)), index(ns.index), distance(ns.distance) {
+  NamedSegment(NamedSegment&& ns) noexcept
+      : name(std::move(ns.name)), index(ns.index), distance(ns.distance) {
   }
 
   NamedSegment& operator=(const NamedSegment& ns);
