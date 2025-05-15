@@ -803,6 +803,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     // has been found to the end node of this directed edge
     const auto& rev_edgestate = edgestatus_[MATRIX_REV][target];
     EdgeStatusInfo rev_edgestatus = rev_edgestate.Get(rev_edgeid);
+    const auto& fwd_edgelabels = edgelabel_[MATRIX_FORW][source];
     const auto& rev_edgelabels = edgelabel_[MATRIX_REV][target];
     uint32_t rev_predidx = rev_edgelabels[rev_edgestatus.index()].predecessor();
     const BDEdgeLabel& rev_label = rev_edgelabels[rev_edgestatus.index()];
@@ -837,19 +838,23 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       // to find for this source or target
       UpdateStatus(source, target);
     } else {
-      float oppcost = (rev_predidx == kInvalidLabel) ? 0.f : rev_edgelabels[rev_predidx].cost().cost;
-      float c = fwd_pred.cost().cost + oppcost + rev_label.transition_cost().cost;
+      // at this point, the found connection might still be somewhat trivial:
+      // the connecting edge might be an initial edge for either the given source or target
+      // there are two things we need to take care of in that case: we have to make sure to
+      // (1) only add the partial cost/distance for the connecting edge and (2) use the
+      // correct transition cost
+      auto& opp_label = rev_predidx == kInvalidLabel ? rev_label : rev_edgelabels[rev_predidx];
+      auto& label = rev_predidx == kInvalidLabel ? fwd_edgelabels[fwd_pred.predecessor()] : fwd_pred;
 
+      Cost total_cost =
+          label.cost() + opp_label.cost() +
+          (rev_predidx == kInvalidLabel ? fwd_pred.transition_cost() : rev_label.transition_cost());
       // Check if best connection
-      if (c < best_connection_[idx].cost.cost) {
-        float oppsec = (rev_predidx == kInvalidLabel) ? 0.f : rev_edgelabels[rev_predidx].cost().secs;
-        uint32_t oppdist =
-            (rev_predidx == kInvalidLabel) ? 0U : rev_edgelabels[rev_predidx].path_distance();
-        float s = fwd_pred.cost().secs + oppsec + rev_label.transition_cost().secs;
-        uint32_t d = fwd_pred.path_distance() + oppdist;
+      if (total_cost < best_connection_[idx].cost) {
+        uint32_t total_dist = label.path_distance() + opp_label.path_distance();
 
         // Update best connection and set a threshold
-        best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, Cost(c, s), d);
+        best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, total_cost, total_dist);
         if (best_connection_[idx].max_iterations == 0) {
           best_connection_[idx].max_iterations =
               n + GetThreshold(mode_,
@@ -922,6 +927,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
     EdgeStatusInfo fwd_edgestatus = edgestatus_[MATRIX_FORW][source].Get(fwd_edgeid);
     if (fwd_edgestatus.set() != EdgeSet::kUnreachedOrReset) {
       const auto& fwd_edgelabels = edgelabel_[MATRIX_FORW][source];
+      const auto& rev_edgelabels = edgelabel_[MATRIX_REV][target];
       uint32_t fwd_predidx = fwd_edgelabels[fwd_edgestatus.index()].predecessor();
       const BDEdgeLabel& fwd_label = fwd_edgelabels[fwd_edgestatus.index()];
 
@@ -953,20 +959,25 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
         // to find for this source or target
         UpdateStatus(source, target);
       } else {
-        float oppcost = (fwd_predidx == kInvalidLabel) ? 0 : fwd_edgelabels[fwd_predidx].cost().cost;
-        float c = rev_pred.cost().cost + oppcost + fwd_label.transition_cost().cost;
+        // at this point, the found connection might still be somewhat trivial:
+        // the connecting edge might be an initial edge for either the given source or target
+        // there are two things we need to take care of in that case: we have to make sure to
+        // (1) only add the partial cost/distance for the connecting edge and (2) use the
+        // correct transition cost
+        auto& opp_label = fwd_predidx == kInvalidLabel ? fwd_label : fwd_edgelabels[fwd_predidx];
+        auto& label =
+            fwd_predidx == kInvalidLabel ? rev_edgelabels[rev_pred.predecessor()] : rev_pred;
+
+        Cost total_cost =
+            label.cost() + opp_label.cost() +
+            (fwd_predidx == kInvalidLabel ? rev_pred.transition_cost() : fwd_label.transition_cost());
 
         // Check if best connection
-        if (c < best_connection_[source_idx].cost.cost) {
-          float fwd_sec =
-              (fwd_predidx == kInvalidLabel) ? 0 : fwd_edgelabels[fwd_predidx].cost().secs;
-          uint32_t fwd_dist =
-              (fwd_predidx == kInvalidLabel) ? 0 : fwd_edgelabels[fwd_predidx].path_distance();
-          float s = rev_pred.cost().secs + fwd_sec + fwd_label.transition_cost().secs;
-          uint32_t d = rev_pred.path_distance() + fwd_dist;
+        if (total_cost < best_connection_[source_idx].cost) {
+          uint32_t total_dist = label.path_distance() + opp_label.path_distance();
 
           // Update best connection and set a threshold
-          best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(c, s), d);
+          best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), total_cost, total_dist);
           if (best_connection_[source_idx].max_iterations == 0) {
             best_connection_[source_idx].max_iterations =
                 n + GetThreshold(mode_,
