@@ -2054,16 +2054,16 @@ function nodes_proc (kv, nokeys)
   if gate == false then
     --if there was a bollard cars can't get through it
     bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block" or
-      kv["barrier"] == "jersey_barrier" or kv["bollard"] == "removable" or
-      kv["barrier"] == "kissing_gate" or kv["barrier"] == "motorcycle_barrier" or
-      kv["barrier"] == "cycle_barrier" or kv["barrier"] == "chain" or
-      kv["barrier"] == "bar" or false
+      kv["bollard"] == "removable" or kv["barrier"] == "kissing_gate" or 
+      kv["barrier"] == "motorcycle_barrier" or kv["barrier"] == "cycle_barrier" or 
+      kv["barrier"] == "chain" or kv["barrier"] == "bar" or false
 
     --if sump_buster then no access for auto, hov, and taxi unless a tag exists.
     sump_buster = kv["barrier"] == "sump_buster" or false
 
     --if there is a kind of wall, there is no access for all profiles unless a tag exists
     wall = kv["barrier"] == "fence" or kv["barrier"] == "barrier_board" or 
+        kv["barrier"] == "wall" or kv["barrier"] == "jersey_barrier" or 
         kv["barrier"] == "debris" or false
 
     --save the following as gates.

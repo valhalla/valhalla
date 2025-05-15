@@ -426,7 +426,7 @@
       ],
       "description": "Set gate flag to true."
     },
-	{
+	  {
       "key": "barrier",
       "value": "sliding_beam",
       "object_types": [
@@ -458,15 +458,7 @@
       ],
       "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
-    {
-      "key": "barrier",
-      "value": "jersey_barrier",
-      "object_types": [
-        "node"
-      ],
-      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
-    },
-	{
+	  {
       "key": "barrier",
       "value": "kissing_gate",
       "object_types": [
@@ -474,7 +466,7 @@
       ],
       "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
-	{
+	  {
       "key": "barrier",
       "value": "motorcycle_barrier",
       "object_types": [
@@ -482,7 +474,7 @@
       ],
       "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
-	{
+	  {
       "key": "barrier",
       "value": "cycle_barrier",
       "object_types": [
@@ -490,7 +482,7 @@
       ],
       "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
-	{
+	  {
       "key": "barrier",
       "value": "chain",
       "object_types": [
@@ -498,7 +490,7 @@
       ],
       "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
-	{
+	  {
       "key": "barrier",
       "value": "bar",
       "object_types": [
@@ -506,7 +498,15 @@
       ],
       "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
-	{
+    {
+      "key": "barrier",
+      "value": "jersey_barrier",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	  {
       "key": "barrier",
       "value": "barrier_board",
       "object_types": [
@@ -514,7 +514,7 @@
       ],
       "description": "Access for all modes is turned off, unless the override is set."
     },
-	{
+	  {
       "key": "barrier",
       "value": "fence",
       "object_types": [
@@ -522,7 +522,15 @@
       ],
       "description": "Access for all modes is turned off, unless the override is set."
     },
-	{
+    {
+      "key": "barrier",
+      "value": "wall",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	  {
       "key": "barrier",
       "value": "debris",
       "object_types": [
