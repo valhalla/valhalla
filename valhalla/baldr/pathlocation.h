@@ -30,6 +30,16 @@ public:
              const double percent_along,
              const midgard::PointLL& projected,
              const double score,
+             const std::pair<midgard::PointLL, uint16_t>& bounding_circle,
+             const SideOfStreet sos = NONE,
+             const unsigned int outbound_reach = 0,
+             const unsigned int inbound_reach = 0,
+             const float projected_heading = -1);
+
+    PathEdge(const GraphId& id,
+             const double percent_along,
+             const midgard::PointLL& projected,
+             const double score,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
              const unsigned int inbound_reach = 0,
@@ -40,6 +50,9 @@ public:
     double percent_along;
     // the projected point along the edge where the original location correlates
     midgard::PointLL projected;
+
+    // bounding circle we stored for it
+    std::pair<midgard::PointLL, uint16_t> bounding_circle;
     // what side of the edge is it on
     SideOfStreet sos;
     // whether or not this correlation point is the begin node of this edge
@@ -152,6 +165,10 @@ public:
         edge->mutable_names()->Add()->assign(n);
       }
       edge->set_heading(e.projected_heading);
+
+      edge->mutable_bounding_circle()->set_radius(e.bounding_circle.second);
+      edge->mutable_bounding_circle()->mutable_latlng()->set_lat(e.bounding_circle.first.lat());
+      edge->mutable_bounding_circle()->mutable_latlng()->set_lng(e.bounding_circle.first.lng());
     }
 
     auto* filtered_edges = l->mutable_correlation()->mutable_filtered_edges();
