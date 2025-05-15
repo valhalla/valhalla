@@ -3,6 +3,7 @@
 Checks: >
     bugprone-throw-keyword-missing,
     clang-*,
+    clang-analyzer-*,
     performance*,
     -performance-move-const-arg,
     -performance-avoid-endl,
