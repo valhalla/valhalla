@@ -1,13 +1,13 @@
 #ifndef __VALHALLA_THOR_MATRIXALGORITHM_H__
 #define __VALHALLA_THOR_MATRIXALGORITHM_H__
 
-#include <functional>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <functional>
 // TODO(nils): should abstract more so we don't pull this in
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/worker.h>

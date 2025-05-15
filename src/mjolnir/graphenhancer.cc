@@ -1,9 +1,32 @@
 #include "mjolnir/graphenhancer.h"
+#include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/streetnames.h"
+#include "baldr/streetnames_factory.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/aabb2.h"
+#include "midgard/constants.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/countryaccess.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/osmaccess.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 #include "speed_assigner.h"
+
+#include <boost/format.hpp>
+#include <boost/geometry/geometries/multi_polygon.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/io/wkt/wkt.hpp>
 
 #include <cinttypes>
 #include <future>
@@ -20,30 +43,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include <boost/format.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/io/wkt/wkt.hpp>
-
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/streetnames.h"
-#include "baldr/streetnames_factory.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/aabb2.h"
-#include "midgard/constants.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/sequence.h"
-#include "midgard/util.h"
-#include "mjolnir/osmaccess.h"
-#include "scoped_timer.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -1492,7 +1491,7 @@ void enhance(const boost::property_tree::ptree& pt,
                directededge.use() == Use::kPedestrianCrossing ||
                directededge.use() == Use::kSidewalk || directededge.use() == Use::kTrack)) {
 
-            std::vector<int> access = country_access.at(country_code);
+            const std::vector<int>& access = country_access.at(country_code);
             // leaves tile flag indicates that we have an access record for this edge.
             // leaves tile flag is updated later to the real value.
             if (directededge.leaves_tile()) {

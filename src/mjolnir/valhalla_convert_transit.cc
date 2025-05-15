@@ -1,11 +1,10 @@
-#include <cxxopts.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/validatetransit.h"
 
-#include "argparse_utils.h"
+#include <cxxopts.hpp>
 
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();

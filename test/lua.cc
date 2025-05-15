@@ -1,12 +1,11 @@
-#include "test.h"
-
-#include <string>
-
-#include <osmium/builder/osm_object_builder.hpp>
-
 #include "mjolnir/graph_lua_proc.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmdata.h"
+#include "test.h"
+
+#include <osmium/builder/osm_object_builder.hpp>
+
+#include <string>
 
 using namespace valhalla;
 
@@ -41,7 +40,7 @@ TEST(Lua, ZeroMantissa) {
   ASSERT_FLOAT_EQ(2.0f, std::stof(results["maxheight"]));
 }
 
-void assert_height_parses(std::string maxheight, float expected) {
+void assert_height_parses(const std::string& maxheight, float expected) {
   mjolnir::LuaTagTransform lua(std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len));
 
   TagsBuilder tags;

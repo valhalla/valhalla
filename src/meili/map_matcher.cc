@@ -1,14 +1,13 @@
-#include <cmath>
-
+#include "meili/map_matcher.h"
 #include "meili/emission_cost_model.h"
 #include "meili/geometry_helpers.h"
-#include "meili/map_matcher.h"
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
 #include "worker.h"
 
 #include <array>
+#include <cmath>
 
 namespace {
 
@@ -449,6 +448,7 @@ std::vector<MatchResult> FindMatchResults(const MapMatcher& mapmatcher,
                                           const std::vector<StateId>& stateids,
                                           baldr::GraphReader& graph_reader) {
   std::vector<MatchResult> results;
+  results.reserve(stateids.size());
   for (StateId::Time time = 0; time < stateids.size(); time++) {
     results.push_back(FindMatchResult(mapmatcher, stateids, time, graph_reader));
   }

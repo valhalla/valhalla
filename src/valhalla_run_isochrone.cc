@@ -1,13 +1,3 @@
-#include <cmath>
-#include <cstdint>
-#include <cxxopts.hpp>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
@@ -19,6 +9,16 @@
 #include "thor/isochrone.h"
 #include "tyr/serializers.h"
 #include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cmath>
+#include <cstdint>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
   auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find locations
-  std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+  const std::shared_ptr<DynamicCost>& cost = mode_costing[static_cast<uint32_t>(mode)];
   const auto projections = Search(locations, reader, cost);
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {

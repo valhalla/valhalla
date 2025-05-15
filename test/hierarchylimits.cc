@@ -1,18 +1,18 @@
-#include "gurka/gurka.h"
-#include "test.h"
-
-#include <boost/format.hpp>
-#include <string>
-#include <vector>
-
 #include "baldr/rapidjson_utils.h"
+#include "gurka/gurka.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
+#include "test.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
+#include <boost/format.hpp>
+
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -38,10 +38,10 @@ struct HierarchyLimitsTestParams {
   HierarchyLimitsTestParams(std::string&& req,
                             std::vector<HierarchyLimits>& hl,
                             bool use_pbf,
-                            std::unordered_map<std::string, std::string> overrides = {})
+                            const std::unordered_map<std::string, std::string>& overrides = {})
       : request(req), cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(""),
         expected_hierarchy_limits(hl), pbf(use_pbf){};
-  HierarchyLimitsTestParams(std::unordered_map<std::string, std::string> overrides,
+  HierarchyLimitsTestParams(const std::unordered_map<std::string, std::string>& overrides,
                             std::string& config_path)
       : cfg(make_test_config(std::move(overrides))), hierarchy_limits_config_path(config_path){};
 
@@ -117,8 +117,8 @@ void hierarchy_limits_equal(const std::vector<HierarchyLimits>& expected,
                             const std::vector<HierarchyLimits>& actual) {
   EXPECT_EQ(expected.size(), actual.size());
   for (size_t i = 0; i < actual.size(); ++i) {
-    auto actual_hl = actual[i];
-    auto expected_hl = expected[i];
+    const auto& actual_hl = actual[i];
+    const auto& expected_hl = expected[i];
     EXPECT_EQ(actual_hl.max_up_transitions(), expected_hl.max_up_transitions());
     EXPECT_EQ(actual_hl.expand_within_dist(), expected_hl.expand_within_dist());
   }
@@ -128,7 +128,7 @@ class TestHierarchyLimits : public ::testing::TestWithParam<HierarchyLimitsTestP
 
 TEST_P(TestHierarchyLimits, from_request) {
 
-  auto test_params = GetParam();
+  const auto& test_params = GetParam();
   if (!test_params.hierarchy_limits_config_path.empty())
     return;
 

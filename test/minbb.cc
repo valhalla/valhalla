@@ -1,12 +1,12 @@
-#include <string>
-#include <vector>
-
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/vector2.h"
+#include "test.h"
+
 #include <boost/property_tree/ptree.hpp>
 
-#include "test.h"
+#include <string>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -1,15 +1,15 @@
 #ifndef VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H
 #define VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/mjolnir/osmlinguistic.h>
+#include <valhalla/mjolnir/uniquenames.h>
+
 #include <cstdint>
 #include <cstring>
 #include <map>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/mjolnir/osmlinguistic.h>
-#include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
 namespace mjolnir {

@@ -1,7 +1,7 @@
 #include "gurka.h"
-#include <gtest/gtest.h>
-
 #include "odin/enhancedtrippath.h"
+
+#include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

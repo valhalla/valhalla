@@ -1,10 +1,4 @@
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <string>
-#include <unordered_map>
-#include <utility>
-
+#include "thor/triplegbuilder.h"
 #include "baldr/admin.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
@@ -23,8 +17,14 @@
 #include "proto/common.pb.h"
 #include "sif/costconstants.h"
 #include "sif/recost.h"
-#include "thor/triplegbuilder.h"
 #include "triplegbuilder_utils.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -686,7 +686,7 @@ void SetElevation(TripLeg_Edge* trip_edge,
 
   // Lambda to get elevation at specified distance
   double interval = 0.0;
-  const auto find_elevation = [&interval](const std::vector<float> elevation, const double d) {
+  const auto find_elevation = [&interval](const std::vector<float>& elevation, const double d) {
     // Find index based on the stored interval and the desired distance
     uint32_t index = static_cast<uint32_t>(d / interval);
     if (index >= elevation.size() - 1) {

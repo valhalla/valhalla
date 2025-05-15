@@ -1,7 +1,6 @@
-#include "test.h"
-
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
+#include "test.h"
 #include "tyr/actor.h"
 #include "valhalla/tile_server.h"
 

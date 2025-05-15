@@ -1,4 +1,13 @@
 #include "skadi/sample.h"
+#include "baldr/compression_utils.h"
+#include "filesystem.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "valhalla/baldr/curl_tilegetter.h"
+
+#include <lz4frame.h>
+#include <sys/stat.h>
 
 #include <cmath>
 #include <cstddef>
@@ -8,16 +17,6 @@
 #include <regex>
 #include <unordered_map>
 #include <unordered_set>
-
-#include <lz4frame.h>
-#include <sys/stat.h>
-
-#include "baldr/compression_utils.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/sequence.h"
-#include "valhalla/baldr/curl_tilegetter.h"
 
 namespace {
 // srtmgl1 holds 1x1 degree tiles but oversamples the edge of the tile
@@ -203,7 +202,7 @@ public:
   ~tile_data();
   tile_data& operator=(const tile_data& other);
 
-  tile_data& operator=(tile_data&& other) {
+  tile_data& operator=(tile_data&& other) noexcept {
     std::swap(c, other.c);
     std::swap(data, other.data);
     std::swap(index, other.index);

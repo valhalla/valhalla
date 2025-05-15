@@ -1,12 +1,11 @@
 #ifndef VALHALLA_BALDR_ADMIN_H_
 #define VALHALLA_BALDR_ADMIN_H_
 
+#include <valhalla/midgard/util.h>
+
 #include <array>
 #include <cstdint>
 #include <cstring>
-#include <stdint.h>
-
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {

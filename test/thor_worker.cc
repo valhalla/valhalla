@@ -1,12 +1,13 @@
-#include "test.h"
-
 #include "baldr/attributes_controller.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
+#include "test.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
-#include <algorithm>
+
 #include <unistd.h>
+
+#include <algorithm>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

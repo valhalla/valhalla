@@ -2,7 +2,9 @@
 #define VALHALLA_MEILI_STATE_H_
 
 #include <cstdint>
+#include <functional>
 #include <limits>
+#include <utility>
 
 namespace valhalla {
 namespace meili {

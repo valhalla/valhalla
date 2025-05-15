@@ -1,8 +1,3 @@
-#include <algorithm>
-#include <string>
-#include <tuple>
-#include <vector>
-
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/json.h"
@@ -12,11 +7,15 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
+#include "proto/directions.pb.h"
+#include "proto/trip.pb.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
-#include "proto/directions.pb.h"
-#include "proto/trip.pb.h"
+#include <algorithm>
+#include <string>
+#include <tuple>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::midgard;

@@ -14,19 +14,19 @@ Since this service wraps other services, the request format mostly follows the o
 
 | Parameter                         | Description                           |
 |:----------------------------------| :------------------------------------ |
-| `action` (required)               | The service whose expansion should be tracked. Currently one of `route`, `isochrone` or `sources_to_targets`. | 
-| `skip_opposites` (optional)       | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. Default false. | 
-| `dedupe` (optional)               | If set to `true`, the output will contain each edge only once, significantly reducing the response size. The expansion will keep track of already visited edges and override their properties, ensuring that only the one with higher edge state is returned. Default `false`.                                     | 
+| `action` (required)               | The service whose expansion should be tracked. Currently one of `route`, `isochrone` or `sources_to_targets`. |
+| `skip_opposites` (optional)       | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. Default false. |
+| `dedupe` (optional)               | If set to `true`, the output will contain each edge only once, significantly reducing the response size. The expansion will keep track of already visited edges and override their properties, ensuring that only the one with higher edge state is returned. Default `false`.                                     |
 | `expansion_properties` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "duration", "distance", "cost", "edge_id", "pred_edge_id", "edge_status" or "expansion_type". **Note**, that each additional property will increase the output size by minimum ~ 10%. By default an empty `properties` object is returned. |
 
 The `expansion_properties` choices are as follows:
 
 | Property   | Description                           |
 | :--------- | :------------------------------------ |
-| `distance`   | Returns the accumulated distance in meters for each edge in order of graph traversal. | 
-| `duration`   | Returns the accumulated duration in seconds for each edge in order of graph traversal. | 
-| `cost`       | Returns the accumulated cost for each edge in order of graph traversal. | 
-| `edge_id`   | Returns the internal edge IDs for each edge in order of graph traversal. Mostly interesting for debugging. | 
+| `distance`   | Returns the accumulated distance in meters for each edge in order of graph traversal. |
+| `duration`   | Returns the accumulated duration in seconds for each edge in order of graph traversal. |
+| `cost`       | Returns the accumulated cost for each edge in order of graph traversal. |
+| `edge_id`   | Returns the internal edge IDs for each edge in order of graph traversal. Mostly interesting for debugging. |
 | `pred_edge_id` |  Returns the internal edge IDs of the predecessor for each edge in order of graph traversal. Mostly interesting for debugging. |
 | `edge_status`   | Returns the edge states for each edge in order of graph traversal. Mostly interesting for debugging. Can be one of "r" (reached), "s" (settled), "c" (connected). |
 | `expansion_type`   | Returns the expansion direction from which the edge was encountered. 0 for forward, 1 for reverse. |
@@ -55,7 +55,7 @@ An example request is:
 		"edge_id",
 		"pred_edge_id",
 		"edge_status",
-		"cost", 
+		"cost",
 		"expansion_type"
 	]
 }
@@ -63,7 +63,7 @@ An example request is:
 
 ## Outputs of the Expansion service
 
-In the service response, the expanded way segments are returned as [GeoJSON](http://geojson.org/) as plain `LineString`s. Due to the verbosity of the GeoJSON format, single geometry features would produce prohibitively huge responses.
+In the service response, the expanded way segments are returned as [GeoJSON](https://geojson.org/) as plain `LineString`s. Due to the verbosity of the GeoJSON format, single geometry features would produce prohibitively huge responses.
 
 The output will only contain the `properties` which were specified in the `expansion_properties` request array. If the parameter was omitted in the request, the output will contain an empty `properties` object.
 
@@ -151,4 +151,4 @@ An example response for `"action": "isochrone"` is:
 
 ## Credits
 
-The image includes data from [OpenStreetMap](http://www.openstreetmap.org/) and the ["Positron" basemap by Carto](https://carto.com/help/building-maps/basemap-list/#positron-with-labels).
+The image includes data from [OpenStreetMap](https://www.openstreetmap.org/) and the ["Positron" basemap by Carto](https://carto.com/help/building-maps/basemap-list/#positron-with-labels).

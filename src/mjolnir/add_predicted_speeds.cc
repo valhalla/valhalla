@@ -4,16 +4,16 @@
 #include "baldr/predictedspeeds.h"
 #include "mjolnir/graphtilebuilder.h"
 
+#include <boost/tokenizer.hpp>
+
 #include <fstream>
+#include <future>
 #include <iomanip>
 #include <random>
 #include <sstream>
 #include <thread>
 #include <unordered_map>
 #include <vector>
-
-#include <boost/tokenizer.hpp>
-#include <future>
 
 namespace vj = valhalla::mjolnir;
 
