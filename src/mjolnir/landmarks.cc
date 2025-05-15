@@ -400,7 +400,7 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
         updated_tiles++;
       }
       // reset the tile builder to this new tile
-      tile_builder_ptr.reset(new GraphTileBuilder(tile_dir, (*it).first.Tile_Base(), true));
+      tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.Tile_Base(), true);
     }
 
     // retrieve the landmark to be added
@@ -464,9 +464,9 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::vector<std::promise<std::string>> sequence_file_names(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    threads[i].reset(new std::thread(FindLandmarkEdges, std::cref(pt.get_child("mjolnir")),
-                                     std::cref(vec_tileset), i, num_threads,
-                                     std::ref(sequence_file_names[i])));
+    threads[i] = std::make_shared<std::thread>(FindLandmarkEdges, std::cref(pt.get_child("mjolnir")),
+                                               std::cref(vec_tileset), i, num_threads,
+                                               std::ref(sequence_file_names[i]));
   }
 
   // join all the threads and collect the sequence file names
@@ -505,8 +505,8 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   const std::string tile_dir = reader.tile_dir();
   for (size_t i = 0; i < num_threads; ++i) {
     // assume the data size that each thread processes doesn't affect performance a lot
-    threads[i].reset(new std::thread(UpdateTiles, std::ref(merged_sequence_file), tile_dir, db_name,
-                                     i, num_threads, std::ref(stats_info[i])));
+    threads[i] = std::make_shared<std::thread>(UpdateTiles, std::ref(merged_sequence_file), tile_dir,
+                                               db_name, i, num_threads, std::ref(stats_info[i]));
   }
 
   for (auto& thread : threads) {
