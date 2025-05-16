@@ -11,8 +11,6 @@
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
-#include <valhalla/proto_conversions.h>
-#include <valhalla/tyr/actor.h>
 
 #include <string>
 #include <unordered_map>

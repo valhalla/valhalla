@@ -1,5 +1,7 @@
 #include "config.h"
 
+#include <filesystem>
+
 namespace {
 struct config_singleton_t {
 protected:

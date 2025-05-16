@@ -1,8 +1,8 @@
 #include "mjolnir/ingest_transit.h"
+#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphtile.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "just_gtfs/just_gtfs.h"
@@ -11,9 +11,6 @@
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "midgard/util.h"
-#include "mjolnir/admin.h"
-#include "mjolnir/servicedays.h"
-#include "mjolnir/util.h"
 #include "proto/transit.pb.h"
 
 #include <boost/algorithm/string.hpp>

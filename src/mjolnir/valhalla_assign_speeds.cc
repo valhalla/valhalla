@@ -9,6 +9,7 @@
 #include <cxxopts.hpp>
 
 #include <algorithm>
+#include <deque>
 #include <future>
 #include <memory>
 #include <random>

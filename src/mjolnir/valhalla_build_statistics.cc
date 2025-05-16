@@ -16,6 +16,7 @@
 #include <cxxopts.hpp>
 
 #include <cstdint>
+#include <deque>
 #include <future>
 #include <iostream>
 #include <list>

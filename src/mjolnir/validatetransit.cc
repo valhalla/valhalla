@@ -7,11 +7,10 @@
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 #include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/osmrestriction.h"
 #include "mjolnir/servicedays.h"
+#include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
