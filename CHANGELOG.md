@@ -74,6 +74,7 @@
    * ADDED: Make iterations limit configurable in costmatrix [#5221](https://github.com/valhalla/valhalla/pull/5221)
    * ADDED: Enforce the order of includes via `clang-format` [5230](https://github.com/valhalla/valhalla/pull/5230)
    * CHANGED: Switch to PyPI version of `clang-format` [#5237](https://github.com/valhalla/valhalla/pull/5237)
+   * ADDED: More barrier types to consider for car routing [#5217](https://github.com/valhalla/valhalla/pull/5217)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
