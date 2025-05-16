@@ -9,10 +9,8 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
-#include <fstream>
 #include <list>
 #include <map>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -191,26 +189,9 @@ bool build_tile_set(const boost::property_tree::ptree& config,
 struct TileManifest {
   std::map<baldr::GraphId, size_t> tileset;
 
-  std::string ToString() const {
-    baldr::json::ArrayPtr array = baldr::json::array({});
-    for (const auto& tile : tileset) {
-      const baldr::json::Value& graphid = tile.first.json();
-      const baldr::json::MapPtr& item = baldr::json::map(
-          {{"graphid", graphid}, {"node_index", static_cast<uint64_t>(tile.second)}});
-      array->emplace_back(item);
-    }
-    std::stringstream manifest;
-    manifest << *baldr::json::map({{"tiles", array}});
-    return manifest.str();
-  }
+  std::string ToString() const;
 
-  void LogToFile(const std::string& filename) const {
-    std::ofstream handle;
-    handle.open(filename);
-    handle << ToString();
-    handle.close();
-    LOG_INFO("Writing tile manifest to " + filename);
-  }
+  void LogToFile(const std::string& filename) const;
 
   static TileManifest ReadFromFile(const std::string& filename);
 };

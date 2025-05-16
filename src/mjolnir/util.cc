@@ -422,6 +422,27 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   return true;
 }
 
+std::string TileManifest::ToString() const {
+  baldr::json::ArrayPtr array = baldr::json::array({});
+  for (const auto& tile : tileset) {
+    const baldr::json::Value& graphid = tile.first.json();
+    const baldr::json::MapPtr& item =
+        baldr::json::map({{"graphid", graphid}, {"node_index", static_cast<uint64_t>(tile.second)}});
+    array->emplace_back(item);
+  }
+  std::stringstream manifest;
+  manifest << *baldr::json::map({{"tiles", array}});
+  return manifest.str();
+}
+
+void TileManifest::LogToFile(const std::string& filename) const {
+  std::ofstream handle;
+  handle.open(filename);
+  handle << ToString();
+  handle.close();
+  LOG_INFO("Writing tile manifest to " + filename);
+}
+
 TileManifest TileManifest::ReadFromFile(const std::string& filename) {
   ptree manifest;
   rapidjson::read_json(filename, manifest);
