@@ -334,8 +334,8 @@ void ElevationBuilder::Build(const boost::property_tree::ptree& pt,
            std::to_string(nthreads) + " threads...");
   std::mutex lock;
   for (auto& thread : threads) {
-    thread.reset(new std::thread(add_elevations_to_multiple_tiles, std::cref(pt), std::ref(tile_ids),
-                                 std::ref(lock), std::ref(sample)));
+    thread = std::make_shared<std::thread>(add_elevations_to_multiple_tiles, std::cref(pt),
+                                           std::ref(tile_ids), std::ref(lock), std::ref(sample));
   }
 
   for (auto& thread : threads) {
