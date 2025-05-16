@@ -6,7 +6,6 @@
 #include <valhalla/baldr/tilehierarchy.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/incidents.pb.h>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -18,6 +17,7 @@
 #include <unordered_map>
 
 namespace valhalla {
+class IncidentsTile;
 namespace midgard {
 struct tar;
 }
@@ -1012,10 +1012,5 @@ public:
 protected:
   GraphReader& reader_;
 };
-
-// Given the Location relation, return the full metadata
-const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
-                    const valhalla::IncidentsTile::Location& incident_location);
 } // namespace baldr
 } // namespace valhalla

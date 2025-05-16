@@ -1038,17 +1038,5 @@ graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
   return reader_.GetGraphTile(graphid);
 }
 
-const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
-                    const valhalla::IncidentsTile::Location& incident_location) {
-  const int64_t metadata_index = incident_location.metadata_index();
-  if (metadata_index >= tile->metadata_size()) {
-    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
-                             std::to_string(metadata_index) + " but total incident metadata of " +
-                             std::to_string(tile->metadata_size()));
-  }
-  return tile->metadata(metadata_index);
-}
-
 } // namespace baldr
 } // namespace valhalla
