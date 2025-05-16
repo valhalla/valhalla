@@ -1,0 +1,2592 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://valhalla.github.io/valhalla/building/">
+      
+      
+        <link rel="prev" href="../valhalla-intro/">
+      
+      
+        <link rel="next" href="../terminology/">
+      
+      
+      <link rel="icon" href="../images/valhalla.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Build from Source - Valhalla Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#build-from-source" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Valhalla Docs" class="md-header__button md-logo" aria-label="Valhalla Docs" data-md-component="logo">
+      
+  <img src="../images/valhalla.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Valhalla Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Build from Source
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="white" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/valhalla/valhalla/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Valhalla Docs" class="md-nav__button md-logo" aria-label="Valhalla Docs" data-md-component="logo">
+      
+  <img src="../images/valhalla.png" alt="logo">
+
+    </a>
+    Valhalla Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/valhalla/valhalla/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../valhalla-intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction for Users
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Build from Source
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Build from Source
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-configuration-all-platforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Configuration (all platforms)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-with-vcpkg-any-platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building with vcpkg - any platform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#platform-specific-builds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Platform-specific builds
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Platform-specific builds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#building-from-source-linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building from Source - Linux
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#building-from-source-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building from Source - macOS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#building-from-source-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building from Source - Windows
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building from Source - Windows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#include-valhalla-as-a-project-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      Include Valhalla as a project dependency
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-valhalla-server-on-unix" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running Valhalla server on Unix
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Terminology
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Public APIs
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Public APIs
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/protocol-buffers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Protocol Buffers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Turn-by-Turn Route API
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            Turn-by-Turn Route API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/turn-by-turn/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/turn-by-turn/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/optimized/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Optimized Route API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/matrix/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matrix API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/isochrone/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Isochrone API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/map-matching/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map Matching API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/locate/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Locate API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/elevation/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Elevation API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/expansion/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Expansion API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/status/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Status API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Internal topics
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Internal topics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/why_tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Why tiles?
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../route_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview of how routes are computed
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Decoding shape
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tile structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../speeds/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Speed information
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sif/dynamic-costing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dynamic costing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sif/elevation_costing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Elevation influenced bicycle routing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../elevation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Elevation Lookup Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Unit tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tzdb_update/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tzdb update
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Internal components
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Internal components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../baldr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Baldr (routing data strutures/algorithms)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../loki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Loki (associate locations with graph edges)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../midgard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Midgard (data structures for geography/geometry)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../odin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Odin (route narrative/maneuver generation)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sif/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sif (costing for edges/transitions)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skadi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Skadi (digital elevation model usage)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tyr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tyr (service layer)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_8" id="__nav_7_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Meili (map matching)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_8">
+            <span class="md-nav__icon md-icon"></span>
+            Meili (map matching)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meili/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Meili
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meili/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meili/algorithms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Algorithms
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meili/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meili/implementation_details/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Implementation Details
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meili/library_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Library API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../meili/service_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Service API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_9" id="__nav_7_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Mjolnir (routing graph/tile generation)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_9">
+            <span class="md-nav__icon md-icon"></span>
+            Mjolnir (routing graph/tile generation)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Mjolnir
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/geojson/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map Roulette Geojson Generation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/getting_started_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Mjolnir: Getting started guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/map_roulette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Automatic Map Roulette Task Updates
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/map_roulette_blog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map Roulette and Valhalla
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/tag_parsing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    OSM Tag Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/historical_traffic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Traffic in Valhalla
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_10" id="__nav_7_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Thor (routing algorithms)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_10">
+            <span class="md-nav__icon md-icon"></span>
+            Thor (routing algorithms)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../thor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Thor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../thor/isochrones/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Isochrones
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../thor/path-algorithm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Path algorithm
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../incidents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Incidents
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Data sources
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Data sources
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/data_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data sources
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/admins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Administrative data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mjolnir/attribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Attribution requirements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../test/gurka/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../locales/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Locales
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Releasing a new Valhalla version
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#build-configuration-all-platforms" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build Configuration (all platforms)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-with-vcpkg-any-platform" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building with vcpkg - any platform
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#platform-specific-builds" class="md-nav__link">
+    <span class="md-ellipsis">
+      Platform-specific builds
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Platform-specific builds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#building-from-source-linux" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building from Source - Linux
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#building-from-source-macos" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building from Source - macOS
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#building-from-source-windows" class="md-nav__link">
+    <span class="md-ellipsis">
+      Building from Source - Windows
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Building from Source - Windows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#include-valhalla-as-a-project-dependency" class="md-nav__link">
+    <span class="md-ellipsis">
+      Include Valhalla as a project dependency
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-valhalla-server-on-unix" class="md-nav__link">
+    <span class="md-ellipsis">
+      Running Valhalla server on Unix
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="build-from-source">Build from Source<a class="headerlink" href="#build-from-source" title="Permanent link">&para;</a></h1>
+<p>We aim to make Valhalla installable on every half-modern hardware, platform and architecture. If the below instructions are not working for you, we'd be happy if you <a href="../contributing/">file an issue or open a PR with a fix</a>.</p>
+<h2 id="build-configuration-all-platforms">Build Configuration (all platforms)<a class="headerlink" href="#build-configuration-all-platforms" title="Permanent link">&para;</a></h2>
+<p>Valhalla uses <a href="https://cmake.org/">CMake</a> as the build system, the compiler needs C++17 support.</p>
+<p>Important build options include:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-DENABLE_TOOLS</code> (<code>On</code>/<code>Off</code>)</td>
+<td>Build <code>valhalla_service</code> and other utilities (defaults to on)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_DATA_TOOLS</code> (<code>On</code>/<code>Off</code>)</td>
+<td>Build the data preprocessing tools (defaults to on)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_HTTP</code> (<code>On</code>/<code>Off</code>)</td>
+<td>Build with <code>curl</code> support (defaults to on)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_PYTHON_BINDINGS</code> (<code>On</code>/<code>Off</code>)</td>
+<td>Build the python bindings (defaults to on)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_SERVICES</code> (<code>On</code> / <code>Off</code>)</td>
+<td>Build the HTTP service (defaults to on)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_THREAD_SAFE_TILE_REF_COUNT</code> (<code>ON</code> / <code>OFF</code>)</td>
+<td>If ON uses <code>shared_ptr</code> as tile reference (i.e. it is thread safe, defaults to off)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_CCACHE</code> (<code>On</code> / <code>Off</code>)</td>
+<td>Speed up incremental rebuilds via <code>ccache</code> (defaults to on)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_BENCHMARKS</code> (<code>On</code> / <code>Off</code>)</td>
+<td>Enable microbenchmarking (defaults to on)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_TESTS</code> (<code>On</code> / <code>Off</code>)</td>
+<td>Enable Valhalla tests (defaults to on)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_COVERAGE</code> (<code>On</code> / <code>Off</code>)</td>
+<td>Build with coverage instrumentalisation (defaults to off)</td>
+</tr>
+<tr>
+<td><code>-DBUILD_SHARED_LIBS</code> (<code>On</code> / <code>Off</code>)</td>
+<td>Build static or shared libraries (defaults to off)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_STATIC_LIBRARY_MODULES</code> (<code>On</code> / <code>Off</code>)</td>
+<td>If ON builds Valhalla modules as STATIC library targets (defaults to off)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_COMPILER_WARNINGS</code> (<code>ON</code> / <code>OFF</code>)</td>
+<td>Build with common compiler warnings (defaults to off)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_SINGLE_FILES_WERROR</code> (<code>ON</code> / <code>OFF</code>)</td>
+<td>Convert compiler warnings to errors for a (growing) selection of files (defaults to on)</td>
+</tr>
+<tr>
+<td><code>-DENABLE_WERROR</code> (<code>ON</code> / <code>OFF</code>)</td>
+<td>Treat compiler warnings as errors  (defaults to off). Requires <code>-DENABLE_COMPILER_WARNINGS=ON</code> to take effect.</td>
+</tr>
+<tr>
+<td><code>-DENABLE_SANITIZERS</code> (<code>ON</code> / <code>OFF</code>)</td>
+<td>Build with all the integrated sanitizers (defaults to off).</td>
+</tr>
+<tr>
+<td><code>-DENABLE_ADDRESS_SANITIZER</code> (<code>ON</code> / <code>OFF</code>)</td>
+<td>Build with address sanitizer (defaults to off).</td>
+</tr>
+<tr>
+<td><code>-DENABLE_UNDEFINED_SANITIZER</code> (<code>ON</code> / <code>OFF</code>)</td>
+<td>Build with undefined behavior sanitizer (defaults to off).</td>
+</tr>
+<tr>
+<td><code>-DPREFER_SYSTEM_DEPS</code> (<code>ON</code> / <code>OFF</code>)</td>
+<td>Whether to use internally vendored headers or find the equivalent external package (defaults to off).</td>
+</tr>
+<tr>
+<td><code>-DENABLE_GDAL</code> (<code>ON</code> / <code>OFF</code>)</td>
+<td>Whether to include GDAL as a dependency (used for GeoTIFF serialization of isochrone grid) (defaults to off).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="building-with-vcpkg-any-platform">Building with <code>vcpkg</code> - any platform<a class="headerlink" href="#building-with-vcpkg-any-platform" title="Permanent link">&para;</a></h2>
+<p>Instead of installing the dependencies system-wide, you can also opt to use <a href="https://github.com/microsoft/vcpkg"><code>vcpkg</code></a>.</p>
+<p>The following commands should work on all platforms:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>--recurse-submodules<span class="w"> </span>https://github.com/valhalla/valhalla
+<span class="nb">cd</span><span class="w"> </span>valhalla
+
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/microsoft/vcpkg<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>-C<span class="w"> </span>vcpkg<span class="w"> </span>checkout<span class="w"> </span>&lt;some-tag&gt;
+./vcpkg/bootstrap-vcpkg.sh
+<span class="c1"># windows: cmd.exe /c bootstrap-vcpkg.bat</span>
+
+<span class="c1"># only build Release versions of dependencies, not Debug</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;set(VCPKG_BUILD_TYPE Release)&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>vcpkg/triplets/x64-linux.cmake
+<span class="c1"># windows: echo.set(VCPKG_BUILD_TYPE release)&gt;&gt; .\vcpkg\triplets\x64-windows.cmake</span>
+<span class="c1"># osx: echo &quot;set(VCPKG_BUILD_TYPE release)&quot; &gt;&gt; vcpkg/triplets/arm64-osx.cmake</span>
+
+<span class="c1"># vcpkg will install everything during cmake configuration</span>
+<span class="c1"># if you want to ENABLE_SERVICES=ON, install https://github.com/kevinkreiser/prime_server#build-and-install (no Windows)</span>
+cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DCMAKE_TOOLCHAIN_FILE<span class="o">=</span><span class="nv">$PWD</span>/vcpkg/scripts/buildsystems/vcpkg.cmake<span class="w"> </span>-DENABLE_SERVICE<span class="o">=</span>OFF
+cmake<span class="w"> </span>--build<span class="w"> </span>build<span class="w"> </span>--<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+<span class="c1"># windows: cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4</span>
+<span class="c1"># osx: cmake --build build -- -j$(sysctl -n hw.physicalcpu)</span>
+</code></pre></div>
+<h2 id="platform-specific-builds">Platform-specific builds<a class="headerlink" href="#platform-specific-builds" title="Permanent link">&para;</a></h2>
+<h3 id="building-from-source-linux">Building from Source - Linux<a class="headerlink" href="#building-from-source-linux" title="Permanent link">&para;</a></h3>
+<p>To install on a Debian or Ubuntu system you need to install its dependencies with:</p>
+<div class="highlight"><pre><span></span><code>./scripts/install-linux-deps.sh
+</code></pre></div>
+<p>Now you can build and install Valhalla, e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># will build to ./build</span>
+cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release
+make<span class="w"> </span>-C<span class="w"> </span>build<span class="w"> </span>-j<span class="k">$(</span>nproc<span class="k">)</span>
+sudo<span class="w"> </span>make<span class="w"> </span>-C<span class="w"> </span>build<span class="w"> </span>install
+</code></pre></div>
+<h3 id="building-from-source-macos">Building from Source - macOS<a class="headerlink" href="#building-from-source-macos" title="Permanent link">&para;</a></h3>
+<p>Both arm64 and x64 should build cleanly with the below commands.</p>
+<p>To install Valhalla on macOS, you need to install its dependencies with <a href="https://brew.sh">Homebrew</a>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># install dependencies (automake &amp; czmq are required by prime_server)</span>
+brew<span class="w"> </span>install<span class="w"> </span>automake<span class="w"> </span>cmake<span class="w"> </span>libtool<span class="w"> </span>protobuf-c<span class="w"> </span>libspatialite<span class="w"> </span>pkg-config<span class="w"> </span>sqlite3<span class="w"> </span>jq<span class="w"> </span>curl<span class="w"> </span>wget<span class="w"> </span>czmq<span class="w"> </span>lz4<span class="w"> </span>spatialite-tools<span class="w"> </span>unzip<span class="w"> </span>luajit<span class="w"> </span>boost
+<span class="c1"># following packages are needed for running Linux compatible scripts</span>
+brew<span class="w"> </span>install<span class="w"> </span>bash<span class="w"> </span>coreutils<span class="w"> </span>binutils
+<span class="c1"># Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin</span>
+</code></pre></div>
+<p>Now, clone the Valhalla repository</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>--recurse-submodules<span class="w"> </span>https://github.com/valhalla/valhalla.git
+</code></pre></div>
+<p>Then, build <a href="https://github.com/kevinkreiser/prime_server#build-and-install"><code>prime_server</code></a>.</p>
+<p>After getting the dependencies install it with e.g.:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># will build to ./build</span>
+cmake<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-DCMAKE_BUILD_TYPE<span class="o">=</span>Release
+make<span class="w"> </span>-C<span class="w"> </span>build<span class="w"> </span>-j<span class="k">$(</span>sysctl<span class="w"> </span>-n<span class="w"> </span>hw.physicalcpu<span class="k">)</span>
+sudo<span class="w"> </span>make<span class="w"> </span>-C<span class="w"> </span>build<span class="w"> </span>install
+</code></pre></div>
+<h3 id="building-from-source-windows">Building from Source - Windows<a class="headerlink" href="#building-from-source-windows" title="Permanent link">&para;</a></h3>
+<p>It's recommended to work with the following toolset:</p>
+<ul>
+<li>Visual Studio with C++ support</li>
+<li>Visual Studio Code (easier and lighter to handle)</li>
+<li><a href="https://github.com/Microsoft/vcpkg">vcpkg</a> to install packages</li>
+<li><a href="https://cmake.org/download/">CMake</a></li>
+</ul>
+<p>Install the dependencies with <code>vcpkg</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">git</span> <span class="n">-C</span> <span class="n">C</span><span class="p">:\</span><span class="n">path</span><span class="p">\</span><span class="n">to</span><span class="p">\</span><span class="n">vcpkg</span> <span class="n">checkout</span> <span class="n">f330a32</span>
+<span class="c"># only build release versions for vcpkg packages</span>
+<span class="n">echo</span><span class="p">.</span><span class="n">set</span><span class="p">(</span><span class="n">VCPKG_BUILD_TYPE</span> <span class="n">Release</span><span class="p">)&gt;&gt;</span> <span class="n">path</span><span class="p">\</span><span class="n">to</span><span class="p">\</span><span class="n">vcpkg</span><span class="p">\</span><span class="n">triplets</span><span class="p">\</span><span class="n">x64-windows</span><span class="p">.</span><span class="n">cmake</span>
+<span class="nb">cd </span><span class="n">C</span><span class="p">:\</span><span class="n">path</span><span class="p">\</span><span class="n">to</span><span class="p">\</span><span class="n">valhalla</span>
+<span class="n">C</span><span class="p">:\</span><span class="n">path</span><span class="p">\</span><span class="n">to</span><span class="p">\</span><span class="n">vcpkg</span><span class="p">.</span><span class="n">exe</span> <span class="n">install</span> <span class="p">-</span><span class="n">-triplet</span> <span class="n">x64-windows</span>
+</code></pre></div>
+<p>Let CMake configure the build with the required modules enabled. The final command for <code>x64</code> could look like</p>
+<div class="highlight"><pre><span></span><code><span class="s2">&quot;C:\Program Files\CMake\bin\cmake.EXE&quot;</span> <span class="p">-</span><span class="n">-no-warn-unused-cli</span> <span class="n">-DENABLE_TOOLS</span><span class="p">=</span><span class="n">ON</span> <span class="n">-DENABLE_DATA_TOOLS</span><span class="p">=</span><span class="n">ON</span> <span class="n">-DENABLE_PYTHON_BINDINGS</span><span class="p">=</span><span class="n">ON</span> <span class="n">-DENABLE_HTTP</span><span class="p">=</span><span class="n">ON</span> <span class="n">-DENABLE_CCACHE</span><span class="p">=</span><span class="n">OFF</span> <span class="n">-DENABLE_SERVICES</span><span class="p">=</span><span class="n">OFF</span> <span class="n">-DENABLE_BENCHMARKS</span><span class="p">=</span><span class="n">OFF</span> <span class="n">-DENABLE_TESTS</span><span class="p">=</span><span class="n">OFF</span> <span class="n">-DVCPKG_TARGET_TRIPLET</span><span class="p">=</span><span class="n">x64-windows</span> <span class="n">-DCMAKE_TOOLCHAIN_FILE</span><span class="p">=</span><span class="n">path</span><span class="p">\</span><span class="n">to</span><span class="p">\</span><span class="n">vcpkg</span><span class="p">\</span><span class="n">scripts</span><span class="p">\</span><span class="n">buildsystems</span><span class="p">\</span><span class="n">vcpkg</span><span class="p">.</span><span class="n">cmake</span> <span class="n">-DCMAKE_EXPORT_COMPILE_COMMANDS</span><span class="p">:</span><span class="n">BOOL</span><span class="p">=</span><span class="n">TRUE</span> <span class="n">-Hpath</span><span class="p">/</span><span class="n">to</span><span class="p">/</span><span class="n">valhalla</span> <span class="n">-Bpath</span><span class="p">/</span><span class="n">to</span><span class="p">/</span><span class="n">valhalla</span><span class="p">/</span><span class="n">build</span> <span class="n">-G</span> <span class="s2">&quot;Visual Studio 16 2019&quot;</span> <span class="n">-T</span> <span class="n">host</span><span class="p">=</span><span class="n">x64</span> <span class="n">-A</span> <span class="n">x64</span>
+</code></pre></div>
+<p>Run the build for all targets.</p>
+<div class="highlight"><pre><span></span><code><span class="n">cmake</span> <span class="n">-B</span> <span class="n">build</span> <span class="n">-S</span> <span class="n">C</span><span class="p">:\</span><span class="n">path</span><span class="p">\</span><span class="n">to</span><span class="p">\</span><span class="n">valhalla</span> <span class="p">-</span><span class="n">-config</span> <span class="n">Release</span> <span class="p">--</span> <span class="p">/</span><span class="n">clp</span><span class="p">:</span><span class="n">ErrorsOnly</span> <span class="p">/</span><span class="n">p</span><span class="p">:</span><span class="n">BuildInParallel</span><span class="p">=</span><span class="n">true</span> <span class="p">/</span><span class="n">m</span><span class="p">:</span><span class="n">8</span>
+</code></pre></div>
+<p>The artifacts will be built to <code>./build/Release</code>.</p>
+<h4 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h4>
+<ul>
+<li>if the build fails on something with <code>date_time</code>, chances are you don't have <a href="https://gnuwin32.sourceforge.net/packages/make.htm"><code>make</code></a> and/or <a href="https://gnuwin32.sourceforge.net/packages/gawk.htm"><code>awk</code></a> installed, which is needed to properly configure <code>third_party/tz</code>. Even so, it might still fail because the used MS shell can't handle <code>mv</code> properly. In that case simply mv <code>third_party/tz/leapseconds.out</code> to <code>third_party/tz/leapseconds</code> and start the build again</li>
+</ul>
+<h2 id="include-valhalla-as-a-project-dependency">Include Valhalla as a project dependency<a class="headerlink" href="#include-valhalla-as-a-project-dependency" title="Permanent link">&para;</a></h2>
+<p>When importing <code>libvalhalla</code> as a dependency in a project, it's important to know that we're using <strong>both</strong> CMake <strong>and</strong> <a href="https://www.freedesktop.org/wiki/Software/pkg-config/"><code>pkg-config</code></a> to resolve our own dependencies. Check the root <code>CMakeLists.txt</code> for details. This is important in case you'd like to bring your own dependencies, such as cURL or protobuf. It's always safe to use <code>PKG_CONFIG_PATH</code> environment variable to point CMake to custom installations, however, for dependencies we resolve with <code>find_package</code> you'll need to check CMake's built-in <code>Find*</code> modules on how to provide the proper paths.</p>
+<p>To resolve <code>libvalhalla</code>'s linker/library paths/options, we recommend to use <code>pkg-config</code> or <a href="https://cmake.org/cmake/help/latest/module/FindPkgConfig.html#command:pkg_check_modules"><code>pkg_check_modules</code></a> (in CMake).</p>
+<p>Currently, <code>rapidjson</code>, <code>date</code> &amp; <code>dirent</code> (Windows only) headers are vendored in <code>third_party</code>. Consuming applications are encouraged to use <code>pkg-config</code> to resolve Valhalla and its dependencies which will automatically install those headers to <code>/path/to/include/valhalla/third_party/{rapidjson, date, dirent.h}</code> and can be <code>#include</code>d appropriately.</p>
+<h2 id="running-valhalla-server-on-unix">Running Valhalla server on Unix<a class="headerlink" href="#running-valhalla-server-on-unix" title="Permanent link">&para;</a></h2>
+<p>The following script should be enough to make some routing data and start a server using it.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Instructions for <a href="../elevation/">running an <strong>elevation lookup service</strong></a> with Valhalla.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># download some data and make tiles out of it</span>
+<span class="c1"># NOTE: you can feed multiple extracts into pbfgraphbuilder</span>
+wget<span class="w"> </span>https://download.geofabrik.de/europe/switzerland-latest.osm.pbf<span class="w"> </span>https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+<span class="c1"># get the config and setup</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span>valhalla_tiles
+valhalla_build_config<span class="w"> </span>--mjolnir-tile-dir<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/valhalla_tiles<span class="w"> </span>--mjolnir-tile-extract<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/valhalla_tiles.tar<span class="w"> </span>--mjolnir-timezone<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/valhalla_tiles/timezones.sqlite<span class="w"> </span>--mjolnir-admin<span class="w"> </span><span class="si">${</span><span class="nv">PWD</span><span class="si">}</span>/valhalla_tiles/admins.sqlite<span class="w"> </span>&gt;<span class="w"> </span>valhalla.json
+<span class="c1"># build timezones.sqlite to support time-dependent routing</span>
+valhalla_build_timezones<span class="w"> </span>&gt;<span class="w"> </span>valhalla_tiles/timezones.sqlite
+<span class="c1"># build admins.sqlite to support admin-related properties such as access restrictions, driving side, ISO codes etc</span>
+valhalla_build_admins<span class="w"> </span>-c<span class="w"> </span>valhalla.json<span class="w"> </span>switzerland-latest.osm.pbf<span class="w"> </span>liechtenstein-latest.osm.pbf
+<span class="c1"># build routing tiles</span>
+valhalla_build_tiles<span class="w"> </span>-c<span class="w"> </span>valhalla.json<span class="w"> </span>switzerland-latest.osm.pbf<span class="w"> </span>liechtenstein-latest.osm.pbf
+<span class="c1"># tar it up for running the server</span>
+<span class="c1"># either run this to build a tile index for faster graph loading times</span>
+valhalla_build_extract<span class="w"> </span>-c<span class="w"> </span>valhalla.json<span class="w"> </span>-v
+<span class="c1"># or simply tar up the tiles</span>
+find<span class="w"> </span>valhalla_tiles<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-n<span class="w"> </span><span class="p">|</span><span class="w"> </span>tar<span class="w"> </span>cf<span class="w"> </span>valhalla_tiles.tar<span class="w"> </span>--no-recursion<span class="w"> </span>-T<span class="w"> </span>-
+
+<span class="c1"># grab the demos repo and open up the point and click routing sample</span>
+git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="o">=</span><span class="m">1</span><span class="w"> </span>--recurse-submodules<span class="w"> </span>--single-branch<span class="w"> </span>--branch<span class="o">=</span>gh-pages<span class="w"> </span>https://github.com/valhalla/demos.git
+firefox<span class="w"> </span>demos/routing/index-internal.html<span class="w"> </span><span class="p">&amp;</span>
+<span class="c1"># NOTE: set the environment pulldown to &#39;localhost&#39; to point it at your own server</span>
+
+<span class="c1"># start up the server</span>
+valhalla_service<span class="w"> </span>valhalla.json<span class="w"> </span><span class="m">1</span>
+<span class="c1"># curl it directly if you like:</span>
+curl<span class="w"> </span>http://localhost:8002/route<span class="w"> </span>--data<span class="w"> </span><span class="s1">&#39;{&quot;locations&quot;:[{&quot;lat&quot;:47.365109,&quot;lon&quot;:8.546824,&quot;type&quot;:&quot;break&quot;,&quot;city&quot;:&quot;Zürich&quot;,&quot;state&quot;:&quot;Altstadt&quot;},{&quot;lat&quot;:47.108878,&quot;lon&quot;:8.394801,&quot;type&quot;:&quot;break&quot;,&quot;city&quot;:&quot;6037 Root&quot;,&quot;state&quot;:&quot;Untere Waldstrasse&quot;}],&quot;costing&quot;:&quot;auto&quot;,&quot;directions_options&quot;:{&quot;units&quot;:&quot;miles&quot;}}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>jq<span class="w"> </span><span class="s1">&#39;.&#39;</span>
+
+<span class="c1">#HAVE FUN!</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "toc.follow"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+    
+  </body>
+</html>
