@@ -940,6 +940,13 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
   return tiles;
 }
 
+const std::string& GraphReader::tile_extract() const {
+  static std::string empty_str;
+  if (tile_extract_->tiles.empty())
+    return empty_str;
+  return tile_extract_->archive->tar_file;
+}
+
 AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
   // Iterate through all the tiles that intersect this bounding box
   const auto& ids = TileHierarchy::GetGraphIds(bb);
