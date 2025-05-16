@@ -45,6 +45,11 @@ TEST(StandAlone, exhaust_reverse_search) {
   map.config.put("thor.extended_search", false);
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF"});
+  // a second pass should emit a warning
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 401);
+  EXPECT_THAT(result.info().warnings(0).description(),
+              testing::HasSubstr("might have used filtered edges"));
 
   // Allowing search to extend, finds route
   map.config.put("thor.extended_search", true);
