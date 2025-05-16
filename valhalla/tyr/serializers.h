@@ -6,7 +6,7 @@
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/midgard/pointll.h>
@@ -274,7 +274,7 @@ void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 
-void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
                                  const int begin_shape_index,
                                  const int end_shape_index,

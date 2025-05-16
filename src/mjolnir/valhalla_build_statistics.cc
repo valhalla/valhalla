@@ -3,7 +3,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/aabb2.h"

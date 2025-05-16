@@ -4,22 +4,21 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
+#include <fstream>
 #include <list>
 #include <map>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace valhalla {
 namespace mjolnir {
-
-using boost::property_tree::ptree;
 
 // Stages of the Valhalla tile building pipeline
 enum class BuildStage : int8_t {
@@ -161,7 +160,7 @@ uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
  * unusable afterwards.  Set to false if you need to perform protobuf operations after building tiles.
  * @return Returns true if no errors occur, false if an error occurs.
  */
-bool build_tile_set(const ptree& config,
+bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate);
@@ -190,7 +189,6 @@ bool build_tile_set(const ptree& config,
 //   ]
 // }
 struct TileManifest {
-
   std::map<baldr::GraphId, size_t> tileset;
 
   std::string ToString() const {
@@ -214,21 +212,7 @@ struct TileManifest {
     LOG_INFO("Writing tile manifest to " + filename);
   }
 
-  static TileManifest ReadFromFile(const std::string& filename) {
-    ptree manifest;
-    rapidjson::read_json(filename, manifest);
-    LOG_INFO("Reading tile manifest from " + filename);
-    std::map<baldr::GraphId, size_t> tileset;
-    for (const auto& tile_info : manifest.get_child("tiles")) {
-      const ptree& graph_id = tile_info.second.get_child("graphid");
-      const baldr::GraphId id(graph_id.get<uint64_t>("value"));
-      const size_t node_index = tile_info.second.get<size_t>("node_index");
-      tileset.insert({id, node_index});
-    }
-    LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
-             filename);
-    return TileManifest{tileset};
-  }
+  static TileManifest ReadFromFile(const std::string& filename);
 };
 } // namespace mjolnir
 } // namespace valhalla

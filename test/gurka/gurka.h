@@ -16,8 +16,6 @@
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
-#include "mjolnir/util.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
