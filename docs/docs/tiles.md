@@ -2,11 +2,13 @@
 
 ## Hierarchies/Levels
 
-Tiles are split up into three **levels** or **hierarchies**.
+Tiles are arranged into a hierarchy with three **levels**.
 
-- Hierarchy / level `0` contains edges pertaining to roads that are considered highway (motorway, trunk, and primary) roads and are stored in `4` degree tiles.
-- Hierarchy / level `1` contains roads that are at a arterial level (secondary and tertiary) and are saved in `1` degree tiles.
-- Hierarchy / level `2` contains roads that are considered at a local level (unclassified, residential, and service or other).  These tiles are saved in `0.25` degree tiles.
+| Hierarchy level | Tile size, degrees | Content |
+|---|---|---|
+| 0 | 4° | Highway roads: motorway, trunk and primary. |
+| 1 | 1° | Arterial roads: secondary and tertiary. |
+| 2 | 0.25° | Local roads: unclassified, residential, service or other. |
 
 So in python, the levels could be defined as follows:
 
