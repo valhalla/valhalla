@@ -14,6 +14,7 @@
 #include <boost/format.hpp>
 
 #include <algorithm>
+#include <deque>
 #include <future>
 #include <list>
 #include <mutex>

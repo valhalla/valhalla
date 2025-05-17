@@ -1,5 +1,5 @@
-
 #include "baldr/rapidjson_utils.h"
+#include "proto_conversions.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;

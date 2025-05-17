@@ -1,6 +1,5 @@
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
 #include "config.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "speed_assigner.h"
@@ -9,6 +8,7 @@
 #include <cxxopts.hpp>
 
 #include <algorithm>
+#include <deque>
 #include <future>
 #include <memory>
 #include <random>

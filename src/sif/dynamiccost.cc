@@ -1,6 +1,6 @@
 #include "sif/dynamiccost.h"
 #include "baldr/graphconstants.h"
-#include "midgard/util.h"
+#include "baldr/rapidjson_utils.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"

@@ -1,10 +1,8 @@
 #pragma once
-#include "baldr/rapidjson_utils.h"
 #include "valhalla.h"
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <filesystem>
 #include <string>
 
 #define VALHALLA_STRINGIZE_NX(A) #A

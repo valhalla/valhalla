@@ -1,9 +1,7 @@
 #ifndef VALHALLA_ODIN_UTIL_H_
 #define VALHALLA_ODIN_UTIL_H_
 
-#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/odin/narrative_dictionary.h>
-#include <valhalla/proto/options.pb.h>
 
 #include <cstdint>
 #include <locale>

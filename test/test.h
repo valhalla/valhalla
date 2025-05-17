@@ -2,7 +2,6 @@
 #pragma once
 
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
 #include "config.h"
 #include "midgard/polyline2.h"
@@ -14,7 +13,7 @@
 #ifndef _MSC_VER
 #include <sys/mman.h>
 #endif
-#include <boost/algorithm/string/replace.hpp>
+
 #include <boost/property_tree/ptree.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

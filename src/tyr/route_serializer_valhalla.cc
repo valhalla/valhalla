@@ -1,3 +1,4 @@
+#include "baldr/rapidjson_utils.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "odin/enhancedtrippath.h"

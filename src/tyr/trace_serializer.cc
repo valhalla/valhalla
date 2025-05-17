@@ -1,5 +1,6 @@
 #include "baldr/attributes_controller.h"
 #include "baldr/graphconstants.h"
+#include "baldr/rapidjson_utils.h"
 #include "odin/enhancedtrippath.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"

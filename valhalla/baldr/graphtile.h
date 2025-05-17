@@ -3,7 +3,6 @@
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
-#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -27,7 +26,6 @@
 #include <valhalla/filesystem.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
 
 #include <cstdint>
 #include <iterator>
