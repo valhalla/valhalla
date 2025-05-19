@@ -178,6 +178,61 @@ struct TrafficSpeed {
     }
     return live_speed;
   }
+
+  void rapidjson(rapidjson::writer_wrapper_t& writer) const volatile {
+    writer.start_object("live_speed");
+    if (speed_valid()) {
+      writer("overall_speed", static_cast<uint64_t>(get_overall_speed()));
+      auto speed = static_cast<uint64_t>(get_speed(0));
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        writer("speed_0", nullptr);
+      else
+        writer("speed_0", speed);
+      auto congestion = (congestion1 - 1.0) / 62.0;
+      if (congestion < 0)
+        writer("congestion_0", nullptr);
+      else {
+        writer.set_precision(2);
+        writer("congestion_0", congestion);
+        writer.set_precision(kDefaultPrecision);
+      }
+      writer.set_precision(2);
+      writer("breakpoint_0", breakpoint1 / 255.0);
+      writer.set_precision(kDefaultPrecision);
+
+      speed = static_cast<uint64_t>(get_speed(1));
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        writer("speed_1", nullptr);
+      else
+        writer("speed_1", speed);
+      congestion = (congestion2 - 1.0) / 62.0;
+      if (congestion < 0)
+        writer("congestion_1", nullptr);
+      else {
+        writer.set_precision(2);
+        writer("congestion_1", congestion);
+        writer.set_precision(kDefaultPrecision);
+      }
+      writer.set_precision(2);
+      writer("breakpoint_1", breakpoint1 / 255.0);
+      writer.set_precision(kDefaultPrecision);
+
+      speed = static_cast<uint64_t>(get_speed(2));
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        writer("speed_2", nullptr);
+      else
+        writer("speed_2", speed);
+      congestion = (congestion3 - 1.0) / 62.0;
+      if (congestion < 0)
+        writer("congestion_2", nullptr);
+      else {
+        writer.set_precision(2);
+        writer("congestion_2", congestion);
+        writer.set_precision(kDefaultPrecision);
+      }
+    }
+    writer.end_object();
+  }
 #endif
 };
 

@@ -58,6 +58,8 @@ public:
 
   const json::MapPtr json() const;
 
+  void rapidjson(rapidjson::writer_wrapper_t& writer) const;
+
   /**
    * operator < - for sorting. Sort by edge Id.
    * @param  other  Other access restriction to compare to.

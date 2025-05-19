@@ -26,13 +26,14 @@ OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de)
   return OpenLR::LocationReferencePoint::OTHER;
 }
 
-json::ArrayPtr get_access_restrictions(const graph_tile_ptr& tile, uint32_t edge_idx) {
-  auto arr = json::array({});
+void get_access_restrictions(const graph_tile_ptr& tile,
+                             rapidjson::writer_wrapper_t& writer,
+                             uint32_t edge_idx) {
+  writer.start_array();
   for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
-    arr->emplace_back(res.json());
+    res.rapidjson(writer);
   };
-
-  return arr;
+  writer.end_array();
 }
 
 std::string
@@ -62,8 +63,10 @@ linear_reference(const baldr::DirectedEdge* de, float percent_along, const EdgeI
       .toBase64();
 }
 
-json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader, bool verbose) {
-  auto array = json::array({});
+void serialize_edges(const PathLocation& location,
+                     GraphReader& reader,
+                     rapidjson::writer_wrapper_t& writer,
+                     bool verbose) {
   for (const auto& edge : location.edges) {
     try {
       // get the osm way id
@@ -74,7 +77,8 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       if (verbose) {
         // live traffic information
         const volatile auto& traffic = tile->trafficspeed(directed_edge);
-        auto live_speed = traffic.json();
+        // write live_speed
+        traffic.rapidjson(writer);
 
         // incident information
         if (traffic.has_incidents) {
@@ -82,58 +86,66 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
         }
 
         // historical traffic information
-        auto predicted_speeds = json::array({});
         if (directed_edge->has_predicted_speed()) {
+          writer.start_array("predicted_speeds");
           for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
-            predicted_speeds->emplace_back(
-                static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
+            writer(static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
           }
+          writer.end_array();
         }
 
         // basic rest of it plus edge metadata
-        array->emplace_back(json::map({
-            {"correlated_lat", json::fixed_t{edge.projected.lat(), 6}},
-            {"correlated_lon", json::fixed_t{edge.projected.lng(), 6}},
-            {"side_of_street",
-             edge.sos == PathLocation::LEFT
-                 ? std::string("left")
-                 : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
-            {"percent_along", json::fixed_t{edge.percent_along, 5}},
-            {"distance", json::fixed_t{edge.distance, 1}},
-            {"heading", json::fixed_t{edge.projected_heading, 1}},
-            {"outbound_reach", static_cast<int64_t>(edge.outbound_reach)},
-            {"inbound_reach", static_cast<int64_t>(edge.inbound_reach)},
-            {"edge_id", edge.id.json()},
-            {"edge", directed_edge->json()},
-            {"edge_info", edge_info.json()},
-            {"linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info)},
-            {"predicted_speeds", predicted_speeds},
-            {"live_speed", live_speed},
-            {"access_restrictions", get_access_restrictions(tile, edge.id.id())},
-            {"shoulder", directed_edge->shoulder()},
-        }));
+
+        writer("correlated_lat", json::fixed_t{edge.projected.lat(), 6});
+        writer("correlated_lon", json::fixed_t{edge.projected.lng(), 6});
+        writer("side_of_street", edge.sos == PathLocation::LEFT
+                                     ? std::string("left")
+                                     : (edge.sos == PathLocation::RIGHT ? std::string("right")
+                                                                        : std::string("neither")));
+        writer("percent_along", json::fixed_t{edge.percent_along, 5});
+        writer("distance", json::fixed_t{edge.distance, 1});
+        writer("heading", json::fixed_t{edge.projected_heading, 1});
+        writer("outbound_reach", static_cast<int64_t>(edge.outbound_reach));
+        writer("inbound_reach", static_cast<int64_t>(edge.inbound_reach));
+
+        writer.start_object("edge_id");
+        edge.id.rapidjson(writer);
+        writer.end_object();
+
+        writer.start_object("edge");
+        directed_edge->rapidjson(writer);
+        writer.end_object();
+
+        writer.start_object("edge_info");
+        edge_info->rapidjson(writer);
+        writer.end_object();
+
+        writer("linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info));
+        get_access_restrictions(tile, writer, edge.id.id());
+        writer("shoulder", directed_edge->shoulder());
+
       } // they want it lean and mean
       else {
-        array->emplace_back(json::map({
-            {"way_id", static_cast<uint64_t>(edge_info.wayid())},
-            {"correlated_lat", json::fixed_t{edge.projected.lat(), 6}},
-            {"correlated_lon", json::fixed_t{edge.projected.lng(), 6}},
-            {"side_of_street",
-             edge.sos == PathLocation::LEFT
-                 ? std::string("left")
-                 : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
-            {"percent_along", json::fixed_t{edge.percent_along, 5}},
-        }));
+        writer("way_id", static_cast<uint64_t>(edge_info.wayid()));
+        writer("correlated_lat", json::fixed_t{edge.projected.lat(), 6});
+        writer("correlated_lon", json::fixed_t{edge.projected.lng(), 6});
+        writer("side_of_street", edge.sos == PathLocation::LEFT
+                                     ? std::string("left")
+                                     : (edge.sos == PathLocation::RIGHT ? std::string("right")
+                                                                        : std::string("neither")));
+        writer("percent_along", json::fixed_t{edge.percent_along, 5});
       }
     } catch (...) {
       // this really shouldnt ever get hit
       LOG_WARN("Expected edge not found in graph but found by loki::search!");
     }
   }
-  return array;
 }
 
-json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader, bool verbose) {
+void serialize_nodes(const PathLocation& location,
+                     GraphReader& reader,
+                     rapidjson::writer_wrapper_t& writer,
+                     bool verbose) {
   // get the nodes we need
   std::unordered_set<uint64_t> nodes;
   for (const auto& e : location.edges) {
@@ -141,52 +153,50 @@ json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader
       nodes.emplace(reader.GetGraphTile(e.id)->directededge(e.id)->endnode());
     }
   }
-  // ad them into an array of json
-  auto array = json::array({});
+
   for (auto node_id : nodes) {
     GraphId n(node_id);
     graph_tile_ptr tile = reader.GetGraphTile(n);
     auto* node_info = tile->node(n);
-    json::MapPtr node;
+
     if (verbose) {
-      node = node_info->json(tile);
-      node->emplace("node_id", n.json());
+      node_info->rapidjson(tile, writer);
+
+      writer.start_object("node_id");
+      n.rapidjson(writer);
+      writer.end_object();
     } else {
       midgard::PointLL node_ll = tile->get_node_ll(n);
-      node = json::map({
-          {"lon", json::fixed_t{node_ll.first, 6}}, {"lat", json::fixed_t{node_ll.second, 6}},
-          // TODO: osm_id
-      });
+      writer("lon", json::fixed_t{node_ll.first, 6});
+      writer("lat", json::fixed_t{node_ll.second, 6});
+      // TODO: osm_id
     }
-    array->emplace_back(node);
   }
-  // give them back
-  return array;
 }
 
-json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool verbose) {
+void serialize(const PathLocation& location,
+               GraphReader& reader,
+               rapidjson::writer_wrapper_t& writer,
+               bool verbose) {
   // serialze all the edges
-  auto m = json::map({
-      {"edges", serialize_edges(location, reader, verbose)},
-      {"nodes", serialize_nodes(location, reader, verbose)},
-      {"input_lat", json::fixed_t{location.latlng_.lat(), 6}},
-      {"input_lon", json::fixed_t{location.latlng_.lng(), 6}},
-  });
-  return m;
+  writer("edges", serialize_edges(location, reader, writer, verbose));
+  writer("nodes", serialize_nodes(location, reader, writer, verbose));
+  writer("input_lat", json::fixed_t{location.latlng_.lat(), 6});
+  writer("input_lon", json::fixed_t{location.latlng_.lng(), 6});
 }
 
-json::MapPtr serialize(const midgard::PointLL& ll, const std::string& reason, bool verbose) {
-  auto m = json::map({
-      {"edges", static_cast<std::nullptr_t>(nullptr)},
-      {"nodes", static_cast<std::nullptr_t>(nullptr)},
-      {"input_lat", json::fixed_t{ll.lat(), 6}},
-      {"input_lon", json::fixed_t{ll.lng(), 6}},
-  });
-  if (verbose) {
-    m->emplace("reason", reason);
-  }
+void serialize(rapidjson::writer_wrapper_t& writer,
+               const midgard::PointLL& ll,
+               const std::string& reason,
+               bool verbose) {
+  writer("edges", nullptr);
+  writer("nodes", nullptr);
+  writer("input_lat", json::fixed_t{ll.lat(), 6});
+  writer("input_lon", json::fixed_t{ll.lng(), 6});
 
-  return m;
+  if (verbose) {
+    writer("reason", reason);
+  }
 }
 } // namespace
 
@@ -197,19 +207,21 @@ std::string serializeLocate(const Api& request,
                             const std::vector<baldr::Location>& locations,
                             const std::unordered_map<baldr::Location, PathLocation>& projections,
                             GraphReader& reader) {
-  auto json = json::array({});
+  rapidjson::writer_wrapper_t writer(4096);
+  writer.start_object();
+  writer.start_array("locations");
   for (const auto& location : locations) {
+    writer.start_object();
     try {
-      json->emplace_back(serialize(projections.at(location), reader, request.options().verbose()));
+      serialize(projections.at(location), reader, writer, request.options().verbose());
     } catch (const std::exception& e) {
-      json->emplace_back(
-          serialize(location.latlng_, "No data found for location", request.options().verbose()));
+      serialize(writer, location.latlng_, "No data found for location", request.options().verbose());
     }
+    writer.end_object();
   }
-
-  std::stringstream ss;
-  ss << *json;
-  return ss.str();
+  writer.end_array();
+  writer.end_object();
+  return writer.get_buffer();
 }
 
 } // namespace tyr

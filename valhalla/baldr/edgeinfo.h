@@ -311,6 +311,12 @@ public:
    */
   json::MapPtr json() const;
 
+  /**
+   * the rapidjson representation of the object
+   * @param writer The writer rapidjson object to represent the edge info
+   */
+  void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const;
+
   // Operator EqualTo based on nodea and nodeb.
   bool operator==(const EdgeInfo& rhs) const;
 

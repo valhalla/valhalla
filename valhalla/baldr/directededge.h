@@ -1184,6 +1184,12 @@ public:
    */
   json::MapPtr json() const;
 
+  /**
+   * Create a rapidjson object representing this edge
+   *  @param writer The writer rapidjson object to represent the object
+   */
+  void DirectedEdge::rapidjson(rapidjson::writer_wrapper_t& writer) const;
+
 protected:
   // 1st 8-byte word
   uint64_t endnode_ : 46;      // End node of the directed edge

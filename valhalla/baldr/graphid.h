@@ -174,6 +174,12 @@ public:
   json::Value json() const;
 
   /**
+   * The rapidjson representation of the id
+   * @param writer The writer rapidjson object to represent the id
+   */
+  void GraphId::rapidjson(rapidjson::writer_wrapper_t& writer) const;
+
+  /**
    * Post increments the id.
    */
   GraphId operator++(int) {
