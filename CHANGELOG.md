@@ -33,6 +33,7 @@
    * FIXED: compatibility with GEOS <3.12 [#5224](https://github.com/valhalla/valhalla/pull/5224)
    * FIXED: gtest linkage errors with clang 17+ on MacOS [#5227](https://github.com/valhalla/valhalla/pull/5227)
    * FIXED: matrix headings [#5244](https://github.com/valhalla/valhalla/pull/5244)
+   * FIXED: fix semi-trivial paths in costmatrix [#5249](https://github.com/valhalla/valhalla/pull/5249)
    * FIXED: rename `check_reverse_connections` [#5255](https://github.com/valhalla/valhalla/pull/5255)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
@@ -74,6 +75,7 @@
    * ADDED: Make iterations limit configurable in costmatrix [#5221](https://github.com/valhalla/valhalla/pull/5221)
    * ADDED: Enforce the order of includes via `clang-format` [5230](https://github.com/valhalla/valhalla/pull/5230)
    * CHANGED: Switch to PyPI version of `clang-format` [#5237](https://github.com/valhalla/valhalla/pull/5237)
+   * ADDED: More barrier types to consider for car routing [#5217](https://github.com/valhalla/valhalla/pull/5217)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
