@@ -33,6 +33,7 @@
    * FIXED: compatibility with GEOS <3.12 [#5224](https://github.com/valhalla/valhalla/pull/5224)
    * FIXED: gtest linkage errors with clang 17+ on MacOS [#5227](https://github.com/valhalla/valhalla/pull/5227)
    * FIXED: matrix headings [#5244](https://github.com/valhalla/valhalla/pull/5244)
+   * FIXED: rename `check_reverse_connections` [#5255](https://github.com/valhalla/valhalla/pull/5255)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
