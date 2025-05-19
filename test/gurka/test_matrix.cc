@@ -94,7 +94,7 @@ protected:
                              {"mjolnir.traffic_extract",
                               "test/data/matrix_traffic_allowed/traffic.tar"},
                              {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
-                             {"thor.costmatrix_check_reverse_connection", "1"}});
+                             {"thor.costmatrix_check_reverse_connections", "1"}});
 
     // verify shortcut edges being built
     // TODO: need to hack HierarchyLimits to allow shortcuts being seen by the algo
@@ -1127,6 +1127,6 @@ TEST(StandAlone, MultipleTrivialRoutes) {
       gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_fail", {});
   check_trivial_matrix(map, layout);
   // ensure consistent behavior regardless of whether we do the reverse connection check
-  map.config.put("thor.costmatrix_check_reverse_connection", "1");
+  map.config.put("thor.costmatrix_check_reverse_connections", "1");
   check_trivial_matrix(map, layout);
 }
