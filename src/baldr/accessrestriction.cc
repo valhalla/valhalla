@@ -1,7 +1,7 @@
 #include "baldr/accessrestriction.h"
 #include "baldr/timedomain.h"
-
-#include <cstring>
+#include "tyr/serializers.h"
+#include <string.h>
 
 namespace vb = valhalla::baldr;
 
@@ -134,7 +134,7 @@ void AccessRestriction::rapidjson(rapidjson::writer_wrapper_t& writer) const {
     default:
       writer.set_precision(2);
       writer("value", static_cast<double>(value()) * 0.01);
-      writer.set_precision(kDefaultPrecision);
+      writer.set_precision(tyr::kDefaultPrecision);
   }
   writer.end_object();
 }

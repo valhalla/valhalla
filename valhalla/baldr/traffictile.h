@@ -20,6 +20,7 @@
 #else
 #include <stdint.h>
 #endif
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/valhalla.h>
 
 #ifndef C_ONLY_INTERFACE
@@ -194,11 +195,11 @@ struct TrafficSpeed {
       else {
         writer.set_precision(2);
         writer("congestion_0", congestion);
-        writer.set_precision(kDefaultPrecision);
+        writer.set_precision(3);
       }
       writer.set_precision(2);
       writer("breakpoint_0", breakpoint1 / 255.0);
-      writer.set_precision(kDefaultPrecision);
+      writer.set_precision(3);
 
       speed = static_cast<uint64_t>(get_speed(1));
       if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
@@ -211,11 +212,11 @@ struct TrafficSpeed {
       else {
         writer.set_precision(2);
         writer("congestion_1", congestion);
-        writer.set_precision(kDefaultPrecision);
+        writer.set_precision(3);
       }
       writer.set_precision(2);
       writer("breakpoint_1", breakpoint1 / 255.0);
-      writer.set_precision(kDefaultPrecision);
+      writer.set_precision(3);
 
       speed = static_cast<uint64_t>(get_speed(2));
       if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
@@ -228,7 +229,7 @@ struct TrafficSpeed {
       else {
         writer.set_precision(2);
         writer("congestion_2", congestion);
-        writer.set_precision(kDefaultPrecision);
+        writer.set_precision(3);
       }
     }
     writer.end_object();

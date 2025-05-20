@@ -6,6 +6,9 @@
 
 #include <cstdint>
 #include <string>
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <vector>
 
 namespace valhalla {
@@ -177,7 +180,7 @@ public:
    * The rapidjson representation of the id
    * @param writer The writer rapidjson object to represent the id
    */
-  void GraphId::rapidjson(rapidjson::writer_wrapper_t& writer) const;
+  void rapidjson(rapidjson::writer_wrapper_t& writer) const;
 
   /**
    * Post increments the id.

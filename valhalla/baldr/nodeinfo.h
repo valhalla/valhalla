@@ -5,6 +5,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
@@ -498,7 +499,7 @@ public:
    * @param tile the tile required to get admin information
    * @param writer The writer rapidjson object to represent the id
    */
-  void NodeInfo::rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const;
+  void rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // Organized into 8-byte words so structure will align to 8 byte boundaries.

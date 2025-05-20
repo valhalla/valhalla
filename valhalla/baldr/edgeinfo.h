@@ -4,6 +4,7 @@
 #include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/encoded.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
@@ -315,7 +316,7 @@ public:
    * the rapidjson representation of the object
    * @param writer The writer rapidjson object to represent the edge info
    */
-  void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const;
+  void rapidjson(rapidjson::writer_wrapper_t& writer) const;
 
   // Operator EqualTo based on nodea and nodeb.
   bool operator==(const EdgeInfo& rhs) const;
