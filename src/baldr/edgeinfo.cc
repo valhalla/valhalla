@@ -617,11 +617,9 @@ void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const {
   bike_network_rapidjson(bike_network(), writer);
   writer.end_object();
 
-  writer.start_array("names");
-  for (const auto& name : GetNames()) {
-    writer(name);
-  }
-  writer.end_array();
+  writer.start_object("names");
+  names_rapidjson(GetNames(), writer);
+  writer.end_object();
 
   writer("shape", midgard::encode(shape()));
 
