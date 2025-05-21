@@ -20,6 +20,20 @@ json::MapPtr access_json(uint32_t access) {
                     {"motorcycle", static_cast<bool>(access & kMotorcycleAccess)}});
 }
 
+void access_rapidjson(uint32_t access, rapidjson::writer_wrapper_t& writer) {
+  writer("bicycle", static_cast<bool>(access & kBicycleAccess));
+  writer("bus", static_cast<bool>(access & kBusAccess));
+  writer("car", static_cast<bool>(access & kAutoAccess));
+  writer("emergency", static_cast<bool>(access & kEmergencyAccess));
+  writer("HOV", static_cast<bool>(access & kHOVAccess));
+  writer("pedestrian", static_cast<bool>(access & kPedestrianAccess));
+  writer("taxi", static_cast<bool>(access & kTaxiAccess));
+  writer("truck", static_cast<bool>(access & kTruckAccess));
+  writer("wheelchair", static_cast<bool>(access & kWheelchairAccess));
+  writer("moped", static_cast<bool>(access & kMopedAccess));
+  writer("motorcycle", static_cast<bool>(access & kMotorcycleAccess));
+}
+
 /**
  * Get the updated bit field.
  * @param dst  Data member to be updated.
@@ -711,7 +725,7 @@ void DirectedEdge::rapidjson(rapidjson::writer_wrapper_t& writer) const {
   writer("weighted_grade", static_cast<double>(weighted_grade_ - 6.0) / .6);
   writer("max_up_slope", static_cast<double>(max_up_slope()));
   writer("max_down_slope", static_cast<double>(max_down_slope()));
-  writer.set_precision(tyr::kDefaultPrecision);
+  writer.set_precision(3);
   writer("curvature", static_cast<uint64_t>(curvature_));
   writer.end_object();
 

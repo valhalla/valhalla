@@ -326,7 +326,7 @@ void NodeInfo::rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t
   writer("lat", ll.second);
   writer.set_precision(2);
   writer("elevation", elevation());
-  writer.set_precision(tyr::kDefaultPrecision);
+  writer.set_precision(3);
 
   writer("edge_count", static_cast<uint64_t>(edge_count_));
   writer("tagged_access", static_cast<bool>(tagged_access_));

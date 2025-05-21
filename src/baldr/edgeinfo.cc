@@ -671,7 +671,7 @@ void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const {
             writer.end_array();
           }
         }
-        writer.set_precision(tyr::kDefaultPrecision);
+        writer.set_precision(3);
         writer.end_array();
         break;
       }

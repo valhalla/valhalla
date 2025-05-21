@@ -95,16 +95,19 @@ void serialize_edges(const PathLocation& location,
         }
 
         // basic rest of it plus edge metadata
-
-        writer("correlated_lat", json::fixed_t{edge.projected.lat(), tyr::kCoordinatePrecision});
-        writer("correlated_lon", json::fixed_t{edge.projected.lng(), tyr::kCoordinatePrecision});
+        writer.set_precision(tyr::kCoordinatePrecision);
+        writer("correlated_lat", edge.projected.lat());
+        writer("correlated_lon", edge.projected.lng());
         writer("side_of_street", edge.sos == PathLocation::LEFT
                                      ? std::string("left")
                                      : (edge.sos == PathLocation::RIGHT ? std::string("right")
                                                                         : std::string("neither")));
-        writer("percent_along", json::fixed_t{edge.percent_along, 5});
-        writer("distance", json::fixed_t{edge.distance, 1});
-        writer("heading", json::fixed_t{edge.projected_heading, 1});
+        writer.set_precision(5);
+        writer("percent_along", edge.percent_along);
+        writer.set_precision(1);
+        writer("distance", edge.distance);
+        writer("heading", edge.projected_heading);
+        writer.set_precision(tyr::kDefaultPrecision);
         writer("outbound_reach", static_cast<int64_t>(edge.outbound_reach));
         writer("inbound_reach", static_cast<int64_t>(edge.inbound_reach));
 
@@ -117,7 +120,7 @@ void serialize_edges(const PathLocation& location,
         writer.end_object();
 
         writer.start_object("edge_info");
-        edge_info->rapidjson(writer);
+        edge_info.rapidjson(writer);
         writer.end_object();
 
         writer("linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info));
@@ -127,13 +130,16 @@ void serialize_edges(const PathLocation& location,
       } // they want it lean and mean
       else {
         writer("way_id", static_cast<uint64_t>(edge_info.wayid()));
-        writer("correlated_lat", json::fixed_t{edge.projected.lat(), tyr::kCoordinatePrecision});
-        writer("correlated_lon", json::fixed_t{edge.projected.lng(), tyr::kCoordinatePrecision});
+        writer.set_precision(tyr::kCoordinatePrecision);
+        writer("correlated_lat", edge.projected.lat());
+        writer("correlated_lon", edge.projected.lng());
         writer("side_of_street", edge.sos == PathLocation::LEFT
                                      ? std::string("left")
                                      : (edge.sos == PathLocation::RIGHT ? std::string("right")
                                                                         : std::string("neither")));
-        writer("percent_along", json::fixed_t{edge.percent_along, 5});
+        writer.set_precision(5);
+        writer("percent_along", edge.percent_along);
+        writer.set_precision(tyr::kDefaultPrecision);
       }
     } catch (...) {
       // this really shouldnt ever get hit
@@ -167,8 +173,10 @@ void serialize_nodes(const PathLocation& location,
       writer.end_object();
     } else {
       midgard::PointLL node_ll = tile->get_node_ll(n);
-      writer("lon", json::fixed_t{node_ll.first, tyr::kCoordinatePrecision});
-      writer("lat", json::fixed_t{node_ll.second, tyr::kCoordinatePrecision});
+      writer.set_precision(tyr::kCoordinatePrecision);
+      writer("lon", node_ll.first);
+      writer("lat", node_ll.second);
+      writer.set_precision(tyr::kDefaultPrecision);
       // TODO: osm_id
     }
   }
@@ -179,10 +187,16 @@ void serialize(const PathLocation& location,
                rapidjson::writer_wrapper_t& writer,
                bool verbose) {
   // serialze all the edges
-  writer("edges", serialize_edges(location, reader, writer, verbose));
-  writer("nodes", serialize_nodes(location, reader, writer, verbose));
-  writer("input_lat", json::fixed_t{location.latlng_.lat(), tyr::kCoordinatePrecision});
-  writer("input_lon", json::fixed_t{location.latlng_.lng(), tyr::kCoordinatePrecision});
+  writer.start_object("edges");
+  serialize_edges(location, reader, writer, verbose);
+  writer.end_object();
+  writer.start_object("nodes");
+  serialize_nodes(location, reader, writer, verbose);
+  writer.end_object();
+  writer.set_precision(tyr::kCoordinatePrecision);
+  writer("input_lat", location.latlng_.lat());
+  writer("input_lon", location.latlng_.lng());
+  writer.set_precision(tyr::kDefaultPrecision);
 }
 
 void serialize(rapidjson::writer_wrapper_t& writer,
@@ -191,8 +205,10 @@ void serialize(rapidjson::writer_wrapper_t& writer,
                bool verbose) {
   writer("edges", nullptr);
   writer("nodes", nullptr);
-  writer("input_lat", json::fixed_t{ll.lat(), tyr::kCoordinatePrecision});
-  writer("input_lon", json::fixed_t{ll.lng(), tyr::kCoordinatePrecision});
+  writer.set_precision(tyr::kCoordinatePrecision);
+  writer("input_lat", ll.lat());
+  writer("input_lon", ll.lng());
+  writer.set_precision(tyr::kDefaultPrecision);
 
   if (verbose) {
     writer("reason", reason);

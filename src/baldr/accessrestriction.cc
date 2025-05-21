@@ -1,6 +1,7 @@
 #include "baldr/accessrestriction.h"
 #include "baldr/timedomain.h"
 #include "tyr/serializers.h"
+
 #include <string.h>
 
 namespace vb = valhalla::baldr;
