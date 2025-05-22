@@ -122,7 +122,7 @@ config = {
         'clear_reserved_memory': False,
         'extended_search': False,
         'costmatrix': {
-            'check_reverse_connections': False,
+            'check_reverse_connection': False,
             'allow_second_pass': False,
             'max_reserved_locations': 25,
             'max_iterations': 2800,
@@ -432,7 +432,7 @@ help_text = {
         'clear_reserved_memory': 'If True clean reserved memory in path algorithms',
         'extended_search': 'If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge',
         'costmatrix': {
-            'check_reverse_connections': 'Whether to check for expansion connections on the reverse tree, which has an adverse effect on performance',
+            'check_reverse_connection': 'Whether to check for expansion connections on the reverse tree, which has an adverse effect on performance',
             'allow_second_pass': 'Whether to allow a second pass for unfound CostMatrix connections, where we turn off destination-only, relax hierarchies and expand into "semi-islands"',
             'max_reserved_locations': 'Maximum amount of locations allowed to to keep reserved between requests for CostMatrix',
             'max_iterations': 'Upper bound on the number of iterations per expansion once a path has been found. Must be a positive integer',
