@@ -32,7 +32,7 @@ void get_access_restrictions(const graph_tile_ptr& tile,
   writer.start_array();
   for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
     res.rapidjson(writer);
-  };
+  }
   writer.end_array();
 }
 
