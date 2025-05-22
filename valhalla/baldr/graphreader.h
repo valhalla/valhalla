@@ -435,10 +435,10 @@ public:
   /**
    * Constructor using tiles as separate files.
    * @param pt  Property tree listing the configuration for the tile storage
-   * @param tile_getter Object responsible for getting tiles by url. If nullptr default implementation
-   * is in use.
-   * @param traffic_readonly Flag to indicate if memory-mapped traffic extract should be writeable or
-   * read-only (default).
+   * @param tile_getter Object responsible for getting tiles by url. If nullptr default
+   * implementation is in use.
+   * @param traffic_readonly Flag to indicate if memory-mapped traffic extract should be writeable
+   * or read-only (default).
    */
   explicit GraphReader(const boost::property_tree::ptree& pt,
                        std::unique_ptr<tile_getter_t>&& tile_getter = nullptr,

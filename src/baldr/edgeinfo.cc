@@ -28,6 +28,23 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   return a;
 }
 
+void bike_network_rapidjson(uint8_t mask, rapidjson::writer_wrapper_t& writer) {
+  writer.start_object();
+  writer("national", static_cast<bool>(mask & kNcn));
+  writer("regional", static_cast<bool>(mask & kRcn));
+  writer("local", static_cast<bool>(mask & kLcn));
+  writer("mountain", static_cast<bool>(mask & kMcn));
+  writer.end_object();
+}
+
+void names_rapidjson(const std::vector<std::string>& names, rapidjson::writer_wrapper_t& writer) {
+  writer.start_array();
+  for (const auto& n : names) {
+    writer(n);
+  }
+  writer.end_array();
+}
+
 /**
  * Parse a 7-bit encoded varint.
  *
@@ -590,6 +607,90 @@ json::MapPtr EdgeInfo::json() const {
   }
 
   return edge_info;
+}
+
+void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const {
+  writer.start_object();
+  writer("way_id", static_cast<uint64_t>(wayid()));
+
+  writer.start_object("bike_network");
+  bike_network_rapidjson(bike_network(), writer);
+  writer.end_object();
+
+  writer.start_object("names");
+  names_rapidjson(GetNames(), writer);
+  writer.end_object();
+
+  writer("shape", midgard::encode(shape()));
+
+  // add the mean_elevation depending on its validity
+  const auto elev = mean_elevation();
+  if (elev == kNoElevationData) {
+    writer("mean_elevation", nullptr);
+  } else {
+    writer("mean_elevation", static_cast<int64_t>(elev));
+  }
+
+  if (speed_limit() == kUnlimitedSpeedLimit) {
+    writer("speed_limit", "unlimited");
+  } else {
+    writer("speed_limit", static_cast<uint64_t>(speed_limit()));
+  }
+
+  bool has_conditional_speeds = false;
+  writer.start_object("conditional_speed_limits");
+  for (const auto& [tag, value] : GetTags()) {
+    switch (tag) {
+      case TaggedValue::kLayer:
+        break;
+      case TaggedValue::kLinguistic:
+        break;
+      case TaggedValue::kBssInfo:
+        break;
+      case TaggedValue::kLevel:
+        break;
+      case TaggedValue::kLevelRef:
+        break;
+      case TaggedValue::kLandmark:
+        break;
+      case TaggedValue::kLevels: {
+        writer.start_array("levels");
+        std::vector<std::pair<float, float>> decoded;
+        uint32_t precision;
+        std::tie(decoded, precision) = decode_levels(value);
+        writer.set_precision(precision);
+        for (auto& range : decoded) {
+          if (range.first == range.second) {
+            writer(range.first);
+          } else {
+            writer.start_array();
+            writer(range.first);
+            writer(range.second);
+            writer.end_array();
+          }
+        }
+        writer.set_precision(3);
+        writer.end_array();
+        break;
+      }
+      case TaggedValue::kConditionalSpeedLimits: {
+        const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
+        writer(l->td_.to_string(), static_cast<uint64_t>(l->speed_));
+        has_conditional_speeds = true;
+        break;
+      }
+      case TaggedValue::kTunnel:
+        break;
+      case TaggedValue::kBridge:
+        break;
+    }
+  }
+  writer.end_object();
+
+  if (!has_conditional_speeds) {
+    writer("conditional_speed_limits", nullptr);
+  }
+  writer.end_object();
 }
 
 } // namespace baldr
