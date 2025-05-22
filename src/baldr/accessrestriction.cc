@@ -134,7 +134,7 @@ void AccessRestriction::rapidjson(rapidjson::writer_wrapper_t& writer) const {
     default:
       writer.set_precision(2);
       writer("value", static_cast<double>(value()) * 0.01);
-      writer.set_precision(tyr::kDefaultPrecision);
+      writer.set_precision(3);
   }
   writer.end_object();
 }
