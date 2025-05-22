@@ -60,7 +60,7 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
                                                       kInitialEdgeLabelCountBidirDijkstra)),
       max_reserved_locations_count_(
           config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
-      check_reverse_connections_(config.get<bool>("costmatrix.check_reverse_connection", false)),
+      check_reverse_connection_(config.get<bool>("costmatrix.check_reverse_connection", false)),
       max_iterations_(std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultIterations),
                                static_cast<uint32_t>(1))),
       access_mode_(kAutoAccess),
@@ -76,7 +76,7 @@ CostMatrix::~CostMatrix() {
 void CostMatrix::Clear() {
   // Clear the target edge markings
   targets_->clear();
-  if (check_reverse_connections_)
+  if (check_reverse_connection_)
     sources_->clear();
 
   // Clear all adjacency lists, edge labels, and edge status
@@ -571,7 +571,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // mark the edge as settled for the connection check
   if (!FORWARD) {
     (*targets_)[meta.edge_id].push_back(index);
-  } else if (check_reverse_connections_) {
+  } else if (check_reverse_connection_) {
     (*sources_)[meta.edge_id].push_back(index);
   }
 
@@ -630,7 +630,7 @@ bool CostMatrix::Expand(const uint32_t index,
 
   if (FORWARD) {
     CheckForwardConnections(index, pred, n, graphreader, options);
-  } else if (check_reverse_connections_) {
+  } else if (check_reverse_connection_) {
     CheckReverseConnections(index, pred, n, graphreader, options);
   }
 
@@ -1114,7 +1114,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       edgelabel_[MATRIX_FORW][index].push_back(std::move(edge_label));
       adjacency_[MATRIX_FORW][index].add(idx);
       edgestatus_[MATRIX_FORW][index].Set(edgeid, EdgeSet::kTemporary, idx, tile);
-      if (check_reverse_connections_)
+      if (check_reverse_connection_)
         (*sources_)[edgeid].push_back(index);
     }
     index++;
