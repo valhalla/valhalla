@@ -24,7 +24,6 @@ void GraphId::rapidjson(rapidjson::writer_wrapper_t& writer) const {
     writer("id", static_cast<uint64_t>(id()));
     writer("value", value);
   }
-  writer(nullptr);
 }
 
 // Stream output
