@@ -98,6 +98,47 @@ const json::MapPtr AccessRestriction::json() const {
   return map;
 }
 
+void AccessRestriction::rapidjson(rapidjson::writer_wrapper_t& writer) const {
+  auto maybe_found = type_to_string.find(type());
+  std::string restriction_type = "unsupported";
+  if (maybe_found != type_to_string.cend()) {
+    restriction_type = maybe_found->second;
+  }
+
+  writer.start_object();
+  writer("type", restriction_type);
+  writer("edge_index", static_cast<uint64_t>(edgeindex()));
+  writer("bus", static_cast<bool>(modes_ & kBusAccess));
+  writer("car", static_cast<bool>(modes_ & kAutoAccess));
+  writer("emergency", static_cast<bool>(modes_ & kEmergencyAccess));
+  writer("HOV", static_cast<bool>(modes_ & kHOVAccess));
+  writer("pedestrian", static_cast<bool>(modes_ & kPedestrianAccess));
+  writer("taxi", static_cast<bool>(modes_ & kTaxiAccess));
+  writer("truck", static_cast<bool>(modes_ & kTruckAccess));
+  writer("wheelchair", static_cast<bool>(modes_ & kWheelchairAccess));
+  writer("moped", static_cast<bool>(modes_ & kMopedAccess));
+  writer("motorcycle", static_cast<bool>(modes_ & kMotorcycleAccess));
+
+  switch (type()) {
+    case AccessType::kTimedAllowed:
+    case AccessType::kTimedDenied:
+    case AccessType::kDestinationAllowed:
+      // TODO(nils): turn the time domain into a proper map
+      writer.start_object("value");
+      writer("time_domain", value());
+      writer.end_object();
+      break;
+    case AccessType::kMaxAxles:
+      writer("value", value());
+      break;
+    default:
+      writer.set_precision(2);
+      writer("value", static_cast<double>(value()) * 0.01);
+      writer.set_precision(tyr::kDefaultPrecision);
+  }
+  writer.end_object();
+}
+
 // operator < - for sorting. Sort by route Id.
 bool AccessRestriction::operator<(const AccessRestriction& other) const {
   if (edgeindex() == other.edgeindex()) {
