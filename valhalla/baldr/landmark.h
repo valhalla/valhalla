@@ -103,7 +103,7 @@ struct Landmark {
   double lat;
 
   Landmark(const int64_t id,
-           const std::string name,
+           const std::string& name,
            const LandmarkType type,
            const double lng,
            const double lat)

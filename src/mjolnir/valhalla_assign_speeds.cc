@@ -127,8 +127,8 @@ int main(int argc, char** argv) {
   std::mutex lock;
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(assign, std::cref(config), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
+    thread = std::make_shared<std::thread>(assign, std::cref(config), std::ref(tilequeue),
+                                           std::ref(lock), std::ref(results.back()));
   }
 
   // collect the results

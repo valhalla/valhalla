@@ -63,8 +63,8 @@ public:
    * @param callback the functor to call back when the Dijkstra makes progress
    *                             on a given edge
    */
-  void SetInnerExpansionCallback(const expansion_callback_t callback) {
-    inner_expansion_callback_ = callback;
+  void SetInnerExpansionCallback(expansion_callback_t&& callback) {
+    inner_expansion_callback_ = std::move(callback);
   }
 
 protected:

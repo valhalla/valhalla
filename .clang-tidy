@@ -1,5 +1,15 @@
 ---
-Checks:          'bugprone-throw-keyword-missing,clang-*,performance*,-performance-move-const-arg,misc-unused-parameters,-performance-avoid-endl'
+# https://clang.llvm.org/extra/clang-tidy/checks/list.html
+Checks: >
+    bugprone-throw-keyword-missing,
+    clang-*,
+    clang-analyzer-*,
+    performance*,
+    -performance-move-const-arg,
+    -performance-avoid-endl,
+    misc-unused-parameters,
+    modernize-make-shared,
+    modernize-make-unique,
 WarningsAsErrors: ''
 CheckOptions:
   - key:             google-readability-braces-around-statements.ShortStatementLines
