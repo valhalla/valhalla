@@ -40,6 +40,32 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
   return m;
 }
 
+void access_rapidjson(uint16_t access, rapidjson::writer_wrapper_t& writer) {
+  writer("bicycle", static_cast<bool>(access & kBicycleAccess));
+  writer("bus", static_cast<bool>(access & kBusAccess));
+  writer("car", static_cast<bool>(access & kAutoAccess));
+  writer("emergency", static_cast<bool>(access & kEmergencyAccess));
+  writer("HOV", static_cast<bool>(access & kHOVAccess));
+  writer("pedestrian", static_cast<bool>(access & kPedestrianAccess));
+  writer("taxi", static_cast<bool>(access & kTaxiAccess));
+  writer("truck", static_cast<bool>(access & kTruckAccess));
+  writer("wheelchair", static_cast<bool>(access & kWheelchairAccess));
+}
+
+void admin_rapidjson(const AdminInfo& admin, uint16_t tz_index, rapidjson::writer_wrapper_t& writer) {
+  // admin
+  writer("iso_3166-1", admin.country_iso());
+  writer("country", admin.country_text());
+  writer("iso_3166-2", admin.state_iso());
+  writer("state", admin.state_text());
+
+  // timezone
+  auto tz = DateTime::get_tz_db().from_index(tz_index);
+  if (tz) {
+    writer("time_zone_name", tz->name());
+  }
+}
+
 /**
  * Get the updated bit field.
  * @param dst  Data member to be updated.
@@ -289,6 +315,44 @@ json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
     m->emplace("stop_index", static_cast<uint64_t>(stop_index()));
   }
   return m;
+}
+
+void NodeInfo::rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const {
+  auto ll = latlng(tile->header()->base_ll());
+  writer.start_object();
+
+  writer.set_precision(6);
+  writer("lon", ll.first);
+  writer("lat", ll.second);
+  writer.set_precision(2);
+  writer("elevation", elevation());
+  writer.set_precision(3);
+
+  writer("edge_count", static_cast<uint64_t>(edge_count_));
+  writer("tagged_access", static_cast<bool>(tagged_access_));
+  writer("intersection_type", to_string(static_cast<IntersectionType>(intersection_)));
+  writer("density", static_cast<uint64_t>(density_));
+  writer("local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1));
+  writer("drive_on_right", static_cast<bool>(drive_on_right_));
+  writer("mode_change", static_cast<bool>(mode_change_));
+  writer("private_access", static_cast<bool>(private_access_));
+  writer("traffic_signal", static_cast<bool>(traffic_signal_));
+  writer("type", to_string(static_cast<NodeType>(type_)));
+  writer("transition_count", static_cast<uint64_t>(transition_count_));
+  writer("named_intersection", static_cast<bool>(named_));
+
+  writer.start_object("access");
+  access_rapidjson(access_, writer);
+  writer.end_object();
+
+  writer.start_object("administrative");
+  admin_rapidjson(tile->admininfo(admin_index_), timezone_, writer);
+  writer.end_object();
+
+  if (is_transit()) {
+    writer("stop_index", static_cast<uint64_t>(stop_index()));
+  }
+  writer.end_object();
 }
 
 } // namespace baldr
