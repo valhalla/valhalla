@@ -637,52 +637,41 @@ void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const {
     writer("speed_limit", static_cast<uint64_t>(speed_limit()));
   }
 
+  bool has_levels = false;
+  for (const auto& [tag, value] : GetTags()) {
+    if (tag == TaggedValue::kLevels) {
+      has_levels = true;
+      writer.start_array("levels");
+      std::vector<std::pair<float, float>> decoded;
+      uint32_t precision;
+      std::tie(decoded, precision) = decode_levels(value);
+      writer.set_precision(precision);
+      for (auto& range : decoded) {
+        if (range.first == range.second) {
+          writer(range.first);
+        } else {
+          writer.start_array();
+          writer(range.first);
+          writer(range.second);
+          writer.end_array();
+        }
+      }
+      writer.set_precision(3);
+      writer.end_array();
+      break;
+    }
+  }
+  if (!has_levels) {
+    writer("levels", nullptr);
+  }
+
   bool has_conditional_speeds = false;
   writer.start_object("conditional_speed_limits");
   for (const auto& [tag, value] : GetTags()) {
-    switch (tag) {
-      case TaggedValue::kLayer:
-        break;
-      case TaggedValue::kLinguistic:
-        break;
-      case TaggedValue::kBssInfo:
-        break;
-      case TaggedValue::kLevel:
-        break;
-      case TaggedValue::kLevelRef:
-        break;
-      case TaggedValue::kLandmark:
-        break;
-      case TaggedValue::kLevels: {
-        writer.start_array("levels");
-        std::vector<std::pair<float, float>> decoded;
-        uint32_t precision;
-        std::tie(decoded, precision) = decode_levels(value);
-        writer.set_precision(precision);
-        for (auto& range : decoded) {
-          if (range.first == range.second) {
-            writer(range.first);
-          } else {
-            writer.start_array();
-            writer(range.first);
-            writer(range.second);
-            writer.end_array();
-          }
-        }
-        writer.set_precision(3);
-        writer.end_array();
-        break;
-      }
-      case TaggedValue::kConditionalSpeedLimits: {
-        const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
-        writer(l->td_.to_string(), static_cast<uint64_t>(l->speed_));
-        has_conditional_speeds = true;
-        break;
-      }
-      case TaggedValue::kTunnel:
-        break;
-      case TaggedValue::kBridge:
-        break;
+    if (tag == TaggedValue::kConditionalSpeedLimits) {
+      const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
+      writer(l->td_.to_string(), static_cast<uint64_t>(l->speed_));
+      has_conditional_speeds = true;
     }
   }
   writer.end_object();
