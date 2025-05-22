@@ -1,10 +1,8 @@
 #include "mjolnir/util.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
-#include "midgard/aabb2.h"
 #include "midgard/logging.h"
-#include "midgard/point2.h"
-#include "midgard/polyline2.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
@@ -422,6 +420,43 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     OSMData::cleanup_temp_files(tile_dir);
   }
   return true;
+}
+
+std::string TileManifest::ToString() const {
+  baldr::json::ArrayPtr array = baldr::json::array({});
+  for (const auto& tile : tileset) {
+    const baldr::json::Value& graphid = tile.first.json();
+    const baldr::json::MapPtr& item =
+        baldr::json::map({{"graphid", graphid}, {"node_index", static_cast<uint64_t>(tile.second)}});
+    array->emplace_back(item);
+  }
+  std::stringstream manifest;
+  manifest << *baldr::json::map({{"tiles", array}});
+  return manifest.str();
+}
+
+void TileManifest::LogToFile(const std::string& filename) const {
+  std::ofstream handle;
+  handle.open(filename);
+  handle << ToString();
+  handle.close();
+  LOG_INFO("Writing tile manifest to " + filename);
+}
+
+TileManifest TileManifest::ReadFromFile(const std::string& filename) {
+  ptree manifest;
+  rapidjson::read_json(filename, manifest);
+  LOG_INFO("Reading tile manifest from " + filename);
+  std::map<baldr::GraphId, size_t> tileset;
+  for (const auto& tile_info : manifest.get_child("tiles")) {
+    const ptree& graph_id = tile_info.second.get_child("graphid");
+    const baldr::GraphId id(graph_id.get<uint64_t>("value"));
+    const size_t node_index = tile_info.second.get<size_t>("node_index");
+    tileset.insert({id, node_index});
+  }
+  LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
+           filename);
+  return TileManifest{tileset};
 }
 
 } // namespace mjolnir

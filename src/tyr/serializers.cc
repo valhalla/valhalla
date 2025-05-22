@@ -463,113 +463,95 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
   return via_waypoints;
 }
 
-void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
                                  const int begin_shape_index,
                                  const int end_shape_index,
                                  const std::string& road_class,
                                  const std::string& key_prefix) {
-  writer.Key(key_prefix + "id");
-  writer.String(std::to_string(incident_metadata.id()));
-  {
-    // Type is mandatory
-    writer.Key(key_prefix + "type");
-    writer.String(std::string(valhalla::incidentTypeToString(incident_metadata.type())));
-  }
+  writer(key_prefix + "id", std::to_string(incident_metadata.id()));
+  // Type is mandatory
+  writer(key_prefix + "type", valhalla::incidentTypeToString(incident_metadata.type()));
   if (!incident_metadata.iso_3166_1_alpha2().empty()) {
-    writer.Key(key_prefix + "iso_3166_1_alpha2");
-    writer.String(incident_metadata.iso_3166_1_alpha2());
+    writer(key_prefix + "iso_3166_1_alpha2", incident_metadata.iso_3166_1_alpha2());
   }
   if (!incident_metadata.iso_3166_1_alpha3().empty()) {
-    writer.Key(key_prefix + "iso_3166_1_alpha3");
-    writer.String(incident_metadata.iso_3166_1_alpha3());
+    writer(key_prefix + "iso_3166_1_alpha3", incident_metadata.iso_3166_1_alpha3());
   }
   if (!incident_metadata.description().empty()) {
-    writer.Key(key_prefix + "description");
-    writer.String(incident_metadata.description());
+    writer(key_prefix + "description", incident_metadata.description());
   }
   if (!incident_metadata.long_description().empty()) {
-    writer.Key(key_prefix + "long_description");
-    writer.String(incident_metadata.long_description());
+    writer(key_prefix + "long_description", incident_metadata.long_description());
   }
   if (incident_metadata.creation_time()) {
-    writer.Key(key_prefix + "creation_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
+    writer(key_prefix + "creation_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
   }
   if (incident_metadata.start_time() > 0) {
-    writer.Key(key_prefix + "start_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
+    writer(key_prefix + "start_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
   }
   if (incident_metadata.end_time()) {
-    writer.Key(key_prefix + "end_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
+    writer(key_prefix + "end_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
   }
   if (incident_metadata.impact()) {
-    writer.Key(key_prefix + "impact");
-    writer.String(std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
+    writer(key_prefix + "impact",
+           std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
   }
   if (!incident_metadata.sub_type().empty()) {
-    writer.Key(key_prefix + "sub_type");
-    writer.String(incident_metadata.sub_type());
+    writer(key_prefix + "sub_type", incident_metadata.sub_type());
   }
   if (!incident_metadata.sub_type_description().empty()) {
-    writer.Key(key_prefix + "sub_type_description");
-    writer.String(incident_metadata.sub_type_description());
+    writer(key_prefix + "sub_type_description", incident_metadata.sub_type_description());
   }
   if (incident_metadata.alertc_codes_size() > 0) {
-    writer.Key(key_prefix + "alertc_codes");
-    writer.StartArray();
+    writer(key_prefix + "alertc_codes");
+    writer.start_array();
     for (const auto& alertc_code : incident_metadata.alertc_codes()) {
-      writer.Uint64(static_cast<uint64_t>(alertc_code));
+      writer(static_cast<uint64_t>(alertc_code));
     }
-    writer.EndArray();
+    writer.end_array();
   }
   {
-    writer.Key(key_prefix + "lanes_blocked");
-    writer.StartArray();
+    writer(key_prefix + "lanes_blocked");
+    writer.start_array();
     for (const auto& blocked_lane : incident_metadata.lanes_blocked()) {
-      writer.String(blocked_lane);
+      writer(blocked_lane);
     }
-    writer.EndArray();
+    writer.end_array();
   }
   if (incident_metadata.num_lanes_blocked()) {
-    writer.Key(key_prefix + "num_lanes_blocked");
-    writer.Uint64(incident_metadata.num_lanes_blocked());
+    writer(key_prefix + "num_lanes_blocked", incident_metadata.num_lanes_blocked());
   }
   if (!incident_metadata.clear_lanes().empty()) {
-    writer.Key(key_prefix + "clear_lanes");
-    writer.String(incident_metadata.clear_lanes());
+    writer(key_prefix + "clear_lanes", incident_metadata.clear_lanes());
   }
 
   if (incident_metadata.length() > 0) {
-    writer.Key(key_prefix + "length");
-    writer.Uint(incident_metadata.length());
+    writer(key_prefix + "length", incident_metadata.length());
   }
 
   if (incident_metadata.road_closed()) {
-    writer.Key(key_prefix + "closed");
-    writer.Bool(incident_metadata.road_closed());
+    writer(key_prefix + "closed", incident_metadata.road_closed());
   }
   if (!road_class.empty()) {
-    writer.Key(key_prefix + "class");
-    writer.String(road_class);
+    writer(key_prefix + "class", road_class);
   }
 
   if (incident_metadata.has_congestion()) {
-    writer.Key(key_prefix + "congestion");
-    writer.StartObject();
-    writer.Key("value");
-    writer.Uint(incident_metadata.congestion().value());
-    writer.EndObject();
+    writer(key_prefix + "congestion");
+    writer.start_object();
+    writer("value", incident_metadata.congestion().value());
+    writer.end_object();
   }
 
   if (begin_shape_index >= 0) {
-    writer.Key(key_prefix + "geometry_index_start");
-    writer.Int(begin_shape_index);
+    writer(key_prefix + "geometry_index_start", begin_shape_index);
   }
   if (end_shape_index >= 0) {
-    writer.Key(key_prefix + "geometry_index_end");
-    writer.Int(end_shape_index);
+    writer(key_prefix + "geometry_index_end", end_shape_index);
   }
   // TODO Add test of lanes blocked and add missing properties
 }

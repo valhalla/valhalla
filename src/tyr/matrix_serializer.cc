@@ -1,4 +1,4 @@
-#include "baldr/json.h"
+#include "baldr/rapidjson_utils.h"
 #include "proto_conversions.h"
 #include "thor/matrixalgorithm.h"
 #include "tyr/serializers.h"

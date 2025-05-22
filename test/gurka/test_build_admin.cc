@@ -2,6 +2,7 @@
 #include "gurka.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/pbfgraphparser.h"
+#include "mjolnir/util.h"
 #include "test/test.h"
 
 #include <gtest/gtest.h>

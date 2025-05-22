@@ -1,8 +1,11 @@
 #include "gurka.h"
 #include "mjolnir/adminbuilder.h"
+#include "mjolnir/util.h"
 #include "test.h"
 
 #include <gtest/gtest.h>
+
+#include <filesystem>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -163,9 +166,9 @@ TEST(Standalone, AdminCrossingsState) {
 
   // border between E and F
   const std::string ascii_map = R"(
-            | 
+            |
    A-B-C-D-E+F-G
-            | 
+            |
   )";
 
   const gurka::ways ways = {{"AB", {{"highway", "motorway"}}}, {"BC", {{"highway", "motorway"}}},

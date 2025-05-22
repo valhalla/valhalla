@@ -1,7 +1,7 @@
 #ifndef VALHALLA_SIF_BICYCLECOST_H_
 #define VALHALLA_SIF_BICYCLECOST_H_
 
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 

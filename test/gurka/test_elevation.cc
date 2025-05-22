@@ -2,6 +2,7 @@
 #include "gurka.h"
 #include "loki/worker.h"
 #include "midgard/pointll.h"
+#include "mjolnir/util.h"
 #include "test.h"
 
 #include <gtest/gtest.h>

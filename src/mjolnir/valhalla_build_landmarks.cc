@@ -1,7 +1,5 @@
 #include "argparse_utils.h"
-#include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
-#include "midgard/logging.h"
 #include "mjolnir/landmarks.h"
 
 #include <cxxopts.hpp>

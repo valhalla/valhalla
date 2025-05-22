@@ -1,6 +1,5 @@
 #include "argparse_utils.h"
 #include "baldr/connectivity_map.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 

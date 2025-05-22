@@ -10,7 +10,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -20,8 +20,6 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/edgestatus.h>
-
-#include <rapidjson/document.h>
 
 #include <cstdint>
 #include <memory>

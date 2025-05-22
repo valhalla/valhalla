@@ -1,9 +1,11 @@
 #pragma once
 
-#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
 #include "filesystem.h"
 #include "midgard/sequence.h"
+#include "proto/incidents.pb.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 

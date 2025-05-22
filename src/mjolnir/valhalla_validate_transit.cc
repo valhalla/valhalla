@@ -1,12 +1,6 @@
 #include "argparse_utils.h"
 #include "baldr/graphid.h"
-#include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
-#include "midgard/aabb2.h"
-#include "midgard/logging.h"
-#include "midgard/point2.h"
-#include "midgard/polyline2.h"
-#include "mjolnir/graphbuilder.h"
 #include "mjolnir/validatetransit.h"
 
 #include <boost/property_tree/ptree.hpp>
