@@ -4,8 +4,9 @@
 #include "sif/dynamiccost.h"
 #include "test.h"
 
-#include <gtest/gtest.h>
 #include <valhalla/proto/options.pb.h>
+
+#include <gtest/gtest.h>
 
 using namespace valhalla;
 using namespace valhalla::loki;

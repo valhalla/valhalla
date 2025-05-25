@@ -1,10 +1,4 @@
 #include "loki/search.h"
-
-#include <cstdint>
-#include <filesystem>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
@@ -13,8 +7,12 @@
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 #include "sif/nocost.h"
-
 #include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <filesystem>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -1,8 +1,8 @@
-#include <algorithm>
-
 #include "midgard/logging.h"
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/osmway.h"
+
+#include <algorithm>
 
 using namespace valhalla::baldr;
 

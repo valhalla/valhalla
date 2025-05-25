@@ -1,18 +1,15 @@
+#include "odin/maneuversbuilder.h"
+#include "midgard/logging.h"
+#include "midgard/util.h"
+#include "odin/maneuver.h"
+#include "proto/options.pb.h"
+#include "test.h"
+
 #include <cstdint>
 #include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include "midgard/logging.h"
-#include "midgard/util.h"
-
-#include "odin/maneuver.h"
-#include "odin/maneuversbuilder.h"
-
-#include "proto/options.pb.h"
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla;

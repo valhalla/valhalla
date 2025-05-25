@@ -1,10 +1,10 @@
 #include "midgard/pointll.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
+#include "test.h"
+
 #include <algorithm>
 #include <cmath>
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla::midgard;

@@ -1,5 +1,4 @@
 #include "test.h"
-
 #include "baldr/graphmemory.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
@@ -16,14 +15,12 @@
 #ifndef _MSC_VER
 #include <sys/mman.h>
 #endif
-#include <sys/stat.h>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "microtar.h"
 
 #include <boost/algorithm/string.hpp>
-
-#include "microtar.h"
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <sys/stat.h>
 
 namespace {
 // TODO: this should support boost::property_tree::path
@@ -404,7 +401,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         },
         "source_to_target_algorithm": "select_optimal",
         "costmatrix": {
-            "check_reverse_connections": false,
+            "check_reverse_connection": false,
             "allow_second_pass": false,
             "max_reserved_locations": 25,
             "hierarchy_limits": {

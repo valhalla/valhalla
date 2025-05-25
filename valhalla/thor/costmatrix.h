@@ -1,11 +1,6 @@
 #ifndef VALHALLA_THOR_COSTMATRIX_H_
 #define VALHALLA_THOR_COSTMATRIX_H_
 
-#include <cstdint>
-#include <memory>
-#include <set>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -17,6 +12,11 @@
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <cstdint>
+#include <memory>
+#include <set>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -121,7 +121,11 @@ public:
 protected:
   uint32_t max_reserved_labels_count_;
   uint32_t max_reserved_locations_count_;
-  bool check_reverse_connections_;
+  bool check_reverse_connection_;
+
+  // upper bound for the number of additional iterations per expansion once a connection has been
+  // found
+  uint32_t max_iterations_;
 
   // Access mode used by the costing method
   uint32_t access_mode_;

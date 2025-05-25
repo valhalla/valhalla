@@ -95,7 +95,7 @@
     "max_reserved_labels_count_bidir_dijkstras": 2000000,
     "extended_search": false,
     "costmatrix": {
-      "check_reverse_connections": false,
+      "check_reverse_connection": false,
       "allow_second_pass": false,
       "max_reserved_locations": 25,
       "hierarchy_limits": {

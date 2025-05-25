@@ -1,9 +1,14 @@
 #ifndef VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 #define VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 
-#include <cstdint>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/mjolnir/osmway.h>
+
+#include <cstdint>
+
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace baldr {

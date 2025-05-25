@@ -1,11 +1,10 @@
+#include "odin/signs.h"
+#include "odin/sign.h"
+#include "test.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <vector>
-
-#include "odin/sign.h"
-#include "odin/signs.h"
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla::odin;

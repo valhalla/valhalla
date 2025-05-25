@@ -7,13 +7,6 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
-OSMAccessRestriction::OSMAccessRestriction() {
-  memset(this, 0, sizeof(OSMAccessRestriction));
-}
-
-OSMAccessRestriction::~OSMAccessRestriction() {
-}
-
 // Set the restriction type
 void OSMAccessRestriction::set_type(AccessType type) {
   attributes_.type_ = static_cast<uint16_t>(type);

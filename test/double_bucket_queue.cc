@@ -2,13 +2,13 @@
 #include "config.h"
 #include "midgard/util.h"
 #include "sif/edgelabel.h"
+#include "test.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla;

@@ -1,18 +1,17 @@
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "loki/worker.h"
-#include "thor/worker.h"
-
 #include "gurka/gurka.h"
+#include "loki/worker.h"
 #include "test.h"
+#include "thor/worker.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 #ifdef ENABLE_GDAL
 #include <gdal_priv.h>
@@ -252,7 +251,7 @@ TEST(Isochrones, OriginEdge) {
                                  {{"/contours/0/time", "10"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
-  auto WaypointToBoostPoint = [&](std::string waypoint) {
+  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
     auto point = map.nodes[waypoint];
     return point_type(point.x(), point.y());
   };
@@ -287,7 +286,7 @@ TEST(Isochrones, LongEdge) {
                                  {{"/contours/0/time", "15"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
-  auto WaypointToBoostPoint = [&](std::string waypoint) {
+  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
     auto point = map.nodes[waypoint];
     return point_type(point.x(), point.y());
   };

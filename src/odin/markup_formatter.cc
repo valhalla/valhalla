@@ -1,12 +1,12 @@
-#include <optional>
-#include <string>
-#include <unordered_map>
+#include "odin/markup_formatter.h"
+#include "proto/common.pb.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
-#include "odin/markup_formatter.h"
-#include "proto/common.pb.h"
+#include <optional>
+#include <string>
+#include <unordered_map>
 
 namespace {
 constexpr auto kQuotesTag = "<QUOTES>";

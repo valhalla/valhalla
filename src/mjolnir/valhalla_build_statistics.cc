@@ -1,10 +1,21 @@
-#include <cstdint>
-
+#include "argparse_utils.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/nodeinfo.h"
+#include "baldr/rapidjson_utils.h"
+#include "baldr/tilehierarchy.h"
+#include "filesystem.h"
+#include "midgard/aabb2.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
 #include "statistics.h"
 
-#include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
+
+#include <cstdint>
 #include <future>
 #include <iostream>
 #include <list>
@@ -14,19 +25,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/nodeinfo.h"
-#include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-#include "midgard/aabb2.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-
-#include "argparse_utils.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
