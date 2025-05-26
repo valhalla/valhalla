@@ -670,8 +670,6 @@ json::MapPtr DirectedEdge::json() const {
 
 // rapidjson representation
 void DirectedEdge::rapidjson(rapidjson::writer_wrapper_t& writer) const {
-  writer.start_object();
-
   writer.start_object("end_node");
   endnode().rapidjson(writer);
   writer.end_object();
@@ -689,6 +687,14 @@ void DirectedEdge::rapidjson(rapidjson::writer_wrapper_t& writer) const {
   //{"restrictions", restrictions_},
 
   writer("access_restriction", static_cast<bool>(access_restriction_));
+
+  writer.start_object("start_restriction");
+  access_rapidjson(start_restriction_, writer);
+  writer.end_object();
+  writer.start_object("end_restriction");
+  access_rapidjson(end_restriction_, writer);
+  writer.end_object();
+
   writer("part_of_complex_restriction", static_cast<bool>(complex_restriction_));
   writer("has_sign", static_cast<bool>(sign_));
   writer("toll", static_cast<bool>(toll_));
@@ -710,14 +716,6 @@ void DirectedEdge::rapidjson(rapidjson::writer_wrapper_t& writer) const {
   writer("sidewalk_right", static_cast<bool>(sidewalk_right_));
   writer("sac_scale", to_string(static_cast<SacScale>(sac_scale_)));
   writer("deadend", static_cast<bool>(deadend_));
-
-  writer.start_object("start_restriction");
-  access_rapidjson(start_restriction_, writer);
-  writer.end_object();
-
-  writer.start_object("end_restriction");
-  access_rapidjson(end_restriction_, writer);
-  writer.end_object();
 
   writer.start_object("geo_attributes");
   writer("length", static_cast<uint64_t>(length_));

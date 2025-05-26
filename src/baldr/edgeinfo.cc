@@ -29,20 +29,16 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
 }
 
 void bike_network_rapidjson(uint8_t mask, rapidjson::writer_wrapper_t& writer) {
-  writer.start_object();
   writer("national", static_cast<bool>(mask & kNcn));
   writer("regional", static_cast<bool>(mask & kRcn));
   writer("local", static_cast<bool>(mask & kLcn));
   writer("mountain", static_cast<bool>(mask & kMcn));
-  writer.end_object();
 }
 
 void names_rapidjson(const std::vector<std::string>& names, rapidjson::writer_wrapper_t& writer) {
-  writer.start_array();
   for (const auto& n : names) {
     writer(n);
   }
-  writer.end_array();
 }
 
 /**
@@ -610,16 +606,15 @@ json::MapPtr EdgeInfo::json() const {
 }
 
 void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const {
-  writer.start_object();
   writer("way_id", static_cast<uint64_t>(wayid()));
 
   writer.start_object("bike_network");
   bike_network_rapidjson(bike_network(), writer);
   writer.end_object();
 
-  writer.start_object("names");
+  writer.start_array("names");
   names_rapidjson(GetNames(), writer);
-  writer.end_object();
+  writer.end_array();
 
   writer("shape", midgard::encode(shape()));
 
@@ -679,7 +674,6 @@ void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const {
   if (!has_conditional_speeds) {
     writer("conditional_speed_limits", nullptr);
   }
-  writer.end_object();
 }
 
 } // namespace baldr

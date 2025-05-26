@@ -329,8 +329,18 @@ void NodeInfo::rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t
   writer.set_precision(3);
 
   writer("edge_count", static_cast<uint64_t>(edge_count_));
+
+  writer.start_object("access");
+  access_rapidjson(access_, writer);
+  writer.end_object();
+
   writer("tagged_access", static_cast<bool>(tagged_access_));
   writer("intersection_type", to_string(static_cast<IntersectionType>(intersection_)));
+
+  writer.start_object("administrative");
+  admin_rapidjson(tile->admininfo(admin_index_), timezone_, writer);
+  writer.end_object();
+
   writer("density", static_cast<uint64_t>(density_));
   writer("local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1));
   writer("drive_on_right", static_cast<bool>(drive_on_right_));
@@ -340,14 +350,6 @@ void NodeInfo::rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t
   writer("type", to_string(static_cast<NodeType>(type_)));
   writer("transition_count", static_cast<uint64_t>(transition_count_));
   writer("named_intersection", static_cast<bool>(named_));
-
-  writer.start_object("access");
-  access_rapidjson(access_, writer);
-  writer.end_object();
-
-  writer.start_object("administrative");
-  admin_rapidjson(tile->admininfo(admin_index_), timezone_, writer);
-  writer.end_object();
 
   if (is_transit()) {
     writer("stop_index", static_cast<uint64_t>(stop_index()));

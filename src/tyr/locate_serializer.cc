@@ -29,7 +29,7 @@ OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de)
 void get_access_restrictions(const graph_tile_ptr& tile,
                              rapidjson::writer_wrapper_t& writer,
                              uint32_t edge_idx) {
-  writer.start_array();
+  writer.start_array("access_restrictions");
   for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
     res.rapidjson(writer);
   }
@@ -67,6 +67,7 @@ void serialize_edges(const PathLocation& location,
                      GraphReader& reader,
                      rapidjson::writer_wrapper_t& writer,
                      bool verbose) {
+  writer.start_array("edges");
   for (const auto& edge : location.edges) {
     try {
       // get the osm way id
@@ -77,24 +78,14 @@ void serialize_edges(const PathLocation& location,
       if (verbose) {
         // live traffic information
         const volatile auto& traffic = tile->trafficspeed(directed_edge);
-        // write live_speed
-        traffic.rapidjson(writer);
 
         // incident information
         if (traffic.has_incidents) {
           // TODO: incidents
         }
 
-        // historical traffic information
-        if (directed_edge->has_predicted_speed()) {
-          writer.start_array("predicted_speeds");
-          for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
-            writer(static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
-          }
-          writer.end_array();
-        }
-
         // basic rest of it plus edge metadata
+        writer.start_object();
         writer.set_precision(tyr::kCoordinatePrecision);
         writer("correlated_lat", edge.projected.lat());
         writer("correlated_lon", edge.projected.lng());
@@ -124,11 +115,24 @@ void serialize_edges(const PathLocation& location,
         writer.end_object();
 
         writer("linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info));
+
+        // historical traffic information
+        if (directed_edge->has_predicted_speed()) {
+          writer.start_array("predicted_speeds");
+          for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
+            writer(static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
+          }
+          writer.end_array();
+        }
+        // write live_speed
+        traffic.rapidjson(writer);
+
         get_access_restrictions(tile, writer, edge.id.id());
         writer("shoulder", directed_edge->shoulder());
-
+        writer.end_object();
       } // they want it lean and mean
       else {
+        writer.start_object();
         writer("way_id", static_cast<uint64_t>(edge_info.wayid()));
         writer.set_precision(tyr::kCoordinatePrecision);
         writer("correlated_lat", edge.projected.lat());
@@ -140,12 +144,14 @@ void serialize_edges(const PathLocation& location,
         writer.set_precision(5);
         writer("percent_along", edge.percent_along);
         writer.set_precision(tyr::kDefaultPrecision);
+        writer.end_object();
       }
     } catch (...) {
       // this really shouldnt ever get hit
       LOG_WARN("Expected edge not found in graph but found by loki::search!");
     }
   }
+  writer.end_array();
 }
 
 void serialize_nodes(const PathLocation& location,
@@ -159,12 +165,13 @@ void serialize_nodes(const PathLocation& location,
       nodes.emplace(reader.GetGraphTile(e.id)->directededge(e.id)->endnode());
     }
   }
-
+  writer.start_array("nodes");
   for (auto node_id : nodes) {
     GraphId n(node_id);
     graph_tile_ptr tile = reader.GetGraphTile(n);
     auto* node_info = tile->node(n);
 
+    writer.start_object();
     if (verbose) {
       node_info->rapidjson(tile, writer);
 
@@ -174,12 +181,16 @@ void serialize_nodes(const PathLocation& location,
     } else {
       midgard::PointLL node_ll = tile->get_node_ll(n);
       writer.set_precision(tyr::kCoordinatePrecision);
+      writer.start_object();
       writer("lon", node_ll.first);
       writer("lat", node_ll.second);
+      writer.end_object();
       writer.set_precision(tyr::kDefaultPrecision);
       // TODO: osm_id
     }
+    writer.end_object();
   }
+  writer.end_array();
 }
 
 void serialize(const PathLocation& location,
@@ -187,15 +198,14 @@ void serialize(const PathLocation& location,
                rapidjson::writer_wrapper_t& writer,
                bool verbose) {
   // serialze all the edges
-  writer.start_object("edges");
+  writer.start_object();
   serialize_edges(location, reader, writer, verbose);
-  writer.end_object();
-  writer.start_object("nodes");
   serialize_nodes(location, reader, writer, verbose);
-  writer.end_object();
+
   writer.set_precision(tyr::kCoordinatePrecision);
   writer("input_lat", location.latlng_.lat());
   writer("input_lon", location.latlng_.lng());
+  writer.end_object();
   writer.set_precision(tyr::kDefaultPrecision);
 }
 
@@ -203,6 +213,7 @@ void serialize(rapidjson::writer_wrapper_t& writer,
                const midgard::PointLL& ll,
                const std::string& reason,
                bool verbose) {
+  writer.start_object();
   writer("edges", nullptr);
   writer("nodes", nullptr);
   writer.set_precision(tyr::kCoordinatePrecision);
@@ -213,6 +224,7 @@ void serialize(rapidjson::writer_wrapper_t& writer,
   if (verbose) {
     writer("reason", reason);
   }
+  writer.end_object();
 }
 } // namespace
 
@@ -224,19 +236,17 @@ std::string serializeLocate(const Api& request,
                             const std::unordered_map<baldr::Location, PathLocation>& projections,
                             GraphReader& reader) {
   rapidjson::writer_wrapper_t writer(4096);
-  writer.start_object();
-  writer.start_array("locations");
+  writer.set_precision(tyr::kDefaultPrecision);
+  writer.start_array();
+
   for (const auto& location : locations) {
-    writer.start_object();
     try {
       serialize(projections.at(location), reader, writer, request.options().verbose());
     } catch (const std::exception& e) {
       serialize(writer, location.latlng_, "No data found for location", request.options().verbose());
     }
-    writer.end_object();
   }
   writer.end_array();
-  writer.end_object();
   return writer.get_buffer();
 }
 
