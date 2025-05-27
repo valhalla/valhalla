@@ -29,11 +29,9 @@ OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de)
 void get_access_restrictions(const graph_tile_ptr& tile,
                              rapidjson::writer_wrapper_t& writer,
                              uint32_t edge_idx) {
-  writer.start_array("access_restrictions");
   for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
     res.rapidjson(writer);
   }
-  writer.end_array();
 }
 
 std::string
@@ -71,6 +69,7 @@ void serialize_edges(const PathLocation& location,
   for (const auto& edge : location.edges) {
     try {
       // get the osm way id
+      writer.start_object();
       auto tile = reader.GetGraphTile(edge.id);
       auto* directed_edge = tile->directededge(edge.id);
       auto edge_info = tile->edgeinfo(directed_edge);
@@ -83,9 +82,15 @@ void serialize_edges(const PathLocation& location,
         if (traffic.has_incidents) {
           // TODO: incidents
         }
+        writer.start_array("access_restrictions");
+        get_access_restrictions(tile, writer, edge.id.id());
+        writer.end_array();
+        // write live_speed
+        writer.start_object("live_speed");
+        traffic.rapidjson(writer);
+        writer.end_object();
 
         // basic rest of it plus edge metadata
-        writer.start_object();
         writer.set_precision(tyr::kCoordinatePrecision);
         writer("correlated_lat", edge.projected.lat());
         writer("correlated_lon", edge.projected.lng());
@@ -93,28 +98,27 @@ void serialize_edges(const PathLocation& location,
                                      ? std::string("left")
                                      : (edge.sos == PathLocation::RIGHT ? std::string("right")
                                                                         : std::string("neither")));
+
+        writer("linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info));
         writer.set_precision(5);
         writer("percent_along", edge.percent_along);
         writer.set_precision(1);
         writer("distance", edge.distance);
+        writer("shoulder", directed_edge->shoulder());
         writer("heading", edge.projected_heading);
         writer.set_precision(tyr::kDefaultPrecision);
         writer("outbound_reach", static_cast<int64_t>(edge.outbound_reach));
         writer("inbound_reach", static_cast<int64_t>(edge.inbound_reach));
 
-        writer.start_object("edge_id");
-        edge.id.rapidjson(writer);
-        writer.end_object();
-
-        writer.start_object("edge");
-        directed_edge->rapidjson(writer);
-        writer.end_object();
-
         writer.start_object("edge_info");
         edge_info.rapidjson(writer);
         writer.end_object();
-
-        writer("linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info));
+        writer.start_object("edge");
+        directed_edge->rapidjson(writer);
+        writer.end_object();
+        writer.start_object("edge_id");
+        edge.id.rapidjson(writer);
+        writer.end_object();
 
         // historical traffic information
         if (directed_edge->has_predicted_speed()) {
@@ -124,15 +128,8 @@ void serialize_edges(const PathLocation& location,
           }
           writer.end_array();
         }
-        // write live_speed
-        traffic.rapidjson(writer);
-
-        get_access_restrictions(tile, writer, edge.id.id());
-        writer("shoulder", directed_edge->shoulder());
-        writer.end_object();
       } // they want it lean and mean
       else {
-        writer.start_object();
         writer("way_id", static_cast<uint64_t>(edge_info.wayid()));
         writer.set_precision(tyr::kCoordinatePrecision);
         writer("correlated_lat", edge.projected.lat());
@@ -144,8 +141,8 @@ void serialize_edges(const PathLocation& location,
         writer.set_precision(5);
         writer("percent_along", edge.percent_along);
         writer.set_precision(tyr::kDefaultPrecision);
-        writer.end_object();
       }
+      writer.end_object();
     } catch (...) {
       // this really shouldnt ever get hit
       LOG_WARN("Expected edge not found in graph but found by loki::search!");
@@ -167,11 +164,11 @@ void serialize_nodes(const PathLocation& location,
   }
   writer.start_array("nodes");
   for (auto node_id : nodes) {
+    writer.start_object();
     GraphId n(node_id);
     graph_tile_ptr tile = reader.GetGraphTile(n);
     auto* node_info = tile->node(n);
 
-    writer.start_object();
     if (verbose) {
       node_info->rapidjson(tile, writer);
 
@@ -199,14 +196,14 @@ void serialize(const PathLocation& location,
                bool verbose) {
   // serialze all the edges
   writer.start_object();
-  serialize_edges(location, reader, writer, verbose);
-  serialize_nodes(location, reader, writer, verbose);
-
   writer.set_precision(tyr::kCoordinatePrecision);
   writer("input_lat", location.latlng_.lat());
   writer("input_lon", location.latlng_.lng());
-  writer.end_object();
   writer.set_precision(tyr::kDefaultPrecision);
+  serialize_edges(location, reader, writer, verbose);
+  serialize_nodes(location, reader, writer, verbose);
+
+  writer.end_object();
 }
 
 void serialize(rapidjson::writer_wrapper_t& writer,
@@ -214,12 +211,12 @@ void serialize(rapidjson::writer_wrapper_t& writer,
                const std::string& reason,
                bool verbose) {
   writer.start_object();
-  writer("edges", nullptr);
-  writer("nodes", nullptr);
   writer.set_precision(tyr::kCoordinatePrecision);
   writer("input_lat", ll.lat());
   writer("input_lon", ll.lng());
   writer.set_precision(tyr::kDefaultPrecision);
+  writer("edges", nullptr);
+  writer("nodes", nullptr);
 
   if (verbose) {
     writer("reason", reason);

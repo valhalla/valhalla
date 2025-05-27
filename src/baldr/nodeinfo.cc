@@ -318,8 +318,8 @@ json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
 }
 
 void NodeInfo::rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const {
-  auto ll = latlng(tile->header()->base_ll());
   writer.start_object();
+  auto ll = latlng(tile->header()->base_ll());
 
   writer.set_precision(6);
   writer("lon", ll.first);

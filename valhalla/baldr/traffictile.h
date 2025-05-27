@@ -181,7 +181,6 @@ struct TrafficSpeed {
   }
 
   void rapidjson(rapidjson::writer_wrapper_t& writer) const volatile {
-    writer.start_object("live_speed");
     if (speed_valid()) {
       writer("overall_speed", static_cast<uint64_t>(get_overall_speed()));
       auto speed = static_cast<uint64_t>(get_speed(0));
@@ -232,7 +231,6 @@ struct TrafficSpeed {
         writer.set_precision(3);
       }
     }
-    writer.end_object();
   }
 #endif
 };

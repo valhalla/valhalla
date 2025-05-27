@@ -632,10 +632,8 @@ void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const {
     writer("speed_limit", static_cast<uint64_t>(speed_limit()));
   }
 
-  bool has_levels = false;
   for (const auto& [tag, value] : GetTags()) {
     if (tag == TaggedValue::kLevels) {
-      has_levels = true;
       writer.start_array("levels");
       std::vector<std::pair<float, float>> decoded;
       uint32_t precision;
@@ -656,24 +654,15 @@ void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const {
       break;
     }
   }
-  if (!has_levels) {
-    writer("levels", nullptr);
-  }
 
-  bool has_conditional_speeds = false;
   writer.start_object("conditional_speed_limits");
   for (const auto& [tag, value] : GetTags()) {
     if (tag == TaggedValue::kConditionalSpeedLimits) {
       const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
       writer(l->td_.to_string(), static_cast<uint64_t>(l->speed_));
-      has_conditional_speeds = true;
     }
   }
   writer.end_object();
-
-  if (!has_conditional_speeds) {
-    writer("conditional_speed_limits", nullptr);
-  }
 }
 
 } // namespace baldr
