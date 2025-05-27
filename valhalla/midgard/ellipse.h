@@ -1,13 +1,14 @@
 #ifndef VALHALLA_MIDGARD_ELLIPSE_H_
 #define VALHALLA_MIDGARD_ELLIPSE_H_
 
-#include <cstdint>
-#include <math.h>
-
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/linesegment2.h>
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <math.h>
+
+#include <cstdint>
 
 namespace valhalla {
 namespace midgard {

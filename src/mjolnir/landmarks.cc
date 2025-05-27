@@ -1,16 +1,14 @@
 #include "mjolnir/landmarks.h"
-#include "filesystem.h"
-
 #include "baldr/graphreader.h"
-#include "midgard/sequence.h"
-#include "mjolnir/util.h"
-
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
 #include "loki/search.h"
+#include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/sqlite3.h"
+#include "mjolnir/util.h"
 #include "sif/nocost.h"
 
 #include <osmium/io/pbf_input.hpp>
@@ -194,7 +192,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   sql += ")";
 
   // callback for the sql query
-  auto populate_landmarks = [](void* data, int argc, char** argv, char** col_names) {
+  auto populate_landmarks = [](void* data, int /*argc*/, char** argv, char** /*col_names*/) {
     std::vector<Landmark>* landmarks = static_cast<std::vector<Landmark>*>(data);
 
     int64_t landmark_id = static_cast<int64_t>(std::stoi(argv[0]));

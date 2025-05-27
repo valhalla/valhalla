@@ -7,11 +7,13 @@
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/osrm_car_duration.h"
+
 #include <cassert>
 
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
+
 #include <random>
 #endif
 

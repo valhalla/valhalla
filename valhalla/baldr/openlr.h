@@ -6,6 +6,7 @@
 #include <valhalla/proto/trip.pb.h>
 
 #include <assert.h>
+
 #include <bitset>
 #include <numeric>
 #include <stdexcept>

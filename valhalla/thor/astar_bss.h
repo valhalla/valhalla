@@ -1,12 +1,6 @@
 #ifndef VALHALLA_THOR_ASTAR_BSS_H
 #define VALHALLA_THOR_ASTAR_BSS_H
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -17,6 +11,12 @@
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace valhalla {
 namespace thor {

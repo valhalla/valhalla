@@ -1,11 +1,11 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_
 
-#include <regex>
-#include <string>
-
 #include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/sign.h>
+
+#include <regex>
+#include <string>
 
 namespace valhalla {
 namespace baldr {

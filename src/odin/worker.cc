@@ -1,18 +1,16 @@
-#include <functional>
-#include <string>
-
-#include <boost/property_tree/ptree.hpp>
-
+#include "odin/worker.h"
 #include "baldr/json.h"
 #include "midgard/logging.h"
-
 #include "midgard/util.h"
 #include "odin/directionsbuilder.h"
 #include "odin/util.h"
-#include "odin/worker.h"
+#include "proto/trip.pb.h"
 #include "tyr/serializers.h"
 
-#include "proto/trip.pb.h"
+#include <boost/property_tree/ptree.hpp>
+
+#include <functional>
+#include <string>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
