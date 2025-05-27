@@ -151,12 +151,12 @@ struct WayTags {
   }
 
   /**
-  /* Parses destination:ref & ref tags as separate vectors of names
-  /*
-  /* @param way     The way to parse the tags of
-  /* @param omsdata The data parsed from the PBF
-  /* @returns a WayTags object holding the vectors of names
-  */
+   * Parses destination:ref & ref tags as separate vectors of names
+   *
+   * @param way     The way to parse the tags of
+   * @param omsdata The data parsed from the PBF
+   * @returns a WayTags object holding the vectors of names
+   */
   static WayTags Parse(const OSMWay& way, const OSMData& osmdata) {
     WayTags road_tags;
 
