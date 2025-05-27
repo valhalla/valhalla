@@ -35,6 +35,7 @@
    * FIXED: matrix headings [#5244](https://github.com/valhalla/valhalla/pull/5244)
    * FIXED: fix semi-trivial paths in costmatrix [#5249](https://github.com/valhalla/valhalla/pull/5249)
    * FIXED: rename `check_reverse_connections` [#5255](https://github.com/valhalla/valhalla/pull/5255)
+   * FIXED: invert expansion_direction for expansion properties in costmatrix [#5266](https://github.com/valhalla/valhalla/pull/5266)
    * FIXED: set initial precision in matrix serializer [#5267](https://github.com/valhalla/valhalla/pull/5267)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
