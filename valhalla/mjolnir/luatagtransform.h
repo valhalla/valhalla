@@ -7,9 +7,9 @@ extern "C" {
 #include <lualib.h>
 }
 
-#include <osmium/osm/tag.hpp>
 #include <valhalla/mjolnir/osmdata.h>
 
+#include <osmium/osm/tag.hpp>
 #include <robin_hood.h>
 
 #include <string>
@@ -28,6 +28,11 @@ public:
    * @param lua   the string containing the lua code
    */
   LuaTagTransform(const std::string& lua);
+
+  LuaTagTransform(const LuaTagTransform&) = delete;
+  LuaTagTransform& operator=(const LuaTagTransform&) = delete;
+  LuaTagTransform(LuaTagTransform&&) = delete;
+  LuaTagTransform& operator=(LuaTagTransform&&) = delete;
 
   ~LuaTagTransform();
 

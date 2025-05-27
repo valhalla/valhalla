@@ -1,14 +1,14 @@
 #ifndef VALHALLA_MJOLNIR_DATAQUALITY_H
 #define VALHALLA_MJOLNIR_DATAQUALITY_H
 
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/midgard/logging.h>
+
 #include <algorithm>
 #include <cstdint>
 #include <map>
 #include <unordered_set>
-
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/midgard/logging.h>
 
 namespace valhalla {
 namespace mjolnir {

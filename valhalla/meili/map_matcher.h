@@ -2,8 +2,6 @@
 #ifndef MMP_MAP_MATCHER_H_
 #define MMP_MAP_MATCHER_H_
 
-#include <vector>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/meili/candidate_search.h>
@@ -16,6 +14,8 @@
 #include <valhalla/meili/topk_search.h>
 #include <valhalla/meili/transition_cost_model.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <vector>
 
 namespace valhalla {
 namespace meili {

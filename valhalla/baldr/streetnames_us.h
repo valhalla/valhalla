@@ -1,11 +1,11 @@
 #ifndef VALHALLA_BALDR_STREETNAMES_US_H_
 #define VALHALLA_BALDR_STREETNAMES_US_H_
 
-#include <memory>
-
 #include <valhalla/baldr/streetname_us.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/proto/common.pb.h>
+
+#include <memory>
 
 namespace valhalla {
 namespace baldr {

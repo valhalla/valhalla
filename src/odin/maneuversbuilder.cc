@@ -1,13 +1,4 @@
-#include <algorithm>
-#include <cstdint>
-#include <iterator>
-#include <optional>
-#include <sstream>
-#include <string>
-#include <vector>
-
-#include <boost/format.hpp>
-
+#include "odin/maneuversbuilder.h"
 #include "baldr/graphconstants.h"
 #include "baldr/streetname.h"
 #include "baldr/streetnames.h"
@@ -22,15 +13,22 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "worker.h"
-
-#include "odin/maneuversbuilder.h"
 #include "odin/sign.h"
 #include "odin/signs.h"
 #include "odin/util.h"
-
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
+#include "worker.h"
+
+#include <boost/format.hpp>
+
+#include <algorithm>
+#include <cstdint>
+#include <iterator>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -885,9 +883,14 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
     curr_man->set_elevator(true);
   }
 
-  // If needed, set steps
+  // If needed, set indoor steps
   if (next_man->indoor_steps()) {
     curr_man->set_indoor_steps(true);
+  }
+
+  // If needed, set steps
+  if (next_man->is_steps()) {
+    curr_man->set_steps(true);
   }
 
   // If needed, set escalator
@@ -1118,7 +1121,6 @@ void ManeuversBuilder::CreateDestinationManeuver(Maneuver& maneuver) {
 
 void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   int node_index = 0;
-
   // Determine if the origin has a side of street
   // and set the appropriate start maneuver type
   switch (trip_path_->GetOrigin().side_of_street()) {
@@ -1136,6 +1138,13 @@ void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
       maneuver.set_type(DirectionsLeg_Maneuver_Type_kStart);
       LOG_TRACE("ManeuverType=START");
     }
+  }
+
+  auto curr_edge = trip_path_->GetCurrEdge(node_index);
+
+  // exception: start maneuvers are not helpful for routes starting on stairs or escalators
+  if (curr_edge->IsStepsUse() || curr_edge->IsEscalatorUse()) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kNone);
   }
 
   FinalizeManeuver(maneuver, node_index);
@@ -2212,6 +2221,18 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
     return false;
   }
   if (maneuver.indoor_steps() && prev_edge->IsStepsUse() && prev_edge->indoor()) {
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Process steps
+  if (maneuver.is_steps() && !(prev_edge->IsStepsUse())) {
+    return false;
+  }
+  if (prev_edge->IsStepsUse() && !maneuver.is_steps()) {
+    return false;
+  }
+  if (maneuver.is_steps() && prev_edge->IsStepsUse()) {
     return true;
   }
 
