@@ -67,9 +67,9 @@ void serialize_edges(const PathLocation& location,
                      bool verbose) {
   writer.start_array("edges");
   for (const auto& edge : location.edges) {
+    writer.start_object();
     try {
       // get the osm way id
-      writer.start_object();
       auto tile = reader.GetGraphTile(edge.id);
       auto* directed_edge = tile->directededge(edge.id);
       auto edge_info = tile->edgeinfo(directed_edge);
@@ -113,21 +113,23 @@ void serialize_edges(const PathLocation& location,
         writer.start_object("edge_info");
         edge_info.rapidjson(writer);
         writer.end_object();
+
         writer.start_object("edge");
         directed_edge->rapidjson(writer);
         writer.end_object();
+
         writer.start_object("edge_id");
         edge.id.rapidjson(writer);
         writer.end_object();
 
         // historical traffic information
+        writer.start_array("predicted_speeds");
         if (directed_edge->has_predicted_speed()) {
-          writer.start_array("predicted_speeds");
           for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
             writer(static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
           }
-          writer.end_array();
         }
+        writer.end_array();
       } // they want it lean and mean
       else {
         writer("way_id", static_cast<uint64_t>(edge_info.wayid()));
@@ -142,11 +144,11 @@ void serialize_edges(const PathLocation& location,
         writer("percent_along", edge.percent_along);
         writer.set_precision(tyr::kDefaultPrecision);
       }
-      writer.end_object();
     } catch (...) {
       // this really shouldnt ever get hit
       LOG_WARN("Expected edge not found in graph but found by loki::search!");
     }
+    writer.end_object();
   }
   writer.end_array();
 }

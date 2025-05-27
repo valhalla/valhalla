@@ -752,8 +752,6 @@ void DirectedEdge::rapidjson(rapidjson::writer_wrapper_t& writer) const {
   if (is_hov_only()) {
     writer("hov_type", to_string(static_cast<HOVEdgeType>(hov_type_)));
   }
-
-  writer.end_object();
 }
 
 } // namespace baldr

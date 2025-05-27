@@ -194,7 +194,6 @@ struct TrafficSpeed {
       else {
         writer.set_precision(2);
         writer("congestion_0", congestion);
-        writer.set_precision(3);
       }
       writer.set_precision(2);
       writer("breakpoint_0", breakpoint1 / 255.0);
@@ -211,10 +210,9 @@ struct TrafficSpeed {
       else {
         writer.set_precision(2);
         writer("congestion_1", congestion);
-        writer.set_precision(3);
       }
       writer.set_precision(2);
-      writer("breakpoint_1", breakpoint1 / 255.0);
+      writer("breakpoint_1", breakpoint2 / 255.0);
       writer.set_precision(3);
 
       speed = static_cast<uint64_t>(get_speed(2));

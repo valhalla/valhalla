@@ -2,6 +2,8 @@
 #include "baldr/graphconstants.h"
 #include "midgard/elevation_encoding.h"
 
+#include <vector>
+
 using namespace valhalla::baldr;
 
 namespace {
@@ -634,35 +636,48 @@ void EdgeInfo::rapidjson(rapidjson::writer_wrapper_t& writer) const {
 
   for (const auto& [tag, value] : GetTags()) {
     if (tag == TaggedValue::kLevels) {
+      if (value.empty()) {
+        writer.start_array("levels");
+        writer.end_array();
+        continue;
+      }
+
       writer.start_array("levels");
       std::vector<std::pair<float, float>> decoded;
       uint32_t precision;
       std::tie(decoded, precision) = decode_levels(value);
-      writer.set_precision(precision);
-      for (auto& range : decoded) {
-        if (range.first == range.second) {
-          writer(range.first);
-        } else {
-          writer.start_array();
-          writer(range.first);
-          writer(range.second);
-          writer.end_array();
+      if (!decoded.empty()) {
+        // depending on precision variable causes issues in the json writer
+        writer.set_precision(3);
+        for (auto& range : decoded) {
+          if (range.first == range.second) {
+            writer(range.first);
+          } else {
+            writer.start_array();
+            writer(range.first);
+            writer(range.second);
+            writer.end_array();
+          }
         }
       }
-      writer.set_precision(3);
       writer.end_array();
-      break;
     }
   }
 
-  writer.start_object("conditional_speed_limits");
+  std::vector<std::pair<std::string, uint64_t>> keyToValSpeedLimits;
   for (const auto& [tag, value] : GetTags()) {
     if (tag == TaggedValue::kConditionalSpeedLimits) {
       const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
-      writer(l->td_.to_string(), static_cast<uint64_t>(l->speed_));
+      keyToValSpeedLimits.push_back({l->td_.to_string(), l->speed_});
     }
   }
-  writer.end_object();
+  if (keyToValSpeedLimits.size()) {
+    writer.start_object("conditional_speed_limits");
+    for (auto& p : keyToValSpeedLimits) {
+      writer(p.first, static_cast<uint64_t>(p.second));
+    }
+    writer.end_object();
+  }
 }
 
 } // namespace baldr
