@@ -127,10 +127,10 @@ find_package(Threads REQUIRED)
 
 # resolve vendored libraries
 set(date_include_dir ${VALHALLA_SOURCE_DIR}/third_party/date/include)
-set(rapidjson_include_dir ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include)
-set(robinhoodhashing_include_dir ${CMAKE_SOURCE_DIR}/third_party/robin-hood-hashing/src/include)
+set(rapidjson_include_dir ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)
+set(robinhoodhashing_include_dir ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include)
 set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
-set(dirent_include_dir ${CMAKE_SOURCE_DIR}/third_party/dirent/include)
+set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
 if (PREFER_EXTERNAL_DEPS)
   # date
   find_package(date QUIET)
@@ -365,7 +365,7 @@ if(ENABLE_COVERAGE)
     DEPENDS check)
 
   add_custom_target(coverage
-    COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info
+    COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info --ignore-errors=negative
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/coverage.info)
   set_target_properties(coverage PROPERTIES FOLDER "Tests")

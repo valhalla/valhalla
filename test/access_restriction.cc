@@ -1,7 +1,4 @@
-#include <vector>
-
 #include "baldr/accessrestriction.h"
-
 #include "test.h"
 
 using namespace std;

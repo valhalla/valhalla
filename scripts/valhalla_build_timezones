@@ -19,20 +19,20 @@ if  ! which unzip >/dev/null; then
 fi
 
 rm -rf dist
-rm -f ./timezones-with-oceans.shapefile.zip
+rm -f ./timezones-with-oceans-1970.shapefile.zip
 
-url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/2024a/timezones-with-oceans.shapefile.zip"
+url="https://github.com/evansiroky/timezone-boundary-builder/releases/download/2025b/timezones-with-oceans-1970.shapefile.zip"
 
 echo "downloading timezone polygon file." 1>&2
-curl -L -s -o ./timezones-with-oceans.shapefile.zip ${url} || error_exit "curl failed for ${url}"
-unzip ./timezones-with-oceans.shapefile.zip 1>&2 || error_exit "unzip failed"
+curl -L -s -o ./timezones-with-oceans-1970.shapefile.zip ${url} || error_exit "curl failed for ${url}"
+unzip ./timezones-with-oceans-1970.shapefile.zip 1>&2 || error_exit "unzip failed"
 
 tz_file=$(mktemp)
-spatialite_tool -i -shp "./combined-shapefile-with-oceans" -d "${tz_file}" -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
+spatialite_tool -i -shp "./combined-shapefile-with-oceans-1970" -d "${tz_file}" -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
 spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed"
 spatialite ${tz_file} "VACUUM;" 1>&2 || error_exit "VACUUM failed"
 spatialite ${tz_file} "ANALYZE;" 1>&2 || error_exit "ANALYZE failed"
 
-rm -rf ./combined-shapefile-with-oceans*
-rm -f ./timezones-with-oceans.shapefile.zip alias_tz.csv
+rm -rf ./combined-shapefile-with-oceans-1970*
+rm -f ./timezones-with-oceans-1970.shapefile.zip alias_tz.csv
 cat ${tz_file}

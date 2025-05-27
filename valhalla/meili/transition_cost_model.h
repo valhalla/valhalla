@@ -1,8 +1,6 @@
 #ifndef MMP_TRANSITION_COST_MODEL_H_
 #define MMP_TRANSITION_COST_MODEL_H_
 
-#include <functional>
-
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/meili/config.h>
 #include <valhalla/meili/measurement.h>

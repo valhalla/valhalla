@@ -426,13 +426,21 @@
       ],
       "description": "Set gate flag to true."
     },
+	  {
+      "key": "barrier",
+      "value": "sliding_beam",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set gate flag to true."
+    },
     {
       "key": "barrier",
       "value": "bollard",
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -440,7 +448,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -448,7 +456,47 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "kissing_gate",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "motorcycle_barrier",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "cycle_barrier",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "chain",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "bar",
+      "object_types": [
+        "node"
+      ],
+      "description": "Set bollard flag to true. Access for all motor vehicles is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -456,7 +504,39 @@
       "object_types": [
         "node"
       ],
-      "description": "Set bollard flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "barrier_board",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "fence",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+    {
+      "key": "barrier",
+      "value": "wall",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
+    },
+	  {
+      "key": "barrier",
+      "value": "debris",
+      "object_types": [
+        "node"
+      ],
+      "description": "Access for all modes is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -464,7 +544,7 @@
       "object_types": [
         "node"
       ],
-      "description": "Set sump_buster flag to true.  Access for all modes is turned off, unless the override is set."
+      "description": "Set sump_buster flag to true. Access for auto, hov and taxi is turned off, unless the override is set."
     },
     {
       "key": "barrier",
@@ -7430,12 +7510,6 @@
       ]
     },
     {
-      "key": "seasonal",
-      "object_types": [
-        "way"
-      ]
-    },
-    {
       "key": "segregated",
       "value": "yes",
       "object_types": [
@@ -7657,6 +7731,13 @@
     {
       "key": "surface",
       "description": "Road surface",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "smoothness",
+      "description": "Road smoothness.  Note that surface and tracktype keys have a higher priority than smoothness.",
       "object_types": [
         "way"
       ]

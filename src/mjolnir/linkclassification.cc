@@ -1,15 +1,15 @@
-#include <list>
-#include <optional>
-#include <queue>
-#include <unordered_set>
-#include <vector>
-
 #include "baldr/graphid.h"
 #include "baldr/json.h"
 #include "midgard/util.h"
 #include "mjolnir/ferry_connections.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
+
+#include <optional>
+#include <queue>
+#include <unordered_set>
+#include <vector>
 
 using namespace valhalla::baldr;
 
@@ -113,7 +113,7 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
     // If the node has a both links and non links at it
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.link_edge_ && bundle.node.non_link_edge_) {
-      // Check if this node has a link edge that is drivable from the node
+      // Check if this node has a link edge that is outgoing (i.e. driveforward) from the node
       for (const auto& edge : bundle.node_edges) {
         if (edge.first.attributes.link && (edge.first.attributes.driveforward)) {
           // Get the highest classification of non-link edges at this node.
@@ -150,6 +150,13 @@ struct WayTags {
     return refs.empty() && dest_refs.empty();
   }
 
+  /**
+   * Parses destination:ref & ref tags as separate vectors of names
+   *
+   * @param way     The way to parse the tags of
+   * @param omsdata The data parsed from the PBF
+   * @returns a WayTags object holding the vectors of names
+   */
   static WayTags Parse(const OSMWay& way, const OSMData& osmdata) {
     WayTags road_tags;
 
@@ -891,6 +898,7 @@ void ReclassifyLinks(const std::string& ways_file,
                      const OSMData& osmdata,
                      bool reclassify_links,
                      bool infer_turn_channels) {
+  SCOPED_TIMER();
   LOG_INFO("Reclassifying_V2 link graph edges...");
 
   Data data(nodes_file, edges_file, ways_file, way_nodes_file, osmdata);

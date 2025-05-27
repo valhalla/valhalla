@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -7,7 +8,7 @@
 
 using namespace valhalla;
 
-//#############################################################################
+// #############################################################################
 class InstructionsRightLinkThenTurnExample1 : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -158,7 +159,7 @@ TEST_F(InstructionsRightLinkThenTurnExample1, RightLinkTurnRightInMiddleOfLink) 
       "Continue for 60 meters.");
 }
 
-//#############################################################################
+// #############################################################################
 class InstructionsRightLinkThenTurnExample2 : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -351,7 +352,7 @@ TEST_F(InstructionsRightLinkThenTurnExample2, RightLinkTurn4thRight) {
       "Continue for 200 meters.");
 }
 
-//#############################################################################
+// #############################################################################
 class InstructionsRightLinkThenTurnExample3 : public ::testing::Test {
 protected:
   static gurka::map map;

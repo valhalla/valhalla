@@ -65,6 +65,7 @@ set(sources
     pathlocation.cc
     predictedspeeds.cc
     tilehierarchy.cc
+    timedomain.cc
     turn.cc
     shortcut_recovery.h
     streetname.cc

@@ -4,7 +4,7 @@ Valhalla's elevation lookup service provides digital elevation model (DEM) data 
 
 For example, you can get elevation data for a point, a trail, or a trip. You might use the results to consider hills for your bicycle trip, or when estimating battery usage for trips in electric vehicles.
 
-View an interactive demo [here](http://valhalla.github.io/demos/elevation).
+View an interactive demo [here](https://valhalla.github.io/demos/elevation).
 
 ## Inputs of the elevation service
 
@@ -17,7 +17,7 @@ An elevation service request takes the form of `servername/height?json={}`, wher
 There is an option to name your elevation request. You can do this by appending the following to your request `&id=`.  The `id` is returned with the response so a user could match to the corresponding request.
 
 ### Height Precision
-By default, all height values are returned as integer values. This works fine for most cases. However, using integer precision when charting elevation results along a nearly flat road can lead to "stair step" changes in elevation. Height data can be returned with 1 or 2 digits decimal precision by specifying `height_precision`. 
+By default, all height values are returned as integer values. This works fine for most cases. However, using integer precision when charting elevation results along a nearly flat road can lead to "stair step" changes in elevation. Height data can be returned with 1 or 2 digits decimal precision by specifying `height_precision`.
 
 | Height precision | Description |
 | :--------- | :----------- |
@@ -95,23 +95,18 @@ The `resample_distance` parameter is a numeric value specifying the distance at 
 
 ## Outputs of the elevation service
 
-If an elevation request has been named using the optional `&id=` input, then the name will be returned as a string `id`.
-
-The profile results are returned with the form of shape (shape points or encoded polylines) that was supplied in the request, along with a 2D array representing the x and y of each input point in the elevation profile.
+The profile results are returned with the form of shape (`shape` points or `encoded_ polyline`) that was supplied in the request, along with an array representing the x and y of each input point in the elevation profile.
 
 | Item | Description |
 | :---- | :----------- |
+| `id` | Name your route request. If `id` is specified, the naming will be sent thru to the response. |
 | `shape` | The specified shape coordinates from the input request. |
 | `encoded_polyline` | The specified encoded polyline, with six degrees of precision, coordinates from the input request. |
-| `range_height` | The 2D array of range (x) and height (y) per input latitude, longitude coordinate. |
-| `x coordinate` | The range or distance along the input locations. It is the cumulative distance along the previous latitiude, longitude coordinates up to the current coordinate. The x-value for the first coordinate in the shape will always be 0. |
-| `y coordinate` | The height or elevation of the associated latitude, longitude pair. The height is returned as `null` if no height data exists for a given location. |
-| `height` | An array of height for the associated latitude, longitude coordinates. |
-| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
+| `range_height` | (Present if `range`=`true`)<br>The 2D array of range (x) and height (y) per input latitude, longitude coordinate:<ul><li>x coordinate (first index):<br>The range or distance along the input locations. It is the cumulative distance along the previous latitiude, longitude coordinates up to the current coordinate. The x-value for the first coordinate in the shape will always be 0.</li><li>y coordinate (second index):<br>The height or elevation of the associated latitude, longitude pair. Returned as `null` if no height data exists for a given location.</li></ul> |
+| `height` | (Present if `range`=`false` or not present)<br>An array of height for the associated latitude, longitude coordinates. Returned as `null` if no height data exists for a given location. |
+| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. |
 
 
 ## Data sources
 
-Elevation data is obtained from the [Amazon Web Services Public Datasets](https://aws.amazon.com/public-datasets/terrain/). 
-
-
+Elevation data is obtained from the [Amazon Web Services Public Datasets](https://aws.amazon.com/public-datasets/terrain/).

@@ -1,17 +1,4 @@
 #include "mjolnir/shortcutbuilder.h"
-#include "mjolnir/graphtilebuilder.h"
-
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <iostream>
-#include <map>
-#include <ostream>
-#include <set>
-#include <sstream>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -20,8 +7,17 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 #include "sif/osrm_car_duration.h"
+
+#include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -328,10 +324,7 @@ void ConnectEdges(GraphReader& reader,
 
   // Add edge and turn duration for truck
   total_truck_duration += turn_duration;
-  auto const truck_speed =
-      std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
-               directededge->truck_speed() ? directededge->truck_speed() : kMaxAssumedTruckSpeed);
-
+  auto const truck_speed = tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
   assert(truck_speed != 0);
   auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
   total_truck_duration += edge_duration_truck;
@@ -387,7 +380,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
   }
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
-  auto last_edge = [&reader](graph_tile_ptr tile, const GraphId& endnode, EdgePairs& edgepairs) {
+  auto last_edge = [&reader](const graph_tile_ptr& tile, const GraphId& endnode,
+                             EdgePairs& edgepairs) {
     return !CanContract(reader, tile, endnode, edgepairs);
   };
 
@@ -767,6 +761,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   // across tile boundaries so that we are only messing with one tile
   // in one thread at a time
 
+  SCOPED_TIMER();
   // Get GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
 

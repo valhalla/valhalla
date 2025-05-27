@@ -1,3 +1,4 @@
+#include "gurka.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -11,16 +12,14 @@
 #include "mjolnir/util.h"
 #include "odin/worker.h"
 #include "proto/trip.pb.h"
+#include "test.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include "gurka.h"
-#include "test.h"
-
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-
+#include <gtest/gtest.h>
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/output_iterator.hpp>
@@ -33,8 +32,6 @@
 #include <string>
 #include <tuple>
 #include <utility>
-
-#include <gtest/gtest.h>
 
 namespace valhalla {
 namespace gurka {
@@ -52,21 +49,11 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
   return lls;
 }
 
-/**
- * build a valhalla json request body
- *
- * @param location_types vector of locations or shape, sources, targets
- * @param waypoints      all pointll sequences for all location types
- * @param costing        which costing name to use, defaults to auto
- * @param options        overrides parts of the request, supports rapidjson pointer semantics
- * @param stop_type      break, through, via, break_through
- * @return json string
- */
 std::string build_valhalla_request(const std::vector<std::string>& location_types,
                                    const std::vector<std::vector<midgard::PointLL>>& waypoints,
-                                   const std::string& costing = "auto",
-                                   const std::unordered_map<std::string, std::string>& options = {},
-                                   const std::string& stop_type = "break") {
+                                   const std::string& costing,
+                                   const std::unordered_map<std::string, std::string>& options,
+                                   const std::string& stop_type) {
   assert(location_types.size() == waypoints.size());
 
   rapidjson::Document doc;
@@ -354,6 +341,7 @@ inline void build_pbf(const nodelayout& node_locations,
     }
 
     std::vector<std::pair<std::string, std::string>> tags;
+    tags.reserve(relation.tags.size());
     for (const auto& tag : relation.tags) {
       tags.push_back({tag.first, tag.second});
     }
@@ -473,7 +461,7 @@ map buildtiles(const nodelayout& layout,
   midgard::logging::Configure({{"type", ""}});
 
   mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate, false);
+                          mjolnir::BuildStage::kValidate);
 
   return result;
 }

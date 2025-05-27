@@ -1,7 +1,6 @@
-#include <iostream>
-#include <vector>
-
 #include "thor/alternates.h"
+
+#include <vector>
 
 using namespace valhalla::thor;
 using namespace valhalla::baldr;

@@ -1,11 +1,7 @@
 #ifndef VALHALLA_ODIN_NARRATIVEBUILDER_H_
 #define VALHALLA_ODIN_NARRATIVEBUILDER_H_
 
-#include <cstdint>
-#include <vector>
-
 #include <valhalla/baldr/verbal_text_formatter.h>
-
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/odin/markup_formatter.h>
@@ -13,6 +9,9 @@
 #include <valhalla/odin/util.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
+
+#include <cstdint>
+#include <vector>
 
 namespace valhalla {
 namespace odin {
@@ -27,10 +26,10 @@ public:
   virtual ~NarrativeBuilder() = default;
 
   NarrativeBuilder(NarrativeBuilder&&) = default;
-  NarrativeBuilder& operator=(NarrativeBuilder&&) = default;
+  NarrativeBuilder& operator=(NarrativeBuilder&&) = delete;
 
   NarrativeBuilder(const NarrativeBuilder&) = default;
-  NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
+  NarrativeBuilder& operator=(const NarrativeBuilder&) = delete;
 
   void Build(std::list<Maneuver>& maneuvers);
 

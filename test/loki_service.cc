@@ -1,22 +1,20 @@
-#include "test.h"
-
-#include <cstdint>
-#include <filesystem>
-
 #include "baldr/rapidjson_utils.h"
+#include "loki/worker.h"
 #include "midgard/logging.h"
+#include "odin/worker.h"
 #include "proto/api.pb.h"
 #include "proto_conversions.h"
+#include "test.h"
+#include "thor/worker.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
-#include <thread>
 #include <unistd.h>
 
-#include "loki/worker.h"
-#include "odin/worker.h"
-#include "thor/worker.h"
+#include <cstdint>
+#include <filesystem>
+#include <thread>
 
 using namespace valhalla;
 using namespace prime_server;
@@ -607,9 +605,6 @@ public:
 
 // Elevation service
 int main(int argc, char* argv[]) {
-  // make this whole thing bail if it doesnt finish fast
-  alarm(180);
-
   testing::AddGlobalTestEnvironment(new LokiServiceEnv);
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

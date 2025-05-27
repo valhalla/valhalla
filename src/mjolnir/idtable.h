@@ -1,15 +1,14 @@
 #ifndef VALHALLA_MJOLNIR_IDTABLE_H
 #define VALHALLA_MJOLNIR_IDTABLE_H
 
+#include "midgard/logging.h"
+
+#include <robin_hood.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
-#include <vector>
-
-#include <robin_hood.h>
-
-#include <midgard/logging.h>
 
 namespace valhalla {
 namespace mjolnir {

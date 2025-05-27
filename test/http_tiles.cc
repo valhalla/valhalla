@@ -1,14 +1,12 @@
-#include "test.h"
-
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
+#include "test.h"
 #include "tyr/actor.h"
 #include "valhalla/tile_server.h"
 
 #include <prime_server/prime_server.hpp>
 
 #include <filesystem>
-#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <thread>

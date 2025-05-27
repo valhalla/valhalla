@@ -1,12 +1,4 @@
-#include <algorithm>
-#include <cmath>
-#include <cstdint>
-#include <iostream>
-#include <ostream>
-#include <string>
-#include <unordered_map>
-#include <utility>
-
+#include "thor/triplegbuilder.h"
 #include "baldr/admin.h"
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
@@ -15,6 +7,7 @@
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/time_info.h"
+#include "baldr/timedomain.h"
 #include "meili/match_result.h"
 #include "midgard/elevation_encoding.h"
 #include "midgard/encoded.h"
@@ -24,8 +17,14 @@
 #include "proto/common.pb.h"
 #include "sif/costconstants.h"
 #include "sif/recost.h"
-#include "thor/triplegbuilder.h"
 #include "triplegbuilder_utils.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -508,42 +507,40 @@ void AddLandmarks(const EdgeInfo& edgeinfo,
     return;
   }
 
-  for (const auto& tag : edgeinfo.GetTags()) {
-    // get landmarks from tagged values in the edge info
-    if (tag.first == baldr::TaggedValue::kLandmark) {
-      Landmark lan(tag.second);
-      PointLL landmark_point = {lan.lng, lan.lat};
+  const auto landmark_range = edgeinfo.GetTags().equal_range(baldr::TaggedValue::kLandmark);
+  for (auto it = landmark_range.first; it != landmark_range.second; ++it) {
+    Landmark lan(it->second);
+    PointLL landmark_point = {lan.lng, lan.lat};
 
-      // find the closed point on edge to the landmark
-      auto closest = landmark_point.ClosestPoint(shape, begin_index);
-      // TODO: in the future maybe we could allow a request option to have a tighter threshold on
-      // how far landmarks should be away from an edge
+    // find the closed point on edge to the landmark
+    auto closest = landmark_point.ClosestPoint(shape, begin_index);
+    // TODO: in the future maybe we could allow a request option to have a tighter threshold on
+    // how far landmarks should be away from an edge
 
-      // add the landmark to trip leg
-      auto* landmark = trip_edge->mutable_landmarks()->Add();
-      landmark->set_name(lan.name);
-      landmark->set_type(static_cast<valhalla::RouteLandmark::Type>(lan.type));
-      landmark->mutable_lat_lng()->set_lng(lan.lng);
-      landmark->mutable_lat_lng()->set_lat(lan.lat);
+    // add the landmark to trip leg
+    auto* landmark = trip_edge->mutable_landmarks()->Add();
+    landmark->set_name(lan.name);
+    landmark->set_type(static_cast<valhalla::RouteLandmark::Type>(lan.type));
+    landmark->mutable_lat_lng()->set_lng(lan.lng);
+    landmark->mutable_lat_lng()->set_lat(lan.lat);
 
-      // calculate the landmark's distance along the edge
-      // that is to accumulate distance from the begin point to the closest point to it on the edge
-      int closest_idx = std::get<2>(closest);
-      double distance_along_edge = 0;
-      for (int idx = begin_index + 1; idx <= closest_idx; ++idx) {
-        distance_along_edge += shape[idx].Distance(shape[idx - 1]);
-      }
-      distance_along_edge += shape[closest_idx].Distance(std::get<0>(closest));
-      // the overall distance shouldn't be larger than edge length
-      distance_along_edge = std::min(distance_along_edge, static_cast<double>(edge->length()));
-      landmark->set_distance(distance_along_edge);
-      // check which side of the edge the landmark is on
-      // quirks of the ClosestPoint function
-      bool is_right = closest_idx == (int)shape.size() - 1
-                          ? landmark_point.IsLeft(shape[closest_idx - 1], shape[closest_idx]) < 0
-                          : landmark_point.IsLeft(shape[closest_idx], shape[closest_idx + 1]) < 0;
-      landmark->set_right(is_right);
+    // calculate the landmark's distance along the edge
+    // that is to accumulate distance from the begin point to the closest point to it on the edge
+    int closest_idx = std::get<2>(closest);
+    double distance_along_edge = 0;
+    for (int idx = begin_index + 1; idx <= closest_idx; ++idx) {
+      distance_along_edge += shape[idx].Distance(shape[idx - 1]);
     }
+    distance_along_edge += shape[closest_idx].Distance(std::get<0>(closest));
+    // the overall distance shouldn't be larger than edge length
+    distance_along_edge = std::min(distance_along_edge, static_cast<double>(edge->length()));
+    landmark->set_distance(distance_along_edge);
+    // check which side of the edge the landmark is on
+    // quirks of the ClosestPoint function
+    bool is_right = closest_idx == (int)shape.size() - 1
+                        ? landmark_point.IsLeft(shape[closest_idx - 1], shape[closest_idx]) < 0
+                        : landmark_point.IsLeft(shape[closest_idx], shape[closest_idx + 1]) < 0;
+    landmark->set_right(is_right);
   }
 }
 
@@ -689,7 +686,7 @@ void SetElevation(TripLeg_Edge* trip_edge,
 
   // Lambda to get elevation at specified distance
   double interval = 0.0;
-  const auto find_elevation = [&interval](const std::vector<float> elevation, const double d) {
+  const auto find_elevation = [&interval](const std::vector<float>& elevation, const double d) {
     // Find index based on the stored interval and the desired distance
     uint32_t index = static_cast<uint32_t>(d / interval);
     if (index >= elevation.size() - 1) {
@@ -1042,24 +1039,25 @@ void ProcessTunnelBridgeTaggedValue(valhalla::StreetName* trip_edge_name,
  * Add trip edge. (TODO more comments)
  * @param  controller         Controller to determine which attributes to set.
  * @param  edge               Identifier of an edge within the tiled, hierarchical graph.
- * @param  trip_id            Trip Id (0 if not a transit edge).
+ * @param  edge_itr           PathInfo iterator
  * @param  block_id           Transit block Id (0 if not a transit edge)
  * @param  mode               Travel mode for the edge: Biking, walking, etc.
  * @param  directededge       Directed edge information.
  * @param  drive_right        Right side driving for this edge.
  * @param  trip_node          Trip node to add the edge information to.
  * @param  graphtile          Graph tile for accessing data.
- * @param  second_of_week     The time, from the beginning of the week in seconds at which
+ * @param  time_info          The time, from the beginning of the week in seconds at which
  *                            the path entered this edge (always monday at noon on timeless route)
  * @param  start_node_idx     The start node index
  * @param  has_junction_name  True if named junction exists, false otherwise
  * @param  start_tile         The start tile of the start node
  * @param  blind_instructions Whether instructions should be generated for blind users
- *
+ * @param  edgeinfo           EdgeInfo of the directed edge
+ * @param  levels             level information of the edge
  */
 TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const GraphId& edge,
-                          const uint32_t trip_id,
+                          const std::vector<valhalla::thor::PathInfo>::const_iterator& edge_itr,
                           const uint32_t block_id,
                           const sif::TravelMode mode,
                           const uint8_t travel_type,
@@ -1072,16 +1070,15 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
                           const graph_tile_ptr& start_tile,
-                          const uint8_t restrictions_idx,
-                          float elapsed_secs,
-                          bool blind_instructions) {
+                          bool blind_instructions,
+                          EdgeInfo& edgeinfo,
+                          const std::pair<std::vector<std::pair<float, float>>, uint32_t>& levels) {
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
   TripLeg_Edge* trip_edge = trip_node->mutable_edge();
 
   // Get the edgeinfo
-  auto edgeinfo = graphtile->edgeinfo(directededge);
 
   // Add names to edge if requested
   if (controller(kEdgeNames)) {
@@ -1193,7 +1190,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     if (mode == sif::TravelMode::kPublicTransit) {
       // TODO(nils): get the actual speed here by passing in the elapsed seconds (or the whole
       // pathinfo)
-      speed = directededge->length() / elapsed_secs * kMetersPerSectoKPH;
+      speed = directededge->length() / edge_itr->elapsed_cost.secs * kMetersPerSectoKPH;
     } else {
       uint8_t flow_sources;
       speed = directededge->length() /
@@ -1201,6 +1198,25 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
               kMetersPerSectoKPH;
     }
     trip_edge->set_speed(speed);
+  }
+
+  // Set country crossing if requested
+  if (controller(kEdgeCountryCrossing)) {
+    trip_edge->set_country_crossing(directededge->ctry_crossing());
+  }
+
+  // Set forward if requested
+  if (controller(kEdgeForward)) {
+    trip_edge->set_forward(directededge->forward());
+  }
+
+  if (controller(kEdgeLevels)) {
+    trip_edge->set_level_precision(std::max(static_cast<uint32_t>(1), levels.second));
+    for (const auto& level : levels.first) {
+      auto proto_level = trip_edge->mutable_levels()->Add();
+      proto_level->set_start(level.first);
+      proto_level->set_end(level.second);
+    }
   }
 
   uint8_t kAccess = 0;
@@ -1245,14 +1261,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   }
 
-  if (directededge->access_restriction() && restrictions_idx != kInvalidRestriction) {
+  if (directededge->access_restriction() && edge_itr->restriction_index != kInvalidRestriction) {
     const std::vector<baldr::AccessRestriction>& restrictions =
         graphtile->GetAccessRestrictions(edge.id(), costing->access_mode());
     trip_edge->mutable_restriction()->set_type(
-        static_cast<uint32_t>(restrictions[restrictions_idx].type()));
+        static_cast<uint32_t>(restrictions[edge_itr->restriction_index].type()));
   }
 
-  trip_edge->set_has_time_restrictions(restrictions_idx != kInvalidRestriction);
+  trip_edge->set_has_time_restrictions(edge_itr->restriction_index != kInvalidRestriction);
 
   // Set the trip path use based on directed edge use if requested
   if (controller(kEdgeUse)) {
@@ -1436,6 +1452,38 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_speed_limit(edgeinfo.speed_limit());
   }
 
+  if (controller(kEdgeConditionalSpeedLimits)) {
+    auto conditional_limits = edgeinfo.conditional_speed_limits();
+    trip_edge->mutable_conditional_speed_limits()->Reserve(conditional_limits.size());
+    for (const auto& limit : conditional_limits) {
+      auto proto = trip_edge->mutable_conditional_speed_limits()->Add();
+      proto->set_speed_limit(limit.speed_);
+
+      auto* condition = proto->mutable_condition();
+
+      switch (limit.td_.type()) {
+        case kYMD:
+          condition->set_day_dow_type(TripLeg_TimeDomain_DayDowType_kDayOfMonth);
+          break;
+        case kNthDow:
+          condition->set_day_dow_type(TripLeg_TimeDomain_DayDowType_kNthDayOfWeek);
+          break;
+      }
+
+      condition->set_dow_mask(limit.td_.dow());
+      condition->set_begin_hrs(limit.td_.begin_hrs());
+      condition->set_begin_mins(limit.td_.begin_mins());
+      condition->set_begin_month(limit.td_.begin_month());
+      condition->set_begin_day_dow(limit.td_.begin_day_dow());
+      condition->set_begin_week(limit.td_.begin_week());
+      condition->set_end_hrs(limit.td_.end_hrs());
+      condition->set_end_mins(limit.td_.end_mins());
+      condition->set_end_month(limit.td_.end_month());
+      condition->set_end_day_dow(limit.td_.end_day_dow());
+      condition->set_end_week(limit.td_.end_week());
+    }
+  }
+
   if (controller(kEdgeDefaultSpeed)) {
     trip_edge->set_default_speed(directededge->speed());
   }
@@ -1450,7 +1498,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   /////////////////////////////////////////////////////////////////////////////
   // Process transit information
-  if (trip_id && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
+  if (edge_itr->trip_id && (directededge->use() == Use::kRail || directededge->use() == Use::kBus)) {
 
     TransitRouteInfo* transit_route_info = trip_edge->mutable_transit_route_info();
 
@@ -1461,11 +1509,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
     // Set trip_id if requested
     if (controller(kEdgeTransitRouteInfoTripId)) {
-      transit_route_info->set_trip_id(trip_id);
+      transit_route_info->set_trip_id(edge_itr->trip_id);
     }
 
     const TransitDeparture* transit_departure =
-        graphtile->GetTransitDeparture(directededge->lineid(), trip_id,
+        graphtile->GetTransitDeparture(directededge->lineid(), edge_itr->trip_id,
                                        time_info.second_of_week % kSecondsPerDay);
 
     if (transit_departure) {
@@ -1621,6 +1669,10 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
   }
 }
 
+inline bool is_multi_level(const std::vector<std::pair<float, float>>& levels) {
+  return levels.size() == 1 ? levels[0].first != levels[0].second : levels.size() != 0;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -1750,6 +1802,9 @@ void TripLegBuilder::Build(
   // prepare to make some edges!
   trip_path.mutable_node()->Reserve((path_end - path_begin) + 1);
 
+  // collect the level changes
+  float prev_level = kMaxLevel;
+
   // we track the intermediate locations while we iterate so we can update their shape index
   // from the edge index that we assigned to them earlier in route_action
   auto intermediate_itr = trip_path.mutable_location()->begin() + 1;
@@ -1852,21 +1907,22 @@ void TripLegBuilder::Build(
     multimodal_builder.Build(trip_node, edge_itr->trip_id, node, startnode, directededge, edge,
                              start_tile, graphtile, mode_costing, controller, graphreader);
 
+    uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
+    auto edgeinfo = graphtile->edgeinfo(directededge);
+    std::pair<std::vector<std::pair<float, float>>, uint32_t> levels = edgeinfo.levels();
     // Add edge to the trip node and set its attributes
     TripLeg_Edge* trip_edge =
-        AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
-                    travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
-                    time_info, startnode.id(), node->named_intersection(), start_tile,
-                    edge_itr->restriction_index, edge_itr->elapsed_cost.secs,
-                    travel_type == PedestrianType::kBlind && mode == sif::TravelMode::kPedestrian);
+        AddTripEdge(controller, edge, edge_itr, multimodal_builder.block_id, mode, travel_type,
+                    costing, directededge, node->drive_on_right(), trip_node, graphtile, time_info,
+                    startnode.id(), node->named_intersection(), start_tile,
+                    travel_type == PedestrianType::kBlind && mode == sif::TravelMode::kPedestrian,
+                    edgeinfo, levels);
 
     // some information regarding shape/length trimming
     float trim_start_pct = is_first_edge ? start_pct : 0;
     float trim_end_pct = is_last_edge ? end_pct : 1;
 
     // Some edges at the beginning and end of the path and at intermediate locations will need trimmed
-    uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
-    auto edgeinfo = graphtile->edgeinfo(directededge);
     auto trimming = edge_trimming.end();
     if (!edge_trimming.empty() &&
         (trimming = edge_trimming.find(edge_index)) != edge_trimming.end()) {
@@ -1941,6 +1997,42 @@ void TripLegBuilder::Build(
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1, edgeinfo.shape().end());
       } else {
         trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1, edgeinfo.shape().rend());
+      }
+    }
+
+    /**
+     * For the level changes, only consider edges  if
+     *   - they are on a single level
+     *   - they are on multiple levels and either the first or last in leg
+     *     so we can use the start/end level filter to fill up the level changes
+     */
+    if (bool multilevel = is_multi_level(levels.first);
+        (is_first_edge && multilevel) || (is_last_edge && multilevel) ||
+        (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second)) {
+      float lvl = kMaxLevel;
+      if (!multilevel) {
+        lvl = levels.first[0].first;
+      } else if ((is_first_edge && origin.search_filter().has_level_case()) ||
+                 (is_last_edge && dest.search_filter().has_level_case())) {
+        lvl = is_first_edge ? origin.search_filter().level() : dest.search_filter().level();
+      }
+      // if this edge is on a different level than the previous one,
+      // add a level change
+      if (lvl != kMaxLevel && !(is_last_edge && multilevel && !is_first_edge) &&
+          std::fabs(lvl - prev_level) >= std::numeric_limits<float>::epsilon()) {
+        auto* change = trip_path.add_level_changes();
+        change->set_level(lvl);
+        change->set_shape_index(begin_index);
+        change->set_precision(std::max(static_cast<uint32_t>(1), levels.second));
+        prev_level = lvl;
+      }
+
+      // special case multilevel last edge
+      if (is_last_edge && multilevel && dest.search_filter().has_level_case()) {
+        auto* change = trip_path.add_level_changes();
+        change->set_level(dest.search_filter().level());
+        change->set_shape_index(trip_shape.size() - 1);
+        change->set_precision(std::max(static_cast<uint32_t>(1), levels.second));
       }
     }
 

@@ -1,7 +1,7 @@
-#include <cmath>
-
 #include "valhalla/midgard/ellipse.h"
 #include "valhalla/midgard/util.h"
+
+#include <cmath>
 
 namespace valhalla {
 namespace midgard {

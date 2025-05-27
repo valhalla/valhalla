@@ -1,10 +1,7 @@
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphid.h"
 #include "midgard/pointll.h"
-
 #include "test.h"
-
-#include <boost/property_tree/ptree.hpp>
 
 using namespace std;
 using namespace valhalla::baldr;

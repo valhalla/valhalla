@@ -1,14 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
 #define VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
 
-#include <cstdint>
-#include <iostream>
-#include <list>
-#include <string>
-#include <vector>
-
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/graphconstants.h>
+
+#include <cstdint>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

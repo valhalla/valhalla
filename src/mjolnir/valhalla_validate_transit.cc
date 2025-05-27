@@ -1,10 +1,4 @@
-#include <ostream>
-#include <string>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
+#include "argparse_utils.h"
 #include "baldr/graphid.h"
 #include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
@@ -15,7 +9,11 @@
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/validatetransit.h"
 
-#include "argparse_utils.h"
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <string>
+#include <vector>
 
 using namespace valhalla::mjolnir;
 

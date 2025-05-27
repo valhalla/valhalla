@@ -1,15 +1,4 @@
 #include "mjolnir/restrictionbuilder.h"
-#include "mjolnir/complexrestrictionbuilder.h"
-#include "mjolnir/dataquality.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/osmrestriction.h"
-
-#include <future>
-#include <queue>
-#include <set>
-#include <thread>
-#include <unordered_set>
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -19,6 +8,17 @@
 #include "baldr/timedomain.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
+#include "mjolnir/complexrestrictionbuilder.h"
+#include "mjolnir/dataquality.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/osmrestriction.h"
+#include "scoped_timer.h"
+
+#include <future>
+#include <queue>
+#include <random>
+#include <thread>
+#include <unordered_set>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -278,6 +278,7 @@ struct Result {
 
 void HandleOnlyRestrictionProperties(const std::vector<Result>& results,
                                      const boost::property_tree::ptree& config) {
+  SCOPED_TIMER();
   std::unordered_map<GraphId, std::vector<const ComplexRestrictionBuilder*>> restrictions;
   std::unordered_map<GraphId, std::vector<GraphId>> part_of_restriction;
   for (const auto& res : results) {
@@ -728,6 +729,7 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
                                const std::string& complex_from_restrictions_file,
                                const std::string& complex_to_restrictions_file) {
 
+  SCOPED_TIMER();
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
   for (auto tl = TileHierarchy::levels().rbegin(); tl != TileHierarchy::levels().rend(); ++tl) {

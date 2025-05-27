@@ -1,12 +1,17 @@
 #pragma once
 
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util_core.h>
+
 #include <cstdint>
 #include <cstring>
-#include <functional>
 #include <limits>
-#include <memory>
+#include <list>
 #include <ostream>
-#include <random>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -14,13 +19,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/util_core.h>
 
 #define UNUSED(x) (void)(x)
 

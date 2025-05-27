@@ -4,13 +4,12 @@
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
+#include "test.h"
+
 #include <cmath>
 #include <cstdlib>
-#include <random>
-
 #include <list>
-
-#include "test.h"
+#include <random>
 
 using namespace valhalla::midgard;
 

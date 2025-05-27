@@ -1,12 +1,12 @@
 #ifndef VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 #define VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 
+#include <valhalla/mjolnir/osmdata.h>
+
 #include <boost/property_tree/ptree.hpp>
-#include <cstdint>
+
 #include <string>
 #include <vector>
-
-#include <valhalla/mjolnir/osmdata.h>
 
 namespace valhalla {
 namespace mjolnir {

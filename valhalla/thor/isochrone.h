@@ -1,13 +1,6 @@
 #ifndef VALHALLA_THOR_ISOCHRONE_H_
 #define VALHALLA_THOR_ISOCHRONE_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -18,6 +11,9 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/dijkstras.h>
 #include <valhalla/thor/edgestatus.h>
+
+#include <cstdint>
+#include <memory>
 
 namespace valhalla {
 namespace thor {

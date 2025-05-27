@@ -89,6 +89,13 @@ parser.add_argument(
     type=Path,
 )
 parser.add_argument(
+    "-i",
+    "--inline-config",
+    help="Inline JSON config, will override --config JSON if present",
+    type=str,
+    default='{}',
+)
+parser.add_argument(
     "-o",
     "--outdir",
     help="Absolute or relative path to the directory where the tiles will be saved. Overrides config JSON.",
@@ -116,7 +123,7 @@ group.add_argument(
     "-z",
     "--lz4",
     help="If set, downloaded files will be recompressed with LZ4. Requires lz4. "
-    "Requires ~12% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
+    "Requires ~12%% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
     "initial download, tiles will be several times faster to decompress vz gzip.",
     action="store_true",
 )
@@ -322,14 +329,17 @@ if __name__ == "__main__":
     elif args.verbosity >= 2:
         LOGGER.setLevel(logging.DEBUG)
 
-    config = None
+    config = dict()
     if args.config:
         with open(args.config) as f:
             config = json.load(f)
 
+    if args.inline_config:
+        config.update(**json.loads(args.inline_config))
+
     if args.outdir:
         elevation_fp = args.outdir
-    elif config is not None:
+    elif config:
         elevation_fp = Path(config["additional_data"]["elevation"] or "elevation")
     else:
         LOGGER.critical("Either config or outdir is required.")
@@ -340,7 +350,7 @@ if __name__ == "__main__":
     elif args.from_bbox:
         tiles = get_tiles_with_bbox(args.from_bbox)
     elif args.from_tiles:
-        if config is None:
+        if not config:
             LOGGER.critical("--from-tiles requires a config to be specified.")
             sys.exit(1)
         tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))

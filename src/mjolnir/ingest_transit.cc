@@ -1,45 +1,40 @@
-#include <cmath>
-#include <cstdint>
-#include <fstream>
-#include <functional>
-#include <future>
-#include <iostream>
-#include <memory>
-#include <mutex>
-#include <queue>
-#include <random>
-#include <sstream>
-#include <string>
-#include <thread>
-#include <unordered_map>
-#include <unordered_set>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/tokenizer.hpp>
-
+#include "mjolnir/ingest_transit.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem.h"
+#include "just_gtfs/just_gtfs.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
-
-#include "filesystem.h"
-#include "just_gtfs/just_gtfs.h"
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
-#include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
 #include "mjolnir/util.h"
 #include "proto/transit.pb.h"
 
+#include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/tokenizer.hpp>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
+
+#include <cmath>
+#include <cstdint>
+#include <fstream>
+#include <future>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <set>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
@@ -169,13 +164,22 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const std::string&
   filesystem::recursive_directory_iterator end_file_itr;
   for (; gtfs_feed_itr != end_file_itr; ++gtfs_feed_itr) {
     const auto& feed_path = gtfs_feed_itr->path();
+    if (gtfs_feed_itr->is_directory() && filesystem::is_empty(feed_path)) {
+      LOG_ERROR("Feed directory " + feed_path.string() + " is empty");
+      continue;
+    }
     if (filesystem::is_directory(feed_path)) {
       // feed_path has a trailing separator
       const auto feed_name = feed_path.filename().string();
 
       LOG_INFO("Loading " + feed_name);
       gtfs::Feed feed(feed_path.string());
-      feed.read_feed();
+      auto read_result = feed.read_feed();
+      if (read_result.code != gtfs::ResultCode::OK) {
+        LOG_ERROR("Couldn't find a required file for feed " + feed_path.filename().string() + ": " +
+                  read_result.message);
+        continue;
+      }
       LOG_INFO("Done loading, now parsing " + feed_name);
 
       const auto& stops = feed.get_stops();
@@ -312,7 +316,7 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& f
     // Add the Egress
     int node_count = tile.nodes_size();
     for (const auto& child : tile_children) {
-      auto child_stop = feed.get_stop(child.second);
+      const auto& child_stop = feed.get_stop(child.second);
       if (child.first.id == station.id && child.first.feed == station.feed &&
           child_stop.location_type == gtfs::StopLocationType::EntranceExit) {
         setup_stops(tile, child_stop, node_id, platform_node_ids, station.feed,
@@ -342,7 +346,7 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& f
     node_count = tile.nodes_size();
     prev_id = GraphId(tile.nodes().rbegin()->graphid());
     for (const auto& child : tile_children) {
-      auto child_stop = feed.get_stop(child.second);
+      const auto& child_stop = feed.get_stop(child.second);
 
       if (child.first.id == station.id && child.first.feed == station.feed &&
           child_stop.location_type == gtfs::StopLocationType::StopOrPlatform) {
@@ -874,6 +878,9 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   // go get information about what transit tiles we should be fetching
   LOG_INFO("Tiling GTFS Feeds");
   auto tiles = select_transit_tiles(gtfs_dir);
+  if (tiles.empty()) {
+    throw std::runtime_error("Couldn't find any usable GTFS feeds.");
+  }
 
   LOG_INFO("Writing " + std::to_string(tiles.size()) + " transit pbf tiles with " +
            std::to_string(thread_count) + " threads...");

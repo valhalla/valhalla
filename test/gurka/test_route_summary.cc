@@ -1,18 +1,17 @@
-#include <cmath>
-#include <filesystem>
-#include <sstream>
-#include <sys/mman.h>
-#include <sys/stat.h>
-
 #include "gurka.h"
 #include "loki/worker.h"
 #include "microtar.h"
 #include "mjolnir/adminbuilder.h"
 #include "test/test.h"
 
-#include <boost/property_tree/ptree.hpp>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/traffictile.h>
+
+#include <sys/mman.h>
+#include <sys/stat.h>
+
+#include <cmath>
+#include <filesystem>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

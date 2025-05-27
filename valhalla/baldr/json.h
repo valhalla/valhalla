@@ -2,15 +2,14 @@
 #define VALHALLA_BALDR_JSON_H_
 
 #include <boost/variant.hpp>
+
 #include <cctype>
 #include <cinttypes>
 #include <cmath>
 #include <cstddef>
 #include <iomanip>
-#include <list>
 #include <memory>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>

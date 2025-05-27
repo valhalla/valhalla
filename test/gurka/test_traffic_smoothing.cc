@@ -1,6 +1,8 @@
 #include "gurka.h"
 #include "test.h"
 
+#include <boost/format.hpp>
+
 using namespace valhalla;
 
 void set_traffic(gurka::map& map) {

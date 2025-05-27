@@ -1,7 +1,4 @@
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-
+#include "meili/routing.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodetransition.h"
@@ -10,7 +7,9 @@
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 
-#include "meili/routing.h"
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace valhalla {
 namespace meili {

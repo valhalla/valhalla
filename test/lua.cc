@@ -1,32 +1,52 @@
-#include "test.h"
-
-#include <string>
-
 #include "mjolnir/graph_lua_proc.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmdata.h"
+#include "test.h"
+
+#include <osmium/builder/osm_object_builder.hpp>
+
+#include <string>
 
 using namespace valhalla;
 
 namespace {
+struct TagsBuilder {
+  osmium::memory::Buffer buffer;
+  osmium::builder::WayBuilder way_builder;
+  osmium::builder::TagListBuilder tags_builder;
+
+  TagsBuilder()
+      : buffer(1024, osmium::memory::Buffer::auto_grow::yes), way_builder(buffer),
+        tags_builder(way_builder) {
+  }
+
+  void insert(const std::pair<std::string, std::string>& tag) {
+    tags_builder.add_tag(tag);
+  }
+
+  const osmium::TagList& get() {
+    return way_builder.object().tags();
+  }
+};
+
 TEST(Lua, ZeroMantissa) {
   mjolnir::LuaTagTransform lua(std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len));
 
-  mjolnir::Tags tags;
+  TagsBuilder tags;
   // Check that decimals are properly parsed
   tags.insert({"highway", "primary"});
   tags.insert({"maxheight", "2.0"});
-  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags);
+  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags.get());
   ASSERT_FLOAT_EQ(2.0f, std::stof(results["maxheight"]));
 }
 
-void assert_height_parses(std::string maxheight, float expected) {
+void assert_height_parses(const std::string& maxheight, float expected) {
   mjolnir::LuaTagTransform lua(std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len));
 
-  mjolnir::Tags tags;
+  TagsBuilder tags;
   tags.insert({"highway", "tertiary"});
   tags.insert({"maxheight", maxheight});
-  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags);
+  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags.get());
   ASSERT_TRUE(results.count("maxheight") == 1);
   ASSERT_FLOAT_EQ(expected, std::stof(results["maxheight"]));
 }
@@ -92,10 +112,10 @@ TEST(Lua, NumberDoublePeriod) {
   // dots. This probably shouldn't be parsed?
   mjolnir::LuaTagTransform lua(std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len));
 
-  mjolnir::Tags tags;
+  TagsBuilder tags;
   tags.insert({"highway", "tertiary"});
   tags.insert({"maxheight", "3..35"});
-  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags);
+  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags.get());
 
   // check that the maxheight isn't present...
   ASSERT_TRUE(results.count("maxheight") == 0);
@@ -109,7 +129,7 @@ TEST(Lua, TestForwardBackward) {
   // dots. This probably shouldn't be parsed?
   mjolnir::LuaTagTransform lua(std::string(lua_graph_lua, lua_graph_lua + lua_graph_lua_len));
 
-  mjolnir::Tags tags;
+  TagsBuilder tags;
   tags.insert({"highway", "tertiary"});
   tags.insert({"maxheight:forward", "1"});
   tags.insert({"maxheight:backward", "1"});
@@ -119,7 +139,7 @@ TEST(Lua, TestForwardBackward) {
   tags.insert({"maxwidth:backward", "1"});
   tags.insert({"maxweight:forward", "1"});
   tags.insert({"maxweight:backward", "1"});
-  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags);
+  auto results = lua.Transform(mjolnir::OSMType::kWay, 1, tags.get());
 
   // check that the maxheight is present...
   ASSERT_TRUE(results.count("maxheight_forward") == 1);

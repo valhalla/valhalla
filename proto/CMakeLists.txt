@@ -15,14 +15,6 @@ set(protobuf_descriptors
   isochrone.proto
   expansion.proto)
 
-if(ENABLE_DATA_TOOLS)
-  # Only mjolnir needs the OSM PBF descriptors
-  list(APPEND protobuf_descriptors
-    ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/fileformat.proto
-    ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/osmformat.proto)
-endif()
-
-
 protobuf_generate_cpp(protobuf_srcs protobuf_hdrs ${protobuf_descriptors})
 
 valhalla_module(NAME proto

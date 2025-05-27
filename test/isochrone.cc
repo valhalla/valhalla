@@ -1,18 +1,17 @@
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "loki/worker.h"
-#include "thor/worker.h"
-
 #include "gurka/gurka.h"
+#include "loki/worker.h"
 #include "test.h"
+#include "thor/worker.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 #ifdef ENABLE_GDAL
 #include <gdal_priv.h>
@@ -187,6 +186,7 @@ TEST(Isochrones, Basic) {
   GraphReader reader(cfg.get_child("mjolnir"));
 
   {
+    SCOPED_TRACE("basic request 1 failed");
     const auto request =
         R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"auto","contours":[{"time":9.1}],"polygons":false,"generalize":55})";
     const auto expected =
@@ -195,6 +195,7 @@ TEST(Isochrones, Basic) {
   }
 
   {
+    SCOPED_TRACE("basic request 2 failed");
     const auto request =
         R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","costing_options":{"bicycle":{"service_penalty":0}},"contours":[{"time":15}],"polygons":true,"denoise":0.2})";
     const auto expected =
@@ -203,6 +204,7 @@ TEST(Isochrones, Basic) {
   }
 
   {
+    SCOPED_TRACE("basic request 3 failed");
     const auto request =
         R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","costing_options":{"bicycle":{"service_penalty":0}},"contours":[{"time":15}],"show_locations":true})";
     const auto expected =
@@ -212,6 +214,7 @@ TEST(Isochrones, Basic) {
 
   // multi-location
   {
+    SCOPED_TRACE("basic request 4 failed");
     const auto request =
         R"({"costing":"auto","locations":[{"lon":5.086633,"lat":52.075911},{"lon":5.128852,"lat":52.109455}],"contours":[{"time":2}],"denoise":0,"generalize":100,"polygons":true})";
     const auto expected =
@@ -221,6 +224,7 @@ TEST(Isochrones, Basic) {
 
   // holes
   {
+    SCOPED_TRACE("basic request 5 failed");
     const auto request =
         R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"time":1}],"denoise":0,"generalize":0,"polygons":true})";
     const auto expected =
@@ -246,7 +250,7 @@ TEST(Isochrones, OriginEdge) {
                                  {{"/contours/0/time", "10"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
-  auto WaypointToBoostPoint = [&](std::string waypoint) {
+  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
     auto point = map.nodes[waypoint];
     return point_type(point.x(), point.y());
   };
@@ -281,7 +285,7 @@ TEST(Isochrones, LongEdge) {
                                  {{"/contours/0/time", "15"}}, {}, &geojson);
   std::vector<PointLL> iso_polygon = polygon_from_geojson(geojson);
 
-  auto WaypointToBoostPoint = [&](std::string waypoint) {
+  auto WaypointToBoostPoint = [&](const std::string& waypoint) {
     auto point = map.nodes[waypoint];
     return point_type(point.x(), point.y());
   };
@@ -493,6 +497,31 @@ TEST(Isochrones, test_geotiff_output_time_distance) {
     }
     ASSERT_EQ(no_intermediate_values, false);
   }
+  VSIFCloseL(handle);
+}
+TEST(Isochrones, test_geotiff_vertical_orientation) {
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+
+  const auto request =
+      R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"distance":1}], "format": "geotiff"})";
+  Api request_pbf;
+  ParseApi(request, Options::isochrone, request_pbf);
+  loki_worker.isochrones(request_pbf);
+  std::string geotiff = thor_worker.isochrones(request_pbf);
+
+  std::string name = "/vsimem/test_isogrid_geotiff_d.tif";
+  unsigned char buffer[geotiff.length()];
+  std::copy(geotiff.cbegin(), geotiff.cend(), buffer);
+  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
+  auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
+  int y = geotiff_dataset->GetRasterYSize();
+  double geoTransform[6];
+  geotiff_dataset->GetGeoTransform(geoTransform);
+  double topY = geoTransform[3] + 0 * geoTransform[4] + 0 * geoTransform[5];
+  double bottomY = geoTransform[3] + 0 * geoTransform[4] + y * geoTransform[5];
+  ASSERT_TRUE(topY > bottomY);
+
   VSIFCloseL(handle);
 }
 #endif

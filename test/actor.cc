@@ -1,11 +1,8 @@
-#include <functional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-
 #include "tyr/actor.h"
-
 #include "test.h"
+
+#include <functional>
+#include <string>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

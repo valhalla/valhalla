@@ -1,17 +1,15 @@
-#include <cstdint>
-#include <functional>
-#include <sstream>
-#include <vector>
-
 #include "midgard/encoded.h"
 #include "midgard/util.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 #include "route_serializer_osrm.h"
 #include "route_serializer_valhalla.cc"
 #include "tyr/serializers.h"
 
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
+#include <cstdint>
+#include <sstream>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::tyr;

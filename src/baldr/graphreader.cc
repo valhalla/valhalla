@@ -1,17 +1,16 @@
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <sys/stat.h>
-#include <utility>
-
+#include "baldr/graphreader.h"
 #include "baldr/connectivity_map.h"
 #include "baldr/curl_tilegetter.h"
-#include "baldr/graphreader.h"
 #include "filesystem.h"
 #include "incident_singleton.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "shortcut_recovery.h"
+
+#include <sys/stat.h>
+
+#include <string>
+#include <utility>
 
 using namespace valhalla::midgard;
 
@@ -1027,6 +1026,10 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
   int end_index = end - itile->locations().begin();
 
   return {itile, begin_index, end_index};
+}
+
+graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
+  return reader_.GetGraphTile(graphid);
 }
 
 const valhalla::IncidentsTile::Metadata&

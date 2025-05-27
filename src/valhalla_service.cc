@@ -1,15 +1,9 @@
 #include <fstream>
-#include <functional>
 #include <iostream>
 #include <list>
-#include <memory>
-#include <set>
-#include <sstream>
-#include <stdexcept>
 #include <streambuf>
 #include <string>
 #include <thread>
-#include <unordered_set>
 
 #ifdef ENABLE_SERVICES
 #include <prime_server/http_protocol.hpp>
@@ -18,9 +12,8 @@ using namespace prime_server;
 #endif
 
 #include "config.h"
-#include "midgard/logging.h"
-
 #include "loki/worker.h"
+#include "midgard/logging.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"

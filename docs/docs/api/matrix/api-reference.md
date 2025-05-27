@@ -11,7 +11,7 @@ The time distance matrix service takes a `sources` and `targets` to list locatio
 The matrix request run locally takes the form of `localhost:8002/sources_to_targets?json={}`, where the JSON inputs inside the `{}` includes at least one location for both sources and for targets as well as the route costing type and options for the route costing model.
 
 
-For example, while at your office, you want to know the times and distances to walk to several restaurants where you could have dinner, as well as the times and distances from each restaurant to the train station for your commute home. This will help you determine where to eat. 
+For example, while at your office, you want to know the times and distances to walk to several restaurants where you could have dinner, as well as the times and distances from each restaurant to the train station for your commute home. This will help you determine where to eat.
 
 `one-to-many using /sources_to_targets?`
 
@@ -41,9 +41,9 @@ A source and target must include a latitude and longitude in decimal degrees. Th
 | :--------- | :----------- |
 | `lat` | Latitude of the source/target in degrees. |
 | `lon` | Longitude of the source/target in degrees. |
-| `date_time` | Expected date/time for the user to be at the location using the ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. `date_time` as location input offers more granularity over setting time than the global `date_time` object (see below). 
+| `date_time` | Expected date/time for the user to be at the location using the ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. `date_time` as location input offers more granularity over setting time than the global `date_time` object (see below).
 
-You can refer to the [route location documentation](../turn-by-turn/api-reference.md#locations) for more information on specifying locations.  
+You can refer to the [route location documentation](../turn-by-turn/api-reference.md#locations) for more information on specifying locations.
 
 **Note**: `date_time` strings behave differently for `sources_to_targets` than for `route`. If set on the `sources` **and** there's more `targets` than `sources`, it'll behave like a "Specified departure time" on the `sources`. If set on the `targets` **and** there's less `targets` than `sources`, it'll behave like a "Specified arrival time" on the `targets`.
 
@@ -73,25 +73,34 @@ However, there are important limitations of the `/sources_to_targets` service's 
 
 ## Outputs of the matrix service
 
-If a matrix request has been named using the optional `&id=` input, then the name will be returned as a string `id`.
-
-These are the results of a request to the Time-Distance Matrix service.
+Depending on the `verbose` (default: `true`) request parameter, the result of the Time-Distance Matrix service is different.
+In both (`"verbose": true` and `"verbose": false`) cases, these parameters are present:
 
 | Item | Description |
 | :---- | :----------- |
-| `sources_to_targets` | Returns an array of time and distance between the sources and the targets. The array is **row-ordered**. This means that the time and distance from the first location to all others forms the first row of the array, followed by the time and distance from the second source location to all target locations, etc. |
-| `distance` | The computed distance between each set of points. Distance will always be 0.00 for the first element of the time-distance array for `one_to_many`, the last element in a `many_to_one`, and the first and last elements of a `many_to_many`. |
-| `time` | The computed time between each set of points. Time will always be 0 for the first element of the time-distance array for `one_to_many`, the last element in a `many_to_one`, and the first and last elements of a `many_to_many`.  |
-| `to_index` | The destination index into the locations array. |
-| `from_index` | The origin index into the locations array. |
-| `date_time`  | (optional) If the date_time was valid for an origin, `date_time` will return the local time at the destination. |
-| `locations` | The specified array of lat/lngs from the input request.
-| `units` | Distance units for output. Allowable unit types are mi (miles) and km (kilometers). If no unit type is specified, the units default to kilometers. |
-| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
+| `id`                 | Name of the request. Included only if a matrix request has been named using the optional `id` input. |
+| `algorithm`          | The algorithm used to compute the results. Can be `"timedistancematrix"`, `"costmatrix"` or `"timedistancebssmatrix"` |
+| `units` | Distance units for output. Allowable unit types are `"miles"` and `"kilometers"`. If no unit type is specified in the input, the units default to `"kilometers"`. |
+| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. |
 
 See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
 
+### Verbose mode (`"verbose": true`)
+
+The following parameters are only present in `"verbose": true` mode:
+
+| Item | Description |
+| :---- | :----------- |
+| `sources` | The sources passed to the request. |
+| `targets` | The targets passed to the request. |
+| `sources_to_targets` | An array of time and distance between the sources and the targets.<br>The array is <b>row-ordered</b>, meaning the time and distance from the first location to all others forms the first row of the array, followed by the time and distance from the second source location to all target locations, etc.<br>The Object contained in the arrays contains the following fields:<ul><li><code>distance</code>: The computed distance between each set of points. Distance will always be 0.00 for the first element of the time-distance array for <code>one_to_many</code>, the last element in a <code>many_to_one</code>, and the first and last elements of a <code>many_to_many</code>.</li><li><code>time</code>: The computed time between each set of points. Time will always be 0 for the first element of the time-distance array for <code>one_to_many</code>, the last element in a <code>many_to_one</code>, and the first and last elements of a <code>many_to_many</code>.</li><li><code>to_index</code>: The destination index into the locations array.</li><li><code>from_index</code>: The origin index into the locations array.</li><li><code>date_time</code>: When a user will arrive at/depart from this location. See <a href="#time-dependent-matrices">the part above</a> where we explain how time dependent matices work for further context.<br> Note: If the time is above the setting <code>max_timedep_distance_matrix</code> this is skipped.<br>Note: If the departure/arrival time is unspecified it is not computed.</li><li><code>time_zone_offset</code>, <code>time_zone_name</code>: time zone at the target location. See <a href="#time-dependent-matrices">here</a> on requesting time dependent matrices. Note: this is skipped if the time is greater than <code>max_timedep_distance_matrix</code> or no route was found for the location pair.</li><li>`begin_heading` **beta**: the heading at the beginning of path in degrees</li><li>`end_heading` **beta**: the heading at the end of the path in degrees</li><li>`begin_lat` **beta**: the latitude of the correlated source location for this connection</li><li>`begin_lon` **beta**: the longitude of the correlated source location for this connection</li><li>`begin_lat` **beta**: the latitude of the correlated target location for this connection</li><li>`begin_lon` **beta**: the longitude of the correlated target location for this connection</li></ul> |
+
+### Concise mode  (`"verbose": false`)
+
+| Item | Description |
+| :---- | :----------- |
+| `sources_to_targets` | Returns an object with <code>durations</code> and <code>distances</code> as <b>row-ordered</b> contents of the values above. |
+
 ## Demonstration
 
-[View an interactive demo](http://valhalla.github.io/demos/matrix//).
-
+[View an interactive demo](https://valhalla.github.io/demos/matrix//).

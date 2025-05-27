@@ -1,13 +1,6 @@
 #ifndef VALHALLA_THOR_COSTMATRIX_H_
 #define VALHALLA_THOR_COSTMATRIX_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <set>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -19,6 +12,11 @@
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <cstdint>
+#include <memory>
+#include <set>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -123,7 +121,11 @@ public:
 protected:
   uint32_t max_reserved_labels_count_;
   uint32_t max_reserved_locations_count_;
-  bool check_reverse_connections_;
+  bool check_reverse_connection_;
+
+  // upper bound for the number of additional iterations per expansion once a connection has been
+  // found
+  uint32_t max_iterations_;
 
   // Access mode used by the costing method
   uint32_t access_mode_;
@@ -147,7 +149,7 @@ protected:
   std::array<std::vector<LocationStatus>, 2> locs_status_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each location
-  std::array<std::vector<std::vector<sif::HierarchyLimits>>, 2> hierarchy_limits_;
+  std::array<std::vector<std::vector<valhalla::HierarchyLimits>>, 2> hierarchy_limits_;
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
@@ -194,17 +196,21 @@ protected:
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
    * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
    */
   void CheckForwardConnections(const uint32_t source,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
-                               baldr::GraphReader& graphreader);
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   bool Expand(const uint32_t index,
               const uint32_t n,
               baldr::GraphReader& graphreader,
+              const valhalla::Options& options,
               const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
               const bool invariant = false);
 
@@ -228,11 +234,14 @@ protected:
    * @param  pred        Edge label of the predecessor.
    * @param  n           Iteration counter.
    * @param  graphreader the graph reader instance
+   * @param  options     the request options to check for the position along origin and destination
+   *                     edges
    */
   void CheckReverseConnections(const uint32_t target,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
-                               baldr::GraphReader& graphreader);
+                               baldr::GraphReader& graphreader,
+                               const valhalla::Options& options);
 
   /**
    * Update status when a connection is found.
@@ -300,14 +309,12 @@ protected:
    */
   std::string RecostFormPath(baldr::GraphReader& graphreader,
                              BestCandidate& connection,
-                             const valhalla::Location& source,
-                             const valhalla::Location& target,
+                             Api& request,
                              const uint32_t source_idx,
                              const uint32_t target_idx,
+                             const uint32_t connection_idx,
                              const baldr::TimeInfo& time_info,
-                             const bool invariant,
-                             const ShapeFormat shape_format);
-
+                             const bool invariant);
   /**
    * Sets the date_time on the origin locations.
    *
@@ -326,20 +333,6 @@ protected:
     }
 
     return infos;
-  };
-
-  void ModifyHierarchyLimits() {
-    // Distance threshold optimized for unidirectional search. For bidirectional case
-    // they can be lowered.
-    // Decrease distance thresholds only for arterial roads for now
-    for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
-      if (hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 2.f;
-    }
-    for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
-      if (hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
-    }
   };
 
   /**

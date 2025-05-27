@@ -1,5 +1,4 @@
 #include "baldr/graphtile.h"
-
 #include "baldr/compression_utils.h"
 #include "baldr/curl_tilegetter.h"
 #include "baldr/datetime.h"
@@ -11,6 +10,7 @@
 #include "midgard/tiles.h"
 
 #include <boost/algorithm/string.hpp>
+
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -18,8 +18,6 @@
 #include <ctime>
 #include <fstream>
 #include <iomanip>
-#include <iostream>
-#include <locale>
 #include <string>
 #include <thread>
 #include <utility>

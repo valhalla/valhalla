@@ -1,13 +1,13 @@
 #include "filesystem.h"
+#include "test.h"
+
+#include <sys/stat.h>
 
 #include <algorithm>
 #include <fstream>
 #include <string>
-#include <sys/stat.h>
 #include <thread>
 #include <vector>
-
-#include "test.h"
 
 // TODO: move this out of the test and into the filesystem replacement
 // and then remove filesystem from mjolnir as well

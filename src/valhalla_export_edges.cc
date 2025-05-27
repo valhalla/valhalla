@@ -1,20 +1,18 @@
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-
+#include "argparse_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 
-#include <algorithm>
+#include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
+
+#include <algorithm>
+#include <cstdint>
 #include <iostream>
 #include <unordered_map>
-#include <utility>
-
-#include "argparse_utils.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -178,11 +176,11 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  // get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
-
   // configure logging here, we want it to go to stderr
   valhalla::midgard::logging::Configure({{"type", "std_err"}, {"color", "true"}});
+
+  // get something we can use to fetch tiles
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // keep the global number of edges encountered at the point we encounter each tile
   // this allows an edge to have a sequential global id and makes storing it very small

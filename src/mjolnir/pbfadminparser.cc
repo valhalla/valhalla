@@ -1,16 +1,15 @@
-
 #include "mjolnir/pbfadminparser.h"
 #include "admin_lua_proc.h"
-#include "baldr/tilehierarchy.h"
 #include "idtable.h"
 #include "midgard/logging.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmadmindata.h"
-#include "mjolnir/osmpbfparser.h"
-#include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
+#include <osmium/io/pbf_input.hpp>
+#include <osmium/osm/entity_bits.hpp>
 
+#include <string>
 #include <utility>
 
 using namespace valhalla::midgard;
@@ -23,65 +22,61 @@ namespace {
 // reality to maintain performance
 constexpr uint64_t kMaxOSMNodesHint = 1300000000;
 
-struct admin_callback : public OSMPBF::Callback {
-public:
-  admin_callback() = delete;
-  admin_callback(const admin_callback&) = delete;
-  virtual ~admin_callback() {
-  }
+struct admin_parser {
   // Construct PBFAdminParser based on properties file and input PBF extract
-  admin_callback(const boost::property_tree::ptree& pt, OSMAdminData& osmdata)
+  admin_parser(const boost::property_tree::ptree& pt, OSMAdminData& osmdata)
       : lua_(std::string(lua_admin_lua, lua_admin_lua + lua_admin_lua_len)),
         shape_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)),
         members_(pt.get<unsigned long>("id_table_size", kMaxOSMNodesHint)), osm_admin_data_(osmdata) {
   }
 
-  virtual void
-  node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& /*tags*/) override {
+  void node(const osmium::Node& node) {
     // Check if it is in the list of nodes used by ways
-    if (!shape_.get(osmid)) {
+    if (!shape_.get(node.id())) {
       return;
     }
 
     ++osm_admin_data_.osm_node_count;
 
-    osm_admin_data_.shape_map.emplace(osmid, PointLL(lng, lat));
+    osm_admin_data_.shape_map.emplace(node.id(),
+                                      PointLL(node.location().lon(), node.location().lat()));
 
     if (osm_admin_data_.shape_map.size() % 500000 == 0) {
       LOG_INFO("Processed " + std::to_string(osm_admin_data_.shape_map.size()) + " nodes on ways");
     }
   }
 
-  virtual void way_callback(const uint64_t osmid,
-                            const OSMPBF::Tags& /*tags*/,
-                            const std::vector<uint64_t>& nodes) override {
+  void way(const osmium::Way& way) {
 
     // Check if it is in the list of ways used by relations
-    if (!members_.get(osmid)) {
+    if (!members_.get(way.id())) {
       return;
     }
 
-    for (const auto node : nodes) {
+    std::vector<uint64_t> node_ids;
+    node_ids.reserve(way.nodes().size());
+    for (const auto& node : way.nodes()) {
+      node_ids.push_back(node.ref());
+    }
+
+    for (const auto node : node_ids) {
       ++osm_admin_data_.node_count;
       // Mark the nodes that we will care about when processing nodes
       shape_.set(node);
     }
 
-    osm_admin_data_.way_map.emplace(osmid, nodes);
+    osm_admin_data_.way_map.emplace(way.id(), std::move(node_ids));
   }
 
-  virtual void relation_callback(const uint64_t osmid,
-                                 const OSMPBF::Tags& tags,
-                                 const std::vector<OSMPBF::Member>& members) override {
-    // Get tags
-    auto results = lua_.Transform(OSMType::kRelation, osmid, tags);
-    if (results.size() == 0) {
+  void relation(const osmium::Relation& relation) {
+    auto tags = lua_.Transform(OSMType::kRelation, relation.id(), relation.tags());
+    if (tags.empty()) {
       return;
     }
 
-    OSMAdmin admin{osmid};
+    OSMAdmin admin{static_cast<uint64_t>(relation.id())};
 
-    for (const auto& tag : results) {
+    for (const auto& tag : tags) {
       // TODO:  Store multiple all the names
       if (tag.first == "name" && !tag.second.empty()) {
         admin.name_index = osm_admin_data_.name_offset_map.index(tag.second);
@@ -100,14 +95,15 @@ public:
       }
     }
 
+    const auto& members = relation.members();
     admin.ways.reserve(members.size());
     admin.roles.reserve(members.size());
     for (const auto& member : members) {
 
-      if (member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
-        members_.set(member.member_id);
-        admin.ways.push_back(member.member_id);
-        admin.roles.push_back(member.role != "inner"); // assume outer
+      if (member.type() == osmium::item_type::way) {
+        members_.set(member.ref());
+        admin.ways.push_back(member.ref());
+        admin.roles.push_back(std::string(member.role()) != "inner"); // assume outer
         ++osm_admin_data_.osm_way_count;
       }
     }
@@ -117,10 +113,6 @@ public:
     }
 
     osm_admin_data_.admins.push_back(std::move(admin));
-  }
-
-  virtual void changeset_callback(const uint64_t changeset_id) override {
-    osm_admin_data_.max_changeset_id_ = std::max(osm_admin_data_.max_changeset_id_, changeset_id);
   }
 
   // Lua Tag Transformation class
@@ -144,38 +136,34 @@ OSMAdminData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
   // Create OSM data. Set the member pointer so that the parsing callback
   // methods can use it.
   OSMAdminData osmdata{};
-  admin_callback callback(pt, osmdata);
+  admin_parser parser(pt, osmdata);
 
   LOG_INFO("Parsing files: " + boost::algorithm::join(input_files, ", "));
 
-  // hold open all the files so that if something else (like diff application)
-  // needs to mess with them we wont have troubles with inodes changing underneath us
-  std::list<std::ifstream> file_handles;
-  for (const auto& input_file : input_files) {
-    file_handles.emplace_back(input_file, std::ios::binary);
-    if (!file_handles.back().is_open()) {
-      throw std::runtime_error("Unable to open: " + input_file);
-    }
-  }
-
   // Parse each input file for relations
   LOG_INFO("Parsing relations...");
-  for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::RELATIONS |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+  for (auto& file : input_files) {
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::relation);
+    while (const osmium::memory::Buffer buffer = reader.read()) {
+      for (const osmium::memory::Item& item : buffer) {
+        parser.relation(static_cast<const osmium::Relation&>(item));
+      }
+    }
+    reader.close(); // Explicit close to get an exception in case of an error.
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.admins.size()) +
            " admin polygons comprised of " + std::to_string(osmdata.osm_way_count) + " ways");
 
   // Parse the ways.
   LOG_INFO("Parsing ways...");
-  for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::WAYS |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+  for (auto& file : input_files) {
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
+    while (const osmium::memory::Buffer buffer = reader.read()) {
+      for (const osmium::memory::Item& item : buffer) {
+        parser.way(static_cast<const osmium::Way&>(item));
+      }
+    }
+    reader.close(); // Explicit close to get an exception in case of an error.
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.way_map.size()) + " ways comprised of " +
            std::to_string(osmdata.node_count) + " nodes");
@@ -183,11 +171,14 @@ OSMAdminData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
   // Parse node in all the input files. Skip any that are not marked from
   // being used in a way.
   LOG_INFO("Parsing nodes...");
-  for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
-                                                        OSMPBF::Interest::CHANGESETS),
-                          callback);
+  for (auto& file : input_files) {
+    osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
+    while (const osmium::memory::Buffer buffer = reader.read()) {
+      for (const osmium::memory::Item& item : buffer) {
+        parser.node(static_cast<const osmium::Node&>(item));
+      }
+    }
+    reader.close(); // Explicit close to get an exception in case of an error.
   }
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) + " nodes");
 

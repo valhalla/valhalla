@@ -1,21 +1,19 @@
 #ifndef VALHALLA_ODIN_MANEUVER_H_
 #define VALHALLA_ODIN_MANEUVER_H_
 
-#include <cstdint>
-#include <list>
-#include <memory>
-#include <string>
-#include <unordered_map>
-
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
-
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
 #include <valhalla/proto/common.pb.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
+
+#include <cstdint>
+#include <list>
+#include <memory>
+#include <string>
 
 using namespace valhalla::baldr;
 

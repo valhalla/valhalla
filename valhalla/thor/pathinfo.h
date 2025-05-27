@@ -1,7 +1,6 @@
 #ifndef VALHALLA_THOR_PATHINFO_H_
 #define VALHALLA_THOR_PATHINFO_H_
 
-#include <unordered_map>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/sif/costconstants.h>
 

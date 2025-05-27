@@ -2,9 +2,8 @@
 #include "baldr/datetime.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
+
 #include <algorithm>
-#include <iostream> // TODO remove if not needed
-#include <map>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

@@ -1,5 +1,7 @@
 #include "baldr/admin.h"
 
+#include <algorithm>
+
 namespace {
 
 // For transforming ISO 3166-1 country codes from alpha2 to alpha3

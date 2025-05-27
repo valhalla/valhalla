@@ -1,16 +1,14 @@
-#include <pybind11/pybind11.h>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/make_shared.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <sstream>
-#include <string>
-
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "tyr/actor.h"
+
+#include <boost/make_shared.hpp>
+#include <boost/noncopyable.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <pybind11/pybind11.h>
+
+#include <string>
 
 namespace vt = valhalla::tyr;
 namespace {

@@ -1,13 +1,6 @@
 #ifndef VALHALLA_THOR_Dijkstras_H_
 #define VALHALLA_THOR_Dijkstras_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -18,6 +11,11 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
+
+#include <cstdint>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -77,7 +75,8 @@ public:
                                                   const Expansion::EdgeStatus,
                                                   float,
                                                   uint32_t,
-                                                  float)>;
+                                                  float,
+                                                  const Expansion_ExpansionType)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }

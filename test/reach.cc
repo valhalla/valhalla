@@ -1,16 +1,14 @@
-#include "gurka/gurka.h"
-#include "test.h"
-
+#include "loki/reach.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "loki/reach.h"
+#include "gurka/gurka.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
+#include "test.h"
 
 #include <algorithm>
-#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
