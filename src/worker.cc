@@ -1081,15 +1081,26 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
   if (exclude_polygons) {
-    if (!exclude_polygons->IsArray()) {
+    if (!exclude_polygons->IsArray() || !exclude_polygons->IsObject()) {
       add_warning(api, 204);
     } else {
       // it has to be either an array of rings
       // or an array of objects
       auto* rings_pbf = options.mutable_exclude_polygons();
       auto* levels_pbf = options.mutable_exclude_levels();
+
+      auto exclude_polygons_array_ptr = exclude_polygons;
+
+      // if it's not an array, make sure it's a GeoJSON FeatureCollection
+      if (!exclude_polygons->IsArray()) {
+        auto fc = rapidjson::get_optional<std::string>(doc, "/exclude_polygons/type");
+        auto features = rapidjson::get_child_optional(doc, "/exclude_polygons/features");
+        if (fc && *fc == "FeatureCollection" && features) {
+          exclude_polygons_array_ptr = features;
+        }
+      }
       try {
-        for (const auto& req_poly : exclude_polygons->GetArray()) {
+        for (const auto& req_poly : exclude_polygons_array_ptr->GetArray()) {
           if ((!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) &&
               (!req_poly.IsObject() || (req_poly.IsObject() && req_poly.GetObject().ObjectEmpty()))) {
             continue;
@@ -1099,13 +1110,15 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           if (req_poly.IsArray()) {
             parse_ring(pbf_ring, req_poly);
           } else { // it's an object, so it better have coordinates and maybe levels
-            auto coordinates = rapidjson::get_child_optional(req_poly, "/coordinates");
-            if (coordinates) {
+            // we only support one ring
+            auto coordinates = rapidjson::get_child_optional(req_poly, "/geometry/coordinates/0");
+            auto geom_type = rapidjson::get_child_optional(req_poly, "/geometry/type");
+            if (coordinates && geom_type && *geom_type == "Polygon" && coordinates->IsArray()) {
               parse_ring(pbf_ring, *coordinates);
             } else {
               throw std::runtime_error("Expected object to have coordinates member");
             }
-            auto levels = rapidjson::get_child_optional(req_poly, "/levels");
+            auto levels = rapidjson::get_child_optional(req_poly, "/properties/levels");
             if (levels && levels->IsArray()) {
               // parse the levels
               for (const auto& level : levels->GetArray()) {
