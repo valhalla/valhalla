@@ -579,7 +579,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   if (expansion_callback_) {
     expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix",
                         Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost,
-                        static_cast<Expansion_ExpansionType>(expansion_direction));
+                        static_cast<Expansion_ExpansionType>(
+                            !static_cast<bool>(expansion_direction)));
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -625,7 +626,9 @@ bool CostMatrix::Expand(const uint32_t index,
         pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
     expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
                         Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
-                        pred.cost().cost, static_cast<Expansion_ExpansionType>(expansion_direction));
+                        pred.cost().cost,
+                        static_cast<Expansion_ExpansionType>(
+                            !static_cast<bool>(expansion_direction)));
   }
 
   if (FORWARD) {
