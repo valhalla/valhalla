@@ -186,6 +186,7 @@ TEST(Isochrones, Basic) {
   GraphReader reader(cfg.get_child("mjolnir"));
 
   {
+    SCOPED_TRACE("basic request 1 failed");
     const auto request =
         R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"auto","contours":[{"time":9.1}],"polygons":false,"generalize":55})";
     const auto expected =
@@ -194,6 +195,7 @@ TEST(Isochrones, Basic) {
   }
 
   {
+    SCOPED_TRACE("basic request 2 failed");
     const auto request =
         R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","costing_options":{"bicycle":{"service_penalty":0}},"contours":[{"time":15}],"polygons":true,"denoise":0.2})";
     const auto expected =
@@ -202,6 +204,7 @@ TEST(Isochrones, Basic) {
   }
 
   {
+    SCOPED_TRACE("basic request 3 failed");
     const auto request =
         R"({"locations":[{"lat":52.078937,"lon":5.115321}],"costing":"bicycle","costing_options":{"bicycle":{"service_penalty":0}},"contours":[{"time":15}],"show_locations":true})";
     const auto expected =
@@ -211,6 +214,7 @@ TEST(Isochrones, Basic) {
 
   // multi-location
   {
+    SCOPED_TRACE("basic request 4 failed");
     const auto request =
         R"({"costing":"auto","locations":[{"lon":5.086633,"lat":52.075911},{"lon":5.128852,"lat":52.109455}],"contours":[{"time":2}],"denoise":0,"generalize":100,"polygons":true})";
     const auto expected =
@@ -220,6 +224,7 @@ TEST(Isochrones, Basic) {
 
   // holes
   {
+    SCOPED_TRACE("basic request 5 failed");
     const auto request =
         R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"time":1}],"denoise":0,"generalize":0,"polygons":true})";
     const auto expected =

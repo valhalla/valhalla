@@ -134,7 +134,7 @@ enum class RoadClass : uint8_t {
   kUnclassified = 5,
   kResidential = 6,
   kServiceOther = 7,
-  kInvalid = 8,
+  kInvalid = 8, // only 3 bits in DE for road class
 };
 inline RoadClass stringToRoadClass(const std::string& s) {
   static const std::unordered_map<std::string, RoadClass> stringToRoadClass =

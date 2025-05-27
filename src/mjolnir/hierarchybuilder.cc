@@ -309,6 +309,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 
+      // reset shortcuts after hijacking them for reclassification
       newedge.set_hierarchy_roadclass(RoadClass::kMotorway, true);
 
       // Add directed edge
