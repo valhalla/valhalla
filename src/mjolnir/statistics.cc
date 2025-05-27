@@ -1,22 +1,21 @@
-#include <cstdint>
-
-#include "filesystem.h"
-#include "mjolnir/graphvalidator.h"
 #include "statistics.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/json.h"
+#include "baldr/tilehierarchy.h"
+#include "filesystem.h"
+#include "midgard/aabb2.h"
+#include "midgard/logging.h"
+#include "mjolnir/graphvalidator.h"
 
 #include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
 #include <fstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/json.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/aabb2.h"
-#include "midgard/logging.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

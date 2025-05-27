@@ -1,13 +1,13 @@
 #ifndef VALHALLA_ODIN_MANEUVERSBUILDER_H_
 #define VALHALLA_ODIN_MANEUVERSBUILDER_H_
 
-#include <cstdint>
-#include <list>
-
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
+
+#include <cstdint>
+#include <list>
 
 namespace valhalla {
 namespace odin {

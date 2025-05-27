@@ -11,21 +11,21 @@ So in python, the levels are defined as:<br/>
 The following image shows the world at level 0.  Using a world bounding box (-180, -90, 180, 90) the world is split up into 4 degree tiles.  The rows and columns start from the bottom left and increase to the top right.  Tiles are row ordered increasing from west to east.
 
 ![Level 0](images/world_level0.png)
-Image generated using http://geojson.io
+Image generated using https://geojson.io
 
 Using a bounding box for Germany, Pennsylvania, and NYC we can show how the regions would be split up into the 3 levels.  Level 0 is colored in light blue.  Level 1 is light green and level 2 is light red.
 
 ### Germany
 ![Germany](images/germany.png)
-Image generated using http://geojson.io
+Image generated using https://geojson.io
 
 ### Pennsylvania
 ![Pennsylvania](images/pennsylvania.png)
-Image generated using http://geojson.io
+Image generated using https://geojson.io
 
 ### NYC
 ![NYC](images/nyc.png)
-Image generated using http://geojson.io
+Image generated using https://geojson.io
 
 # Sample Tile Code
 Below are some sample functions to help you obtain latitude and longitude coordinates, levels, tile ids, and list of tiles that intersect a bounding box.
@@ -88,7 +88,7 @@ def get_ll(id):
 ```
 ## Get the Level or Hierarchy
 `get_tile_level(73160266)` returns a level of 2.  73160266 is a Valhalla Graphid.<br/>
-`get_tile_level(142438865769)` returns a level of 1.  142438865769 is an Open Traffic Segment id.<br/> 
+`get_tile_level(142438865769)` returns a level of 1.  142438865769 is an Open Traffic Segment id.<br/>
 ## Get the Latitude and Longitude from an ID
 `get_ll(73160266)` returns the bottom left corner of the level 2 tile.  (41.25, -73.75)<br/>
 `get_ll(142438865769)` returns the bottom left corner of the level 1 tile.  (14.0, 121.0)<br/>
@@ -100,6 +100,5 @@ def get_ll(id):
 `get_tile_index(73160266)`  Returns the tile id 756425.<br/>
 `get_tile_index(142438865769)`  Returns the tile id 37741.<br/>
 ## Get Tiles That Intersect a Bounding Box
-`tiles_for_bounding_box(-74.251961,40.512764,-73.755405,40.903125)`  Returns a list of tiles for the NYC bounding box at each level.  
-`[(2, 752102), (2, 753542), (2, 752103), (2, 753543), (2, 752104), (2, 753544), (1, 46905), (1, 46906), (0, 2906)]`  
-
+`tiles_for_bounding_box(-74.251961,40.512764,-73.755405,40.903125)`  Returns a list of tiles for the NYC bounding box at each level.
+`[(2, 752102), (2, 753542), (2, 752103), (2, 753543), (2, 752104), (2, 753544), (1, 46905), (1, 46906), (0, 2906)]`

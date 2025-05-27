@@ -1,8 +1,8 @@
 #pragma once
+#include <valhalla/proto/options.pb.h>
+
 #include <string>
 #include <unordered_map>
-
-#include <valhalla/proto/options.pb.h>
 
 namespace valhalla {
 namespace baldr {

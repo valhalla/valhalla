@@ -1,12 +1,12 @@
-#include <algorithm> // std::copy
-#include <optional>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include "loki/worker.h"
 #include "odin/worker.h"
 #include "test.h"
 #include "thor/worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <algorithm> // std::copy
+#include <optional>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

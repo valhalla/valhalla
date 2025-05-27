@@ -1,14 +1,13 @@
-#include "test.h"
-
-#include <string>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "test.h"
+
+#include <string>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
@@ -31,7 +30,7 @@ TEST(PredictiveTraffic, DISABLED_test_predictive_traffic) {
   auto level = TileHierarchy::levels().rbegin();
   for (; level != TileHierarchy::levels().rend(); ++level) {
     // Create a randomized queue of tiles to work from
-    auto tile_level = *level;
+    const auto& tile_level = *level;
     auto level_tiles = reader.GetTileSet(tile_level.level);
     for (const auto& tile_id : level_tiles) {
       graph_tile_ptr tile = reader.GetGraphTile(tile_id);

@@ -1,21 +1,21 @@
 ### Why is administrative attribution important?
 
-[x] Rental Car 
+[x] Rental Car
 
-[x] Laptop 
+[x] Laptop
 
-[x] Cell 
+[x] Cell
 
-[x] Luggage 
+[x] Luggage
 
-[ ] Passport 
+[ ] Passport
 
 D’oh!  Facepalm!  I totally forgot that my passport has expired.  The fastest route from Detroit, MI to Buffalo, NY is via Canada.   For a US citizen, it is best to use a passport when driving through Canada; therefore, I must seek an alternate route.  What drives me nuts is the fact that most of the routing sites do not provide an option to avoid country crossings.  However, Valhalla does provide the ability to avoid country borders.
 ### Admins and Costing
 
 [Mjolnir](https://github.com/valhalla/mjolnir) pulverizes data into a usable form.  Well, not really...It does, however, give the option to apply attribution to the Valhalla routing data.  An administrative database is created via pbfadminbuilder and can then be used to flag country crossings on edges during the building of the graph data.
 
-Now costing comes into play…Valhalla uses dynamic, run-time costing to form the route path. (Read more about [SIF](http://github.com/valhalla/sif) and dynamic costing [in our previous blog post](https://mapzen.com/blog/dynamic-costing-via-sif).)  A route request to Valhalla includes the name of the costing model and can include optional parameters accepted by the costing mode.  In our case, we are using the Auto costing model and the optional parameters:
+Now costing comes into play…Valhalla uses dynamic, run-time costing to form the route path. (Read more about [SIF](https://github.com/valhalla/sif) and dynamic costing [in our previous blog post](https://mapzen.com/blog/dynamic-costing-via-sif).)  A route request to Valhalla includes the name of the costing model and can include optional parameters accepted by the costing mode.  In our case, we are using the Auto costing model and the optional parameters:
 
 - country_crossing_cost = A cost that is applied when a country crossing is encountered. This cost is added to the estimated time / elapsed time. The default cost is 600 seconds.
 

@@ -1,16 +1,8 @@
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <cxxopts.hpp>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "worker.h"
-
+#include "argparse_utils.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "meili/map_matcher.h"
@@ -20,8 +12,15 @@
 #include "sif/costfactory.h"
 #include "thor/pathinfo.h"
 #include "thor/route_matcher.h"
+#include "worker.h"
 
-#include "argparse_utils.h"
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cstdint>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::sif;
@@ -86,7 +85,7 @@ void walk_edges(const std::string& shape,
                 GraphReader& reader,
                 const valhalla::sif::mode_costing_t& mode_costings,
                 valhalla::sif::TravelMode mode) {
-  auto cost = mode_costings[static_cast<uint32_t>(mode)];
+  const auto& cost = mode_costings[static_cast<uint32_t>(mode)];
 
   // Get shape
   std::vector<PointLL> shape_pts = decode<std::vector<PointLL>>(shape);
@@ -284,7 +283,7 @@ int main(int argc, char* argv[]) {
 
   valhalla::sif::TravelMode mode;
   auto mode_costings = valhalla::sif::CostFactory{}.CreateModeCosting(request.options(), mode);
-  auto cost_ptr = mode_costings[static_cast<uint32_t>(mode)];
+  const auto& cost_ptr = mode_costings[static_cast<uint32_t>(mode)];
 
   // If a shape is entered use edge walking
   if (!map_match) {

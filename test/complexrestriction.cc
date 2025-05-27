@@ -2,7 +2,6 @@
 #include "baldr/complexrestriction.h"
 #include "baldr/graphid.h"
 #include "mjolnir/complexrestrictionbuilder.h"
-
 #include "test.h"
 
 using namespace std;

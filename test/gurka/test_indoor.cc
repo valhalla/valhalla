@@ -1,6 +1,7 @@
 #include "gurka.h"
 #include "mjolnir/osmway.h"
 #include "test.h"
+
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -623,7 +624,7 @@ TEST_F(TestLevels, EdgeInfoJson) {
   ASSERT_EQ(response.GetArray().Size(), 9);
 
   for (size_t i = 0; i < locs.size(); ++i) {
-    auto name = locs[i];
+    const auto& name = locs[i];
     auto edges = rapidjson::Pointer("/" + std::to_string(i) + "/edges").Get(response)->GetArray();
     ASSERT_EQ(edges.Size(), 2);
     auto expected_levels = expected_levels_map[name];

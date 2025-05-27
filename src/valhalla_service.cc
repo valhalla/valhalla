@@ -12,9 +12,8 @@ using namespace prime_server;
 #endif
 
 #include "config.h"
-#include "midgard/logging.h"
-
 #include "loki/worker.h"
+#include "midgard/logging.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"

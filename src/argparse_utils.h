@@ -1,13 +1,13 @@
-#include <iostream>
-
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/config.h>
 #include <valhalla/filesystem.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <iostream>
 
 /**
  * Parses common command line arguments across executables. It
