@@ -11,12 +11,11 @@ using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace baldr {
-class GraphId;
+struct GraphId;
 }
 
 namespace mjolnir {
-
-class OSMWay;
+struct OSMWay;
 
 /**
  * Derived class to build a directed edge given OSM way and other properties.
