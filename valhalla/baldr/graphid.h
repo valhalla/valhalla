@@ -170,15 +170,9 @@ public:
 
   /**
    * The json representation of the id
-   * @return  json
+   * @param writer The writer json object to represent the id
    */
-  json::Value json() const;
-
-  /**
-   * The rapidjson representation of the id
-   * @param writer The writer rapidjson object to represent the id
-   */
-  void rapidjson(rapidjson::writer_wrapper_t& writer) const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
   /**
    * Post increments the id.

@@ -62,7 +62,7 @@ void AccessRestriction::set_value(const uint64_t v) {
   value_ = v;
 }
 
-void AccessRestriction::rapidjson(rapidjson::writer_wrapper_t& writer) const {
+void AccessRestriction::json(rapidjson::writer_wrapper_t& writer) const {
   auto maybe_found = type_to_string.find(type());
   std::string restriction_type = "unsupported";
   if (maybe_found != type_to_string.cend()) {

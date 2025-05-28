@@ -30,7 +30,7 @@ void get_access_restrictions(const graph_tile_ptr& tile,
                              rapidjson::writer_wrapper_t& writer,
                              uint32_t edge_idx) {
   for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
-    res.rapidjson(writer);
+    res.json(writer);
   }
 }
 
@@ -87,7 +87,7 @@ void serialize_edges(const PathLocation& location,
         writer.end_array();
         // write live_speed
         writer.start_object("live_speed");
-        traffic.rapidjson(writer);
+        traffic.json(writer);
         writer.end_object();
 
         // basic rest of it plus edge metadata
@@ -111,15 +111,15 @@ void serialize_edges(const PathLocation& location,
         writer("inbound_reach", static_cast<int64_t>(edge.inbound_reach));
 
         writer.start_object("edge_info");
-        edge_info.rapidjson(writer);
+        edge_info.json(writer);
         writer.end_object();
 
         writer.start_object("edge");
-        directed_edge->rapidjson(writer);
+        directed_edge->json(writer);
         writer.end_object();
 
         writer.start_object("edge_id");
-        edge.id.rapidjson(writer);
+        edge.id.json(writer);
         writer.end_object();
 
         // historical traffic information
@@ -172,10 +172,10 @@ void serialize_nodes(const PathLocation& location,
     auto* node_info = tile->node(n);
 
     if (verbose) {
-      node_info->rapidjson(tile, writer);
+      node_info->json(tile, writer);
 
       writer.start_object("node_id");
-      n.rapidjson(writer);
+      n.json(writer);
       writer.end_object();
     } else {
       midgard::PointLL node_ll = tile->get_node_ll(n);

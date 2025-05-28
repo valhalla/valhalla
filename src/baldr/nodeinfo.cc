@@ -10,37 +10,7 @@ using namespace valhalla::baldr;
 
 namespace {
 
-json::MapPtr access_json(uint16_t access) {
-  return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
-                    {"bus", static_cast<bool>(access & kBusAccess)},
-                    {"car", static_cast<bool>(access & kAutoAccess)},
-                    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
-                    {"HOV", static_cast<bool>(access & kHOVAccess)},
-                    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
-                    {"taxi", static_cast<bool>(access & kTaxiAccess)},
-                    {"truck", static_cast<bool>(access & kTruckAccess)},
-                    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)}});
-}
-
-json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
-  // admin
-  auto m = json::map({
-      {"iso_3166-1", admin.country_iso()},
-      {"country", admin.country_text()},
-      {"iso_3166-2", admin.state_iso()},
-      {"state", admin.state_text()},
-  });
-
-  // timezone
-  auto tz = DateTime::get_tz_db().from_index(tz_index);
-  if (tz) {
-    m->emplace("time_zone_name", tz->name());
-  }
-
-  return m;
-}
-
-void access_rapidjson(uint16_t access, rapidjson::writer_wrapper_t& writer) {
+void access_json(uint16_t access, rapidjson::writer_wrapper_t& writer) {
   writer("bicycle", static_cast<bool>(access & kBicycleAccess));
   writer("bus", static_cast<bool>(access & kBusAccess));
   writer("car", static_cast<bool>(access & kAutoAccess));
@@ -52,7 +22,7 @@ void access_rapidjson(uint16_t access, rapidjson::writer_wrapper_t& writer) {
   writer("wheelchair", static_cast<bool>(access & kWheelchairAccess));
 }
 
-void admin_rapidjson(const AdminInfo& admin, uint16_t tz_index, rapidjson::writer_wrapper_t& writer) {
+void admin_json(const AdminInfo& admin, uint16_t tz_index, rapidjson::writer_wrapper_t& writer) {
   // admin
   writer("iso_3166-1", admin.country_iso());
   writer("country", admin.country_text());
@@ -291,33 +261,7 @@ void NodeInfo::set_connecting_point(const midgard::PointLL& p) {
   headings_ = static_cast<uint64_t>(p) | (1ull << 63);
 }
 
-json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
-  auto m = json::map({
-      {"lon", json::fixed_t{latlng(tile->header()->base_ll()).first, 6}},
-      {"lat", json::fixed_t{latlng(tile->header()->base_ll()).second, 6}},
-      {"elevation", json::fixed_t{elevation(), 2}},
-      {"edge_count", static_cast<uint64_t>(edge_count_)},
-      {"access", access_json(access_)},
-      {"tagged_access", static_cast<bool>(tagged_access_)},
-      {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
-      {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
-      {"density", static_cast<uint64_t>(density_)},
-      {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
-      {"drive_on_right", static_cast<bool>(drive_on_right_)},
-      {"mode_change", static_cast<bool>(mode_change_)},
-      {"private_access", static_cast<bool>(private_access_)},
-      {"traffic_signal", static_cast<bool>(traffic_signal_)},
-      {"type", to_string(static_cast<NodeType>(type_))},
-      {"transition count", static_cast<uint64_t>(transition_count_)},
-      {"named_intersection", static_cast<bool>(named_)},
-  });
-  if (is_transit()) {
-    m->emplace("stop_index", static_cast<uint64_t>(stop_index()));
-  }
-  return m;
-}
-
-void NodeInfo::rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const {
+void NodeInfo::json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const {
   writer.start_object();
   auto ll = latlng(tile->header()->base_ll());
 
@@ -331,14 +275,14 @@ void NodeInfo::rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t
   writer("edge_count", static_cast<uint64_t>(edge_count_));
 
   writer.start_object("access");
-  access_rapidjson(access_, writer);
+  access_json(access_, writer);
   writer.end_object();
 
   writer("tagged_access", static_cast<bool>(tagged_access_));
   writer("intersection_type", to_string(static_cast<IntersectionType>(intersection_)));
 
   writer.start_object("administrative");
-  admin_rapidjson(tile->admininfo(admin_index_), timezone_, writer);
+  admin_json(tile->admininfo(admin_index_), timezone_, writer);
   writer.end_object();
 
   writer("density", static_cast<uint64_t>(density_));

@@ -307,16 +307,10 @@ public:
   std::vector<std::string> level_ref() const;
 
   /**
-   * Returns json representing this object
-   * @return json object
+   * the json representation of the object
+   * @param writer The writer json object to represent the edge info
    */
-  json::MapPtr json() const;
-
-  /**
-   * the rapidjson representation of the object
-   * @param writer The writer rapidjson object to represent the edge info
-   */
-  void rapidjson(rapidjson::writer_wrapper_t& writer) const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
   // Operator EqualTo based on nodea and nodeb.
   bool operator==(const EdgeInfo& rhs) const;

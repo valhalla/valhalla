@@ -488,18 +488,11 @@ public:
   }
 
   /**
-   * Returns the json representation of the object
+   * the json representation of the object
    * @param tile the tile required to get admin information
-   * @return  json object
+   * @param writer The writer json object to represent the id
    */
-  json::MapPtr json(const graph_tile_ptr& tile) const;
-
-  /**
-   * the rapidjson representation of the object
-   * @param tile the tile required to get admin information
-   * @param writer The writer rapidjson object to represent the id
-   */
-  void rapidjson(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const;
+  void json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // Organized into 8-byte words so structure will align to 8 byte boundaries.

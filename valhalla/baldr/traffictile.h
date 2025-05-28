@@ -138,49 +138,7 @@ struct TrafficSpeed {
         congestion3{c3}, has_incidents{incidents}, spare{0} {
   }
 
-  json::MapPtr json() const volatile {
-    auto live_speed = json::map({});
-    if (speed_valid()) {
-      live_speed->emplace("overall_speed", static_cast<uint64_t>(get_overall_speed()));
-      auto speed = static_cast<uint64_t>(get_speed(0));
-      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
-        live_speed->emplace("speed_0", nullptr);
-      else
-        live_speed->emplace("speed_0", speed);
-      auto congestion = (congestion1 - 1.0) / 62.0;
-      if (congestion < 0)
-        live_speed->emplace("congestion_0", nullptr);
-      else
-        live_speed->emplace("congestion_0", json::fixed_t{congestion, 2});
-      live_speed->emplace("breakpoint_0", json::fixed_t{breakpoint1 / 255.0, 2});
-
-      speed = static_cast<uint64_t>(get_speed(1));
-      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
-        live_speed->emplace("speed_1", nullptr);
-      else
-        live_speed->emplace("speed_1", speed);
-      congestion = (congestion2 - 1.0) / 62.0;
-      if (congestion < 0)
-        live_speed->emplace("congestion_1", nullptr);
-      else
-        live_speed->emplace("congestion_1", json::fixed_t{congestion, 2});
-      live_speed->emplace("breakpoint_1", json::fixed_t{breakpoint2 / 255.0, 2});
-
-      speed = static_cast<uint64_t>(get_speed(2));
-      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
-        live_speed->emplace("speed_2", nullptr);
-      else
-        live_speed->emplace("speed_2", speed);
-      congestion = (congestion3 - 1.0) / 62.0;
-      if (congestion < 0)
-        live_speed->emplace("congestion_2", nullptr);
-      else
-        live_speed->emplace("congestion_2", json::fixed_t{congestion, 2});
-    }
-    return live_speed;
-  }
-
-  void rapidjson(rapidjson::writer_wrapper_t& writer) const volatile {
+  void json(rapidjson::writer_wrapper_t& writer) const volatile {
     if (speed_valid()) {
       writer("overall_speed", static_cast<uint64_t>(get_overall_speed()));
       auto speed = static_cast<uint64_t>(get_speed(0));

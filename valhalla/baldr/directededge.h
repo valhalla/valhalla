@@ -1181,15 +1181,9 @@ public:
 
   /**
    * Create a json object representing this edge
-   * @return  Returns the json object
+   *  @param writer The writer json object to represent the object
    */
-  json::MapPtr json() const;
-
-  /**
-   * Create a rapidjson object representing this edge
-   *  @param writer The writer rapidjson object to represent the object
-   */
-  void rapidjson(rapidjson::writer_wrapper_t& writer) const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // 1st 8-byte word
