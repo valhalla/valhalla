@@ -1253,8 +1253,9 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
-                                     tile_start, tile_end, std::ref(results.back())));
+    threads[i] =
+        std::make_shared<std::thread>(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
+                                      tile_start, tile_end, std::ref(results.back()));
   }
 
   // Wait for them to finish up their work
