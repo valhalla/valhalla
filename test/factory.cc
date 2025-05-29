@@ -1,3 +1,4 @@
+#include "baldr/rapidjson_utils.h"
 #include "proto/options.pb.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"

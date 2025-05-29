@@ -82,6 +82,7 @@
    * ADDED: More barrier types to consider for car routing [#5217](https://github.com/valhalla/valhalla/pull/5217)
    * CHANGED: Removed ferry reclassification and only move edges in hierarchy [#5269](https://github.com/valhalla/valhalla/pull/5269)
    * CHANGED: More clang-tidy fixes [#5253](https://github.com/valhalla/valhalla/pull/5253)
+   * CHANGED: Removed unused headers [#5254](https://github.com/valhalla/valhalla/pull/5254)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

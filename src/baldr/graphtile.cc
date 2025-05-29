@@ -1,7 +1,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/compression_utils.h"
 #include "baldr/curl_tilegetter.h"
-#include "baldr/datetime.h"
 #include "baldr/sign.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"

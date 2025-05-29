@@ -2,7 +2,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/time_info.h"
-#include "proto/api.pb.h"
 
 #include <utility>
 

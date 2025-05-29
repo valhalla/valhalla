@@ -1,10 +1,8 @@
 #include "argparse_utils.h"
-#include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
+#include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
 #include "mjolnir/servicedays.h"
 #include "valhalla/proto/transit.pb.h"
 

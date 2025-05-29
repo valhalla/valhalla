@@ -1,5 +1,4 @@
 #include "baldr/graphreader.h"
-#include "baldr/connectivity_map.h"
 #include "baldr/curl_tilegetter.h"
 #include "filesystem.h"
 #include "incident_singleton.h"
@@ -941,6 +940,13 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
   return tiles;
 }
 
+const std::string& GraphReader::tile_extract() const {
+  static std::string empty_str;
+  if (tile_extract_->tiles.empty())
+    return empty_str;
+  return tile_extract_->archive->tar_file;
+}
+
 AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
   // Iterate through all the tiles that intersect this bounding box
   const auto& ids = TileHierarchy::GetGraphIds(bb);
@@ -1031,18 +1037,6 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
 
 graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
   return reader_.GetGraphTile(graphid);
-}
-
-const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
-                    const valhalla::IncidentsTile::Location& incident_location) {
-  const int64_t metadata_index = incident_location.metadata_index();
-  if (metadata_index >= tile->metadata_size()) {
-    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
-                             std::to_string(metadata_index) + " but total incident metadata of " +
-                             std::to_string(tile->metadata_size()));
-  }
-  return tile->metadata(metadata_index);
 }
 
 } // namespace baldr
