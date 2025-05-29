@@ -699,7 +699,7 @@ void serializeIncidents(const google::protobuf::RepeatedPtrField<TripLeg::Incide
     // No incidents, nothing to do
     return;
   }
-  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
+  json::ArrayPtr serialized_incidents = std::make_shared<json::Jarray>();
   {
     // Bring up any already existing array
     auto existing = doc.find("incidents");

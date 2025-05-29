@@ -80,7 +80,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       // TODO: use the "scan" to iterate over tar
-      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, true, index_loader));
+      archive = std::make_shared<midgard::tar>(pt.get<std::string>("tile_extract"), true, true,
+                                               index_loader);
       // map files to graph ids
       if (tiles.empty()) {
         for (const auto& c : archive->contents) {
@@ -122,8 +123,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       traffic_from_index = true;
-      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract"), traffic_readonly,
-                                             true, index_loader));
+      traffic_archive = std::make_shared<midgard::tar>(pt.get<std::string>("traffic_extract"),
+                                                       traffic_readonly, true, index_loader);
       if (traffic_tiles.empty()) {
         LOG_WARN(
             "Traffic extract contained no index file, expect degraded performance for tile (re-)loading.");
@@ -446,10 +447,10 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
     std::lock_guard<std::mutex> lock(factoryMutex);
     if (!globalTileCache_) {
       if (use_lru_cache) {
-        globalTileCache_.reset(new TileCacheLRU(max_cache_size, lru_mem_control));
+        globalTileCache_ = std::make_shared<TileCacheLRU>(max_cache_size, lru_mem_control);
       } else {
         // globalTileCache_.reset(new SimpleTileCache(max_cache_size));
-        globalTileCache_.reset(new FlatTileCache(max_cache_size));
+        globalTileCache_ = std::make_shared<FlatTileCache>(max_cache_size);
       }
     }
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);

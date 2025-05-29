@@ -216,7 +216,7 @@ private:
       }
       // make a dirent from stat info for starting out
       auto filename = path_.filename();
-      entry_.reset(new dirent);
+      entry_ = std::make_shared<dirent>();
       // entry_->d_reclen =
       // entry_->d_off =
       entry_->d_ino = s.st_ino;

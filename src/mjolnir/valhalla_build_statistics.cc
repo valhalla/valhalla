@@ -543,8 +543,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // Spawn the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(build, std::cref(pt), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
+    thread = std::make_shared<std::thread>(build, std::cref(pt), std::ref(tilequeue), std::ref(lock),
+                                           std::ref(results.back()));
   }
 
   // Wait for threads to finish

@@ -52,9 +52,9 @@ public:
    * @param costing    the cost type that the function creates
    * @param function   the function pointer to call to actually create the cost object
    */
-  void Register(const Costing::Type costing, factory_function_t function) {
+  void Register(const Costing::Type costing, factory_function_t&& function) {
     factory_funcs_.erase(costing);
-    factory_funcs_.emplace(costing, function);
+    factory_funcs_.emplace(costing, std::move(function));
   }
 
   /**

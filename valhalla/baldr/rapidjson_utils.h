@@ -322,7 +322,7 @@ public:
     writer.SetMaxDecimalPlaces(precision);
   }
 
-  template <typename K, typename V> inline void operator()(K key, V value) {
+  template <typename K, typename V> inline void operator()(const K& key, const V& value) {
     if constexpr (is_string_like_v<K>) {
       writer.String(key);
     } else {
@@ -351,7 +351,7 @@ public:
     }
   }
 
-  template <typename V> inline void operator()(V value) {
+  template <typename V> inline void operator()(const V& value) {
     if constexpr (std::is_same_v<V, int> || std::is_same_v<V, int32_t>) {
       writer.Int64(static_cast<int64_t>(value));
     } else if constexpr (std::is_same_v<V, unsigned int> || std::is_same_v<V, uint32_t>) {

@@ -3,6 +3,8 @@
 #include "baldr/graphreader.h"
 #include "baldr/time_info.h"
 
+#include <utility>
+
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -41,7 +43,8 @@ struct MultimodalBuilder {
              GraphReader& graphreader) {
 
     AddBssNode(trip_node, node, directededge, start_tile, mode_costing, controller);
-    AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
+    AddTransitNodes(trip_node, node, startnode, std::move(start_tile), std::move(graphtile),
+                    controller);
     AddTransitInfo(trip_node, trip_id, node, startnode, directededge, edge, start_tile, graphtile,
                    mode_costing, controller, graphreader);
   }
@@ -59,7 +62,7 @@ private:
   void AddBssNode(TripLeg_Node* trip_node,
                   const NodeInfo* node,
                   const DirectedEdge* directededge,
-                  graph_tile_ptr start_tile,
+                  const graph_tile_ptr& start_tile,
                   const mode_costing_t& mode_costing,
                   const AttributesController&) {
 
@@ -94,8 +97,8 @@ private:
   void AddTransitNodes(TripLeg_Node* trip_node,
                        const NodeInfo* node,
                        const GraphId& startnode,
-                       graph_tile_ptr start_tile,
-                       graph_tile_ptr graphtile,
+                       const graph_tile_ptr& start_tile,
+                       const graph_tile_ptr& graphtile,
                        const AttributesController& controller) {
 
     if (node->type() == NodeType::kTransitStation) {
@@ -160,8 +163,8 @@ private:
                       const GraphId&,
                       const DirectedEdge* directededge,
                       const GraphId& edge,
-                      graph_tile_ptr start_tile,
-                      graph_tile_ptr graphtile,
+                      const graph_tile_ptr& start_tile,
+                      const graph_tile_ptr& graphtile,
                       const sif::mode_costing_t&,
                       const AttributesController& controller,
                       GraphReader& graphreader) {
