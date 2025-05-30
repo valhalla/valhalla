@@ -170,6 +170,12 @@ public:
 
   /**
    * The json representation of the id
+   * @return  json
+   */
+  json::Value json() const;
+
+  /**
+   * The json representation of the id
    * @param writer The writer json object to represent the id
    */
   void json(rapidjson::writer_wrapper_t& writer) const;
