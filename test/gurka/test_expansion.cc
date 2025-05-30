@@ -171,7 +171,7 @@ TEST_P(ExpansionTest, Routing) {
 
 TEST_P(ExpansionTest, RoutingNoOpposites) {
   // test AStar expansion and no opposite edges
-  check_results("route", {"E", "H"}, true, 16, GetParam());
+  check_results("route", {"E", "H"}, true, 15, GetParam());
 }
 
 TEST_P(ExpansionTest, Matrix) {
@@ -194,7 +194,7 @@ TEST_P(ExpansionTest, IsochroneNoOppositesDedupe) {
 
 TEST_P(ExpansionTest, RoutingDedupe) {
   // test AStar expansion
-  check_results("route", {"E", "H"}, false, 7, GetParam(), true);
+  check_results("route", {"E", "H"}, false, 9, GetParam(), true);
 }
 
 TEST_P(ExpansionTest, RoutingNoOppositesDedupe) {

@@ -1,3 +1,4 @@
+#include "baldr/rapidjson_utils.h"
 #include "proto/options.pb.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"

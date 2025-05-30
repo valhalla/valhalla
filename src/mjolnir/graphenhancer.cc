@@ -1,5 +1,4 @@
 #include "mjolnir/graphenhancer.h"
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -1742,9 +1741,10 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // Start the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
-                                 std::cref(access_file), std::ref(hierarchy_properties),
-                                 std::ref(tilequeue), std::ref(lock), std::ref(results.back())));
+    thread =
+        std::make_shared<std::thread>(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
+                                      std::cref(access_file), std::ref(hierarchy_properties),
+                                      std::ref(tilequeue), std::ref(lock), std::ref(results.back()));
   }
 
   // Wait for them to finish up their work

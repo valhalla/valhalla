@@ -1,8 +1,5 @@
 #include "baldr/location.h"
-#include "baldr/rapidjson_utils.h"
-#include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
 
 namespace valhalla {
 namespace baldr {

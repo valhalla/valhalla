@@ -1,8 +1,8 @@
 #include "mjolnir/ingest_transit.h"
+#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphtile.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "just_gtfs/just_gtfs.h"
@@ -11,9 +11,6 @@
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "midgard/util.h"
-#include "mjolnir/admin.h"
-#include "mjolnir/servicedays.h"
-#include "mjolnir/util.h"
 #include "proto/transit.pb.h"
 
 #include <boost/algorithm/string.hpp>
@@ -893,9 +890,10 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   auto pbf_trip_limit = pt.get<uint32_t>("mjolnir.transit_pbf_limit");
 
   for (size_t i = 0; i < threads.size(); ++i) {
-    threads[i].reset(new std::thread(ingest_tiles, std::cref(gtfs_dir), std::cref(transit_dir),
-                                     pbf_trip_limit, std::ref(tiles), std::ref(uniques),
-                                     std::ref(promises[i])));
+    threads[i] =
+        std::make_shared<std::thread>(ingest_tiles, std::cref(gtfs_dir), std::cref(transit_dir),
+                                      pbf_trip_limit, std::ref(tiles), std::ref(uniques),
+                                      std::ref(promises[i]));
   }
 
   // let the threads finish and get the dangling list
@@ -946,8 +944,9 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
   // make let them rip
   std::mutex lock;
   for (size_t i = 0; i < threads.size(); ++i) {
-    threads[i].reset(new std::thread(stitch_tiles, std::cref(transit_dir), std::cref(all_tiles),
-                                     std::ref(dangling_tiles), std::ref(lock)));
+    threads[i] =
+        std::make_shared<std::thread>(stitch_tiles, std::cref(transit_dir), std::cref(all_tiles),
+                                      std::ref(dangling_tiles), std::ref(lock));
   }
 
   // wait for them to finish
