@@ -9,7 +9,8 @@
 #ifndef C_ONLY_INTERFACE
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphmemory.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/valhalla.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -20,8 +21,6 @@
 #else
 #include <stdint.h>
 #endif
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/valhalla.h>
 
 #ifndef C_ONLY_INTERFACE
 namespace valhalla {
