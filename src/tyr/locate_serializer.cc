@@ -233,7 +233,6 @@ std::string serializeLocate(const Api& request,
                             const std::unordered_map<baldr::Location, PathLocation>& projections,
                             GraphReader& reader) {
   rapidjson::writer_wrapper_t writer(4096);
-  writer.set_precision(tyr::kDefaultPrecision);
   writer.start_array();
 
   for (const auto& location : locations) {
