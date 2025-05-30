@@ -262,7 +262,6 @@ void NodeInfo::set_connecting_point(const midgard::PointLL& p) {
 }
 
 void NodeInfo::json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const {
-  writer.start_object();
   auto ll = latlng(tile->header()->base_ll());
 
   writer.set_precision(6);
@@ -298,7 +297,6 @@ void NodeInfo::json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& wri
   if (is_transit()) {
     writer("stop_index", static_cast<uint64_t>(stop_index()));
   }
-  writer.end_object();
 }
 
 } // namespace baldr

@@ -180,10 +180,8 @@ void serialize_nodes(const PathLocation& location,
     } else {
       midgard::PointLL node_ll = tile->get_node_ll(n);
       writer.set_precision(tyr::kCoordinatePrecision);
-      writer.start_object();
       writer("lon", node_ll.first);
       writer("lat", node_ll.second);
-      writer.end_object();
       writer.set_precision(tyr::kDefaultPrecision);
       // TODO: osm_id
     }
