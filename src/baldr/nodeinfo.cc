@@ -3,8 +3,6 @@
 #include "baldr/graphtile.h"
 #include "midgard/logging.h"
 
-#include <cmath>
-
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
