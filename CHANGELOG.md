@@ -80,6 +80,7 @@
    * ADDED: Enforce the order of includes via `clang-format` [5230](https://github.com/valhalla/valhalla/pull/5230)
    * CHANGED: Switch to PyPI version of `clang-format` [#5237](https://github.com/valhalla/valhalla/pull/5237)
    * ADDED: More barrier types to consider for car routing [#5217](https://github.com/valhalla/valhalla/pull/5217)
+   * CHANGED: Use rapidjson for locate serializers [#5260](https://github.com/valhalla/valhalla/pull/5260)
    * CHANGED: Removed ferry reclassification and only move edges in hierarchy [#5269](https://github.com/valhalla/valhalla/pull/5269)
    * CHANGED: More clang-tidy fixes [#5253](https://github.com/valhalla/valhalla/pull/5253)
    * CHANGED: Removed unused headers [#5254](https://github.com/valhalla/valhalla/pull/5254)
