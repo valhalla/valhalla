@@ -2,7 +2,6 @@
 #include "baldr/graphconstants.h"
 #include "midgard/elevation_encoding.h"
 
-#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -559,15 +558,15 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     // precision variable causes issues in the json writer
     writer.set_precision(3);
     for (auto& level : levels) {
-      std::cout << "\n\n decoded values \n\n";
+      std::cout << "\n\n [DEBUG] decoded values \n\n";
       for (auto& range : level) {
-        std::cout << "first: " << range.first << " second: " << range.second << "\n";
+        std::cout << "[DEBUG] first: " << range.first << " second: " << range.second << "\n";
         if (range.first == range.second) {
-          writer(std::round(range.first * 100) / 100);
+          writer(range.first);
         } else {
           writer.start_array();
-          writer(std::round(range.first * 100) / 100);
-          writer(std::round(range.second * 100) / 100);
+          writer(range.first);
+          writer(range.second);
           writer.end_array();
         }
       }
