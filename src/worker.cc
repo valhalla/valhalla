@@ -148,7 +148,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {100, R"(auto_shorter costing is deprecated, use "shortest" costing option instead)"},
   {101,
     R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
-  {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
+  {102, R"(auto_data_fix costing is deprecated, use the "ignore_*" costing options instead)"},
   {103, R"(best_paths has been deprecated, use "alternates" instead)"},
   // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
   {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
@@ -162,13 +162,19 @@ const std::unordered_map<int, std::string> warning_codes = {
   {208, R"(Hard exclusions are not allowed on this server, ignoring hard excludes)"},
   {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
   {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
+  {211, R"(CostMatrix algorithm used, ignoring "matrix_locations")"},
+  {212, R"(Distance exceeded max_timedep_distance for arrive_by, probably ignoring date_time)"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
   {302, R"("search_filter.level" was specified without a custom "search_cutoff", setting default default cutoff to )"},
   {303, R"("search_cutoff" exceeds maximum allowed value due to "search_filter.level" being specified, clamping cutoff to )"},
   // 4xx is used when we do sneaky important things the user should be aware of
-  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
+  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
+  {401, R"(Routing turned off destination-only and might have used filtered edges on a second pass)"},
+  {402, R"(Distance exceeded max_timedep_distance for depart_at, probably falling back to bidirectional A*)"},
+  // RESERVED: 500 is for clamped values, set in JSON_PBF_RANGED_DEFAULT* macros
+  // {500, R"(<option> was clamped to <value> )"},
 };
 // clang-format on
 
@@ -606,7 +612,8 @@ void parse_contours(const rapidjson::Document& doc,
 // parse all costings needed to fulfill the request, including recostings
 void parse_recostings(const rapidjson::Document& doc,
                       const std::string& key,
-                      valhalla::Options& options) {
+                      valhalla::Options& options,
+                      google::protobuf::RepeatedPtrField<valhalla::CodedDescription>& warnings) {
   // make sure we only have unique recosting names in the end
   std::unordered_set<std::string> names;
   auto check_name = [&names](const valhalla::Costing& recosting) -> void {
@@ -624,13 +631,13 @@ void parse_recostings(const rapidjson::Document& doc,
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCosting(doc, key, options.add_recostings());
+      sif::ParseCosting(doc, key, options.add_recostings(), warnings);
       check_name(*options.recostings().rbegin());
     }
   } else if (options.recostings().size()) {
     for (auto& recosting : *options.mutable_recostings()) {
       check_name(recosting);
-      sif::ParseCosting(doc, key, &recosting, recosting.type());
+      sif::ParseCosting(doc, key, &recosting, warnings, recosting.type());
     }
   }
 }
@@ -662,6 +669,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto& options = *api.mutable_options();
   if (Options::Action_IsValid(action))
     options.set_action(action);
+  auto& warnings = *api.mutable_info()->mutable_warnings();
 
   // TODO: stop doing this after a sufficient amount of time has passed
   // move anything nested in deprecated directions_options up to the top level
@@ -907,7 +915,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
   //   as in the above logic the costing options aren't even parsed yet,
   //   so how can it determine "ignore_closures" there?
-  sif::ParseCosting(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options, warnings);
 
   // if any of the locations params have a date_time object in their locations, we'll remember
   // only /sources_to_targets will parse more than one location collection and there it's fine
@@ -1038,7 +1046,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // parse any named costings for re-costing a given path
-  parse_recostings(doc, "/recostings", options);
+  parse_recostings(doc, "/recostings", options, warnings);
 
   // get the locations in there
   parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
@@ -1073,7 +1081,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else if (!options.has_matrix_locations_case()) {
+  } else if (!options.has_matrix_locations_case() ||
+             (options.sources_size() != 1 && options.targets_size() != 1)) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 
