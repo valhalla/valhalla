@@ -1,4 +1,8 @@
 #include "config.h"
+#include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
+
+#include <filesystem>
 
 namespace {
 struct config_singleton_t {

@@ -1,5 +1,4 @@
 #include "baldr/graphreader.h"
-#include "baldr/connectivity_map.h"
 #include "baldr/curl_tilegetter.h"
 #include "filesystem.h"
 #include "incident_singleton.h"
@@ -81,7 +80,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       // TODO: use the "scan" to iterate over tar
-      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, true, index_loader));
+      archive = std::make_shared<midgard::tar>(pt.get<std::string>("tile_extract"), true, true,
+                                               index_loader);
       // map files to graph ids
       if (tiles.empty()) {
         for (const auto& c : archive->contents) {
@@ -123,8 +123,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       traffic_from_index = true;
-      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract"), traffic_readonly,
-                                             true, index_loader));
+      traffic_archive = std::make_shared<midgard::tar>(pt.get<std::string>("traffic_extract"),
+                                                       traffic_readonly, true, index_loader);
       if (traffic_tiles.empty()) {
         LOG_WARN(
             "Traffic extract contained no index file, expect degraded performance for tile (re-)loading.");
@@ -447,10 +447,10 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
     std::lock_guard<std::mutex> lock(factoryMutex);
     if (!globalTileCache_) {
       if (use_lru_cache) {
-        globalTileCache_.reset(new TileCacheLRU(max_cache_size, lru_mem_control));
+        globalTileCache_ = std::make_shared<TileCacheLRU>(max_cache_size, lru_mem_control);
       } else {
         // globalTileCache_.reset(new SimpleTileCache(max_cache_size));
-        globalTileCache_.reset(new FlatTileCache(max_cache_size));
+        globalTileCache_ = std::make_shared<FlatTileCache>(max_cache_size);
       }
     }
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
@@ -940,6 +940,13 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
   return tiles;
 }
 
+const std::string& GraphReader::tile_extract() const {
+  static std::string empty_str;
+  if (tile_extract_->tiles.empty())
+    return empty_str;
+  return tile_extract_->archive->tar_file;
+}
+
 AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
   // Iterate through all the tiles that intersect this bounding box
   const auto& ids = TileHierarchy::GetGraphIds(bb);
@@ -1030,18 +1037,6 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
 
 graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
   return reader_.GetGraphTile(graphid);
-}
-
-const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
-                    const valhalla::IncidentsTile::Location& incident_location) {
-  const int64_t metadata_index = incident_location.metadata_index();
-  if (metadata_index >= tile->metadata_size()) {
-    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
-                             std::to_string(metadata_index) + " but total incident metadata of " +
-                             std::to_string(tile->metadata_size()));
-  }
-  return tile->metadata(metadata_index);
 }
 
 } // namespace baldr

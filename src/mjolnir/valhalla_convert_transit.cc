@@ -1,5 +1,4 @@
 #include "argparse_utils.h"
-#include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/validatetransit.h"

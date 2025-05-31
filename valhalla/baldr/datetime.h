@@ -28,9 +28,7 @@
 #endif
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/constants.h>
-#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace baldr {

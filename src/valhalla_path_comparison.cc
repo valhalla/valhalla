@@ -3,7 +3,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
 #include "baldr/rapidjson_utils.h"
-#include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "meili/map_matcher.h"
 #include "meili/map_matcher_factory.h"

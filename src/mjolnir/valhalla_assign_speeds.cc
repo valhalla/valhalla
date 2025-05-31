@@ -1,6 +1,5 @@
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
 #include "config.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "speed_assigner.h"
@@ -9,6 +8,7 @@
 #include <cxxopts.hpp>
 
 #include <algorithm>
+#include <deque>
 #include <future>
 #include <memory>
 #include <random>
@@ -127,8 +127,8 @@ int main(int argc, char** argv) {
   std::mutex lock;
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(assign, std::cref(config), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
+    thread = std::make_shared<std::thread>(assign, std::cref(config), std::ref(tilequeue),
+                                           std::ref(lock), std::ref(results.back()));
   }
 
   // collect the results

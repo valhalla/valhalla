@@ -375,8 +375,8 @@ void ProcessTrafficTiles(const std::string& tile_dir,
     auto tile_start = tile_end;
     tile_end += (i < at_ceiling ? floor + 1 : floor);
     results.emplace_back();
-    threads[i].reset(
-        new std::thread(UpdateTiles, tile_dir, tile_start, tile_end, std::ref(results.back())));
+    threads[i] = std::make_shared<std::thread>(UpdateTiles, tile_dir, tile_start, tile_end,
+                                               std::ref(results.back()));
   }
 
   // Wait for threads to complete

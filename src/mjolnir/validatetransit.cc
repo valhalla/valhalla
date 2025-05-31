@@ -7,16 +7,16 @@
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 #include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/osmrestriction.h"
 #include "mjolnir/servicedays.h"
+#include "mjolnir/util.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <future>
+#include <iostream>
 #include <thread>
 
 using namespace valhalla::midgard;
@@ -527,9 +527,9 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(validate, std::cref(local_pt.get_child("mjolnir")),
-                                     std::ref(lock), tile_start, tile_end, std::cref(onestoptests),
-                                     std::ref(results.back())));
+    threads[i] = std::make_shared<std::thread>(validate, std::cref(local_pt.get_child("mjolnir")),
+                                               std::ref(lock), tile_start, tile_end,
+                                               std::cref(onestoptests), std::ref(results.back()));
   }
 
   // Wait for them to finish up their work

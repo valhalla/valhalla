@@ -1,12 +1,10 @@
 #include "argparse_utils.h"
 #include "baldr/attributes_controller.h"
-#include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "loki/worker.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
@@ -25,7 +23,6 @@
 #include "worker.h"
 
 #include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
 #include <cmath>
