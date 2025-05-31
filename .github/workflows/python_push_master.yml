@@ -37,6 +37,9 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+        # we need to fetch all tags for setuptools-scm to work properly
+        fetch-depth: 0
+        fetch-tags: true
 
     - name: Configure Python
       uses: actions/setup-python@v4
@@ -50,20 +53,25 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: /project/.cache/ccache
-        key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}"
+        key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}
         restore-keys: ccache-manylinux_2_28_x86_64-
 
     # only build the earliest supported python version
     - uses: pypa/cibuildwheel@v2.23.3
       env:
-        CIBW_ENVIRONMENT: CCACHE_DIR=/project/.cache/ccache
+        # /host is mounted from the host system to the manylinux container
+        CIBW_ENVIRONMENT: CCACHE_DIR=/host/project/.cache/ccache
 
     - name: Save cache
       if: always()
       uses: actions/cache/save@v4
       with:
         path: /project/.cache/ccache
-        key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}"
+        key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}
+
+    - name: Print wheelhouse
+      run: |
+        ls -l wheelhouse
 
     - name: Upload wheels
       uses: actions/upload-artifact@v4
@@ -93,3 +101,4 @@ jobs:
       uses: pypa/gh-action-pypi-publish@v1.12.4
       with:
         repository-url: https://test.pypi.org/legacy/
+        verbose: true
