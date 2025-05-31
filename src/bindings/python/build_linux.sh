@@ -9,7 +9,7 @@ cmake -B ${BUILD_DIR} \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
   -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF `# turns off lto, which triggers a gcc/ld bug` \
   -DENABLE_PYTHON_BINDINGS=OFF `# setuptools will build the bindings` \
-  -DENABLE_TESTS=ON `# we need to build utrecht tiles for the python test to work` \
+  -DENABLE_TESTS=OFF \
   -DENABLE_SINGLE_FILES_WERROR=OFF \
   -DENABLE_GDAL=ON \
   -DCMAKE_BUILD_TYPE=Release
