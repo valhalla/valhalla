@@ -147,13 +147,13 @@ TEST(AstarBss, test_With_Mode_Changes) {
   std::vector<std::string> expected_route{"Rue Gabriel Vicaire", "Rue Perrée",
                                           "Rue Perrée",          "Rue Caffarelli",
                                           "Rue de Bretagne",     "Rue de Turenne",
-                                          "Rue du Parc Royal",   "Place de Thorigny",
-                                          "Rue de la Perle",     "Rue de la Perle"};
+                                          "Rue du Parc Royal",   "Rue de la Perle",
+                                          "Rue de la Perle"};
 
   const std::map<size_t, BssManeuverType>&
       expected_bss_maneuver{{2, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
-                            {9, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
-  const std::map<size_t, std::string>& expected_bss_ref{{2, "3006"}, {9, "3008"}};
+                            {8, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+  const std::map<size_t, std::string>& expected_bss_ref{{2, "3006"}, {8, "3008"}};
 
   test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver,
                expected_bss_ref);
@@ -226,14 +226,13 @@ TEST(AstarBss, test_With_Mode_Changes_2) {
                                           "Rue du Pont aux Choux",
                                           "Rue de Turenne",
                                           "Rue du Parc Royal",
-                                          "Place de Thorigny",
                                           "Rue de la Perle",
                                           "Rue de la Perle",
                                           "Rue Vieille du Temple"};
   const std::map<size_t, BssManeuverType>&
       expected_bss_maneuver{{1, DirectionsLeg_Maneuver_BssManeuverType_kRentBikeAtBikeShare},
-                            {10, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
-  const std::map<size_t, std::string>& expected_bss_ref{{1, "11103"}, {10, "3008"}};
+                            {9, DirectionsLeg_Maneuver_BssManeuverType_kReturnBikeAtBikeShare}};
+  const std::map<size_t, std::string>& expected_bss_ref{{1, "11103"}, {9, "3008"}};
 
   test_request(request, expected_travel_modes, expected_route, expected_bss_maneuver,
                expected_bss_ref);
@@ -244,7 +243,7 @@ TEST(AstarBss, test_Pedestrian) {
   std::string request =
       R"({"locations":[{"lat":48.859895,"lon":2.3610976338},{"lat":48.86271911,"lon":2.367111146}],"costing":"pedestrian"})";
   std::vector<TravelMode> expected_travel_modes{TravelMode::kPedestrian};
-  std::vector<std::string> expected_route{"Rue de la Perle", "Rue Vieille du Temple", "Rue Froissart",
+  std::vector<std::string> expected_route{"Rue de la Perle", "Rue Vieille du Temple",
                                           "Rue Commines", "Rue Amelot"};
   // There shouldn't be any bss maneuvers
   const std::map<size_t, BssManeuverType>& expected_bss_maneuver{};
