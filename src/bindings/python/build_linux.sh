@@ -3,7 +3,7 @@ set -o errexit -o pipefail -o nounset
 
 BUILD_DIR="${1:-build_manylinux}"
 # if someone specifies the python version, we'll build this wheel to ./wheelhouse
-PYTHON_VERSION="${2:-}"
+PYTHON_VERSION="${2}"
 
 cmake -B ${BUILD_DIR} \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -13,6 +13,12 @@ cmake -B ${BUILD_DIR} \
   -DENABLE_SINGLE_FILES_WERROR=OFF \
   -DENABLE_GDAL=ON \
   -DCMAKE_BUILD_TYPE=Release
+
+if ! [ -z $CCACHE_DIR ]; then
+  echo "[INFO] ccache dir changed to ${CCACHE_DIR}"
+else
+  echo "Using default ccache dir at $(ccache -k cache_dir)"
+fi
 
 echo "[INFO] Building & installing libvalhalla..."
 LDFLAGS=-fno-lto cmake --build ${BUILD_DIR} -- -j$(nproc) > /dev/null

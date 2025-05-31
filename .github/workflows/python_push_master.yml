@@ -50,18 +50,20 @@ jobs:
     - name: Restore cache
       uses: actions/cache/restore@v4
       with:
-        path: ~/.cache/ccache
+        path: /project/.cache/ccache
         key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}"
         restore-keys: ccache-manylinux_2_28_x86_64-
 
     # only build the earliest supported python version
     - uses: pypa/cibuildwheel@v2.23.3
+      env:
+        CCACHE_DIR=/project/.cache/ccache
 
     - name: Save cache
       if: always()
       uses: actions/cache/save@v4
       with:
-        path: ~/.cache/ccache
+        path: /project/.cache/ccache
         key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}"
 
     - name: Upload wheels
