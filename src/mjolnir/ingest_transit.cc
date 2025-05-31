@@ -218,24 +218,32 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const std::string&
           tile_info.stations.insert({stop.stop_id, feed_name});
           tile_info.station_children.insert({{stop.stop_id, feed_name}, stop.stop_id});
         }
+      }
 
-        for (const auto& stopTime : feed.get_stop_times_for_stop(stop.stop_id)) {
-          // add trip, route, agency and service_id from stop_time, it's the only place with that info
-          // TODO: should we throw here?
-          auto trip = feed.get_trip(stopTime.trip_id);
-          auto route = feed.get_route(trip.route_id);
-          if (!gtfs::valid(trip) || !gtfs::valid(route) || trip.service_id.empty()) {
-            LOG_ERROR("Missing trip or route or service_id for trip");
-            continue;
-          }
+      for (const auto& stop_time : feed.get_stop_times()) {
+        const auto& trip_id = stop_time.trip_id;
 
-          tile_info.trips.insert({trip.trip_id, feed_name});
-          tile_info.routes.insert({{route.route_id, feed_name}, tile_info.routes.size()});
+        // Directly get trip (no cache)
+        auto trip = feed.get_trip(trip_id);
+        if (!gtfs::valid(trip))
+          continue;
 
-          // shapes are optional, don't keep non-existing shapes around
-          if (!trip.shape_id.empty()) {
-            tile_info.shapes.insert({{trip.shape_id, feed_name}, tile_info.shapes.size()});
-          }
+        // Directly get route (no cache)
+        auto route = feed.get_route(trip.route_id);
+        if (!gtfs::valid(route))
+          continue;
+
+        // Now get the stop's tile info
+        const auto& stop = feed.get_stop(stop_time.stop_id);
+        auto& tile_info = get_tile_info(stop);
+
+        // Store trip, route, and shape data
+        tile_info.trips.insert({trip.trip_id, feed_name});
+        tile_info.routes.insert({{route.route_id, feed_name}, tile_info.routes.size()});
+
+        // Only add valid shapes
+        if (!trip.shape_id.empty()) {
+          tile_info.shapes.insert({{trip.shape_id, feed_name}, tile_info.shapes.size()});
         }
       }
 
