@@ -47,7 +47,7 @@ jobs:
     - name: Restore cache
       uses: actions/cache/restore@v4
       with:
-        path: /root/.ccache
+        path: ~/.cache/ccache
         key: ccache-manylinux_2_28_x86_64-${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
         restore-keys: ccache-manylinux_2_28_x86_64-
 
@@ -58,7 +58,7 @@ jobs:
       if: always()
       uses: actions/cache/save@v4
       with:
-        path: /root/.ccache
+        path: ~/.cache/ccache
         key: ccache-manylinux_2_28_x86_64-${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
 
     - name: Upload wheels
