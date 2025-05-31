@@ -1,8 +1,7 @@
 #include "baldr/json.h"
 #include "skadi/sample.h"
 #include "tyr/serializers.h"
-
-#include <sstream>
+#include "valhalla/baldr/rapidjson_utils.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
