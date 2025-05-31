@@ -44,11 +44,14 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Get branch name
+      run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
+
     - name: Restore cache
       uses: actions/cache/restore@v4
       with:
         path: ~/.cache/ccache
-        key: ccache-manylinux_2_28_x86_64-${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}"
         restore-keys: ccache-manylinux_2_28_x86_64-
 
     # only build the earliest supported python version
@@ -59,7 +62,7 @@ jobs:
       uses: actions/cache/save@v4
       with:
         path: ~/.cache/ccache
-        key: ccache-manylinux_2_28_x86_64-${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+        key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}"
 
     - name: Upload wheels
       uses: actions/upload-artifact@v4
