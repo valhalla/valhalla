@@ -9,12 +9,13 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
-write_to = "valhalla/__version__.py"
+version_file = "src/bindings/python/valhalla/__version__.py"
 write_to_template = "__version__ = '{version}'\n"
 version_scheme = "post-release"
 
 [tool.black]
 line-length = 105
+skip-string-normalization = true
 exclude = '''
 /(
     \\..*
@@ -28,23 +29,23 @@ exclude = '''
 '''
 
 [tool.cibuildwheel]
-test-command = "python -m unittest discover -s {project}/test"
+# it's enough here to know it's importable, actual test is run on other CI
+# mostly to avoid building utrecht tiles within the bindings build
+test-command = "python -c 'from valhalla import Actor'"
 # find out current defaults: cibuildwheel --print-build-identifiers --platform linux
 build = "cp*"
 skip = "*musllinux*"
 archs = "native"
-manylinux-x86_64-image = "ghcr.io/gis-ops/manylinux:2_28_valhalla_python"
+manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
 
 [tool.cibuildwheel.windows]
 before-all = "pip install conan delvewheel"
 repair-wheel-command = "delvewheel repair --add-path lib/windows {wheel} -w {dest_dir}"
 
 [tool.cibuildwheel.linux]
+# build & install libvalhalla before building the bindings
 before-all = """
-pip install "conan<2.0.0"
-conan profile new default --detect
-conan config set storage.path={package}/conan_data
-conan install --install-folder {package}/conan_build --remote conancenter {package}/conanfile.txt
+{project}/src/bindings/python/build_linux.sh build_manylinux
 """
 
 [tool.cibuildwheel.macos]

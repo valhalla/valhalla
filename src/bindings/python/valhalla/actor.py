@@ -2,9 +2,9 @@ import json
 from typing import Union
 
 try:
-    from .python_valhalla import _Actor
+    from ._valhalla import _Actor
 except ModuleNotFoundError:
-    from python_valhalla import _Actor
+    from _valhalla import _Actor
 
 
 # TODO: wasteful for dict input/output; more reasonable would be to extend
