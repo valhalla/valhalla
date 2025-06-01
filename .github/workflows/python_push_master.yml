@@ -50,7 +50,7 @@ jobs:
     - name: Get branch name
       run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
 
-    - name: Determine package to publish: pyvalhalla(-git)
+    - name: Determine package to publish
       run: |
         VALHALLA_RELEASE_PKG="pyvalhalla"
         if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
