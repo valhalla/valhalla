@@ -2,7 +2,7 @@
 
 ## Hierarchies/Levels
 
-Tiles are arranged into a hierarchy with three **levels**.
+Tiles are arranged into a hierarchy with three levels.
 
 | Hierarchy level | Tile size, degrees | Content |
 |---|---|---|
@@ -10,24 +10,16 @@ Tiles are arranged into a hierarchy with three **levels**.
 | 1 | 1° | Arterial roads: secondary and tertiary. |
 | 2 | 0.25° | Local roads: unclassified, residential, service or other. |
 
-So in python, the levels could be defined as follows:
-
-```python
-valhalla_tiles = [
-  {'level': 0, 'size': 4.0},
-  {'level': 1, 'size': 1.0},
-  {'level': 2, 'size': 0.25},
-]
-```
+At each level, the world ([WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS_84)) is split into rectangular tiles with a specific size using the bounding box `(-180, -90, 180, 90)`. The rows and columns start from the _bottom left_ and increase to the top right - tiles are row ordered increasing from west to east.
 
 ### The World at Level 0
 
-The following image shows the world at level 0.  Using a world bounding box (-180, -90, 180, 90) the world is split up into 4 degree tiles.  The rows and columns start from the bottom left and increase to the top right.  Tiles are row ordered increasing from west to east.
+The following image shows the world at level 0.
 
 ![Level 0](images/world_level0.png)
 Image generated using <https://geojson.io>
 
-Using a bounding box for Germany, Pennsylvania, and NYC we can show how the regions would be split up into the 3 levels.  Level 0 is colored in light blue.  Level 1 is light green and level 2 is light red.
+Using bounding boxes for Germany, Pennsylvania, and NYC we can show how the regions would be split up into the 3 levels. Level 0 is colored in light blue. Level 1 is light green and level 2 is light red.
 
 ### Germany
 
@@ -46,7 +38,7 @@ Image generated using <https://geojson.io>
 
 ## Sample Tile Code
 
-Below are some sample functions to help you obtain latitude and longitude coordinates, levels, tile ids, and list of tiles that intersect a bounding box.
+Below are some sample functions to help you obtain latitude and longitude coordinates, levels, tile ids, and lists of tiles that intersect a bounding box.
 
 ```python
 valhalla_tiles = [
