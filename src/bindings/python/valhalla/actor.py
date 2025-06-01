@@ -3,7 +3,10 @@ import tempfile
 from pathlib import Path
 from typing import Union
 
-from ._valhalla import _Actor
+try:
+    from ._valhalla import _Actor
+except ModuleNotFoundError:
+    from _valhalla import _Actor
 
 
 # TODO: wasteful for dict input/output; more reasonable would be to extend
