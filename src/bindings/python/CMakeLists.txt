@@ -18,6 +18,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/valhalla/__init__.py ${CMAKE_CURRENT_
 configure_file(${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_config ${CMAKE_CURRENT_BINARY_DIR}/valhalla/valhalla_build_config.py COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/valhalla/config.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/config.py COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/valhalla/actor.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/actor.py COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/valhalla/utils.py ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils.py COPYONLY)
 
 message(STATUS "Installing python modules to ${Python_SITEARCH}")
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla

@@ -1,15 +1,14 @@
 name: Python - Master Push
 
-# run (and build) only py3.10 but on all platforms
-# pull_request.yml tests all py versions but only on ubuntu
+# runs on master and tag (aka release) pushes to build all current platforms & minor python versions
+# publishes to https://pypi.org/project/pyvalhalla/ for tag pushes
+# publishes to https://pypi.org/project/pyvalhalla-git/ for master pushes
 
 on:
   push:
-    # branches-ignore:
-    # # TODO: change this to `master`
-    #   - '*'
     branches:
-      - 'nn-python-packaging'
+      - 'master'
+    # TODO: also run this on tags once all platforms are ready
     paths-ignore:
       - "*.md"
       - .circleci/
@@ -39,6 +38,7 @@ jobs:
         fetch-depth: 0
         fetch-tags: true
 
+    # this is only used to run cibuildwheel
     - name: Configure Python
       uses: actions/setup-python@v4
       with:
@@ -47,7 +47,7 @@ jobs:
     - name: Get branch name
       run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
 
-    - name: Determine package to publish, pyvalhalla(-git)
+    - name: Determine package to publish: pyvalhalla(-git)
       run: |
         VALHALLA_RELEASE_PKG="pyvalhalla"
         if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
@@ -62,7 +62,6 @@ jobs:
         key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}
         restore-keys: ccache-manylinux_2_28_x86_64-
 
-    # only build the earliest supported python version
     - uses: pypa/cibuildwheel@v2.23.3
       env:
         # /host is mounted from the host system to the manylinux container
@@ -77,10 +76,6 @@ jobs:
         path: /project/.cache/ccache
         key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}
 
-    - name: Print wheelhouse
-      run: |
-        ls -l wheelhouse
-
     - name: Upload wheels
       uses: actions/upload-artifact@v4
       with:
@@ -88,7 +83,6 @@ jobs:
 
   upload_all:
     name: Upload if release
-    # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     needs: [build_wheels]
     runs-on: ubuntu-latest
 
@@ -108,5 +102,6 @@ jobs:
     - name: Publish to Test PyPI
       uses: pypa/gh-action-pypi-publish@v1.12.4
       with:
+        # TODO: publish to real PyPI once all platforms are ready
         repository-url: https://test.pypi.org/legacy/
         verbose: true
