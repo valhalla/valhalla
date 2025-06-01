@@ -149,3 +149,49 @@ def get_ll(id):
 
 `tiles_for_bounding_box(-74.251961,40.512764,-73.755405,40.903125)`  Returns a list of tiles for the NYC bounding box at each level.
 `[(2, 752102), (2, 753542), (2, 752103), (2, 753543), (2, 752104), (2, 753544), (1, 46905), (1, 46906), (0, 2906)]`
+
+### Hierarchy Level or Tile Index from `GraphId`
+
+```python linenums="1"
+HIERARCHY_LEVEL_BITS = 3
+HIERARCHY_LEVEL_MASK = 2**HIERARCHY_LEVEL_BITS - 1
+
+TILE_INDEX_BITS = 22
+TILE_INDEX_MASK = 2**TILE_INDEX_BITS - 1
+
+OBJECT_INDEX_BITS = 21
+OBJECT_INDEX_MASK = 2**OBJECT_INDEX_BITS - 1
+
+
+def get_hierarchy_level(graph_id: int) -> int:
+    """Hierarchy level from 64-bit representation of `GraphId`."""
+
+    return graph_id & HIERARCHY_LEVEL_MASK
+
+
+def get_tile_index(graph_id: int) -> int:
+    """Tile index from 64-bit representation of `GraphId`."""
+
+    offset = HIERARCHY_LEVEL_BITS
+
+    return (graph_id >> offset) & TILE_INDEX_MASK
+
+
+def get_object_index(graph_id: int) -> int:
+    """Object (node or edge) index from 64-bit representation of `GraphId`."""
+
+    offset = HIERARCHY_LEVEL_BITS + TILE_INDEX_BITS
+
+    return (graph_id >> offset) & OBJECT_INDEX_MASK
+```
+
+```python
+>>> get_hierarchy_level(73160266)
+2
+>>> get_hierarchy_level(142438865769)
+1
+>>> get_tile_index(73160266)
+756425
+>>> get_tile_index(142438865769)
+37741
+```
