@@ -8,6 +8,8 @@ on:
   push:
     branches:
       - 'master'
+    tags:
+      - "*"
     # TODO: also run this on tags once all platforms are ready
     paths-ignore:
       - "*.md"
