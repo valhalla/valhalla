@@ -15,14 +15,27 @@ void serialize_range_height(rapidjson::writer_wrapper_t& writer,
                             const uint32_t precision,
                             const double no_data_value) {
   writer.start_array("range_height");
-  writer.set_precision(precision);
+  // precisoin is sent with value 0 which breaks the condition: maxDecimalPlaces >= 1 and causes an
+  // error
+  writer.set_precision(std::max(precision, 1u));
   // for each posting
   auto range = ranges.cbegin();
 
   for (const auto height : heights) {
     writer.start_array();
+
+    if (precision == 0) {
+      // cast to integer after rounding instead of changing tests in valhalla/test/skadi_service.cc
+      writer(static_cast<int64_t>(std::round(*range)));
+    } else {
+      writer(*range);
+    }
+
     if (height == no_data_value) {
       writer(nullptr);
+    } else if (precision == 0) {
+      // cast to integer after rounding instead of changing tests in valhalla/test/skadi_service.cc
+      writer(static_cast<int64_t>(std::round(height)));
     } else {
       writer(height);
     }
@@ -37,11 +50,14 @@ void serialize_height(rapidjson::writer_wrapper_t& writer,
                       const uint32_t precision,
                       const double no_data_value) {
   writer.start_array("height");
-  writer.set_precision(precision);
+  writer.set_precision(std::max(precision, 1u));
   for (const auto height : heights) {
     // add all heights's to an array
     if (height == no_data_value) {
       writer(nullptr);
+    } else if (precision == 0) {
+      // cast to integer after rounding instead of changing tests in valhalla/test/skadi_service.cc
+      writer(static_cast<int64_t>(std::round(height)));
     } else {
       writer(height);
     }
@@ -55,8 +71,8 @@ void serialize_shape(rapidjson::writer_wrapper_t& writer,
   writer.set_precision(6);
   for (const auto& p : shape) {
     writer.start_object();
-    writer("lon", p.ll().lng());
     writer("lat", p.ll().lat());
+    writer("lon", p.ll().lng());
     writer.end_object();
   }
   writer.end_array();
@@ -82,6 +98,12 @@ std::string serializeHeight(const Api& request,
   // get the precision to use for returned heights
   uint32_t precision = request.options().height_precision();
 
+  // send back the shape as well
+  if (request.options().has_encoded_polyline_case()) {
+    writer("encoded_polyline", request.options().encoded_polyline());
+  } else {
+    serialize_shape(writer, request.options().shape());
+  }
   // get the distances between the postings
   if (ranges.size()) {
     serialize_range_height(writer, ranges, heights, precision, skadi::get_no_data_value());
@@ -89,12 +111,7 @@ std::string serializeHeight(const Api& request,
   else {
     serialize_height(writer, heights, precision, skadi::get_no_data_value());
   }
-  // send back the shape as well
-  if (request.options().has_encoded_polyline_case()) {
-    writer("encoded_polyline", request.options().encoded_polyline());
-  } else {
-    serialize_shape(writer, request.options().shape());
-  }
+
   if (request.options().has_id_case()) {
     writer("id", request.options().id());
   }
