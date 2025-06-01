@@ -66,7 +66,9 @@ jobs:
     - uses: pypa/cibuildwheel@v2.23.3
       env:
         # /host is mounted from the host system to the manylinux container
-        CIBW_ENVIRONMENT: CCACHE_DIR=/host/project/.cache/ccache
+        CIBW_ENVIRONMENT: >
+          CCACHE_DIR=/host/project/.cache/ccache
+          VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
 
     - name: Save cache
       if: always()

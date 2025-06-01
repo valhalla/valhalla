@@ -5,7 +5,7 @@ BUILD_DIR="${1:-build_manylinux}"
 # if someone specifies the python version, we'll build this wheel to ./wheelhouse
 PYTHON_VERSION="${2:-}"
 
-echo "[INFO] ccache dir is $(ccache -k cache_dir) with CCACHE_DIR=${CCACHE_DIR}"
+echo "[INFO] ccache dir is $(ccache -k cache_dir) with CCACHE_DIR=${CCACHE_DIR:-}"
 
 cmake -B ${BUILD_DIR} \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
