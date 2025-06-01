@@ -66,6 +66,8 @@ if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-git"]):
     warnings.warn(f"VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}'")
     pkg = "pyvalhalla"
 
+warnings.warn(f"Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}")
+
 setup(
     name=pkg,
     description="High-level bindings to the Valhalla C++ library",
