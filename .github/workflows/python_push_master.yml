@@ -5,6 +5,9 @@ name: Python - Master Push
 
 on:
   push:
+    # branches-ignore:
+    # # TODO: change this to `master`
+    #   - '*'
     branches:
       - 'nn-python-packaging'
     paths-ignore:
@@ -13,11 +16,6 @@ on:
       - docs/
       - run_route_scripts/
       - test_requests/
-
-# env:
-#   VCPKG_VERSION: '8040303'
-#   VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
-#   VCPKG_DISABLE_COMPILER_TRACKING: ON
 
 jobs:
   build_wheels:
@@ -48,6 +46,14 @@ jobs:
 
     - name: Get branch name
       run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
+
+    - name: Determine package to publish, pyvalhalla(-git)
+      run: |
+        VALHALLA_RELEASE_PKG="pyvalhalla"
+        if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
+          VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
+        fi
+        echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
 
     - name: Restore cache
       uses: actions/cache/restore@v4

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import platform
+import warnings
 
 from pybind11.setup_helpers import Pybind11Extension
 from setuptools import setup
@@ -20,6 +21,7 @@ libraries = list()
 extra_link_args = list()
 extra_compile_args = list()
 
+# determine libraries to link to
 if platform.system() == "Windows":
     libraries.extend(["libprotobuf-lite", "valhalla", "libcurl", "zlib", "Ws2_32", "ole32", "Shell32"])
     extra_compile_args.extend(["-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN", "-DNOGDI"])
@@ -58,8 +60,14 @@ ext_modules = [
 with open(os.path.join(THIS_DIR, "README.md"), encoding="utf-8") as f:
     long_description = "\n" + f.read()
 
+# if we push master, we upload to pyvalhalla-git
+pkg = os.environ.get('VALHALLA_RELEASE_PKG')
+if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-git"]):
+    warnings.warn(f"VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}'")
+    pkg = "pyvalhalla"
+
 setup(
-    name="pyvalhalla",
+    name=pkg,
     description="High-level bindings to the Valhalla C++ library",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -68,12 +76,10 @@ setup(
     packages=["valhalla"],
     package_dir={"": "./src/bindings/python"},
     python_requires=">=3.9.0",
-    url="https://github.com/gis-ops/pyvalhalla",
-    # ext_package="valhalla",
+    url="https://github.com/valhalla/valhalla",
     ext_modules=ext_modules,
-    zip_safe=False,
     classifiers=[
-        "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: Implementation :: CPython",
     ],
