@@ -12,6 +12,8 @@ build-backend = "setuptools.build_meta"
 version_file = "src/bindings/python/valhalla/__version__.py"
 write_to_template = "__version__ = '{version}'\n"
 version_scheme = "post-release"
+# temp for test pypi
+local_scheme = "no-local-version"
 
 [tool.black]
 line-length = 105
