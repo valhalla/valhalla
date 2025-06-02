@@ -126,7 +126,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/Library/Caches/ccache
-          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
+          key: ccache-osx-${{ env.VALHALLA_BRANCH }}-v2
           restore-keys: |
             ccache-osx-master
             ccache-osx-
