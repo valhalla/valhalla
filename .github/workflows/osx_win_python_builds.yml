@@ -1,4 +1,4 @@
-name: Python - Master Push
+name: Build OSX, Win & Python bindings
 
 # this workflow:
 # - runs master & PR pushes for OSX & Win
@@ -306,7 +306,7 @@ jobs:
         env:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
-            VCPKG_BASE_DIR=${build/vcpkg_installed/custom-x64-windows}
+            VCPKG_BASE_DIR=build/vcpkg_installed/custom-x64-windows
 
       - name: Upload wheels
         # if: github.event_name != 'pull_request'
