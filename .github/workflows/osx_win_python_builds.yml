@@ -190,7 +190,7 @@ jobs:
 
   upload_all:
     name: Upload if release
-    needs: [build_linux_python_wheels, build_osx]
+    needs: [build_python_wheels_linux, build_osx]
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
 
