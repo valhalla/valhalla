@@ -1,4 +1,11 @@
-name: OSX CI
+name: Python - Master Push
+
+# this workflow:
+# - runs master & PR pushes for OSX & Win
+# - publishes Python bindings for all platforms and minor Python versions to:
+#   - https://pypi.org/project/pyvalhalla/ for tag pushes
+#   - https://pypi.org/project/pyvalhalla-git/ for master pushes
+
 on:
   push:
     paths-ignore:
@@ -9,7 +16,9 @@ on:
       - test_requests/
     branches:
       - master
-      - nn-python-packaging-osx
+      - 'nn-python-packaging*'
+    tags:
+      - '*'
   # pull_request:
   #   paths-ignore:
   #     - "*.md"
@@ -28,6 +37,66 @@ on:
         default: false
 
 jobs:
+  build_python_wheels_linux:
+    name: Build Python wheels, Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # we need to fetch all tags for setuptools-scm to work properly
+          fetch-depth: 0
+          fetch-tags: true
+
+      # this is only used to run cibuildwheel
+      - name: Configure Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Get branch name
+        run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
+
+      - name: Determine package to publish
+        run: |
+          VALHALLA_RELEASE_PKG="pyvalhalla"
+          if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
+          fi
+          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+
+      - name: Restore cache
+        id: cache-ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: /project/.cache/ccache
+          key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}
+          restore-keys: ccache-manylinux_2_28_x86_64-
+
+      - uses: pypa/cibuildwheel@v2.23.3
+        env:
+          # /host is mounted from the host system to the manylinux container
+          CIBW_ENVIRONMENT: >
+            CCACHE_DIR=/host/project/.cache/ccache
+            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+
+      - name: Delete cache to save the latest
+        run: |
+          KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
+          gh cache delete ${KEY} || true
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /project/.cache/ccache
+          key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          path: wheelhouse/*.whl
+  
   build_osx:
     runs-on: macos-14
     steps:
@@ -73,7 +142,7 @@ jobs:
 
       - name: Delete cache to save the latest
         run: |
-          KEY="ccache-osx-${{ env.VALHALLA_BRANCH }}"
+          KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
           gh cache delete ${KEY} || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -90,7 +159,7 @@ jobs:
       # only package python bindings if it's not a PR
 
       - name: Determine package to publish
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
@@ -99,7 +168,7 @@ jobs:
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         env:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
@@ -121,26 +190,26 @@ jobs:
 
   upload_all:
     name: Upload if release
-    needs: [build_osx]
+    needs: [build_linux_python_wheels, build_osx]
     runs-on: ubuntu-latest
-    # if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request'
 
     permissions:
       id-token: write # This is required for requesting the JWT from Github for PyPI
 
     steps:
-    - uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
-    - uses: actions/download-artifact@v4
-      with:
-        name: artifact
-        path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: artifact
+          path: dist
 
-    - name: Publish to Test PyPI
-      uses: pypa/gh-action-pypi-publish@v1.12.4
-      with:
-        # TODO: publish to real PyPI once all platforms are ready
-        repository-url: https://test.pypi.org/legacy/
-        verbose: true
+      - name: Publish to Test PyPI
+        uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          # TODO: publish to real PyPI once all platforms are ready
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
