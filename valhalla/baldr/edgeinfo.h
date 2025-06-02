@@ -3,7 +3,7 @@
 
 #include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/midgard/encoded.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>

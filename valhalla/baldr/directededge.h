@@ -3,7 +3,7 @@
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/turn.h>
 
 #include <cstdint>

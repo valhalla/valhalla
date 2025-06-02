@@ -1,5 +1,6 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/elevation_encoding.h"
 
 #include <vector>

@@ -1,4 +1,5 @@
 #include "baldr/graphid.h"
+#include "baldr/rapidjson_utils.h"
 
 namespace valhalla {
 namespace baldr {

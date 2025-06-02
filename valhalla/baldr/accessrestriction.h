@@ -2,7 +2,7 @@
 #define VALHALLA_BALDR_ACCESSRESTRICTION_H_
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 
 #include <cstdint>
 

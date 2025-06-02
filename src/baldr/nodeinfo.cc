@@ -1,6 +1,7 @@
 #include "baldr/nodeinfo.h"
 #include "baldr/datetime.h"
 #include "baldr/graphtile.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
 using namespace valhalla::midgard;
