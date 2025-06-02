@@ -22,9 +22,6 @@ make -C ${BUILD_DIR} install
 
 ccache -s
 
-# copy most recent valhalla_build_config.py
-cp scripts/valhalla_build_config src/bindings/python/valhalla/valhalla_build_config.py
-
 if ! [ -z "$PYTHON_VERSION" ]; then
   echo "[INFO] Building the pyvalhalla wheel for python v${PYTHON_VERSION}."
   python$PYTHON_VERSION -m pip install -r src/bindings/python/requirements-build.txt > /dev/null

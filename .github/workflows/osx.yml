@@ -34,6 +34,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          # we need to fetch all tags for setuptools-scm to work properly
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: actions/setup-python@v5
         with:
@@ -65,26 +68,26 @@ jobs:
       - name: Build & install Valhalla (for python bindings)
         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
 
-      # # - name: Build Tests
-      # #   run: make -C build -j$(sysctl -n hw.logicalcpu) tests
+      # - name: Build Tests
+      #   run: make -C build -j$(sysctl -n hw.logicalcpu) tests
 
-      # # - name: Delete cache to save the latest
-      # #   run: |
-      # #     KEY="ccache-osx-${{ env.VALHALLA_BRANCH }}"
-      # #     gh cache delete ${KEY} || true
-      # #   env:
-      # #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Delete cache to save the latest
+      #   run: |
+      #     KEY="ccache-osx-${{ env.VALHALLA_BRANCH }}"
+      #     gh cache delete ${KEY} || true
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # # - name: Save ccache
-      # #   uses: actions/cache/save@v4
-      # #   with:
-      # #     path: ~/Library/Caches/ccache
-      # #     key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
+      # - name: Save ccache
+      #   uses: actions/cache/save@v4
+      #   with:
+      #     path: ~/Library/Caches/ccache
+      #     key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
 
-      # # - name: Run Tests
-      # #   run: make -C build -j$(sysctl -n hw.logicalcpu) check
+      # - name: Run Tests
+      #   run: make -C build -j$(sysctl -n hw.logicalcpu) check
       
-      # # only package python bindings if it's not a PR
+      # only package python bindings if it's not a PR
 
       - name: Determine package to publish
         # if: github.event_name != 'pull_request'
