@@ -200,6 +200,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          # we need to fetch all tags for setuptools-scm to work properly
+          fetch-depth: 0
+          fetch-tags: true
 
       # we add a custom triplet to avoid cache misses as much as possible
       # https://github.com/microsoft/vcpkg/issues/26346#issuecomment-1319244766
