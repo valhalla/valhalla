@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #else
@@ -83,7 +84,6 @@ struct TrafficSpeed {
       case 2:
         return breakpoint2 < 255 && (encoded_speed3 == 0 || congestion3 == MAX_CONGESTION_VAL);
       default:
-        assert(false);
         throw std::logic_error("Bad subsegment");
     }
   }
@@ -110,7 +110,6 @@ struct TrafficSpeed {
       case 2:
         return encoded_speed3 << 1;
       default:
-        assert(false);
         throw std::logic_error("Bad subsegment");
     }
   }
