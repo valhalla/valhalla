@@ -28,10 +28,12 @@ if platform.system().lower() == "darwin":
 elif platform.system().lower() == "windows":
     # this is set in GHA to the vcpkg installation directory
     if (base_dir := Path(os.environ.get("VCPKG_BASE_DIR"))).is_dir():
-        include_dirs.append(str(base_dir.joinpath("include").absolute()), "C:/Program Files/valhalla/include")
+        include_dirs.append(str(base_dir.joinpath("include").absolute()))
+        include_dirs.append("C:/Program Files/valhalla/include")
         # DLLs are in the bin folder
         library_dirs.append(str(base_dir.joinpath("bin").absolute()))
-        library_dirs.append(str(base_dir.joinpath("lib").absolute()), "C:/Program Files/valhalla/lib")
+        library_dirs.append(str(base_dir.joinpath("lib").absolute()))
+        library_dirs.append("C:/Program Files/valhalla/lib")
 
 # determine libraries to link to
 if platform.system() == "Windows":
