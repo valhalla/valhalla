@@ -95,6 +95,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
+          name: wheels-linux
           path: wheelhouse/*.whl
   
   build_osx:
@@ -178,6 +179,7 @@ jobs:
         # if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
+          name: wheels-osx
           path: wheelhouse/*.whl
 
       - name: Setup tmate session
@@ -315,6 +317,7 @@ jobs:
         # if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
+          name: wheels-win
           path: wheelhouse/*.whl
 
       - name: Setup tmate session
@@ -341,8 +344,8 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: artifact
           path: dist
+          merge-multiple: true
 
       - name: Publish to Test PyPI
         uses: pypa/gh-action-pypi-publish@v1.12.4
