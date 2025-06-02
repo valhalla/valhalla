@@ -43,7 +43,7 @@ if platform.system() == "Windows":
         "libcurl",
         "zlib",
         "gdal",
-        "libspatialite",
+        "spatialite",
         "sqlite3",
         "lz4",
         "geos",
