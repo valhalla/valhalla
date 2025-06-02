@@ -21,6 +21,10 @@ libraries = list()
 extra_link_args = list()
 extra_compile_args = list()
 
+if platform.system().lower() == "darwin":
+    include_dirs.append("/opt/homebrew/include")
+    library_dirs.append("/opt/homebrew/lib")
+
 # determine libraries to link to
 if platform.system() == "Windows":
     libraries.extend(["libprotobuf-lite", "valhalla", "libcurl", "zlib", "Ws2_32", "ole32", "Shell32"])
