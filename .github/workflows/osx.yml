@@ -9,15 +9,16 @@ on:
       - test_requests/
     branches:
       - master
-  pull_request:
-    paths-ignore:
-      - "*.md"
-      - .circleci/
-      - docs/
-      - run_route_scripts/
-      - test_requests/
-    branches:
-      - master
+      - nn-python-packaging-osx
+  # pull_request:
+  #   paths-ignore:
+  #     - "*.md"
+  #     - .circleci/
+  #     - docs/
+  #     - run_route_scripts/
+  #     - test_requests/
+  #   branches:
+  #     - master
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -61,11 +62,18 @@ jobs:
       - name: Configure CMake
         run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON
 
-      - name: Build Valhalla
-        run: make -C build -j$(sysctl -n hw.logicalcpu)
+      - name: Build & install Valhalla (for python bindings)
+        run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
 
       - name: Build Tests
         run: make -C build -j$(sysctl -n hw.logicalcpu) tests
+
+      - name: Delete cache to save the latest
+        run: |
+          KEY="ccache-osx-${{ env.VALHALLA_BRANCH }}"
+          gh cache delete ${KEY} || true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Save ccache
         uses: actions/cache/save@v4
@@ -75,6 +83,30 @@ jobs:
 
       - name: Run Tests
         run: make -C build -j$(sysctl -n hw.logicalcpu) check
+      
+      # only package python bindings if it's not a PR
+
+      - name: Determine package to publish
+        # if: github.event_name != 'pull_request'
+        run: |
+          VALHALLA_RELEASE_PKG="pyvalhalla"
+          if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
+          fi
+          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+      
+      - uses: pypa/cibuildwheel@v2.23.3
+        # if: github.event_name != 'pull_request'
+        env:
+          CIBW_ENVIRONMENT: >
+            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+          MACOSX_DEPLOYMENT_TARGET: 10.15
+
+      - name: Upload wheels
+        # if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          path: wheelhouse/*.whl
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -83,3 +115,29 @@ jobs:
         with:
           detached: true
           timeout-minutes: 15
+
+  upload_all:
+    name: Upload if release
+    needs: [build_osx]
+    runs-on: ubuntu-latest
+    # if: github.event_name != 'pull_request'
+
+    permissions:
+      id-token: write # This is required for requesting the JWT from Github for PyPI
+
+    steps:
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: artifact
+        path: dist
+
+    - name: Publish to Test PyPI
+      uses: pypa/gh-action-pypi-publish@v1.12.4
+      with:
+        # TODO: publish to real PyPI once all platforms are ready
+        repository-url: https://test.pypi.org/legacy/
+        verbose: true
