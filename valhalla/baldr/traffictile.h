@@ -9,7 +9,6 @@
 #ifndef C_ONLY_INTERFACE
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphmemory.h>
-#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/valhalla.h>
 
 #include <algorithm>
@@ -135,57 +134,6 @@ struct TrafficSpeed {
       : overall_encoded_speed{overall_encoded_speed}, encoded_speed1{s1}, encoded_speed2{s2},
         encoded_speed3{s3}, breakpoint1{b1}, breakpoint2{b2}, congestion1{c1}, congestion2{c2},
         congestion3{c3}, has_incidents{incidents}, spare{0} {
-  }
-
-  void json(rapidjson::writer_wrapper_t& writer) const volatile {
-    if (speed_valid()) {
-      writer("overall_speed", static_cast<uint64_t>(get_overall_speed()));
-      auto speed = static_cast<uint64_t>(get_speed(0));
-      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
-        writer("speed_0", nullptr);
-      else
-        writer("speed_0", speed);
-      auto congestion = (congestion1 - 1.0) / 62.0;
-      if (congestion < 0)
-        writer("congestion_0", nullptr);
-      else {
-        writer.set_precision(2);
-        writer("congestion_0", congestion);
-      }
-      writer.set_precision(2);
-      writer("breakpoint_0", breakpoint1 / 255.0);
-      writer.set_precision(3);
-
-      speed = static_cast<uint64_t>(get_speed(1));
-      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
-        writer("speed_1", nullptr);
-      else
-        writer("speed_1", speed);
-      congestion = (congestion2 - 1.0) / 62.0;
-      if (congestion < 0)
-        writer("congestion_1", nullptr);
-      else {
-        writer.set_precision(2);
-        writer("congestion_1", congestion);
-      }
-      writer.set_precision(2);
-      writer("breakpoint_1", breakpoint2 / 255.0);
-      writer.set_precision(3);
-
-      speed = static_cast<uint64_t>(get_speed(2));
-      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
-        writer("speed_2", nullptr);
-      else
-        writer("speed_2", speed);
-      congestion = (congestion3 - 1.0) / 62.0;
-      if (congestion < 0)
-        writer("congestion_2", nullptr);
-      else {
-        writer.set_precision(2);
-        writer("congestion_2", congestion);
-        writer.set_precision(3);
-      }
-    }
   }
 #endif
 };

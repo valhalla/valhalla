@@ -1,4 +1,3 @@
-#include "baldr/json.h"
 #include "baldr/openlr.h"
 #include "tyr/serializers.h"
 
@@ -61,6 +60,58 @@ linear_reference(const baldr::DirectedEdge* de, float percent_along, const EdgeI
       .toBase64();
 }
 
+void serialize_traffic_speed(const volatile baldr::TrafficSpeed& traffic_speed,
+                             rapidjson::writer_wrapper_t& writer) {
+  if (traffic_speed.speed_valid()) {
+    writer("overall_speed", static_cast<uint64_t>(traffic_speed.get_overall_speed()));
+    auto speed = static_cast<uint64_t>(traffic_speed.get_speed(0));
+    if (speed == baldr::UNKNOWN_TRAFFIC_SPEED_KPH)
+      writer("speed_0", nullptr);
+    else
+      writer("speed_0", speed);
+    auto congestion = (traffic_speed.congestion1 - 1.0) / 62.0;
+    if (congestion < 0)
+      writer("congestion_0", nullptr);
+    else {
+      writer.set_precision(2);
+      writer("congestion_0", congestion);
+    }
+    writer.set_precision(2);
+    writer("breakpoint_0", traffic_speed.breakpoint1 / 255.0);
+    writer.set_precision(3);
+
+    speed = static_cast<uint64_t>(traffic_speed.get_speed(1));
+    if (speed == baldr::UNKNOWN_TRAFFIC_SPEED_KPH)
+      writer("speed_1", nullptr);
+    else
+      writer("speed_1", speed);
+    congestion = (traffic_speed.congestion2 - 1.0) / 62.0;
+    if (congestion < 0)
+      writer("congestion_1", nullptr);
+    else {
+      writer.set_precision(2);
+      writer("congestion_1", congestion);
+    }
+    writer.set_precision(2);
+    writer("breakpoint_1", traffic_speed.breakpoint2 / 255.0);
+    writer.set_precision(3);
+
+    speed = static_cast<uint64_t>(traffic_speed.get_speed(2));
+    if (speed == baldr::UNKNOWN_TRAFFIC_SPEED_KPH)
+      writer("speed_2", nullptr);
+    else
+      writer("speed_2", speed);
+    congestion = (traffic_speed.congestion3 - 1.0) / 62.0;
+    if (congestion < 0)
+      writer("congestion_2", nullptr);
+    else {
+      writer.set_precision(2);
+      writer("congestion_2", congestion);
+      writer.set_precision(3);
+    }
+  }
+}
+
 void serialize_edges(const PathLocation& location,
                      GraphReader& reader,
                      rapidjson::writer_wrapper_t& writer,
@@ -87,7 +138,7 @@ void serialize_edges(const PathLocation& location,
         writer.end_array();
         // write live_speed
         writer.start_object("live_speed");
-        traffic.json(writer);
+        serialize_traffic_speed(traffic, writer);
         writer.end_object();
 
         // basic rest of it plus edge metadata
