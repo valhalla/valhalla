@@ -24,6 +24,13 @@ extra_compile_args = list()
 if platform.system().lower() == "darwin":
     include_dirs.append("/opt/homebrew/include")
     library_dirs.append("/opt/homebrew/lib")
+elif platform.system().lower() == "windows":
+    # this is set in GHA to the vcpkg installation directory
+    if (base_dir := Path(os.environ.get("VCPKG_BASE_DIR"))).is_dir():
+        include_dirs.append(str(base_dir.joinpath("include").absolute()))
+        # DLLs are in the bin folder
+        library_dirs.append(str(base_dir.joinpath("bin").absolute()))
+        library_dirs.append(str(base_dir.joinpath("lib").absolute()))
 
 # determine libraries to link to
 if platform.system() == "Windows":
@@ -65,6 +72,7 @@ with open(os.path.join(THIS_DIR, "README.md"), encoding="utf-8") as f:
     long_description = "\n" + f.read()
 
 # if we push master, we upload to pyvalhalla-git
+# this is used in GHA for publishing
 pkg = os.environ.get('VALHALLA_RELEASE_PKG')
 if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-git"]):
     warnings.warn(f"VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}'")
