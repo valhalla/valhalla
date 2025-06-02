@@ -51,7 +51,7 @@ before-all = """
 """
 
 [tool.cibuildwheel.macos]
-environment = { LIBRARY_PATH="$(pwd)/lib/darwin/:$LIBRARY_PATH" }
+environment = { LIBRARY_PATH="/opt/homebrew/lib/:$LIBRARY_PATH" }
 repair-wheel-command = [
     'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-listdeps {wheel}',
     'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}'
