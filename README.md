@@ -77,11 +77,23 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 ## Installation
 
-To run Valhalla locally or your own server, we recommend using our Docker image. Checkout our docker image here: <https://github.com/orgs/valhalla/packages>. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
+For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](https://valhalla.github.io/valhalla).
+
+### From source
 
 If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
 
-For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](https://valhalla.github.io/valhalla).
+### From docker
+
+To run Valhalla locally or your own server, we recommend using our Docker image. Checkout our docker image here: <https://github.com/orgs/valhalla/packages>. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
+
+### Python bindings
+
+We publish our Python bindings to PyPI:
+- [`pyvalhalla`](https://pypi.org/project/pyvalhalla/): follows Github releases
+- [`pyvalhalla-git`](https://pypi.org/project/pyvalhalla-git/): follows Github master branch
+
+So far, the PyPI packages only contain the Python library. However, we might decide to also include other binaries, such as executables, in the future.
 
 ## Contributing
 

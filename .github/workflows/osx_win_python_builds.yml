@@ -363,6 +363,4 @@ jobs:
       - name: Publish to Test PyPI
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
-          # TODO: publish to real PyPI once all platforms are ready
-          repository-url: https://test.pypi.org/legacy/
           verbose: true
