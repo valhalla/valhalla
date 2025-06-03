@@ -1,4 +1,5 @@
 #include "baldr/openlr.h"
+#include "baldr/rapidjson_utils.h"
 #include "tyr/serializers.h"
 
 #include <cstdint>
