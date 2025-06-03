@@ -1,0 +1,3235 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://valhalla.github.io/valhalla/api/map-matching/api-reference/">
+      
+      
+        <link rel="prev" href="../../isochrone/api-reference/">
+      
+      
+        <link rel="next" href="../../locate/api-reference/">
+      
+      
+      <link rel="icon" href="../../../images/valhalla.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>Map Matching API - Valhalla Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#map-matching-service-api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Valhalla Docs" class="md-header__button md-logo" aria-label="Valhalla Docs" data-md-component="logo">
+      
+  <img src="../../../images/valhalla.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Valhalla Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Map Matching API
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="white" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/valhalla/valhalla/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Valhalla Docs" class="md-nav__button md-logo" aria-label="Valhalla Docs" data-md-component="logo">
+      
+  <img src="../../../images/valhalla.png" alt="logo">
+
+    </a>
+    Valhalla Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/valhalla/valhalla/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../valhalla-intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction for Users
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Build from Source
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Terminology
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Public APIs
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Public APIs
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../protocol-buffers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Protocol Buffers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Turn-by-Turn Route API
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            Turn-by-Turn Route API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../turn-by-turn/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../turn-by-turn/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimized/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Optimized Route API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matrix/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matrix API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../isochrone/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Isochrone API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Map Matching API
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map Matching API
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#trace-route-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trace route action
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trace-attributes-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trace attributes action
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inputs-of-the-map-matching-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inputs of the Map Matching service
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Inputs of the Map Matching service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shape-matching-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shape-matching parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#costing-models-and-other-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Costing models and other options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attribute-filters-trace_attributes-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      Attribute filters (trace_attributes only)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#outputs-of-the-map-matching-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outputs of the Map Matching service
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Outputs of the Map Matching service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#outputs-of-trace_route" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outputs of trace_route
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#outputs-of-trace_attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outputs of trace_attributes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Outputs of trace_attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#edge-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Edge items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sign-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sign items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-node-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      End node items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intersecting-edge-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Intersecting edge items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Admin items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#matched-point-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Matched point items
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-better-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get better results
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-map-matching-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Map Matching requests
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Map Matching requests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-trace_route-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example trace_route requests
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-trace_attributes-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example trace_attributes requests
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../locate/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Locate API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../elevation/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Elevation API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expansion/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Expansion API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Status API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Internal topics
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Internal topics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/why_tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Why tiles?
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../route_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview of how routes are computed
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Decoding shape
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tile structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../speeds/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Speed information
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../sif/dynamic-costing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dynamic costing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../sif/elevation_costing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Elevation influenced bicycle routing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../elevation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Elevation Lookup Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Unit tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tzdb_update/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tzdb update
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Internal components
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Internal components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../baldr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Baldr (routing data strutures/algorithms)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../loki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Loki (associate locations with graph edges)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../midgard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Midgard (data structures for geography/geometry)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../odin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Odin (route narrative/maneuver generation)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../sif/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sif (costing for edges/transitions)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../skadi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Skadi (digital elevation model usage)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tyr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tyr (service layer)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_8" id="__nav_7_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Meili (map matching)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_8">
+            <span class="md-nav__icon md-icon"></span>
+            Meili (map matching)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Meili
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/algorithms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Algorithms
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/implementation_details/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Implementation Details
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/library_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Library API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/service_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Service API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_9" id="__nav_7_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Mjolnir (routing graph/tile generation)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_9">
+            <span class="md-nav__icon md-icon"></span>
+            Mjolnir (routing graph/tile generation)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Mjolnir
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/geojson/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map Roulette Geojson Generation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/getting_started_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Mjolnir: Getting started guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/map_roulette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Automatic Map Roulette Task Updates
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/map_roulette_blog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map Roulette and Valhalla
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/tag_parsing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    OSM Tag Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/historical_traffic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Traffic in Valhalla
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_10" id="__nav_7_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Thor (routing algorithms)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_10">
+            <span class="md-nav__icon md-icon"></span>
+            Thor (routing algorithms)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../thor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Thor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../thor/isochrones/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Isochrones
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../thor/path-algorithm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Path algorithm
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../incidents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Incidents
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Data sources
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Data sources
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/data_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data sources
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/admins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Administrative data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/attribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Attribution requirements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../test/gurka/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../locales/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Locales
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Releasing a new Valhalla version
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#trace-route-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trace route action
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trace-attributes-action" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trace attributes action
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inputs-of-the-map-matching-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inputs of the Map Matching service
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Inputs of the Map Matching service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#shape-matching-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Shape-matching parameters
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#costing-models-and-other-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Costing models and other options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#attribute-filters-trace_attributes-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      Attribute filters (trace_attributes only)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#outputs-of-the-map-matching-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outputs of the Map Matching service
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Outputs of the Map Matching service">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#outputs-of-trace_route" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outputs of trace_route
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#outputs-of-trace_attributes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outputs of trace_attributes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Outputs of trace_attributes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#edge-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Edge items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sign-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sign items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-node-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      End node items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#intersecting-edge-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Intersecting edge items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#admin-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Admin items
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#matched-point-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      Matched point items
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#get-better-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Get better results
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-map-matching-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example Map Matching requests
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Example Map Matching requests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#example-trace_route-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example trace_route requests
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-trace_attributes-requests" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example trace_attributes requests
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="map-matching-service-api-reference">Map Matching service API reference<a class="headerlink" href="#map-matching-service-api-reference" title="Permanent link">&para;</a></h1>
+<p>With Valhalla's Map Matching service, you can match coordinates, such as GPS locations, to roads and paths that have been mapped in OpenStreetMap. By doing this, you can turn a path into a route with narrative instructions and also get the attribute values from that matched line.</p>
+<p>You can view an <a href="https://valhalla.github.io/demos/map_matching/">interactive demo</a>.</p>
+<p>There are two separate Map Matching calls that perform different operations on an input set of latitude,longitude coordinates. The <code>trace_route</code> action returns the shape snapped to the road network and narrative directions, while <code>trace_attributes</code> returns detailed attribution along the portion of the route.</p>
+<p>It is important to note that all service requests should be <em>POST</em> because <code>shape</code> or <code>encoded_polyline</code> can be fairly large.</p>
+<h2 id="trace-route-action">Trace route action<a class="headerlink" href="#trace-route-action" title="Permanent link">&para;</a></h2>
+<p>The <code>trace_route</code> action takes the costing mode and a list of latitude,longitude coordinates, for example, from a GPS trace, to turn them into a route with the shape snapped to the road network and a set of guidance directions. You might use this to take a GPS trace from a bike route into a set of narrative instructions so you can re-create your trip or share it with others.</p>
+<p>By default a single trip leg is returned in a trace_route response. You can split the route response into multiple legs by setting <code>"type":"break"</code> on any of the input shape objects in the <code>shape</code> parameter of your query. The first and last locations should always have type break. Note that setting breaks is not supported for encoded_polyline input, and is only supported for <code>map_snap</code> mode of the trace_route endpoint.</p>
+<p>If the path contains one or more discontinuities (i.e. no path can be found between two locations), it is split into multiple paths. Any remaining paths from the first discontinuity onwards are stored as route alternates on the response.</p>
+<h2 id="trace-attributes-action">Trace attributes action<a class="headerlink" href="#trace-attributes-action" title="Permanent link">&para;</a></h2>
+<p>The <code>trace_attributes</code> action takes the costing mode and a GPS trace or latitude,longitude positions and returns detailed attribution along the portion of the route. This includes details for each section of road along the path, as well as any intersections along the path. Some of the use cases for <code>trace_attributes</code> include getting:</p>
+<ul>
+<li>just-in-time information for navigation. Getting attributes only for portions of the upcoming route can improve performance because returning full details along an entire route can create a very large payload. For example, regular route responses include shape and a set of maneuvers along each route leg. The maneuvers are a generalization of the path to simplify the description. Detailed attributes and localization of attributes along a maneuver would require significant additions to the route response. For long and even moderate length routes this can be wasteful, as the chances of re-routing along a long route are high.</li>
+<li>speed limits. Speed limits along a path are a good example of just-in-time information that can be used for navigation. A single maneuver in a route (US-1, for example) may have many different speed limits along the full length of the maneuver. The <code>trace_attributes</code> action allows speed limits along each road segment to be determined and associated to portions of a maneuver.</li>
+<li>way IDs. You can turn a GPS trace into a set of way IDs that match the trace.</li>
+<li>the current road. A map-matching call with a recent set of GPS locations can be useful to find information about the current road, even if not doing navigation or having a route loaded on device.</li>
+</ul>
+<p>Note that the attributes that are returned are Valhalla routing attributes, not the base OSM tags or base data. Valhalla imports OSM tags and normalizes many of them to a standard set of values used for routing. The default logic for the OpenStreetMap tags, keys, and values used when routing are documented on an <a href="https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Valhalla">OSM wiki page</a>. To get the base OSM tags along a path, you need to take the OSM way IDs that are returned as attributes along the path and query OSM directly through a process such as the <a href="https://wiki.openstreetmap.org/wiki/Overpass_API">Overpass API</a>.</p>
+<h2 id="inputs-of-the-map-matching-service">Inputs of the Map Matching service<a class="headerlink" href="#inputs-of-the-map-matching-service" title="Permanent link">&para;</a></h2>
+<h3 id="shape-matching-parameters">Shape-matching parameters<a class="headerlink" href="#shape-matching-parameters" title="Permanent link">&para;</a></h3>
+<p><code>shape_match</code> is an optional string input parameter. It allows some control of the matching algorithm based on the type of input.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">shape_match type</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>edge_walk</code></td>
+<td style="text-align: left;">Indicates an edge walking algorithm can be used. This algorithm requires nearly exact shape matching, so it should only be used when the shape is from a prior Valhalla route.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>map_snap</code></td>
+<td style="text-align: left;">Indicates that a map-matching algorithm should be used because the input shape might not closely match Valhalla edges. This algorithm is more expensive.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>walk_or_snap</code></td>
+<td style="text-align: left;">Also the default option. This will try edge walking and if this does not succeed, it will fall back and use map matching.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="costing-models-and-other-options">Costing models and other options<a class="headerlink" href="#costing-models-and-other-options" title="Permanent link">&para;</a></h3>
+<p>Valhalla Map Matching can use any costing model available in the Valhalla route service except for <code>multimodal</code> (it would be difficult to get a GPS trace and detect certain mode changes). Refer to the <a href="../../turn-by-turn/api-reference/#costing-models">route costing models</a> and <a href="../../turn-by-turn/api-reference/#costing-options">costing options</a> documentation for more on how to specify this input.</p>
+<p>You can also set <code>directions_options</code> to specify output units, language, and whether or not to return directions in a narrative form. Refer to the <a href="../../turn-by-turn/api-reference/#directions-options">route options</a> documentation for examples.</p>
+<p><code>trace_route</code> has additional options that allow more flexibility in specifying timestamps (when using encoded polyline input for the trace) and for using timestamps when computing elapsed time along the matched path. These options are:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Option</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>begin_time</code></td>
+<td style="text-align: left;">Begin timestamp for the trace. This is used along with the <code>durations</code> so that timestamps can be specified for a trace that is specified using an encoded polyline.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>durations</code></td>
+<td style="text-align: left;">List of durations (seconds) between each successive pair of input trace points. This allows trace points to be supplied as an encoded polyline and timestamps to be created by using this list of "delta" times along with the <code>begin_time</code> of the trace.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_timestamps</code></td>
+<td style="text-align: left;">A boolean value indicating whether the input timestamps or durations should be used when computing elapsed time at each edge along the matched path. If true, timestamps are used. If false (default), internal costing is applied to compute elapsed times.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>trace_options</code></td>
+<td style="text-align: left;">Additional options.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>trace_options.search_radius</code></td>
+<td style="text-align: left;">Search radius in meters associated with supplied trace points.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>trace_options.gps_accuracy</code></td>
+<td style="text-align: left;">GPS accuracy in meters associated with supplied trace points.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>trace_options.breakage_distance</code></td>
+<td style="text-align: left;">Breaking distance in meters between trace points.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>trace_options.interpolation_distance</code></td>
+<td style="text-align: left;">Interpolation distance in meters beyond which trace points are merged together.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>linear_references</code></td>
+<td style="text-align: left;">When present and <code>true</code>, the successful <code>trace_route</code> response will include a key <code>linear_references</code>. Its value is an array of base64-encoded <a href="https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf">OpenLR location references</a>, one for each graph edge of the road network matched by the input trace.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="attribute-filters-trace_attributes-only">Attribute filters (<code>trace_attributes</code> only)<a class="headerlink" href="#attribute-filters-trace_attributes-only" title="Permanent link">&para;</a></h3>
+<p>The <code>trace_attributes</code> action allows you to apply filters to <code>include</code> or <code>exclude</code> specific attribute filter keys in your response. These filters are optional and can be added to the action string inside of the <code>filters</code> object.</p>
+<p>If no filters are used, all attributes are enabled and returned in the <code>trace_attributes</code> response.</p>
+<p>These are the available filter keys. Review their <a href="#outputs-of-trace_attributes">descriptions</a> for more information.</p>
+<div class="highlight"><pre><span></span><code>// Edge filter Keys
+edge.names
+edge.length  # can also set source/target_percent_along
+edge.speed
+edge.road_class
+edge.begin_heading
+edge.end_heading
+edge.begin_shape_index
+edge.end_shape_index
+edge.traversability
+edge.use
+edge.toll
+edge.unpaved
+edge.tunnel
+edge.bridge
+edge.roundabout
+edge.internal_intersection
+edge.drive_on_right
+edge.surface
+edge.sign.exit_number
+edge.sign.exit_branch
+edge.sign.exit_toward
+edge.sign.exit_name
+edge.travel_mode
+edge.vehicle_type
+edge.pedestrian_type
+edge.bicycle_type
+edge.transit_type
+edge.id
+edge.indoor
+edge.way_id
+edge.weighted_grade
+edge.max_upward_grade
+edge.max_downward_grade
+edge.mean_elevation
+edge.lane_count
+edge.cycle_lane
+edge.bicycle_network
+edge.sac_scale
+edge.shoulder
+edge.sidewalk
+edge.density
+edge.speed_limit
+edge.truck_speed
+edge.truck_route
+edge.country_crossing
+edge.forward
+
+// Node filter keys
+node.intersecting_edge.begin_heading
+node.intersecting_edge.from_edge_name_consistency
+node.intersecting_edge.to_edge_name_consistency
+node.intersecting_edge.driveability
+node.intersecting_edge.cyclability
+node.intersecting_edge.walkability
+node.intersecting_edge.use
+node.intersecting_edge.road_class
+node.intersecting_edge.lane_count
+node.elapsed_time
+node.admin_index
+node.type
+node.traffic_signal
+node.fork
+node.time_zone
+
+// Other filter keys
+osm_changeset
+shape
+admin.country_code
+admin.country_text
+admin.state_code
+admin.state_text
+matched.point
+matched.type
+matched.edge_index
+matched.begin_route_discontinuity
+matched.end_route_discontinuity
+matched.distance_along_edge
+matched.distance_from_trace_point
+</code></pre></div>
+<h2 id="outputs-of-the-map-matching-service">Outputs of the Map Matching service<a class="headerlink" href="#outputs-of-the-map-matching-service" title="Permanent link">&para;</a></h2>
+<h3 id="outputs-of-trace_route">Outputs of <code>trace_route</code><a class="headerlink" href="#outputs-of-trace_route" title="Permanent link">&para;</a></h3>
+<p>The outputs of the <code>trace_route</code> action are the same as the <a href="../../turn-by-turn/api-reference/#outputs-of-a-route">outputs of a route</a> action.</p>
+<h3 id="outputs-of-trace_attributes">Outputs of <code>trace_attributes</code><a class="headerlink" href="#outputs-of-trace_attributes" title="Permanent link">&para;</a></h3>
+<p>The <code>trace_attributes</code> results contains a list of edges and, optionally, the following items: <code>osm_changeset</code>, list of <code>admins</code>, <code>shape</code>, <code>matched_points</code>, and <code>units</code>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Result item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>edges</code></td>
+<td style="text-align: left;">List of edges associated with input shape. See the list of <a href="#edge-items">edge items</a> for details.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>osm_changeset</code></td>
+<td style="text-align: left;">Identifier of the OpenStreetMap base data version.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>admins</code></td>
+<td style="text-align: left;">List of the administrative codes and names. See the list of <a href="#admin-items">admin items</a> for details.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shape</code></td>
+<td style="text-align: left;">The <a href="../../../decoding/">encoded polyline</a> of the matched path.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>matched_points</code></td>
+<td style="text-align: left;">List of match results when using the <code>map_snap</code> shape match algorithm. There is a one-to-one correspondence with the input set of latitude, longitude coordinates and this list of match results. See the list of <a href="#matched-point-items">matched point items</a> for details.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>units</code></td>
+<td style="text-align: left;">The specified units with the request, in either kilometers or miles.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>warnings</code></td>
+<td style="text-align: left;">A warnings array. This array may contain descriptive text about notices of deprecated request parameters, clamped values etc.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="edge-items">Edge items<a class="headerlink" href="#edge-items" title="Permanent link">&para;</a></h4>
+<p>Each <code>edge</code> may include:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Edge item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>names</code></td>
+<td style="text-align: left;">List of names.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>source_percent_along</code></td>
+<td style="text-align: left;">The start of an edge's match as percentage of its length in (0, 1) range. If an edge was fully matched, we omit this value.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>target_percent_along</code></td>
+<td style="text-align: left;">The end of an edge's match as percentage of its length in (0, 1) range. If an edge was fully matched, we omit this value.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>length</code></td>
+<td style="text-align: left;">The <strong>matched</strong> edge length in the units specified (default is kilometers). If <code>source_percent_along</code> and/or <code>target_percent_along</code> are present, this represents the partially matched edge length, otherwise the full edge length.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>speed</code></td>
+<td style="text-align: left;">Edge speed in the units specified. The default is kilometers per hour.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>road_class</code></td>
+<td style="text-align: left;">Road class values:<ul><li><code>motorway</code></li><li><code>trunk</code></li><li><code>primary</code></li><li><code>secondary</code></li><li><code>tertiary</code></li><li><code>unclassified</code></li><li><code>residential</code></li><li><code>service_other</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>begin_heading</code></td>
+<td style="text-align: left;">The direction at the beginning of an edge. The units are degrees from north in a clockwise direction.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>end_heading</code></td>
+<td style="text-align: left;">The direction at the end of an edge. The units are degrees from north in a clockwise direction..</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>begin_shape_index</code></td>
+<td style="text-align: left;">Index into the list of shape points for the start of the edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>end_shape_index</code></td>
+<td style="text-align: left;">Index into the list of shape points for the end of the edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>traversability</code></td>
+<td style="text-align: left;">Traversability values, if available:<ul><li><code>forward</code></li><li><code>backward</code></li><li><code>both</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use</code></td>
+<td style="text-align: left;">Use values: <ul><li><code>tram</code></li><li><code>road</code></li><li><code>ramp</code></li><li><code>turn_channel</code></li><li><code>track</code></li><li><code>driveway</code></li><li><code>alley</code></li><li><code>parking_aisle</code></li><li><code>emergency_access</code></li><li><code>drive_through</code></li><li><code>culdesac</code></li><li><code>cycleway</code></li><li><code>mountain_bike</code></li><li><code>sidewalk</code></li><li><code>footway</code></li><li><code>steps</code></li><li><code>other</code></li><li><code>rail-ferry</code></li><li><code>ferry</code></li><li><code>rail</code></li><li><code>bus</code></li><li><code>egress_connection</code></li><li><code>platform_connection</code></li><li><code>transit_connection</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>toll</code></td>
+<td style="text-align: left;">True if the edge has any toll.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>unpaved</code></td>
+<td style="text-align: left;">True if the edge is unpaved or rough pavement.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>tunnel</code></td>
+<td style="text-align: left;">True if the edge is a tunnel.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bridge</code></td>
+<td style="text-align: left;">True if the edge is a bridge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>roundabout</code></td>
+<td style="text-align: left;">True if the edge is a roundabout.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>internal_intersection</code></td>
+<td style="text-align: left;">True if the edge is an internal intersection.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>drive_on_right</code></td>
+<td style="text-align: left;">True if the flag is enabled for driving on the right side of the street.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>surface</code></td>
+<td style="text-align: left;">Surface values: <ul><li><code>paved_smooth</code></li><li><code>paved</code></li><li><code>paved_rough</code></li><li><code>compacted</code></li><li><code>dirt</code></li><li><code>gravel</code></li><li><code>path</code></li><li><code>impassable</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sign</code></td>
+<td style="text-align: left;">Contains the interchange guide information associated with this edge. See the list of <a href="#sign-items">sign items</a> for details.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>travel_mode</code></td>
+<td style="text-align: left;">Travel mode values:<ul><li><code>drive</code></li><li><code>pedestrian</code></li><li><code>bicycle</code></li><li><code>transit</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>vehicle_type</code></td>
+<td style="text-align: left;">Vehicle type values:<ul><li><code>car</code></li><li><code>motorcycle</code></li><li><code>bus</code></li><li><code>tractor_trailer</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>pedestrian_type</code></td>
+<td style="text-align: left;">Pedestrian type values:<ul><li><code>foot</code></li><li><code>wheelchair</code></li><li><code>segway</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bicycle_type</code></td>
+<td style="text-align: left;">Bicycle type values:<ul><li><code>road</code></li><li><code>cross</code></li><li><code>hybrid</code></li><li><code>mountain</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>transit_type</code></td>
+<td style="text-align: left;">Transit type values: <ul><li><code>tram</code></li><li><code>metro</code></li><li><code>rail</code></li><li><code>bus</code></li><li><code>ferry</code></li><li><code>cable_car</code></li><li><code>gondola</code></li><li><code>funicular</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>id</code></td>
+<td style="text-align: left;">Identifier of an edge within the tiled, hierarchical graph.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>indoor</code></td>
+<td style="text-align: left;">Whether or not the edge is inside of a building or structure or not.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>way_id</code></td>
+<td style="text-align: left;">Way identifier of the OpenStreetMap base data.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>weighted_grade</code></td>
+<td style="text-align: left;">The weighted grade factor. Valhalla manufactures a <code>weighted_grade</code> from elevation data. It is a measure used for hill avoidance in routing - sort of a relative energy use along an edge. But since an edge in Valhalla can possibly go up and down over several hills it might not equate to what most folks think of as grade.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>max_upward_grade</code></td>
+<td style="text-align: left;">The maximum upward slope. A value of 32768 indicates no elevation data is available for this edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>max_downward_grade</code></td>
+<td style="text-align: left;">The maximum downward slope. A value of 32768 indicates no elevation data is available for this edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>mean_elevation</code></td>
+<td style="text-align: left;">The mean or average elevation along the edge. Units are meters by default. If the units are specified as miles, then the mean elevation is returned in feet. A value of 32768 indicates no elevation data is available for this edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>lane_count</code></td>
+<td style="text-align: left;">The number of lanes for this edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cycle_lane</code></td>
+<td style="text-align: left;">The type (if any) of bicycle lane along this edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bicycle_network</code></td>
+<td style="text-align: left;">The bike network for this edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sac_scale</code></td>
+<td style="text-align: left;">Classification of hiking trails based on difficulty. Values:<ul><li><code>0 - No Sac Scale</code></li><li><code>1 - Hiking</code></li><li><code>2 - Mountain hiking</code><li><code>3 - Demanding mountain hiking</code><li><code>4 - Alpine hiking</code><li><code>5 - Demanding alpine hiking</code><li><code>6 - Difficult alpine hiking</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shoulder</code></td>
+<td style="text-align: left;">True if the edge has a shoulder.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sidewalk</code></td>
+<td style="text-align: left;">Sidewalk values:<ul><li><code>left</code></li><li><code>right</code></li><li><code>both</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>density</code></td>
+<td style="text-align: left;">The relative density along the edge.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>speed_limit</code></td>
+<td style="text-align: left;">Edge speed limit in the units specified. The default is kilometers per hour.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>truck_speed</code></td>
+<td style="text-align: left;">Edge truck speed in the units specified. The default is kilometers per hour.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>truck_route</code></td>
+<td style="text-align: left;">True if edge is part of a truck network/route.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>end_node</code></td>
+<td style="text-align: left;">The node at the end of this edge. See the list of <a href="#end-node-items">end node items</a> for details.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>landmarks</code></td>
+<td style="text-align: left;">List of landmarks along the edge. They are used as direction support in navigation.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>country_crossing</code></td>
+<td style="text-align: left;">True if the edge is a country crossing.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>forward</code></td>
+<td style="text-align: left;">True if the edge is traversed forwards and False if it is traversed backwards with respect to the reference shape/geometry (ie. the direction in which it was digitized).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="sign-items">Sign items<a class="headerlink" href="#sign-items" title="Permanent link">&para;</a></h4>
+<p>Each <code>sign</code> may include:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Sign item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>exit_number</code></td>
+<td style="text-align: left;">List of exit number elements. If an exit number element exists, it is typically just one value. Element example: <code>91B</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exit_branch</code></td>
+<td style="text-align: left;">List of exit branch elements. An exit branch element is the subsequent road name or route number after the sign. Element example: <code>I 95 North</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exit_toward</code></td>
+<td style="text-align: left;">List of exit toward elements. The exit toward element is the location where the road ahead goes; the location is typically a control city, but may also be a future road name or route number. Element example: <code>New York</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exit_name</code></td>
+<td style="text-align: left;">List of exit name elements. The exit name element is the interchange identifier, although typically not used in the United States. Element example: <code>Gettysburg Pike</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="end-node-items">End node items<a class="headerlink" href="#end-node-items" title="Permanent link">&para;</a></h4>
+<p>Each <code>end_node</code> may include:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Node item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>intersecting_edges</code></td>
+<td style="text-align: left;">List of intersecting edges at this node. See the list of <a href="#intersecting-edge-items">intersecting edge items</a> for details.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>elapsed_time</code></td>
+<td style="text-align: left;">Elapsed time of the path to arrive at this node.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>admin_index</code></td>
+<td style="text-align: left;">Index value in the admin list.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;">Node type values: <ul><li><code>street_intersection</code></li><li><code>gate</code></li><li><code>bollard</code></li><li><code>toll_booth</code></li><li><code>multi_use_transit_stop</code></li><li><code>bike_share</code></li><li><code>parking</code></li><li><code>motor_way_junction</code></li><li><code>border_control</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>traffic_signal</code></td>
+<td style="text-align: left;">A boolean value indicating whether the node is a traffic signal (<code>true</code> or <code>false</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>fork</code></td>
+<td style="text-align: left;">True if this node is a fork.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>time_zone</code></td>
+<td style="text-align: left;">Time zone string for this node.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="intersecting-edge-items">Intersecting edge items<a class="headerlink" href="#intersecting-edge-items" title="Permanent link">&para;</a></h4>
+<p>Each <code>intersecting_edge</code> may include:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Intersecting edge item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>begin_heading</code></td>
+<td style="text-align: left;">The direction at the beginning of this intersecting edge. The units are degrees from north in a clockwise direction.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>from_edge_name_consistency</code></td>
+<td style="text-align: left;">True if this intersecting edge at the end node has consistent names with the path <code>from edge</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>to_edge_name_consistency</code></td>
+<td style="text-align: left;">True if this intersecting edge at the end node has consistent names with the path <code>to edge</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>driveability</code></td>
+<td style="text-align: left;">Driveability values, if available:<ul><li><code>forward</code></li><li><code>backward</code></li><li><code>both</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cyclability</code></td>
+<td style="text-align: left;">Cyclability values, if available:<ul><li><code>forward</code></li><li><code>backward</code></li><li><code>both</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>walkability</code></td>
+<td style="text-align: left;">Walkability values, if available:<ul><li><code>forward</code></li><li><code>backward</code></li><li><code>both</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use</code></td>
+<td style="text-align: left;">Use values: <ul><li><code>tram</code></li><li><code>road</code></li><li><code>ramp</code></li><li><code>turn_channel</code></li><li><code>track</code></li><li><code>driveway</code></li><li><code>alley</code></li><li><code>parking_aisle</code></li><li><code>emergency_access</code></li><li><code>drive_through</code></li><li><code>culdesac</code></li><li><code>cycleway</code></li><li><code>mountain_bike</code></li><li><code>sidewalk</code></li><li><code>footway</code></li><li><code>steps</code></li><li><code>other</code></li><li><code>rail-ferry</code></li><li><code>ferry</code></li><li><code>rail</code></li><li><code>bus</code></li><li><code>egress_connection</code></li><li><code>platform_connection</code></li><li><code>transit_connection</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>road_class</code></td>
+<td style="text-align: left;">Road class values:<ul><li><code>motorway</code></li><li><code>trunk</code></li><li><code>primary</code></li><li><code>secondary</code></li><li><code>tertiary</code></li><li><code>unclassified</code></li><li><code>residential</code></li><li><code>service_other</code></li></ul></td>
+</tr>
+</tbody>
+</table>
+<h4 id="admin-items">Admin items<a class="headerlink" href="#admin-items" title="Permanent link">&para;</a></h4>
+<p>Each <code>admin</code> may include:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Admin item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>country_code</code></td>
+<td style="text-align: left;">Country <a href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2">ISO 3166-1 alpha-2</a> code.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>country_text</code></td>
+<td style="text-align: left;">Country name.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>state_code</code></td>
+<td style="text-align: left;">State code.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>state_text</code></td>
+<td style="text-align: left;">State name.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="matched-point-items">Matched point items<a class="headerlink" href="#matched-point-items" title="Permanent link">&para;</a></h4>
+<p>Each <code>matched_point</code> may include:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Matched point item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>lat</code></td>
+<td style="text-align: left;">The latitude of the matched point.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>lon</code></td>
+<td style="text-align: left;">The longitude of the matched point.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;">Describes the type of this match result - possible values include:<ul><li><code>unmatched</code></li><li><code>interpolated</code></li><li><code>matched</code></li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>edge_index</code></td>
+<td style="text-align: left;">The index of the edge in the list of edges that this matched point is associated with. This value will not exist if this point was unmatched.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>begin_route_discontinuity</code></td>
+<td style="text-align: left;">The boolean value is true if this match result is the begin location of a route disconnect. This value will not exist if this is false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>end_route_discontinuity</code></td>
+<td style="text-align: left;">The boolean value is true if this match result is the end location of a route disconnect.  This value will not exist if this is false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>distance_along_edge</code></td>
+<td style="text-align: left;">The distance along the associated edge for this matched point. For example, if the matched point is halfway along the edge then the value would be 0.5. This value will not exist if this point was unmatched.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>distance_from_trace_point</code></td>
+<td style="text-align: left;">The distance in meters from the trace point to the matched point. This value will not exist if this point was unmatched.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="get-better-results">Get better results<a class="headerlink" href="#get-better-results" title="Permanent link">&para;</a></h2>
+<p>Follow these guidelines to improve the Map Matching results.</p>
+<ul>
+<li>You should have good GPS accuracy, meaning that there are few obstructions affecting GPS signals. This can be difficult in urban areas.</li>
+<li>Make sure the trace point density is within the approximate range of one per second and one per 10 seconds. The greater the range between them, the more chance of inaccurate results.</li>
+<li>Have each trace represent one continuous path.</li>
+<li>Verify that there is a corresponding match with the OpenStreetMap network.</li>
+</ul>
+<p>You can use certain parameters to tune the response. Unless otherwise noted, each of these options is specified within a root-level <code>trace_options</code> object.</p>
+<ul>
+<li>Use <code>turn_penalty_factor</code> to penalize turns from one road segment to next. For a pedestrian <code>trace_route</code>, you may see a back-and-forth motion along the streets of your path. Try increasing the turn penalty factor to 500 to smooth out jittering of points. Note that if GPS accuracy is already good, increasing this will have a negative affect on your results.</li>
+<li>Set the <code>gps_accuracy</code> to indicate the accuracy in meters.</li>
+<li>Apply a <code>search_radius</code> to specify the search radius (in meters) within which to search road candidates for each measurement. The maximum search radius is 100 meters. Note that performance may decrease with a higher search radius value.</li>
+<li>Add a <code>time</code> component to your GPS data to inform the map matching algorithm about when the point was measured. Providing a <code>time</code> attribute is not available for <code>encoded_polyline</code> data and can only be specified with GPS data provided by the <code>shape</code> attribute. <code>time</code> is specified in seconds and can be a UNIX epoch time or any increasing sequence:
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;shape&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983841</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735741</span><span class="p">,</span><span class="nt">&quot;time&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983704</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735298</span><span class="p">,</span><span class="nt">&quot;time&quot;</span><span class="p">:</span><span class="mi">2</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983578</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734848</span><span class="p">,</span><span class="nt">&quot;time&quot;</span><span class="p">:</span><span class="mi">6</span><span class="p">},</span><span class="err">...</span><span class="p">]}</span>
+</code></pre></div></li>
+</ul>
+<h2 id="example-map-matching-requests">Example Map Matching requests<a class="headerlink" href="#example-map-matching-requests" title="Permanent link">&para;</a></h2>
+<h3 id="example-trace_route-requests">Example <code>trace_route</code> requests<a class="headerlink" href="#example-trace_route-requests" title="Permanent link">&para;</a></h3>
+<p>The following are example JSON payloads for POST requests for the <code>trace_routes</code> action.</p>
+<p><em><code>trace_route</code> with shape parameter</em></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;shape&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983841</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735741</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;break&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983704</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735298</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;via&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983578</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734848</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;via&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983551</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734253</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;break&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983555</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734116</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;via&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983589</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.733315</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;via&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983719</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.732445</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;via&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983818</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731712</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;via&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983776</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731506</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;via&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983696</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731369</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;break&quot;</span><span class="p">}],</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span><span class="nt">&quot;shape_match&quot;</span><span class="p">:</span><span class="s2">&quot;map_snap&quot;</span><span class="p">}}</span>
+</code></pre></div>
+<p><em><code>trace_route</code> with encoded polyline parameter</em></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;encoded_polyline&quot;</span><span class="p">:</span><span class="s2">&quot;_grbgAh~{nhF?lBAzBFvBHxBEtBKdB?fB@dBZdBb@hBh@jBb@x@\\|@x@pB\\x@v@hBl@nBPbCXtBn@|@z@ZbAEbAa@~@q@z@QhA]pAUpAVhAPlAWtASpAAdA[dASdAQhAIlARjANnAZhAf@n@`A?lB^nCRbA\\xB`@vBf@tBTbCFbARzBZvBThBRnBNrBP`CHbCF`CNdCb@vBX`ARlAJfADhA@dAFdAP`AR`Ah@hBd@bBl@rBV|B?vB]tBCvBBhAF`CFnBXtAVxAVpAVtAb@|AZ`Bd@~BJfA@fAHdADhADhABjAGzAInAAjAB|BNbCR|BTjBZtB`@lBh@lB\\|Bl@rBXtBN`Al@g@t@?nAA~AKvACvAAlAMdAU`Ac@hAShAI`AJ`AIdAi@bAu@|@k@p@]p@a@bAc@z@g@~@Ot@Bz@f@X`BFtBXdCLbAf@zBh@fBb@xAb@nATjAKjAW`BI|AEpAHjAPdAAfAGdAFjAv@p@XlAVnA?~A?jAInAPtAVxAXnAf@tBDpBJpBXhBJfBDpAZ|Ax@pAz@h@~@lA|@bAnAd@hAj@tAR~AKxAc@xAShA]hAIdAAjA]~A[v@BhB?dBSv@Ct@CvAI~@Oz@Pv@dAz@lAj@~A^`B^|AXvAVpAXdBh@~Ap@fCh@hB\\zBN`Aj@xBFdA@jALbAPbAJdAHdAJbAHbAHfAJhALbA\\lBTvBAdC@bC@jCKjASbC?`CM`CDpB\\xAj@tB\\fA\\bAVfAJdAJbAXz@L|BO`AOdCDdA@~B\\z@l@v@l@v@l@r@j@t@b@x@b@r@z@jBVfCJdAJdANbCPfCF|BRhBS~BS`AYbAe@~BQdA&quot;</span><span class="p">,</span><span class="nt">&quot;shape_match&quot;</span><span class="p">:</span><span class="s2">&quot;map_snap&quot;</span><span class="p">,</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;pedestrian&quot;</span><span class="p">,</span><span class="nt">&quot;directions_options&quot;</span><span class="p">:{</span><span class="nt">&quot;units&quot;</span><span class="p">:</span><span class="s2">&quot;miles&quot;</span><span class="p">}}</span>
+</code></pre></div>
+<p><em><code>trace_route</code> with additional trace options</em></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;encoded_polyline&quot;</span><span class="p">:</span><span class="s2">&quot;{gmagAp~_nhF[_AZqAjAaB`AkB\\cAZeAPcAHiAKiCQaAUeAe@cA]qAQsACqAF}AIsAg@{@s@i@sAw@i@uANyAPsAv@cAZ_ALqA_@cA_Ai@q@w@[uAm@}AaAqAs@s@m@u@c@oA]mAMiAIkAYqBRyATsANsBKyBAiA?iAFsALuAPsAXaBGgCg@oBKiBf@iBGiBg@oBHqA?{Ai@cA@oAbAgAj@g@j@k@n@q@p@e@n@k@d@}@\\cAFgAIoBg@m@y@[_ASu@K{AHgBP{@@w@Jy@L}@JsAMoAe@kAq@kAk@gAg@y@a@m@g@q@mAo@e@gAc@sAA_AI_BFu@LiALaALaAHoAFiAF{A@yABkAKmAKcAMiBU}AYu@MaBUqBu@{As@iAaAaA_Ao@aAi@s@q@{@{@a@sAi@oAGeAD}@[YiAmA[u@BgBXaBHgAQ}@]s@S]x@_BbC}@lAw@dAs@dAk@dAm@z@s@n@y@p@{@`Ao@z@_@z@u@jA_Af@aANiAAcBPsAl@s@X}@T{@PoAPeAl@{@t@_AbAgAjBk@r@e@~AY~@U~@YhAi@lAo@t@kBb@u@NyAX{@k@MoAi@{@eAx@aArAmBt@_ALgAPiAXkAf@w@j@u@p@_A^aA\\aA`@eAt@eATcAGcAG}@AeAX_Aj@q@r@aAp@wAt@sARk@xA?pBAvAu@Ps@_Bk@i@y@\\s@f@o@j@u@f@{@RwAb@mAZaARkATqANyAImAK}@C_AFqADiAC_AUs@[}Ao@eBm@q@_@_Bg@iAm@kAaAc@s@c@w@y@{AWcAc@{Am@c@yBF{@AkAYmA_@uBD{@B{@Gu@ScBIu@NaB^_B`@sAC{Ac@}A]yAg@aBHuAJ_BAaAEgAA_AAy@@eBX_AFw@JcB^s@VuA`AuAl@kBl@_AFeAJcAB{ABwAj@o@l@q@b@u@Z{AXmAaAm@o@oAwAsAcAsAu@u@cAe@iAy@eAk@iAc@gAOgAWgBe@wAo@}Ai@sBY{@u@s@y@Y{@[aA]s@oB\\eCPoARwAXgBV{Ab@sAf@oAb@kAFsA?kACeADeA^aABeAO_Be@gB]}@eAaB_AoAw@aAm@o@q@cBp@eBz@a@fAi@|@o@LiBAyAIoAu@qBkAuAiAa@gAa@cB_@eAQm@c@o@{ANaBf@{@h@_BV}@XcBz@?{@s@o@y@u@}@mAaBw@qCm@mG}@uJLoBVkBVaBh@iB`@gBXgBZ_BZaBNgACwASyAUqAGuBGsBTcBRiB^eCTmBTaBNoAVaB@kAMiBZcAd@eAf@q@z@mAVgB[gAq@aAk@s@UkAG{B_@sAW}ASoBMwBSuB]gBq@eBs@eBaAuAaAeAo@{@i@}@e@{@g@{@m@m@y@_@y@[aBk@a@cBFsB[iAaAGoA`@IcC^yA`@}AVkBNwBBmBR_Cr@{CrAyD|@mCf@kBXeB\\eBl@aCf@cBc@sBg@qAUkBe@sBw@eBi@uA{@gAyAc@qAk@[wB@gARqANgAPiAJsAAeAa@mBKmB@uBBwB@oBZoBJkCJkANaCY}Ac@aBa@iBc@iBu@qBu@sBu@sB_AiBcA}AiAqAaAqAeAaA}@]iANgAj@}@dAcAhAeAfAyAfAo@`@k@f@o@f@s@d@o@f@k@h@o@`@s@V_Br@wAv@{An@uAt@qAj@wAl@iAv@gA~@qAbA{A`AcBz@o@^{A`AmAhAo@b@sAxA_@z@]x@a@t@qAxAk@j@qAfAm@b@m@b@kAfAuA~@eAhAcAbAiAr@qA|@gAdAcA`A{@bA_AhAgA|@mAr@qA|@mAlA&quot;</span><span class="p">,</span><span class="nt">&quot;shape_match&quot;</span><span class="p">:</span><span class="s2">&quot;map_snap&quot;</span><span class="p">,</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;pedestrian&quot;</span><span class="p">,</span><span class="nt">&quot;trace_options&quot;</span><span class="p">:{</span><span class="nt">&quot;turn_penalty_factor&quot;</span><span class="p">:</span><span class="mi">500</span><span class="p">},</span><span class="nt">&quot;directions_options&quot;</span><span class="p">:{</span><span class="nt">&quot;units&quot;</span><span class="p">:</span><span class="s2">&quot;miles&quot;</span><span class="p">}}</span>
+</code></pre></div>
+<h3 id="example-trace_attributes-requests">Example <code>trace_attributes</code> requests<a class="headerlink" href="#example-trace_attributes-requests" title="Permanent link">&para;</a></h3>
+<p>The following are example JSON payloads for POST requests for the <code>trace_attributes</code> action.</p>
+<p><em><code>trace_attributes</code> with shape parameter</em></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;shape&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983841</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735741</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983704</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735298</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983578</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734848</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983551</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734253</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983555</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734116</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983589</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.733315</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983719</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.732445</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983818</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731712</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983776</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731506</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983696</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731369</span><span class="p">}],</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span><span class="nt">&quot;shape_match&quot;</span><span class="p">:</span><span class="s2">&quot;walk_or_snap&quot;</span><span class="p">,</span><span class="nt">&quot;filters&quot;</span><span class="p">:{</span><span class="nt">&quot;attributes&quot;</span><span class="p">:[</span><span class="s2">&quot;edge.names&quot;</span><span class="p">,</span><span class="s2">&quot;edge.id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;edge.weighted_grade&quot;</span><span class="p">,</span><span class="s2">&quot;edge.speed&quot;</span><span class="p">],</span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;include&quot;</span><span class="p">}}</span>
+</code></pre></div>
+<p><em><code>trace_attributes</code> with encoded polyline parameter</em></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;encoded_polyline&quot;</span><span class="p">:</span><span class="s2">&quot;_grbgAh~{nhF?lBAzBFvBHxBEtBKdB?fB@dBZdBb@hBh@jBb@x@\\|@x@pB\\x@v@hBl@nBPbCXtBn@|@z@ZbAEbAa@~@q@z@QhA]pAUpAVhAPlAWtASpAAdA[dASdAQhAIlARjANnAZhAf@n@`A?lB^nCRbA\\xB`@vBf@tBTbCFbARzBZvBThBRnBNrBP`CHbCF`CNdCb@vBX`ARlAJfADhA@dAFdAP`AR`Ah@hBd@bBl@rBV|B?vB]tBCvBBhAF`CFnBXtAVxAVpAVtAb@|AZ`Bd@~BJfA@fAHdADhADhABjAGzAInAAjAB|BNbCR|BTjBZtB`@lBh@lB\\|Bl@rBXtBN`Al@g@t@?nAA~AKvACvAAlAMdAU`Ac@hAShAI`AJ`AIdAi@bAu@|@k@p@]p@a@bAc@z@g@~@Ot@Bz@f@X`BFtBXdCLbAf@zBh@fBb@xAb@nATjAKjAW`BI|AEpAHjAPdAAfAGdAFjAv@p@XlAVnA?~A?jAInAPtAVxAXnAf@tBDpBJpBXhBJfBDpAZ|Ax@pAz@h@~@lA|@bAnAd@hAj@tAR~AKxAc@xAShA]hAIdAAjA]~A[v@BhB?dBSv@Ct@CvAI~@Oz@Pv@dAz@lAj@~A^`B^|AXvAVpAXdBh@~Ap@fCh@hB\\zBN`Aj@xBFdA@jALbAPbAJdAHdAJbAHbAHfAJhALbA\\lBTvBAdC@bC@jCKjASbC?`CM`CDpB\\xAj@tB\\fA\\bAVfAJdAJbAXz@L|BO`AOdCDdA@~B\\z@l@v@l@v@l@r@j@t@b@x@b@r@z@jBVfCJdAJdANbCPfCF|BRhBS~BS`AYbAe@~BQdA&quot;</span><span class="p">,</span><span class="nt">&quot;shape_match&quot;</span><span class="p">:</span><span class="s2">&quot;map_snap&quot;</span><span class="p">,</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;pedestrian&quot;</span><span class="p">,</span><span class="nt">&quot;directions_options&quot;</span><span class="p">:{</span><span class="nt">&quot;units&quot;</span><span class="p">:</span><span class="s2">&quot;miles&quot;</span><span class="p">}}</span>
+</code></pre></div>
+<p><em><code>trace_attributes</code> with <code>include</code> attribute filter</em></p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;shape&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983841</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735741</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983704</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735298</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983578</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734848</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983551</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734253</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983555</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734116</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983589</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.733315</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983719</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.732445</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983818</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731712</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983776</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731506</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983696</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731369</span><span class="p">}],</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span><span class="nt">&quot;shape_match&quot;</span><span class="p">:</span><span class="s2">&quot;walk_or_snap&quot;</span><span class="p">,</span><span class="nt">&quot;filters&quot;</span><span class="p">:{</span><span class="nt">&quot;attributes&quot;</span><span class="p">:[</span><span class="s2">&quot;edge.names&quot;</span><span class="p">,</span><span class="s2">&quot;edge.id&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;edge.weighted_grade&quot;</span><span class="p">,</span><span class="s2">&quot;edge.speed&quot;</span><span class="p">],</span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;include&quot;</span><span class="p">}}</span>
+</code></pre></div>
+<p><em><code>trace_attributes</code> with <code>exclude</code> attribute filter</em></p>
+<p><div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;shape&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983841</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735741</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983704</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.735298</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983578</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734848</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983551</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734253</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983555</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.734116</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983589</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.733315</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983719</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.732445</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983818</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731712</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983776</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731506</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">39.983696</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-76.731369</span><span class="p">}],</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span><span class="nt">&quot;shape_match&quot;</span><span class="p">:</span><span class="s2">&quot;walk_or_snap&quot;</span><span class="p">,</span><span class="nt">&quot;filters&quot;</span><span class="p">:{</span><span class="nt">&quot;attributes&quot;</span><span class="p">:[</span><span class="s2">&quot;edge.names&quot;</span><span class="p">,</span><span class="s2">&quot;edge.begin_shape_index&quot;</span><span class="p">,</span><span class="s2">&quot;edge.end_shape_index&quot;</span><span class="p">,</span><span class="s2">&quot;shape&quot;</span><span class="p">],</span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;exclude&quot;</span><span class="p">}}</span>
+</code></pre></div>
+<em>If you would like to visualize the map matched points that correlate to specified input locations - use the following filter</em>
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;filters&quot;</span><span class="p">:{</span><span class="nt">&quot;attributes&quot;</span><span class="p">:[</span><span class="s2">&quot;edge.id&quot;</span><span class="p">,</span><span class="s2">&quot;matched.point&quot;</span><span class="p">,</span><span class="s2">&quot;matched.type&quot;</span><span class="p">,</span><span class="s2">&quot;matched.edge_index&quot;</span><span class="p">,</span><span class="s2">&quot;matched.begin_route_discontinuity&quot;</span><span class="p">,</span><span class="s2">&quot;matched.end_route_discontinuity&quot;</span><span class="p">,</span><span class="s2">&quot;matched.distance_along_edge&quot;</span><span class="p">],</span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;include&quot;</span><span class="p">}</span>
+</code></pre></div></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "toc.follow"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+    
+  </body>
+</html>

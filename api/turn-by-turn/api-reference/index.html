@@ -1,0 +1,4604 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://valhalla.github.io/valhalla/api/turn-by-turn/api-reference/">
+      
+      
+        <link rel="prev" href="../overview/">
+      
+      
+        <link rel="next" href="../../optimized/api-reference/">
+      
+      
+      <link rel="icon" href="../../../images/valhalla.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>API Reference - Valhalla Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#valhalla-routing-service-api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Valhalla Docs" class="md-header__button md-logo" aria-label="Valhalla Docs" data-md-component="logo">
+      
+  <img src="../../../images/valhalla.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Valhalla Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              API Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="deep-purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="white" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/valhalla/valhalla/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Valhalla Docs" class="md-nav__button md-logo" aria-label="Valhalla Docs" data-md-component="logo">
+      
+  <img src="../../../images/valhalla.png" alt="logo">
+
+    </a>
+    Valhalla Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/valhalla/valhalla/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../valhalla-intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction for Users
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../building/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Build from Source
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../terminology/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Terminology
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Public APIs
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Public APIs
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../protocol-buffers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Protocol Buffers
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5_3" id="__nav_5_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Turn-by-Turn Route API
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5_3">
+            <span class="md-nav__icon md-icon"></span>
+            Turn-by-Turn Route API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inputs-of-a-route" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inputs of a route
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Inputs of a route">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#locations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Locations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#costing-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Costing models
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Costing models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Costing options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Costing options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automobile-and-bus-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Automobile and bus costing options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Automobile and bus costing options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#other-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other costing options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bicycle-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bicycle costing options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#motor_scooter-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Motor_scooter costing options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#motorcycle-costing-options-beta" class="md-nav__link">
+    <span class="md-ellipsis">
+      Motorcycle costing options -&gt; BETA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pedestrian-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pedestrian costing options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transit-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transit costing options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hard-exclusions-experimental" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hard exclusions -&gt; EXPERIMENTAL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sample-json-payloads-for-multimodal-requests-with-transit" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sample JSON payloads for multimodal requests with transit
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directions-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Directions options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Directions options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-language-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supported language tags
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-request-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other request options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#outputs-of-a-route" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outputs of a route
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Outputs of a route">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trip-legs-and-maneuvers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trip legs and maneuvers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-status-codes-and-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP status codes and conditions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#internal-error-codes-and-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Internal error codes and conditions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimized/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Optimized Route API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../matrix/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Matrix API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../isochrone/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Isochrone API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../map-matching/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map Matching API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../locate/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Locate API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../elevation/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Elevation API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../expansion/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Expansion API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../status/api-reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Status API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Internal topics
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Internal topics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/why_tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Why tiles?
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../route_overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview of how routes are computed
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../decoding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Decoding shape
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tile structure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../speeds/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Speed information
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../sif/dynamic-costing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Dynamic costing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../sif/elevation_costing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Elevation influenced bicycle routing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../elevation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Elevation Lookup Service
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../testing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Unit tests
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tzdb_update/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tzdb update
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Internal components
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            Internal components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../baldr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Baldr (routing data strutures/algorithms)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../loki/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Loki (associate locations with graph edges)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../midgard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Midgard (data structures for geography/geometry)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../odin/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Odin (route narrative/maneuver generation)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../sif/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sif (costing for edges/transitions)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../skadi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Skadi (digital elevation model usage)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../tyr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Tyr (service layer)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_8" id="__nav_7_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Meili (map matching)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_8">
+            <span class="md-nav__icon md-icon"></span>
+            Meili (map matching)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Meili
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/algorithms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Algorithms
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/implementation_details/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Implementation Details
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/library_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Library API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../meili/service_api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Service API
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_9" id="__nav_7_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Mjolnir (routing graph/tile generation)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_9">
+            <span class="md-nav__icon md-icon"></span>
+            Mjolnir (routing graph/tile generation)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Mjolnir
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/geojson/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map Roulette Geojson Generation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/getting_started_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Mjolnir: Getting started guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/map_roulette/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Automatic Map Roulette Task Updates
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/map_roulette_blog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Map Roulette and Valhalla
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/tag_parsing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    OSM Tag Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/historical_traffic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Traffic in Valhalla
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_7_10" id="__nav_7_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Thor (routing algorithms)
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7_10">
+            <span class="md-nav__icon md-icon"></span>
+            Thor (routing algorithms)
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../thor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Thor
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../thor/isochrones/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Isochrones
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../thor/path-algorithm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Path algorithm
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../incidents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Incidents
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Data sources
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            Data sources
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/data_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data sources
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/admins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Administrative data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mjolnir/attribution/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Attribution requirements
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Development
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            Development
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../test/gurka/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Testing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../locales/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Locales
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../releasing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Releasing a new Valhalla version
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inputs-of-a-route" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inputs of a route
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Inputs of a route">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#locations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Locations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#costing-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      Costing models
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Costing models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Costing options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Costing options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automobile-and-bus-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Automobile and bus costing options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Automobile and bus costing options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#other-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other costing options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bicycle-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bicycle costing options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#motor_scooter-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Motor_scooter costing options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#motorcycle-costing-options-beta" class="md-nav__link">
+    <span class="md-ellipsis">
+      Motorcycle costing options -&gt; BETA
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pedestrian-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pedestrian costing options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transit-costing-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transit costing options
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hard-exclusions-experimental" class="md-nav__link">
+    <span class="md-ellipsis">
+      Hard exclusions -&gt; EXPERIMENTAL
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sample-json-payloads-for-multimodal-requests-with-transit" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sample JSON payloads for multimodal requests with transit
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#directions-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Directions options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Directions options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#supported-language-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supported language tags
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-request-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other request options
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#outputs-of-a-route" class="md-nav__link">
+    <span class="md-ellipsis">
+      Outputs of a route
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Outputs of a route">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#trip-legs-and-maneuvers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Trip legs and maneuvers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#http-status-codes-and-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP status codes and conditions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#internal-error-codes-and-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Internal error codes and conditions
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="valhalla-routing-service-api-reference">Valhalla routing service API reference<a class="headerlink" href="#valhalla-routing-service-api-reference" title="Permanent link">&para;</a></h1>
+<p>Valhalla's routing service (a.k.a. turn-by-turn), is an open-source routing service that lets you integrate routing and navigation into a web or mobile application.</p>
+<p><a href="https://valhalla.github.io/demos/routing">View an interactive demo</a></p>
+<p>The default logic for the OpenStreetMap tags, keys, and values used when routing are documented on an <a href="https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Valhalla">OSM wiki page</a>.</p>
+<h2 id="inputs-of-a-route">Inputs of a route<a class="headerlink" href="#inputs-of-a-route" title="Permanent link">&para;</a></h2>
+<p>The route request run locally takes the form of <code>localhost:8002/route?json={}</code>, where the JSON inputs inside the <code>{}</code> include location information, name and options for the costing model, and output options. Here is the JSON payload for an example request:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;locations&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">42.358528</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-83.271400</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Appleton&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">42.996613</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-78.749855</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Ranch Trail&quot;</span><span class="p">}],</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span><span class="nt">&quot;costing_options&quot;</span><span class="p">:{</span><span class="nt">&quot;auto&quot;</span><span class="p">:{</span><span class="nt">&quot;country_crossing_penalty&quot;</span><span class="p">:</span><span class="mf">2000.0</span><span class="p">}},</span><span class="nt">&quot;units&quot;</span><span class="p">:</span><span class="s2">&quot;miles&quot;</span><span class="p">,</span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="s2">&quot;my_work_route&quot;</span><span class="p">}</span>
+</code></pre></div>
+<p>This request provides automobile routing between the Detroit, Michigan area and Buffalo, New York, with an optional street name parameter to improve navigation at the start and end points. It attempts to avoid routing north through Canada by adding a penalty for crossing international borders. The resulting route is displayed in miles.</p>
+<p>There is an option to name your route request. You can do this by appending the following to your request <code>&amp;id=</code>. The <code>id</code> is returned with the response so a user could match to the corresponding request.</p>
+<h3 id="locations">Locations<a class="headerlink" href="#locations" title="Permanent link">&para;</a></h3>
+<p>You specify locations as an ordered list of two or more locations within a JSON array. Locations are visited in the order specified.</p>
+<p>A location must include a latitude and longitude in decimal degrees. The coordinates can come from many input sources, such as a GPS location, a point or a click on a map, a geocoding service, and so on. Note that the Valhalla cannot search for names or addresses or perform geocoding or reverse geocoding. External search services, such as <a href="https://www.mapbox.com/api-documentation/#geocoding">Mapbox Geocoding</a>, can be used to find places and geocode addresses, which must be converted to coordinates for input.</p>
+<p>To build a route, you need to specify two <code>break</code> locations. In addition, you can include <code>through</code>, <code>via</code> or <code>break_through</code> locations to influence the route path.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Location parameters</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>lat</code></td>
+<td style="text-align: left;">Latitude of the location in degrees. This is assumed to be both the routing location and the display location if no <code>display_lat</code> and <code>display_lon</code> are provided.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>lon</code></td>
+<td style="text-align: left;">Longitude of the location in degrees. This is assumed to be both the routing location and the display location if no <code>display_lat</code> and <code>display_lon</code> are provided.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;">Type of location, either <code>break</code>, <code>through</code>, <code>via</code> or <code>break_through</code>. Each type controls two characteristics: whether or not to allow a u-turn at the location and whether or not to generate guidance/legs at the location. A <code>break</code> is a location at which we allows u-turns and generate legs and arrival/departure maneuvers. A <code>through</code> location is a location at which we neither allow u-turns nor generate legs or arrival/departure maneuvers. A <code>via</code> location is a location at which we allow u-turns but do not generate legs or arrival/departure maneuvers. A <code>break_through</code> location is a location at which we do not allow u-turns but do generate legs and arrival/departure maneuvers. If no type is provided, the type is assumed to be a <code>break</code>. The types of the first and last locations are ignored and are treated as <code>break</code>s.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>heading</code></td>
+<td style="text-align: left;">(optional) Preferred direction of travel for the start from the location. This can be useful for mobile routing where a vehicle is traveling in a specific direction along a road, and the route should start in that direction. The <code>heading</code> is indicated in degrees from north in a clockwise direction, where north is 0°, east is 90°, south is 180°, and west is 270°.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>heading_tolerance</code></td>
+<td style="text-align: left;">(optional) How close in degrees a given street's angle must be in order for it to be considered as in the same direction of the <code>heading</code> parameter. The default value is 60 degrees.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>street</code></td>
+<td style="text-align: left;">(optional) Street name. The street name may be used to assist finding the correct routing location at the specified latitude, longitude. This is not currently implemented.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>way_id</code></td>
+<td style="text-align: left;">(optional) OpenStreetMap identification number for a polyline <a href="https://wiki.openstreetmap.org/wiki/Way">way</a>. The way ID may be used to assist finding the correct routing location at the specified latitude, longitude. This is not currently implemented.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>minimum_reachability</code></td>
+<td style="text-align: left;">Minimum number of nodes (intersections) reachable for a given edge (road between intersections) to consider that edge as belonging to a connected region. When correlating this location to the route network, try to find candidates who are reachable from this many or more nodes (intersections). If a given candidate edge reaches less than this number of nodes its considered to be a disconnected island and we'll search for more candidates until we find at least one that isn't considered a disconnected island. If this value is larger than the configured service limit it will be clamped to that limit. The default is a minimum of 50 reachable nodes.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>radius</code></td>
+<td style="text-align: left;">The number of meters about this input location within which edges (roads between intersections) will be considered as candidates for said location. When correlating this location to the route network, try to only return results within this distance (meters) from this location. If there are no candidates within this distance it will return the closest candidate within reason. If this value is larger than the configured service limit it will be clamped to that limit. The default is 0 meters.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>rank_candidates</code></td>
+<td style="text-align: left;">Whether or not to rank the edge candidates for this location. The ranking is used as a penalty within the routing algorithm so that some edges will be penalized more heavily than others. If <code>true</code> candidates will be ranked according to their distance from the input and various other attributes. If <code>false</code> the candidates will all be treated as equal which should lead to routes that are just the most optimal path with emphasis about which edges were selected.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>preferred_side</code></td>
+<td style="text-align: left;">If the location is not offset from the road centerline or is closest to an intersection this option has no effect. Otherwise the determined side of street is used to determine whether or not the location should be visited from the <code>same</code>, <code>opposite</code> or <code>either</code> side of the road with respect to the side of the road the given locale drives on. In Germany (driving on the right side of the road), passing a value of <code>same</code> will only allow you to leave from or arrive at a location such that the location will be on your right. In Australia (driving on the left side of the road), passing a value of <code>same</code> will force the location to be on your left. A value of <code>opposite</code> will enforce arriving/departing from a location on the opposite side of the road from that which you would be driving on while a value of <code>either</code> will make no attempt limit the side of street that is available for the route.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>display_lat</code></td>
+<td style="text-align: left;">Latitude of the map location in degrees. If provided the <code>lat</code> and <code>lon</code> parameters will be treated as the routing location and the <code>display_lat</code> and <code>display_lon</code> will be used to determine the side of street. Both <code>display_lat</code> and <code>display_lon</code> must be provided and valid to achieve the desired effect.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>display_lon</code></td>
+<td style="text-align: left;">Longitude of the map location in degrees. If provided the <code>lat</code> and <code>lon</code> parameters will be treated as the routing location and the <code>display_lat</code> and <code>display_lon</code> will be used to determine the side of street. Both <code>display_lat</code> and <code>display_lon</code> must be provided and valid to achieve the desired effect.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>search_cutoff</code></td>
+<td style="text-align: left;">The cutoff at which we will assume the input is too far away from civilisation to be worth correlating to the nearest graph elements. The default is 35 km.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>node_snap_tolerance</code></td>
+<td style="text-align: left;">During edge correlation this is the tolerance used to determine whether or not to snap to the intersection rather than along the street, if the snap location is within this distance from the intersection the intersection is used instead. The default is 5 meters.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>street_side_tolerance</code></td>
+<td style="text-align: left;">If your input coordinate is less than this tolerance away from the edge centerline then we set your side of street to none otherwise your side of street will be left or right depending on direction of travel. The default is 5 meters.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>street_side_max_distance</code></td>
+<td style="text-align: left;">The max distance in meters that the input coordinates or display ll can be from the edge centerline for them to be used for determining the side of street. Beyond this distance the side of street is set to none. The default is 1000 meters.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>street_side_cutoff</code></td>
+<td style="text-align: left;">Disables the <code>preferred_side</code> when set to <code>same</code> or <code>opposite</code> if the edge has a road class less than that provided by <code>street_side_cutoff</code>. The road class must be one of the following strings: motorway, trunk, primary, secondary, tertiary, unclassified, residential, service_other.  The default value is <code>service_other</code> so that <code>preferred_side</code> will not be disabled for any edges.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>search_filter</code></td>
+<td style="text-align: left;">A set of optional filters to exclude candidate edges based on their attribution. The following exclusion filters are supported: <ul><li><code>exclude_tunnel</code> (boolean, defaults to <code>false</code>): whether to exclude roads marked as tunnels</li><li><code>exclude_bridge</code> (boolean, defaults to <code>false</code>): whether to exclude roads marked as bridges</li><li><code>exclude_toll</code> (boolean, defaults to <code>false</code>): whether to exclude toll</li><li><code>exclude_ferry</code> (boolean, defaults to <code>false</code>): whether to exclude ferry</li><li><code>exclude_ramp</code> (boolean, defaults to <code>false</code>): whether to exclude link roads marked as ramps, note that some turn channels are also marked as ramps</li><li><code>exclude_closures</code> (boolean, defaults to <code>true</code>): whether to exclude roads considered closed due to live traffic closure. <br><strong>Note:</strong> This option cannot be set if <code>costing_options.&lt;costing&gt;.ignore_closures</code> is also specified. An error is returned if both options are specified. <br><strong>Note 2:</strong> Ignoring closures at destination and source locations does NOT work for date_time type <code>0/1</code> &amp; <code>2</code> respectively</li><li><code>min_road_class</code> (string, defaults to <code>"service_other"</code>): lowest road class allowed</li><li><code>max_road_class</code> (string, defaults to <code>"motorway"</code>): highest road class allowed</li><li><strong>BETA</strong> <code>level</code> (float): if specified, will only consider edges that are on or traverse the passed floor level. It will set <code>search_cutoff</code> to a default value of 300 meters if no cutoff value is passed. Additionally, if a <code>search_cutoff</code> is passed, it will be clamped to 1000 meters.</li></ul>Road classes from highest to lowest are: motorway, trunk, primary, secondary, tertiary, unclassified, residential, service_other.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>preferred_layer</code></td>
+<td style="text-align: left;">The layer on which edges should be considered. If provided, edges whose layer does not match the provided value will be discarded from the candidate search.</td>
+</tr>
+</tbody>
+</table>
+<p>Optionally, you can include the following location information without impacting the routing. This information is carried through the request and returned as a convenience.</p>
+<ul>
+<li><code>name</code> = Location or business name. The name may be used in the route narration directions, such as "You have arrived at <em>&lt;business name&gt;</em>.")</li>
+<li><code>city</code> = City name.</li>
+<li><code>state</code> = State name.</li>
+<li><code>postal_code</code> = Postal code.</li>
+<li><code>country</code> = Country name.</li>
+<li><code>phone</code> = Telephone number.</li>
+<li><code>url</code> = URL for the place or location.</li>
+<li><code>waiting</code>: The waiting time in seconds at this location. E.g. when the route describes a pizza delivery tour, each location has a service time, which can be respected by setting <code>waiting</code> on the location, then the departure will be delayed by this amount in seconds. Only works for <code>break</code> or <code>break_through</code> types.</li>
+<li><code>side_of_street</code> = (response only) The side of street of a <code>break</code> <code>location</code> that is determined based on the actual route when the <code>location</code> is offset from the street. The possible values are <code>left</code> and <code>right</code>.</li>
+<li><code>date_time</code> = (response only for <code>/route</code>) Expected date/time for the user to be at the location using the ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2015-12-29T08:00". If <code>waiting</code> was set on this location in the request, and it's an intermediate location, the <code>date_time</code> will describe the departure time at this location.</li>
+</ul>
+<p>Future development work includes adding location options and information related to time at each location. This will allow routes to specify a start time or an arrive by time at each location. There is also ongoing work to improve support for <code>through</code> locations.</p>
+<h3 id="costing-models">Costing models<a class="headerlink" href="#costing-models" title="Permanent link">&para;</a></h3>
+<p>Valhalla's routing service uses dynamic, run-time costing to generate the route path. The route request must include the name of the costing model and can include optional parameters available for the chosen costing model.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Costing model</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>auto</code></td>
+<td style="text-align: left;">Standard costing for driving routes by car, motorcycle, truck, and so on that obeys automobile driving rules, such as access and turn restrictions. <code>Auto</code> provides a short time path (though not guaranteed to be shortest time) and uses intersection costing to minimize turns and maneuvers or road name changes. Routes also tend to favor highways and higher classification roads, such as motorways and trunks.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bicycle</code></td>
+<td style="text-align: left;">Standard costing for travel by bicycle, with a slight preference for using <a href="https://wiki.openstreetmap.org/wiki/Key:cycleway">cycleways</a> or roads with bicycle lanes. Bicycle routes follow regular roads when needed, but avoid roads without bicycle access.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bus</code></td>
+<td style="text-align: left;">Standard costing for bus routes. Bus costing inherits the auto costing behaviors, but checks for bus access on the roads.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>BETA</strong> <code>bikeshare</code></td>
+<td style="text-align: left;">A combination of pedestrian and bicycle. Use bike share station(<code>amenity:bicycle_rental</code>) to change the travel mode</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>truck</code></td>
+<td style="text-align: left;">Standard costing for trucks. Truck costing inherits the auto costing behaviors, but checks for truck access, width and height restrictions, and weight limits on the roads.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>hov</code></td>
+<td style="text-align: left;">DEPRECATED: use <code>auto</code> cost with HOV costing options.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>taxi</code></td>
+<td style="text-align: left;">Standard costing for taxi routes. Taxi costing inherits the auto costing behaviors, but checks for taxi lane access on the roads and favors those roads.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>motor_scooter</code></td>
+<td style="text-align: left;">Standard costing for travel by motor scooter or moped.  By default, motor_scooter costing will avoid higher class roads unless the country overrides allows motor scooters on these roads.  Motor scooter routes follow regular roads when needed, but avoid roads without motor_scooter, moped, or mofa access.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>BETA</strong> <code>motorcycle</code></td>
+<td style="text-align: left;">Standard costing for travel by motorcycle.  This costing model provides options to tune the route to take roadways (road touring) vs. tracks and trails (adventure motorcycling).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>multimodal</code></td>
+<td style="text-align: left;">Currently supports pedestrian and transit. In the future, multimodal will support a combination of all of the above.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>pedestrian</code></td>
+<td style="text-align: left;">Standard walking route that excludes roads without pedestrian access. In general, pedestrian routes are shortest distance with the following exceptions: walkways and footpaths are slightly favored, while steps or stairs and alleys are slightly avoided.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="costing-options">Costing options<a class="headerlink" href="#costing-options" title="Permanent link">&para;</a></h4>
+<p>Costing methods can have several options that can be adjusted to develop the route path, as well as for estimating time along the path. Specify costing model options in your request using the format of <code>costing_options.type</code>, such as <code>costing_options.auto</code>.</p>
+<ul>
+<li>Cost options are fixed costs in seconds that are added to both the path cost and the estimated time. Examples of costs are <code>gate_costs</code> and <code>toll_booth_costs</code>, where a fixed amount of time is added. Costs are not generally used to influence the route path; instead, use penalties to do this. Costs must be in the range of 0.0 seconds to 43200.0 seconds (12 hours), otherwise a default value will be assigned.</li>
+<li>Penalty options are fixed costs in seconds that are only added to the path cost. Penalties can influence the route path determination but do not add to the estimated time along the path. For example, add a <code>toll_booth_penalty</code> to create route paths that tend to avoid toll booths. Penalties must be in the range of 0.0 seconds to 43200.0 seconds (12 hours), otherwise a default value will be assigned.</li>
+<li>Factor options are used to multiply the cost along an edge or road section in a way that influences the path to favor or avoid a particular attribute. Factor options do not impact estimated time along the path, though. Factors must be in the range 0.1 to 100000.0, where factors of 1.0 have no influence on cost. Anything outside of this range will be assigned a default value. Use a factor less than 1.0 to attempt to favor paths containing preferred attributes, and a value greater than 1.0 to avoid paths with undesirable attributes. Avoidance factors are more effective than favor factors at influencing a path. A factor's impact also depends on the length of road containing the specified attribute, as longer roads have more impact on the costing than very short roads. For this reason, penalty options tend to be better at influencing paths.</li>
+</ul>
+<p>A special costing option is <code>shortest</code>, which, when <code>true</code>, will solely use distance as cost and disregard all other costs, penalties and factors. It's available for all costing models except <code>multimodal</code> &amp; <code>bikeshare</code>.</p>
+<p>Another special case is <code>disable_hierarchy_pruning</code> costing option. As the name indicates, <code>disable_hierarchy_pruning = true</code> will disable hierarchies in routing algorithms, which allows us to find the actual optimal route even in edge cases. For example, together with <code>shortest = true</code> they can find the actual shortest route. When <code>disable_hierarchy_pruning</code> is <code>true</code> and arc distances between source and target are not above the max limit, the actual optimal route will be calculated at the expense of performance. Note that if arc distances between locations exceed the max limit, <code>disable_hierarchy_pruning</code> is <code>true</code> will not be applied. This costing option is available for all motorized costing models, i.e <code>auto</code>, <code>motorcycle</code>, <code>motor_scooter</code>, <code>bus</code>, <code>truck</code> &amp; <code>taxi</code>. For <code>bicycle</code> and <code>pedestrian</code> hierarchies are always disabled by default.</p>
+<p>Additionally to the main costing option, the <code>recostings</code> option can be used to calculate the travelling time of the found route based on different costing options. By e.g. adding
+<div class="highlight"><pre><span></span><code><span class="nt">&quot;recostings&quot;</span><span class="p">:[</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span><span class="nt">&quot;fixed_speed&quot;</span><span class="p">:</span><span class="mi">20</span><span class="p">,</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;auto_20&quot;</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span><span class="nt">&quot;fixed_speed&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;auto_50&quot;</span><span class="p">}</span>
+<span class="p">]</span>
+</code></pre></div>
+to the route request, the values <code>time_auto_20</code> and <code>time_auto_50</code> will be added to summaries to show how much time the route would cost with these given costing options. Passing a recosting which make the route impossible to follow (e.g. the main rout is by car over a motorway and recosting with pedestrian costing) leads to a <code>none</code> result of this recosting.</p>
+<h5 id="automobile-and-bus-costing-options">Automobile and bus costing options<a class="headerlink" href="#automobile-and-bus-costing-options" title="Permanent link">&para;</a></h5>
+<p>These options are available for <code>auto</code>, <code>bus</code>, and <code>truck</code> costing methods.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Automobile options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>maneuver_penalty</code></td>
+<td style="text-align: left;">A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>gate_cost</code></td>
+<td style="text-align: left;">A cost applied when a <a href="https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate">gate</a> with undefined or private access is encountered. This cost is added to the estimated time / elapsed time. The default gate cost is 30 seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>gate_penalty</code></td>
+<td style="text-align: left;">A penalty applied when a <a href="https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate">gate</a> with no access information is on the road. The default gate penalty is 300 seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>private_access_penalty</code></td>
+<td style="text-align: left;">A penalty applied when a <a href="https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate">gate</a> or <a href="https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dbollard">bollard</a> with <code>access=private</code> is encountered. The default private access penalty is 450 seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>destination_only_penalty</code></td>
+<td style="text-align: left;">A penalty applied when entering an road which is only allowed to enter if necessary to reach the <a href="https://wiki.openstreetmap.org/wiki/Tag:vehicle%3Ddestination">destination</a>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>toll_booth_cost</code></td>
+<td style="text-align: left;">A cost applied when a <a href="https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth">toll booth</a> is encountered. This cost is added to the estimated and elapsed times. The default cost is 15 seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>toll_booth_penalty</code></td>
+<td style="text-align: left;">A penalty applied to the cost when a <a href="https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth">toll booth</a> is encountered. This penalty can be used to create paths that avoid toll roads. The default toll booth penalty is 0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ferry_cost</code></td>
+<td style="text-align: left;">A cost applied when entering a ferry. This cost is added to the estimated and elapsed times. The default cost is 300 seconds (5 minutes).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_ferry</code></td>
+<td style="text-align: left;">This value indicates the willingness to take ferries. This is a range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. The default value is 0.5. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_highways</code></td>
+<td style="text-align: left;">This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will favor highways. The default value is 1.0. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_tolls</code></td>
+<td style="text-align: left;">This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values near 0 attempt to avoid tolls and values near 1 will not attempt to avoid them. The default value is 0.5. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_living_streets</code></td>
+<td style="text-align: left;">This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0 for trucks, 0.1 for cars, buses, motor scooters and motorcycles. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_tracks</code></td>
+<td style="text-align: left;">This value indicates the willingness to take track roads. This is a range of values between 0 and 1. Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit. The default value is 0 for autos, 0.5 for motor scooters and motorcycles. Note that sometimes tracks are required to complete a route so values of 0 are not guaranteed to avoid tracks entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>service_penalty</code></td>
+<td style="text-align: left;">A penalty applied for transition to generic service road. The default penalty is 0 trucks and 15 for cars, buses, motor scooters and motorcycles.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>service_factor</code></td>
+<td style="text-align: left;">A factor that modifies (multiplies) the cost when generic service roads are encountered. The default <code>service_factor</code> is 1.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>country_crossing_cost</code></td>
+<td style="text-align: left;">A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. The default cost is 600 seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>country_crossing_penalty</code></td>
+<td style="text-align: left;">A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shortest</code></td>
+<td style="text-align: left;">Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings &amp; penalties. Also note, <code>shortest</code> will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is <code>false</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_distance</code></td>
+<td style="text-align: left;">A factor that allows controlling the contribution of distance and time to the route costs. The value is in range between 0 and 1, where 0 only takes time into account (default) and 1 only distance. A factor of 0.5 will weight them roughly equally. <strong>Note:</strong> this costing is currently only available for auto costing.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>disable_hierarchy_pruning</code></td>
+<td style="text-align: left;">Disable hierarchies to calculate the actual optimal route. The default is <code>false</code>. <strong>Note:</strong> This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be <code>false</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>top_speed</code></td>
+<td style="text-align: left;">Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. <code>top_speed</code> must be between 10 and 252 KPH. The default value is 120 KPH for <code>truck</code> and 140 KPH for <code>auto</code> and <code>bus</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>fixed_speed</code></td>
+<td style="text-align: left;">Fixed speed the vehicle can go. Used to override the calculated speed. Can be useful if speed of vehicle is known. <code>fixed_speed</code> must be between 1 and 252 KPH. The default value is 0 KPH which disables fixed speed and falls back to the standard calculated speed based on the road attribution.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ignore_closures</code></td>
+<td style="text-align: left;">If set to <code>true</code>, ignores all closures, marked due to live traffic closures, during routing. <strong>Note:</strong> This option cannot be set if <code>location.search_filter.exclude_closures</code> is also specified in the request and will return an error if it is. Default is <code>false</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>closure_factor</code></td>
+<td style="text-align: left;">A factor that penalizes the cost when traversing a closed edge (eg: if <code>search_filter.exclude_closures</code> is <code>false</code> for origin and/or destination location and the route starts/ends on closed edges). Its value can range from <code>1.0</code> - don't penalize closed edges, to <code>10.0</code> - apply high cost penalty to closed edges. Default value is <code>9.0</code>. <strong>Note:</strong> This factor is applicable only for motorized modes of transport, i.e <code>auto</code>, <code>motorcycle</code>, <code>motor_scooter</code>, <code>bus</code>, <code>truck</code> &amp; <code>taxi</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ignore_restrictions</code></td>
+<td style="text-align: left;">If set to <code>true</code>, ignores any restrictions (e.g. turn/dimensional/conditional restrictions). Especially useful for matching GPS traces to the road network regardless of restrictions. Default is <code>false</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ignore_oneways</code></td>
+<td style="text-align: left;">If set to <code>true</code>, ignores one-way restrictions. Especially useful for matching GPS traces to the road network ignoring uni-directional traffic rules. Not included in <code>ignore_restrictions</code> option. Default is <code>false</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ignore_non_vehicular_restrictions</code></td>
+<td style="text-align: left;">Similar to <code>ignore_restrictions</code>, but will respect restrictions that impact vehicle safety, such as weight and size restrictions.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ignore_access</code></td>
+<td style="text-align: left;">Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions. Default is <code>false</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ignore_construction</code></td>
+<td style="text-align: left;">Will ignore construction tags. Only works when the <code>include_construction</code> option is set before building the graph. Useful for planning future routes. Default is <code>false</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>speed_types</code></td>
+<td style="text-align: left;">Will determine which speed sources are used, if available. A list of strings with the following possible values: <ul><li><code>freeflow</code></li><li><code>constrained</code></li><li><code>predicted</code></li><li><code>current</code></li></ul> Default is all sources (again, only if available).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>hierarchy_limits</code> (<strong>beta</strong>)</td>
+<td style="text-align: left;">Pass custom hierarchy limits along with this request (read more about the tile hierarchy <a href="../../../tiles/#hierarchieslevels">here</a>). Needs to be an object with mandatory keys <code>1</code> and <code>2</code>, each value is another object containing numerical values for <code>max_up_transitions</code> and <code>expand_within_distance</code>. The service may either clamp these values or disallow modifying hierarchy limits via the request parameters entirely.</td>
+</tr>
+</tbody>
+</table>
+<h6 id="other-costing-options">Other costing options<a class="headerlink" href="#other-costing-options" title="Permanent link">&para;</a></h6>
+<p>The following options are available for <code>auto</code>, <code>bus</code>, <code>taxi</code>, and <code>truck</code> costing methods.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Vehicle Options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>height</code></td>
+<td style="text-align: left;">The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 4.11 for truck.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>width</code></td>
+<td style="text-align: left;">The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 2.6 for truck.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exclude_unpaved</code></td>
+<td style="text-align: left;">This value indicates whether or not the path may include unpaved roads. If <code>exclude_unpaved</code> is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exclude_cash_only_tolls</code></td>
+<td style="text-align: left;">A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>include_hov2</code></td>
+<td style="text-align: left;">A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>include_hov3</code></td>
+<td style="text-align: left;">A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>include_hot</code></td>
+<td style="text-align: left;">A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false.</td>
+</tr>
+</tbody>
+</table>
+<p>The following options are available for <code>truck</code> costing.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Truck options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>length</code></td>
+<td style="text-align: left;">The length of the truck (in meters). Default 21.64.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>weight</code></td>
+<td style="text-align: left;">The weight of the truck (in metric tons). Default 21.77.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>axle_load</code></td>
+<td style="text-align: left;">The axle load of the truck (in metric tons). Default 9.07.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>axle_count</code></td>
+<td style="text-align: left;">The axle count of the truck. Default 5.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>hazmat</code></td>
+<td style="text-align: left;">A value indicating if the truck is carrying hazardous materials. Default false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>hgv_no_access_penalty</code></td>
+<td style="text-align: left;">A penalty applied to roads with no HGV/truck access. If set to a value less than 43200 seconds, HGV will be allowed on these roads and the penalty applies. Default 43200, i.e. trucks are not allowed.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>low_class_penalty</code></td>
+<td style="text-align: left;">A penalty (in seconds) which is applied when going to residential or service roads. Default is 30 seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_truck_route</code></td>
+<td style="text-align: left;">This value is a range of values from 0 to 1, where 0 indicates a light preference for streets marked as truck routes, and 1 indicates that streets not marked as truck routes should be avoided. This information is derived from the <code>hgv=designated</code> tag. Note that even with values near 1, there is no guarantee the returned route will include streets marked as truck routes. The default value is 0.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="bicycle-costing-options">Bicycle costing options<a class="headerlink" href="#bicycle-costing-options" title="Permanent link">&para;</a></h5>
+<p>The default bicycle costing is tuned toward road bicycles with a slight preference for using <a href="https://wiki.openstreetmap.org/wiki/Key:cycleway">cycleways</a> or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.</p>
+<ul>
+<li>The types of roads suitable for bicycling depend on the type of bicycle. Road bicycles (skinny or narrow tires) generally are suited to paved roads or perhaps very short sections of compacted gravel. They are not designed for riding on coarse gravel or most paths and tracks through wooded areas or farmland. Mountain bikes, on the other hand, are able to traverse a wider set of surfaces.</li>
+<li>Average travel speed can be highly variable and can depend on bicycle type, fitness and experience of the cyclist, road surface, and hills. The costing model assumes a default speed on smooth, flat roads for each supported bicycle type. This speed can be overridden by an input option. The base speed is modulated by surface type (in conjunction with the bicycle type). In addition, speed is modified based on the hilliness of a road section.</li>
+<li>Bicyclists vary in their tolerance for riding on roads. Most novice bicyclists, and even other bicyclists, prefer cycleways and dedicated cycling paths and would rather avoid all but the quietest neighborhood roads. Other cyclists may be experienced riding on roads and prefer to take roadways because they often provide the fastest way to get between two places. The bicycle costing model accounts for this with a <code>use_roads</code> factor to indicate a cyclist's tolerance for riding on roads.</li>
+<li>Bicyclists vary in their fitness level and experience level, and many want to avoid hilly roads, and especially roads with very steep uphill or even downhill sections. Even if the fastest path is over a mountain, many cyclists prefer a flatter path that avoids the climb and descent up and over the mountain.</li>
+</ul>
+<p>The following options described above for autos also apply to bicycle costing methods: <code>maneuver_penalty</code>, <code>gate_cost</code>, <code>gate_penalty</code>,  <code>destination_only_penalty</code> , <code>country_crossing_cost</code>, <code>country_costing_penalty</code>, and <code>service_penalty</code>.</p>
+<p>These additional options are available for bicycle costing methods.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Bicycle options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>bicycle_type</code></td>
+<td style="text-align: left;">The type of bicycle. The default type is <code>hybrid</code>. <ul><li><code>road</code>: a road-style bicycle with narrow tires that is generally lightweight and designed for speed on paved surfaces. </li><li><code>hybrid</code> or <code>city</code>: a bicycle made mostly for city riding or casual riding on roads and paths with good surfaces.</li><li><code>cross</code>: a cyclo-cross bicycle, which is similar to a road bicycle but with wider tires suitable to rougher surfaces.</li><li><code>mountain</code>: a mountain bicycle suitable for most surfaces but generally heavier and slower on paved surfaces.</li><ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cycling_speed</code></td>
+<td style="text-align: left;">Cycling speed is the average travel speed along smooth, flat roads. This is meant to be the speed a rider can comfortably maintain over the desired distance of the route. It can be modified (in the costing method) by surface type in conjunction with bicycle type and (coming soon) by hilliness of the road section. When no speed is specifically provided, the default speed is determined by the bicycle type and are as follows:<ul><li><code>road</code> = 25 KPH (15.5 MPH),</li><li><code>cross</code> = 20 KPH (13 MPH),<li></li><code>hybrid</code>/<code>city</code> = 18 KPH (11.5 MPH),<li></li>and <code>mountain</code> = 16 KPH (10 MPH).</li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_roads</code></td>
+<td style="text-align: left;">A cyclist's propensity to use roads alongside other vehicles. This is a range of values from 0 to 1, where 0 attempts to avoid roads and stay on cycleways and paths, and 1 indicates the rider is more comfortable riding on roads. Based on the <code>use_roads</code> factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path. The default value is 0.5.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_hills</code></td>
+<td style="text-align: left;">A cyclist's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the <code>use_hills</code> factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_ferry</code></td>
+<td style="text-align: left;">This value indicates the willingness to take ferries. This is a range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. The default value is 0.5.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_living_streets</code></td>
+<td style="text-align: left;">This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values from 0.5 to 1 will currently have no effect on route selection. The default value is 0.5. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>avoid_bad_surfaces</code></td>
+<td style="text-align: left;">This value is meant to represent how much a cyclist wants to avoid roads with poor surfaces relative to the bicycle type being used. This is a range of values between 0 and 1. When the value is 0, there is no penalization of roads with different surface types; only bicycle speed on each surface is taken into account. As the value approaches 1, roads with poor surfaces for the bike are penalized heavier so that they are only taken if they significantly improve travel time. When the value is equal to 1, all bad surfaces are completely disallowed from routing, including start and end points. The default value is 0.25.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bss_return_cost</code></td>
+<td style="text-align: left;">This value is useful when <code>bikeshare</code> is chosen as travel mode. It is meant to give the time will be used to return a rental bike. This value will be displayed in the final directions and used to calculate the whole duration. The default value is 120 seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bss_return_penalty</code></td>
+<td style="text-align: left;">This value is useful when <code>bikeshare</code> is chosen as travel mode. It is meant to describe the potential effort to return a rental bike. This value won't be displayed and used only inside of the algorithm.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shortest</code></td>
+<td style="text-align: left;">Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings &amp; penalties. Also note, <code>shortest</code> will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is <code>false</code>.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="motor_scooter-costing-options">Motor_scooter costing options<a class="headerlink" href="#motor_scooter-costing-options" title="Permanent link">&para;</a></h5>
+<p>Standard costing for travel by motor scooter or moped.  By default, motor_scooter costing will avoid higher class roads unless the country overrides allows motor scooters on these roads.  Motor scooter routes follow regular roads when needed, but avoid roads without motor_scooter, moped, or mofa access. The costing model recognizes factors unique to motor_scooter travel and offers options for tuning motor_scooter routes. Factors unique to travel by motor_scooter influence the resulting route.</p>
+<p>All of the options described above for autos also apply to motor_scooter costing methods.  These additional options are available for motor_scooter costing methods.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Motor_scooter options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>top_speed</code></td>
+<td style="text-align: left;">Top speed the motorized scooter can go. Used to avoid roads with higher speeds than this value. For <code>motor_scooter</code> this value must be between 20 and 120 KPH. The default value is 45 KPH (~28 MPH)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_primary</code></td>
+<td style="text-align: left;">A rider's propensity to use primary roads. This is a range of values from 0 to 1, where 0 attempts to avoid primary roads, and 1 indicates the rider is more comfortable riding on primary roads. Based on the <code>use_primary</code> factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path. The default value is 0.5.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_hills</code></td>
+<td style="text-align: left;">A rider's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the <code>use_hills</code> factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shortest</code></td>
+<td style="text-align: left;">Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings &amp; penalties. Also note, <code>shortest</code> will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is <code>false</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>disable_hierarchy_pruning</code></td>
+<td style="text-align: left;">Disable hierarchies to calculate the actual optimal route. The default is <code>false</code>. <strong>Note:</strong> This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be <code>false</code>.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="motorcycle-costing-options-beta">Motorcycle costing options -&gt; <strong>BETA</strong><a class="headerlink" href="#motorcycle-costing-options-beta" title="Permanent link">&para;</a></h5>
+<p>Standard costing for travel by motorcycle.  By default, motorcycle costing will default to higher class roads.  The costing model recognizes factors unique to motorcycle travel and offers options for tuning motorcycle routes.</p>
+<p>All of the options described above for autos also apply to motorcycle costing methods.
+The following options are available for motorcycle costing:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Motorcycle options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>use_highways</code></td>
+<td style="text-align: left;">A riders's propensity to prefer the use of highways. This is a range of values from 0 to 1, where 0 attempts to avoid highways, and values toward 1 indicates the rider prefers highways. The default value is 1.0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_trails</code></td>
+<td style="text-align: left;">A riders's desire for adventure in their routes.  This is a range of values from 0 to 1, where 0 will avoid trails, tracks, unclassified or bad surfaces and values towards 1 will tend to avoid major roads and route on secondary roads.  The default value is 0.0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shortest</code></td>
+<td style="text-align: left;">Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings &amp; penalties. Also note, <code>shortest</code> will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is <code>false</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>disable_hierarchy_pruning</code></td>
+<td style="text-align: left;">Disable hierarchies to calculate the actual optimal route. The default is <code>false</code>. <strong>Note:</strong> This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be <code>false</code>.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="pedestrian-costing-options">Pedestrian costing options<a class="headerlink" href="#pedestrian-costing-options" title="Permanent link">&para;</a></h5>
+<p>These options are available for pedestrian costing methods.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Pedestrian options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>walking_speed</code></td>
+<td style="text-align: left;">Walking speed in kilometers per hour. Must be between 0.5 and 25 km/hr. Defaults to 5.1 km/hr (3.1 miles/hour).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>walkway_factor</code></td>
+<td style="text-align: left;">A factor that modifies the cost when encountering roads classified as <code>footway</code> (no motorized vehicles allowed), which may be designated footpaths or designated sidewalks along residential roads. Pedestrian routes generally attempt to favor using these <a href="https://wiki.openstreetmap.org/wiki/Sidewalks">walkways and sidewalks</a>. The default walkway_factor is 1.0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sidewalk_factor</code></td>
+<td style="text-align: left;">A factor that modifies the cost when encountering roads with dedicated sidewalks. Pedestrian routes generally attempt to favor using <a href="https://wiki.openstreetmap.org/wiki/Key:sidewalk">sidewalks</a>. The default sidewalk_factor is 1.0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>alley_factor</code></td>
+<td style="text-align: left;">A factor that modifies (multiplies) the cost when <a href="https://wiki.openstreetmap.org/wiki/Tag:service%3Dalley">alleys</a> are encountered. Pedestrian routes generally want to avoid alleys or narrow service roads between buildings. The default alley_factor is 2.0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>driveway_factor</code></td>
+<td style="text-align: left;">A factor that modifies (multiplies) the cost when encountering a <a href="https://wiki.openstreetmap.org/wiki/Tag:service%3Ddriveway">driveway</a>, which is often a private, service road. Pedestrian routes generally want to avoid driveways (private). The default driveway factor is 5.0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>step_penalty</code></td>
+<td style="text-align: left;">A penalty in seconds added to each transition onto a path with <a href="https://wiki.openstreetmap.org/wiki/Tag:highway%3Dsteps">steps or stairs</a>. Higher values apply larger cost penalties to avoid paths that contain flights of steps.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>elevator_penalty</code></td>
+<td style="text-align: left;">A penalty in seconds added to each transition via an elevator node or onto an elevator edge. Higher values apply larger cost penalties to avoid elevators.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_ferry</code></td>
+<td style="text-align: left;">This value indicates the willingness to take ferries. This is range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. The default value is 0.5. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_living_streets</code></td>
+<td style="text-align: left;">This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0.6. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_tracks</code></td>
+<td style="text-align: left;">This value indicates the willingness to take track roads. This is a range of values between 0 and 1. Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit. The default value is 0.5. Note that sometimes tracks are required to complete a route so values of 0 are not guaranteed to avoid tracks entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_hills</code></td>
+<td style="text-align: left;">This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the pedestrian does not fear hills and steeper grades. Based on the <code>use_hills</code> factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_lit</code></td>
+<td style="text-align: left;">This value is a range of values from 0 to 1, where 0 indicates indifference towards lit streets, and 1 indicates that unlit streets should be avoided. Note that even with values near 1, there is no guarantee the returned route will include lit segments. The default value is 0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>service_penalty</code></td>
+<td style="text-align: left;">A penalty applied for transition to generic service road. The default penalty is 0.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>service_factor</code></td>
+<td style="text-align: left;">A factor that modifies (multiplies) the cost when generic service roads are encountered. The default <code>service_factor</code> is 1.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>destination_only_penalty</code></td>
+<td style="text-align: left;">A penalty applied when entering an road which is only allowed to enter if necessary to reach the <a href="https://wiki.openstreetmap.org/wiki/Tag:vehicle%3Ddestination">destination</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>max_hiking_difficulty</code></td>
+<td style="text-align: left;">This value indicates the maximum difficulty of hiking trails that is allowed. Values between 0 and 6 are allowed. The values correspond to <em>sac_scale</em> values within OpenStreetMap, see reference <a href="https://wiki.openstreetmap.org/wiki/Key:sac_scale">here</a>. The default value is 1 which means that well cleared trails that are mostly flat or slightly sloped are allowed. Higher difficulty trails can be allowed by specifying a higher value for max_hiking_difficulty.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bss_rent_cost</code></td>
+<td style="text-align: left;">This value is useful when <code>bikeshare</code> is chosen as travel mode. It is meant to give the time will be used to rent a bike from a bike share station. This value will be displayed in the final directions and used to calculate the whole duration. The default value is 120 seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bss_rent_penalty</code></td>
+<td style="text-align: left;">This value is useful when <code>bikeshare</code> is chosen as travel mode. It is meant to describe the potential effort to rent a bike from a bike share station. This value won't be displayed and used only inside of the algorithm.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shortest</code></td>
+<td style="text-align: left;">Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings &amp; penalties. Also note, <code>shortest</code> will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is <code>false</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>max_distance</code></td>
+<td style="text-align: left;">Sets the maximum total walking distance of a route. Default is 100 km (~62 miles).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>transit_start_end_max_distance</code></td>
+<td style="text-align: left;">A pedestrian option that can be added to the request to extend the defaults (2145 meters or approximately 1.5 miles). This is the maximum walking distance at the beginning or end of a route.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>transit_transfer_max_distance</code></td>
+<td style="text-align: left;">A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;"><ul><li>If set to <code>blind</code>, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes.</li><li>If set to <code>wheelchair</code>, changes the defaults for <code>max_distance</code>, <code>walking_speed</code>, and <code>step_penalty</code> to be better aligned to the needs of wheelchair users.</li></ul> These two options are mutually exclusive. In case you want to combine them, please use <code>blind</code> and pass the options adjusted for <code>wheelchair</code> users manually. Default <code>foot</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>mode_factor</code></td>
+<td style="text-align: left;">A factor which the cost of a pedestrian edge will be multiplied with on multimodal request, e.g. <code>bss</code> or <code>multimodal/transit</code>. Default is a factor of 1.5, i.e. avoiding walking.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="transit-costing-options">Transit costing options<a class="headerlink" href="#transit-costing-options" title="Permanent link">&para;</a></h5>
+<p>These options are available for transit costing when the multimodal costing model is used.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Transit options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>use_bus</code></td>
+<td style="text-align: left;">User's desire to use buses. Range of values from 0 (try to avoid buses) to 1 (strong preference for riding buses).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_rail</code></td>
+<td style="text-align: left;">User's desire to use rail/subway/metro. Range of values from 0 (try to avoid rail) to 1 (strong preference for riding rail).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>use_transfers</code></td>
+<td style="text-align: left;">User's desire to favor transfers. Range of values from 0 (try to avoid transfers) to 1 (totally comfortable with transfers).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>filters</code></td>
+<td style="text-align: left;">A way to filter for one or more <del><code>stops</code></del> (TODO: need to re-enable), <code>routes</code>, or <code>operators</code>. Filters must contain a list of so-called Onestop IDs, which is (supposed to be) a unique identifier for GTFS data, and an <code>action</code>. The OneStop ID is simply the feeds's directory name and the object's GTFS ID separated by an underscore, i.e. a route with <code>route_id: AUR</code> in <code>routes.txt</code> from the feed <code>NYC</code> would have the OneStop ID <code>NYC_AUR</code>, similar with operators/agencies. <ul><li><code>ids</code>: any number of Onestop IDs</li><li><code>action</code>: either <code>exclude</code> to exclude all of the <code>ids</code> listed in the filter or <code>include</code> to include only the <code>ids</code> listed in the filter</li></ul></td>
+</tr>
+</tbody>
+</table>
+<h5 id="hard-exclusions-experimental">Hard exclusions -&gt; <strong>EXPERIMENTAL</strong><a class="headerlink" href="#hard-exclusions-experimental" title="Permanent link">&para;</a></h5>
+<p>The following options are available for all costing methods. Those options are not available by default, the server config must have <code>service_limits.allow_hard_exclusions</code> set to true in order to allow them. If not allowed and any of the hard excludes is set to true, the server will return a warning and ignore the hard excludes.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Vehicle Options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>exclude_bridges</code></td>
+<td style="text-align: left;">This value indicates whether or not the path may include bridges. If <code>exclude_bridges</code> is set to true it is allowed to start and end with bridges, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exclude_tunnels</code></td>
+<td style="text-align: left;">This value indicates whether or not the path may include tunnels. If <code>exclude_tunnels</code> is set to true it is allowed to start and end with tunnels, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exclude_tolls</code></td>
+<td style="text-align: left;">This value indicates whether or not the path may include tolls. If <code>exclude_tolls</code> is set to true it is allowed to start and end with tolls, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exclude_highways</code></td>
+<td style="text-align: left;">This value indicates whether or not the path may include highways. If <code>exclude_highways</code> is set to true it is allowed to start and end with highways, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exclude_ferries</code></td>
+<td style="text-align: left;">This value indicates whether or not the path may include ferries. If <code>exclude_ferries</code> is set to true it is allowed to start and end with ferries, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false.</td>
+</tr>
+</tbody>
+</table>
+<h5 id="sample-json-payloads-for-multimodal-requests-with-transit">Sample JSON payloads for multimodal requests with transit<a class="headerlink" href="#sample-json-payloads-for-multimodal-requests-with-transit" title="Permanent link">&para;</a></h5>
+<p>A multimodal request at the current date and time:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;locations&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.730930</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991379</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Wanamaker Place&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.749706</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991562</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Penn Plaza&quot;</span><span class="p">}],</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;multimodal&quot;</span><span class="p">,</span><span class="nt">&quot;units&quot;</span><span class="p">:</span><span class="s2">&quot;miles&quot;</span><span class="p">}</span>
+</code></pre></div>
+<p>A multimodal request departing on 2016-03-29 at 08:00:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;locations&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.749706</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991562</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;break&quot;</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Penn Plaza&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.73093</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991379</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;break&quot;</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Wanamaker Place&quot;</span><span class="p">}],</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;multimodal&quot;</span><span class="p">,</span><span class="nt">&quot;date_time&quot;</span><span class="p">:{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="s2">&quot;2016-03-29T08:00&quot;</span><span class="p">}}</span>
+</code></pre></div>
+<p>A multimodal request for a route favoring buses and a person walking at a set speed of 4.1 km/h:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;locations&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.749706</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991562</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;break&quot;</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Penn Plaza&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.73093</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991379</span><span class="p">,</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;break&quot;</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Wanamaker Place&quot;</span><span class="p">}],</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;multimodal&quot;</span><span class="p">,</span><span class="nt">&quot;costing_options&quot;</span><span class="p">:{</span><span class="nt">&quot;transit&quot;</span><span class="p">:{</span><span class="nt">&quot;use_bus&quot;</span><span class="p">:</span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span><span class="nt">&quot;use_rail&quot;</span><span class="p">:</span><span class="s2">&quot;0.0&quot;</span><span class="p">,</span><span class="nt">&quot;use_transfers&quot;</span><span class="p">:</span><span class="s2">&quot;0.3&quot;</span><span class="p">},</span><span class="nt">&quot;pedestrian&quot;</span><span class="p">:{</span><span class="nt">&quot;walking_speed&quot;</span><span class="p">:</span><span class="s2">&quot;4.1&quot;</span><span class="p">}}}</span>
+</code></pre></div>
+<p>A multimodal request with a filter for certain Onestop IDs:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;locations&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.730930</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991379</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Wanamaker Place&quot;</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.749706</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991562</span><span class="p">,</span><span class="nt">&quot;street&quot;</span><span class="p">:</span><span class="s2">&quot;Penn Plaza&quot;</span><span class="p">}],</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;multimodal&quot;</span><span class="p">,</span><span class="nt">&quot;costing_options&quot;</span><span class="p">:{</span><span class="nt">&quot;transit&quot;</span><span class="p">:{</span><span class="nt">&quot;filters&quot;</span><span class="p">:{</span><span class="nt">&quot;routes&quot;</span><span class="p">:{</span><span class="nt">&quot;ids&quot;</span><span class="p">:[</span><span class="s2">&quot;NYC_AUR&quot;</span><span class="p">],</span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;exclude&quot;</span><span class="p">},</span><span class="nt">&quot;operators&quot;</span><span class="p">:{</span><span class="nt">&quot;ids&quot;</span><span class="p">:[</span><span class="s2">&quot;paris_CFG&quot;</span><span class="p">,</span><span class="s2">&quot;berlin_VBB&quot;</span><span class="p">],</span><span class="nt">&quot;action&quot;</span><span class="p">:</span><span class="s2">&quot;include&quot;</span><span class="p">}}}},</span><span class="nt">&quot;units&quot;</span><span class="p">:</span><span class="s2">&quot;miles&quot;</span><span class="p">}</span>
+</code></pre></div>
+<h4 id="directions-options">Directions options<a class="headerlink" href="#directions-options" title="Permanent link">&para;</a></h4>
+<p>Directions options should be specified at the top level of the JSON object.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>units</code></td>
+<td style="text-align: left;">Distance units for output. Allowable unit types are miles (or mi) and kilometers (or km). If no unit type is specified, the units default to kilometers.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>language</code></td>
+<td style="text-align: left;">The language of the narration instructions based on the <a href="https://tools.ietf.org/html/bcp47">IETF BCP 47</a> language tag string. If no language is specified or the specified language is unsupported, United States-based English (en-US) is used. <a href="#supported-language-tags">Currently supported language list</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>directions_type</code></td>
+<td style="text-align: left;">An enum with 3 values. <ul><li><code>none</code> indicating no maneuvers or instructions should be returned.</li><li><code>maneuvers</code> indicating that only maneuvers be returned.</li><li><code>instructions</code> indicating that maneuvers with instructions should be returned (this is the default if not specified).</li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>format</code></td>
+<td style="text-align: left;">Four options are available: <ul><li><code>json</code> is default valhalla routing directions JSON format</li><li><code>gpx</code> returns the route as a GPX (GPS exchange format) XML track</li><li><code>osrm</code> creates a OSRM compatible route directions JSON</li><li><code>pbf</code> formats the result using protocol buffers</li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>shape_format</code></td>
+<td style="text-align: left;">If <code>"format" : "osrm"</code> is set: Specifies the optional format for the path shape of each connection. One of <code>polyline6</code> (default), <code>polyline5</code>, <code>geojson</code> or <code>no_shape</code>.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>banner_instructions</code></td>
+<td style="text-align: left;">If the format is <code>osrm</code>, this boolean indicates if each step should have the additional <code>bannerInstructions</code> attribute, which can be displayed in some navigation system SDKs.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>voice_instructions</code></td>
+<td style="text-align: left;">If the format is <code>osrm</code>, this boolean indicates if each step should have the additional <code>voiceInstructions</code> attribute, which can be heard in some navigation system SDKs.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>alternates</code></td>
+<td style="text-align: left;">A number denoting how many alternate routes should be provided. There may be no alternates or less alternates than the user specifies. Alternates are not yet supported on multipoint routes (that is, routes with more than 2 locations). They are also not supported on time dependent routes.</td>
+</tr>
+</tbody>
+</table>
+<p>For example a bus request with the result in Spanish using the OSRM (Open Source Routing Machine) format with the additional bannerInstructions and voiceInstructions in the steps would use the following json:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span><span class="nt">&quot;locations&quot;</span><span class="p">:[{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.730930</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991379</span><span class="p">},{</span><span class="nt">&quot;lat&quot;</span><span class="p">:</span><span class="mf">40.749706</span><span class="p">,</span><span class="nt">&quot;lon&quot;</span><span class="p">:</span><span class="mf">-73.991562</span><span class="p">}],</span><span class="nt">&quot;format&quot;</span><span class="p">:</span><span class="s2">&quot;osrm&quot;</span><span class="p">,</span><span class="nt">&quot;costing&quot;</span><span class="p">:</span><span class="s2">&quot;bus&quot;</span><span class="p">,</span><span class="nt">&quot;banner_instructions&quot;</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="nt">&quot;voice_instructions&quot;</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span><span class="nt">&quot;language&quot;</span><span class="p">:</span><span class="s2">&quot;es-ES&quot;</span><span class="p">}</span>
+</code></pre></div>
+<h5 id="supported-language-tags">Supported language tags<a class="headerlink" href="#supported-language-tags" title="Permanent link">&para;</a></h5>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Language tag</th>
+<th style="text-align: left;">Language alias</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>bg-BG</code></td>
+<td style="text-align: left;"><code>bg</code></td>
+<td style="text-align: left;">Bulgarian (Bulgaria)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ca-ES</code></td>
+<td style="text-align: left;"><code>ca</code></td>
+<td style="text-align: left;">Catalan (Spain)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>cs-CZ</code></td>
+<td style="text-align: left;"><code>cs</code></td>
+<td style="text-align: left;">Czech (Czech Republic)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>da-DK</code></td>
+<td style="text-align: left;"><code>da</code></td>
+<td style="text-align: left;">Danish (Denmark)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>de-DE</code></td>
+<td style="text-align: left;"><code>de</code></td>
+<td style="text-align: left;">German (Germany)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>el-GR</code></td>
+<td style="text-align: left;"><code>el</code></td>
+<td style="text-align: left;">Greek (Greece)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>en-GB</code></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">English (United Kingdom)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>en-US-x-pirate</code></td>
+<td style="text-align: left;"><code>en-x-pirate</code></td>
+<td style="text-align: left;">English (United States) Pirate</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>en-US</code></td>
+<td style="text-align: left;"><code>en</code></td>
+<td style="text-align: left;">English (United States)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>es-ES</code></td>
+<td style="text-align: left;"><code>es</code></td>
+<td style="text-align: left;">Spanish (Spain)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>et-EE</code></td>
+<td style="text-align: left;"><code>et</code></td>
+<td style="text-align: left;">Estonian (Estonia)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>fi-FI</code></td>
+<td style="text-align: left;"><code>fi</code></td>
+<td style="text-align: left;">Finnish (Finland)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>fr-FR</code></td>
+<td style="text-align: left;"><code>fr</code></td>
+<td style="text-align: left;">French (France)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>hi-IN</code></td>
+<td style="text-align: left;"><code>hi</code></td>
+<td style="text-align: left;">Hindi (India)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>hu-HU</code></td>
+<td style="text-align: left;"><code>hu</code></td>
+<td style="text-align: left;">Hungarian (Hungary)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>it-IT</code></td>
+<td style="text-align: left;"><code>it</code></td>
+<td style="text-align: left;">Italian (Italy)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ja-JP</code></td>
+<td style="text-align: left;"><code>ja</code></td>
+<td style="text-align: left;">Japanese (Japan)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>nb-NO</code></td>
+<td style="text-align: left;"><code>nb</code></td>
+<td style="text-align: left;">Bokmal (Norway)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>nl-NL</code></td>
+<td style="text-align: left;"><code>nl</code></td>
+<td style="text-align: left;">Dutch (Netherlands)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>pl-PL</code></td>
+<td style="text-align: left;"><code>pl</code></td>
+<td style="text-align: left;">Polish (Poland)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>pt-BR</code></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">Portuguese (Brazil)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>pt-PT</code></td>
+<td style="text-align: left;"><code>pt</code></td>
+<td style="text-align: left;">Portuguese (Portugal)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ro-RO</code></td>
+<td style="text-align: left;"><code>ro</code></td>
+<td style="text-align: left;">Romanian (Romania)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ru-RU</code></td>
+<td style="text-align: left;"><code>ru</code></td>
+<td style="text-align: left;">Russian (Russia)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sk-SK</code></td>
+<td style="text-align: left;"><code>sk</code></td>
+<td style="text-align: left;">Slovak (Slovakia)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sl-SI</code></td>
+<td style="text-align: left;"><code>sl</code></td>
+<td style="text-align: left;">Slovenian (Slovenia)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sv-SE</code></td>
+<td style="text-align: left;"><code>sv</code></td>
+<td style="text-align: left;">Swedish (Sweden)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>tr-TR</code></td>
+<td style="text-align: left;"><code>tr</code></td>
+<td style="text-align: left;">Turkish (Turkey)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>uk-UA</code></td>
+<td style="text-align: left;"><code>uk</code></td>
+<td style="text-align: left;">Ukrainian (Ukraine)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="other-request-options">Other request options<a class="headerlink" href="#other-request-options" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Options</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>exclude_locations</code></td>
+<td style="text-align: left;">A set of locations to exclude or avoid within a route can be specified using a JSON array of avoid_locations. The avoid_locations have the same format as the locations list. At a minimum each avoid location must include latitude and longitude. The avoid_locations are mapped to the closest road or roads and these roads are excluded from the route path computation.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>exclude_polygons</code></td>
+<td style="text-align: left;">One or multiple exterior rings of polygons in the form of nested JSON arrays, e.g. <code>[[[lon1, lat1], [lon2,lat2]],[[lon1,lat1],[lon2,lat2]]]</code>. Roads intersecting these rings will be avoided during path finding. If you only need to avoid a few specific roads, it's <strong>much</strong> more efficient to use <code>exclude_locations</code>. Valhalla will close open rings (i.e. copy the first coordinate to the last position).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>date_time</code></td>
+<td style="text-align: left;">This is the local date and time at the location.<ul><li><code>type</code><ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time. Not yet implemented for multimodal costing method.</li><li>3 - Invariant specified time. Time does not vary over the course of the path. Not implemented for multimodal or bike share routing</li></ul></li><li><code>value</code> - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><br></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>elevation_interval</code></td>
+<td style="text-align: left;">Elevation interval (meters) for requesting elevation along the route. Valhalla data must have been generated with elevation data. If no <code>elevation_interval</code> is specified, no elevation will be returned for the route. An elevation interval of 30 meters is recommended when elevation along the route is desired, matching the default data source's resolution.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>id</code></td>
+<td style="text-align: left;">Name your route request. If <code>id</code> is specified, the naming will be sent thru to the response.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>linear_references</code></td>
+<td style="text-align: left;">When present and <code>true</code>, the successful <code>route</code> response will include a key <code>linear_references</code>. Its value is an array of base64-encoded <a href="https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf">OpenLR location references</a>, one for each graph edge of the road network matched by the input trace.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>prioritize_bidirectional</code></td>
+<td style="text-align: left;">Prioritize <code>bidirectional a*</code> when <code>date_time.type = depart_at/current</code>. By default <code>time_dependent_forward a*</code> is used in these cases, but <code>bidirectional a*</code> is much faster. Currently it does not update the time (and speeds) when searching for the route path, but the ETA on that route is recalculated based on the time-dependent speeds</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>roundabout_exits</code></td>
+<td style="text-align: left;">A boolean indicating whether exit instructions at roundabouts should be added to the output or not. Default is true.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>admin_crossings</code></td>
+<td style="text-align: left;">When present and <code>true</code>, the successful route summary will include the two keys <code>admins</code> and <code>admin_crossings</code>. <code>admins</code> is an array of administrative regions the route lies within. <code>admin_crossings</code> is an array of objects that contain <code>from_admin_index</code> and <code>to_admin_index</code>, which are indices into the <code>admins</code> array. They also contain <code>from_shape_index</code> and <code>to_shape_index</code>, which are start and end indices of the edge along which an administrative boundary is crossed.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>turn_lanes</code></td>
+<td style="text-align: left;">When present and <code>true</code>, each maneuver in the route response can include a <code>lanes</code> array describing lane-level guidance. The lanes array details possible <code>directions</code>, as well as which lanes are <code>valid</code> or <code>active</code> for following the maneuver.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="outputs-of-a-route">Outputs of a route<a class="headerlink" href="#outputs-of-a-route" title="Permanent link">&para;</a></h2>
+<p>If a route has been named in the request using the optional <code>&amp;id=</code> input, then the name will be returned as a string <code>id</code> on the JSON object.</p>
+<p>The route results are returned as a <code>trip</code>. This is a JSON object that contains details about the trip, including locations, a summary with basic information about the entire trip, and a list of <code>legs</code>.</p>
+<p>Basic trip information includes:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Trip item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>status</code></td>
+<td style="text-align: left;">Status code.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>status_message</code></td>
+<td style="text-align: left;">Status message.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>units</code></td>
+<td style="text-align: left;">The specified units of length are returned, either kilometers or miles.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>language</code></td>
+<td style="text-align: left;">The language of the narration instructions. If the user specified a language in the directions options and the specified language was supported - this returned value will be equal to the specified value. Otherwise, this value will be the default (en-US) language.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>locations</code></td>
+<td style="text-align: left;">Location information is returned in the same form as it is entered with additional fields to indicate the side of the street.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>warnings</code> (optional)</td>
+<td style="text-align: left;">This array may contain warning objects informing about deprecated request parameters, clamped values etc.</td>
+</tr>
+</tbody>
+</table>
+<p>The summary JSON object includes:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Summary item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>time</code></td>
+<td style="text-align: left;">Estimated elapsed time to complete the trip.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>length</code></td>
+<td style="text-align: left;">Distance traveled for the entire trip. Units are either miles or kilometers based on the input units specified.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>has_toll</code></td>
+<td style="text-align: left;">Flag indicating if the path uses one or more toll segments.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>has_highway</code></td>
+<td style="text-align: left;">Flag indicating if the path uses one or more highway segments.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>has_ferry</code></td>
+<td style="text-align: left;">Flag indicating if the path uses one or more ferry segments.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>min_lat</code></td>
+<td style="text-align: left;">Minimum latitude of a bounding box containing the route.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>min_lon</code></td>
+<td style="text-align: left;">Minimum longitude of a bounding box containing the route.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>max_lat</code></td>
+<td style="text-align: left;">Maximum latitude of a bounding box containing the route.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>max_lon</code></td>
+<td style="text-align: left;">Maximum longitude of a bounding box containing the route.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>level_changes</code></td>
+<td style="text-align: left;">If a trip leg includes level changes (i.e. when navigating inside a building), the summary will include an array in the form of <code>[[shape_index, level], ...]</code> that can be used to split up the geometry along the level changes.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="trip-legs-and-maneuvers">Trip legs and maneuvers<a class="headerlink" href="#trip-legs-and-maneuvers" title="Permanent link">&para;</a></h3>
+<p>A <code>trip</code> contains one or more <code>legs</code>. For <em>n</em> number of <code>break</code> locations, there are <em>n-1</em> legs. <code>Through</code> locations do not create separate legs.</p>
+<p>Each leg of the trip includes a summary, which is comprised of the same information as a trip summary but applied to the single leg of the trip. It also includes a <code>shape</code>, which is an <a href="https://developers.google.com/maps/documentation/utilities/polylinealgorithm">encoded polyline</a> of the route path (with 6 digits decimal precision), and a list of <code>maneuvers</code> as a JSON array. For more about decoding route shapes, see these <a href="../../../decoding/">code examples</a>.</p>
+<p>If <code>elevation_interval</code> is specified, each leg of the trip will return <code>elevation</code> along the route as a JSON array. The <code>elevation_interval</code> is also returned. Units for both <code>elevation</code> and <code>elevation_interval</code> are either meters or feet based on the input units specified.</p>
+<p>Each maneuver includes:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Maneuver item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;">Type of maneuver. See below for a list.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>instruction</code></td>
+<td style="text-align: left;">Written maneuver instruction. Describes the maneuver, such as "Turn right onto Main Street".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>verbal_transition_alert_instruction</code></td>
+<td style="text-align: left;">Text suitable for use as a verbal alert in a navigation application. The transition alert instruction will prepare the user for the forthcoming transition. For example: "Turn right onto North Prince Street".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>verbal_pre_transition_instruction</code></td>
+<td style="text-align: left;">Text suitable for use as a verbal message immediately prior to the maneuver transition. For example "Turn right onto North Prince Street, U.S. 2 22".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>verbal_post_transition_instruction</code></td>
+<td style="text-align: left;">Text suitable for use as a verbal message immediately after the maneuver transition. For example "Continue on U.S. 2 22 for 3.9 miles".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>street_names</code></td>
+<td style="text-align: left;">List of street names that are consistent along the entire nonobvious maneuver.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>begin_street_names</code></td>
+<td style="text-align: left;">When present, these are the street names at the beginning (transition point) of the nonobvious maneuver (if they are different than the names that are consistent along the entire nonobvious maneuver).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>time</code></td>
+<td style="text-align: left;">Estimated time along the maneuver in seconds.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>length</code></td>
+<td style="text-align: left;">Maneuver length in the units specified.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>begin_shape_index</code></td>
+<td style="text-align: left;">Index into the list of shape points for the start of the maneuver.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>end_shape_index</code></td>
+<td style="text-align: left;">Index into the list of shape points for the end of the maneuver.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>toll</code></td>
+<td style="text-align: left;">True if the maneuver has any toll, or portions of the maneuver are subject to a toll.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>highway</code></td>
+<td style="text-align: left;">True if a highway is encountered on this maneuver.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>rough</code></td>
+<td style="text-align: left;">True if the maneuver is unpaved or rough pavement, or has any portions that have rough pavement.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>gate</code></td>
+<td style="text-align: left;">True if a gate is encountered on this maneuver.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>ferry</code></td>
+<td style="text-align: left;">True if a ferry is encountered on this maneuver.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>sign</code></td>
+<td style="text-align: left;">Contains the interchange guide information at a road junction associated with this maneuver. See below for details.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>roundabout_exit_count</code></td>
+<td style="text-align: left;">The spoke to exit roundabout after entering.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>depart_instruction</code></td>
+<td style="text-align: left;">Written depart time instruction. Typically used with a transit maneuver, such as "Depart: 8:04 AM from 8 St - NYU".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>verbal_depart_instruction</code></td>
+<td style="text-align: left;">Text suitable for use as a verbal depart time instruction. Typically used with a transit maneuver, such as "Depart at 8:04 AM from 8 St - NYU".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>arrive_instruction</code></td>
+<td style="text-align: left;">Written arrive time instruction. Typically used with a transit maneuver, such as "Arrive: 8:10 AM at 34 St - Herald Sq".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>verbal_arrive_instruction</code></td>
+<td style="text-align: left;">Text suitable for use as a verbal arrive time instruction. Typically used with a transit maneuver, such as "Arrive at 8:10 AM at 34 St - Herald Sq".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>transit_info</code></td>
+<td style="text-align: left;">Contains the attributes that describe a specific transit route. See below for details.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>verbal_multi_cue</code></td>
+<td style="text-align: left;">True if the <code>verbal_pre_transition_instruction</code> has been appended with the verbal instruction of the next maneuver.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>travel_mode</code></td>
+<td style="text-align: left;">Travel mode.<ul><li>"drive"</li><li>"pedestrian"</li><li>"bicycle"</li><li>"transit"</li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>travel_type</code></td>
+<td style="text-align: left;">Travel type for drive.<ul><li>"car"</li><li>"motorcycle"</li><li>"motor_scooter"</li><li>"truck"</li><li>"bus"</li></ul>Travel type for pedestrian.<ul><li>"foot"</li><li>"wheelchair"</li></ul>Travel type for bicycle.<ul><li>"road"</li><li>"hybrid"</li><li>"cross"</li><li>"mountain"</li></ul>Travel type for transit.<ul><li>Tram or light rail = "tram"</li><li>Metro or subway = "metro"</li><li>Rail = "rail"</li><li>Bus = "bus"</li><li>Ferry = "ferry"</li><li>Cable car = "cable_car"</li><li>Gondola = "gondola"</li><li>Funicular = "funicular"</li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bss_maneuver_type</code></td>
+<td style="text-align: left;">Used when <code>travel_mode</code> is <code>bikeshare</code>. Describes bike share maneuver. The default value is "NoneAction <ul><li>"NoneAction"</li><li>"RentBikeAtBikeShare"</li><li>"ReturnBikeAtBikeShare"</li></ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bearing_before</code></td>
+<td style="text-align: left;">The clockwise angle from true north to the direction of travel immediately before the maneuver.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>bearing_after</code></td>
+<td style="text-align: left;">The clockwise angle from true north to the direction of travel immediately after the maneuver.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>lanes</code></td>
+<td style="text-align: left;">An array describing lane-level guidance. Used when <code>turn_lanes</code> is enabled. See below for details.</td>
+</tr>
+</tbody>
+</table>
+<p>For the maneuver <code>type</code>, the following are available:</p>
+<div class="highlight"><pre><span></span><code><span class="err">kNo</span><span class="kc">ne</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">0</span><span class="err">;</span>
+<span class="err">kS</span><span class="kc">tart</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">1</span><span class="err">;</span>
+<span class="err">kS</span><span class="kc">tart</span><span class="err">Righ</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">2</span><span class="err">;</span>
+<span class="err">kS</span><span class="kc">tart</span><span class="err">Le</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">3</span><span class="err">;</span>
+<span class="err">kDes</span><span class="kc">t</span><span class="err">i</span><span class="kc">nat</span><span class="err">io</span><span class="kc">n</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">4</span><span class="err">;</span>
+<span class="err">kDes</span><span class="kc">t</span><span class="err">i</span><span class="kc">nat</span><span class="err">io</span><span class="kc">n</span><span class="err">Righ</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">5</span><span class="err">;</span>
+<span class="err">kDes</span><span class="kc">t</span><span class="err">i</span><span class="kc">nat</span><span class="err">io</span><span class="kc">n</span><span class="err">Le</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">6</span><span class="err">;</span>
+<span class="err">kBecomes</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">7</span><span class="err">;</span>
+<span class="err">kCo</span><span class="kc">nt</span><span class="err">i</span><span class="kc">nue</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">8</span><span class="err">;</span>
+<span class="err">kSligh</span><span class="kc">t</span><span class="err">Righ</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">9</span><span class="err">;</span>
+<span class="err">kRigh</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">10</span><span class="err">;</span>
+<span class="err">kSharpRigh</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">11</span><span class="err">;</span>
+<span class="err">kU</span><span class="kc">turn</span><span class="err">Righ</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">12</span><span class="err">;</span>
+<span class="err">kU</span><span class="kc">turn</span><span class="err">Le</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">13</span><span class="err">;</span>
+<span class="err">kSharpLe</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">14</span><span class="err">;</span>
+<span class="err">kLe</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">15</span><span class="err">;</span>
+<span class="err">kSligh</span><span class="kc">t</span><span class="err">Le</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">16</span><span class="err">;</span>
+<span class="err">kRampS</span><span class="kc">tra</span><span class="err">igh</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">17</span><span class="err">;</span>
+<span class="err">kRampRigh</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">18</span><span class="err">;</span>
+<span class="err">kRampLe</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">19</span><span class="err">;</span>
+<span class="err">kExi</span><span class="kc">t</span><span class="err">Righ</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">20</span><span class="err">;</span>
+<span class="err">kExi</span><span class="kc">t</span><span class="err">Le</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">21</span><span class="err">;</span>
+<span class="err">kS</span><span class="kc">ta</span><span class="err">yS</span><span class="kc">tra</span><span class="err">igh</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">22</span><span class="err">;</span>
+<span class="err">kS</span><span class="kc">ta</span><span class="err">yRigh</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">23</span><span class="err">;</span>
+<span class="err">kS</span><span class="kc">ta</span><span class="err">yLe</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">24</span><span class="err">;</span>
+<span class="err">kMerge</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">25</span><span class="err">;</span>
+<span class="err">kRou</span><span class="kc">n</span><span class="err">dabou</span><span class="kc">t</span><span class="err">E</span><span class="kc">nter</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">26</span><span class="err">;</span>
+<span class="err">kRou</span><span class="kc">n</span><span class="err">dabou</span><span class="kc">t</span><span class="err">Exi</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">27</span><span class="err">;</span>
+<span class="err">kFerryE</span><span class="kc">nter</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">28</span><span class="err">;</span>
+<span class="err">kFerryExi</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">29</span><span class="err">;</span>
+<span class="err">kTra</span><span class="kc">ns</span><span class="err">i</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">30</span><span class="err">;</span>
+<span class="err">kTra</span><span class="kc">ns</span><span class="err">i</span><span class="kc">t</span><span class="err">Tra</span><span class="kc">nsfer</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">31</span><span class="err">;</span>
+<span class="err">kTra</span><span class="kc">ns</span><span class="err">i</span><span class="kc">t</span><span class="err">Remai</span><span class="kc">n</span><span class="err">O</span><span class="kc">n</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">32</span><span class="err">;</span>
+<span class="err">kTra</span><span class="kc">ns</span><span class="err">i</span><span class="kc">t</span><span class="err">Co</span><span class="kc">nne</span><span class="err">c</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">S</span><span class="kc">tart</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">33</span><span class="err">;</span>
+<span class="err">kTra</span><span class="kc">ns</span><span class="err">i</span><span class="kc">t</span><span class="err">Co</span><span class="kc">nne</span><span class="err">c</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">Tra</span><span class="kc">nsfer</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">34</span><span class="err">;</span>
+<span class="err">kTra</span><span class="kc">ns</span><span class="err">i</span><span class="kc">t</span><span class="err">Co</span><span class="kc">nne</span><span class="err">c</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">Des</span><span class="kc">t</span><span class="err">i</span><span class="kc">nat</span><span class="err">io</span><span class="kc">n</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">35</span><span class="err">;</span>
+<span class="err">kPos</span><span class="kc">t</span><span class="err">Tra</span><span class="kc">ns</span><span class="err">i</span><span class="kc">t</span><span class="err">Co</span><span class="kc">nne</span><span class="err">c</span><span class="kc">t</span><span class="err">io</span><span class="kc">n</span><span class="err">Des</span><span class="kc">t</span><span class="err">i</span><span class="kc">nat</span><span class="err">io</span><span class="kc">n</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">36</span><span class="err">;</span>
+<span class="err">kMergeRigh</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">37</span><span class="err">;</span>
+<span class="err">kMergeLe</span><span class="kc">ft</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">38</span><span class="err">;</span>
+<span class="err">kEleva</span><span class="kc">t</span><span class="err">orE</span><span class="kc">nter</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">39</span><span class="err">;</span>
+<span class="err">kS</span><span class="kc">te</span><span class="err">psE</span><span class="kc">nter</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">40</span><span class="err">;</span>
+<span class="err">kEscala</span><span class="kc">t</span><span class="err">orE</span><span class="kc">nter</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">41</span><span class="err">;</span>
+<span class="err">kBuildi</span><span class="kc">n</span><span class="err">gE</span><span class="kc">nter</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">42</span><span class="err">;</span>
+<span class="err">kBuildi</span><span class="kc">n</span><span class="err">gExi</span><span class="kc">t</span><span class="w"> </span><span class="err">=</span><span class="w"> </span><span class="mi">43</span><span class="err">;</span>
+</code></pre></div>
+<p>The maneuver <code>sign</code> may contain four lists of interchange sign elements as follows:</p>
+<ul>
+<li><code>exit_number_elements</code> = list of exit number elements. If an exit number element exists, it is typically just one value.</li>
+<li><code>exit_branch_elements</code> = list of exit branch elements. The exit branch element text is the subsequent road name or route number after the sign.</li>
+<li><code>exit_toward_elements</code> = list of exit toward elements. The exit toward element text is the location where the road ahead goes - the location is typically a control city, but may also be a future road name or route number.</li>
+<li><code>exit_name_elements</code> = list of exit name elements. The exit name element is the interchange identifier - typically not used in the US.</li>
+</ul>
+<p>Each maneuver sign element includes:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Maneuver sign element item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>text</code></td>
+<td style="text-align: left;">Interchange sign text. <ul><li>exit number example: 91B.</li><li>exit branch example: I 95 North.</li><li>exit toward example: New York.</li><li>exit name example: Gettysburg Pike.</li><ul></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>consecutive_count</code></td>
+<td style="text-align: left;">The frequency of this sign element within a set a consecutive signs. This item is optional.</td>
+</tr>
+</tbody>
+</table>
+<p>A maneuver <code>transit_info</code> includes:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Maneuver transit route item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>onestop_id</code></td>
+<td style="text-align: left;">Global transit route identifier.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>short_name</code></td>
+<td style="text-align: left;">Short name describing the transit route. For example "N".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>long_name</code></td>
+<td style="text-align: left;">Long name describing the transit route. For example "Broadway Express".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>headsign</code></td>
+<td style="text-align: left;">The sign on a public transport vehicle that identifies the route destination to passengers. For example "ASTORIA - DITMARS BLVD".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>color</code></td>
+<td style="text-align: left;">The numeric color value associated with a transit route. The value for yellow would be "16567306".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>text_color</code></td>
+<td style="text-align: left;">The numeric text color value associated with a transit route. The value for black would be "0".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>description</code></td>
+<td style="text-align: left;">The description of the transit route. For example "Trains operate from Ditmars Boulevard, Queens, to Stillwell Avenue, Brooklyn, at all times. N trains in Manhattan operate along Broadway and across the Manhattan Bridge to and from Brooklyn. Trains in Brooklyn operate along 4<sup>th</sup> Avenue, then through Borough Park to Gravesend. Trains typically operate local in Queens, and either express or local in Manhattan and Brooklyn, depending on the time. Late night trains operate via Whitehall Street, Manhattan. Late night service is local".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>operator_onestop_id</code></td>
+<td style="text-align: left;">Global operator/agency identifier.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>operator_name</code></td>
+<td style="text-align: left;">Operator/agency name. For example, "BART", "King County Marine Division", and so on.  Short name is used over long name.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>operator_url</code></td>
+<td style="text-align: left;">Operator/agency URL. For example, "https://web.mta.info/".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>transit_stops</code></td>
+<td style="text-align: left;">A list of the stops/stations associated with a specific transit route. See below for details.</td>
+</tr>
+</tbody>
+</table>
+<p>A <code>transit_stop</code> includes:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Transit stop item</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;">Type of stop (simple stop=0; station=1).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>name</code></td>
+<td style="text-align: left;">Name of the stop or station. For example "14 St - Union Sq".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>arrival_date_time</code></td>
+<td style="text-align: left;">Arrival date and time using the <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a> format (YYYY-MM-DDThh:mm). For example, "2015-12-29T08:06".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>departure_date_time</code></td>
+<td style="text-align: left;">Departure date and time using the <a href="https://en.wikipedia.org/wiki/ISO_8601">ISO 8601</a> format (YYYY-MM-DDThh:mm). For example, "2015-12-29T08:06".</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>is_parent_stop</code></td>
+<td style="text-align: left;">True if this stop is a marked as a parent stop.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>assumed_schedule</code></td>
+<td style="text-align: left;">True if the times are based on an assumed schedule because the actual schedule is not known.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>lat</code></td>
+<td style="text-align: left;">Latitude of the transit stop in degrees.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>lon</code></td>
+<td style="text-align: left;">Longitude of the transit stop in degrees.</td>
+</tr>
+</tbody>
+</table>
+<p>Continuing with the earlier routing example from the Detroit, Michigan area, a maneuver such as this one may be returned with that request: <code>{"begin_shape_index":0,"length":0.109,"end_shape_index":1,"instruction":"Go south on Appleton.","street_names":["Appleton"],"type":1,"time":0}</code></p>
+<p>A <code>lanes</code> includes:</p>
+<p>When <code>turn_lanes</code> is enabled, each maneuver may include a <code>lanes</code> array describing lane-level guidance. Each lane object can include the following fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>directions</code></td>
+<td>A bitmask indicating all possible turn directions for that lane.</td>
+</tr>
+<tr>
+<td><code>valid</code> (Optional)</td>
+<td>A bitmask indicating valid turn directions for following the route initially. A lane is marked valid if it can be used at the start of the maneuver but might require further lane changes.</td>
+</tr>
+<tr>
+<td><code>active</code> (Optional)</td>
+<td>A bitmask indicating active turn directions for continuing along the route without needing additional lane changes. A lane is marked active if it is the best lane for following the maneuver as intended.</td>
+</tr>
+</tbody>
+</table>
+<p>The directions, valid, and active fields use the following bitmask values:</p>
+<table>
+<thead>
+<tr>
+<th>Decimal Value</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>Empty</td>
+<td>No turn lane or undefined</td>
+</tr>
+<tr>
+<td>1</td>
+<td>None</td>
+<td>No specific direction</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Through</td>
+<td>Goes straight</td>
+</tr>
+<tr>
+<td>4</td>
+<td>SharpLeft</td>
+<td>Turns sharply to the left</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Left</td>
+<td>Turns left</td>
+</tr>
+<tr>
+<td>16</td>
+<td>SlightLeft</td>
+<td>Turns slightly to the left</td>
+</tr>
+<tr>
+<td>32</td>
+<td>SlightRight</td>
+<td>Turns slightly to the right</td>
+</tr>
+<tr>
+<td>64</td>
+<td>Right</td>
+<td>Turns right</td>
+</tr>
+<tr>
+<td>128</td>
+<td>SharpRight</td>
+<td>Turns sharply to the right</td>
+</tr>
+<tr>
+<td>256</td>
+<td>Reverse</td>
+<td>U-turn</td>
+</tr>
+<tr>
+<td>512</td>
+<td>MergeToLeft</td>
+<td>Lane merges to the left</td>
+</tr>
+<tr>
+<td>1024</td>
+<td>MergeToRight</td>
+<td>Lane merges to the right</td>
+</tr>
+</tbody>
+</table>
+<p>Example of a lanes array with two lanes: the first lane can only turn left and is marked as the preferred (active) lane for left turns. The second lane allows going left or straight, but it is marked as valid only for left turns in this maneuver context:</p>
+<div class="highlight"><pre><span></span><code>&quot;lanes&quot;: [
+  {
+    &quot;directions&quot;: 8,   // bitmask for Left (8)
+    &quot;active&quot;: 8        // indicates this lane should be preferred for a left turn
+  },
+  {
+    &quot;directions&quot;: 10,  // bitmask for Left (8) + Straight (2)
+    &quot;valid&quot;: 8         // indicates this lane can be used for a left turn
+  }
+]
+</code></pre></div>
+<p>In the future, look for additional maneuver information to enhance navigation applications, including landmark usage.</p>
+<h3 id="http-status-codes-and-conditions">HTTP status codes and conditions<a class="headerlink" href="#http-status-codes-and-conditions" title="Permanent link">&para;</a></h3>
+<p>The following is a table of HTTP status error code conditions that may occur for a particular request. In general, the service follows the <a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes">HTTP specification</a>. That is to say that <code>5xx</code> returns are generally ephemeral server problems that should be resolved shortly or are the result of a bug. <code>4xx</code> returns are used to mark requests that cannot be carried out, generally due to bad input in the request or problems with the underlying data. A <code>2xx</code> return is expected when there is a successful route result or <code>trip</code>, as described above.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Status Code</th>
+<th style="text-align: left;">Status</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">200</td>
+<td style="text-align: left;"><em>your_trip_json</em></td>
+<td style="text-align: left;">A happy bit of json describing your <code>trip</code> result</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">Failed to parse json request</td>
+<td style="text-align: left;">You need a valid json request</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">Failed to parse location</td>
+<td style="text-align: left;">You need a valid location object in your json request</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">Failed to parse correlated location</td>
+<td style="text-align: left;">There was a problem with the location once correlated to the route network</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">Insufficiently specified required parameter 'locations'</td>
+<td style="text-align: left;">You forgot the locations parameter</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">No edge/node costing provided</td>
+<td style="text-align: left;">You forgot the costing parameter</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">Insufficient number of locations provided</td>
+<td style="text-align: left;">You didn't provide enough locations</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">Exceeded max route locations of X</td>
+<td style="text-align: left;">You are asking for too many locations</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">Locations are in unconnected regions. Go check/edit the map at osm.org</td>
+<td style="text-align: left;">You are routing between regions of no connectivity</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">No costing method found for 'X'</td>
+<td style="text-align: left;">You are asking for a non-existent costing mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">Path distance exceeds the max distance limit</td>
+<td style="text-align: left;">You want to travel further than this mode allows</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">No suitable edges near location</td>
+<td style="text-align: left;">There were no edges applicable to your mode of travel near the input location</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">No data found for location</td>
+<td style="text-align: left;">There was no route data tile at the input location</td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">No path could be found for input</td>
+<td style="text-align: left;">There was no path found between the input locations</td>
+</tr>
+<tr>
+<td style="text-align: left;">404</td>
+<td style="text-align: left;">Try any of: '/route' '/locate'</td>
+<td style="text-align: left;">You asked for an invalid path</td>
+</tr>
+<tr>
+<td style="text-align: left;">405</td>
+<td style="text-align: left;">Try a POST or GET request instead</td>
+<td style="text-align: left;">We only support GET and POST requests</td>
+</tr>
+<tr>
+<td style="text-align: left;">500</td>
+<td style="text-align: left;">Failed to parse intermediate request format</td>
+<td style="text-align: left;">Had a problem reading an intermediate request format</td>
+</tr>
+<tr>
+<td style="text-align: left;">500</td>
+<td style="text-align: left;">Failed to parse TripPath</td>
+<td style="text-align: left;">Had a problem reading the computed path from Protobuf</td>
+</tr>
+<tr>
+<td style="text-align: left;">500</td>
+<td style="text-align: left;">Could not build directions for TripPath</td>
+<td style="text-align: left;">Had a problem using the trip path to create TripDirections</td>
+</tr>
+<tr>
+<td style="text-align: left;">500</td>
+<td style="text-align: left;">Failed to parse TripDirections</td>
+<td style="text-align: left;">Had a problem using the trip directions to serialize a json response</td>
+</tr>
+<tr>
+<td style="text-align: left;">501</td>
+<td style="text-align: left;">Not implemented</td>
+<td style="text-align: left;">Not Implemented</td>
+</tr>
+</tbody>
+</table>
+<h3 id="internal-error-codes-and-conditions">Internal error codes and conditions<a class="headerlink" href="#internal-error-codes-and-conditions" title="Permanent link">&para;</a></h3>
+<p>The following is a table of exception internal error code conditions that may occur for a particular request. An <a href="https://raw.githubusercontent.com/valhalla/baldr/master/valhalla/baldr/errorcode_util.h">error code utility header file</a> can be included by any of the Valhalla service projects.</p>
+<p>The codes correspond to code returned from a particular <a href="https://github.com/valhalla/valhalla">Valhalla project</a>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Error code</th>
+<th style="text-align: left;">Error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>1xx</strong></td>
+<td style="text-align: left;"><strong>Loki project codes</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">100</td>
+<td style="text-align: left;">Failed to parse json request</td>
+</tr>
+<tr>
+<td style="text-align: left;">101</td>
+<td style="text-align: left;">Try a POST or GET request instead</td>
+</tr>
+<tr>
+<td style="text-align: left;">102</td>
+<td style="text-align: left;">The config actions for Loki are incorrectly loaded</td>
+</tr>
+<tr>
+<td style="text-align: left;">103</td>
+<td style="text-align: left;">Missing max_locations configuration</td>
+</tr>
+<tr>
+<td style="text-align: left;">104</td>
+<td style="text-align: left;">Missing max_distance configuration</td>
+</tr>
+<tr>
+<td style="text-align: left;">105</td>
+<td style="text-align: left;">Path action not supported</td>
+</tr>
+<tr>
+<td style="text-align: left;">106</td>
+<td style="text-align: left;">Try any of</td>
+</tr>
+<tr>
+<td style="text-align: left;">107</td>
+<td style="text-align: left;">Not Implemented</td>
+</tr>
+<tr>
+<td style="text-align: left;">110</td>
+<td style="text-align: left;">Insufficiently specified required parameter 'locations'</td>
+</tr>
+<tr>
+<td style="text-align: left;">111</td>
+<td style="text-align: left;">Insufficiently specified required parameter 'time'</td>
+</tr>
+<tr>
+<td style="text-align: left;">112</td>
+<td style="text-align: left;">Insufficiently specified required parameter 'locations' or 'sources &amp; targets'</td>
+</tr>
+<tr>
+<td style="text-align: left;">113</td>
+<td style="text-align: left;">Insufficiently specified required parameter 'contours'</td>
+</tr>
+<tr>
+<td style="text-align: left;">114</td>
+<td style="text-align: left;">Insufficiently specified required parameter 'shape' or 'encoded_polyline'</td>
+</tr>
+<tr>
+<td style="text-align: left;">120</td>
+<td style="text-align: left;">Insufficient number of locations provided</td>
+</tr>
+<tr>
+<td style="text-align: left;">121</td>
+<td style="text-align: left;">Insufficient number of sources provided</td>
+</tr>
+<tr>
+<td style="text-align: left;">122</td>
+<td style="text-align: left;">Insufficient number of targets provided</td>
+</tr>
+<tr>
+<td style="text-align: left;">123</td>
+<td style="text-align: left;">Insufficient shape provided</td>
+</tr>
+<tr>
+<td style="text-align: left;">124</td>
+<td style="text-align: left;">No edge/node costing provided</td>
+</tr>
+<tr>
+<td style="text-align: left;">125</td>
+<td style="text-align: left;">No costing method found</td>
+</tr>
+<tr>
+<td style="text-align: left;">126</td>
+<td style="text-align: left;">No shape provided</td>
+</tr>
+<tr>
+<td style="text-align: left;">130</td>
+<td style="text-align: left;">Failed to parse location</td>
+</tr>
+<tr>
+<td style="text-align: left;">131</td>
+<td style="text-align: left;">Failed to parse source</td>
+</tr>
+<tr>
+<td style="text-align: left;">132</td>
+<td style="text-align: left;">Failed to parse target</td>
+</tr>
+<tr>
+<td style="text-align: left;">140</td>
+<td style="text-align: left;">Action does not support multimodal costing</td>
+</tr>
+<tr>
+<td style="text-align: left;">141</td>
+<td style="text-align: left;">Arrive by for multimodal not implemented yet</td>
+</tr>
+<tr>
+<td style="text-align: left;">142</td>
+<td style="text-align: left;">Arrive by not implemented for isochrones</td>
+</tr>
+<tr>
+<td style="text-align: left;">143</td>
+<td style="text-align: left;">ignore_closure in costing and exclude_closure in search_filter cannot both be specified</td>
+</tr>
+<tr>
+<td style="text-align: left;">150</td>
+<td style="text-align: left;">Exceeded max locations</td>
+</tr>
+<tr>
+<td style="text-align: left;">151</td>
+<td style="text-align: left;">Exceeded max time</td>
+</tr>
+<tr>
+<td style="text-align: left;">152</td>
+<td style="text-align: left;">Exceeded max contours</td>
+</tr>
+<tr>
+<td style="text-align: left;">153</td>
+<td style="text-align: left;">Too many shape points</td>
+</tr>
+<tr>
+<td style="text-align: left;">154</td>
+<td style="text-align: left;">Path distance exceeds the max distance limit</td>
+</tr>
+<tr>
+<td style="text-align: left;">155</td>
+<td style="text-align: left;">Outside the valid walking distance at the beginning or end of a multimodal route</td>
+</tr>
+<tr>
+<td style="text-align: left;">156</td>
+<td style="text-align: left;">Outside the valid walking distance between stops of a multimodal route</td>
+</tr>
+<tr>
+<td style="text-align: left;">157</td>
+<td style="text-align: left;">Exceeded max avoid locations</td>
+</tr>
+<tr>
+<td style="text-align: left;">158</td>
+<td style="text-align: left;">Input trace option is out of bounds</td>
+</tr>
+<tr>
+<td style="text-align: left;">160</td>
+<td style="text-align: left;">Date and time required for origin for date_type of depart at</td>
+</tr>
+<tr>
+<td style="text-align: left;">161</td>
+<td style="text-align: left;">Date and time required for destination for date_type of arrive by</td>
+</tr>
+<tr>
+<td style="text-align: left;">162</td>
+<td style="text-align: left;">Date and time is invalid.  Format is YYYY-MM-DDTHH:MM</td>
+</tr>
+<tr>
+<td style="text-align: left;">163</td>
+<td style="text-align: left;">Invalid date_type</td>
+</tr>
+<tr>
+<td style="text-align: left;">170</td>
+<td style="text-align: left;">Locations are in unconnected regions. Go check/edit the map at osm.org</td>
+</tr>
+<tr>
+<td style="text-align: left;">171</td>
+<td style="text-align: left;">No suitable edges near location</td>
+</tr>
+<tr>
+<td style="text-align: left;">199</td>
+<td style="text-align: left;">Unknown</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>2xx</strong></td>
+<td style="text-align: left;"><strong>Odin project codes</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">200</td>
+<td style="text-align: left;">Failed to parse intermediate request format</td>
+</tr>
+<tr>
+<td style="text-align: left;">201</td>
+<td style="text-align: left;">Failed to parse TripPath</td>
+</tr>
+<tr>
+<td style="text-align: left;">210</td>
+<td style="text-align: left;">Trip path does not have any nodes</td>
+</tr>
+<tr>
+<td style="text-align: left;">211</td>
+<td style="text-align: left;">Trip path has only one node</td>
+</tr>
+<tr>
+<td style="text-align: left;">212</td>
+<td style="text-align: left;">Trip must have at least 2 locations</td>
+</tr>
+<tr>
+<td style="text-align: left;">213</td>
+<td style="text-align: left;">Error - No shape or invalid node count</td>
+</tr>
+<tr>
+<td style="text-align: left;">220</td>
+<td style="text-align: left;">Turn degree out of range for cardinal direction</td>
+</tr>
+<tr>
+<td style="text-align: left;">230</td>
+<td style="text-align: left;">Invalid TripDirections_Maneuver_Type in method FormTurnInstruction</td>
+</tr>
+<tr>
+<td style="text-align: left;">231</td>
+<td style="text-align: left;">Invalid TripDirections_Maneuver_Type in method FormRelativeTwoDirection</td>
+</tr>
+<tr>
+<td style="text-align: left;">232</td>
+<td style="text-align: left;">Invalid TripDirections_Maneuver_Type in method FormRelativeThreeDirection</td>
+</tr>
+<tr>
+<td style="text-align: left;">299</td>
+<td style="text-align: left;">Unknown</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>3xx</strong></td>
+<td style="text-align: left;"><strong>Skadi project codes</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">300</td>
+<td style="text-align: left;">Failed to parse json request</td>
+</tr>
+<tr>
+<td style="text-align: left;">301</td>
+<td style="text-align: left;">Try a POST or GET request instead</td>
+</tr>
+<tr>
+<td style="text-align: left;">302</td>
+<td style="text-align: left;">The config actions for Skadi are incorrectly loaded</td>
+</tr>
+<tr>
+<td style="text-align: left;">303</td>
+<td style="text-align: left;">Path action not supported</td>
+</tr>
+<tr>
+<td style="text-align: left;">304</td>
+<td style="text-align: left;">Try any of</td>
+</tr>
+<tr>
+<td style="text-align: left;">305</td>
+<td style="text-align: left;">Not Implemented</td>
+</tr>
+<tr>
+<td style="text-align: left;">310</td>
+<td style="text-align: left;">No shape provided</td>
+</tr>
+<tr>
+<td style="text-align: left;">311</td>
+<td style="text-align: left;">Insufficient shape provided</td>
+</tr>
+<tr>
+<td style="text-align: left;">312</td>
+<td style="text-align: left;">Insufficiently specified required parameter 'shape' or 'encoded_polyline'</td>
+</tr>
+<tr>
+<td style="text-align: left;">313</td>
+<td style="text-align: left;">'resample_distance' must be &gt;=</td>
+</tr>
+<tr>
+<td style="text-align: left;">314</td>
+<td style="text-align: left;">Too many shape points</td>
+</tr>
+<tr>
+<td style="text-align: left;">399</td>
+<td style="text-align: left;">Unknown</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>4xx</strong></td>
+<td style="text-align: left;"><strong>Thor project codes</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">400</td>
+<td style="text-align: left;">Unknown action</td>
+</tr>
+<tr>
+<td style="text-align: left;">401</td>
+<td style="text-align: left;">Failed to parse intermediate request format</td>
+</tr>
+<tr>
+<td style="text-align: left;">410</td>
+<td style="text-align: left;">Insufficiently specified required parameter 'locations'</td>
+</tr>
+<tr>
+<td style="text-align: left;">411</td>
+<td style="text-align: left;">Insufficiently specified required parameter 'shape'</td>
+</tr>
+<tr>
+<td style="text-align: left;">412</td>
+<td style="text-align: left;">No costing method found</td>
+</tr>
+<tr>
+<td style="text-align: left;">420</td>
+<td style="text-align: left;">Failed to parse correlated location</td>
+</tr>
+<tr>
+<td style="text-align: left;">421</td>
+<td style="text-align: left;">Failed to parse location</td>
+</tr>
+<tr>
+<td style="text-align: left;">422</td>
+<td style="text-align: left;">Failed to parse source</td>
+</tr>
+<tr>
+<td style="text-align: left;">423</td>
+<td style="text-align: left;">Failed to parse target</td>
+</tr>
+<tr>
+<td style="text-align: left;">424</td>
+<td style="text-align: left;">Failed to parse shape</td>
+</tr>
+<tr>
+<td style="text-align: left;">430</td>
+<td style="text-align: left;">Exceeded max iterations in CostMatrix::SourceToTarget</td>
+</tr>
+<tr>
+<td style="text-align: left;">440</td>
+<td style="text-align: left;">Cannot reach destination - too far from a transit stop</td>
+</tr>
+<tr>
+<td style="text-align: left;">441</td>
+<td style="text-align: left;">Location is unreachable</td>
+</tr>
+<tr>
+<td style="text-align: left;">442</td>
+<td style="text-align: left;">No path could be found for input</td>
+</tr>
+<tr>
+<td style="text-align: left;">443</td>
+<td style="text-align: left;">Exact route match algorithm failed to find path</td>
+</tr>
+<tr>
+<td style="text-align: left;">444</td>
+<td style="text-align: left;">Map Match algorithm failed to find path</td>
+</tr>
+<tr>
+<td style="text-align: left;">445</td>
+<td style="text-align: left;">Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input.</td>
+</tr>
+<tr>
+<td style="text-align: left;">499</td>
+<td style="text-align: left;">Unknown</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>5xx</strong></td>
+<td style="text-align: left;"><strong>Tyr project codes</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;">500</td>
+<td style="text-align: left;">Failed to parse intermediate request format</td>
+</tr>
+<tr>
+<td style="text-align: left;">501</td>
+<td style="text-align: left;">Failed to parse TripDirections</td>
+</tr>
+<tr>
+<td style="text-align: left;">504</td>
+<td style="text-align: left;">GeoTIFF serialization not supported by service</td>
+</tr>
+<tr>
+<td style="text-align: left;">599</td>
+<td style="text-align: left;">Unknown</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.sections", "navigation.top", "toc.follow"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+    
+  </body>
+</html>
