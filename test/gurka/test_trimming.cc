@@ -1,9 +1,9 @@
 #include "baldr/graphreader.h"
+#include "gurka.h"
 #include "midgard/encoded.h"
 #include "midgard/util.h"
 #include "thor/triplegbuilder.h"
 
-#include "gurka.h"
 #include <gtest/gtest.h>
 
 using namespace valhalla;

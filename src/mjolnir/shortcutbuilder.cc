@@ -1,12 +1,4 @@
 #include "mjolnir/shortcutbuilder.h"
-#include "mjolnir/graphtilebuilder.h"
-
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -15,8 +7,17 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 #include "sif/osrm_car_duration.h"
+
+#include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -759,6 +760,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   // across tile boundaries so that we are only messing with one tile
   // in one thread at a time
 
+  SCOPED_TIMER();
   // Get GraphReader
   GraphReader reader(pt.get_child("mjolnir"));
 

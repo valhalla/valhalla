@@ -1,18 +1,17 @@
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "loki/worker.h"
-#include "thor/worker.h"
-
 #include "gurka/gurka.h"
+#include "loki/worker.h"
 #include "test.h"
+#include "thor/worker.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 #ifdef ENABLE_GDAL
 #include <gdal_priv.h>
@@ -493,6 +492,31 @@ TEST(Isochrones, test_geotiff_output_time_distance) {
     }
     ASSERT_EQ(no_intermediate_values, false);
   }
+  VSIFCloseL(handle);
+}
+TEST(Isochrones, test_geotiff_vertical_orientation) {
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+
+  const auto request =
+      R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"distance":1}], "format": "geotiff"})";
+  Api request_pbf;
+  ParseApi(request, Options::isochrone, request_pbf);
+  loki_worker.isochrones(request_pbf);
+  std::string geotiff = thor_worker.isochrones(request_pbf);
+
+  std::string name = "/vsimem/test_isogrid_geotiff_d.tif";
+  unsigned char buffer[geotiff.length()];
+  std::copy(geotiff.cbegin(), geotiff.cend(), buffer);
+  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
+  auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
+  int y = geotiff_dataset->GetRasterYSize();
+  double geoTransform[6];
+  geotiff_dataset->GetGeoTransform(geoTransform);
+  double topY = geoTransform[3] + 0 * geoTransform[4] + 0 * geoTransform[5];
+  double bottomY = geoTransform[3] + 0 * geoTransform[4] + y * geoTransform[5];
+  ASSERT_TRUE(topY > bottomY);
+
   VSIFCloseL(handle);
 }
 #endif

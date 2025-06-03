@@ -1,6 +1,3 @@
-#include <filesystem>
-#include <gtest/gtest.h>
-
 #include "baldr/admin.h"
 #include "gurka.h"
 #include "mjolnir/admin.h"
@@ -8,6 +5,11 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "test/test.h"
+
+#include <gtest/gtest.h>
+#include <sqlite3.h>
+
+#include <filesystem>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -153,7 +155,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   // nodes that span the two countries.
   //======================================================================
   build_tile_set(admin_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
 

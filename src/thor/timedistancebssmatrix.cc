@@ -1,5 +1,6 @@
 #include "thor/timedistancebssmatrix.h"
 #include "midgard/logging.h"
+
 #include <algorithm>
 #include <vector>
 
@@ -113,10 +114,12 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     // Get cost and update distance
     auto edge_cost = FORWARD ? current_costing->EdgeCost(directededge, tile)
                              : current_costing->EdgeCost(opp_edge, t2);
+    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
-        FORWARD ? current_costing->TransitionCost(directededge, nodeinfo, pred)
-                : current_costing->TransitionCostReverse(directededge->localedgeidx(), nodeinfo,
-                                                         opp_edge, opp_pred_edge);
+        FORWARD
+            ? current_costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter)
+            : current_costing->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                     opp_pred_edge, t2, pred.edgeid(), reader_getter);
 
     Cost normalized_edge_cost = {edge_cost.cost * current_costing->GetModeFactor(), edge_cost.secs};
     // Compute the cost to the end of this edge
@@ -179,8 +182,10 @@ bool TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
 
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
+
   // reserve the PBF vectors
-  reserve_pbf_arrays(*request.mutable_matrix(), origins.size() * destinations.size());
+  reserve_pbf_arrays(*request.mutable_matrix(), origins.size() * destinations.size(),
+                     request.options().verbose());
 
   for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
     edgelabels_.reserve(max_reserved_labels_count_);

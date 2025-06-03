@@ -10,7 +10,7 @@ const std::string& MatrixAlgoToString(const valhalla::Matrix::Algorithm algo) {
   static const std::unordered_map<valhalla::Matrix::Algorithm, const std::string> algos{
       {valhalla::Matrix::CostMatrix, "costmatrix"},
       {valhalla::Matrix::TimeDistanceMatrix, "timedistancematrix"},
-      {valhalla::Matrix::TimeDistanceBSSMatrix, "timedistancbssematrix"},
+      {valhalla::Matrix::TimeDistanceBSSMatrix, "timedistancebssmatrix"},
   };
   auto i = algos.find(algo);
   return i == algos.cend() ? empty_str : i->second;

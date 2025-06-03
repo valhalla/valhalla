@@ -1,9 +1,32 @@
 #include "mjolnir/graphenhancer.h"
+#include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/streetnames.h"
+#include "baldr/streetnames_factory.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/aabb2.h"
+#include "midgard/constants.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/countryaccess.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/osmaccess.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 #include "speed_assigner.h"
+
+#include <boost/format.hpp>
+#include <boost/geometry/geometries/multi_polygon.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+#include <boost/geometry/io/wkt/wkt.hpp>
 
 #include <cinttypes>
 #include <future>
@@ -20,29 +43,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include <boost/format.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/io/wkt/wkt.hpp>
-#include <boost/geometry/multi/geometries/multi_polygon.hpp>
-
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/streetnames.h"
-#include "baldr/streetnames_factory.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/aabb2.h"
-#include "midgard/constants.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/sequence.h"
-#include "midgard/util.h"
-#include "mjolnir/osmaccess.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -1289,16 +1289,17 @@ void enhance(const boost::property_tree::ptree& pt,
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
   // Initialize the admin DB (if it exists)
-  sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
+  auto admin_db = (database && use_admin_db) ? AdminDB::open(*database) : std::optional<AdminDB>{};
   if (!database && use_admin_db) {
-    LOG_WARN("Admin db not found.  Not saving admin information.");
-  } else if (!admin_db_handle && use_admin_db) {
-    LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
+    LOG_WARN("Admin db not found. Not saving admin information.");
+  } else if (!admin_db && use_admin_db) {
+    LOG_WARN("Admin db " + *database + " not found. Not saving admin information.");
   }
-  auto admin_conn = make_spatialite_cache(admin_db_handle);
 
-  std::unordered_map<std::string, std::vector<int>> country_access =
-      GetCountryAccess(admin_db_handle);
+  std::unordered_map<std::string, std::vector<int>> country_access;
+  if (admin_db) {
+    country_access = GetCountryAccess(*admin_db);
+  }
 
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
@@ -1698,10 +1699,6 @@ void enhance(const boost::property_tree::ptree& pt,
     lock.unlock();
   }
 
-  if (admin_db_handle) {
-    sqlite3_close(admin_db_handle);
-  }
-
   // Send back the statistics
   result.set_value(stats);
 }
@@ -1715,6 +1712,7 @@ namespace mjolnir {
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
                             const OSMData& osmdata,
                             const std::string& access_file) {
+  SCOPED_TIMER();
   LOG_INFO("Enhancing local graph...");
 
   // A place to hold worker threads and their results, exceptions or otherwise

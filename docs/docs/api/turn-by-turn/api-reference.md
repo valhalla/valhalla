@@ -137,7 +137,9 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `ignore_oneways` | If set to `true`, ignores one-way restrictions. Especially useful for matching GPS traces to the road network ignoring uni-directional traffic rules. Not included in `ignore_restrictions` option. Default is `false`. |
 | `ignore_non_vehicular_restrictions` | Similar to `ignore_restrictions`, but will respect restrictions that impact vehicle safety, such as weight and size restrictions. |
 | `ignore_access` | Will ignore mode-specific access tags. Especially useful for matching GPS traces to the road network regardless of restrictions. Default is `false`. |
+| `ignore_construction` | Will ignore construction tags. Only works when the `include_construction` option is set before building the graph. Useful for planning future routes. Default is `false`. |
 | `speed_types` | Will determine which speed sources are used, if available. A list of strings with the following possible values: <ul><li><code>freeflow</code></li><li><code>constrained</code></li><li><code>predicted</code></li><li><code>current</code></li></ul> Default is all sources (again, only if available). |
+| `hierarchy_limits` (**beta**) | Pass custom hierarchy limits along with this request (read more about the tile hierarchy [here](../../tiles.md#hierarchieslevels)). Needs to be an object with mandatory keys `1` and `2`, each value is another object containing numerical values for `max_up_transitions` and `expand_within_distance`. The service may either clamp these values or disallow modifying hierarchy limits via the request parameters entirely. |
 
 ###### Other costing options
 The following options are available for `auto`, `bus`, `taxi`, and `truck` costing methods.
@@ -180,8 +182,8 @@ These additional options are available for bicycle costing methods.
 
 | Bicycle options | Description |
 | :-------------------------- | :----------- |
-| `bicycle_type` | The type of bicycle. The default type is `Hybrid`. <ul><li>`Road`: a road-style bicycle with narrow tires that is generally lightweight and designed for speed on paved surfaces. </li><li>`Hybrid` or `City`: a bicycle made mostly for city riding or casual riding on roads and paths with good surfaces.</li><li>`Cross`: a cyclo-cross bicycle, which is similar to a road bicycle but with wider tires suitable to rougher surfaces.</li><li>`Mountain`: a mountain bicycle suitable for most surfaces but generally heavier and slower on paved surfaces.</li><ul> |
-| `cycling_speed` | Cycling speed is the average travel speed along smooth, flat roads. This is meant to be the speed a rider can comfortably maintain over the desired distance of the route. It can be modified (in the costing method) by surface type in conjunction with bicycle type and (coming soon) by hilliness of the road section. When no speed is specifically provided, the default speed is determined by the bicycle type and are as follows: Road = 25 KPH (15.5 MPH), Cross = 20 KPH (13 MPH), Hybrid/City = 18 KPH (11.5 MPH), and Mountain = 16 KPH (10 MPH). |
+| `bicycle_type` | The type of bicycle. The default type is `hybrid`. <ul><li>`road`: a road-style bicycle with narrow tires that is generally lightweight and designed for speed on paved surfaces. </li><li>`hybrid` or `city`: a bicycle made mostly for city riding or casual riding on roads and paths with good surfaces.</li><li>`cross`: a cyclo-cross bicycle, which is similar to a road bicycle but with wider tires suitable to rougher surfaces.</li><li>`mountain`: a mountain bicycle suitable for most surfaces but generally heavier and slower on paved surfaces.</li><ul> |
+| `cycling_speed` | Cycling speed is the average travel speed along smooth, flat roads. This is meant to be the speed a rider can comfortably maintain over the desired distance of the route. It can be modified (in the costing method) by surface type in conjunction with bicycle type and (coming soon) by hilliness of the road section. When no speed is specifically provided, the default speed is determined by the bicycle type and are as follows:<ul><li>`road` = 25 KPH (15.5 MPH),</li><li>`cross` = 20 KPH (13 MPH),<li></li>`hybrid`/`city` = 18 KPH (11.5 MPH),<li></li>and `mountain` = 16 KPH (10 MPH).</li></ul> |
 | `use_roads` | A cyclist's propensity to use roads alongside other vehicles. This is a range of values from 0 to 1, where 0 attempts to avoid roads and stay on cycleways and paths, and 1 indicates the rider is more comfortable riding on roads. Based on the `use_roads` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path. The default value is 0.5. |
 | `use_hills` | A cyclist's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
 | `use_ferry` | This value indicates the willingness to take ferries. This is a range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. The default value is 0.5. |
@@ -229,6 +231,7 @@ These options are available for pedestrian costing methods.
 | `alley_factor` | A factor that modifies (multiplies) the cost when [alleys](http://wiki.openstreetmap.org/wiki/Tag:service%3Dalley) are encountered. Pedestrian routes generally want to avoid alleys or narrow service roads between buildings. The default alley_factor is 2.0. |
 | `driveway_factor` | A factor that modifies (multiplies) the cost when encountering a [driveway](http://wiki.openstreetmap.org/wiki/Tag:service%3Ddriveway), which is often a private, service road. Pedestrian routes generally want to avoid driveways (private). The default driveway factor is 5.0. |
 | `step_penalty` | A penalty in seconds added to each transition onto a path with [steps or stairs](http://wiki.openstreetmap.org/wiki/Tag:highway%3Dsteps). Higher values apply larger cost penalties to avoid paths that contain flights of steps. |
+| `elevator_penalty` | A penalty in seconds added to each transition via an elevator node or onto an elevator edge. Higher values apply larger cost penalties to avoid elevators. |
 | `use_ferry` | This value indicates the willingness to take ferries. This is range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. The default value is 0.5. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. |
 | `use_living_streets` | This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0.6. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely. |
 | `use_tracks` | This value indicates the willingness to take track roads. This is a range of values between 0 and 1. Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit. The default value is 0.5. Note that sometimes tracks are required to complete a route so values of 0 are not guaranteed to avoid tracks entirely. |
@@ -244,7 +247,7 @@ These options are available for pedestrian costing methods.
 | `max_distance` | Sets the maximum total walking distance of a route. Default is 100 km (~62 miles). |
 | `transit_start_end_max_distance` | A pedestrian option that can be added to the request to extend the defaults (2145 meters or approximately 1.5 miles). This is the maximum walking distance at the beginning or end of a route.|
 | `transit_transfer_max_distance` | A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.|
-| `type` | If set to `blind`, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. Default `foot` |
+| `type` | <ul><li>If set to `blind`, enables additional route instructions, especially useful for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes.</li><li>If set to `wheelchair`, changes the defaults for `max_distance`, `walking_speed`, and `step_penalty` to be better aligned to the needs of wheelchair users.</li></ul> These two options are mutually exclusive. In case you want to combine them, please use `blind` and pass the options adjusted for `wheelchair` users manually. Default `foot` |
 | `mode_factor` | A factor which the cost of a pedestrian edge will be multiplied with on multimodal request, e.g. `bss` or `multimodal/transit`. Default is a factor of 1.5, i.e. avoiding walking.
 
 ##### Transit costing options
@@ -364,6 +367,7 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 | `prioritize_bidirectional` | Prioritize `bidirectional a*` when `date_time.type = depart_at/current`. By default `time_dependent_forward a*` is used in these cases, but `bidirectional a*` is much faster. Currently it does not update the time (and speeds) when searching for the route path, but the ETA on that route is recalculated based on the time-dependent speeds |
 | `roundabout_exits` | A boolean indicating whether exit instructions at roundabouts should be added to the output or not. Default is true. |
 | `admin_crossings` | When present and `true`, the successful route summary will include the two keys `admins` and `admin_crossings`. `admins` is an array of administrative regions the route lies within. `admin_crossings` is an array of objects that contain `from_admin_index` and `to_admin_index`, which are indices into the `admins` array. They also contain `from_shape_index` and `to_shape_index`, which are start and end indices of the edge along which an administrative boundary is crossed. |
+| `turn_lanes` | When present and `true`, each maneuver in the route response can include a `lanes` array describing lane-level guidance. The lanes array details possible `directions`, as well as which lanes are `valid` or `active` for following the maneuver.
 
 [openlr]: https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 
@@ -405,7 +409,7 @@ A `trip` contains one or more `legs`. For *n* number of `break` locations, there
 
 Each leg of the trip includes a summary, which is comprised of the same information as a trip summary but applied to the single leg of the trip. It also includes a `shape`, which is an [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path (with 6 digits decimal precision), and a list of `maneuvers` as a JSON array. For more about decoding route shapes, see these [code examples](../../decoding.md).
 
-If `elevation_interval` is specified, each leg of the trip will return `elevation` along the route as a JSON array. The `elevation_interval` is also returned. Units for both `elevation` and `elevation_interval` are either meters or feet based on the input units specified. 
+If `elevation_interval` is specified, each leg of the trip will return `elevation` along the route as a JSON array. The `elevation_interval` is also returned. Units for both `elevation` and `elevation_interval` are either meters or feet based on the input units specified.
 
 Each maneuver includes:
 
@@ -436,8 +440,11 @@ Each maneuver includes:
 | `transit_info` | Contains the attributes that describe a specific transit route. See below for details. |
 | `verbal_multi_cue` | True if the `verbal_pre_transition_instruction` has been appended with the verbal instruction of the next maneuver. |
 | `travel_mode` | Travel mode.<ul><li>"drive"</li><li>"pedestrian"</li><li>"bicycle"</li><li>"transit"</li></ul>|
-| `travel_type` | Travel type for drive.<ul><li>"car"</li></ul>Travel type for pedestrian.<ul><li>"foot"</li></ul>Travel type for bicycle.<ul><li>"road"</li></ul>Travel type for transit.<ul><li>Tram or light rail = "tram"</li><li>Metro or subway = "metro"</li><li>Rail = "rail"</li><li>Bus = "bus"</li><li>Ferry = "ferry"</li><li>Cable car = "cable_car"</li><li>Gondola = "gondola"</li><li>Funicular = "funicular"</li></ul>|
+| `travel_type` | Travel type for drive.<ul><li>"car"</li><li>"motorcycle"</li><li>"motor_scooter"</li><li>"truck"</li><li>"bus"</li></ul>Travel type for pedestrian.<ul><li>"foot"</li><li>"wheelchair"</li></ul>Travel type for bicycle.<ul><li>"road"</li><li>"hybrid"</li><li>"cross"</li><li>"mountain"</li></ul>Travel type for transit.<ul><li>Tram or light rail = "tram"</li><li>Metro or subway = "metro"</li><li>Rail = "rail"</li><li>Bus = "bus"</li><li>Ferry = "ferry"</li><li>Cable car = "cable_car"</li><li>Gondola = "gondola"</li><li>Funicular = "funicular"</li></ul>|
 | `bss_maneuver_type` | Used when `travel_mode` is `bikeshare`. Describes bike share maneuver. The default value is "NoneAction <ul><li>"NoneAction"</li><li>"RentBikeAtBikeShare"</li><li>"ReturnBikeAtBikeShare"</li></ul> |
+| `bearing_before` | The clockwise angle from true north to the direction of travel immediately before the maneuver. |
+| `bearing_after` | The clockwise angle from true north to the direction of travel immediately after the maneuver. |
+| `lanes` | An array describing lane-level guidance. Used when `turn_lanes` is enabled. See below for details. |
 
 For the maneuver `type`, the following are available:
 
@@ -532,6 +539,48 @@ A `transit_stop` includes:
 | `lon` | Longitude of the transit stop in degrees. |
 
 Continuing with the earlier routing example from the Detroit, Michigan area, a maneuver such as this one may be returned with that request: `{"begin_shape_index":0,"length":0.109,"end_shape_index":1,"instruction":"Go south on Appleton.","street_names":["Appleton"],"type":1,"time":0}`
+
+A `lanes` includes:
+
+When `turn_lanes` is enabled, each maneuver may include a `lanes` array describing lane-level guidance. Each lane object can include the following fields:
+
+| Field | Description |
+| --- | --- |
+| `directions` | A bitmask indicating all possible turn directions for that lane. |
+| `valid` (Optional) | A bitmask indicating valid turn directions for following the route initially. A lane is marked valid if it can be used at the start of the maneuver but might require further lane changes. |
+| `active` (Optional) | A bitmask indicating active turn directions for continuing along the route without needing additional lane changes. A lane is marked active if it is the best lane for following the maneuver as intended.|
+
+The directions, valid, and active fields use the following bitmask values:
+
+| Decimal Value | Name | Description |
+| --- | --- | --- |
+| 0 | Empty | No turn lane or undefined |
+| 1 | None | No specific direction |
+| 2 | Through | Goes straight |
+| 4 | SharpLeft | Turns sharply to the left |
+| 8 | Left | Turns left |
+| 16 | SlightLeft | Turns slightly to the left |
+| 32 | SlightRight | Turns slightly to the right |
+| 64 | Right | Turns right |
+| 128 | SharpRight | Turns sharply to the right |
+| 256 | Reverse | U-turn |
+| 512 | MergeToLeft | Lane merges to the left |
+| 1024 | MergeToRight | Lane merges to the right |
+
+Example of a lanes array with two lanes: the first lane can only turn left and is marked as the preferred (active) lane for left turns. The second lane allows going left or straight, but it is marked as valid only for left turns in this maneuver context:
+
+```
+"lanes": [
+  {
+    "directions": 8,   // bitmask for Left (8)
+    "active": 8        // indicates this lane should be preferred for a left turn
+  },
+  {
+    "directions": 10,  // bitmask for Left (8) + Straight (2)
+    "valid": 8         // indicates this lane can be used for a left turn
+  }
+]
+```
 
 In the future, look for additional maneuver information to enhance navigation applications, including landmark usage.
 

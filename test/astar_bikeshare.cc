@@ -1,12 +1,12 @@
-#include <algorithm> // std::copy
-#include <optional>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include "loki/worker.h"
 #include "odin/worker.h"
 #include "test.h"
 #include "thor/worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <algorithm> // std::copy
+#include <optional>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -27,8 +27,8 @@ namespace {
 // loki which leads to random results when you make changes to the way the tiles are built. so to
 // avoid that we set a radius here to get both sets of edges and let the algorithm take the cheaper
 // one. this only worked before by luck
-const auto conf =
-    test::make_config("test/data/paris_bss_tiles", {{"loki.service_defaults.radius", "10"}});
+const auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/paris_bss_tiles",
+                                    {{"loki.service_defaults.radius", "10"}});
 
 struct route_tester {
   route_tester()

@@ -54,6 +54,31 @@ float length_comparison(const float length, const bool exact_match) {
   return length + tolerance;
 }
 
+// check if the intermediate shape points are also on the edge
+bool check_shape(const graph_tile_ptr& tile,
+                 const DirectedEdge* de,
+                 const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
+                 uint32_t from,
+                 uint32_t to) {
+  if (to - from == 1 && de->length() == 0) {
+    return true;
+  }
+  const auto edgeinfo = tile->edgeinfo(de);
+  const auto& edge_shape = edgeinfo.shape();
+  int32_t i = edge_shape.size() - (to - from);
+  if (i < 1 || (from > 0 && i != 1)) {
+    return false;
+  }
+  bool forward = de->forward();
+  for (uint32_t j = from + 1; j < to; i++, j++) {
+    const uint32_t shape_idx = forward ? i : edge_shape.size() - 1 - i;
+    if (!to_ll(shape.Get(j).ll()).ApproximatelyEqual(edge_shape[shape_idx])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // TODO: we need to stop relying on loki::Search to pre populate edge candidates for the first and
 // last locations. Instead we need to do that here where we already know the edges in question and can
 // make a single path edge for the edge we are interested in. Its the only way to get multi-leg
@@ -174,7 +199,8 @@ bool expand_from_node(const mode_costing_t& mode_costing,
 
       // Found a match if shape equals directed edge LL within tolerance
       if (to_ll(shape.Get(index).ll()).ApproximatelyEqual(de_end_ll) &&
-          de->length() < length_comparison(length, true)) {
+          de->length() < length_comparison(length, true) &&
+          check_shape(tile, de, shape, correlated_index, index)) {
 
         // Figure out what time it is right now, the first iteration is a no-op
         auto offset_time_info = nodeinfo
@@ -184,10 +210,11 @@ bool expand_from_node(const mode_costing_t& mode_costing,
 
         // get the cost of traversing the node and the edge
         auto& costing = mode_costing[static_cast<int>(mode)];
-        auto transition_cost = costing->TransitionCost(de, nodeinfo, prev_edge_label);
+        auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
+        auto transition_cost =
+            costing->TransitionCost(de, nodeinfo, prev_edge_label, tile, reader_getter);
         uint8_t flow_sources;
-        auto cost =
-            transition_cost + costing->EdgeCost(de, end_node_tile, offset_time_info, flow_sources);
+        auto cost = transition_cost + costing->EdgeCost(de, tile, offset_time_info, flow_sources);
         elapsed += cost;
         // overwrite time with timestamps
         if (use_timestamps)
@@ -359,7 +386,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
     midgard::PointLL de_end_ll = end_node_tile->get_node_ll(de->endnode());
 
     // Initialize indexes and shape
-    size_t index = 0;
+    size_t index = 1;
     float length = 0.0f;
     float de_remaining_length = de->length() * (1 - edge.percent_along());
     float de_length = length_comparison(de_remaining_length, true);
@@ -379,7 +406,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
       // Check if shape is within tolerance at the end node
       if (to_ll(options.shape(index).ll()).ApproximatelyEqual(de_end_ll) &&
-          de_remaining_length < length_comparison(length, true)) {
+          de_remaining_length < length_comparison(length, true) &&
+          check_shape(begin_edge_tile, de, options.shape(), 0, index)) {
 
         // Figure out what time it is right now, the first iteration is a no-op
         auto offset_time_info = nodeinfo
@@ -389,8 +417,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
         // Get the cost of traversing the edge
         uint8_t flow_sources;
-        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, offset_time_info,
-                                                                  flow_sources) *
+        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, begin_edge_tile,
+                                                                  offset_time_info, flow_sources) *
                    (1 - edge.percent_along());
         // overwrite time with timestamps
         if (options.use_timestamps())
@@ -472,7 +500,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           // get the cost of traversing the node and the remaining part of the edge
           auto& costing = mode_costing[static_cast<int>(mode)];
           nodeinfo = end_edge_tile->node(n->first);
-          auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label);
+          auto reader_getter = [&reader]() { return LimitedGraphReader(reader); };
+          auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label,
+                                                         end_edge_tile, reader_getter);
           uint8_t flow_sources;
           elapsed += transition_cost +
                      costing->EdgeCost(end_de, end_edge_tile, offset_time_info, flow_sources) *
@@ -499,7 +529,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
         if (end.second.first.graph_id() == edge.graph_id()) {
           // Update the elapsed time based on edge cost
           uint8_t flow_sources;
-          elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, time_info,
+          elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, begin_edge_tile, time_info,
                                                                     flow_sources) *
                      (end.second.first.percent_along() - edge.percent_along());
           if (options.use_timestamps())

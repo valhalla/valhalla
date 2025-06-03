@@ -1,10 +1,6 @@
 #ifndef VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 #define VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 
-#include <cstdint>
-#include <memory>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/proto/api.pb.h>
@@ -13,6 +9,10 @@
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
+
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -95,8 +95,8 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   // Hierarchy limits
-  std::vector<sif::HierarchyLimits> hierarchy_limits_forward_;
-  std::vector<sif::HierarchyLimits> hierarchy_limits_reverse_;
+  std::vector<HierarchyLimits> hierarchy_limits_forward_;
+  std::vector<HierarchyLimits> hierarchy_limits_reverse_;
   bool ignore_hierarchy_limits_;
 
   // A* heuristic
@@ -235,11 +235,6 @@ protected:
                                               const valhalla::Location& origin,
                                               const valhalla::Location& dest,
                                               const baldr::TimeInfo& time_info);
-
-  /**
-   * Modify default (optimized for unidirectional search) hierarchy limits.
-   */
-  void ModifyHierarchyLimits();
 };
 
 // This function checks if the path formed by the two expanding trees

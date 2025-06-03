@@ -1,7 +1,9 @@
-#include "test.h"
-#include <string>
-
 #include "config.h"
+#include "test.h"
+
+#include <valhalla/worker.h>
+
+#include <string>
 
 namespace {
 

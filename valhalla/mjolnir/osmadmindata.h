@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
-
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/mjolnir/uniquenames.h>
+
+#include <cstdint>
+#include <vector>
 
 namespace valhalla {
 namespace mjolnir {
@@ -45,10 +45,9 @@ struct OSMAdmin {
  * Populated by the PBF admin parser and sent into valhalla_build_admins.
  */
 struct OSMAdminData {
-  uint64_t max_changeset_id_; // The largest/newest changeset id encountered when parsing OSM data
-  size_t osm_node_count;      // Count of osm nodes
-  size_t osm_way_count;       // Count of osm ways
-  size_t node_count;          // Count of all nodes
+  size_t osm_node_count; // Count of osm nodes
+  size_t osm_way_count;  // Count of osm ways
+  size_t node_count;     // Count of all nodes
 
   // Unique names used by admin areas
   UniqueNames name_offset_map;

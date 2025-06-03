@@ -1,11 +1,6 @@
 #ifndef __VALHALLA_THOR_SERVICE_H__
 #define __VALHALLA_THOR_SERVICE_H__
 
-#include <tuple>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
@@ -30,6 +25,11 @@
 #include <valhalla/thor/unidirectional_astar.h>
 #include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <tuple>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -134,6 +134,13 @@ protected:
   meili::MapMatcherFactory matcher_factory;
   baldr::AttributesController controller;
   Centroid centroid_gen;
+
+  // Hierarchy limits
+  bool allow_hierarchy_limits_modifications;
+  // ignored if allow_hierarchy_limits_modifications is false
+  hierarchy_limits_config_t hierarchy_limits_config_astar;
+  hierarchy_limits_config_t hierarchy_limits_config_bidirectional_astar;
+  hierarchy_limits_config_t hierarchy_limits_config_costmatrix;
 
 private:
   std::string service_name() const override {

@@ -1,9 +1,9 @@
-#include <algorithm>
-#include <vector>
-
+#include "thor/timedistancematrix.h"
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
-#include "thor/timedistancematrix.h"
+
+#include <algorithm>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -127,10 +127,11 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     uint8_t flow_sources;
     auto newcost = FORWARD ? costing_->EdgeCost(directededge, tile, offset_time, flow_sources)
                            : costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources);
+    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
-        FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred)
+        FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter)
                 : costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                  opp_pred_edge,
+                                                  opp_pred_edge, t2, pred.edgeid(), reader_getter,
                                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                   pred.internal_turn());
     newcost += pred.cost() + transition_cost;
@@ -204,7 +205,8 @@ bool TimeDistanceMatrix::ComputeMatrix(Api& request,
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
   // reserve the PBF vectors
-  reserve_pbf_arrays(*request.mutable_matrix(), num_elements, costing_->pass());
+  reserve_pbf_arrays(*request.mutable_matrix(), num_elements, request.options().verbose(),
+                     costing_->pass());
 
   for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
     // reserve some space for the next dijkstras (will be cleared at the end of the loop)

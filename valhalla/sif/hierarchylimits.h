@@ -1,6 +1,8 @@
 #ifndef VALHALLA_SIF_HIERARCHYLIMITS_H_
 #define VALHALLA_SIF_HIERARCHYLIMITS_H_
 
+#include <valhalla/proto/options.pb.h>
+
 #include <cstdint>
 #include <limits>
 
@@ -23,74 +25,54 @@ constexpr uint32_t kDefaultMaxUpTransitions[] = {0, 400, 100, 0, 0, 0, 0, 0};
 // bidirectional search.
 constexpr float kDefaultExpansionWithinDist[] = {kMaxDistance, 100000.0f, 5000.0f, 0.0f,
                                                  0.0f,         0.0f,      0.0f,    0.0f};
+constexpr float kDefaultExpansionWithinDistBidir[] = {kMaxDistance, 20000.0f, 5000.0f, 0.0f,
+                                                      0.0f,         0.0f,     0.0f,    0.0f};
 } // namespace
 
 namespace valhalla {
 namespace sif {
 
 /**
- * Hierarchy limits controls expansion and transitions between hierarchy
- * levels. It allows limiting expansion on hierarchy levels once
- * some number of "upward" transitions have been made (e.g. from the local
- * level to the arterial level). Expansion on a level is allowed within some
- * distance from the destination location. This also allows control of where
- * upward and downward transitions are allowed based on distance from the
- * destination.
+ * Determine if expansion of a hierarchy level should be stopped once
+ * the number of upward transitions has been exceeded. Allows expansion
+ * within the specified distance from the destination regardless of
+ * count.
+ * @param hierarchy_limits Hierarchy limits.
+ * @param dist             Distance (meters) from the destination.
+ * @return                 Returns true if expansion at this hierarchy level should stop.
  */
-struct HierarchyLimits {
-  uint32_t up_transition_count; // # of upward transitions from this level
-  uint32_t max_up_transitions;  // Maximum number of upward transitions before
-                                // expansion is stopped on a level.
-  float expansion_within_dist;  // Distance (m) to destination within which
-                                // expansion of a hierarchy level is
-                                // always allowed. Used for A*.
+inline bool StopExpanding(const valhalla::HierarchyLimits& hierarchy_limits, const float dist) {
+  return (hierarchy_limits.up_transition_count() > hierarchy_limits.max_up_transitions() &&
+          dist > hierarchy_limits.expand_within_dist());
+}
 
-  /**
-   * Set hierarchy limits for the specified level.
-   * @param  level  Hierarchy level
-   */
-  HierarchyLimits(const uint32_t level) : up_transition_count(0) {
-    // Set maximum number of upward transitions
-    max_up_transitions = kDefaultMaxUpTransitions[level];
+/**
+ * Determine if expansion of a hierarchy level should be stopped once
+ * the number of upward transitions has been exceeded. This is used in
+ * the bidirectional method where distance from the destination does not
+ * matter.
+ * @param hierarchy_limits Hierarchy limits.
+ * @return                 Returns true if expansion at this hierarchy level should stop.
+ */
+inline bool StopExpanding(const valhalla::HierarchyLimits& hierarchy_limits) {
+  return hierarchy_limits.up_transition_count() > hierarchy_limits.max_up_transitions();
+}
 
-    // Set distance within which expansion is always allowed for this level
-    expansion_within_dist = kDefaultExpansionWithinDist[level];
+/**
+ * Relax hierarchy limits to try to find a route when initial attempt fails.
+ * Do not relax limits if they are unlimited (bicycle and pedestrian for
+ * example).
+ */
+inline void RelaxHierarchyLimits(valhalla::HierarchyLimits& hierarchy_limits,
+                                 const float factor,
+                                 const float expansion_within_factor) {
+
+  if (hierarchy_limits.max_up_transitions() != kUnlimitedTransitions) {
+    hierarchy_limits.set_max_up_transitions(hierarchy_limits.max_up_transitions() * factor);
+    hierarchy_limits.set_expand_within_dist(hierarchy_limits.expand_within_dist() *
+                                            expansion_within_factor);
   }
-
-  /**
-   * Determine if expansion of a hierarchy level should be stopped once
-   * the number of upward transitions has been exceeded. Allows expansion
-   * within the specified distance from the destination regardless of
-   * count.
-   * @param  dist  Distance (meters) from the destination.
-   * @return  Returns true if expansion at this hierarchy level should stop.
-   */
-  bool StopExpanding(const float dist) const;
-
-  /**
-   * Determine if expansion of a hierarchy level should be stopped once
-   * the number of upward transitions has been exceeded. This is used in
-   * the bidirectional method where distance from the destination does not
-   * matter.
-   * @return  Returns true if expansion at this hierarchy level should stop.
-   */
-  bool StopExpanding() const {
-    return up_transition_count > max_up_transitions;
-  }
-
-  /**
-   * Relax hierarchy limits to try to find a route when initial attempt fails.
-   * Do not relax limits if they are unlimited (bicycle and pedestrian for
-   * example).
-   */
-  void Relax(const float factor, const float expansion_within_factor) {
-    if (max_up_transitions != kUnlimitedTransitions) {
-      max_up_transitions *= factor;
-      expansion_within_dist *= expansion_within_factor;
-    }
-  }
-};
-
+}
 } // namespace sif
 } // namespace valhalla
 

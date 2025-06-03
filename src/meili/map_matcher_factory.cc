@@ -1,15 +1,13 @@
+#include "meili/map_matcher_factory.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
+#include "meili/candidate_search.h"
+#include "meili/map_matcher.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/costconstants.h"
 #include "sif/motorscootercost.h"
 #include "sif/pedestriancost.h"
-
-#include "meili/candidate_search.h"
-#include "meili/map_matcher.h"
-
-#include "meili/map_matcher_factory.h"
 
 namespace {
 

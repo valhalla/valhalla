@@ -1,14 +1,14 @@
 #ifndef __VALHALLA_SAMPLE_H__
 #define __VALHALLA_SAMPLE_H__
 
+#include "valhalla/baldr/tilegetter.h"
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <mutex>
 #include <shared_mutex>
 #include <string>
 #include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
-#include "valhalla/baldr/tilegetter.h"
 
 namespace valhalla {
 namespace skadi {

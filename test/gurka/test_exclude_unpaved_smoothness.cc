@@ -1,8 +1,9 @@
-#include <filesystem>
-
 #include "gurka.h"
 #include "test/test.h"
+
 #include <gtest/gtest.h>
+
+#include <filesystem>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -146,7 +147,8 @@ TEST_F(ExcludeUnpavedTest, UnpavedRoadsInTheEnd) {
   }
 }
 
-valhalla::gurka::map BuildPBF(const std::string& workdir) {
+TEST(Standalone, SmoothnessAccess) {
+
   const std::string ascii_map = R"(
                
       A--------B-----1--C-------D
@@ -163,37 +165,13 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.1079374, 52.0887174});
 
-  auto pbf_filename = workdir + "/map.pbf";
-  detail::build_pbf(layout, ways, nodes, {}, pbf_filename);
-
-  valhalla::gurka::map result;
-  result.nodes = layout;
-
-  return result;
-}
-
-TEST(Standalone, SmoothnessAccess) {
-
-  const std::string workdir = "test/data/gurka_smoothness_access";
-
-  if (!std::filesystem::exists(workdir)) {
-    bool created = std::filesystem::create_directories(workdir);
-    EXPECT_TRUE(created);
-  }
-
-  valhalla::gurka::map map = BuildPBF(workdir);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/smoothness_access");
 
   const std::string sqlite = {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"};
   boost::property_tree::ptree& pt = map.config;
-  pt.put("mjolnir.tile_dir", workdir + "/tiles");
   pt.put("mjolnir.admin", sqlite);
 
-  std::vector<std::string> input_files = {workdir + "/map.pbf"};
-
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
-
-  GraphReader graph_reader(pt.get_child("mjolnir"));
+  auto graph_reader = test::make_clean_graphreader(pt.get_child("mjolnir"));
 
   {
     GraphId edge_id_1;
@@ -201,14 +179,19 @@ TEST(Standalone, SmoothnessAccess) {
     GraphId edge_id_2;
     const DirectedEdge* edge_2 = nullptr;
 
-    std::tie(edge_id_1, edge_1, edge_id_2, edge_2) = findEdge(graph_reader, map.nodes, "AB", "B");
-    // no access due to smoothness = impassable and are therefore tossed.
+    std::tie(edge_id_1, edge_1, edge_id_2, edge_2) = findEdge(*graph_reader, map.nodes, "AB", "B");
+    // ped only access due to smoothness = impassable.
     // edge_1 = AB
     // edge_2 = BA
-    EXPECT_EQ(edge_1, nullptr);
-    EXPECT_EQ(edge_2, nullptr);
+    EXPECT_EQ(edge_1->forwardaccess(), baldr::kPedestrianAccess);
+    EXPECT_EQ(edge_1->reverseaccess(), baldr::kPedestrianAccess);
+    EXPECT_EQ(edge_2->forwardaccess(), baldr::kPedestrianAccess);
+    EXPECT_EQ(edge_2->reverseaccess(), baldr::kPedestrianAccess);
 
-    std::tie(edge_id_1, edge_1, edge_id_2, edge_2) = findEdge(graph_reader, map.nodes, "B1C", "C");
+    EXPECT_EQ(edge_1->surface(), baldr::Surface::kImpassable);
+    EXPECT_EQ(edge_2->surface(), baldr::Surface::kImpassable);
+
+    std::tie(edge_id_1, edge_1, edge_id_2, edge_2) = findEdge(*graph_reader, map.nodes, "B1C", "C");
     // edge_1 = B1C
     // edge_2 = C1B
     // edge is not tossed
@@ -217,10 +200,13 @@ TEST(Standalone, SmoothnessAccess) {
     EXPECT_NE(edge_2->forwardaccess(), 0);
     EXPECT_NE(edge_2->reverseaccess(), 0);
 
-    auto node_id = gurka::findNode(graph_reader, map.nodes, "1");
-    const auto* node = graph_reader.nodeinfo(node_id);
-    // no access due to smoothness = impassable
-    EXPECT_EQ(node->access(), 0);
+    EXPECT_EQ(edge_1->surface(), baldr::Surface::kPavedSmooth);
+    EXPECT_EQ(edge_2->surface(), baldr::Surface::kPavedSmooth);
+
+    auto node_id = gurka::findNode(*graph_reader, map.nodes, "1");
+    const auto* node = graph_reader->nodeinfo(node_id);
+    // ped only access due to smoothness = impassable
+    EXPECT_EQ(node->access(), baldr::kPedestrianAccess);
   }
 }
 

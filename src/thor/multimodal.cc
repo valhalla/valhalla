@@ -2,6 +2,7 @@
 #include "baldr/datetime.h"
 #include "midgard/logging.h"
 #include "worker.h"
+
 #include <algorithm>
 
 using namespace valhalla::baldr;
@@ -65,10 +66,6 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& destll,
   float range = kBucketCount * bucketsize;
   adjacencylist_.reuse(0.0f, range, bucketsize, &edgelabels_);
   edgestatus_.clear();
-
-  // Get hierarchy limits from the costing. Get a copy since we increment
-  // transition counts (i.e., this is not a const reference).
-  hierarchy_limits_ = costing->GetHierarchyLimits();
 }
 
 // Clear the temporary information generated during path construction.
@@ -461,8 +458,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       // a transit line (assume the wait time is the cost)
       // transition_cost = {10.0f, 10.0f };
     } else {
+      auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
       transition_cost =
-          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
+          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred,
+                                                                     tile, reader_getter);
     }
     newcost += transition_cost;
 
@@ -733,7 +732,8 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     }
 
     // Get cost
-    auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
+    auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
     Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile) + transition_cost;
     uint32_t walking_distance = pred.path_distance() + directededge->length();
 
@@ -858,6 +858,5 @@ std::vector<PathInfo> MultiModalPathAlgorithm::FormPath(const uint32_t dest) {
   std::reverse(path.begin(), path.end());
   return path;
 }
-
 } // namespace thor
 } // namespace valhalla

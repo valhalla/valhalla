@@ -1,7 +1,6 @@
 #include "baldr/graphreader.h"
-#include "mjolnir/util.h"
-
 #include "gurka.h"
+#include "mjolnir/util.h"
 #include "test/test.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -82,8 +81,7 @@ TEST_P(PhonemesWithLangsTest, Names) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -204,8 +202,7 @@ TEST_P(PhonemesWithLangsTest, Alts) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -338,8 +335,7 @@ TEST_P(PhonemesWithLangsTest, Official) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -470,8 +466,7 @@ TEST_P(PhonemesWithLangsTest, Tunnel) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -591,8 +586,7 @@ TEST_P(PhonemesWithLangsTest, NamesFB) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -694,8 +688,7 @@ TEST_P(PhonemesWithLangsTest, RefLR) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -789,8 +782,7 @@ TEST_P(PhonemesWithLangsTest, Destinations) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -848,8 +840,7 @@ TEST_P(PhonemesWithLangsTest, DestinationStreet) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -907,8 +898,7 @@ TEST_P(PhonemesWithLangsTest, DestinationStreetTo) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -972,8 +962,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1066,8 +1055,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1184,8 +1172,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1277,8 +1264,7 @@ TEST_P(PhonemesWithLangsTest, DestinationRef) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1336,8 +1322,7 @@ TEST_P(PhonemesWithLangsTest, DestinationRefTo) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1394,8 +1379,7 @@ TEST_P(PhonemesWithLangsTest, DestinationJunctionRef) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1451,8 +1435,7 @@ TEST_P(PhonemesWithLangsTest, NodeRef) {
   detail::build_pbf(layout, ways, nodes, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1513,8 +1496,7 @@ TEST_P(PhonemesWithLangsTest, NodeName) {
   detail::build_pbf(layout, ways, nodes, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1583,8 +1565,7 @@ TEST_P(PhonemesWithLangsTest, NamesPart2) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1700,8 +1681,7 @@ TEST_P(PhonemesWithLangsTest, OldDataDestination) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1764,8 +1744,7 @@ TEST_P(PhonemesWithLangsTest, ForwardDestination) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1840,8 +1819,7 @@ TEST_P(PhonemesWithLangsTest, Junction) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -1921,8 +1899,7 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;
@@ -2082,8 +2059,7 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
   valhalla::gurka::map map;
   map.nodes = layout;
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   GraphReader graph_reader(pt.get_child("mjolnir"));
   GraphId BC_edge_id;

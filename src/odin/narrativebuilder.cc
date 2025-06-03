@@ -1,21 +1,20 @@
-#include <cmath>
-#include <iomanip>
-#include <sstream>
-#include <string>
-
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/replace.hpp>
-
+#include "odin/narrativebuilder.h"
 #include "baldr/verbal_text_formatter.h"
 #include "midgard/constants.h"
-
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
 #include "odin/markup_formatter.h"
 #include "odin/narrative_dictionary.h"
-#include "odin/narrativebuilder.h"
 #include "odin/util.h"
 #include "worker.h"
+
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
+
+#include <cmath>
+#include <iomanip>
+#include <sstream>
+#include <string>
 
 namespace {
 // Text instruction initial capacity
@@ -465,12 +464,33 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       }
       case DirectionsLeg_Maneuver_Type_kElevatorEnter: {
         // Set instruction
-        maneuver.set_instruction(FormElevatorInstruction(maneuver));
+        auto instr = FormElevatorInstruction(maneuver);
+        maneuver.set_instruction(instr);
+
+        if (maneuver.has_node_type() && maneuver.node_type() == TripLeg_Node_Type_kElevator) {
+          maneuver.set_verbal_transition_alert_instruction(instr);
+
+          // Set verbal pre transition instruction
+          maneuver.set_verbal_pre_transition_instruction(instr);
+
+          // Set verbal post transition instruction
+          maneuver.set_verbal_post_transition_instruction(
+              FormVerbalPostTransitionInstruction(maneuver));
+        }
         break;
       }
       case DirectionsLeg_Maneuver_Type_kStepsEnter: {
         // Set instruction
-        maneuver.set_instruction(FormStepsInstruction(maneuver));
+        auto instr = FormStepsInstruction(maneuver);
+        maneuver.set_instruction(instr);
+        maneuver.set_verbal_transition_alert_instruction(instr);
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(instr);
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kEscalatorEnter: {

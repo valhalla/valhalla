@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -37,6 +38,8 @@ protected:
          F----G----H----I----J----K----L
                              |    |
                              M----N
+
+          R---S---T---U
     )";
 
     const std::string condition =
@@ -94,6 +97,9 @@ protected:
         {"MN", {{"highway", "residential"}}},
         {"NK", {{"highway", "residential"}}},
 
+        {"RS", {{"highway", "primary"}}},
+        {"ST", {{"highway", "primary"}, {"access:conditional", timeDenied}}},
+        {"TU", {{"highway", "primary"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
@@ -266,5 +272,72 @@ TEST_F(ConditionalRestrictions, DestinationRestrictionOnMidEdgeIsNotValid_ManyAl
                                       "Date time type: " + date_time_type +
                                           ", costing type: " + costing);
     }
+  }
+}
+
+TEST_F(ConditionalRestrictions, AccessConditional) {
+  std::vector<std::string> all_costings(kMotorVehicleCostingModels.begin(),
+                                        kMotorVehicleCostingModels.end());
+  all_costings.push_back("bicycle");
+  all_costings.push_back("pedestrian");
+
+  const std::vector<std::string> wypoints = {"R", "U"};
+  const std::vector<std::string> expected_path = {"RS", "ST", "TU"};
+  const std::string good_time = "2020-04-02T12:00";
+  const std::string bad_time = "2020-04-02T20:00";
+
+  for (auto const& costing : all_costings) {
+    // no time - all good
+    auto result = gurka::do_action(valhalla::Options::route, map, wypoints, costing);
+    gurka::assert::raw::expect_path(result, expected_path, costing);
+
+    // time outside of restriction - all good
+    result = gurka::do_action(valhalla::Options::route, map, wypoints, costing,
+                              {{"/date_time/type", "1"}, {"/date_time/value", good_time}});
+    gurka::assert::raw::expect_path(result, expected_path, costing);
+
+    // time inside of restriction - no path
+    EXPECT_THROW(
+        {
+          try {
+            auto result =
+                gurka::do_action(valhalla::Options::route, map, wypoints, costing,
+                                 {{"/date_time/type", "1"}, {"/date_time/value", bad_time}});
+          } catch (const std::exception& e) {
+            // and this tests that it has the correct message
+            EXPECT_STREQ("No path could be found for input", e.what());
+            throw;
+          }
+        },
+        std::exception)
+        << costing;
+
+    // time inside of restriction - all good if restrictions are ignored
+    result = gurka::do_action(valhalla::Options::route, map, wypoints, costing,
+                              {{"/date_time/type", "1"},
+                               {"/date_time/value", bad_time},
+                               {"/costing_options/" + costing + "/ignore_restrictions", "1"}});
+    gurka::assert::raw::expect_path(result, expected_path, costing);
+
+    // 'access' vs 'restriction' might be difficult to articulate. As per
+    // https://wiki.openstreetmap.org/wiki/Key:access#Access_time_and_other_conditional_restrictions,
+    // the `access:conditional` falls under the 'conditional restrictions' category, so
+    // `ignore_access` doesn't apply (and also because it is implemented via conditional
+    // restrictions).
+    EXPECT_THROW(
+        {
+          try {
+            auto result = gurka::do_action(valhalla::Options::route, map, wypoints, costing,
+                                           {{"/date_time/type", "1"},
+                                            {"/date_time/value", bad_time},
+                                            {"/costing_options/" + costing + "/ignore_access", "1"}});
+          } catch (const std::exception& e) {
+            // and this tests that it has the correct message
+            EXPECT_STREQ("No path could be found for input", e.what());
+            throw;
+          }
+        },
+        std::exception)
+        << costing;
   }
 }

@@ -1,10 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include <memory>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -16,6 +11,11 @@
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <cstdint>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -160,7 +160,7 @@ protected:
   uint8_t travel_type_;  // Current travel type
 
   // Hierarchy limits.
-  std::vector<sif::HierarchyLimits> hierarchy_limits_;
+  std::vector<HierarchyLimits> hierarchy_limits_;
 
   // A* heuristic
   AStarHeuristic astarheuristic_;

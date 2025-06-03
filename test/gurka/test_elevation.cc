@@ -1,13 +1,12 @@
-#include "gurka.h"
-#include "test.h"
-
 #include "baldr/json.h"
+#include "gurka.h"
 #include "loki/worker.h"
 #include "midgard/pointll.h"
-
-#include <filesystem>
+#include "test.h"
 
 #include <gtest/gtest.h>
+
+#include <filesystem>
 
 using namespace valhalla;
 using namespace valhalla::gurka;
@@ -147,8 +146,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
   pt.put("additional_data.elevation", workdir);
 
   std::vector<std::string> input_files = {pbf_filename};
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate);
 
   // try a bunch of routes
   for (const auto& waypoints : std::vector<std::vector<std::string>>{

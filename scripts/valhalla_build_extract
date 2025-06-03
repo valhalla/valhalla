@@ -90,12 +90,14 @@ class TileResolver:
         # since 3.7 python dicts are insertion-ordered, so order is preserved
         for t in list(dict.fromkeys(self.matched_paths)):
             LOGGER.debug(f"Adding tile {t} to the tar file")
+            # Normalize path to use forward slashes, fixes issues when running on Windows
+            normalized_path = str(t).replace("\\", "/")
             if self._is_tar:
-                tar_member = self._tar_obj.getmember(str(t))
+                tar_member = self._tar_obj.getmember(normalized_path)
                 tar.addfile(tar_member, self._tar_obj.extractfile(tar_member.name))
             else:
-                tar.add(str(self.path.joinpath(t)), arcname=t)
-                tar_member = tar.getmember(str(t))
+                tar.add(str(self.path.joinpath(normalized_path)), arcname=normalized_path)
+                tar_member = tar.getmember(normalized_path)
 
 
 description = "Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."

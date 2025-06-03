@@ -1,13 +1,13 @@
 #ifndef __VALHALLA_THOR_MATRIXALGORITHM_H__
 #define __VALHALLA_THOR_MATRIXALGORITHM_H__
 
-#include <functional>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <functional>
 // TODO(nils): should abstract more so we don't pull this in
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/worker.h>
@@ -17,6 +17,7 @@ namespace thor {
 
 // Default for time distance matrix is to find all locations
 constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
+constexpr float kInvalidHeading = std::numeric_limits<float>::max();
 constexpr float kMaxCost = 99999999.9999f;
 
 /**
@@ -151,7 +152,8 @@ protected:
   bool clear_reserved_memory_;
 
   // on first pass, resizes all PBF sequences and defaults to 0 or ""
-  inline static void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size, uint32_t pass = 0) {
+  inline static void
+  reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size, bool verbose, uint32_t pass = 0) {
     if (pass == 0) {
       matrix.mutable_from_indices()->Resize(size, 0U);
       matrix.mutable_to_indices()->Resize(size, 0U);
@@ -172,6 +174,15 @@ protected:
         *time_zone_name = "";
         auto* shape = matrix.mutable_shapes()->Add();
         *shape = "";
+      }
+      if (verbose) {
+        // fill with sentinel values meaning "no data"
+        matrix.mutable_begin_heading()->Resize(size, kInvalidHeading);
+        matrix.mutable_end_heading()->Resize(size, kInvalidHeading);
+        matrix.mutable_begin_lat()->Resize(size, INVALID_LL);
+        matrix.mutable_begin_lon()->Resize(size, INVALID_LL);
+        matrix.mutable_end_lat()->Resize(size, INVALID_LL);
+        matrix.mutable_end_lon()->Resize(size, INVALID_LL);
       }
     }
   }

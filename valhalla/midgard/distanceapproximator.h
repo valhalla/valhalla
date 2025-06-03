@@ -2,9 +2,9 @@
 #ifndef VALHALLA_MIDGARD_DISTANCEAPPROXIMATOR_H_
 #define VALHALLA_MIDGARD_DISTANCEAPPROXIMATOR_H_
 
-#include <cmath>
-
 #include <valhalla/midgard/constants.h>
+
+#include <cmath>
 
 namespace valhalla {
 namespace midgard {

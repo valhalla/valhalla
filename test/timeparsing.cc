@@ -1,15 +1,14 @@
-#include <algorithm>
-#include <cstdint>
-#include <string>
-
-#include <boost/algorithm/string/split.hpp>
-
+#include "mjolnir/timeparsing.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
-#include "mjolnir/timeparsing.h"
-
 #include "test.h"
+
+#include <boost/algorithm/string/split.hpp>
+
+#include <algorithm>
+#include <cstdint>
+#include <string>
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -528,7 +527,8 @@ TEST(TimeParsing, TestConditionalMaxspeed) {
   TryConditionalRestrictions("(Jun 1-Aug 31 00:00-24:00)", 0, 0, 0, {6, 1, 0, 0, 0},
                              {8, 31, 0, 0, 0});
 
-  // non-standard seasons that are not supported
+  // At this level of abstraction we lost the information in which hemisphere the tag we are parsing
+  // right now is located in, so we can't resolve the season into a month range.
   EXPECT_TRUE(get_time_range("summer").empty());
   EXPECT_TRUE(get_time_range("winter").empty());
 }

@@ -1,24 +1,22 @@
 #pragma once
 
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/tilegetter.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/sequence.h>
+#include <valhalla/proto/incidents.pb.h>
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
-
-#include <boost/property_tree/ptree.hpp>
-
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/tilegetter.h>
-#include <valhalla/baldr/tilehierarchy.h>
-
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/sequence.h>
-
-#include <valhalla/proto/incidents.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -999,6 +997,22 @@ protected:
   std::unique_ptr<TileCache> cache_;
 
   bool enable_incidents_;
+};
+
+class LimitedGraphReader {
+public:
+  LimitedGraphReader(GraphReader& reader) : reader_(reader) {
+  }
+
+  /**
+   * Get a pointer to a graph tile object given a GraphId.
+   * @param graphid  the graphid of the tile
+   * @return GraphTile* a pointer to the graph tile
+   */
+  virtual graph_tile_ptr GetGraphTile(const GraphId& graphid);
+
+protected:
+  GraphReader& reader_;
 };
 
 // Given the Location relation, return the full metadata
