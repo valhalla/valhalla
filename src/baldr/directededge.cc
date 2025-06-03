@@ -609,6 +609,7 @@ json::MapPtr DirectedEdge::json() const {
       {"has_sign", static_cast<bool>(sign_)},
       {"toll", static_cast<bool>(toll_)},
       {"destination_only", static_cast<bool>(dest_only_)},
+      {"destination_only_hgv", static_cast<bool>(dest_only_hgv_)},
       {"tunnel", static_cast<bool>(tunnel_)},
       {"bridge", static_cast<bool>(bridge_)},
       {"round_about", static_cast<bool>(roundabout_)},
