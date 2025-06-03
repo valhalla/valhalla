@@ -325,7 +325,7 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_BASE_DIR=build/vcpkg_installed/custom-x64-windows
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            delvewheel repair --add-path build/vcpkg_installed/custom-x64-windows {wheel} -w {dest_dir}
+            delvewheel repair --add-path build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}
 
       - name: Upload wheels
         if: github.event_name != 'pull_request'
