@@ -589,6 +589,7 @@ void DirectedEdge::set_lit(const bool lit) {
   lit_ = lit;
 }
 
+<<<<<<< HEAD
 // json representation
 void DirectedEdge::json(rapidjson::writer_wrapper_t& writer) const {
   writer.start_object("end_node");
@@ -620,6 +621,7 @@ void DirectedEdge::json(rapidjson::writer_wrapper_t& writer) const {
   writer("has_sign", static_cast<bool>(sign_));
   writer("toll", static_cast<bool>(toll_));
   writer("destination_only", static_cast<bool>(dest_only_));
+  writer("destination_only_hgv", static_cast<bool>(dest_only_hgv_));
   writer("tunnel", static_cast<bool>(tunnel_));
   writer("bridge", static_cast<bool>(bridge_));
   writer("round_about", static_cast<bool>(roundabout_));
@@ -669,6 +671,72 @@ void DirectedEdge::json(rapidjson::writer_wrapper_t& writer) const {
     {"superseded_mask", static_cast<uint64_t>(superseded_)},
     {"shortcut", static_cast<bool>(is_shortcut_)},
   })},*/
+=======
+// Json representation
+json::MapPtr DirectedEdge::json() const {
+  json::MapPtr map = json::map({
+      {"end_node", endnode().json()},
+      {"speeds", json::map({
+                     {"default", static_cast<uint64_t>(speed_)},
+                     {"type", to_string(static_cast<SpeedType>(speed_type_))},
+                     {"free_flow", static_cast<uint64_t>(free_flow_speed_)},
+                     {"constrained_flow", static_cast<uint64_t>(constrained_flow_speed_)},
+                     {"predicted", static_cast<bool>(has_predicted_speed_)},
+                 })},
+      //{"opp_index", static_cast<bool>(opp_index_)},
+      //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
+      //{"restrictions", restrictions_},
+      {"access_restriction", static_cast<bool>(access_restriction_)},
+      {"start_restriction", access_json(start_restriction_)},
+      {"end_restriction", access_json(end_restriction_)},
+      {"part_of_complex_restriction", static_cast<bool>(complex_restriction_)},
+      {"has_sign", static_cast<bool>(sign_)},
+      {"toll", static_cast<bool>(toll_)},
+      {"destination_only", static_cast<bool>(dest_only_)},
+      {"destination_only_hgv", static_cast<bool>(dest_only_hgv_)},
+      {"tunnel", static_cast<bool>(tunnel_)},
+      {"bridge", static_cast<bool>(bridge_)},
+      {"round_about", static_cast<bool>(roundabout_)},
+      {"traffic_signal", static_cast<bool>(traffic_signal_)},
+      {"forward", static_cast<bool>(forward_)},
+      {"not_thru", static_cast<bool>(not_thru_)},
+      {"stop_sign", static_cast<bool>(stop_sign_)},
+      {"yield_sign", static_cast<bool>(yield_sign_)},
+      {"cycle_lane", to_string(static_cast<CycleLane>(cycle_lane_))},
+      {"bike_network", static_cast<bool>(bike_network_)},
+      {"truck_route", static_cast<bool>(truck_route_)},
+      {"lane_count", static_cast<uint64_t>(lanecount_)},
+      {"country_crossing", static_cast<bool>(ctry_crossing_)},
+      {"sidewalk_left", static_cast<bool>(sidewalk_left_)},
+      {"sidewalk_right", static_cast<bool>(sidewalk_right_)},
+      {"sac_scale", to_string(static_cast<SacScale>(sac_scale_))},
+      {"deadend", static_cast<bool>(deadend_)},
+      {"geo_attributes",
+       json::map({
+           {"length", static_cast<uint64_t>(length_)},
+           {"weighted_grade", json::fixed_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
+           {"max_up_slope", json::fixed_t{static_cast<double>(max_up_slope()), 2}},
+           {"max_down_slope", json::fixed_t{static_cast<double>(max_down_slope()), 2}},
+           {"curvature", static_cast<uint64_t>(curvature_)},
+       })},
+      {"access", access_json(forwardaccess_)},
+      //{"access", access_json(reverseaccess_)},
+      {"classification", json::map({
+                             {"classification", to_string(static_cast<RoadClass>(classification_))},
+                             {"use", to_string(static_cast<Use>(use_))},
+                             {"surface", to_string(static_cast<Surface>(surface_))},
+                             {"link", static_cast<bool>(link_)},
+                             {"internal", static_cast<bool>(internal_)},
+                         })},
+      /*{"hierarchy", json::map({
+        {"local_edge_index", static_cast<uint64_t>(localedgeidx_)},
+        {"opposing_local_index", static_cast<uint64_t>(opp_local_idx_)},
+        {"shortcut_mask", static_cast<uint64_t>(shortcut_)},
+        {"superseded_mask", static_cast<uint64_t>(superseded_)},
+        {"shortcut", static_cast<bool>(is_shortcut_)},
+      })},*/
+  });
+>>>>>>> upstream/master
 
   if (is_hov_only()) {
     writer("hov_type", to_string(static_cast<HOVEdgeType>(hov_type_)));
