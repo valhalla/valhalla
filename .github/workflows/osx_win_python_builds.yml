@@ -84,6 +84,8 @@ jobs:
         run: |
           KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
           gh cache delete ${KEY} || true
+          env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Save cache
         if: always()
@@ -176,7 +178,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: 14
 
       - name: Upload wheels
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: wheels-osx
@@ -305,16 +307,23 @@ jobs:
             VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
           fi
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+        
+      - name: Print libs
+        shell: bash
+        run: |
+          ls -l build/vcpkg_installed/custom-x64-windows/lib
+          ls -l build/vcpkg_installed/custom-x64-windows/bin
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: github.event_name != 'pull_request'
         env:
+          # used in setup.py
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
             VCPKG_BASE_DIR=build/vcpkg_installed/custom-x64-windows
 
       - name: Upload wheels
-        # if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: wheels-win

@@ -47,7 +47,8 @@ if platform.system() == "Windows":
         "sqlite3",
         "lz4",
         "geos",
-        "luajit",
+        "lua",
+        "lua51",
         "Ws2_32",
         "ole32",
         "Shell32"
