@@ -344,8 +344,8 @@ jobs:
     name: Upload if release
     needs: [build_python_wheels_linux, build_osx, build_win]
     runs-on: ubuntu-latest
-    if: ${{ always() }}
-    # if: github.event_name != 'pull_request'
+    # if: ${{ always() }}
+    if: github.event_name != 'pull_request'
 
     permissions:
       id-token: write # This is required for requesting the JWT from Github for PyPI
