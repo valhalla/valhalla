@@ -38,7 +38,7 @@ on:
 
 jobs:
   build_python_wheels_linux:
-    name: Build Python wheels, Linux
+    name: Build Linux Python wheels
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -85,7 +85,7 @@ jobs:
           KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
           gh cache delete ${KEY} || true
           env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GH_TOKEN: ${{ github.token }}
 
       - name: Save cache
         if: always()
@@ -102,6 +102,7 @@ jobs:
   
   build_osx:
     runs-on: macos-14
+    name: Build OSX & Python wheels
     steps:
       - uses: actions/checkout@v4
         with:
@@ -193,6 +194,7 @@ jobs:
           timeout-minutes: 15
   
   build_win:
+    name: Build OSX & Python wheels
     runs-on: windows-2022
     env:
       BUILD_TYPE: Release
@@ -320,7 +322,10 @@ jobs:
           # used in setup.py
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+          CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_BASE_DIR=build/vcpkg_installed/custom-x64-windows
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
+            delvewheel repair --add-path ${VCPKG_BASE_DIR} {wheel} -w {dest_dir}
 
       - name: Upload wheels
         if: github.event_name != 'pull_request'

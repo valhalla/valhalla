@@ -27,7 +27,7 @@ if platform.system().lower() == "darwin":
     library_dirs.append("/opt/homebrew/lib")
 elif platform.system().lower() == "windows":
     # this is set in GHA to the vcpkg installation directory
-    if (vcpkg_base_dir := Path(os.environ.get("VCPKG_BASE_DIR"))).is_dir():
+    if (vcpkg_base_dir := Path(os.environ.get("VCPKG_BASE_DIR", Path("/dev/null")))).is_dir():
         include_dirs.append(str(vcpkg_base_dir.joinpath("include").absolute()))
         include_dirs.append("C:/Program Files/valhalla/include")
         # DLLs are in the bin folder
@@ -37,6 +37,7 @@ elif platform.system().lower() == "windows":
 
 # determine libraries to link to
 if platform.system() == "Windows":
+    # this is pretty annoying, especially with absl.. don't know any other way though..
     libraries.extend([
         "valhalla",
         "libprotobuf-lite",
@@ -47,11 +48,27 @@ if platform.system() == "Windows":
         "sqlite3",
         "lz4",
         "geos",
-        "lua",
         "lua51",
         "Ws2_32",
         "ole32",
-        "Shell32"
+        "Shell32",
+        "abseil_dll",
+        "absl_decode_rust_punycode",
+        "absl_demangle_rust",
+        "absl_flags_commandlineflag",
+        "absl_flags_commandlineflag_internal",
+        "absl_flags_config",
+        "absl_flags_internal",
+        "absl_flags_marshalling",
+        "absl_flags_parse",
+        "absl_flags_private_handle_accessor",
+        "absl_flags_program_name",
+        "absl_flags_reflection",
+        "absl_flags_usage",
+        "absl_flags_usage_internal",
+        "absl_log_flags",
+        "absl_poison",
+        "absl_utf8_for_code_point",
     ])
     extra_compile_args.extend(["-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN", "-DNOGDI"])
 else: 
