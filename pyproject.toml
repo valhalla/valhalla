@@ -33,7 +33,7 @@ exclude = '''
 [tool.cibuildwheel]
 # it's enough here to know it's importable, actual test is run on other CI
 # mostly to avoid building utrecht tiles within the bindings build
-test-command = "python -c 'from valhalla import Actor'"
+test-command = "python -c \"from valhalla import Actor\""
 # find out current defaults: cibuildwheel --print-build-identifiers --platform linux
 build = "cp*"
 skip = "*musllinux*"
@@ -42,7 +42,7 @@ manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
 
 [tool.cibuildwheel.windows]
 before-all = "pip install conan delvewheel"
-repair-wheel-command = "delvewheel repair --add-path lib/windows {wheel} -w {dest_dir}"
+repair-wheel-command = "delvewheel repair --add-path {project}/build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}"
 
 [tool.cibuildwheel.linux]
 # build & install libvalhalla before building the bindings
