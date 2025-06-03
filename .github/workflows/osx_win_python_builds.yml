@@ -16,18 +16,17 @@ on:
       - test_requests/
     branches:
       - master
-      - 'nn-python-packaging*'
     tags:
       - '*'
-  # pull_request:
-  #   paths-ignore:
-  #     - "*.md"
-  #     - .circleci/
-  #     - docs/
-  #     - run_route_scripts/
-  #     - test_requests/
-  #   branches:
-  #     - master
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -40,6 +39,7 @@ jobs:
   build_python_wheels_linux:
     name: Build Linux Python wheels
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -70,8 +70,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: /project/.cache/ccache
-          key: ccache-manylinux_2_28_x86_64-${{ env.VALHALLA_BRANCH }}
-          restore-keys: ccache-manylinux_2_28_x86_64-
+          key: ccache-manylinux_2_28_x86_64
 
       - uses: pypa/cibuildwheel@v2.23.3
         env:
