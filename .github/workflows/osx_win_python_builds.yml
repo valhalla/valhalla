@@ -149,7 +149,7 @@ jobs:
           KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
           gh cache delete ${KEY} || true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Save ccache
         uses: actions/cache/save@v4
@@ -325,7 +325,7 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_BASE_DIR=build/vcpkg_installed/custom-x64-windows
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            delvewheel repair --add-path ${VCPKG_BASE_DIR} {wheel} -w {dest_dir}
+            delvewheel repair --add-path build/vcpkg_installed/custom-x64-windows {wheel} -w {dest_dir}
 
       - name: Upload wheels
         if: github.event_name != 'pull_request'
