@@ -556,7 +556,7 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
   if (levels.size()) {
     writer.start_array("levels");
     // precision variable causes issues in the json writer
-    writer.set_precision(3);
+    writer.set_precision(1);
     for (auto& level : levels) {
       for (auto& range : level) {
         if (range.first == range.second) {

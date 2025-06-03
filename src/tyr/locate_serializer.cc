@@ -64,6 +64,7 @@ linear_reference(const baldr::DirectedEdge* de, float percent_along, const EdgeI
 void serialize_traffic_speed(const volatile baldr::TrafficSpeed& traffic_speed,
                              rapidjson::writer_wrapper_t& writer) {
   if (traffic_speed.speed_valid()) {
+    writer.set_precision(2);
     writer("overall_speed", static_cast<uint64_t>(traffic_speed.get_overall_speed()));
     auto speed = static_cast<uint64_t>(traffic_speed.get_speed(0));
     if (speed == baldr::UNKNOWN_TRAFFIC_SPEED_KPH)
@@ -74,12 +75,9 @@ void serialize_traffic_speed(const volatile baldr::TrafficSpeed& traffic_speed,
     if (congestion < 0)
       writer("congestion_0", nullptr);
     else {
-      writer.set_precision(2);
       writer("congestion_0", congestion);
     }
-    writer.set_precision(2);
     writer("breakpoint_0", traffic_speed.breakpoint1 / 255.0);
-    writer.set_precision(3);
 
     speed = static_cast<uint64_t>(traffic_speed.get_speed(1));
     if (speed == baldr::UNKNOWN_TRAFFIC_SPEED_KPH)
@@ -90,12 +88,9 @@ void serialize_traffic_speed(const volatile baldr::TrafficSpeed& traffic_speed,
     if (congestion < 0)
       writer("congestion_1", nullptr);
     else {
-      writer.set_precision(2);
       writer("congestion_1", congestion);
     }
-    writer.set_precision(2);
     writer("breakpoint_1", traffic_speed.breakpoint2 / 255.0);
-    writer.set_precision(3);
 
     speed = static_cast<uint64_t>(traffic_speed.get_speed(2));
     if (speed == baldr::UNKNOWN_TRAFFIC_SPEED_KPH)
@@ -106,10 +101,9 @@ void serialize_traffic_speed(const volatile baldr::TrafficSpeed& traffic_speed,
     if (congestion < 0)
       writer("congestion_2", nullptr);
     else {
-      writer.set_precision(2);
       writer("congestion_2", congestion);
-      writer.set_precision(3);
     }
+    writer.set_precision(tyr::kDefaultPrecision);
   }
 }
 
