@@ -83,7 +83,6 @@
    * CHANGED: Removed ferry reclassification and only move edges in hierarchy [#5269](https://github.com/valhalla/valhalla/pull/5269)
    * CHANGED: More clang-tidy fixes [#5253](https://github.com/valhalla/valhalla/pull/5253)
    * CHANGED: Removed unused headers [#5254](https://github.com/valhalla/valhalla/pull/5254)
-   * ADDED: python packaging workflow to publish `linux-x64` to https://test.pypi.org/project/pyvalhalla-git/ (for now) [#5280](https://github.com/valhalla/valhalla/pull/5280)
    * ADDED: "destination_only_hgv" in directed edge json [#5281](https://github.com/valhalla/valhalla/pull/5281)
    * ADDED: workflow to publish Python bindings for all major platforms to PyPI [#5280](https://github.com/valhalla/valhalla/pull/5280)
 
