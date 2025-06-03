@@ -1,7 +1,10 @@
 ## Python bindings
 
 > [!NOTE]
-> `pyvalhalla(-git)` packages are currently only published for `linux-x64` and Linux
+> `pyvalhalla(-git)` packages are currently only published for:
+> - `linux-x86_x64`
+> - `win-amd64`
+> - `macos-arm64`
 
 ### Linux
 
