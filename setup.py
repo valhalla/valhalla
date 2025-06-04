@@ -27,7 +27,7 @@ if platform.system().lower() == "darwin":
     library_dirs.append("/opt/homebrew/lib")
 elif platform.system().lower() == "windows":
     # this is set in GHA to the vcpkg installation directory
-    if (vcpkg_base_dir := Path(os.environ.get("VCPKG_BASE_DIR", Path("/dev/null")))).is_dir():
+    if (vcpkg_base_dir := Path(os.environ.get("VCPKG_ARCH_ROOT", Path("/dev/null")))).is_dir():
         include_dirs.append(str(vcpkg_base_dir.joinpath("include").absolute()))
         include_dirs.append("C:/Program Files/valhalla/include")
         # DLLs are in the bin folder
@@ -103,7 +103,7 @@ ext_modules = [
 ]
 
 # open README.md for PyPI
-with open(os.path.join(THIS_DIR, "README.md"), encoding="utf-8") as f:
+with open(os.path.join(THIS_DIR, "src", "bindings", "python", "README.md"), encoding="utf-8") as f:
     long_description = "\n" + f.read()
 
 # if we push master, we upload to pyvalhalla-git

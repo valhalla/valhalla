@@ -16,9 +16,10 @@ source scripts/bash_utils.sh
 # Python setup
 py=$(setup_python)
 install_py_packages $py
-python_sources=$(LANG=C find scripts src/bindings/python -type f -exec file {} \; | grep -F "Python script" | sed 's/:.*//')
+python_sources=$(LANG=C find scripts src/bindings/python -type f ! -name "*.md" -exec file {} \; | grep -F "Python script" | sed 's/:.*//')
 
 # Python formatter
+echo ${python_sources}
 ${py} -m black --config pyproject.toml ${python_sources}
 
 # Python linter
