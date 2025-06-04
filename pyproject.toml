@@ -18,7 +18,7 @@ local_scheme = "no-local-version"
 [tool.black]
 line-length = 105
 skip-string-normalization = true
-exclude = '''
+extend-exclude = '''
 /(
     \\..*
   | dist
@@ -26,7 +26,6 @@ exclude = '''
   | '*build'
   | __pycache__
   | '*.toml'
-
 )/
 '''
 

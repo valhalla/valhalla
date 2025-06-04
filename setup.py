@@ -128,7 +128,7 @@ setup(
     url="https://github.com/valhalla/valhalla",
     ext_modules=ext_modules,
     classifiers=[
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: Implementation :: CPython",
     ],
