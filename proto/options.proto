@@ -19,6 +19,10 @@ message Ring {
   repeated LatLng coords = 1;
 }
 
+message Levels {
+  repeated float levels = 1;
+}
+
 enum ShapeMatch {
   walk_or_snap = 0;
   edge_walk = 1;
@@ -502,7 +506,7 @@ message Options {
     bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
   }
   repeated Costing recostings = 46;                                // CostingType options to use to recost a path after it has been found
-  repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
+  repeated Ring exclude_polygons = 47;                             // Rings/polygons to exclude entire areas during path finding
   oneof has_prioritize_bidirectional {
     bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
   }
@@ -526,4 +530,5 @@ message Options {
                                                                    // ensuring that each edge appears in the output only once. [default = false]
   bool admin_crossings = 59;                                       // Include administrative boundary crossings
   bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
+  repeated Levels exclude_levels = 61;                             // Levels to exclude within the exclude_polygon at the same index
 }
