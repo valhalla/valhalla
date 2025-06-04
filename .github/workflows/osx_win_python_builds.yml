@@ -39,7 +39,7 @@ jobs:
   build_python_wheels_linux:
     name: Build Linux Python wheels
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -162,7 +162,7 @@ jobs:
       # only package python bindings if it's not a PR
 
       - name: Determine package to publish
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
@@ -171,14 +171,14 @@ jobs:
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
         env:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
           MACOSX_DEPLOYMENT_TARGET: 14
 
       - name: Upload wheels
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-osx
@@ -300,7 +300,7 @@ jobs:
           ./build/$BUILD_TYPE/valhalla_service.exe ./test/win/valhalla.json isochrone "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
       
       - name: Determine package to publish
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
         shell: bash
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
@@ -316,7 +316,7 @@ jobs:
           ls -l build/vcpkg_installed/custom-x64-windows/bin
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
         env:
           # used in setup.py
           CIBW_ENVIRONMENT: >
@@ -327,7 +327,7 @@ jobs:
             delvewheel repair --add-path build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}
 
       - name: Upload wheels
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-win
@@ -345,7 +345,7 @@ jobs:
     needs: [build_python_wheels_linux, build_osx, build_win]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
 
     permissions:
       id-token: write # This is required for requesting the JWT from Github for PyPI
