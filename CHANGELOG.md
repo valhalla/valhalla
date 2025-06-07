@@ -84,6 +84,7 @@
    * CHANGED: More clang-tidy fixes [#5253](https://github.com/valhalla/valhalla/pull/5253)
    * CHANGED: Removed unused headers [#5254](https://github.com/valhalla/valhalla/pull/5254)
    * ADDED: "destination_only_hgv" in directed edge json [#5281](https://github.com/valhalla/valhalla/pull/5281)
+   * ADDED: workflow to publish Python bindings for all major platforms to PyPI [#5280](https://github.com/valhalla/valhalla/pull/5280)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
