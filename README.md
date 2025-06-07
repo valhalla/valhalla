@@ -141,6 +141,5 @@ The following projects are open-source and built with the intention to make it e
 - [**valhalla-qgis-plugin**](https://github.com/gis-ops/valhalla-qgis-plugin): A QGIS plugin for Valhalla, also available in the [official QGIS plugin store](https://plugins.qgis.org/plugins/valhalla/). **Note**, it's almost deprecated and will be replaced with a much superior alternative.
 - [**routingpy**](https://github.com/gis-ops/routingpy): A Python client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available on [PyPI](https://pypi.org/project/routingpy/).
 - [**routingjs**](https://github.com/gis-ops/routingjs): A TypeScript client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available as engine-specific packages on [npm](https://www.npmjs.com/package/@routingjs/valhalla).
-- [**pyvalhalla**](https://github.com/gis-ops/pyvalhalla): Python bindings for Valhalla, so its APIs can be used from within Python without a HTTP service. Available on [PyPI](https://pypi.org/project/pyvalhalla/).
 - [**Valhalla_jll.jl**](https://github.com/JuliaBinaryWrappers/Valhalla_jll.jl): Valhalla binaries shipped for Julia.
 - [**valhalla-go**](https://github.com/pufferffish/valhalla-go): Valhalla Golang bindings via cgo
