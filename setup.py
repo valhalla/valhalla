@@ -76,7 +76,7 @@ include_dirs = [
 ]
 # this doesn't seem to be enough, on Linux we need to set LD_LIBRARY_PATH as well
 # or auditwheel will link to e.g. system libgeos
-library_dirs = ["/usr/local/lib", "/usr/local/lib64"]
+library_dirs = ["/usr/local/lib", "/usr/local/lib64", "/lib64"]
 libraries = list()
 extra_link_args = list()
 extra_compile_args = list()

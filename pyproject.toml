@@ -52,7 +52,7 @@ before-all = """
 """
 # e.g. geos is both installed to the system and built from source, need to prioritize the latter
 # VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_linux.sh' above
-environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux"}
+environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux"}
 
 [tool.cibuildwheel.macos]
 environment = { LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH" }
