@@ -97,7 +97,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux
+          name: wheels-linux-x64
           path: wheelhouse/*.whl
   
   build_osx:
@@ -182,7 +182,7 @@ jobs:
         if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-osx
+          name: wheels-osx-arm64
           path: wheelhouse/*.whl
 
       - name: Setup tmate session
@@ -331,7 +331,7 @@ jobs:
         if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-win
+          name: wheels-win-amd64
           path: wheelhouse/*.whl
 
       - name: Setup tmate session

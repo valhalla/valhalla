@@ -1,12 +1,14 @@
 ## Valhalla Python bindings
 
-This package contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
+This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
 > `pyvalhalla(-git)` packages are currently only published for:
 > - `linux-x86_x64`
 > - `win-amd64`
 > - `macos-arm64`
+
+On top of the (very) high-level Python bindings, we package some data-building Valhalla executables to ease the process of graph creation.
 
 ### License
 
@@ -20,6 +22,8 @@ We distribute all currently maintained CPython versions as **binary wheels** for
 `pip install pyvalhalla-git` to install the most recent Valhalla **master commit**.
 
 ### Usage
+
+#### Bindings
 
 Find a more extended notebook in `./examples`, e.g. how to [use the actor](./examples/actor_examples.ipynb).
 
@@ -44,6 +48,24 @@ print(get_help()["service_limits"]["auto"]["max_distance"])
 actor = Actor(config)
 route = actor.route({"locations": [...]})
 ```
+
+#### Valhalla executables
+
+To access the C++ (native) executables, there are 2 options:
+- (recommended) execute the module, e.g. `python -m valhalla valhalla_build_tiles -h`
+- execute the Python wrapper scripts directly, e.g. `valhalla_build_tiles -h`
+
+> [!NOTE]
+> For the latter option to work, the Python environment's `bin/` folder has to be in the `$PATH`. Inside virtual environments, that's always the case.
+
+Executing the scripts directly might also not work properly if there's a system-wide Valhalla installation, unless the Python environment's `bin/` folder has higher priority than system folders in `$PATH`. The module execution uses an explicit Python executable which should be preferred.
+
+There are also some additional commands we added:
+- `--help`: print the help for `python -m valhalla` explicitly
+- `--quiet`: redirect `stdout` of the C++ executables to `/dev/null`; can be added **once** anywhere in the command, will not be forwarded to a C++ executable
+- `print_bin_path`: simply prints the absolute path to the package-internal `bin/` directory where the C++ executables are; useful if the executables should be accessed directly in some script
+
+To find out which Valhalla executables are currently included, run `python -m valhalla --help`. We limit the number of executables to control the wheel size. However, we're open to include any other executable if there's a good reason.
 
 ### Building from source
 
