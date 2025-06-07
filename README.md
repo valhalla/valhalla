@@ -83,17 +83,17 @@ For more information on binaries, see [Command Line Tools](#command-line-tools) 
 
 If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
 
-### From docker
+### With docker
 
 To run Valhalla locally or your own server, we recommend using our Docker image. Checkout our docker image here: <https://github.com/orgs/valhalla/packages>. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
 
-### Python bindings
+### Via Python bindings
 
 We publish our (very) high-level Python bindings to PyPI:
 - [`pyvalhalla`](https://pypi.org/project/pyvalhalla/): follows Github releases
 - [`pyvalhalla-git`](https://pypi.org/project/pyvalhalla-git/): follows Github master branch
 
-The Python packages don't only contain the Python bindings, they also provide access to the C++ executables in the form of e.g. `python -m valhalla valhalla_build_tiles -h` or even directly via `valhalla_build_tiles -h`. For more information, see the [Python README](./src/bindings/python/README.md) for more details.
+The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](./src/bindings/python/README.md).
 
 To use the native C++ executables one doesn't even need to have Python installed. Simply download the wheel from [PyPI](https://pypi.org/project/pyvalhalla-git/3.5.1.post186/#files), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
 
