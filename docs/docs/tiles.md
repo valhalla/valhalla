@@ -1,5 +1,11 @@
 # Tile Specifications
 
+## Introduction
+
+A **tile** represents a small rectangular section of a geographic area. The entire map or geographic region is divided into a grid of square tiles.
+
+Tiles are _files_ in a specific format. They contain information necessary for routing: road network data, access restrictions, administrative information and so on.
+
 ## Hierarchies/Levels
 
 Tiles are arranged into a hierarchy with three levels.
@@ -10,7 +16,7 @@ Tiles are arranged into a hierarchy with three levels.
 | 1 | 1° | Arterial roads: secondary and tertiary. |
 | 2 | 0.25° | Local roads: unclassified, residential, service or other. |
 
-At each level, the world ([WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS_84)) is split into rectangular tiles with a specific size using the bounding box `(-180, -90, 180, 90)`. The rows and columns start from the _bottom left_ and increase to the top right - tiles are row ordered increasing from west to east.
+At each level, the world ([WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS_84)) is split into square tiles with a specific size using the bounding box `(-180, -90, 180, 90)`. The rows and columns start from the _bottom left_ and increase to the top right - tiles are row ordered increasing from west to east.
 
 ### The World at Level 0
 
