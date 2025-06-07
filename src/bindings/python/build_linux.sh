@@ -6,6 +6,11 @@ BUILD_DIR="${1:-build_manylinux}"
 PYTHON_VERSION="${2:-}"
 
 echo "[INFO] ccache dir is $(ccache -k cache_dir) with CCACHE_DIR=${CCACHE_DIR:-}"
+# we have a few packages installed to the system as well as built from source
+# we need to prioritize the ones built from source
+# NOTE: this shouldn't break those packages, as the ones we duplicate so far (e.g. geos)
+# have no own dependencies which might be installed on the system and thus outdated
+export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
 
 cmake -B ${BUILD_DIR} \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \

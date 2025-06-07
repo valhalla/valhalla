@@ -5,6 +5,7 @@ requires = [
     "setuptools_scm>=6.2",
     "setuptools_scm_git_archive",
     "pybind11>=2.10.4",
+    "auditwheel",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -26,6 +27,7 @@ extend-exclude = '''
   | '*build'
   | __pycache__
   | '*.toml'
+  | '*.egg-info'
 )/
 '''
 
@@ -48,6 +50,9 @@ repair-wheel-command = "delvewheel repair --add-path {project}/build/vcpkg_insta
 before-all = """
 {project}/src/bindings/python/build_linux.sh build_manylinux
 """
+# e.g. geos is both installed to the system and built from source, need to prioritize the latter
+# VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_linux.sh' above
+environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux"}
 
 [tool.cibuildwheel.macos]
 environment = { LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH" }
