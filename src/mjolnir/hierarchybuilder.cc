@@ -43,6 +43,14 @@ struct OldToNewNodes {
   }
 };
 
+// Gets the hierarchy level respecting ramp & ferry-related edges which can be marked
+// with a different road class: links will have the lowest connecting non-link road class,
+// ferry-connecting edges will have kPrimary
+uint8_t get_hierarchy_level(const DirectedEdge* de) {
+  return de->is_shortcut() ? TileHierarchy::get_level(static_cast<RoadClass>(de->shortcut()))
+                           : TileHierarchy::get_level(de->classification());
+}
+
 // Add a downward transition edge if the node is valid.
 bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
   if (node.Is_Valid()) {
@@ -131,7 +139,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       // Despite the road class, Bike Share Stations' connections are always at local level
       return (2 == current_level);
     } else {
-      return (TileHierarchy::get_level(directededge->classification()) == current_level);
+      return (get_hierarchy_level(directededge) == current_level);
     }
   };
 
@@ -301,6 +309,9 @@ void FormTilesInNewLevel(GraphReader& reader,
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 
+      // reset shortcuts after hijacking them for reclassification
+      newedge.set_hierarchy_roadclass(RoadClass::kMotorway, true);
+
       // Add directed edge
       tilebuilder->directededges().emplace_back(std::move(newedge));
     }
@@ -424,7 +435,7 @@ void CreateNodeAssociations(GraphReader& reader,
         } else if (directededge->use() != Use::kTransitConnection &&
                    directededge->use() != Use::kEgressConnection &&
                    directededge->use() != Use::kPlatformConnection) {
-          levels[TileHierarchy::get_level(directededge->classification())] = true;
+          levels[get_hierarchy_level(directededge)] = true;
         }
       }
 

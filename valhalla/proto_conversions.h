@@ -1,5 +1,4 @@
 #pragma once
-#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/incidents.pb.h>

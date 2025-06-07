@@ -1,5 +1,4 @@
 #include "argparse_utils.h"
-#include "baldr/rapidjson_utils.h"
 #include "mjolnir/ingest_transit.h"
 
 #include <cxxopts.hpp>

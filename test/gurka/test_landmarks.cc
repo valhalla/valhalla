@@ -3,6 +3,7 @@
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/landmarks.h"
+#include "mjolnir/util.h"
 #include "odin/enhancedtrippath.h"
 #include "test/test.h"
 

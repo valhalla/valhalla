@@ -4,6 +4,7 @@
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
+#include "microtar.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
@@ -12,12 +13,13 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+
 #ifndef _MSC_VER
 #include <sys/mman.h>
 #endif
-#include "microtar.h"
 
 #include <boost/algorithm/string.hpp>
+#include <fcntl.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/stat.h>
@@ -401,7 +403,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         },
         "source_to_target_algorithm": "select_optimal",
         "costmatrix": {
-            "check_reverse_connections": false,
+            "check_reverse_connection": false,
             "allow_second_pass": false,
             "max_reserved_locations": 25,
             "hierarchy_limits": {
