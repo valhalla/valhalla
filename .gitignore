@@ -74,3 +74,9 @@ site/
 *.gph
 
 .DS_Store
+
+# python bindings
+src/bindings/python/valhalla/__version__.py
+**/*.egg-info
+dist
+wheelhouse

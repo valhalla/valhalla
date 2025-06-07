@@ -283,13 +283,14 @@ if(ENABLE_TOOLS)
 endif()
 
 if(ENABLE_DATA_TOOLS)
+  pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
     target_include_directories(${program} PRIVATE ${cxxopts_include_dir})
-    target_link_libraries(${program} valhalla)
+    target_link_libraries(${program} valhalla PkgConfig::GEOS)
     if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
@@ -298,8 +299,6 @@ if(ENABLE_DATA_TOOLS)
   endforeach()
 
   # Target-specific dependencies
-  pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
-  target_link_libraries(valhalla_build_admins PkgConfig::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
       ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc
