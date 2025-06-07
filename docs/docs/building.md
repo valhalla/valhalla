@@ -37,26 +37,73 @@ Instead of installing the dependencies system-wide, you can also opt to use [`vc
 
 The following commands should work on all platforms:
 
+### Clone sources
+
 ```bash
 git clone --recurse-submodules https://github.com/valhalla/valhalla
 cd valhalla
-
+# Clone vcpkg for dependencies:
 git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout <some-tag>
-./vcpkg/bootstrap-vcpkg.sh
-# windows: cmd.exe /c bootstrap-vcpkg.bat
-
-# only build Release versions of dependencies, not Debug
-echo "set(VCPKG_BUILD_TYPE Release)" >> vcpkg/triplets/x64-linux.cmake
-# windows: echo.set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
-# osx: echo "set(VCPKG_BUILD_TYPE release)" >> vcpkg/triplets/arm64-osx.cmake
-
-# vcpkg will install everything during cmake configuration
-# if you want to ENABLE_SERVICES=ON, install https://github.com/kevinkreiser/prime_server#build-and-install (no Windows)
-cmake -B build -DCMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake -DENABLE_SERVICE=OFF
-cmake --build build -- -j$(nproc)
-# windows: cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
-# osx: cmake --build build -- -j$(sysctl -n hw.physicalcpu)
 ```
+### Bootstrap `vcpkg`
+
+```bash
+# linux / macOS
+./vcpkg/bootstrap-vcpkg.sh
+```
+```bash
+# windows
+cmd.exe /c .\vcpkg\bootstrap-vcpkg.bat
+```
+
+#### Set build type (Optional)
+
+To build only release build without any debug symbols:
+
+
+```bash
+# linux
+echo "set(VCPKG_BUILD_TYPE Release)" >> vcpkg/triplets/x64-linux.cmake
+```
+```bash
+# osx
+echo "set(VCPKG_BUILD_TYPE release)" >> vcpkg/triplets/arm64-osx.cmake
+```
+```bash
+# windows
+echo set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
+```
+
+### Configure CMake
+
+`vcpkg` will install everything during cmake configuration.
+
+If you want to `ENABLE_SERVICES=ON`, install https://github.com/kevinkreiser/prime_server#build-and-install (Not available for Windows).
+
+```bash
+# linux / maxOS
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake -DENABLE_SERVICES=OFF
+```
+```bash
+# windows
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=%CD%\vcpkg\scripts\buildsystems\vcpkg.cmake -DENABLE_SERVICES=OFF
+```
+
+### Build
+
+```bash
+# linux
+cmake --build build -- -j$(nproc)
+```
+```bash
+# osx:
+cmake --build build -- -j$(sysctl -n hw.physicalcpu)
+```
+```bash
+# windows: (/m:4 = Use up to 4 processes)
+cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+```
+
 
 ## Platform-specific builds
 
