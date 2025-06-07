@@ -235,6 +235,7 @@ if(ENABLE_DATA_TOOLS)
   find_package(SQLite3 REQUIRED)
   pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
+  pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
@@ -303,8 +304,6 @@ if(ENABLE_DATA_TOOLS)
   endforeach()
 
   # Target-specific dependencies
-  pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
-  target_link_libraries(valhalla_build_admins PkgConfig::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
       ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc

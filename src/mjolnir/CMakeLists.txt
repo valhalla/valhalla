@@ -95,6 +95,7 @@ valhalla_module(NAME mjolnir
   DEPENDS
     valhalla::proto
     valhalla::baldr
+    PkgConfig::GEOS
     PkgConfig::SpatiaLite
     SQLite3::SQLite3
     Boost::boost
