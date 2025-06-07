@@ -60,25 +60,30 @@ endif()
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.
-if(NOT MSVC_IDE) # TODO: May need to be extended for Xcode, CLion, etc.
+get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
+if(isMultiConfig)
+    message(STATUS "Multi-config generator detected (${CMAKE_GENERATOR}) — skipping CMAKE_BUILD_TYPE checks.")
+else()
+  # CMAKE_BUILD_TYPE is only relevant for single-configuration generators.
   if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type specified, defaulting to Release")
     set(CMAKE_BUILD_TYPE Release)
   endif()
-endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  message(STATUS "Configuring in debug mode")
-elseif(CMAKE_BUILD_TYPE STREQUAL Release)
-  message(STATUS "Configuring in release mode")
-elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
-  message(STATUS "Configuring in release mode with debug symbols")
-elseif(CMAKE_BUILD_TYPE STREQUAL MinRelSize)
-  message(STATUS "Configuring in release mode with minimized size")
-elseif(CMAKE_BUILD_TYPE STREQUAL None)
-  message(STATUS "Configuring without a mode, no optimization flags will be set")
-else()
-  message(FATAL_ERROR "Unrecognized build type. Use one of Debug, Release, RelWithDebInfo, MinRelSize, None")
+  if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    message(STATUS "Configuring in debug mode")
+  elseif(CMAKE_BUILD_TYPE STREQUAL Release)
+    message(STATUS "Configuring in release mode")
+  elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
+    message(STATUS "Configuring in release mode with debug symbols")
+  elseif(CMAKE_BUILD_TYPE STREQUAL MinRelSize)
+    message(STATUS "Configuring in release mode with minimized size")
+  elseif(CMAKE_BUILD_TYPE STREQUAL None)
+    message(STATUS "Configuring without a mode, no optimization flags will be set")
+  else()
+    message(FATAL_ERROR "Unrecognized build type. Use one of Debug, Release, RelWithDebInfo, MinRelSize, None")
+  endif()
 endif()
 
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
@@ -320,7 +325,7 @@ endif()
 foreach(script valhalla_build_config valhalla_build_elevation
   valhalla_build_extract valhalla_build_timezones)
   configure_file(${VALHALLA_SOURCE_DIR}/scripts/${script} ${CMAKE_BINARY_DIR}/${script} COPYONLY)
-  
+
   install(
     FILES
       scripts/${script}
