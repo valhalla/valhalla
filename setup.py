@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import platform
-import warnings
+import sys
 
 from pybind11.setup_helpers import Pybind11Extension
 from setuptools import setup
@@ -110,10 +110,16 @@ with open(os.path.join(THIS_DIR, "src", "bindings", "python", "README.md"), enco
 # this is used in GHA for publishing
 pkg = os.environ.get('VALHALLA_RELEASE_PKG')
 if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-git"]):
-    warnings.warn(f"VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}'")
-    pkg = "pyvalhalla"
+    print(
+        f"[WARN] VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}'",
+        file=sys.stderr
+    )
+    pkg = "pyvalhalla-git"
 
-warnings.warn(f"Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}")
+print(
+    f"[FATAL]: Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}",
+    file=sys.stderr
+)
 
 setup(
     name=pkg,
