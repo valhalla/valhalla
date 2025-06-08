@@ -16,7 +16,6 @@ on:
       - test_requests/
     branches:
       - master
-      - 'nn-python-packaging'
     tags:
       - '*'
   pull_request:
@@ -365,4 +364,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@v1.12.4
         with:
           verbose: true
-          repository-url: 'https://test.pypi.org/legacy/'
+          # repository-url: 'https://test.pypi.org/legacy/'
