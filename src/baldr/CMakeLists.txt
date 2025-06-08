@@ -2,7 +2,7 @@
 set(tz_db_files africa antarctica asia australasia backward etcetera europe
   northamerica southamerica leapseconds)
 
-## Select make command based on platform
+# Select make command based on platform
 if(WIN32)
   set(MAKE_CMD nmake)
 else()
