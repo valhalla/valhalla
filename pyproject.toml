@@ -50,7 +50,8 @@ repair-wheel-command = "delvewheel repair --add-path {project}/build/vcpkg_insta
 # CI is testing the built wheel in a fresh Docker container
 test-command=[
     'dnf remove -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel',
-    '{project}/src/bindings/python/test/test_pyvalhalla_package.sh'
+    '{project}/src/bindings/python/test/test_pyvalhalla_package.sh',
+    'dnf install -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel'
 ]
 # build & install libvalhalla before building the bindings
 before-all = """

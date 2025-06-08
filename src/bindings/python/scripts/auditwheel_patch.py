@@ -28,10 +28,10 @@ if not AUDITWHEEL_POLICY_JSON.exists():
     print(f"[FATAL] Can't find source to patch: {AUDITWHEEL_POLICY_JSON}", file=sys.stderr)
     sys.exit(1)
 
-description = "Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."
+description = "Patches auditwheel so it mangles the SONAME of all required dependencies for vendoring."
 
 parser = ArgumentParser(description=description)
-parser.add_argument("SONAMES", help="The .so names to remove from the auditwheel policy.", nargs="+")
+parser.add_argument("SONAMES", help="The .so names to remove from all auditwheel policies.", nargs="+")
 
 
 def main():

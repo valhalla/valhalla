@@ -343,7 +343,7 @@ jobs:
 
   verify_wheels:
     name: Verify wheels with executables in a fresh environment
-    needs: [build_python_wheels_linux, build_osx, build_win]
+    needs: [build_python_wheels_linux]
     runs-on: python:slim-bullseye
     if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
     steps:
@@ -367,7 +367,7 @@ jobs:
   
   upload_all:
     name: Upload if release
-    needs: [verify_wheels]
+    needs: [verify_wheels, build_osx, build_win]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
     if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
