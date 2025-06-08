@@ -46,10 +46,14 @@ before-all = "pip install conan delvewheel"
 repair-wheel-command = "delvewheel repair --add-path {project}/build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}"
 
 [tool.cibuildwheel.linux]
+# we remove some system libraries to try and simulate a more pristine environment before testing
+# CI is testing the built wheel in a fresh Docker container
+test-command=[
+    'dnf remove -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel',
+    '{project}/src/bindings/python/test/test_pyvalhalla_package.sh'
+]
 # build & install libvalhalla before building the bindings
 before-all = """
-echo "[INFO] Using $(python -V) from $(which python)"
-{python} {project}/src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1
 {project}/src/bindings/python/scripts/build_manylinux.sh build_manylinux
 """
 # e.g. geos is both installed to the system and built from source, need to prioritize the latter

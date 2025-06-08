@@ -16,17 +16,18 @@ on:
       - test_requests/
     branches:
       - master
+      - 'nn-python-binaries'
     tags:
       - '*'
-  pull_request:
-    paths-ignore:
-      - "*.md"
-      - .circleci/
-      - docs/
-      - run_route_scripts/
-      - test_requests/
-    branches:
-      - master
+  # pull_request:
+  #   paths-ignore:
+  #     - "*.md"
+  #     - .circleci/
+  #     - docs/
+  #     - run_route_scripts/
+  #     - test_requests/
+  #   branches:
+  #     - master
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -340,9 +341,33 @@ jobs:
         with:
           detached: true
 
+  verify_wheels:
+    name: Verify wheels with executables in a fresh environment
+    needs: [build_python_wheels_linux, build_osx, build_win]
+    runs-on: python:slim-bullseye
+    if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+    steps:
+      - uses: actions/checkout@v4
+          
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      
+      - name: Run test
+        run: |
+          apt-get update -y
+          apt-get install -y file
+          python -m pip install dist/*cp313-manylinux*.whl
+          ./src/bindings/python/test/test_pyvalhalla_package.sh
+  
   upload_all:
     name: Upload if release
-    needs: [build_python_wheels_linux, build_osx, build_win]
+    needs: [verify_wheels]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
     if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
@@ -353,7 +378,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.13'
 
       - uses: actions/download-artifact@v4
         with:
@@ -365,4 +390,4 @@ jobs:
         with:
           verbose: true
           # uncomment when testing!
-          # repository-url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/

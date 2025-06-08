@@ -109,3 +109,7 @@ VCPKG_ARCH_ROOT="build/vcpkg_installed/custom-x64-windows" cibuildwheel --only c
 ```
 
 On Linux, this might download the [`manylinux` docker image](https://github.com/valhalla/manylinux/pkgs/container/manylinux). In the end, you'll find the wheel in `./wheelhouse`.
+
+### Testing (**`linux-x86_x64` only**)
+
+We have a small [test script](./test/test_pyvalhalla_package.sh) which makes sure that all the executables are working properly. If run locally for some reason, install a `pyvalhalla` wheel first. We run this in CI in a fresh Docker container with no dependencies installed, mostly to verify dynamic linking of the vendored dependencies.
