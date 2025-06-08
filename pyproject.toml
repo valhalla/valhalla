@@ -72,5 +72,6 @@ repair-wheel-command = [
         'link_target="$(readlink -f $(which "auditwheel"))"',
         'python_bin="$(dirname "$link_target")/python"',
         'echo "[INFO] Using $($python_bin -V) from $(which "$python_bin")"',
+        'export LD_LIBRARY_PATH=/usr/local/lib64',
         '$python_bin src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1',
     ]
