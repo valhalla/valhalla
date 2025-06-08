@@ -48,10 +48,12 @@ repair-wheel-command = "delvewheel repair --add-path {project}/build/vcpkg_insta
 [tool.cibuildwheel.linux]
 # build & install libvalhalla before building the bindings
 before-all = """
-{project}/src/bindings/python/build_linux.sh build_manylinux
+echo "[INFO] Using $(python -V) from $(which python)"
+{python} {project}/src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1
+{project}/src/bindings/python/scripts/build_manylinux.sh build_manylinux
 """
 # e.g. geos is both installed to the system and built from source, need to prioritize the latter
-# VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_linux.sh' above
+# VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_manylinux.sh' above
 environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux"}
 
 [tool.cibuildwheel.macos]
