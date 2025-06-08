@@ -48,10 +48,10 @@ repair-wheel-command = "delvewheel repair --add-path {project}/build/vcpkg_insta
 [tool.cibuildwheel.linux]
 # build & install libvalhalla before building the bindings
 before-all = """
-{project}/src/bindings/python/build_linux.sh build_manylinux
+{project}/src/bindings/python/scripts/build_manylinux.sh build_manylinux
 """
 # e.g. geos is both installed to the system and built from source, need to prioritize the latter
-# VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_linux.sh' above
+# VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_manylinux.sh' above
 environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux"}
 
 [tool.cibuildwheel.macos]
@@ -60,3 +60,15 @@ repair-wheel-command = [
     'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-listdeps {wheel}',
     'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}'
 ]
+
+# we prepend a few commands to patch the auditwheel source a bit
+# main challenge is to find the same python version auditwheel will use for repairing
+[[tool.cibuildwheel.overrides]]
+    select = "*-manylinux_*"
+    inherit.repair-wheel-command = "prepend"
+    repair-wheel-command = [
+        'link_target="$(readlink -f $(which "auditwheel"))"',
+        'python_bin="$(dirname "$link_target")/python"',
+        'echo "[INFO] Using $($python_bin -V) from $(which "$python_bin")"',
+        '$python_bin src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1',
+    ]

@@ -30,11 +30,13 @@ ccache -s
 if ! [ -z "$PYTHON_VERSION" ]; then
   echo "[INFO] Building the pyvalhalla wheel for python v${PYTHON_VERSION}."
   python$PYTHON_VERSION -m pip install -r src/bindings/python/requirements-build.txt > /dev/null
+  # patch auditwheel so that it allows to vendor libraries also linked to libpython
+  python$PYTHON_VERSION src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1
   python$PYTHON_VERSION setup.py bdist_wheel
 
   # repair the wheel
   for whl in dist/*; do
-    auditwheel repair --plat manylinux_2_28_x86_64 "${whl}"
+    python$PYTHON_VERSION -m auditwheel repair --plat manylinux_2_28_x86_64 "${whl}"
   done
 fi
 
