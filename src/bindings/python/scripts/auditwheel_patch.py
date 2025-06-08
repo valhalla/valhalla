@@ -3,8 +3,6 @@
 """
 This script patches auditwheel to allow libraries such as libz & libexpat to be vendored into the wheel.
 
-NOTE, this script has to be executed by the same python installation which will execute "auditwheel".
-
 See discussion (and related discussions):
 https://github.com/valhalla/valhalla/pull/5292#issuecomment-2953151580
 """
@@ -19,7 +17,7 @@ try:
     import auditwheel
 except ImportError:
     print(
-        f"[FATAL] Can't import 'auditwheel' in Python environment at {Path(sys.executable).parent.parent}",
+        f"[FATAL] Can't find 'auditwheel' package in current Python environment at {Path(sys.executable).parent.parent}.",
         file=sys.stderr,
     )
     sys.exit(1)
@@ -41,12 +39,12 @@ def main():
 
     print(f"[INFO] Modifying {AUDITWHEEL_POLICY_JSON}...")
 
+    libs_removed = False
     with AUDITWHEEL_POLICY_JSON.open() as f:
         policy_source: list = json.load(f)
 
         # even though we only use 1 policy, we need to remove the libs from all, otherwise
         # auditwheel says PEP600 is violated
-        libs_removed = False
         for policy in policy_source:
             lib_whitelist: List[str] = policy["lib_whitelist"]
             for lib_name in args.SONAMES:
