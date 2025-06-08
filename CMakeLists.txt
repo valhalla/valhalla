@@ -1,12 +1,3 @@
-# Minimal CMake configuration for Valhalla
-#
-# Builds libvalhalla and minimal collection of programs.
-#
-# This is NOT equivalent to the official Valhalla build configuration based on GNU Autotools.
-# This is NOT suitable for building complete Valhalla suite.
-# This is secondary build configuration provided for convenient development
-# on Windows and using CMake-enabled IDEs.
-#
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
@@ -320,7 +311,7 @@ endif()
 foreach(script valhalla_build_config valhalla_build_elevation
   valhalla_build_extract valhalla_build_timezones)
   configure_file(${VALHALLA_SOURCE_DIR}/scripts/${script} ${CMAKE_BINARY_DIR}/${script} COPYONLY)
-  
+
   install(
     FILES
       scripts/${script}
