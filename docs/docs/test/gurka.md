@@ -44,7 +44,7 @@ TEST(TestSuite, TestName) {
 ```
 
 !!! note
-    Some tests need the timezone db to be loaded. To build timezone db initially, you can do `make check`.
+    Some tests need the timezone db to be loaded. To build timezone db initially, you can run `make -j$(nproc) gurka_time_tracking`.
 
 ## Building and Running
 
