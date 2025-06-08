@@ -7,7 +7,10 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/traffictile.h>
 
+#ifndef _MSC_VER
 #include <sys/mman.h>
+#endif
+
 #include <sys/stat.h>
 
 #include <cmath>
