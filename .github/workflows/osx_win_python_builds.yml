@@ -16,18 +16,17 @@ on:
       - test_requests/
     branches:
       - master
-      - 'nn-python-binaries'
     tags:
       - '*'
-  # pull_request:
-  #   paths-ignore:
-  #     - "*.md"
-  #     - .circleci/
-  #     - docs/
-  #     - run_route_scripts/
-  #     - test_requests/
-  #   branches:
-  #     - master
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -366,4 +365,4 @@ jobs:
         with:
           verbose: true
           # uncomment when testing!
-          repository-url: https://test.pypi.org/legacy/
+          # repository-url: https://test.pypi.org/legacy/
