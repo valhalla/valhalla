@@ -16,6 +16,7 @@ on:
       - test_requests/
     branches:
       - master
+      - 'nn-python-packaging'
     tags:
       - '*'
   pull_request:
