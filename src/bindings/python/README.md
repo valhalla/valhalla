@@ -49,7 +49,7 @@ actor = Actor(config)
 route = actor.route({"locations": [...]})
 ```
 
-#### Valhalla executables
+#### Valhalla executables (**`linux-x86_x64` only**)
 
 To access the C++ (native) executables, there are 2 options:
 - (recommended) execute the module, e.g. `python -m valhalla valhalla_build_tiles -h`
@@ -100,11 +100,12 @@ This will also build & install `libvalhalla` before building the bindings. At th
 On our CI, this orchestrates the packaging of all `pyvalhalla` wheels for every supported, minor Python version and every platform. It can also be run locally (obviously only being able to build wheels for _your_ platform), e.g.
 
 ```shell
-# specifiers from https://cibuildwheel.pypa.io/en/stable/options/#build-skip
+python -m pip install cibuildwheel
+cibuildwheel --print-build-identifiers
 cibuildwheel --only cp313-manylinux_x86_64
 
 # for windows you'll have to set an env var to the vcpkg win root
 VCPKG_ARCH_ROOT="build/vcpkg_installed/custom-x64-windows" cibuildwheel --only cp313-manylinux_x86_64
 ```
 
-On Linux, this might download the `manylinux` docker image. In the end, you'll find the wheel in `./wheelhouse`.
+On Linux, this might download the [`manylinux` docker image](https://github.com/valhalla/manylinux/pkgs/container/manylinux). In the end, you'll find the wheel in `./wheelhouse`.
