@@ -4,7 +4,6 @@
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
 * **Bug Fix**
-   * FIXED: Typos in the documentation related to building Windows from source [#5294](https://github.com/valhalla/valhalla/pull/5294)
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
    * FIXED: Fix valhalla_benchmark_loki benchmark application. [#4981](https://github.com/valhalla/valhalla/pull/4981)
@@ -41,7 +40,6 @@
    * FIXED: pass correct edge id to expansion callback in bidirectional a* [#5265](https://github.com/valhalla/valhalla/pull/5265)
    * FIXED: remove `GraphId` and `OSMWay` incompatible forward declarations [#5270](https://github.com/valhalla/valhalla/pull/5270)
 * **Enhancement**
-   * UPDATED: Build command to use `nmake` on Windows instead of `make`. [#5294](https://github.com/valhalla/valhalla/pull/5294)
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
@@ -86,6 +84,7 @@
    * CHANGED: More clang-tidy fixes [#5253](https://github.com/valhalla/valhalla/pull/5253)
    * CHANGED: Removed unused headers [#5254](https://github.com/valhalla/valhalla/pull/5254)
    * ADDED: "destination_only_hgv" in directed edge json [#5281](https://github.com/valhalla/valhalla/pull/5281)
+   * CHANGED: Build command to use `nmake` on Windows instead of `make`. Skipping check for `CMAKE_BUILD_TYPE` when using a multi-config generator like Visual Studio or XCode. [#5294](https://github.com/valhalla/valhalla/pull/5294)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
