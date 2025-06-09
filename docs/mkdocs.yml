@@ -5,6 +5,7 @@ theme:
   logo: images/valhalla.png
   favicon: images/valhalla.png
   features:
+    - content.tabs.link
     - navigation.instant
     - navigation.sections
     - navigation.top
