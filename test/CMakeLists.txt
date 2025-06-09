@@ -74,7 +74,7 @@ if(NOT APPLE)
 endif()
 
 # tests files that have warning,
-# any other file not int this list will be processed with the
+# any other file not in this list will be processed with the
 # "-Werror" flag
 # Avoid adding a test to this list
 set(tests_with_warnings
