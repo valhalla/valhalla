@@ -36,7 +36,7 @@ const boost::property_tree::ptree configure(const std::string& config) {
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(python_valhalla, m) {
+PYBIND11_MODULE(_valhalla, m) {
   py::class_<vt::actor_t>(m, "_Actor", "Valhalla Actor class")
       .def(py::init<>([](std::string config) { return vt::actor_t(configure(config), true); }))
       .def(

@@ -16,13 +16,14 @@ source scripts/bash_utils.sh
 # Python setup
 py=$(setup_python)
 install_py_packages $py
-python_sources=$(LANG=C find scripts src/bindings/python -type f -exec file {} \; | grep -F "Python script" | sed 's/:.*//')
+python_sources=$(LANG=C find scripts src/bindings/python -type f ! -name "*.md" ! -name "PKG-INFO" -exec file {} \; | grep -F "Python script" | sed 's/:.*//')
 
 # Python formatter
-${py} -m black --line-length=105 --skip-string-normalization ${python_sources}
+echo ${python_sources}
+${py} -m black --config pyproject.toml ${python_sources}
 
 # Python linter
-${py} -m flake8 --max-line-length=105 --extend-ignore=E501,E731,E203 --extend-exclude=src/bindings/python/__init__.py ${python_sources}
+${py} -m flake8 --config setup.cfg ${python_sources}
 
 # clang-format
 echo "Using $(${py} scripts/clang_format_wrapper.py --version)"
