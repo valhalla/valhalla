@@ -5,10 +5,19 @@ import shutil
 import sys
 from typing import Optional
 
+IS_OSX = platform.system().lower() == "darwin"
+IS_WIN = platform.system().lower() == "windows"
+IS_LINUX = platform.system().lower() == "linux"
+
+if IS_LINUX:
+    from auditwheel.wheeltools import InWheel
+elif IS_WIN:
+    from delocate.wheeltools import InWheel
+
 from pybind11.setup_helpers import Pybind11Extension
 from setuptools import setup, Extension
-from auditwheel.wheeltools import InWheel
 from wheel.bdist_wheel import bdist_wheel as BDistWheelCommand  # noqa: E402
+
 
 DEFAULT_VALHALLA_BUILD_DIR = "./build_manylinux"
 
@@ -22,9 +31,13 @@ BINARIES = [
     "valhalla_ingest_transit",
     "valhalla_convert_transit",
 ]
-IS_OSX = platform.system().lower() == "darwin"
-IS_WIN = platform.system().lower() == "windows"
-IS_LINUX = platform.system().lower() == "linux"
+
+# verify build dir; needs to be an absolute path for InWheel context manager further below
+# $VALHALLA_BUILD_BIN_DIR is set by GHA
+valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR", DEFAULT_VALHALLA_BUILD_DIR)).absolute()
+if not valhalla_build_dir.is_dir():
+    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
+    valhalla_build_dir = None
 
 
 class ValhallaBDistWheelCommand(BDistWheelCommand):
@@ -59,13 +72,6 @@ class ValhallaBDistWheelCommand(BDistWheelCommand):
 
             print(f"Updating RECORD file of {whl_dist_path}")
 
-
-# verify build dir; needs to be an absolute path for InWheel context manager further below
-# $VALHALLA_BUILD_BIN_DIR is set by GHA
-valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR", DEFAULT_VALHALLA_BUILD_DIR)).absolute()
-if not valhalla_build_dir.is_dir():
-    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
-    valhalla_build_dir = None
 
 include_dirs = [
     str(THIS_DIR.joinpath("third_party", "date", "include")),

@@ -16,7 +16,7 @@ on:
       - test_requests/
     branches:
       - master
-      - 'nn-python-binaries'
+      - 'nn-python-binaries-osx'
     tags:
       - '*'
   # pull_request:

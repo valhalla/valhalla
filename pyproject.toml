@@ -6,6 +6,7 @@ requires = [
     "setuptools_scm_git_archive",
     "pybind11>=2.10.4",
     "auditwheel",
+    "delocate",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -46,6 +47,16 @@ before-all = "pip install conan delvewheel"
 repair-wheel-command = "delvewheel repair --add-path {project}/build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}"
 
 [tool.cibuildwheel.linux]
+# e.g. geos is both installed to the system and built from source, need to prioritize the latter
+# VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_manylinux.sh' above
+environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux"}
+
+
+# build & install libvalhalla before building the bindings
+before-all = """
+{project}/src/bindings/python/scripts/build_manylinux.sh build_manylinux
+"""
+
 # we remove some system libraries to try and simulate a more pristine environment before testing
 # CI is testing the built wheel in a fresh Docker container
 test-command=[
@@ -53,19 +64,12 @@ test-command=[
     '{project}/src/bindings/python/test/test_pyvalhalla_package.sh',
     'dnf install -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel > /dev/null'
 ]
-# build & install libvalhalla before building the bindings
-before-all = """
-{project}/src/bindings/python/scripts/build_manylinux.sh build_manylinux
-"""
-# e.g. geos is both installed to the system and built from source, need to prioritize the latter
-# VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_manylinux.sh' above
-environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux"}
 
 [tool.cibuildwheel.macos]
-environment = { LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH" }
+environment = { LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH", DYLD_LIBRARY_PATH="/opt/homebrew/lib:$DYLD_LIBRARY_PATH", VALHALLA_BUILD_BIN_DIR="build_manylinux" }
 repair-wheel-command = [
-    'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-listdeps {wheel}',
-    'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}'
+    'delocate-listdeps {wheel}',
+    'delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}'
 ]
 
 # we prepend a few commands to patch the auditwheel source a bit

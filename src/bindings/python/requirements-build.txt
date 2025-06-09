@@ -4,3 +4,4 @@ setuptools_scm>=6.2
 setuptools_scm_git_archive
 pybind11>=2.10.4
 auditwheel
+delocate
