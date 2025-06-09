@@ -182,7 +182,7 @@ parameter by setting `break_at_waypoints`.
 
 Gurka provides helper functions to make it easy to test various aspects of an API response.
 
-### Protocol Buffers
+### `gurka::assert::raw`
 
 By default, `gurka::route` and `gurka::match` functions return a `valhalla::Api` object, which is the raw Protocol Buffers object that Valhalla passes around. You can check some things directly on this with the helpers in the `gurka::assert::raw` namespace.
 
@@ -213,7 +213,7 @@ void expect_path(const valhalla::Api& result,
                  const std::vector<std::string>& expected_names);
 ```
 
-### OSRM
+### `gurka::assert::osrm`
 
 Valhalla can also return responses in OSRM-compatible format. To test that results contain things you
 expect when serialized to OSRM form, you can use the helpers in the `gurka::assert::osrm` namespace.
