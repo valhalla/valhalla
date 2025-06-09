@@ -344,7 +344,8 @@ jobs:
   verify_wheels:
     name: Verify wheels with executables in a fresh environment
     needs: [build_python_wheels_linux]
-    runs-on: python:slim-bullseye
+    runs-on: ubuntu-latest
+    container: python:slim-bullseye
     if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
     steps:
       - uses: actions/checkout@v4
