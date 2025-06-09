@@ -345,14 +345,10 @@ jobs:
     name: Verify wheels with executables in a fresh environment
     needs: [build_python_wheels_linux]
     runs-on: ubuntu-latest
-    container: python:slim-bullseye
+    container: python:3.13-slim-bookworm
     if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
     steps:
       - uses: actions/checkout@v4
-          
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.13'
 
       - uses: actions/download-artifact@v4
         with:
