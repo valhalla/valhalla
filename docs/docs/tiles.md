@@ -16,7 +16,7 @@ Tiles are arranged into a hierarchy with three levels.
 | 1 | 1° | Arterial roads: secondary and tertiary. |
 | 2 | 0.25° | Local roads: unclassified, residential, service or other. |
 
-At each level, the world ([WGS 84](https://en.wikipedia.org/wiki/World_Geodetic_System#WGS_84)) is split into square tiles with a specific size using the bounding box `(-180, -90, 180, 90)`. The rows and columns start from the _bottom left_ and increase to the top right - tiles are row ordered increasing from west to east.
+At each level, the world is split into square tiles with a specific size using the bounding box `(-180, -90, 180, 90)`. The rows and columns start from the _bottom left_ and increase to the top right - tiles are row ordered increasing from west to east.
 
 ### The World at Level 0
 
