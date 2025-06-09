@@ -83,9 +83,7 @@ function(valhalla_module)
     target_add_compile_flags_if_supported(${library} PRIVATE -mfpmath=sse -msse2)
   endif()
 
-  if(ENABLE_COMPILER_WARNINGS)
-    cxx_add_warning_flags(${library})
-  endif()
+  configure_cxx_warnings(${library})
 
   install(FILES ${MODULE_HEADERS}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${MODULE_NAME}"
@@ -177,9 +175,7 @@ target_compile_definitions(valhalla
 
 target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 
-if(ENABLE_COMPILER_WARNINGS)
-  cxx_add_warning_flags(valhalla)
-endif()
+configure_cxx_warnings(valhalla)
 
 target_include_directories(valhalla
   PUBLIC
