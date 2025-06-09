@@ -278,19 +278,21 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/07
 add_custom_target(nh_ar_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/nh_ar_tiles/2/000/765/074.gph)
 set_target_properties(nh_ar_tiles PROPERTIES FOLDER "Tests")
 
-file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
-add_custom_command(OUTPUT .locales.timestamp
-  COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
-       $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
-       $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
-     done \
-     && touch ${CMAKE_CURRENT_BINARY_DIR}/.locales.timestamp"
-  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales
-  DEPENDS ${locales}
-  COMMENT "Compile locale definition files..."
-  VERBATIM)
-add_custom_target(localedef DEPENDS .locales.timestamp)
-set_target_properties(localedef PROPERTIES FOLDER "Tests")
+if (NOT WIN32)
+  file(GLOB locales "${VALHALLA_SOURCE_DIR}/locales/*.json")
+  add_custom_command(OUTPUT .locales.timestamp
+    COMMAND /bin/bash -c "for loc in $(jq --raw-output .posix_locale *.json); do \
+        $<$<NOT:$<BOOL:${APPLE}>>:  localedef -i $\{loc\%.\*\} -f $\{loc\#\#\*.\} ./$\{loc\}   ; > \
+        $<$<BOOL:${APPLE}>:         localedef -i /usr/share/locale/$\{loc\} ./$\{loc\} || true ; > \
+      done \
+      && touch ${CMAKE_CURRENT_BINARY_DIR}/.locales.timestamp"
+    WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/locales
+    DEPENDS ${locales}
+    COMMENT "Compile locale definition files..."
+    VERBATIM)
+  add_custom_target(localedef DEPENDS .locales.timestamp)
+  set_target_properties(localedef PROPERTIES FOLDER "Tests")
+endif()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/test/data)
 add_custom_command(OUTPUT test/data/sample/N00
@@ -345,7 +347,7 @@ endforeach()
 
 ## Run test dependencies
 ## TODO: fix apple tests!
-if(NOT APPLE)
+if(NOT APPLE AND NOT WIN32)
   add_dependencies(run-util_odin localedef)
   add_dependencies(run-narrativebuilder localedef)
 endif()
