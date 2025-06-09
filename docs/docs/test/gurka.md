@@ -57,7 +57,7 @@ After timezone exists in your `build/test/data` directory, you can:
       --gtest_filter=ConditionalRestrictions.NoRestrictionAuto
     ```
 
-- Build and execute _all_ tests with `make run-gurka`.
+- Build and execute _all_ integration tests with `make run-gurka`.
 
 ## How to construct a map
 
