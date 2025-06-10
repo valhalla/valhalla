@@ -13,14 +13,15 @@ using namespace valhalla::sif;
 namespace {
 
 TEST(Factory, Register) {
-  Options options;
+  Api api;
+  Options& options = *api.mutable_options();
   const rapidjson::Document doc;
   CostFactory factory;
   options.set_costing_type(Costing::auto_);
-  sif::ParseCosting(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options, *api.mutable_info()->mutable_warnings());
   auto car = factory.Create(options);
   options.set_costing_type(Costing::bicycle);
-  sif::ParseCosting(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options, *api.mutable_info()->mutable_warnings());
   auto bike = factory.Create(options);
   auto truck = factory.Create(Costing::truck);
 }

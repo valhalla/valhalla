@@ -69,12 +69,12 @@ protected:
                                                     Location& origin,
                                                     Location& destination,
                                                     const std::string& costing,
-                                                    const Options& options);
+                                                    Api& request);
   void log_admin(const TripLeg&);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const Location& origin,
                                           const Location& destination,
-                                          const Options& options);
+                                          Api& request);
   thor::MatrixAlgorithm*
   get_matrix_algorithm(Api& request, const bool has_time, const std::string& costing);
   void route_match(Api& request);

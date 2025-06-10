@@ -34,17 +34,26 @@
  * @param costing_options  pointer to protobuf costing options object
  * @param range            ranged_default_t object which will check any provided values are in range
  * @param json             rapidjson value object which should contain user provided costing options
- * @param json_key         the json key to use to pull a user provided value out of the jsonn
+ * @param json_key         the json key to use to pull a user provided value out of the json
  * @param option_name      the name of the option will be set on the costing options object
  */
 
-#define JSON_PBF_RANGED_DEFAULT(costing_options, range, json, json_key, option_name)                 \
+#define JSON_PBF_RANGED_DEFAULT(costing_options, range, json, json_key, option_name, warnings)       \
   {                                                                                                  \
+    bool clamped = false;                                                                            \
     costing_options->set_##option_name(                                                              \
         range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
                                                   costing_options->has_##option_name##_case()        \
                                                       ? costing_options->option_name()               \
-                                                      : range.def)));                                \
+                                                      : range.def),                                  \
+              clamped));                                                                             \
+    if (clamped) {                                                                                   \
+      auto warning = warnings.Add();                                                                 \
+      warning->set_description("'" + std::string(json_key) + "' has been clamped to " +              \
+                               std::to_string(range.def));                                           \
+                                                                                                     \
+      warning->set_code(500);                                                                        \
+    }                                                                                                \
   }
 
 /**
@@ -57,13 +66,22 @@
  * @param option_name      the name of the option will be set on the costing options object
  */
 
-#define JSON_PBF_RANGED_DEFAULT_V2(costing_options, range, json, json_key, option_name)              \
+#define JSON_PBF_RANGED_DEFAULT_V2(costing_options, range, json, json_key, option_name, warnings)    \
   {                                                                                                  \
+    bool clamped = false;                                                                            \
     costing_options->set_##option_name(                                                              \
         range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
                                                   costing_options->option_name()                     \
                                                       ? costing_options->option_name()               \
-                                                      : range.def)));                                \
+                                                      : range.def),                                  \
+              clamped));                                                                             \
+    if (clamped) {                                                                                   \
+      auto warning = warnings.Add();                                                                 \
+      warning->set_description("'" + std::string(json_key) + "' has been clamped to " +              \
+                               std::to_string(range.def));                                           \
+                                                                                                     \
+      warning->set_code(500);                                                                        \
+    }                                                                                                \
   }
 
 /**
@@ -1375,17 +1393,20 @@ struct BaseCostingOptionsConfig {
  */
 void ParseBaseCostOptions(const rapidjson::Value& json,
                           Costing* co,
-                          const BaseCostingOptionsConfig& cfg);
+                          const BaseCostingOptionsConfig& cfg,
+                          google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Parses all the costing options for all needed costings
  * @param doc                   json document
  * @param costing_options_key   the key in the json document where the options are located
  * @param options               where to store the parsed costing
+ * @param warnings              the warnings array to update
  */
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& costing_options_key,
-                  Options& options);
+                  Options& options,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Parses the costing options for the costing specified within the json object. If the
@@ -1394,11 +1415,13 @@ void ParseCosting(const rapidjson::Document& doc,
  * @param doc                   json document
  * @param key                   the key in the json document where the options are located
  * @param costing_options       where to store the parsed options
+ * @param warnings              the warnings array to update
  * @param costing               specify the costing you want to parse or let it check the json
  */
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& key,
                   Costing* costing,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings,
                   Costing::Type costing_type = static_cast<Costing::Type>(Costing::Type_ARRAYSIZE));
 
 } // namespace sif
