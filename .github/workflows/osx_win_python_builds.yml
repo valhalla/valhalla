@@ -16,18 +16,17 @@ on:
       - test_requests/
     branches:
       - master
-      - 'nn-python-binaries'
     tags:
       - '*'
-  # pull_request:
-  #   paths-ignore:
-  #     - "*.md"
-  #     - .circleci/
-  #     - docs/
-  #     - run_route_scripts/
-  #     - test_requests/
-  #   branches:
-  #     - master
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+    branches:
+      - master
   workflow_dispatch:
     inputs:
       debug_enabled:
@@ -99,6 +98,13 @@ jobs:
         with:
           name: wheels-linux-x64
           path: wheelhouse/*.whl
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # only run this if manually invoked and debug_enabled == true or a previous step failed
+        if: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || failure()) && (github.repository_owner == 'valhalla') }}
+        with:
+          detached: true
   
   build_osx:
     runs-on: macos-14
@@ -187,11 +193,10 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked or a previous job failed
-        if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+        # only run this if manually invoked and debug_enabled == true or a previous step failed
+        if: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || failure()) && (github.repository_owner == 'valhalla') }}
         with:
           detached: true
-          timeout-minutes: 15
   
   build_win:
     name: Build Win & Python wheels
@@ -336,8 +341,8 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked or a previous job failed
-        if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+        # only run this if manually invoked and debug_enabled == true or a previous step failed
+        if: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || failure()) && (github.repository_owner == 'valhalla') }}
         with:
           detached: true
 
@@ -387,4 +392,4 @@ jobs:
         with:
           verbose: true
           # uncomment when testing!
-          repository-url: https://test.pypi.org/legacy/
+          # repository-url: https://test.pypi.org/legacy/
