@@ -3,11 +3,7 @@ import sys
 from typing import Optional
 
 from ._scripts import PYVALHALLA_BIN_DIR, run
-
-try:
-    from .__version__ import version as __version__
-except ImportError:
-    __version__ = "undefined"
+from . import __version__
 
 PRINT_BIN_PATH = "print_bin_path"
 

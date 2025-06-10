@@ -96,7 +96,7 @@ We publish our (very) high-level Python bindings to PyPI:
 > [!NOTE]
 > The below is only valid for `linux-x86_x64` so far.
 
-The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](./src/bindings/python/README.md).
+The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](https://valhalla.github.io/valhalla/README_python).
 
 To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the wheel from [PyPI](https://pypi.org/project/pyvalhalla-git/3.5.1.post186/#files), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
 
@@ -119,7 +119,7 @@ Linux and MacOS.
 ## Command Line Tools
 
 > [!TIP]
-> Easily install various Valhalla command line tools like `valhalla_build_tiles` with the [Python bindings](./src/bindings/python/README.md), e.g. via [PyPI](https://pypi.org/project/pyvalhalla/#files). This currently **only works for `linux-x64`**.
+> Easily install various Valhalla command line tools like `valhalla_build_tiles` with the [Python bindings](https://valhalla.github.io/valhalla/README_python), e.g. via [PyPI](https://pypi.org/project/pyvalhalla/#files). This currently **only works for `linux-x64`**.
 
 ### `valhalla_service` aka one-shot mode
 

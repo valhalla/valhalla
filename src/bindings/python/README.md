@@ -21,7 +21,7 @@ We distribute all currently maintained CPython versions as **binary wheels** for
 
 #### Bindings
 
-Find a more extended notebook in `./examples`, e.g. how to [use the actor](./examples/actor_examples.ipynb).
+Find a more extended notebook in `./examples`, e.g. how to [use the actor](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/examples/actor_examples.ipynb).
 
 Before using the Python bindings you need to have access to a routable Valhalla graph. Either install Valhalla from source and built the graph from OSM compatible data or use our [Valhalla docker image](https://github.com/gis-ops/docker-valhalla) for a painless experience, e.g. this will build the routing graph for Andorra in `./custom_files`:
 
@@ -108,4 +108,4 @@ On Linux, this might download the [`manylinux` docker image](https://github.com/
 
 ### Testing (**`linux-x86_x64` only**)
 
-We have a small [test script](./test/test_pyvalhalla_package.sh) which makes sure that all the executables are working properly. If run locally for some reason, install a `pyvalhalla` wheel first. We run this in CI in a fresh Docker container with no dependencies installed, mostly to verify dynamic linking of the vendored dependencies.
+We have a small [test script](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/test/test_pyvalhalla_package.sh) which makes sure that all the executables are working properly. If run locally for some reason, install a `pyvalhalla` wheel first. We run this in CI in a fresh Docker container with no dependencies installed, mostly to verify dynamic linking of the vendored dependencies.
