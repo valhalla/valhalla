@@ -62,6 +62,7 @@ nav:
   - Introduction for Users: valhalla-intro.md
   - Build from Source: building.md
   - Terminology: terminology.md
+  - Python bindings: README_python.md
   - Public APIs:
       - API Overview: api/index.md
       - Protocol Buffers: api/protocol-buffers.md
