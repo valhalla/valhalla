@@ -10,6 +10,7 @@ theme:
     - navigation.sections
     - navigation.top
     - toc.follow
+    - content.code.copy
   palette:
     - scheme: default
       toggle:
