@@ -10,10 +10,6 @@ This folder contains the Python bindings to [Valhalla routing engine](https://gi
 
 On top of the (very) high-level Python bindings, we package some data-building Valhalla executables to ease the process of graph creation.
 
-### License
-
-Due to the dependencies we package, the Python bindings are licensed under GNU Lesser General Public License v2 or later (LGPLv2+).
-
 ### Installation
 
 We distribute all currently maintained CPython versions as **binary wheels** for Win64, MacOS (`arm64`) and Linux (`x86_64`) distributions with `glibc>=2.28`. We **do not** offer a source distribution on PyPI.
