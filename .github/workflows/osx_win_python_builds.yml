@@ -41,7 +41,7 @@ on:
 
 env:
   # only run tmate if manually invoked and debug_enabled == true or a previous step failed
-  SETUP_TMATE: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || (job.status == 'success')) && (github.repository_owner == 'valhalla') }}
+  SETUP_TMATE: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || (github.job.status == 'success')) && (github.repository_owner == 'valhalla') }}
   # only publish to PyPI on tags, schedule or workflow_dispatch (only on master!)
   PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
 
