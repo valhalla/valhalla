@@ -60,7 +60,7 @@ jobs:
       - name: Determine package to publish
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
-          if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
+          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
             VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
           fi
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
