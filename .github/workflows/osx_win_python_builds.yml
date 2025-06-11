@@ -59,7 +59,7 @@ jobs:
 
       - name: Get version modifier
         if: github.ref == 'refs/heads/master'
-        run: echo "version_modifier=\"-$(git rev-parse --short HEAD)\"" >> $GITHUB_OUTPUT
+        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Determine package to publish
         run: |
@@ -82,6 +82,7 @@ jobs:
           CIBW_ENVIRONMENT: >
             CCACHE_DIR=/host/project/.cache/ccache
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+            VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.git_sha || "" }}
 
       - name: Delete cache to save the latest
         run: |
@@ -137,7 +138,7 @@ jobs:
 
       - name: Get version modifier
         if: github.ref == 'refs/heads/master'
-        run: echo "version_modifier=\"-$(git rev-parse --short HEAD)\"" >> $GITHUB_OUTPUT
+        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Restore ccache
         id: cache-ccache-restore
@@ -269,7 +270,7 @@ jobs:
 
       - name: Get version modifier
         if: github.ref == 'refs/heads/master'
-        run: echo "version_modifier=\"-$(git rev-parse --short HEAD)\"" >> $GITHUB_OUTPUT
+        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Configure CMake
         shell: bash

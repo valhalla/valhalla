@@ -166,17 +166,13 @@ add_library(valhalla ${valhalla_src})
 set_target_properties(valhalla PROPERTIES FOLDER "Library")
 create_source_groups("Source Files" ${valhalla_src})
 
-if(NOT DEFINED VALHALLA_VERSION_MODIFIER)
-  set(VALHALLA_VERSION_MODIFIER "\"\"")
-endif()
-
 target_compile_definitions(valhalla
   PUBLIC
     $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
     $<$<BOOL:${MSVC}>:NOMINMAX>
     HAS_REMOTE_API=0
     AUTO_DOWNLOAD=0
-    VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}
+    $<$<BOOL:${VALHALLA_VERSION_MODIFIER}>:VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}>
   PRIVATE
     ${libvalhalla_compile_definitions}
   )
