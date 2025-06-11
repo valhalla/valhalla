@@ -4,10 +4,10 @@ name: Build OSX, Win & Python bindings
 # - runs master & PR pushes for OSX & Win
 # - publishes Python bindings for all platforms and minor Python versions to:
 #   - https://pypi.org/project/pyvalhalla/ for tag pushes
-#   - https://pypi.org/project/pyvalhalla-git/ for master pushes
+#   - https://pypi.org/project/pyvalhalla-weekly/ for master pushes
 
 on:
-  # We run this once a week so we regularly publish pyvalhalla-git
+  # We run this once a week so we regularly publish pyvalhalla-weekly
   # but not on _every_ master commit
   schedule:
     - cron: "0 0 * * 0"
@@ -71,7 +71,7 @@ jobs:
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
 
@@ -182,7 +182,7 @@ jobs:
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
@@ -320,7 +320,7 @@ jobs:
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
         
