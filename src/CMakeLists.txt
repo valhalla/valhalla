@@ -168,8 +168,6 @@ create_source_groups("Source Files" ${valhalla_src})
 
 if(NOT DEFINED VALHALLA_VERSION_MODIFIER)
   set(VALHALLA_VERSION_MODIFIER "\"\"")
-else() 
-  message("valhalla version modifier set to ${VALHALLA_VERSION_MODIFIER}")
 endif()
 
 target_compile_definitions(valhalla
