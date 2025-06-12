@@ -14,7 +14,7 @@ DEFAULT_VALHALLA_BUILD_DIR = "./build_manylinux"
 
 THIS_DIR = Path(__file__).parent.resolve()
 BINARIES = [
-    # "valhalla_service", # sadly auditwheel(/patchelf?) corrupts valhalla_service somehow
+    "valhalla_service", # this needed a custom-built "patchelf" for auditwheel to properly fix
     "valhalla_build_tiles",
     "valhalla_build_admins",
     "valhalla_add_predicted_traffic",
