@@ -1,5 +1,10 @@
 # GoogleTest builds with /MT(d) by default, which is incompatible with Valhalla's /MD(d) builds.
-# Force it to use the same CRT as Valhalla.
+#
+# /MD(d) links the C++ runtime dynamically, while /MT(d) links it statically.
+#
+# Force it to use the same CRT as Valhalla /MD(d). Technically Valhalla doesn't enforce /MD(d) but
+# it is the CMake default. It can be switched by MSVC_RUNTIME_LIBRARY, but GoogleTest is ignoring
+# this.
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
