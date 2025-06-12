@@ -172,8 +172,10 @@ target_compile_definitions(valhalla
     $<$<BOOL:${MSVC}>:NOMINMAX>
     HAS_REMOTE_API=0
     AUTO_DOWNLOAD=0
+    $<$<BOOL:${VALHALLA_VERSION_MODIFIER}>:VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}>
   PRIVATE
-    ${libvalhalla_compile_definitions})
+    ${libvalhalla_compile_definitions}
+  )
 
 target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 

@@ -57,6 +57,10 @@ jobs:
       - name: Get branch name
         run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
 
+      - name: Get version modifier
+        if: github.ref == 'refs/heads/master'
+        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Determine package to publish
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
@@ -78,6 +82,7 @@ jobs:
           CIBW_ENVIRONMENT: >
             CCACHE_DIR=/host/project/.cache/ccache
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+            VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
 
       - name: Delete cache to save the latest
         run: |
@@ -131,6 +136,10 @@ jobs:
       - name: Get branch name
         run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
 
+      - name: Get version modifier
+        if: github.ref == 'refs/heads/master'
+        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Restore ccache
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
@@ -142,7 +151,7 @@ jobs:
             ccache-osx-
 
       - name: Configure CMake
-        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON
+        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ steps.vars.outputs.version_modifier || '' }}
 
       - name: Build & install Valhalla (for python bindings)
         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
@@ -259,9 +268,14 @@ jobs:
       - name: Setup Developer Command Prompt for VS
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Get version modifier
+        if: github.ref == 'refs/heads/master'
+        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Configure CMake
         shell: bash
         run: |
+
           cmake --version
           cmake -B build \
             -G "Visual Studio 17 2022" \
@@ -279,7 +293,8 @@ jobs:
             -DENABLE_CCACHE=OFF \
             -DENABLE_SERVICES=OFF \
             -DPREFER_EXTERNAL_DEPS=ON \
-            -DENABLE_GDAL=ON
+            -DENABLE_GDAL=ON \
+            -DVALHALLA_VERSION_MODIFIFER=${{ steps.vars.outputs.version_modifier || '' }}
 
       - name: Save vcpkg packages (always, to avoid redundant rebuilds)
         uses: actions/cache/save@v3
