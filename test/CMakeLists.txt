@@ -15,6 +15,7 @@ set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
 # Common things that the tests need.
+enable_testing()
 find_package(Threads)
 set(TEST_SRCS test.h test.cc)
 if(ENABLE_DATA_TOOLS)
@@ -122,6 +123,8 @@ foreach(test ${tests})
     # Any tool that needs interact with Lua will need these flags on macOS
     target_link_options(${test} PUBLIC -pagezero_size 10000 -image_base 100000000)
   endif()
+
+  add_test(NAME ${test})
 endforeach()
 
 set(cost_tests autocost bicyclecost motorcyclecost motorscootercost pedestriancost transitcost truckcost)
@@ -132,6 +135,8 @@ foreach(test ${cost_tests})
     COMPILE_DEFINITIONS INLINE_TEST)
   create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/sif/${test}.cc)
   target_link_libraries(${test} valhalla_test)
+
+  add_test(NAME ${test})
 endforeach()
 
 set(tyr_tests route_serializer_osrm)
@@ -142,6 +147,8 @@ foreach(test ${tyr_tests})
     COMPILE_DEFINITIONS INLINE_TEST)
   create_source_groups("Source Files" ${VALHALLA_SOURCE_DIR}/src/tyr/${test}.cc)
   target_link_libraries(${test} valhalla_test)
+
+  add_test(NAME ${test})
 endforeach()
 
 ## Test-specific data, properties and dependencies
