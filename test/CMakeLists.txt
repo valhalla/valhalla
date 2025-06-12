@@ -14,7 +14,7 @@ set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
-# common things that the tests need
+# Common things that the tests need.
 find_package(Threads)
 set(TEST_SRCS test.h test.cc)
 if(ENABLE_DATA_TOOLS)
@@ -24,17 +24,26 @@ add_library(valhalla_test
   ${TEST_SRCS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
-  )
+)
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
-  ${VALHALLA_SOURCE_DIR}/test/gurka)
+  ${VALHALLA_SOURCE_DIR}/test/gurka
+)
 target_include_directories(valhalla_test SYSTEM PUBLIC
   ${robinhoodhashing_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
+)
+target_link_libraries(valhalla_test
+  valhalla
+  gtest
+  gtest_main
+  gmock
+  ${CMAKE_THREAD_LIBS_INIT}
+  PkgConfig::LZ4
+)
 
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
