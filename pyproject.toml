@@ -11,8 +11,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 version_file = "src/bindings/python/valhalla/__version__.py"
-write_to_template = "__version__ = '{version}'\n"
-version_scheme = "post-release"
+version_scheme = "no-guess-dev"
 # PyPI doesn't accept local hashed version strings, important for pyvalhalla-weekly
 local_scheme = "no-local-version"
 
