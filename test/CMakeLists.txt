@@ -36,11 +36,6 @@ target_include_directories(valhalla_test SYSTEM PUBLIC
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
 target_link_libraries(valhalla_test valhalla gtest gtest_main gmock ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
 
-if(ENABLE_DATA_TOOLS)
-  target_link_libraries(valhalla_test PkgConfig::GEOS)
-endif()
-
-
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
