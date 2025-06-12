@@ -39,6 +39,7 @@
    * FIXED: set initial precision in matrix serializer [#5267](https://github.com/valhalla/valhalla/pull/5267)
    * FIXED: pass correct edge id to expansion callback in bidirectional a* [#5265](https://github.com/valhalla/valhalla/pull/5265)
    * FIXED: remove `GraphId` and `OSMWay` incompatible forward declarations [#5270](https://github.com/valhalla/valhalla/pull/5270)
+   * FIXED: Number of compile/linker issues on Windows for the test targets. [#5313](https://github.com/valhalla/valhalla/pull/5313)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
@@ -86,6 +87,7 @@
    * ADDED: "destination_only_hgv" in directed edge json [#5281](https://github.com/valhalla/valhalla/pull/5281)
    * CHANGED: Link libvalhalla to libgeos. Build command to use `nmake` on Windows instead of `make`. Skipping check for `CMAKE_BUILD_TYPE` when using a multi-config generator like Visual Studio or XCode. [#5294](https://github.com/valhalla/valhalla/pull/5294)
    * ADDED: workflow to publish Python bindings for all major platforms to PyPI [#5280](https://github.com/valhalla/valhalla/pull/5280)
+   * ADDED: git sha version suffix for executables [#5307](https://github.com/valhalla/valhalla/pull/5307)
    * ADDED: script to analyze build logs for warnings [#5312](https://github.com/valhalla/valhalla/pull/5312)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
