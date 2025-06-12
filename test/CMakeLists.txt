@@ -20,6 +20,7 @@ set(TEST_SRCS test.h test.cc)
 if(ENABLE_DATA_TOOLS)
   list(APPEND TEST_SRCS gurka/gurka.h gurka/gurka.cc)
 endif()
+# TODO: Should this be marked STATIC ?
 add_library(valhalla_test
   ${TEST_SRCS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
