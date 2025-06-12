@@ -39,6 +39,7 @@
    * FIXED: set initial precision in matrix serializer [#5267](https://github.com/valhalla/valhalla/pull/5267)
    * FIXED: pass correct edge id to expansion callback in bidirectional a* [#5265](https://github.com/valhalla/valhalla/pull/5265)
    * FIXED: remove `GraphId` and `OSMWay` incompatible forward declarations [#5270](https://github.com/valhalla/valhalla/pull/5270)
+   * FIXED: Number of compile/linker issues on Windows for the test targets. [#5313](https://github.com/valhalla/valhalla/pull/5313)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
