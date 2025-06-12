@@ -19,7 +19,8 @@ cmake -B ${BUILD_DIR} \
   -DENABLE_TESTS=OFF \
   -DENABLE_SINGLE_FILES_WERROR=OFF \
   -DENABLE_GDAL=ON \
-  -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_BUILD_TYPE=Release \
+  -DVALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER:-}
 
 echo "[INFO] Building & installing libvalhalla..."
 LDFLAGS=-fno-lto cmake --build ${BUILD_DIR} -- -j$(nproc) > /dev/null
