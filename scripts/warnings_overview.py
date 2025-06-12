@@ -28,7 +28,7 @@ parser.add_argument(
     type=str,
     help="The compiler used for the build",
     choices=[
-        "gcc",
+        GCC,
         # "clang",
         # "msvc"
     ],
@@ -80,23 +80,25 @@ def main():
         print("\n=== Warning counts ===")
         for warn, count in warnings_counter.most_common():
             print(f"{warn}: {count}")
-    if warnings_files_lines:
-        print("\n=== Messages per Warning ===")
-        for warning_id, lines in warnings_files_lines.items():
-            print(f"\n{warning_id}: ({warnings_counter[warning_id]} total)")
 
-            req_warning_amount = warnings_files_requested[warning_id]
-
-            # if someone set 0 for some reason
-            if not req_warning_amount:
-                continue
-
-            line: str
-            for line_idx, line in enumerate(lines):
-                if req_warning_amount == -1 or line_idx < warnings_files_requested[warning_id]:
-                    print(f"  {line.strip()}")
+        if warnings_files_lines:
+            print("\n=== Messages per Warning ===")
+            for warning_id, lines in warnings_files_lines.items():
+                req_warning_amount = warnings_files_requested[warning_id]
+                # if someone set 0 for some reason
+                if not req_warning_amount:
                     continue
-                break
+
+                print(
+                    f"\n{warning_id}: ({warnings_counter[warning_id]} total, only showing {warnings_files_requested[warning_id]})"
+                )
+
+                line: str
+                for line_idx, line in enumerate(lines):
+                    if req_warning_amount == -1 or line_idx < warnings_files_requested[warning_id]:
+                        print(f"  {line.strip()}")
+                        continue
+                    break
 
 
 if __name__ == "__main__":
