@@ -372,7 +372,8 @@ TEST(Isochrones, test_geotiff_output_distance) {
   std::string name = "/vsimem/test_isogrid_geotiff_d.tif";
   std::vector<unsigned char> buffer(geotiff.length());
   std::copy(geotiff.cbegin(), geotiff.cend(), buffer.begin());
-  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer.data(), static_cast<int>(geotiff.size()), 0);
+  auto handle =
+      VSIFileFromMemBuffer(name.c_str(), buffer.data(), static_cast<int>(geotiff.size()), 0);
   auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
   int x = geotiff_dataset->GetRasterXSize();
   int y = geotiff_dataset->GetRasterYSize();
@@ -417,7 +418,8 @@ TEST(Isochrones, test_geotiff_output_time) {
   std::string name = "/vsimem/test_isogrid_geotiff_t.tif";
   std::vector<unsigned char> buffer(geotiff.length());
   std::copy(geotiff.cbegin(), geotiff.cend(), buffer.begin());
-  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer.data(), static_cast<int>(geotiff.size()), 0);
+  auto handle =
+      VSIFileFromMemBuffer(name.c_str(), buffer.data(), static_cast<int>(geotiff.size()), 0);
   auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
   int x = geotiff_dataset->GetRasterXSize();
   int y = geotiff_dataset->GetRasterYSize();
@@ -463,7 +465,8 @@ TEST(Isochrones, test_geotiff_output_time_distance) {
   std::string name = "/vsimem/test_isogrid_geotiff_td.tif";
   std::vector<unsigned char> buffer(geotiff.length());
   std::copy(geotiff.cbegin(), geotiff.cend(), buffer.begin());
-  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer.data(), static_cast<int>(geotiff.size()), 0);
+  auto handle =
+      VSIFileFromMemBuffer(name.c_str(), buffer.data(), static_cast<int>(geotiff.size()), 0);
   auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
   int x = geotiff_dataset->GetRasterXSize();
   int y = geotiff_dataset->GetRasterYSize();
@@ -513,7 +516,8 @@ TEST(Isochrones, test_geotiff_vertical_orientation) {
   std::string name = "/vsimem/test_isogrid_geotiff_d.tif";
   std::vector<unsigned char> buffer(geotiff.length());
   std::copy(geotiff.cbegin(), geotiff.cend(), buffer.begin());
-  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer.data(), static_cast<int>(geotiff.size()), 0);
+  auto handle =
+      VSIFileFromMemBuffer(name.c_str(), buffer.data(), static_cast<int>(geotiff.size()), 0);
   auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
   int y = geotiff_dataset->GetRasterYSize();
   double geoTransform[6];
