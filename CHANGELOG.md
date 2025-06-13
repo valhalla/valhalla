@@ -88,6 +88,7 @@
    * CHANGED: Link libvalhalla to libgeos. Build command to use `nmake` on Windows instead of `make`. Skipping check for `CMAKE_BUILD_TYPE` when using a multi-config generator like Visual Studio or XCode. [#5294](https://github.com/valhalla/valhalla/pull/5294)
    * ADDED: workflow to publish Python bindings for all major platforms to PyPI [#5280](https://github.com/valhalla/valhalla/pull/5280)
    * ADDED: git sha version suffix for executables [#5307](https://github.com/valhalla/valhalla/pull/5307)
+   * ADDED: version modifier in public servers [#5316](https://github.com/valhalla/valhalla/pull/5316)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
