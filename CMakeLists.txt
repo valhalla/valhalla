@@ -265,7 +265,7 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
   valhalla_convert_transit valhalla_ingest_transit valhalla_query_transit valhalla_add_predicted_traffic
-  valhalla_assign_speeds valhalla_add_elevation valhalla_build_landmarks valhalla_add_landmarks)
+  valhalla_assign_speeds valhalla_add_elevation valhalla_build_landmarks valhalla_traffic_utils valhalla_add_landmarks valhalla_traffic_demo_utils)
 
 ## Valhalla services
 set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)
@@ -285,6 +285,8 @@ endif()
 if(ENABLE_DATA_TOOLS)
   foreach(program ${valhalla_data_tools})
     get_source_path(path ${program})
+    message(STATUS "Path is: '${path}'")
+
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
@@ -320,7 +322,7 @@ endif()
 foreach(script valhalla_build_config valhalla_build_elevation
   valhalla_build_extract valhalla_build_timezones)
   configure_file(${VALHALLA_SOURCE_DIR}/scripts/${script} ${CMAKE_BINARY_DIR}/${script} COPYONLY)
-  
+
   install(
     FILES
       scripts/${script}
@@ -430,3 +432,50 @@ include(CPack)
 
 configure_file(cmake/uninstall.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/valhalla_uninstall.cmake @ONLY)
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/valhalla_uninstall.cmake)
+
+
+
+# Find Node.js and N-API headers
+find_path(NODE_INCLUDE_DIR
+  NAMES node.h
+  PATHS
+    /Users/boon.boonsiri/.nvm/versions/node/v20.19.0/include/node
+  NO_DEFAULT_PATH
+
+)
+
+find_path(NAPI_INCLUDE_DIR
+  NAMES napi.h
+  HINTS ${NODE_INCLUDE_DIR}/node_modules
+  /Users/boon.boonsiri/local/backup/valhalla-traffic-builder/node_modules/node-addon-api
+        ${NODE_INCLUDE_DIR}/..
+        ${CMAKE_JS_INC}
+  PATH_SUFFIXES node-addon-api
+)
+
+message(STATUS "NODE_INCLUDE_DIR: ${NODE_INCLUDE_DIR}")
+message(STATUS "NAPI_INCLUDE_DIR: ${NAPI_INCLUDE_DIR}")
+
+add_library(node_bindings SHARED src/node_bindings.cc)
+
+target_include_directories(node_bindings
+  PRIVATE
+    ${NODE_INCLUDE_DIR}
+    ${NAPI_INCLUDE_DIR}
+)
+
+target_compile_definitions(node_bindings PRIVATE NAPI_VERSION=6)
+target_compile_features(node_bindings PRIVATE cxx_std_17)
+
+# This is essential for native modules on macOS
+target_link_libraries(node_bindings
+  PRIVATE
+    "-undefined dynamic_lookup"
+    valhalla
+)
+
+# target_link_libraries(node_bindings valhalla)
+
+set_target_properties(node_bindings PROPERTIES
+  PREFIX "" SUFFIX ".node"
+)

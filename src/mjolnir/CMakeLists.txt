@@ -63,6 +63,7 @@ set(sources
   util.cc
   validatetransit.cc
   way_edges_processor.cc
+  valhalla_traffic_utils.cc
 )
 
 set(system_includes
@@ -81,6 +82,7 @@ valhalla_module(NAME mjolnir
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
+      ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla

@@ -162,7 +162,8 @@ if (ENABLE_SERVICES)
   set(valhalla_src ${valhalla_src} tile_server.cc)
 endif()
 
-add_library(valhalla ${valhalla_src})
+add_library(valhalla ${valhalla_src} ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
+${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c)
 set_target_properties(valhalla PROPERTIES FOLDER "Library")
 create_source_groups("Source Files" ${valhalla_src})
 
@@ -188,6 +189,7 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
+    ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
   PRIVATE
     ${libvalhalla_include_directories}
 )
