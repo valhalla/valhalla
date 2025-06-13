@@ -90,6 +90,7 @@
    * ADDED: git sha version suffix for executables [#5307](https://github.com/valhalla/valhalla/pull/5307)
    * ADDED: version modifier in public servers [#5316](https://github.com/valhalla/valhalla/pull/5316)
    * CHANGED: pyvalhalla-git PyPI repository to pyvalhalla-weekly [#5310](https://github.com/valhalla/valhalla/pull/5310)
+   * ADDED: `valhalla_service` to Linux Python package [#5315](https://github.com/valhalla/valhalla/pull/5315)
    * CHANGED: add full version string with git hash to any program's `--help` message [#5317](https://github.com/valhalla/valhalla/pull/5317)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
