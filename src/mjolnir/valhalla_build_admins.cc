@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "valhalla_build_admins is a program that creates a administrative SQLite database from \n"
       "one or multiple osm.pbf files. The admin db is used during graph building to enrich \n"
       "nodes and edges."

@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "adds predicted traffic to valhalla tiles.\n");
     options.add_options()
       ("h,help", "Print this help message.")
