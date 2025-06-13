@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 
   try {
     options.parse_positional({"pos_args"});
-    options.positional_help("CONFIG_JSON CONCURRENCY or CONFIG_JSON ACTION JSON_REQUEST");
+    options.positional_help("CONFIG_JSON [CONCURRENCY] or CONFIG_JSON ACTION JSON_REQUEST");
     auto result = options.parse(argc, argv);
     // We set up conf & num_threads ourselves
     if (!parse_common_args(program, options, result, std::nullopt, "", false))
