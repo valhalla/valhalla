@@ -50,12 +50,17 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
-    print(f"[INFO] Analyzing build log {args.log_path} for compiler {args.compiler}")
-
     # arguments
     log_path: Path = args.log_path
     compiler: str = args.compiler.lower()
     list_parameters: Optional[List[List[str]]] = args.list_example_files or []
+
+    print(
+        f"[INFO] Analyzing build log {log_path} for compiler {compiler} with details for: {'None' if not list_parameters else ''}"
+    )
+    if list_parameters:
+        for files_amount, warning_id in list_parameters:
+            print(f"  {warning_id}: max {"all" if files_amount != -1 else files_amount} source paths")
 
     warnings_counter = Counter()
     warnings_files_requested = defaultdict(int)
@@ -90,7 +95,7 @@ def main():
                     continue
 
                 print(
-                    f"\n{warning_id}: ({warnings_counter[warning_id]} total, only showing {warnings_files_requested[warning_id]})"
+                    f"\n{warning_id}: ({warnings_counter[warning_id]} total, showing {warnings_files_requested[warning_id]})"
                 )
 
                 line: str
