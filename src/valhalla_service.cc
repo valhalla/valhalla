@@ -25,22 +25,21 @@ int main(int argc, char** argv) {
   std::vector<std::string> pos_args;
   boost::property_tree::ptree config;
 
+  cxxopts::Options options(
+      program,
+      program + " " + VALHALLA_PRINT_VERSION +
+          "\n\n"
+          "a program to run a multi-threaded Valhalla HTTP service powered by https://github.com/kevinkreiser/prime_server\n");
+
+  // clang-format off
+  options.add_options()
+    ("h,help", "Print this help message.")
+    ("v,version","Print the version of this software.")
+    // no optional args bcs of pre-cxxopts backwards-compatibility
+    ("pos_args", "positional arguments", cxxopts::value<std::vector<std::string>>(pos_args));
+  // clang-format on
+
   try {
-
-    cxxopts::Options options(
-        program,
-        program + " " + VALHALLA_PRINT_VERSION +
-            "\n\n"
-            "a program to run a multi-threaded Valhalla HTTP service powered by https://github.com/kevinkreiser/prime_server\n");
-
-    // clang-format off
-    options.add_options()
-      ("h,help", "Print this help message.")
-      ("v,version","Print the version of this software.")
-      // no optional args bcs of pre-cxxopts backwards-compatibility
-      ("pos_args", "positional arguments", cxxopts::value<std::vector<std::string>>(pos_args));
-    // clang-format on
-
     options.parse_positional({"pos_args"});
     options.positional_help("CONFIG_JSON CONCURRENCY or CONFIG_JSON ACTION JSON_REQUEST");
     auto result = options.parse(argc, argv);
@@ -49,16 +48,12 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
 
 #ifdef ENABLE_SERVICES
-    if (pos_args.size() < 1 || pos_args.size() > 3) {
-      throw cxxopts::exceptions::exception("Usage: " + program +
-                                           " config/file.json [concurrency]\n"
-                                           "Usage: " +
-                                           program + " config/file.json action json_request");
+    if (pos_args.size() < 1 || pos_args.size() > 3 || pos_args.size() == 2) {
+      throw cxxopts::exceptions::exception("[FATAL] Too many or few arguments, see --help:\n");
     }
 #else
     if (pos_args.size() != 3) {
-      throw cxxopts::exceptions::exception("Usage: " + program +
-                                           " config/file.json action json_request");
+      throw cxxopts::exceptions::exception("");
     }
 #endif
 
@@ -68,6 +63,7 @@ int main(int argc, char** argv) {
 
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
+    std::cout << options.help() << "\n";
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
