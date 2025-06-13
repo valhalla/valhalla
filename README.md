@@ -91,14 +91,14 @@ To run Valhalla locally or your own server, we recommend using our Docker image.
 
 We publish our (very) high-level Python bindings to PyPI:
 - [`pyvalhalla`](https://pypi.org/project/pyvalhalla/): follows Github releases
-- [`pyvalhalla-git`](https://pypi.org/project/pyvalhalla-git/): follows Github master branch
+- [`pyvalhalla-weekly`](https://pypi.org/project/pyvalhalla-weekly/): follows Github master branch
 
 > [!NOTE]
 > The below is only valid for `linux-x86_x64` so far.
 
 The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](https://valhalla.github.io/valhalla/README_python).
 
-To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the wheel from [PyPI](https://pypi.org/project/pyvalhalla-git/3.5.1.post186/#files), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
+To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the desired wheel from [PyPI](https://pypi.org/project/pyvalhalla-weekly), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
 
 ## Contributing
 

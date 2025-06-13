@@ -15,7 +15,7 @@ On top of the (very) high-level Python bindings, we package some data-building V
 We distribute all currently maintained CPython versions as **binary wheels** for Win64, MacOS (`arm64`) and Linux (`x86_64`) distributions with `glibc>=2.28`. We **do not** offer a source distribution on PyPI.
 
 `pip install pyvalhalla` to install the most recent Valhalla **release**.
-`pip install pyvalhalla-git` to install the most recent Valhalla **master commit**.
+`pip install pyvalhalla-weekly` to install the most recent Valhalla **master commit**.
 
 ### Usage
 
