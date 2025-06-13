@@ -4,9 +4,13 @@ name: Build OSX, Win & Python bindings
 # - runs master & PR pushes for OSX & Win
 # - publishes Python bindings for all platforms and minor Python versions to:
 #   - https://pypi.org/project/pyvalhalla/ for tag pushes
-#   - https://pypi.org/project/pyvalhalla-git/ for master pushes
+#   - https://pypi.org/project/pyvalhalla-weekly/ for master pushes
 
 on:
+  # We run this once a week so we regularly publish pyvalhalla-weekly
+  # but not on _every_ master commit
+  schedule:
+    - cron: "0 0 * * 0"
   push:
     paths-ignore:
       - "*.md"
@@ -34,12 +38,24 @@ on:
         description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
         required: false
         default: false
+        
+# Cancel CI runs on a branch when new commits were pushed
+# See https://stackoverflow.com/a/72408109/2582935
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # only run tmate if manually invoked and debug_enabled == true or a previous step failed
+  SETUP_TMATE: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || (github.job.status != 'success')) && (github.repository_owner == 'valhalla') }}
+  # only publish to PyPI on tags, schedule or workflow_dispatch (only on master!)
+  PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
 
 jobs:
   build_python_wheels_linux:
     name: Build Linux Python wheels
     runs-on: ubuntu-latest
-    if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+    if: ${{ github.env.PUBLISH_PYPI }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -65,7 +81,7 @@ jobs:
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
 
@@ -78,7 +94,7 @@ jobs:
 
       - uses: pypa/cibuildwheel@v2.23.3
         env:
-          # /host is mounted from the host system to the manylinux container
+          # the host system's "/" is mounted to "/host" in the manylinux container
           CIBW_ENVIRONMENT: >
             CCACHE_DIR=/host/project/.cache/ccache
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
@@ -106,8 +122,7 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || failure()) && (github.repository_owner == 'valhalla') }}
+        if: ${{ github.env.SETUP_TMATE }}
         with:
           detached: true
   
@@ -178,23 +193,23 @@ jobs:
       # only package python bindings if it's not a PR
 
       - name: Determine package to publish
-        if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
+        if: ${{ github.env.PUBLISH_PYPI }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
-          if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
+          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+        if: ${{ github.env.PUBLISH_PYPI }}
         env:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
           MACOSX_DEPLOYMENT_TARGET: 14
 
       - name: Upload wheels
-        if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+        if: ${{ github.env.PUBLISH_PYPI }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-osx-arm64
@@ -203,7 +218,7 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || failure()) && (github.repository_owner == 'valhalla') }}
+        if: ${{ github.env.SETUP_TMATE }}
         with:
           detached: true
   
@@ -321,12 +336,12 @@ jobs:
           ./build/$BUILD_TYPE/valhalla_service.exe ./test/win/valhalla.json isochrone "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
       
       - name: Determine package to publish
-        if: github.event_name != 'pull_request' && ${{ github.repository_owner == 'valhalla' }}
+        if: ${{ github.env.PUBLISH_PYPI }}
         shell: bash
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
-          if [[ "${GITHUB_REF#refs/heads/}" != "refs/tags*" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-git"
+          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
         
@@ -337,7 +352,7 @@ jobs:
           ls -l build/vcpkg_installed/custom-x64-windows/bin
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+        if: ${{ github.env.PUBLISH_PYPI }}
         env:
           # used in setup.py
           CIBW_ENVIRONMENT: >
@@ -348,7 +363,7 @@ jobs:
             delvewheel repair --add-path build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}
 
       - name: Upload wheels
-        if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+        if: ${{ github.env.PUBLISH_PYPI }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-win-amd64
@@ -357,7 +372,7 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || failure()) && (github.repository_owner == 'valhalla') }}
+        if: ${{ github.env.SETUP_TMATE }}
         with:
           detached: true
 
@@ -366,7 +381,7 @@ jobs:
     needs: [build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
-    if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+    if: ${{ github.env.PUBLISH_PYPI }}
     steps:
       - uses: actions/checkout@v4
 
@@ -387,7 +402,7 @@ jobs:
     needs: [verify_wheels, build_osx, build_win]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
-    if: ${{ (github.event_name != 'pull_request') && (github.repository_owner == 'valhalla') }}
+    if: ${{ github.env.PUBLISH_PYPI }}
 
     permissions:
       id-token: write # This is required for requesting the JWT from Github for PyPI
