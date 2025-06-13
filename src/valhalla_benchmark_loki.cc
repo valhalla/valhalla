@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a program that does location searches on tiled route data.\n"
       "To run it use a valid config file to let it know where the tiled route data \n"
       "is. The input is simply a text file of one location per line\n\n");
