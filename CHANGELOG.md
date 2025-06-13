@@ -89,6 +89,7 @@
    * ADDED: workflow to publish Python bindings for all major platforms to PyPI [#5280](https://github.com/valhalla/valhalla/pull/5280)
    * ADDED: git sha version suffix for executables [#5307](https://github.com/valhalla/valhalla/pull/5307)
    * ADDED: `valhalla_service` to Linux Python package [#5315](https://github.com/valhalla/valhalla/pull/5315)
+   * ADDED: version modifier in public servers [#5316](https://github.com/valhalla/valhalla/pull/5316)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
