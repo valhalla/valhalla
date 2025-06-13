@@ -50,16 +50,15 @@ int main(int argc, char** argv) {
 
 #ifdef ENABLE_SERVICES
     if (pos_args.size() < 1 || pos_args.size() > 3) {
-      throw cxxopts::exceptions::invalid_option_syntax("Usage: " + program +
-                                                       " config/file.json [concurrency]\n"
-                                                       "Usage: " +
-                                                       program +
-                                                       " config/file.json action json_request");
+      throw cxxopts::exceptions::exception("Usage: " + program +
+                                           " config/file.json [concurrency]\n"
+                                           "Usage: " +
+                                           program + " config/file.json action json_request");
     }
 #else
     if (pos_args.size() != 3) {
-      throw cxxopts::exceptions::invalid_option_syntax("Usage: " + program +
-                                                       " config/file.json action json_request");
+      throw cxxopts::exceptions::exception("Usage: " + program +
+                                           " config/file.json action json_request");
     }
 #endif
 
