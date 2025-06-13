@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
     // clang-format off
     opt::Options options(
         program,
-        std::string(program) + " " + VALHALLA_VERSION + "\n\n"
+        std::string(program) + " " + VALHALLA_PRINT_VERSION + "\n\n"
         "a tool for loading elevations for a provided tile. "
         "The service checks if required elevations stored locally if they are not "
         "it tries to establish connection to the remote storage (based on the information from configuration file)"

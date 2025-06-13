@@ -39,7 +39,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a simple command line test tool for generating an isochrone.\n"
       "Use the -j option for specifying the location and isocrhone options.\n\n");
 

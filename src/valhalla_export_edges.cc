@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a simple command line test tool which\n"
       "dumps information about each graph edge.\n\n");
 
