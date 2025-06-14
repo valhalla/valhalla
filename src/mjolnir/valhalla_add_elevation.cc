@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     const auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     if (!result.count("tiles")) {
