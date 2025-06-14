@@ -2,17 +2,17 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
-#include "filesystem.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
+#include <filesystem>
 #include <string>
 
 namespace bpt = boost::property_tree;
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::string bbox;
   boost::property_tree::ptree config;

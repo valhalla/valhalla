@@ -3,7 +3,6 @@
 #include "baldr/curl_tilegetter.h"
 #include "baldr/sign.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
@@ -15,6 +14,7 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <string>
@@ -111,7 +111,7 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
 
   // Open to the end of the file so we can immediately get size
   const std::string file_location =
-      tile_dir + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
+      tile_dir + std::filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to allocate memory
@@ -179,14 +179,14 @@ GraphTile::GraphTile() = default;
 void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location) {
   // At first we save tile to a temporary file and then move it
   // so we can avoid cases when another thread could read partially written file.
-  auto dir = filesystem::path(disk_location);
+  auto dir = std::filesystem::path(disk_location);
   dir.replace_filename("");
 
   bool success = true;
-  filesystem::path tmp_location;
-  if (filesystem::create_directories(dir)) {
+  std::filesystem::path tmp_location;
+  if (std::filesystem::create_directories(dir)) {
     // Technically this is a race condition but its super unlikely (famous last words)
-    while (tmp_location.string().empty() || filesystem::exists(tmp_location))
+    while (tmp_location.string().empty() || std::filesystem::exists(tmp_location))
       tmp_location = disk_location + GenerateTmpSuffix();
     std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
     file.write(tile_data.data(), tile_data.size());
@@ -201,7 +201,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
   }
 
   if (!success)
-    filesystem::remove(tmp_location);
+    std::filesystem::remove(tmp_location);
 }
 
 void store(const std::string& cache_location,
@@ -214,8 +214,8 @@ void store(const std::string& cache_location,
                                                (tile_getter->gzipped()
                                                     ? valhalla::baldr::SUFFIX_COMPRESSED
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
-    auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
-    filesystem::save(disk_location, raw_data);
+    auto disk_location = cache_location + std::filesystem::path::preferred_separator + suffix;
+    std::filesystem::save(disk_location, raw_data);
   }
 }
 

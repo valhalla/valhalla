@@ -4,6 +4,7 @@ This folder contains the Python bindings to [Valhalla routing engine](https://gi
 
 > [!NOTE]
 > `pyvalhalla(-git)` packages are currently only published for:
+>
 > - `linux-x86_x64`
 > - `win-amd64`
 > - `macos-arm64`
@@ -57,6 +58,7 @@ To access the C++ (native) executables, there are 2 options:
 Executing the scripts directly might also not work properly if there's a system-wide Valhalla installation, unless the Python environment's `bin/` folder has higher priority than system folders in `$PATH`. The module execution uses an explicit Python executable which should be preferred.
 
 There are also some additional commands we added:
+
 - `--help`: print the help for `python -m valhalla` explicitly
 - `--quiet`: redirect `stdout` of the C++ executables to `/dev/null`; can be added **once** anywhere in the command, will not be forwarded to a C++ executable
 - `print_bin_path`: simply prints the absolute path to the package-internal `bin/` directory where the C++ executables are; useful if the executables should be accessed directly in some script
