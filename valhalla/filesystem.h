@@ -35,14 +35,6 @@
 #define _SH_DENYNO 0x40
 #endif
 
-#ifdef _WIN32
-#define FS_MTIME(st_stat) st_stat.st_mtime
-#elif __APPLE__
-#define FS_MTIME(st_stat) st_stat.st_mtime
-#else
-#define FS_MTIME(st_stat) st_stat.st_mtim.tv_sec
-#endif
-
 namespace filesystem {
 
 class path {
@@ -494,13 +486,6 @@ inline std::uintmax_t remove_all(const path& p) {
     num_removed++;
 
   return num_removed;
-}
-
-inline std::chrono::time_point<std::chrono::system_clock> last_write_time(const path& p) {
-  struct stat s;
-  if (stat(p.c_str(), &s) != 0)
-    throw std::runtime_error("could not stat " + p.string());
-  return std::chrono::system_clock::from_time_t(FS_MTIME(s));
 }
 
 struct has_data_impl {

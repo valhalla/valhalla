@@ -1,6 +1,6 @@
 #include "baldr/tilehierarchy.h"
 #include "config.h"
-#include "filesystem.h"
+#include "filesystem_utils.h"
 #include "loki/worker.h"
 #include "proto/status.pb.h"
 
@@ -23,7 +23,7 @@ auto get_graphtile(const std::shared_ptr<GraphReader>& reader) {
 time_t get_tileset_last_modified(const std::shared_ptr<GraphReader>& reader) {
   auto path = reader->GetTileSetLocation();
   try {
-    return std::chrono::system_clock::to_time_t(filesystem::last_write_time(path));
+    return std::filesystem::last_write_time_t(path);
   } catch (...) {}
   return 0;
 }
