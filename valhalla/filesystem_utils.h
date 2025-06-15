@@ -32,19 +32,6 @@ struct has_data_impl {
 template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
 
 /**
- * @brief Saves data to the path, e.g. Windows doesn't implicitly convert std::filesystem::path
- *        to std::string
- * @attention Will replace the contents in case if fpath already exists. Will create
- * new directory if directory did not exist before hand.
- * */
-template <typename Container>
-typename std::enable_if<has_data<Container>::value, bool>::type inline save(
-    const std::filesystem::path& fpath,
-    const Container& data = {}) {
-  return save(fpath.string(), data);
-}
-
-/**
  * @brief Saves data to the path.
  * @attention Will replace the contents in case if fpath already exists. Will create
  * new directory if directory did not exist before hand.
@@ -93,8 +80,4 @@ typename std::enable_if<has_data<Container>::value, bool>::type inline save(
 
   return true;
 }
-
-// workaround for lack of "explicit" to prevent implicit conversion between string & filesystem::path
-template <typename Container, typename T>
-typename std::enable_if<has_data<Container>::value, bool>::type save(T, Container) = delete;
 } // namespace valhalla::filesystem_utils
