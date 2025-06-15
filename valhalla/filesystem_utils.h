@@ -26,7 +26,7 @@ namespace std::filesystem {
 inline std::time_t last_write_time_t(const std::filesystem::path& p) {
   // note, in C++20 there's a proper chrono::clock_cast so we can use filesystem::last_write_time
   struct stat s;
-  if (stat(p.c_str(), &s) != 0)
+  if (stat(p.string().c_str(), &s) != 0)
     throw std::runtime_error("could not stat " + p.string());
   return FS_MTIME(s);
 }
@@ -73,7 +73,7 @@ typename std::enable_if<has_data<Container>::value, bool>::type inline save(
     return false;
   }
 
-  if (std::rename(tmp_location.c_str(), fpath.c_str())) {
+  if (std::rename(tmp_location.string().c_str(), fpath.c_str())) {
     std::filesystem::remove(tmp_location);
     return false;
   }

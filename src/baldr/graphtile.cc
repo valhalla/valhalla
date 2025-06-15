@@ -111,8 +111,9 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
   }
 
   // Open to the end of the file so we can immediately get size
-  const std::string file_location =
-      tile_dir + std::filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
+  std::string file_location = tile_dir;
+  file_location.push_back(std::filesystem::path::preferred_separator);
+  file_location = file_location + tile_dir + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to allocate memory
@@ -194,7 +195,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
     file.close();
     if (file.fail())
       success = false;
-    int err = std::rename(tmp_location.c_str(), disk_location.c_str());
+    int err = std::rename(tmp_location.string().c_str(), disk_location.c_str());
     if (err)
       success = false;
   } else {
@@ -215,7 +216,9 @@ void store(const std::string& cache_location,
                                                (tile_getter->gzipped()
                                                     ? valhalla::baldr::SUFFIX_COMPRESSED
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
-    auto disk_location = cache_location + std::filesystem::path::preferred_separator + suffix;
+    auto disk_location = cache_location;
+    disk_location += std::filesystem::path::preferred_separator;
+    disk_location += suffix;
     std::filesystem::save(disk_location, raw_data);
   }
 }
