@@ -2,10 +2,10 @@
 
 #include "baldr/graphid.h"
 #include "baldr/predictedspeeds.h"
-#include "filesystem.h"
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <filesystem>
 #include <optional>
 #include <string>
 
@@ -25,7 +25,7 @@ namespace mjolnir {
  * @throws std::invalid_argument if configuration is invalid
  */
 void ProcessTrafficTiles(const std::string& tile_dir,
-                         const filesystem::path& traffic_tile_dir,
+                         const std::filesystem::path& traffic_tile_dir,
                          const bool summary,
                          const boost::property_tree::ptree& config);
 

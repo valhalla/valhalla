@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <filesystem>
 #include <future>
 #include <memory>
 #include <random>
@@ -77,7 +78,7 @@ void assign(const boost::property_tree::ptree& config,
 }
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   bpt::ptree config;
 

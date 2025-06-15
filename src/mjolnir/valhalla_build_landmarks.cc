@@ -1,11 +1,12 @@
 #include "argparse_utils.h"
-#include "filesystem.h"
 #include "mjolnir/landmarks.h"
 
 #include <cxxopts.hpp>
 
+#include <filesystem>
+
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> input_files;
   boost::property_tree::ptree config;

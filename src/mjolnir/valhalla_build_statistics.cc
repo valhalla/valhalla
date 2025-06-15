@@ -4,7 +4,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
@@ -16,6 +15,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <filesystem>
 #include <future>
 #include <iostream>
 #include <list>
@@ -565,7 +565,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
 }
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 

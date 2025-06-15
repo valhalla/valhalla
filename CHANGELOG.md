@@ -3,6 +3,7 @@
    * REMOVED: validity checks for historical speeds [#5087](https://github.com/valhalla/valhalla/pull/5087)
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
+   * REMOVED: `valhalla/filesystem` from the project in favor of the std equivalent [#5321](https://github.com/valhalla/valhalla/pull/5321)
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
@@ -92,6 +93,7 @@
    * CHANGED: pyvalhalla-git PyPI repository to pyvalhalla-weekly [#5310](https://github.com/valhalla/valhalla/pull/5310)
    * ADDED: `valhalla_service` to Linux Python package [#5315](https://github.com/valhalla/valhalla/pull/5315)
    * CHANGED: add full version string with git hash to any program's `--help` message [#5317](https://github.com/valhalla/valhalla/pull/5317)
+   * CHANGED: refactor to make valhalla/filesystem functionally redundant [#5319](https://github.com/valhalla/valhalla/pull/5319)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
