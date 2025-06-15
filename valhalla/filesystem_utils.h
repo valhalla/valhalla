@@ -15,6 +15,31 @@
 
 namespace valhalla::filesystem_utils {
 
+// this one doesn't fail if a file couldn't be removed (the std one does)
+inline std::uintmax_t remove_all(const std::filesystem::path& p) {
+  std::uintmax_t num_removed = 0;
+
+  // for each entry in this directory
+  for (std::filesystem::directory_iterator i(p), end; i != end; ++i) {
+    // if its a directory we recurse depth first
+    if (i->is_directory()) {
+      auto sub_num_removed = valhalla::filesystem_utils::remove_all(i->path());
+      num_removed += sub_num_removed;
+    }
+    // otherwise its a file or link try to delete it
+    else {
+      if (std::filesystem::remove(i->path()))
+        num_removed++;
+    }
+  }
+
+  // delete the root
+  if (remove(p))
+    num_removed++;
+
+  return num_removed;
+}
+
 inline std::time_t last_write_time_t(const std::filesystem::path& p) {
   // note, in C++20 there's a proper chrono::clock_cast so we can use filesystem::last_write_time
   struct stat s;
@@ -46,8 +71,8 @@ typename std::enable_if<has_data<Container>::value, bool>::type inline save(
   auto dir = std::filesystem::path(fpath).parent_path();
 
   // if the path is not a directory or it doesn't exist and we can't create it for some reason
-  if (!std::filesystem::is_directory(dir) ||
-      (!std::filesystem::exists(dir) && std::filesystem::create_directories(dir)))
+  if ((!std::filesystem::exists(dir) && !std::filesystem::create_directories(dir)) ||
+      !std::filesystem::is_directory(dir))
     return false;
 
   auto generate_tmp_suffix = []() -> std::string {
