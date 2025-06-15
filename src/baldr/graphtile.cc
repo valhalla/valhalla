@@ -112,8 +112,10 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
 
   // Open to the end of the file so we can immediately get size
   std::filesystem::path file_location{tile_dir};
-  std::ifstream file(file_location / FileSuffix(graphid.Tile_Base()),
-                     std::ios::in | std::ios::binary | std::ios::ate);
+  file_location /= FileSuffix(graphid.Tile_Base());
+
+  // first try to open uncompressed, then try compressed file
+  std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to allocate memory
     size_t filesize = file.tellg();
@@ -128,7 +130,8 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
   }
 
   // Try to load a gzipped tile
-  std::ifstream gz_file(file_location / ".gz", std::ios::in | std::ios::binary | std::ios::ate);
+  std::ifstream gz_file(file_location.replace_extension(".gph.gz"),
+                        std::ios::in | std::ios::binary | std::ios::ate);
   if (gz_file.is_open()) {
     // Read the compressed file into memory
     size_t filesize = gz_file.tellg();
