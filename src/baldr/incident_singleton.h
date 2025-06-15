@@ -284,7 +284,7 @@ protected:
               // and if the tile was updated since the last time we scanned we load it
               seen.insert(tile_id);
               try {
-                time_t m_time = std::filesystem::last_write_time_t(i->path());
+                time_t m_time = valhalla::filesystem_utils::last_write_time_t(i->path());
                 if (last_scan <= m_time) {
                   // update the tile
                   update_count += update_tile(state, tile_id, read_tile(i->path().string()));

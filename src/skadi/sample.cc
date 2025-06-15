@@ -499,7 +499,7 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
     return false;
 
   // thread-safe by implementation
-  if (!std::filesystem::save(fpath, raw_data))
+  if (!filesystem_utils::save(fpath, raw_data))
     return false;
 
   std::lock_guard<std::mutex> _(cache_lck);

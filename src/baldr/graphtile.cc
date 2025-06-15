@@ -111,8 +111,10 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
   }
 
   // Open to the end of the file so we can immediately get size
-  const std::string file_location =
-      tile_dir + std::filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
+  std::filesystem::path file_location{tile_dir};
+  file_location /= FileSuffix(graphid.Tile_Base());
+
+  // first try to open uncompressed, then try compressed file
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to allocate memory
@@ -128,7 +130,8 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
   }
 
   // Try to load a gzipped tile
-  std::ifstream gz_file(file_location + ".gz", std::ios::in | std::ios::binary | std::ios::ate);
+  std::ifstream gz_file(file_location.replace_extension(SUFFIX_COMPRESSED),
+                        std::ios::in | std::ios::binary | std::ios::ate);
   if (gz_file.is_open()) {
     // Read the compressed file into memory
     size_t filesize = gz_file.tellg();
@@ -194,7 +197,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
     file.close();
     if (file.fail())
       success = false;
-    int err = std::rename(tmp_location.c_str(), disk_location.c_str());
+    int err = std::rename(tmp_location.string().c_str(), disk_location.c_str());
     if (err)
       success = false;
   } else {
@@ -215,8 +218,11 @@ void store(const std::string& cache_location,
                                                (tile_getter->gzipped()
                                                     ? valhalla::baldr::SUFFIX_COMPRESSED
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
-    auto disk_location = cache_location + std::filesystem::path::preferred_separator + suffix;
-    std::filesystem::save(disk_location, raw_data);
+    // Windows apparently can't "+" string & char (which "preferred_separator" is on win)
+    auto disk_location = cache_location;
+    disk_location += std::filesystem::path::preferred_separator;
+    disk_location += suffix;
+    filesystem_utils::save(disk_location, raw_data);
   }
 }
 
