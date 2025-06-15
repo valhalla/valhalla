@@ -3,6 +3,7 @@
 #include "baldr/curl_tilegetter.h"
 #include "baldr/sign.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem_utils.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
@@ -463,7 +464,7 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
   const size_t tile_id_strlen = max_length + max_length / 3;
   assert(tile_id_strlen % 4 == 0);
 
-  const char separator = is_file_path ? filesystem::path::preferred_separator : '/';
+  const char separator = is_file_path ? std::filesystem::path::preferred_separator : '/';
 
   std::string tile_id_str(tile_id_strlen, '0');
   size_t ind = tile_id_strlen - 1;
@@ -483,7 +484,7 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  std::unordered_set<std::string::value_type> allowed{filesystem::path::preferred_separator,
+  std::unordered_set<std::string::value_type> allowed{std::filesystem::path::preferred_separator,
                                                       '0',
                                                       '1',
                                                       '2',
@@ -495,7 +496,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
                                                       '8',
                                                       '9'};
   // we require slashes
-  auto pos = fname.find_last_of(filesystem::path::preferred_separator);
+  auto pos = fname.find_last_of(std::filesystem::path::preferred_separator);
   if (pos == fname.npos) {
     throw std::runtime_error("Invalid tile path: " + fname);
   }
@@ -506,7 +507,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
       break;
     }
   }
-  allowed.erase(static_cast<std::string::value_type>(filesystem::path::preferred_separator));
+  allowed.erase(static_cast<std::string::value_type>(std::filesystem::path::preferred_separator));
 
   // if you didnt reach the end and it wasnt a dot then this isnt valid
   if (pos != fname.size() && fname[pos] != '.') {
@@ -524,7 +525,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
     }
 
     // if its the last thing or the next one is a separator thats another digit
-    if (pos == 0 || fname[pos - 1] == filesystem::path::preferred_separator) {
+    if (pos == 0 || fname[pos - 1] == std::filesystem::path::preferred_separator) {
       // this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
       if (dist != 3 && dist != 1) {
