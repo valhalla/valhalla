@@ -1,7 +1,7 @@
 #pragma once
 
 #include "baldr/graphtile.h"
-#include "filesystem.h"
+#include "filesystem_utils.h"
 #include "midgard/sequence.h"
 #include "proto/incidents.pb.h"
 
@@ -12,6 +12,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <ctime>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -195,23 +196,23 @@ protected:
     LOG_INFO("Incident watcher started");
     // try to configure for changelog mode
     std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;
-    filesystem::path inc_log_path(config.get<std::string>("incident_log", ""));
-    filesystem::path inc_dir;
+    std::filesystem::path inc_log_path(config.get<std::string>("incident_log", ""));
+    std::filesystem::path inc_dir;
+    bool inc_dir_exists = false;
     try {
       changelog.reset(new decltype(changelog)::element_type(inc_log_path.string(), false, 0));
       LOG_INFO("Incident watcher configured for mmap changelog mode");
     } // check for a directory scan mode config
     catch (...) {
-      inc_dir = filesystem::path(config.get<std::string>("incident_dir", ""));
-      if (!filesystem::is_directory(inc_dir)) {
-        inc_dir = {};
-      } else {
+      inc_dir = std::filesystem::path(config.get<std::string>("incident_dir", ""));
+      inc_dir_exists = std::filesystem::is_directory(inc_dir);
+      if (!inc_dir_exists) {
         LOG_INFO("Incident watcher configured for directory scan mode");
       }
     }
 
     // bail if there is nothing to do
-    if (!changelog && inc_dir.string().empty()) {
+    if (!changelog && !inc_dir_exists) {
       LOG_INFO("Incident watcher disabled");
       state->initialized.store(true);
       state->signal.notify_one();
@@ -272,9 +273,9 @@ protected:
           }
         }
       } // we are in directory scan mode
-      else if (!inc_dir.string().empty()) {
+      else if (inc_dir_exists) {
         // check all of the files
-        for (filesystem::recursive_directory_iterator i(inc_dir), end; i != end; ++i) {
+        for (std::filesystem::recursive_directory_iterator i(inc_dir), end; i != end; ++i) {
           try {
             // if this looks like a tile
             valhalla::baldr::GraphId tile_id;
@@ -283,8 +284,7 @@ protected:
               // and if the tile was updated since the last time we scanned we load it
               seen.insert(tile_id);
               try {
-                time_t m_time =
-                    std::chrono::system_clock::to_time_t(filesystem::last_write_time(i->path()));
+                time_t m_time = std::filesystem::last_write_time_t(i->path());
                 if (last_scan <= m_time) {
                   // update the tile
                   update_count += update_tile(state, tile_id, read_tile(i->path().string()));
