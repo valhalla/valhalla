@@ -37,6 +37,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 
+if(NOT ENABLE_COMPILER_WARNINGS)
+  # TODO: Not ideal to mute this. But it's almost ~700 warnings in the codebase.
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+endif()
+
 # colorize output
 include(CheckCXXCompilerFlag)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
