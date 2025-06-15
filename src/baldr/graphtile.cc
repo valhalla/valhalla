@@ -130,7 +130,7 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
   }
 
   // Try to load a gzipped tile
-  std::ifstream gz_file(file_location.replace_extension(".gph.gz"),
+  std::ifstream gz_file(file_location.replace_extension(SUFFIX_COMPRESSED),
                         std::ios::in | std::ios::binary | std::ios::ate);
   if (gz_file.is_open()) {
     // Read the compressed file into memory
@@ -218,8 +218,11 @@ void store(const std::string& cache_location,
                                                (tile_getter->gzipped()
                                                     ? valhalla::baldr::SUFFIX_COMPRESSED
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
-    auto disk_location = std::filesystem::path{cache_location};
-    filesystem_utils::save((disk_location / suffix).string(), raw_data);
+    // Windows apparently can't "+" string & char (which "preferred_separator" is on win)
+    auto disk_location = cache_location;
+    disk_location += std::filesystem::path::preferred_separator;
+    disk_location += suffix;
+    filesystem_utils::save(disk_location, raw_data);
   }
 }
 
