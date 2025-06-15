@@ -1,18 +1,18 @@
 #include "argparse_utils.h"
 #include "baldr/graphid.h"
-#include "filesystem.h"
 #include "mjolnir/validatetransit.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
+#include <filesystem>
 #include <string>
 #include <vector>
 
 using namespace valhalla::mjolnir;
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 

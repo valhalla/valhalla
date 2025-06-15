@@ -165,8 +165,9 @@ void UpdateTile(const std::string& tile_dir,
                 const GraphId& tile_id,
                 const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
                 TrafficStats& stat) {
-  auto tile_path = tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-  if (!filesystem::exists(tile_path)) {
+  auto tile_path =
+      tile_dir + std::filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
+  if (!std::filesystem::exists(tile_path)) {
     LOG_ERROR("No tile at " + tile_path);
     return;
   }

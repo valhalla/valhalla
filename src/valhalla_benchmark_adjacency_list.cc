@@ -7,6 +7,7 @@
 #include <cxxopts.hpp>
 
 #include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <queue>
 #include <random>
@@ -104,7 +105,7 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
 }
 
 int main(int argc, char* argv[]) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 
