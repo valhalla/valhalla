@@ -35,6 +35,13 @@
 #define _SH_DENYNO 0x40
 #endif
 
+#ifdef _WIN32
+#define FS_MTIME(st_stat) st_stat.st_mtime
+#elif __APPLE__
+#define FS_MTIME(st_stat) st_stat.st_mtime
+#else
+#define FS_MTIME(st_stat) st_stat.st_mtim.tv_sec
+#endif
 namespace filesystem {
 
 class path {
@@ -486,6 +493,68 @@ inline std::uintmax_t remove_all(const path& p) {
     num_removed++;
 
   return num_removed;
+}
+
+inline std::chrono::time_point<std::chrono::system_clock> last_write_time(const path& p) {
+  struct stat s;
+  if (stat(p.c_str(), &s) != 0)
+    throw std::runtime_error("could not stat " + p.string());
+  return std::chrono::system_clock::from_time_t(FS_MTIME(s));
+}
+
+struct has_data_impl {
+  template <typename T, typename Data = decltype(std::declval<const T&>().data())>
+  static std::true_type test(int);
+  template <typename...> static std::false_type test(...);
+};
+
+template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
+
+/**
+ * @brief Saves data to the path.
+ * @attention Will replace the contents in case if fpath already exists. Will create
+ * new directory if directory did not exist before hand.
+ * */
+template <typename Container>
+typename std::enable_if<has_data<Container>::value, bool>::type inline save(
+    const std::string& fpath,
+    const Container& data = {}) {
+  if (fpath.empty())
+    return false;
+
+  auto dir = filesystem::path(fpath);
+  dir.replace_filename("");
+
+  filesystem::path tmp_location;
+  if (!filesystem::exists(dir) && !filesystem::create_directories(dir))
+    return false;
+
+  auto generate_tmp_suffix = []() -> std::string {
+    std::stringstream ss;
+    ss << ".tmp_" << std::this_thread::get_id() << "_"
+       << std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    return ss.str();
+  };
+
+  // Technically this is a race condition but its super unlikely (famous last words)
+  while (tmp_location.string().empty() || filesystem::exists(tmp_location))
+    tmp_location = fpath + generate_tmp_suffix();
+
+  std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
+  file.write(data.data(), data.size());
+  file.close();
+
+  if (file.fail()) {
+    filesystem::remove(tmp_location);
+    return false;
+  }
+
+  if (std::rename(tmp_location.c_str(), fpath.c_str())) {
+    filesystem::remove(tmp_location);
+    return false;
+  }
+
+  return true;
 }
 
 /**
