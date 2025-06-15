@@ -93,4 +93,8 @@ typename std::enable_if<has_data<Container>::value, bool>::type inline save(
 
   return true;
 }
+
+// workaround for lack of "explicit" to prevent implicit conversion between string & filesystem::path
+template <typename Container, typename T>
+typename std::enable_if<has_data<Container>::value, bool>::type save(T, Container) = delete;
 } // namespace valhalla::filesystem_utils
