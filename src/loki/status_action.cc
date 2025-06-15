@@ -23,7 +23,7 @@ auto get_graphtile(const std::shared_ptr<GraphReader>& reader) {
 time_t get_tileset_last_modified(const std::shared_ptr<GraphReader>& reader) {
   auto path = reader->GetTileSetLocation();
   try {
-    return std::filesystem::last_write_time_t(path);
+    return valhalla::filesystem_utils::last_write_time_t(path);
   } catch (...) {}
   return 0;
 }

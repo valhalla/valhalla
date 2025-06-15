@@ -13,15 +13,7 @@
 #define FS_MTIME(st_stat) st_stat.st_mtim.tv_sec
 #endif
 
-struct has_data_impl {
-  template <typename T, typename Data = decltype(std::declval<const T&>().data())>
-  static std::true_type test(int);
-  template <typename...> static std::false_type test(...);
-};
-
-template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
-
-namespace std::filesystem {
+namespace valhalla::filesystem_utils {
 
 inline std::time_t last_write_time_t(const std::filesystem::path& p) {
   // note, in C++20 there's a proper chrono::clock_cast so we can use filesystem::last_write_time
@@ -30,6 +22,14 @@ inline std::time_t last_write_time_t(const std::filesystem::path& p) {
     throw std::runtime_error("could not stat " + p.string());
   return FS_MTIME(s);
 }
+
+struct has_data_impl {
+  template <typename T, typename Data = decltype(std::declval<const T&>().data())>
+  static std::true_type test(int);
+  template <typename...> static std::false_type test(...);
+};
+
+template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
 
 /**
  * @brief Saves data to the path.
@@ -80,4 +80,4 @@ typename std::enable_if<has_data<Container>::value, bool>::type inline save(
 
   return true;
 }
-} // namespace std::filesystem
+} // namespace valhalla::filesystem_utils

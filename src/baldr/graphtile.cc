@@ -219,7 +219,7 @@ void store(const std::string& cache_location,
                                                     ? valhalla::baldr::SUFFIX_COMPRESSED
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
     auto disk_location = std::filesystem::path{cache_location};
-    std::filesystem::save(disk_location / suffix, raw_data);
+    filesystem_utils::save(disk_location / suffix, raw_data);
   }
 }
 
