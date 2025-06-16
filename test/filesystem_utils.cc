@@ -50,7 +50,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     start_race_event.wait(start_race_lock, [&] { return start_race; });
     start_race_lock.unlock();
 
-    bool success = stdfs::create_directories(nested_subdir);
+    stdfs::create_directories(nested_subdir);
     ASSERT_TRUE(stdfs::exists(nested_subdir));
   };
 
@@ -65,7 +65,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     start_race_event.wait(start_lock, [&] { return start_race; });
     start_lock.unlock();
 
-    std::uintmax_t delete_count = vfs::remove_all(base_subdir);
+    vfs::remove_all(base_subdir);
     // I've found that two+ threads will claim that they've deleted the same
     // file object. This results in double+ counting and prevents me from
     // asserting anything related to the delete_count. All we can be sure
