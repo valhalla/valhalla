@@ -478,7 +478,7 @@ target_compile_features(node_bindings PRIVATE cxx_std_17)
 # This is essential for native modules on macOS
 target_link_libraries(node_bindings
   PRIVATE
-    "-undefined dynamic_lookup"
+    # "-undefined dynamic_lookup"
     valhalla
 )
 
