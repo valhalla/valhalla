@@ -456,11 +456,10 @@ find_path(NAPI_INCLUDE_DIR
     $ENV{NAPI_INCLUDE_DIR}
     /usr/include/node/node_modules/node-addon-api
     /usr/local/include/node/node_modules/node-addon-api
-    ${HOME}/local/backup/valhalla-traffic-builder/node_modules/node-addon-api
+    ${HOME}/valhalla-traffic-builder/node_modules/node-addon-api
     ${CMAKE_JS_INC}
   PATH_SUFFIXES node-addon-api
 )
-
 
 message(STATUS "NODE_INCLUDE_DIR: ${NODE_INCLUDE_DIR}")
 message(STATUS "NAPI_INCLUDE_DIR: ${NAPI_INCLUDE_DIR}")
