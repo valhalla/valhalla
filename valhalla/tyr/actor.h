@@ -1,17 +1,14 @@
 #ifndef VALHALLA_TYR_ACTOR_H_
 #define VALHALLA_TYR_ACTOR_H_
 
-#include <boost/property_tree/ptree_fwd.hpp>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/proto/api.pb.h>
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <memory>
 
 namespace valhalla {
-
-class Api;
-namespace baldr {
-class GraphReader;
-}
-
 namespace tyr {
 
 class actor_t {
