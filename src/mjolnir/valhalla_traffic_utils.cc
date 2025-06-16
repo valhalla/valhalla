@@ -191,8 +191,8 @@ void update_traffic_tile(uint64_t tile_offset,
   boost::property_tree::ptree config;
 
 
-  if (filesystem::is_regular_file("../globe/valhalla.json")) {
-    rapidjson::read_json("../globe/valhalla.json", config);
+  if (filesystem::is_regular_file("../app/valhalla.json")) {
+    rapidjson::read_json("../app/valhalla.json", config);
   } else {
     std::cerr << "Configuration is required" << std::endl;
     return;

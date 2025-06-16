@@ -10,7 +10,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
-#include <hiredis/hiredis.h>
+// #include <hiredis/hiredis.h>
 
 #include <algorithm>
 #include <cstdint>
