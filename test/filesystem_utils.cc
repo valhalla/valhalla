@@ -83,7 +83,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
       std::vector<std::unique_ptr<std::thread>> threads(num_threads);
       for (size_t i = 0; i < num_threads; i++) {
         bool ready_flag = false;
-        threads[i].reset(new std::thread(create_folder, std::ref(ready_flag)));
+        threads[i] = std::make_unique<std::thread>(create_folder, std::ref(ready_flag));
         while (!ready_flag) {
           std::this_thread::yield();
         }
@@ -129,7 +129,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
       std::vector<std::unique_ptr<std::thread>> threads(num_threads);
       for (size_t i = 0; i < num_threads; i++) {
         bool ready_flag = false;
-        threads[i].reset(new std::thread(remove_folder, std::ref(ready_flag)));
+        threads[i] = std::make_unique<std::thread>(remove_folder, std::ref(ready_flag));
         while (!ready_flag) {
           std::this_thread::yield();
         }
