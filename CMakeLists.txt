@@ -438,20 +438,29 @@ add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_D
 # Find Node.js and N-API headers
 find_path(NODE_INCLUDE_DIR
   NAMES node.h
-  PATHS
-    /Users/boon.boonsiri/.nvm/versions/node/v20.19.0/include/node
+  HINTS
+    $ENV{NODE_INCLUDE_DIR}  # Let user override from environment variable
+    ${CMAKE_JS_INC}         # if set by CMake.js or node-gyp
+    /usr/include/node       # common Linux system include path for node
+    /usr/local/include/node
+    ${HOME}/.nvm/versions/node/v20.19.0/include/node  # your local dev path
+  PATH_SUFFIXES
+    include/node
   NO_DEFAULT_PATH
-
 )
 
 find_path(NAPI_INCLUDE_DIR
   NAMES napi.h
-  HINTS ${NODE_INCLUDE_DIR}/node_modules
-  /Users/boon.boonsiri/local/backup/valhalla-traffic-builder/node_modules/node-addon-api
-        ${NODE_INCLUDE_DIR}/..
-        ${CMAKE_JS_INC}
+  HINTS
+    ${NODE_INCLUDE_DIR}/node_modules
+    $ENV{NAPI_INCLUDE_DIR}
+    /usr/include/node/node_modules/node-addon-api
+    /usr/local/include/node/node_modules/node-addon-api
+    ${HOME}/local/backup/valhalla-traffic-builder/node_modules/node-addon-api
+    ${CMAKE_JS_INC}
   PATH_SUFFIXES node-addon-api
 )
+
 
 message(STATUS "NODE_INCLUDE_DIR: ${NODE_INCLUDE_DIR}")
 message(STATUS "NAPI_INCLUDE_DIR: ${NAPI_INCLUDE_DIR}")
