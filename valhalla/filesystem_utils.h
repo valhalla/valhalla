@@ -15,6 +15,32 @@
 
 namespace valhalla::filesystem_utils {
 
+inline bool remove(const std::filesystem::path& p) {
+  bool ret = ::remove(p.c_str()) == 0;
+
+  // it can occur that another thread is removing the same file
+  // object at the same time. Occasionally it will occur that
+  // while one thread is deleting (thread 1), the other thread
+  // (thread 2) will receive -1 from ::remove() and (errno==ENOENT
+  // or errno==EINVAL). And yet, the file still exists until thread 1
+  // is finished deleting. In this exact moment, if thread 2 calls
+  // stat() on the file object in question it will get 0 which means
+  // "file object exists". We kinda want thread 2 to wait for the
+  // file object to truly go out of existence. Hence, this spin loop.
+  if (!ret) {
+    if ((errno == EINVAL) || (errno == ENOENT)) {
+      const int max_tries = 10000;
+      int tries = 0;
+      struct stat s;
+      while ((stat(p.c_str(), &s) == 0) && (tries < max_tries))
+        tries++;
+    } else
+      throw std::runtime_error("filesystem_error filesystem::remove, error " + std::to_string(errno));
+  }
+
+  return ret;
+}
+
 /**
   Replaces std::filesystem::remove_all as that's failing on concurrent calls.
 
@@ -44,7 +70,7 @@ inline std::uintmax_t remove_all(const std::filesystem::path& p) {
   } catch (std::filesystem::filesystem_error& e) {}
 
   // delete the root
-  if (remove(p))
+  if (valhalla::filesystem_utils::remove(p))
     num_removed++;
 
   return num_removed;
