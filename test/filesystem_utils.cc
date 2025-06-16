@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 
 #include <algorithm>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -24,7 +25,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
 
   // Use half the available cores so we don't place too much extra pressure
   // on the CI test runs which are already run in parallel.
-  size_t num_threads = 2;
+  size_t num_threads = std::thread::hardware_concurrency() / 2;
 
   // There's no point in running this test if it will be single threaded.
   if (num_threads < 2)
@@ -47,7 +48,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     // and calls start_race_event.notify_all().
     std::unique_lock<std::mutex> start_race_lock(start_race_mutex);
     start_race_event.wait(start_race_lock, [&] { return start_race; });
-    start_race_mutex.unlock();
+    start_race_lock.unlock();
 
     bool success = stdfs::create_directories(nested_subdir);
     ASSERT_TRUE(stdfs::exists(nested_subdir));
@@ -62,14 +63,15 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     // and calls start_race_event.notify_all().
     std::unique_lock<std::mutex> start_lock(start_race_mutex);
     start_race_event.wait(start_lock, [&] { return start_race; });
-    start_race_mutex.unlock();
+    start_lock.unlock();
 
     std::uintmax_t delete_count = vfs::remove_all(base_subdir);
     // I've found that two+ threads will claim that they've deleted the same
     // file object. This results in double+ counting and prevents me from
     // asserting anything related to the delete_count. All we can be sure
     // is the following:
-    ASSERT_TRUE(!stdfs::exists(base_subdir));
+    ASSERT_FALSE(stdfs::exists(base_subdir))
+        << "Removing directory recursively failed for " << base_subdir;
   };
 
   const int num_iters = 50;
@@ -88,7 +90,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
       }
 
       // By this point we know all threads have been created and are ready.
-      // Announce the start of the race by first setting the "race_started"
+      // Announce the start of the race by first setting the "start_race"
       // cv boolean and then calling "notify_all()".
       start_race_mutex.lock();
       start_race = true;
@@ -178,10 +180,6 @@ TEST(Filesystem, save_file_valid_input) {
   for (const auto& test : tests) {
     EXPECT_TRUE(vfs::save<std::string>(test));
   }
-
-  // make sure we have the expected number of files in that directory
-  //   EXPECT_EQ(std::distance(stdfs::recursive_directory_iterator("/tmp/save_file_input/utrecht_tiles"),
-  //   stdfs::recursive_directory_iterator{}), tests.size());
 
   stdfs::remove_all("/tmp/save_file_input/");
 }

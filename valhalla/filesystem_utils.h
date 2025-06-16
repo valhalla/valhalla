@@ -15,23 +15,31 @@
 
 namespace valhalla::filesystem_utils {
 
-// this one doesn't fail if a file couldn't be removed (the std one does)
+/**
+  Replaces std::filesystem::remove_all as that's failing on concurrent calls.
+
+  @param p The directory to recursively remove
+  @returns The number of files & directories which were removed (if any)
+*/
 inline std::uintmax_t remove_all(const std::filesystem::path& p) {
   std::uintmax_t num_removed = 0;
 
   // for each entry in this directory
-  for (std::filesystem::directory_iterator i(p), end; i != end; ++i) {
-    // if its a directory we recurse depth first
-    if (i->is_directory()) {
-      auto sub_num_removed = valhalla::filesystem_utils::remove_all(i->path());
-      num_removed += sub_num_removed;
+  // std::filesystem raises when smth doesn't work, we assume it's bcs of concurrency and ignore
+  try {
+    for (std::filesystem::directory_iterator i(p), end; i != end; ++i) {
+      // if its a directory we recurse depth first
+      if (i->is_directory()) {
+        auto sub_num_removed = valhalla::filesystem_utils::remove_all(i->path());
+        num_removed += sub_num_removed;
+      }
+      // otherwise its a file or link try to delete it
+      else {
+        if (std::filesystem::remove(i->path()))
+          num_removed++;
+      }
     }
-    // otherwise its a file or link try to delete it
-    else {
-      if (std::filesystem::remove(i->path()))
-        num_removed++;
-    }
-  }
+  } catch (std::filesystem::filesystem_error& e) {}
 
   // delete the root
   if (remove(p))
