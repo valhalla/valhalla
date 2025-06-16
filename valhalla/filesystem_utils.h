@@ -23,19 +23,21 @@ namespace valhalla::filesystem_utils {
 */
 inline std::uintmax_t remove_all(const std::filesystem::path& p) {
   std::uintmax_t num_removed = 0;
+  std::error_code ec;
 
   // for each entry in this directory
   // std::filesystem raises when smth doesn't work, we assume it's bcs of concurrency and ignore
   try {
-    for (std::filesystem::directory_iterator i(p), end; i != end; ++i) {
+    for (std::filesystem::directory_iterator i(p, ec), end; i != end; ++i) {
       // if its a directory we recurse depth first
       if (i->is_directory()) {
         auto sub_num_removed = valhalla::filesystem_utils::remove_all(i->path());
         num_removed += sub_num_removed;
       }
       // otherwise its a file or link try to delete it
+      // avoid raising if path doesn't exist anymore (e.g. other thread removed it)
       else {
-        if (std::filesystem::remove(i->path()))
+        if (std::filesystem::remove(i->path(), ec))
           num_removed++;
       }
     }
