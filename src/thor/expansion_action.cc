@@ -6,7 +6,7 @@
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
-#include <robin_hood.h>
+#include <ankerl/unordered_dense.h>
 
 using namespace rapidjson;
 using namespace valhalla::midgard;
@@ -98,7 +98,7 @@ std::string thor_worker_t::expansion(Api& request) {
   bool dedupe = options.dedupe();
   std::unordered_set<baldr::GraphId> opp_edges;
   std::unordered_set<Options::ExpansionProperties> exp_props;
-  typedef robin_hood::unordered_map<baldr::GraphId, expansion_properties_t> edge_state_t;
+  typedef ankerl::unordered_dense::map<baldr::GraphId, expansion_properties_t> edge_state_t;
   edge_state_t edge_state;
 
   // default generalization to ~ zoom level 15
