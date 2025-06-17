@@ -191,10 +191,11 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   });
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C", "D", "E", "F", "G"}, "auto",
-                              {{"/date_time/type", "0"}, {"/date_time/value", "current"}}, {},
-                              &trace_json, "via");
-                              
+  auto api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C", "D", "E", "F", "G"},
+                       "auto", {{"/date_time/type", "0"}, {"/date_time/value", "current"}}, {},
+                       &trace_json, "via");
+
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
 

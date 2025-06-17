@@ -193,7 +193,7 @@ void serialize_edges(const AttributesController& controller,
         writer("speed", serialize_speed(edge.speed()));
       }
       if (controller(kEdgeSpeedsFaded) &&
-          options.date_time_type() == Options::DateTimeType::Options_DateTimeType_current && 
+          options.date_time_type() == Options::DateTimeType::Options_DateTimeType_current &&
           edge.has_speeds_faded()) {
         auto speeds = edge.speeds_faded();
         writer.start_object("speeds_faded");

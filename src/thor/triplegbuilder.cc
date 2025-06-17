@@ -1212,7 +1212,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       }
       uint32_t speed = graphtile->GetSpeed(directededge, flow_mask, second_of_week, false,
                                            &flow_sources, seconds_from_now);
-      if (flow_sources & initial_flow_mask || !initial_flow_mask || (faded && seconds_from_now == 0)) {
+      if (flow_sources & initial_flow_mask || !initial_flow_mask ||
+          (faded && seconds_from_now == 0)) {
         return speed;
       }
       return std::nullopt;
