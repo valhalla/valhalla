@@ -38,12 +38,12 @@ template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
  * */
 template <typename Container>
 typename std::enable_if<has_data<Container>::value, bool>::type inline save(
-    const std::string& fpath,
+    const std::filesystem::path& fpath,
     const Container& data = {}) {
   if (fpath.empty())
     return false;
 
-  auto dir = std::filesystem::path(fpath).parent_path();
+  auto dir = fpath.parent_path();
 
   // if the path is not a directory or it doesn't exist and we can't create it for some reason
   if ((!std::filesystem::exists(dir) && !std::filesystem::create_directories(dir)) ||
@@ -61,10 +61,11 @@ typename std::enable_if<has_data<Container>::value, bool>::type inline save(
   // Technically this is a race condition but its super unlikely (famous last words)
   // TODO(nils): what am I missing here? why the while loop?
   //   how can tmp_location be empty after 1st iteration? how can a file be created in the loop?
-  while (tmp_location.string().empty() || std::filesystem::exists(tmp_location))
-    tmp_location = fpath + generate_tmp_suffix();
+  while (tmp_location.empty() || std::filesystem::exists(tmp_location))
+    tmp_location = fpath;
+  tmp_location += generate_tmp_suffix();
 
-  std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
+  std::ofstream file(tmp_location, std::ios::out | std::ios::binary | std::ios::ate);
   file.write(data.data(), data.size());
   file.close();
 
@@ -73,7 +74,8 @@ typename std::enable_if<has_data<Container>::value, bool>::type inline save(
     return false;
   }
 
-  if (std::rename(tmp_location.string().c_str(), fpath.c_str())) {
+  std::error_code ec;
+  if (std::filesystem::rename(tmp_location, fpath, ec); ec) {
     std::filesystem::remove(tmp_location);
     return false;
   }

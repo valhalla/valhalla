@@ -486,7 +486,8 @@ template <class coords_t> std::vector<double> sample::get_all(const coords_t& co
 
 bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
   // data_source never changes so we do not lock it. it is set only in sample constructor
-  auto fpath = cache_->data_source + elev;
+
+  std::filesystem::path fpath{cache_->data_source + elev};
   if (std::filesystem::exists(fpath))
     return true;
 
@@ -503,7 +504,7 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
     return false;
 
   std::lock_guard<std::mutex> _(cache_lck);
-  return cache_->insert(data->first, fpath, data->second);
+  return cache_->insert(data->first, fpath.string(), data->second);
 }
 
 bool sample::fetch(uint16_t index) {

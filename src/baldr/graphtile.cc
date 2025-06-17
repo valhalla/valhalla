@@ -180,28 +180,29 @@ GraphTile::GraphTile(const std::string& tile_dir,
 
 GraphTile::GraphTile() = default;
 
-void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location) {
+void GraphTile::SaveTileToFile(const std::vector<char>& tile_data,
+                               const std::filesystem::path& disk_location) {
   // At first we save tile to a temporary file and then move it
   // so we can avoid cases when another thread could read partially written file.
-  auto dir = std::filesystem::path(disk_location);
-  dir.replace_filename("");
 
   bool success = true;
   std::filesystem::path tmp_location;
-  if (std::filesystem::create_directories(dir)) {
+  std::error_code ec;
+  if (std::filesystem::create_directories(disk_location.parent_path())) {
     // Technically this is a race condition but its super unlikely (famous last words)
     while (tmp_location.string().empty() || std::filesystem::exists(tmp_location))
-      tmp_location = disk_location + GenerateTmpSuffix();
-    std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
+      tmp_location = disk_location;
+    tmp_location += GenerateTmpSuffix();
+    std::ofstream file(tmp_location, std::ios::out | std::ios::binary | std::ios::ate);
     file.write(tile_data.data(), tile_data.size());
     file.close();
     if (file.fail())
       success = false;
-    int err = std::rename(tmp_location.string().c_str(), disk_location.c_str());
-    if (err)
+    std::filesystem::rename(tmp_location, disk_location, ec);
+    if (ec)
       success = false;
   } else {
-    LOG_ERROR("Failed to create directory " + disk_location);
+    LOG_ERROR("Failed to create directory " + disk_location.string());
   }
 
   if (!success)
@@ -219,9 +220,8 @@ void store(const std::string& cache_location,
                                                     ? valhalla::baldr::SUFFIX_COMPRESSED
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
     // Windows apparently can't "+" string & char (which "preferred_separator" is on win)
-    auto disk_location = cache_location;
-    disk_location += std::filesystem::path::preferred_separator;
-    disk_location += suffix;
+    std::filesystem::path disk_location{cache_location};
+    disk_location.append(suffix);
     filesystem_utils::save(disk_location, raw_data);
   }
 }
