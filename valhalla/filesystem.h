@@ -42,7 +42,6 @@
 #else
 #define FS_MTIME(st_stat) st_stat.st_mtim.tv_sec
 #endif
-
 namespace filesystem {
 
 class path {
