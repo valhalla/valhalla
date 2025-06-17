@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include <std::std::filesystem>
+#include <std::filesystem>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
