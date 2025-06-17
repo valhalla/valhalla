@@ -1200,6 +1200,60 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_speed(speed);
   }
 
+  if (controller(kEdgeSpeedsFaded) || controller(kEdgeSpeedsNonFaded)) {
+    auto get_speed = [&](uint8_t flow_mask, bool faded,
+                         uint64_t second_of_week = kInvalidSecondsOfWeek) -> std::optional<uint32_t> {
+      uint64_t seconds_from_now = 0;
+      uint8_t flow_sources = 0;
+      uint8_t initial_flow_mask = flow_mask;
+      if (faded) {
+        seconds_from_now = time_info.seconds_from_now;
+        flow_mask |= kCurrentFlowMask;
+      }
+      uint32_t speed = graphtile->GetSpeed(directededge, flow_mask, second_of_week, false,
+                                           &flow_sources, seconds_from_now);
+      if (flow_sources & initial_flow_mask || !initial_flow_mask || (faded && seconds_from_now == 0)) {
+        return speed;
+      }
+      return std::nullopt;
+    };
+    auto set_speeds = [&](valhalla::TripLeg_Speeds* speeds, bool faded) {
+      std::optional<uint32_t> speed;
+
+      speed = get_speed(kCurrentFlowMask, faded);
+      if (speed.has_value()) {
+        speeds->set_current(speed.value());
+      }
+
+      speed = get_speed(kPredictedFlowMask, faded, time_info.second_of_week);
+      if (speed.has_value()) {
+        speeds->set_predicted(speed.value());
+      }
+
+      speed = get_speed(kConstrainedFlowMask, faded);
+      if (speed.has_value()) {
+        speeds->set_constrained(speed.value());
+      }
+
+      speed = get_speed(kFreeFlowMask, faded);
+      if (speed.has_value()) {
+        speeds->set_free(speed.value());
+      }
+
+      speed = get_speed(kNoFlowMask, faded);
+      if (speed.has_value()) {
+        speeds->set_base(speed.value());
+      }
+    };
+
+    if (time_info.valid && controller(kEdgeSpeedsFaded)) {
+      set_speeds(trip_edge->mutable_speeds_faded(), true);
+    }
+    if (controller(kEdgeSpeedsNonFaded)) {
+      set_speeds(trip_edge->mutable_speeds_non_faded(), false);
+    }
+  }
+
   // Set country crossing if requested
   if (controller(kEdgeCountryCrossing)) {
     trip_edge->set_country_crossing(directededge->ctry_crossing());

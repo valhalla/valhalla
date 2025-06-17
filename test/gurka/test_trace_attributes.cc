@@ -151,3 +151,84 @@ TEST(Standalone, RetrieveTrafficSignal) {
   EXPECT_TRUE(edges[1]["end_node"].HasMember("traffic_signal"));
   EXPECT_FALSE(edges[1]["end_node"]["traffic_signal"].GetBool());
 }
+
+TEST(Standalone, AdditionalSpeedAttributes) {
+  const std::string ascii_map = R"(
+    A---B---C---D---E---F---G
+  )";
+
+  // Simulate two edges: one with faded speed, one with non-faded speed
+  gurka::ways ways = {
+      {"AB", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"BC", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"CD", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"DE", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"EF", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"FG", {{"highway", "primary"}, {"maxspeed", "60"}}},
+  };
+
+  const double gridsize = 100;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/speed_attributes");
+  map.config.put("mjolnir.traffic_extract", "test/data/speed_attributes/traffic.tar");
+
+  // add live traffic
+  test::build_live_traffic_data(map.config);
+  test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
+                                                    valhalla::baldr::TrafficSpeed* traffic_speed) {
+    traffic_speed->overall_encoded_speed = 2 >> 1;
+    traffic_speed->encoded_speed1 = 2 >> 1;
+    traffic_speed->breakpoint1 = 255;
+  });
+  test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+    e.set_constrained_flow_speed(40);
+    e.set_free_flow_speed(100);
+
+    // speeds for every 5 min bucket of the week
+    std::array<float, kBucketsPerWeek> historical;
+    historical.fill(10);
+    return historical;
+  });
+
+  std::string trace_json;
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C", "D", "E", "F", "G"}, "auto",
+                              {{"/date_time/type", "0"}, {"/date_time/value", "current"}}, {},
+                              &trace_json, "via");
+                              
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+
+  auto edges = result["edges"].GetArray();
+  ASSERT_EQ(edges.Size(), 6);
+
+  // Check for kEdgeSpeedFaded (should be true for AB, false for BC)
+  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("current"));
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["current"].GetInt(), 2);
+
+  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("constrained"));
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["constrained"].GetInt(), 40);
+
+  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("free"));
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["free"].GetInt(), 100);
+
+  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("base"));
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["base"].GetInt(), 60);
+
+  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("predicted"));
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["predicted"].GetInt(), 10);
+
+  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("current"));
+  EXPECT_EQ(edges[0]["speeds_faded"]["current"].GetInt(), 2);
+
+  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("constrained"));
+  EXPECT_EQ(edges[0]["speeds_faded"]["constrained"].GetInt(), 2);
+
+  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("free"));
+  EXPECT_EQ(edges[0]["speeds_faded"]["free"].GetInt(), 2);
+
+  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("base"));
+  EXPECT_EQ(edges[0]["speeds_faded"]["base"].GetInt(), 2);
+
+  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("predicted"));
+  EXPECT_EQ(edges[0]["speeds_faded"]["predicted"].GetInt(), 2);
+}

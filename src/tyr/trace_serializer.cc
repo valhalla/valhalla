@@ -51,6 +51,9 @@ void serialize_edges(const AttributesController& controller,
   if (options.units() == Options::miles) {
     scale = kMilePerKm;
   }
+  auto serialize_speed = [scale](float speed) -> uint64_t {
+    return static_cast<uint64_t>(std::round(speed * scale));
+  };
 
   // Loop over edges to add attributes
   for (int i = 1; i < trip_path.node().size(); i++) {
@@ -62,13 +65,13 @@ void serialize_edges(const AttributesController& controller,
         writer("truck_route", edge.truck_route());
       }
       if (controller(kEdgeTruckSpeed) && (edge.truck_speed() > 0)) {
-        writer("truck_speed", static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
+        writer("truck_speed", serialize_speed(edge.truck_speed()));
       }
       if (controller(kEdgeSpeedLimit) && (edge.speed_limit() > 0)) {
         if (edge.speed_limit() == kUnlimitedSpeedLimit) {
           writer("speed_limit", std::string("unlimited"));
         } else {
-          writer("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+          writer("speed_limit", serialize_speed(edge.speed_limit()));
         }
       }
       if (controller(kEdgeDensity)) {
@@ -187,7 +190,45 @@ void serialize_edges(const AttributesController& controller,
         writer("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
       }
       if (controller(kEdgeSpeed)) {
-        writer("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
+        writer("speed", serialize_speed(edge.speed()));
+      }
+      if (controller(kEdgeSpeedsFaded) &&
+          options.date_time_type() == Options::DateTimeType::Options_DateTimeType_current && 
+          edge.has_speeds_faded()) {
+        auto speeds = edge.speeds_faded();
+        writer.start_object("speeds_faded");
+        if (speeds.has_current()) {
+          writer("current", serialize_speed(speeds.current()));
+        }
+        if (speeds.has_predicted()) {
+          writer("predicted", serialize_speed(speeds.predicted()));
+        }
+        if (speeds.has_constrained()) {
+          writer("constrained", serialize_speed(speeds.constrained()));
+        }
+        if (speeds.has_free()) {
+          writer("free", serialize_speed(speeds.free()));
+        }
+        writer("base", serialize_speed(speeds.base()));
+        writer.end_object();
+      }
+      if (controller(kEdgeSpeedsNonFaded)) {
+        auto speeds = edge.speeds_non_faded();
+        writer.start_object("speeds_non_faded");
+        if (speeds.has_current()) {
+          writer("current", serialize_speed(speeds.current()));
+        }
+        if (speeds.has_predicted()) {
+          writer("predicted", serialize_speed(speeds.predicted()));
+        }
+        if (speeds.has_constrained()) {
+          writer("constrained", serialize_speed(speeds.constrained()));
+        }
+        if (speeds.has_free()) {
+          writer("free", serialize_speed(speeds.free()));
+        }
+        writer("base", serialize_speed(speeds.base()));
+        writer.end_object();
       }
       if (controller(kEdgeCountryCrossing)) {
         writer("country_crossing", edge.country_crossing());
