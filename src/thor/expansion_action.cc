@@ -1,7 +1,5 @@
-#include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/polyline2.h"
-#include "midgard/util.h"
 #include "thor/pathalgorithm.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
@@ -96,10 +94,9 @@ std::string thor_worker_t::expansion(Api& request) {
   auto exp_action = options.expansion_action();
   bool skip_opps = options.skip_opposites();
   bool dedupe = options.dedupe();
-  std::unordered_set<baldr::GraphId> opp_edges;
   std::unordered_set<Options::ExpansionProperties> exp_props;
-  typedef ankerl::unordered_dense::map<baldr::GraphId, expansion_properties_t> edge_state_t;
-  edge_state_t edge_state;
+  ankerl::unordered_dense::set<baldr::GraphId> opp_edges;
+  ankerl::unordered_dense::map<baldr::GraphId, expansion_properties_t> edge_state;
 
   // default generalization to ~ zoom level 15
   float gen_factor = options.has_generalize_case() ? options.generalize() : 10.f;
@@ -143,9 +140,9 @@ std::string thor_worker_t::expansion(Api& request) {
           std::reverse(shape.begin(), shape.end());
         Polyline2<PointLL>::Generalize(shape, gen_factor, {}, false);
         if (dedupe) {
-          if (edge_state.contains(edgeid)) {
+          if (auto it = edge_state.find(edgeid); it != edge_state.end()) {
             // Keep only properties of last/highest status of edge
-            if (!expansion_properties_t::is_latest_status(edge_state.at(edgeid).status, status)) {
+            if (!expansion_properties_t::is_latest_status(it->second.status, status)) {
               return;
             }
           }
