@@ -175,8 +175,7 @@ gurka::map map;
 // test to write gtfs files
 TEST(GtfsExample, WriteGtfs) {
   auto pt = get_config();
-  const std::string gtfs_dir =
-      pt.get<std::string>("mjolnir.transit_feeds_dir") + std::filesystem::path::preferred_separator;
+  std::filesystem::path gtfs_dir{pt.get<std::string>("mjolnir.transit_feeds_dir")};
   std::filesystem::remove_all(gtfs_dir);
   std::filesystem::remove_all(pt.get<std::string>("mjolnir.tile_dir"));
   std::filesystem::remove_all(pt.get<std::string>("mjolnir.transit_dir"));
@@ -192,12 +191,13 @@ TEST(GtfsExample, WriteGtfs) {
 
   Feed f1;
   Feed f2;
-  std::string f1_path = gtfs_dir + f1_name;
-  std::string f2_path = gtfs_dir + f2_name;
-  for (const auto& f : {"toronto_1", "toronto_2"}) {
-    std::filesystem::create_directories(pt.get<std::string>("mjolnir.transit_feeds_dir") +
-                                        std::filesystem::path::preferred_separator + f);
-  }
+  std::filesystem::path f1_path = gtfs_dir;
+  f1_path.append(f1_name);
+  std::filesystem::create_directories(f1_path);
+
+  std::filesystem::path f2_path = gtfs_dir;
+  f2_path.append(f2_name);
+  std::filesystem::create_directories(f2_path);
 
   // write agency.txt
   struct Agency ttc;

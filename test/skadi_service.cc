@@ -6,6 +6,7 @@
 #include <prime_server/prime_server.hpp>
 #include <unistd.h>
 
+#include <filesystem>
 #include <fstream>
 #include <thread>
 
@@ -154,9 +155,8 @@ const std::vector<std::string> responses{
         "244,243,240,239,239,238,239,241,241,239,236,221,221,225,224]}"),
 };
 
-const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test" +
-                                   std::string(1, std::filesystem::path::preferred_separator) +
-                                   "skadi_service_tmp");
+std::filesystem::path cfg_path{VALHALLA_BUILD_DIR "test/skadi_service_tmp"};
+const auto cfg = test::make_config(cfg_path);
 
 void create_tile() {
   // its annoying to have to get actual data but its also very boring to test with fake data

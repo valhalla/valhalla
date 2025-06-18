@@ -52,11 +52,11 @@ int main(int argc, char** argv) {
 
   GraphReader reader(config.get_child("mjolnir"));
 
-  std::string fname = config.get<std::string>("mjolnir.tile_dir") +
-                      std::filesystem::path::preferred_separator + "way_edges.txt";
+  std::filesystem::path file_path = {config.get<std::string>("mjolnir.tile_dir")};
+  file_path.append("way_edges.txt");
 
   // Collect all way edges
-  auto ways_edges = vm::collect_way_edges(reader, fname);
+  auto ways_edges = vm::collect_way_edges(reader, file_path.string());
 
   LOG_INFO("Finished with " + std::to_string(ways_edges.size()) + " ways.");
 
