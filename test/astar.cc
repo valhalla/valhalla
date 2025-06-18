@@ -203,8 +203,9 @@ void make_tile() {
   ASSERT_EQ(tile->FileSuffix(tile_id), std::string("2/000/519/120.gph"))
       << "Tile ID didn't match the expected filename";
 
-  ASSERT_PRED1(std::filesystem::exists,
-               test_dir + std::filesystem::path::preferred_separator + tile->FileSuffix(tile_id))
+  std::filesystem::path tile_path{test_dir};
+  tile_path.append(tile->FileSuffix(tile_id));
+  ASSERT_TRUE(std::filesystem::exists(tile_path))
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 

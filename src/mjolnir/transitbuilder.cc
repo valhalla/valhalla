@@ -533,45 +533,37 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // Bail if nothing
   auto hierarchy_properties = pt.get_child("mjolnir");
-  auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (!transit_dir || !std::filesystem::exists(*transit_dir) ||
-      !std::filesystem::is_directory(*transit_dir)) {
+  auto transit_config = hierarchy_properties.get_optional<std::string>("transit_dir");
+  std::filesystem::path transit_dir{*transit_config};
+  if (!transit_config || !std::filesystem::exists(transit_dir) ||
+      !std::filesystem::is_directory(transit_dir)) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;
   }
   SCOPED_TIMER();
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
-  transit_dir->push_back(std::filesystem::path::preferred_separator);
   GraphReader reader(hierarchy_properties);
-  auto local_level = TileHierarchy::levels().back().level;
-  if (std::filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
-                                    std::filesystem::path::preferred_separator)) {
-    std::filesystem::recursive_directory_iterator transit_file_itr(
-        *transit_dir + std::to_string(local_level + 1) + std::filesystem::path::preferred_separator),
-        end_file_itr;
+  const auto transit_level = std::to_string(TileHierarchy::GetTransitLevel().level);
+  transit_dir.append(transit_level);
+  if (std::filesystem::is_directory(transit_dir)) {
     // look at each file in the transit dir
-    for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    for (const auto& dir_entry : std::filesystem::recursive_directory_iterator(transit_dir)) {
       // check if its a graph tile
-      if (std::filesystem::is_regular_file(transit_file_itr->path()) &&
-          transit_file_itr->path().string().find(".gph") ==
-              (transit_file_itr->path().string().size() - 4)) {
+      if (std::filesystem::is_regular_file(dir_entry.path()) &&
+          dir_entry.path().string().find(".gph") == (dir_entry.path().string().size() - 4)) {
         // turn the id from the level 3 transit tile into the level 2 tile under it
-        auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
+        auto graph_id = GraphTile::GetTileId(dir_entry.path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
         // if the level 2 tile exists
         if (reader.DoesTileExist(local_graph_id)) {
           // remember the id for the level 2 tile
           tiles.emplace(local_graph_id);
           // figure out the path in the new tileset for the transit tile
-          const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +
-                                               std::filesystem::path::preferred_separator +
-                                               GraphTile::FileSuffix(graph_id);
-          std::filesystem::path root = destination_path;
-          root.replace_filename("");
-          std::filesystem::create_directories(root);
+          std::filesystem::path destination_path{pt.get<std::string>("mjolnir.tile_dir")};
+          destination_path.append(GraphTile::FileSuffix(graph_id));
+          std::filesystem::create_directories(destination_path.parent_path());
           // and copy over the the transit into the tileset we are building
-          std::ifstream in(transit_file_itr->path().string(),
-                           std::ios_base::in | std::ios_base::binary);
+          std::ifstream in(dir_entry.path(), std::ios_base::in | std::ios_base::binary);
           std::ofstream out(destination_path,
                             std::ios_base::out | std::ios_base::trunc | std::ios_base::binary);
 

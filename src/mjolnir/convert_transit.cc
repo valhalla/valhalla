@@ -895,8 +895,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
             GraphId(end_platform_graphid.tileid(), end_platform_graphid.level(), 0));
         boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
         file_name += ".pbf";
-        const std::string file = transit_dir + std::filesystem::path::preferred_separator + file_name;
-        Transit endtransit = read_pbf(file, lock);
+        std::filesystem::path file_path{transit_dir};
+        file_path.append(file_name);
+        Transit endtransit = read_pbf(file_path.string(), lock);
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
@@ -1012,11 +1013,12 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(), 0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
-    const std::string pbf_fp = transit_dir + std::filesystem::path::preferred_separator + file_name;
+    std::filesystem::path pbf_fp{transit_dir};
+    pbf_fp.append(file_name);
 
     // Make sure it exists
     if (!std::filesystem::exists(pbf_fp)) {
-      LOG_ERROR("File not found.  " + pbf_fp);
+      LOG_ERROR("File not found.  " + pbf_fp.string());
       return;
     }
 
@@ -1196,9 +1198,9 @@ namespace mjolnir {
 std::unordered_set<GraphId> convert_transit(const ptree& pt) {
 
   // figure out which transit tiles even exist
-  std::filesystem::recursive_directory_iterator transit_file_itr(
-      pt.get<std::string>("mjolnir.transit_dir") + std::filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::GetTransitLevel().level));
+  std::filesystem::path transit_dir{pt.get<std::string>("mjolnir.transit_dir")};
+  transit_dir.append(std::to_string(TileHierarchy::GetTransitLevel().level));
+  std::filesystem::recursive_directory_iterator transit_file_itr(transit_dir);
   std::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {

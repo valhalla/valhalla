@@ -425,10 +425,11 @@ void FilterTiles(GraphReader& reader,
       tilebuilder.StoreTileData();
     } else {
       // Remove the tile - all nodes and edges were filtered
-      std::string file_location = reader.tile_dir() + std::filesystem::path::preferred_separator +
-                                  GraphTile::FileSuffix(tile_id);
-      remove(file_location.c_str());
-      LOG_INFO("Remove file: " + file_location + " all edges were filtered");
+      std::filesystem::path file_location{reader.tile_dir()};
+      file_location.append(GraphTile::FileSuffix(tile_id));
+      const auto& file_location_str = file_location.string();
+      ::remove(file_location_str.c_str());
+      LOG_INFO("Remove file: " + file_location_str + " all edges were filtered");
     }
 
     if (reader.OverCommitted()) {
@@ -769,10 +770,11 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       tilebuilder.StoreTileData();
     } else {
       // Remove the tile - all nodes and edges were filtered
-      std::string file_location = reader.tile_dir() + std::filesystem::path::preferred_separator +
-                                  GraphTile::FileSuffix(tile_id);
-      remove(file_location.c_str());
-      LOG_INFO("Remove file: " + file_location + " all edges were filtered");
+      std::filesystem::path file_location{reader.tile_dir()};
+      file_location.append(GraphTile::FileSuffix(tile_id));
+      const auto& file_location_str = file_location.string();
+      ::remove(file_location_str.c_str());
+      LOG_INFO("Remove file: " + file_location_str + " all edges were filtered");
     }
 
     if (reader.OverCommitted()) {
