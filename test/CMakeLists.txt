@@ -29,7 +29,7 @@ target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
   ${VALHALLA_SOURCE_DIR}/test/gurka)
 target_include_directories(valhalla_test SYSTEM PUBLIC
-  ${robinhoodhashing_include_dir}
+  ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include

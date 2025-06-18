@@ -5,7 +5,7 @@
 #include "sif/recost.h"
 #include "worker.h"
 
-#include <robin_hood.h>
+#include <ankerl/unordered_dense.h>
 
 #include <algorithm>
 #include <cmath>
@@ -51,7 +51,8 @@ inline const valhalla::PathEdge& find_correlated_edge(const valhalla::Location& 
 namespace valhalla {
 namespace thor {
 
-class CostMatrix::ReachedMap : public robin_hood::unordered_map<uint64_t, std::vector<uint32_t>> {};
+class CostMatrix::ReachedMap : public ankerl::unordered_dense::map<uint64_t, std::vector<uint32_t>> {
+};
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)

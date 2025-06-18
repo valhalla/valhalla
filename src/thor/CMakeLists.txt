@@ -48,7 +48,7 @@ valhalla_module(NAME thor
       ${system_includes}
     PRIVATE
       ${rapidjson_include_dir}
-      ${robinhoodhashing_include_dir}
+      ${unordered_dense_include_dir}
 
   DEPENDS
     valhalla::proto
