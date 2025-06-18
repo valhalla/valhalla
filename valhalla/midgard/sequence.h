@@ -683,9 +683,6 @@ struct tar {
     // map the file
     mm.map(tar_file, s.st_size, POSIX_MADV_NORMAL, readonly);
 
-    // determine opposite of preferred path separator (needed to update OS-specific path separator)
-    const char opp_sep = std::filesystem::path::preferred_separator == '/' ? '\\' : '/';
-
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of
