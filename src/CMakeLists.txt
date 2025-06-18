@@ -138,7 +138,7 @@ set(valhalla_hdrs
     ${VALHALLA_SOURCE_DIR}/valhalla/valhalla.h
     ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem_utils.h
     ${VALHALLA_SOURCE_DIR}/valhalla/proto_conversions.h
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     )
@@ -146,7 +146,6 @@ set(valhalla_hdrs
 set(valhalla_src
     config.cc
     worker.cc
-    filesystem.cc
     proto_conversions.cc
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
