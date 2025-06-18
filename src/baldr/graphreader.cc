@@ -527,8 +527,9 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   }
   if (tile_dir_.empty())
     return false;
-  std::string file_location = tile_dir_ + std::filesystem::path::preferred_separator +
-                              GraphTile::FileSuffix(graphid.Tile_Base());
+  std::string file_location = tile_dir_;
+  file_location += std::filesystem::path::preferred_separator;
+  file_location += GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0 ||
          stat((file_location + ".gz").c_str(), &buffer) == 0;
@@ -891,9 +892,8 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
     // for each level
     for (uint8_t level = 0; level <= TileHierarchy::GetTransitLevel().level; ++level) {
       // crack open this level of tiles directory
-      std::filesystem::path root_dir(tile_dir_ + std::filesystem::path::preferred_separator +
-                                     std::to_string(level) +
-                                     std::filesystem::path::preferred_separator);
+      std::filesystem::path root_dir{tile_dir_};
+      root_dir.append(std::to_string(level));
       if (std::filesystem::exists(root_dir) && std::filesystem::is_directory(root_dir)) {
         // iterate over all the files in there
         for (std::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
@@ -924,9 +924,8 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     } // or individually on disk
   } else if (!tile_dir_.empty()) {
     // crack open this level of tiles directory
-    std::filesystem::path root_dir(tile_dir_ + std::filesystem::path::preferred_separator +
-                                   std::to_string(level) +
-                                   std::filesystem::path::preferred_separator);
+    std::filesystem::path root_dir{tile_dir_};
+    root_dir.append(std::to_string(level));
     if (std::filesystem::exists(root_dir) && std::filesystem::is_directory(root_dir)) {
       // iterate over all the files in the directory and turn into GraphIds
       for (std::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {

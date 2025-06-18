@@ -704,8 +704,9 @@ struct tar {
       // do we record entry file or not
       if (!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0')) {
         // tar doesn't automatically update path separators based on OS, so we need to do it...
-        std::string name{h->name};
-        std::replace(name.begin(), name.end(), opp_sep, std::filesystem::path::preferred_separator);
+        std::filesystem::path filepath{h->name};
+        filepath.make_preferred();
+        const std::string& name = filepath.string();
         // the caller may be able to construct the contents via an index header let them try
         if (!tried_index && from_index != nullptr) {
           tried_index = true;
