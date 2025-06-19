@@ -479,3 +479,8 @@ target_link_libraries(node_bindings
 set_target_properties(node_bindings PROPERTIES
   PREFIX "" SUFFIX ".node"
 )
+
+
+pkg_check_modules(HIREDIS REQUIRED IMPORTED_TARGET hiredis)
+
+target_link_libraries(valhalla PRIVATE PkgConfig::HIREDIS)

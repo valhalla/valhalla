@@ -12,13 +12,13 @@
 #include <boost/property_tree/ptree.hpp>
 // #include <cxxopts.hpp>
 
+#include <hiredis/hiredis.h>
+
 #include <algorithm>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <filesystem>
-
-
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -173,7 +173,8 @@ auto index_loader = [](const std::string& filename,
                                                                  size / sizeof(tile_index_entry));
 
   for (const auto& entry : entries) {
-    std::cout << "tile_id: " << entry.tile_id << ", offset: " << entry.offset << "size: " << entry.size << std::endl;
+    std::cout << "tile_id: " << entry.tile_id << ", offset: " << entry.offset
+              << "size: " << entry.size << std::endl;
     valhalla::baldr::GraphId graph_id(entry.tile_id);
     std::cout << std::to_string(graph_id) << std::endl;
     traffic_tiles.emplace(std::to_string(graph_id), entry.offset - 512);
@@ -182,14 +183,91 @@ auto index_loader = [](const std::string& filename,
   return contents;
 };
 
+void publish_traffic_tile(uint64_t tile_offset) {
+  std::cout << "Current path: " << std::filesystem::current_path() << std::endl;
+
+  boost::property_tree::ptree config;
+
+  if (filesystem::is_regular_file("../globe/valhalla.json")) {
+    rapidjson::read_json("../globe/valhalla.json", config);
+  } else {
+    std::cerr << "Configuration is required" << std::endl;
+    return;
+  }
+
+  const auto memory =
+      std::make_shared<MMap>(config.get<std::string>("mjolnir.traffic_extract").c_str());
+
+  mtar_t tar;
+  tar.pos = tile_offset;
+
+  tar.stream = memory->data;
+  tar.read = [](mtar_t* tar, void* data, unsigned size) -> int {
+    memcpy(data, reinterpret_cast<char*>(tar->stream) + tar->pos, size);
+    return MTAR_ESUCCESS;
+  };
+
+  tar.write = [](mtar_t* tar, const void* data, unsigned size) -> int {
+    memcpy(reinterpret_cast<char*>(tar->stream) + tar->pos, data, size);
+    return MTAR_ESUCCESS;
+  };
+  tar.seek = [](mtar_t*, unsigned) -> int { return MTAR_ESUCCESS; };
+  tar.close = [](mtar_t*) -> int { return MTAR_ESUCCESS; };
+
+  // Read the tile header
+  mtar_header_t tar_header;
+  mtar_read_header(&tar, &tar_header);
+
+  valhalla::baldr::TrafficTile tile(
+      std::make_unique<MMapGraphMemory>(memory,
+                                        reinterpret_cast<char*>(tar.stream) + tile_offset +
+                                            sizeof(mtar_raw_header_t_),
+                                        tar_header.size));
+
+  redisContext* context = redisConnect("127.0.0.1", 6379);
+  if (!context || context->err) {
+    throw std::runtime_error("Redis connection failed");
+  }
+
+  // Assume tile.header and tile.speeds are valid
+  uint64_t tileId = tile.header->tile_id;
+  uint32_t count = tile.header->directed_edge_count;
+
+  size_t speeds_size = sizeof(TrafficSpeed) * count;
+
+
+
+  std::vector<char> buffer(sizeof(tile_offset) + sizeof(tileId) + speeds_size);
+
+  // Copy pos and tileId for verification
+  std::memcpy(buffer.data(), &tile_offset, sizeof(tile_offset));
+  std::memcpy(buffer.data() + sizeof(tile_offset), &tileId, sizeof(tileId));
+
+  // Copy speeds data
+  std::memcpy(
+      buffer.data() + sizeof(tile_offset) + sizeof(tileId),
+      reinterpret_cast<const void*>(const_cast<TrafficSpeed*>(tile.speeds)),
+      speeds_size
+  );
+
+
+  // Publish binary-safe message
+  redisReply* reply =
+      (redisReply*)redisCommand(context, "PUBLISH traffic_update %b", buffer.data(), buffer.size());
+
+  if (reply)
+    freeReplyObject(reply);
+
+  redisFree(context);
+}
+
 void update_traffic_tile(uint64_t tile_offset,
                          const std::vector<uint64_t>& traffic_params,
                          uint64_t last_updated) {
-      std::cout << "Current path: " << std::filesystem::current_path() << std::endl;
+  std::cout << "Current path: " << std::filesystem::current_path() << std::endl;
 
   std::cout << tile_offset << ',' << traffic_params.at(0) << ',' << last_updated << std::endl;
   boost::property_tree::ptree config;
-
 
   if (filesystem::is_regular_file("../globe/valhalla.json")) {
     rapidjson::read_json("../globe/valhalla.json", config);
@@ -206,7 +284,6 @@ void update_traffic_tile(uint64_t tile_offset,
 
   mtar_t tar;
   tar.pos = tile_offset;
-
 
   tar.stream = memory->data;
   tar.read = [](mtar_t* tar, void* data, unsigned size) -> int {
@@ -237,10 +314,10 @@ void update_traffic_tile(uint64_t tile_offset,
   for (size_t paramOffset = 0; paramOffset < traffic_params.size();) {
     uint64_t edge_index = static_cast<uint64_t>(traffic_params[paramOffset]);
 
-
     if (edge_index >= tile.header->directed_edge_count) {
 
-      std::cout << tile.header->directed_edge_count << "edgecount" << edge_index << "," << tile_offset << std::endl;
+      std::cout << tile.header->directed_edge_count << "edgecount" << edge_index << "," << tile_offset
+                << std::endl;
       paramOffset = paramOffset + 7;
       continue;
       throw std::runtime_error("Edge index out of bounds");
@@ -253,8 +330,8 @@ void update_traffic_tile(uint64_t tile_offset,
     target_edge->encoded_speed1 = static_cast<uint64_t>(traffic_params[paramOffset + 2]);
     target_edge->encoded_speed2 = static_cast<uint64_t>(traffic_params[paramOffset + 3]);
     target_edge->encoded_speed3 = static_cast<uint64_t>(traffic_params[paramOffset + 4]);
-    target_edge->breakpoint1 =  static_cast<uint64_t>(traffic_params[paramOffset + 5]);
-    target_edge->breakpoint2 =  static_cast<uint64_t>(traffic_params[paramOffset + 6]);
+    target_edge->breakpoint1 = static_cast<uint64_t>(traffic_params[paramOffset + 5]);
+    target_edge->breakpoint2 = static_cast<uint64_t>(traffic_params[paramOffset + 6]);
     target_edge->congestion1 = static_cast<uint64_t>(0);
     target_edge->congestion2 = static_cast<uint64_t>(0);
     target_edge->congestion3 = static_cast<uint64_t>(0);
@@ -316,12 +393,14 @@ void update_tile_traffic(const boost::property_tree::ptree& config,
     target_edge->encoded_speed1 = static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 2]));
     target_edge->encoded_speed2 = static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 3]));
     target_edge->encoded_speed3 = static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 4]));
-    target_edge->breakpoint1 = 255;// static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 5]));
-    target_edge->breakpoint2 = 255;//static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 6]));
-    target_edge->congestion1 = static_cast<uint64_t>(60);//static_cast<uint64_t>(0);
+    target_edge->breakpoint1 =
+        255; // static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 5]));
+    target_edge->breakpoint2 =
+        255; // static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 6]));
+    target_edge->congestion1 = static_cast<uint64_t>(60); // static_cast<uint64_t>(0);
     target_edge->congestion2 = static_cast<uint64_t>(0);
     target_edge->congestion3 = static_cast<uint64_t>(0);
-    target_edge->has_incidents = static_cast<uint64_t>(1);//static_cast<uint64_t>(0);
+    target_edge->has_incidents = static_cast<uint64_t>(1); // static_cast<uint64_t>(0);
 
     paramOffset = paramOffset + 7;
   }
@@ -465,16 +544,21 @@ int handle_tile_offset_index(std::string config_file_path) {
 //   std::string config_file_path;
 //   try {
 //     // clang-format off
-//     cxxopts::Options options(argv[0], " - Provides utilities for adding traffic to valhalla routing tiles.");
+//     cxxopts::Options options(argv[0], " - Provides utilities for adding traffic to valhalla routing
+//     tiles.");
 
 //     options.add_options()
 //         ("h,help", "Print this help message.")
 //         ("c,config", "Path to the json configuration file.",
 //             cxxopts::value<std::string>(config_file_path))
-// 				("update-tile-traffic", "Update traffic for a given tile. Usage: --update-tile-traffic <tile_offset>,<timestamp>,[<edge_index>,<overall_speed>,<speed1>,<speed2>,<speed3>,<breakpoint1>,<breakpoint2>,<congestion1>,<congestion2>,<congestion3>,<has_incidents>,...]",
+// 				("update-tile-traffic", "Update traffic for a given tile. Usage:
+// --update-tile-traffic
+// <tile_offset>,<timestamp>,[<edge_index>,<overall_speed>,<speed1>,<speed2>,<speed3>,<breakpoint1>,<breakpoint2>,<congestion1>,<congestion2>,<congestion3>,<has_incidents>,...]",
 //             cxxopts::value<std::vector<std::string>>())
-//         ("ways-to-edges", "Creates a list of edges for each OSM way with some additional attributes")
-//         ("tile-offset-index", "Creates an index of tile name with their offset in traffic_extract file");
+//         ("ways-to-edges", "Creates a list of edges for each OSM way with some additional
+//         attributes")
+//         ("tile-offset-index", "Creates an index of tile name with their offset in traffic_extract
+//         file");
 
 //     // clang-format on
 

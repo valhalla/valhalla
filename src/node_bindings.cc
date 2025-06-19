@@ -82,10 +82,34 @@ Napi::Value HandleTileTraffic(const Napi::CallbackInfo& info) {
     }
 }
 
+
+Napi::Value PublishTrafficTile(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+
+    if (info.Length() < 1 || !info[0].IsNumber()) {
+        Napi::TypeError::New(env, "Expected a single numeric argument: tile_offset")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    uint64_t tile_offset = static_cast<uint64_t>(info[0].As<Napi::Number>().Int64Value());
+
+    try {
+        publish_traffic_tile(tile_offset);
+        return Napi::String::New(env, "Traffic tile published successfully");
+    } catch (const std::exception& e) {
+        Napi::Error::New(env, std::string("Failed to publish tile: ") + e.what())
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+}
+
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set("hello", Napi::Function::New(env, Hello));
     exports.Set("getLat", Napi::Function::New(env, GetLat));
     exports.Set("handleTileTraffic", Napi::Function::New(env, HandleTileTraffic));
+    exports.Set("publishTrafficTile", Napi::Function::New(env, PublishTrafficTile));
     return exports;
 }
 
