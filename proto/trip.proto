@@ -119,11 +119,11 @@ message TripLeg {
     oneof has_predicted {
       float predicted = 1;
     }
-    oneof has_constrained {
-      float constrained = 2;
+    oneof has_constrained_flow {
+      float constrained_flow = 2;
     }
-    oneof has_free {
-      float free = 3;
+    oneof has_free_flow {
+      float free_flow = 3;
     }
     oneof has_current {
       float current = 4;

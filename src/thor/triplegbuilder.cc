@@ -1233,12 +1233,12 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
       speed = get_speed(kConstrainedFlowMask, faded);
       if (speed.has_value()) {
-        speeds->set_constrained(speed.value());
+        speeds->set_constrained_flow(speed.value());
       }
 
       speed = get_speed(kFreeFlowMask, faded);
       if (speed.has_value()) {
-        speeds->set_free(speed.value());
+        speeds->set_free_flow(speed.value());
       }
 
       speed = get_speed(kNoFlowMask, faded);

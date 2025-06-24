@@ -76,6 +76,7 @@
    * ADDED: Enforce the order of includes via `clang-format` [5230](https://github.com/valhalla/valhalla/pull/5230)
    * CHANGED: Switch to PyPI version of `clang-format` [#5237](https://github.com/valhalla/valhalla/pull/5237)
    * ADDED: More barrier types to consider for car routing [#5217](https://github.com/valhalla/valhalla/pull/5217)
+   * ADDED: `trace_attributes` now also returns all the speed informations on edges when `edge.speeds_faded` or `edge.speeds_non_faded` is set in request [#5324](https://github.com/valhalla/valhalla/pull/5324)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

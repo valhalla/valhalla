@@ -40,6 +40,28 @@ void serialize_admins(const TripLeg& trip_path, rapidjson::writer_wrapper_t& wri
   writer.end_array();
 }
 
+void serialize_speeds(const valhalla::TripLeg_Edge& edge,
+                      bool is_faded,
+                      std::function<uint64_t(float)> speed_serializer,
+                      rapidjson::writer_wrapper_t& writer) {
+  auto speeds = is_faded ? edge.speeds_faded() : edge.speeds_non_faded();
+  writer.start_object(is_faded ? "speeds_faded" : "speeds_non_faded");
+  if (speeds.has_current()) {
+    writer("current", speed_serializer(speeds.current()));
+  }
+  if (speeds.has_predicted()) {
+    writer("predicted", speed_serializer(speeds.predicted()));
+  }
+  if (speeds.has_constrained_flow()) {
+    writer("constrained_flow", speed_serializer(speeds.constrained_flow()));
+  }
+  if (speeds.has_free_flow()) {
+    writer("free_flow", speed_serializer(speeds.free_flow()));
+  }
+  writer("base", speed_serializer(speeds.base()));
+  writer.end_object();
+}
+
 void serialize_edges(const AttributesController& controller,
                      const Options& options,
                      const TripLeg& trip_path,
@@ -195,40 +217,10 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeSpeedsFaded) &&
           options.date_time_type() == Options::DateTimeType::Options_DateTimeType_current &&
           edge.has_speeds_faded()) {
-        auto speeds = edge.speeds_faded();
-        writer.start_object("speeds_faded");
-        if (speeds.has_current()) {
-          writer("current", serialize_speed(speeds.current()));
-        }
-        if (speeds.has_predicted()) {
-          writer("predicted", serialize_speed(speeds.predicted()));
-        }
-        if (speeds.has_constrained()) {
-          writer("constrained", serialize_speed(speeds.constrained()));
-        }
-        if (speeds.has_free()) {
-          writer("free", serialize_speed(speeds.free()));
-        }
-        writer("base", serialize_speed(speeds.base()));
-        writer.end_object();
+        serialize_speeds(edge, true, serialize_speed, writer);
       }
       if (controller(kEdgeSpeedsNonFaded)) {
-        auto speeds = edge.speeds_non_faded();
-        writer.start_object("speeds_non_faded");
-        if (speeds.has_current()) {
-          writer("current", serialize_speed(speeds.current()));
-        }
-        if (speeds.has_predicted()) {
-          writer("predicted", serialize_speed(speeds.predicted()));
-        }
-        if (speeds.has_constrained()) {
-          writer("constrained", serialize_speed(speeds.constrained()));
-        }
-        if (speeds.has_free()) {
-          writer("free", serialize_speed(speeds.free()));
-        }
-        writer("base", serialize_speed(speeds.base()));
-        writer.end_object();
+        serialize_speeds(edge, false, serialize_speed, writer);
       }
       if (controller(kEdgeCountryCrossing)) {
         writer("country_crossing", edge.country_crossing());

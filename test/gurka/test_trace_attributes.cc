@@ -157,7 +157,7 @@ TEST(Standalone, AdditionalSpeedAttributes) {
     A---B---C---D---E---F---G
   )";
 
-  // Simulate two edges: one with faded speed, one with non-faded speed
+  // All edges are set up identically with the same speed attributes
   gurka::ways ways = {
       {"AB", {{"highway", "primary"}, {"maxspeed", "60"}}},
       {"BC", {{"highway", "primary"}, {"maxspeed", "60"}}},
@@ -180,6 +180,7 @@ TEST(Standalone, AdditionalSpeedAttributes) {
     traffic_speed->encoded_speed1 = 2 >> 1;
     traffic_speed->breakpoint1 = 255;
   });
+  // Set all historical speed buckets to 10 to simulate uniform historical traffic speeds for testing.
   test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
     e.set_constrained_flow_speed(40);
     e.set_free_flow_speed(100);
@@ -202,34 +203,15 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   auto edges = result["edges"].GetArray();
   ASSERT_EQ(edges.Size(), 6);
 
-  // Check for kEdgeSpeedFaded (should be true for AB, false for BC)
-  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("current"));
   EXPECT_EQ(edges[0]["speeds_non_faded"]["current"].GetInt(), 2);
-
-  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("constrained"));
-  EXPECT_EQ(edges[0]["speeds_non_faded"]["constrained"].GetInt(), 40);
-
-  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("free"));
-  EXPECT_EQ(edges[0]["speeds_non_faded"]["free"].GetInt(), 100);
-
-  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("base"));
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["constrained_flow"].GetInt(), 40);
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["free_flow"].GetInt(), 100);
   EXPECT_EQ(edges[0]["speeds_non_faded"]["base"].GetInt(), 60);
-
-  EXPECT_TRUE(edges[0]["speeds_non_faded"].HasMember("predicted"));
   EXPECT_EQ(edges[0]["speeds_non_faded"]["predicted"].GetInt(), 10);
 
-  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("current"));
   EXPECT_EQ(edges[0]["speeds_faded"]["current"].GetInt(), 2);
-
-  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("constrained"));
-  EXPECT_EQ(edges[0]["speeds_faded"]["constrained"].GetInt(), 2);
-
-  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("free"));
-  EXPECT_EQ(edges[0]["speeds_faded"]["free"].GetInt(), 2);
-
-  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("base"));
+  EXPECT_EQ(edges[0]["speeds_faded"]["constrained_flow"].GetInt(), 2);
+  EXPECT_EQ(edges[0]["speeds_faded"]["free_flow"].GetInt(), 2);
   EXPECT_EQ(edges[0]["speeds_faded"]["base"].GetInt(), 2);
-
-  EXPECT_TRUE(edges[0]["speeds_faded"].HasMember("predicted"));
   EXPECT_EQ(edges[0]["speeds_faded"]["predicted"].GetInt(), 2);
 }
