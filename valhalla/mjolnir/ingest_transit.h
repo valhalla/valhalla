@@ -41,8 +41,8 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<baldr::Grap
  * @param lock (optional) lock for threading
  * @return Transit tile that is read from the protobuf data
  */
-Transit read_pbf(const std::string& file_name, std::mutex& lock);
-Transit read_pbf(const std::string& file_name);
+Transit read_pbf(const std::filesystem::path& file_name, std::mutex& lock);
+Transit read_pbf(const std::filesystem::path& file_name);
 
 /**
  * @brief writes transit information inside the tile to a protobuf

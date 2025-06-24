@@ -955,12 +955,12 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
   LOG_INFO("Finished");
 }
 
-Transit read_pbf(const std::string& file_name, std::mutex& lock) {
+Transit read_pbf(const std::filesystem::path& file_name, std::mutex& lock) {
   lock.lock();
   std::fstream file(file_name, std::ios::in | std::ios::binary);
   if (!file) {
     lock.unlock();
-    throw std::runtime_error("Couldn't load " + file_name);
+    throw std::runtime_error("Couldn't load " + file_name.string());
   }
   std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   lock.unlock();
@@ -975,7 +975,7 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
 #endif
   Transit transit;
   if (!transit.ParseFromCodedStream(&cs)) {
-    throw std::runtime_error("Couldn't load " + file_name);
+    throw std::runtime_error("Couldn't load " + file_name.string());
   }
   return transit;
 }

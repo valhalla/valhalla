@@ -149,7 +149,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           if (ext == ".pbf") {
             curr_tile_pbf = tile_pbf;
           } else {
-            curr_tile_pbf = read_pbf(fname, lock);
+            curr_tile_pbf = read_pbf(transit_file_itr->path(), lock);
           }
         }
 
@@ -897,7 +897,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         file_name += ".pbf";
         std::filesystem::path file_path{transit_dir};
         file_path.append(file_name);
-        Transit endtransit = read_pbf(file_path.string(), lock);
+        Transit endtransit = read_pbf(file_path, lock);
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
