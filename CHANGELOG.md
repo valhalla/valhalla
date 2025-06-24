@@ -95,6 +95,8 @@
    * CHANGED: add full version string with git hash to any program's `--help` message [#5317](https://github.com/valhalla/valhalla/pull/5317)
    * CHANGED: `valhalla_service` CLI based on `cxxopts` [#5318](https://github.com/valhalla/valhalla/pull/5317)
    * CHANGED: refactor to make valhalla/filesystem functionally redundant [#5319](https://github.com/valhalla/valhalla/pull/5319)
+   * ADDED: script to analyze build logs for warnings [#5312](https://github.com/valhalla/valhalla/pull/5312)
+   * CHANGED: Replace robin-hood-hashing with `ankerl::unordered_dense::{map, set}` [#5325](https://github.com/valhalla/valhalla/pull/5325)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
