@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a program which is benchmark comparing performance of an STL priority_queue\n"
       "to the approximate double bucket adjacency list class supplied with Valhalla.\n\n");
 

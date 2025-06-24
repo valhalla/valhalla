@@ -14,7 +14,7 @@ DEFAULT_VALHALLA_BUILD_DIR = "./build_manylinux"
 
 THIS_DIR = Path(__file__).parent.resolve()
 BINARIES = [
-    # "valhalla_service", # sadly auditwheel(/patchelf?) corrupts valhalla_service somehow
+    "valhalla_service", # this needed a custom-built "patchelf" for auditwheel to properly fix
     "valhalla_build_tiles",
     "valhalla_build_admins",
     "valhalla_add_predicted_traffic",
@@ -146,12 +146,12 @@ ext_modules = [
     ),
 ]
 
-# if we push master, we upload to pyvalhalla-git
+# if we push master, we upload to pyvalhalla-weekly
 # this is set in GHA when publishing
 pkg = os.environ.get('VALHALLA_RELEASE_PKG')
-if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-git"]):
-    print(f"[WARNING] VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}', defaulting to 'pyvalhalla-git'")
-    pkg = "pyvalhalla-git"
+if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-weekly"]):
+    print(f"[WARNING] VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}', defaulting to 'pyvalhalla-weekly'")
+    pkg = "pyvalhalla-weekly"
 print(f"Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}")
 
 # open README.md for PyPI

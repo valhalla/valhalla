@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a program that creates a list of edges for each auto-drivable OSM way.\n\n");
 
     options.add_options()

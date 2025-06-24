@@ -41,11 +41,7 @@ bool parse_common_args(const std::string& program,
   }
 
   if (result.count("version")) {
-#ifdef VALHALLA_VERSION_PRECISE
-    std::cout << std::string(program) << " " << VALHALLA_VERSION_PRECISE << "\n";
-#else
-    std::cout << std::string(program) << " " << VALHALLA_VERSION << "\n";
-#endif
+    std::cout << std::string(program) << " " << VALHALLA_PRINT_VERSION << "\n";
     return false;
   }
 

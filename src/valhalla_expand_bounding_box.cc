@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "Finds all the nodes in the bounding box and then expands \n"
       "the bounding box by the shape of the edges that leave the nodes.\n\n");
 

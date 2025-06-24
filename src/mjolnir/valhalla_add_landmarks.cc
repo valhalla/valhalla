@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "valhalla_add_landmarks is a program that adds landmarks to existing graph tiles via a SQLite"
       " database containing landmark POIs.\n"
       "\n\n");
