@@ -1201,10 +1201,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   if (controller(kEdgeSpeedsFaded) || controller(kEdgeSpeedsNonFaded)) {
+    // helper function to only get the speed from GetSpeed that we are interested in
     auto get_speed = [&](uint8_t flow_mask, bool faded,
                          uint64_t second_of_week = kInvalidSecondsOfWeek) -> std::optional<uint32_t> {
-      uint64_t seconds_from_now = 0;
       uint8_t flow_sources = 0;
+      uint64_t seconds_from_now = 0;
       uint8_t initial_flow_mask = flow_mask;
       if (faded) {
         seconds_from_now = time_info.seconds_from_now;
