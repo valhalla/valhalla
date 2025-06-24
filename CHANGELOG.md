@@ -93,6 +93,7 @@
    * ADDED: `valhalla_service` to Linux Python package [#5315](https://github.com/valhalla/valhalla/pull/5315)
    * CHANGED: add full version string with git hash to any program's `--help` message [#5317](https://github.com/valhalla/valhalla/pull/5317)
    * CHANGED: `valhalla_service` CLI based on `cxxopts` [#5318](https://github.com/valhalla/valhalla/pull/5317)
+   * ADDED: script to analyze build logs for warnings [#5312](https://github.com/valhalla/valhalla/pull/5312)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
