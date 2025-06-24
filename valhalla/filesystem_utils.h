@@ -32,9 +32,13 @@ struct has_data_impl {
 template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
 
 /**
- * @brief Saves data to the path.
- * @attention Will replace the contents in case if fpath already exists. Will create
- * new directory if directory did not exist before hand.
+ * Saves data to the supplied path. Will replace the contents in case fpath already exists.
+ * Will create a new directory if directory did not exist before hand.
+ *
+ * @param fpath the absolute or relative path to the file you want to save
+ * @param data  the data you want to save, wrapped in a container
+ *
+ * @returns A boolean indicating whether saving the file was successful.
  * */
 template <typename Container>
 typename std::enable_if<has_data<Container>::value, bool>::type inline save(
