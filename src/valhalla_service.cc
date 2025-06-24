@@ -1,5 +1,6 @@
 #include <cxxopts.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <list>
@@ -21,7 +22,7 @@ using namespace prime_server;
 #include "tyr/actor.h"
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   std::vector<std::string> pos_args;
   boost::property_tree::ptree config;
 
