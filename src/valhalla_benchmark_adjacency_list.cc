@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
       ("v,version", "Print the version of this software.");
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;

@@ -20,7 +20,7 @@
 #include "scoped_timer.h"
 #include "speed_assigner.h"
 
-#include <robin_hood.h>
+#include <ankerl/unordered_dense.h>
 
 #include <cstdint>
 #include <functional>
@@ -885,11 +885,11 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
  * @param stats         Reference to stats object to update max_density
  * @return              Density grid mapping cell IDs to relative density values (0-15)
  */
-robin_hood::unordered_flat_map<DensityCellId, uint32_t> BuildDensityIndex(GraphReader& reader,
-                                                                          std::mutex& lock,
-                                                                          const graph_tile_ptr& tile,
-                                                                          const TileLevel& tile_level,
-                                                                          enhancer_stats& stats) {
+ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphReader& reader,
+                                                                        std::mutex& lock,
+                                                                        const graph_tile_ptr& tile,
+                                                                        const TileLevel& tile_level,
+                                                                        enhancer_stats& stats) {
   // To properly count density on the tile edges, the bbox should be extended by the density radius,
   // rounded up to the grid cell size to get fully filled edge cells
   const AABB2<PointLL> tile_bbox = tile->BoundingBox();
@@ -903,7 +903,7 @@ robin_hood::unordered_flat_map<DensityCellId, uint32_t> BuildDensityIndex(GraphR
                             tile_bbox.maxpt().lat() + (kDensityLatDeg + DensityCellId::kSizeDeg));
 
   // Grid where each cell contains a sum of lengths of all edges of all nodes within the cell
-  robin_hood::unordered_flat_map<DensityCellId, float> density_grid;
+  ankerl::unordered_dense::map<DensityCellId, float> density_grid;
   density_grid.reserve(DensityCellId::cover_count(bbox));
 
   for (const auto& t : tile_level.tiles.TileList(bbox)) {
@@ -941,7 +941,7 @@ robin_hood::unordered_flat_map<DensityCellId, uint32_t> BuildDensityIndex(GraphR
   }
 
   // Now build density index where each cell contains density value for nodes in that cell
-  robin_hood::unordered_flat_map<DensityCellId, uint32_t> density_index;
+  ankerl::unordered_dense::map<DensityCellId, uint32_t> density_index;
   density_index.reserve(density_grid.size());
 
   // The difference between cell areas at the top of the 0.25 tile vs cell at the bottom of that tile

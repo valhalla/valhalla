@@ -3,7 +3,7 @@
 
 #include "midgard/logging.h"
 
-#include <robin_hood.h>
+#include <ankerl/unordered_dense.h>
 
 #include <algorithm>
 #include <cmath>
@@ -103,7 +103,7 @@ public:
   }
 
 private:
-  robin_hood::unordered_map<uint64_t, uint64_t> bitmarkers_;
+  ankerl::unordered_dense::map<uint64_t, uint64_t> bitmarkers_;
 };
 
 } // namespace mjolnir
