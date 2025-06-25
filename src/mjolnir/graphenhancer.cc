@@ -895,8 +895,6 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
   const AABB2<PointLL> tile_bbox = tile->BoundingBox();
   const float lat_cos = cosf(kRadPerDeg * tile_bbox.Center().lat());
   const float density_lng_deg = kDensityLatDeg / lat_cos;
-
-  // Add buffer to handle density cells on the tile edges
   const AABB2<PointLL> bbox(tile_bbox.minpt().lng() - (density_lng_deg + DensityCellId::kSizeDeg),
                             tile_bbox.minpt().lat() - (kDensityLatDeg + DensityCellId::kSizeDeg),
                             tile_bbox.maxpt().lng() + (density_lng_deg + DensityCellId::kSizeDeg),
@@ -924,7 +922,6 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
         continue;
       }
 
-      // Get all directed edges and add length
       float roadlengths = 0.0f;
       const DirectedEdge* directededge = newtile->directededge(node->edge_index());
       for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
@@ -940,16 +937,14 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
     }
   }
 
-  // Now build density index where each cell contains density value for nodes in that cell
-  ankerl::unordered_dense::map<DensityCellId, uint32_t> density_index;
-  density_index.reserve(density_grid.size());
-
   // The difference between cell areas at the top of the 0.25 tile vs cell at the bottom of that tile
   // reaches 1.2% at 70s latitude, which is acceptable here
   const float cell_size_km = DensityCellId::kSizeDeg * kMetersPerDegreeLat / kMetersPerKm;
   const float cell_area = cell_size_km * cell_size_km * lat_cos;
 
-  // For each non-empty cell in our original density
+  // Now build the density index where each cell contains density value for nodes in that cell
+  ankerl::unordered_dense::map<DensityCellId, uint32_t> density_index;
+  density_index.reserve(density_grid.size());
   for (const auto& [cell_id, _] : density_grid) {
     float roadlengths = 0.0f;
 
