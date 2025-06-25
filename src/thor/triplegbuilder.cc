@@ -1211,7 +1211,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   if (controller(kEdgeSpeedType)) {
-    trip_edge->set_speed_type(GetSpeedType(directededge->speed_type()));
+    trip_edge->set_speed_type(GetTripLegSpeedType(directededge->speed_type()));
   }
 
   if (controller(kEdgeSpeedsFaded) || controller(kEdgeSpeedsNonFaded)) {
