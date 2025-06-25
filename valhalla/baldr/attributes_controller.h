@@ -11,6 +11,7 @@ namespace baldr {
 const std::string kEdgeNames = "edge.names";
 const std::string kEdgeLength = "edge.length";
 const std::string kEdgeSpeed = "edge.speed";
+const std::string kEdgeSpeedType = "edge.speed_type";
 const std::string kEdgeSpeedsFaded = "edge.speeds_faded";
 const std::string kEdgeSpeedsNonFaded = "edge.speeds_non_faded";
 const std::string kEdgeRoadClass = "edge.road_class";

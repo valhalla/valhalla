@@ -16,6 +16,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeNames, true},
     {kEdgeLength, true},
     {kEdgeSpeed, true},
+    {kEdgeSpeedType, true},
     {kEdgeSpeedsFaded, true},
     {kEdgeSpeedsNonFaded, true},
     {kEdgeRoadClass, true},

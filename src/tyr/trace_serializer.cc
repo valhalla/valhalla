@@ -47,11 +47,11 @@ void serialize_speeds(const valhalla::TripLeg_Edge& edge,
                       rapidjson::writer_wrapper_t& writer) {
   auto speeds = is_faded ? edge.speeds_faded() : edge.speeds_non_faded();
   writer.start_object(is_faded ? "speeds_faded" : "speeds_non_faded");
-  if (speeds.has_current()) {
-    writer("current", speed_serializer(speeds.current()));
+  if (speeds.has_current_flow()) {
+    writer("current_flow", speed_serializer(speeds.current_flow()));
   }
-  if (speeds.has_predicted()) {
-    writer("predicted", speed_serializer(speeds.predicted()));
+  if (speeds.has_predicted_flow()) {
+    writer("predicted_flow", speed_serializer(speeds.predicted_flow()));
   }
   if (speeds.has_constrained_flow()) {
     writer("constrained_flow", speed_serializer(speeds.constrained_flow()));
@@ -59,7 +59,7 @@ void serialize_speeds(const valhalla::TripLeg_Edge& edge,
   if (speeds.has_free_flow()) {
     writer("free_flow", speed_serializer(speeds.free_flow()));
   }
-  writer("base", speed_serializer(speeds.base()));
+  writer("no_flow", speed_serializer(speeds.no_flow()));
   writer.end_object();
 }
 
@@ -214,6 +214,9 @@ void serialize_edges(const AttributesController& controller,
       }
       if (controller(kEdgeSpeed)) {
         writer("speed", serialize_speed(edge.speed()));
+      }
+      if (controller(kEdgeSpeedType)) {
+        writer("speed_type", to_string(static_cast<baldr::SpeedType>(edge.speed_type())));
       }
       if (controller(kEdgeSpeedsFaded) &&
           options.date_time_type() == Options::DateTimeType::Options_DateTimeType_current &&

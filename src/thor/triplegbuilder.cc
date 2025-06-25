@@ -1210,6 +1210,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_speed(speed);
   }
 
+  if (controller(kEdgeSpeedType)) {
+    trip_edge->set_speed_type(GetSpeedType(directededge->speed_type()));
+  }
+
   if (controller(kEdgeSpeedsFaded) || controller(kEdgeSpeedsNonFaded)) {
     // helper function to only get the speed from GetSpeed that we are interested in
     auto get_speed = [&](uint8_t flow_mask, bool faded,
@@ -1219,7 +1223,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       uint8_t initial_flow_mask = flow_mask;
       if (faded) {
         seconds_from_now = time_info.seconds_from_now;
-        flow_mask |= kCurrentFlowMask;
+        // if faded current flow is requested, fade the current speed with the speed_types' flow_mask
+        if (initial_flow_mask == kCurrentFlowMask){
+          flow_mask = costing->flow_mask();
+        }
+          flow_mask |= kCurrentFlowMask;
       }
       uint32_t speed = graphtile->GetSpeed(directededge, flow_mask, second_of_week, false,
                                            &flow_sources, seconds_from_now);
@@ -1234,12 +1242,12 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
       speed = get_speed(kCurrentFlowMask, faded);
       if (speed.has_value()) {
-        speeds->set_current(speed.value());
+        speeds->set_current_flow(speed.value());
       }
 
       speed = get_speed(kPredictedFlowMask, faded, time_info.second_of_week);
       if (speed.has_value()) {
-        speeds->set_predicted(speed.value());
+        speeds->set_predicted_flow(speed.value());
       }
 
       speed = get_speed(kConstrainedFlowMask, faded);
@@ -1254,7 +1262,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
       speed = get_speed(kNoFlowMask, faded);
       if (speed.has_value()) {
-        speeds->set_base(speed.value());
+        speeds->set_no_flow(speed.value());
       }
     };
 

@@ -159,7 +159,7 @@ TEST(Standalone, AdditionalSpeedAttributes) {
 
   // All edges are set up identically with the same speed attributes
   gurka::ways ways = {
-      {"AB", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"AB", {{"highway", "primary"}}},
       {"BC", {{"highway", "primary"}, {"maxspeed", "60"}}},
       {"CD", {{"highway", "primary"}, {"maxspeed", "60"}}},
       {"DE", {{"highway", "primary"}, {"maxspeed", "60"}}},
@@ -200,18 +200,23 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
 
+  std::cout << trace_json << std::endl;
+
   auto edges = result["edges"].GetArray();
   ASSERT_EQ(edges.Size(), 6);
 
-  EXPECT_EQ(edges[0]["speeds_non_faded"]["current"].GetInt(), 2);
+  EXPECT_EQ(edges[0]["speed_type"].GetString(), to_string(baldr::SpeedType::kClassified));
+  EXPECT_EQ(edges[1]["speed_type"].GetString(), to_string(baldr::SpeedType::kTagged));
+
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["current_flow"].GetInt(), 2);
   EXPECT_EQ(edges[0]["speeds_non_faded"]["constrained_flow"].GetInt(), 40);
   EXPECT_EQ(edges[0]["speeds_non_faded"]["free_flow"].GetInt(), 100);
-  EXPECT_EQ(edges[0]["speeds_non_faded"]["base"].GetInt(), 60);
-  EXPECT_EQ(edges[0]["speeds_non_faded"]["predicted"].GetInt(), 10);
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["predicted_flow"].GetInt(), 10);
+  EXPECT_EQ(edges[0]["speeds_non_faded"]["no_flow"].GetInt(), 75);
 
-  EXPECT_EQ(edges[0]["speeds_faded"]["current"].GetInt(), 2);
+  EXPECT_EQ(edges[0]["speeds_faded"]["current_flow"].GetInt(), 2);
   EXPECT_EQ(edges[0]["speeds_faded"]["constrained_flow"].GetInt(), 2);
   EXPECT_EQ(edges[0]["speeds_faded"]["free_flow"].GetInt(), 2);
-  EXPECT_EQ(edges[0]["speeds_faded"]["base"].GetInt(), 2);
-  EXPECT_EQ(edges[0]["speeds_faded"]["predicted"].GetInt(), 2);
+  EXPECT_EQ(edges[0]["speeds_faded"]["predicted_flow"].GetInt(), 2);
+  EXPECT_EQ(edges[0]["speeds_faded"]["no_flow"].GetInt(), 2);
 }
