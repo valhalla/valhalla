@@ -184,8 +184,9 @@ Each `edge` may include:
 | `target_percent_along` | The end of an edge's match as percentage of its length in (0, 1) range. If an edge was fully matched, we omit this value.
 | `length` | The **matched** edge length in the units specified (default is kilometers). If `source_percent_along` and/or `target_percent_along` are present, this represents the partially matched edge length, otherwise the full edge length. |
 | `speed` | Edge speed in the units specified. The default is kilometers per hour. |
-| `speeds_faded` | Contains all flow speeds available for that edge in the units specified (default is kilometers per hour). All flows are: <ul><li>`current`</li><li>`constrained`</li><li>`free`</li><li>`predicted`</li><li>`base` (no flow)</li></ul>These speeds are faded with the current flow (if available). |
-| `speeds_non_faded` | Contains all raw flow speeds available for that edge in the units specified (default is kilometers per hour). All flows are: <ul><li>`current`</li><li>`constrained`</li><li>`free`</li><li>`predicted`</li><li>`base` (no flow)</li></ul>|
+| `speed_type` | Describes how the base speed was assigned to the edge. Either its inferred from the road class (`"classified"`) or it is set by a tag (`"tagged"`) |
+| `speeds_faded` | Contains all flow speeds available for that edge in the units specified (default is kilometers per hour). All flows are: <ul><li>`current_flow`</li><li>`constrained_flow`</li><li>`free_flow`</li><li>`predicted_flow`</li><li>`no_flow`</li></ul>These speeds are faded with the current flow (if available). The `current_flow` fades with the flow_mask that was passed to the request. |
+| `speeds_non_faded` | Contains all raw flow speeds available for that edge in the units specified (default is kilometers per hour). All flows are: <ul><li>`current_flow`</li><li>`constrained_flow`</li><li>`free_flow`</li><li>`predicted_flow`</li><li>`no_flow`</li></ul>|
 | `road_class` | Road class values:<ul><li>`motorway`</li><li>`trunk`</li><li>`primary`</li><li>`secondary`</li><li>`tertiary`</li><li>`unclassified`</li><li>`residential`</li><li>`service_other`</li></ul> |
 | `begin_heading` | The direction at the beginning of an edge. The units are degrees from north in a clockwise direction. |
 | `end_heading` | The direction at the end of an edge. The units are degrees from north in a clockwise direction.. |

@@ -81,7 +81,7 @@
    * ADDED: Enforce the order of includes via `clang-format` [5230](https://github.com/valhalla/valhalla/pull/5230)
    * CHANGED: Switch to PyPI version of `clang-format` [#5237](https://github.com/valhalla/valhalla/pull/5237)
    * ADDED: More barrier types to consider for car routing [#5217](https://github.com/valhalla/valhalla/pull/5217)
-   * ADDED: `trace_attributes` now also returns all the speed informations on edges when `edge.speeds_faded` or `edge.speeds_non_faded` is set in request [#5324](https://github.com/valhalla/valhalla/pull/5324)
+   * ADDED: `trace_attributes` now also returns all the speed informations on edges when `edge.speeds_faded` or `edge.speeds_non_faded` is set in request. Also `edge.speed_type` returns how the edge speed was set [#5324](https://github.com/valhalla/valhalla/pull/5324)
    * CHANGED: Removed ferry reclassification and only move edges in hierarchy [#5269](https://github.com/valhalla/valhalla/pull/5269)
    * CHANGED: More clang-tidy fixes [#5253](https://github.com/valhalla/valhalla/pull/5253)
    * CHANGED: Removed unused headers [#5254](https://github.com/valhalla/valhalla/pull/5254)
