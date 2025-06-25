@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a program that does location searches on tiled route data.\n"
       "To run it use a valid config file to let it know where the tiled route data \n"
       "is. The input is simply a text file of one location per line\n\n");
@@ -154,7 +154,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("LOCATIONS.TXT");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "loki.logging"))
+    if (!parse_common_args(program, options, result, &config, "loki.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("input_files")) {

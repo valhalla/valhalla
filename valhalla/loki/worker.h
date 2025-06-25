@@ -4,8 +4,6 @@
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costfactory.h>

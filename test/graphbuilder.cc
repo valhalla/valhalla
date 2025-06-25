@@ -1,4 +1,5 @@
 #include "mjolnir/graphbuilder.h"
+#include "baldr/datetime.h"
 #include "baldr/graphreader.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/directededgebuilder.h"
@@ -95,7 +96,8 @@ TEST(Graphbuilder, TestDEBuilderLength) {
   ASSERT_NO_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
                                                    valhalla::midgard::length(shape1), 1, 1,
                                                    Use::kRoad, baldr::RoadClass::kMotorway, 0, false,
-                                                   false, false, false, 0, 0, false));
+                                                   false, false, false, 0, 0, false,
+                                                   baldr::RoadClass::kInvalid));
 
   std::vector<PointLL> shape2{{-160.096619f, 21.997619f},
                               {-90.037697f, 41.004531},
@@ -104,7 +106,7 @@ TEST(Graphbuilder, TestDEBuilderLength) {
   ASSERT_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
                                                 valhalla::midgard::length(shape2), 1, 1, Use::kRoad,
                                                 baldr::RoadClass::kMotorway, 0, false, false, false,
-                                                false, 0, 0, false),
+                                                false, 0, 0, false, baldr::RoadClass::kInvalid),
                std::runtime_error);
 }
 

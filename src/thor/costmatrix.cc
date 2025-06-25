@@ -5,7 +5,7 @@
 #include "sif/recost.h"
 #include "worker.h"
 
-#include <robin_hood.h>
+#include <ankerl/unordered_dense.h>
 
 #include <algorithm>
 #include <cmath>
@@ -51,7 +51,8 @@ inline const valhalla::PathEdge& find_correlated_edge(const valhalla::Location& 
 namespace valhalla {
 namespace thor {
 
-class CostMatrix::ReachedMap : public robin_hood::unordered_map<uint64_t, std::vector<uint32_t>> {};
+class CostMatrix::ReachedMap : public ankerl::unordered_dense::map<uint64_t, std::vector<uint32_t>> {
+};
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
@@ -579,7 +580,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   if (expansion_callback_) {
     expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix",
                         Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost,
-                        static_cast<Expansion_ExpansionType>(expansion_direction));
+                        static_cast<Expansion_ExpansionType>(
+                            !static_cast<bool>(expansion_direction)));
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -625,7 +627,9 @@ bool CostMatrix::Expand(const uint32_t index,
         pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
     expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
                         Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
-                        pred.cost().cost, static_cast<Expansion_ExpansionType>(expansion_direction));
+                        pred.cost().cost,
+                        static_cast<Expansion_ExpansionType>(
+                            !static_cast<bool>(expansion_direction)));
   }
 
   if (FORWARD) {

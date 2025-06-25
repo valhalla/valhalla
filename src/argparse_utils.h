@@ -1,4 +1,3 @@
-#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/config.h>
 #include <valhalla/filesystem.h>
 #include <valhalla/midgard/logging.h>
@@ -29,10 +28,11 @@
 bool parse_common_args(const std::string& program,
                        const cxxopts::Options& opts,
                        const cxxopts::ParseResult& result,
-                       boost::property_tree::ptree& conf,
+                       boost::property_tree::ptree* conf,
                        const std::string& log,
                        const bool use_threads = false,
                        std::function<void()> extra_help = nullptr) {
+
   if (result.count("help")) {
     std::cout << opts.help() << "\n";
     if (extra_help) {
@@ -42,36 +42,40 @@ bool parse_common_args(const std::string& program,
   }
 
   if (result.count("version")) {
-    std::cout << std::string(program) << " " << VALHALLA_VERSION << "\n";
+    std::cout << std::string(program) << " " << VALHALLA_PRINT_VERSION << "\n";
     return false;
   }
 
-  // Read the config file
-  if (result.count("inline-config")) {
-    conf = valhalla::config(result["inline-config"].as<std::string>());
-  } else if (result.count("config") &&
-             filesystem::is_regular_file(result["config"].as<std::string>())) {
-    conf = valhalla::config(result["config"].as<std::string>());
-  } else {
-    throw cxxopts::exceptions::exception("Configuration is required\n\n" + opts.help() + "\n\n");
-  }
+  // Read the config file optionally (e.g. valhalla_service doesn't)
+  if (conf) {
+    if (result.count("inline-config")) {
+      *conf = valhalla::config(result["inline-config"].as<std::string>());
+    } else if (result.count("config") &&
+               filesystem::is_regular_file(result["config"].as<std::string>())) {
+      *conf = valhalla::config(result["config"].as<std::string>());
+    } else {
+      throw cxxopts::exceptions::exception("Configuration is required\n\n" + opts.help() + "\n\n");
+    }
 
-  // configure logging
-  auto logging_subtree = conf.get_child_optional(log);
-  if (!log.empty() && logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
+    // configure logging
+    auto logging_subtree = conf->get_child_optional(log);
+    if (!log.empty() && logging_subtree) {
+      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                     std::unordered_map<std::string, std::string>>(
+          logging_subtree.get());
+      valhalla::midgard::logging::Configure(logging_config);
+    }
   }
 
   if (use_threads) {
     // override concurrency config if specified as arg
-    auto num_threads = std::max(1U, result.count("concurrency")
-                                        ? result["concurrency"].as<uint32_t>()
-                                        : conf.get<uint32_t>("mjolnir.concurrency",
-                                                             std::thread::hardware_concurrency()));
-    conf.put<uint32_t>("mjolnir.concurrency", num_threads);
+    auto default_threads = conf && conf->get_child_optional("mjolnir.concurrency")
+                               ? conf->get_optional<uint32_t>("mjolnir.concurrency").value()
+                               : std::thread::hardware_concurrency();
+    auto num_threads = std::max(1U, result.count("concurrency") ? result["concurrency"].as<uint32_t>()
+                                                                : default_threads);
+    if (conf)
+      conf->put<uint32_t>("mjolnir.concurrency", num_threads);
 
     LOG_INFO("Running " + std::string(program) + " with " + std::to_string(num_threads) +
              " thread(s).");

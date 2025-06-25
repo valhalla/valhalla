@@ -1,6 +1,4 @@
 #include "loki/worker.h"
-#include "baldr/json.h"
-#include "baldr/rapidjson_utils.h"
 #include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"

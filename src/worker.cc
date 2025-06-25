@@ -2,6 +2,7 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/location.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"

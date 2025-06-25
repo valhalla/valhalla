@@ -1,8 +1,5 @@
 #ifndef __VALHALLA_SERVICE_H__
 #define __VALHALLA_SERVICE_H__
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/midgard/util.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/valhalla.h>

@@ -1,3 +1,12 @@
+# GoogleTest builds with /MT(d) by default, which is incompatible with Valhalla's /MD(d) builds.
+#
+# /MD(d) links the C++ runtime dynamically, while /MT(d) links it statically.
+#
+# Force it to use the same CRT as Valhalla /MD(d). Technically Valhalla doesn't enforce /MD(d) but
+# it is the CMake default. It can be switched by MSVC_RUNTIME_LIBRARY, but GoogleTest is ignoring
+# this.
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
 
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
@@ -6,6 +15,7 @@ set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock_main PROPERTIES FOLDER "Dependencies")
 
 # common things that the tests need
+find_package(Threads)
 set(TEST_SRCS test.h test.cc)
 if(ENABLE_DATA_TOOLS)
   list(APPEND TEST_SRCS gurka/gurka.h gurka/gurka.cc)
@@ -19,12 +29,12 @@ target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
   ${VALHALLA_SOURCE_DIR}/test/gurka)
 target_include_directories(valhalla_test SYSTEM PUBLIC
-  ${robinhoodhashing_include_dir}
+  ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread PkgConfig::LZ4)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
 
 if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_test PkgConfig::GEOS)
@@ -379,7 +389,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_utrecht.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
-      python_valhalla
+      _valhalla
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")

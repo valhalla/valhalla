@@ -4,11 +4,10 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <list>
 #include <map>
@@ -18,8 +17,6 @@
 
 namespace valhalla {
 namespace mjolnir {
-
-using boost::property_tree::ptree;
 
 // Stages of the Valhalla tile building pipeline
 enum class BuildStage : int8_t {
@@ -161,7 +158,7 @@ uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
  * unusable afterwards.  Set to false if you need to perform protobuf operations after building tiles.
  * @return Returns true if no errors occur, false if an error occurs.
  */
-bool build_tile_set(const ptree& config,
+bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate);
@@ -190,45 +187,13 @@ bool build_tile_set(const ptree& config,
 //   ]
 // }
 struct TileManifest {
-
   std::map<baldr::GraphId, size_t> tileset;
 
-  std::string ToString() const {
-    baldr::json::ArrayPtr array = baldr::json::array({});
-    for (const auto& tile : tileset) {
-      const baldr::json::Value& graphid = tile.first.json();
-      const baldr::json::MapPtr& item = baldr::json::map(
-          {{"graphid", graphid}, {"node_index", static_cast<uint64_t>(tile.second)}});
-      array->emplace_back(item);
-    }
-    std::stringstream manifest;
-    manifest << *baldr::json::map({{"tiles", array}});
-    return manifest.str();
-  }
+  std::string ToString() const;
 
-  void LogToFile(const std::string& filename) const {
-    std::ofstream handle;
-    handle.open(filename);
-    handle << ToString();
-    handle.close();
-    LOG_INFO("Writing tile manifest to " + filename);
-  }
+  void LogToFile(const std::string& filename) const;
 
-  static TileManifest ReadFromFile(const std::string& filename) {
-    ptree manifest;
-    rapidjson::read_json(filename, manifest);
-    LOG_INFO("Reading tile manifest from " + filename);
-    std::map<baldr::GraphId, size_t> tileset;
-    for (const auto& tile_info : manifest.get_child("tiles")) {
-      const ptree& graph_id = tile_info.second.get_child("graphid");
-      const baldr::GraphId id(graph_id.get<uint64_t>("value"));
-      const size_t node_index = tile_info.second.get<size_t>("node_index");
-      tileset.insert({id, node_index});
-    }
-    LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
-             filename);
-    return TileManifest{tileset};
-  }
+  static TileManifest ReadFromFile(const std::string& filename);
 };
 } // namespace mjolnir
 } // namespace valhalla

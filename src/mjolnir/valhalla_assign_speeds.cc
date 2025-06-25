@@ -1,6 +1,5 @@
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
 #include "config.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "speed_assigner.h"
@@ -9,6 +8,7 @@
 #include <cxxopts.hpp>
 
 #include <algorithm>
+#include <deque>
 #include <future>
 #include <memory>
 #include <random>
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "Modifies default speeds based on provided configuration.\n");
 
     options.add_options()
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
@@ -127,8 +127,8 @@ int main(int argc, char** argv) {
   std::mutex lock;
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(assign, std::cref(config), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
+    thread = std::make_shared<std::thread>(assign, std::cref(config), std::ref(tilequeue),
+                                           std::ref(lock), std::ref(results.back()));
   }
 
   // collect the results

@@ -4,6 +4,7 @@
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
+#include "microtar.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
@@ -12,12 +13,13 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+
 #ifndef _MSC_VER
 #include <sys/mman.h>
 #endif
-#include "microtar.h"
 
 #include <boost/algorithm/string.hpp>
+#include <fcntl.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/stat.h>

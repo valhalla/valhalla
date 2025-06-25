@@ -1,0 +1,425 @@
+name: Build OSX, Win & Python bindings
+
+# this workflow:
+# - runs master & PR pushes for OSX & Win
+# - publishes Python bindings for all platforms and minor Python versions to:
+#   - https://pypi.org/project/pyvalhalla/ for tag pushes
+#   - https://pypi.org/project/pyvalhalla-weekly/ for master pushes
+
+on:
+  # We run this once a week so we regularly publish pyvalhalla-weekly
+  # but not on _every_ master commit
+  schedule:
+    - cron: "0 0 * * 0"
+  push:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
+        required: false
+        default: false
+        
+# Cancel CI runs on a branch when new commits were pushed
+# See https://stackoverflow.com/a/72408109/2582935
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # only run tmate if manually invoked and debug_enabled == true or a previous step failed
+  SETUP_TMATE: ${{ (((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) || (github.job.status != 'success')) && (github.repository_owner == 'valhalla') }}
+  # only publish to PyPI on tags, schedule or workflow_dispatch (only on master!)
+  PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
+
+jobs:
+  build_python_wheels_linux:
+    name: Build Linux Python wheels
+    runs-on: ubuntu-latest
+    if: ${{ github.env.PUBLISH_PYPI }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # we need to fetch all tags for setuptools-scm to work properly
+          fetch-depth: 0
+          fetch-tags: true
+
+      # this is only used to run cibuildwheel
+      - name: Configure Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Get branch name
+        run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
+
+      - name: Get version modifier
+        if: github.ref == 'refs/heads/master'
+        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Determine package to publish
+        run: |
+          VALHALLA_RELEASE_PKG="pyvalhalla"
+          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
+          fi
+          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+
+      - name: Restore cache
+        id: cache-ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: /project/.cache/ccache
+          key: ccache-manylinux_2_28_x86_64
+
+      - uses: pypa/cibuildwheel@v2.23.3
+        env:
+          # the host system's "/" is mounted to "/host" in the manylinux container
+          CIBW_ENVIRONMENT: >
+            CCACHE_DIR=/host/project/.cache/ccache
+            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+            VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
+
+      - name: Delete cache to save the latest
+        run: |
+          KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
+          gh cache delete ${KEY} || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: /project/.cache/ccache
+          key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-linux-x64
+          path: wheelhouse/*.whl
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.env.SETUP_TMATE }}
+        with:
+          detached: true
+  
+  build_osx:
+    runs-on: macos-14
+    name: Build OSX & Python wheels
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # we need to fetch all tags for setuptools-scm to work properly
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
+          export PATH="$(brew --prefix python)/libexec/bin:$PATH"
+          sudo python -m pip install --break-system-packages requests shapely
+          git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j$(sysctl -n hw.logicalcpu) && sudo make install
+
+      - name: Get branch name
+        run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
+
+      - name: Get version modifier
+        if: github.ref == 'refs/heads/master'
+        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Restore ccache
+        id: cache-ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ccache-osx-${{ env.VALHALLA_BRANCH }}-v2
+          restore-keys: |
+            ccache-osx-master
+            ccache-osx-
+
+      - name: Configure CMake
+        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ steps.vars.outputs.version_modifier || '' }}
+
+      - name: Build & install Valhalla (for python bindings)
+        run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
+
+      - name: Build Tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
+
+      - name: Delete cache to save the latest
+        run: |
+          KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
+          gh cache delete ${KEY} || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
+
+      - name: Run Tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) check
+      
+      # only package python bindings if it's not a PR
+
+      - name: Determine package to publish
+        if: ${{ github.env.PUBLISH_PYPI }}
+        run: |
+          VALHALLA_RELEASE_PKG="pyvalhalla"
+          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
+          fi
+          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+      
+      - uses: pypa/cibuildwheel@v2.23.3
+        if: ${{ github.env.PUBLISH_PYPI }}
+        env:
+          CIBW_ENVIRONMENT: >
+            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+          MACOSX_DEPLOYMENT_TARGET: 14
+
+      - name: Upload wheels
+        if: ${{ github.env.PUBLISH_PYPI }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-osx-arm64
+          path: wheelhouse/*.whl
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # only run this if manually invoked and debug_enabled == true or a previous step failed
+        if: ${{ github.env.SETUP_TMATE }}
+        with:
+          detached: true
+  
+  build_win:
+    name: Build Win & Python wheels
+    runs-on: windows-2022
+    env:
+      BUILD_TYPE: Release
+      MSVC_VERSION: "2022"
+      VCPKG_VERSION: "5e5d0e1"
+      VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
+      VCPKG_DISABLE_COMPILER_TRACKING: ON
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # we need to fetch all tags for setuptools-scm to work properly
+          fetch-depth: 0
+          fetch-tags: true
+
+      # we add a custom triplet to avoid cache misses as much as possible
+      # https://github.com/microsoft/vcpkg/issues/26346#issuecomment-1319244766
+      - name: Configure vckpg
+        shell: bash
+        run: |
+          echo "VCPKG_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+          echo "VCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg/custom-triplets" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=custom-x64-windows" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg/archives" >> $GITHUB_ENV
+
+      - name: Install GNU make & awk
+        run: choco install gawk make
+
+      - name: Install vcpkg
+        shell: bash
+        run: |
+          git clone https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          git checkout $VCPKG_VERSION
+          mkdir archives
+          mkdir "$VCPKG_OVERLAY_TRIPLETS"
+          TRIPLET_FILE="$VCPKG_OVERLAY_TRIPLETS/$VCPKG_DEFAULT_TRIPLET.cmake"
+          cp triplets/x64-windows.cmake "$TRIPLET_FILE"
+          echo "set(VCPKG_BUILD_TYPE release)" >> "$TRIPLET_FILE"
+          echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$TRIPLET_FILE"
+          cmd.exe /c bootstrap-vcpkg.bat
+
+      # make sure we save vcpkg packages even if build fails
+      # note, we don't use vcpkg "command line" mode, but "cmake manifest" mode
+      - name: Restore vcpkg packages
+        id: vcpkg-restore
+        uses: actions/cache/restore@v3
+        with:
+          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+
+      - name: Setup Developer Command Prompt for VS
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Get version modifier
+        if: github.ref == 'refs/heads/master'
+        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+
+          cmake --version
+          cmake -B build \
+            -G "Visual Studio 17 2022" \
+            -A x64 \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
+            -DVCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS" \
+            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
+            -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
+            -DENABLE_DATA_TOOLS=ON \
+            -DENABLE_TOOLS=ON \
+            -DENABLE_PYTHON_BINDINGS=OFF \
+            -DENABLE_HTTP=ON \
+            -DENABLE_TESTS=OFF \
+            -DENABLE_CCACHE=OFF \
+            -DENABLE_SERVICES=OFF \
+            -DPREFER_EXTERNAL_DEPS=ON \
+            -DENABLE_GDAL=ON \
+            -DVALHALLA_VERSION_MODIFIFER=${{ steps.vars.outputs.version_modifier || '' }}
+
+      - name: Save vcpkg packages (always, to avoid redundant rebuilds)
+        uses: actions/cache/save@v3
+        with:
+          key: ${{ steps.vcpkg-restore.outputs.cache-primary-key }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+
+      - name: Build Valhalla
+        run: |
+          cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+          cmake --build build --config Release --target install
+
+      - name: Test Executable
+        shell: bash
+        run: |
+          set PATH=$PATH:${{ github.workspace }}/build/vcpkg_installed/$BUILD_TYPE/bin
+          ./build/$BUILD_TYPE/valhalla_build_tiles.exe -c ./test/win/valhalla.json ./test/data/utrecht_netherlands.osm.pbf
+          ./build/$BUILD_TYPE/valhalla_run_isochrone.exe --config ./test/win/valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
+          ./build/$BUILD_TYPE/valhalla_service.exe ./test/win/valhalla.json isochrone "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
+      
+      - name: Determine package to publish
+        if: ${{ github.env.PUBLISH_PYPI }}
+        shell: bash
+        run: |
+          VALHALLA_RELEASE_PKG="pyvalhalla"
+          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
+          fi
+          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+        
+      - name: Print libs
+        shell: bash
+        run: |
+          ls -l build/vcpkg_installed/custom-x64-windows/lib
+          ls -l build/vcpkg_installed/custom-x64-windows/bin
+      
+      - uses: pypa/cibuildwheel@v2.23.3
+        if: ${{ github.env.PUBLISH_PYPI }}
+        env:
+          # used in setup.py
+          CIBW_ENVIRONMENT: >
+            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+          CIBW_ENVIRONMENT_WINDOWS: >
+            VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
+          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
+            delvewheel repair --add-path build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}
+
+      - name: Upload wheels
+        if: ${{ github.env.PUBLISH_PYPI }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-win-amd64
+          path: wheelhouse/*.whl
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # only run this if manually invoked and debug_enabled == true or a previous step failed
+        if: ${{ github.env.SETUP_TMATE }}
+        with:
+          detached: true
+
+  verify_wheels:
+    name: Verify wheels with executables in a fresh environment
+    needs: [build_python_wheels_linux]
+    runs-on: ubuntu-latest
+    container: python:3.13-slim-bookworm
+    if: ${{ github.env.PUBLISH_PYPI }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      
+      - name: Run test
+        run: |
+          apt-get update -y
+          apt-get install -y file
+          python -m pip install dist/*cp313-manylinux*.whl
+          ./src/bindings/python/test/test_pyvalhalla_package.sh
+  
+  upload_all:
+    name: Upload if release
+    needs: [verify_wheels, build_osx, build_win]
+    runs-on: ubuntu-latest
+    # if: ${{ always() }}
+    if: ${{ github.env.PUBLISH_PYPI }}
+
+    permissions:
+      id-token: write # This is required for requesting the JWT from Github for PyPI
+
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish to Test PyPI
+        uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          verbose: true
+          # uncomment when testing!
+          # repository-url: https://test.pypi.org/legacy/

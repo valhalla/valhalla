@@ -8,9 +8,10 @@
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
-#include "test.h"
+#include "proto/common.pb.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <filesystem>

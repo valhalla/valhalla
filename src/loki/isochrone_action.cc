@@ -1,8 +1,5 @@
-#include "baldr/datetime.h"
-#include "baldr/rapidjson_utils.h"
 #include "loki/search.h"
 #include "loki/worker.h"
-#include "midgard/logging.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;

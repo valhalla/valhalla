@@ -5,10 +5,8 @@
 #include "baldr/graphconstants.h"
 #include "baldr/landmark.h"
 #include "baldr/signinfo.h"
-#include "baldr/tilehierarchy.h"
 #include "baldr/time_info.h"
 #include "baldr/timedomain.h"
-#include "meili/match_result.h"
 #include "midgard/elevation_encoding.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -107,6 +105,19 @@ inline std::string country_code_from_edge(const graph_tile_ptr& tile,
   return tile->admininfo(tile->node(de.endnode())->admin_index()).country_iso();
 }
 
+// Given the Location relation, return the full metadata
+const valhalla::IncidentsTile::Metadata&
+GetIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
+                    const valhalla::IncidentsTile::Location& incident_location) {
+  const int64_t metadata_index = incident_location.metadata_index();
+  if (metadata_index >= tile->metadata_size()) {
+    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
+                             std::to_string(metadata_index) + " but total incident metadata of " +
+                             std::to_string(tile->metadata_size()));
+  }
+  return tile->metadata(metadata_index);
+}
+
 /**
  * Used to add or update incidents attached to the provided leg. We could do something more exotic to
  * avoid linear scan, like keeping a separate lookup outside of the pbf
@@ -120,8 +131,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
                     uint32_t index,
                     const graph_tile_ptr& end_node_tile,
                     const valhalla::baldr::DirectedEdge& de) {
-  const uint64_t current_incident_id =
-      valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
+  const uint64_t current_incident_id = GetIncidentMetadata(incidents_tile, *incident_location).id();
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
                             [current_incident_id](const TripLeg::Incident& candidate) {
                               return current_incident_id == candidate.metadata().id();
@@ -134,7 +144,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
     auto* new_incident = leg.mutable_incidents()->Add();
 
     // Get the full incident metadata from the incident-tile
-    const auto& meta = valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location);
+    const auto& meta = GetIncidentMetadata(incidents_tile, *incident_location);
     *new_incident->mutable_metadata() = meta;
 
     // Set iso country code (2 & 3 char codes) on the new incident obj created for this leg

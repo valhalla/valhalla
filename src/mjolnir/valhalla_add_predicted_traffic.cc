@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "adds predicted traffic to valhalla tiles.\n");
     options.add_options()
       ("h,help", "Print this help message.")
@@ -37,7 +37,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"traffic-tile-dir"});
     options.positional_help("Traffic tile dir");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
     if (!result.count("traffic-tile-dir")) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
