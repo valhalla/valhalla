@@ -10,15 +10,12 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
-// #include <cxxopts.hpp>
 
 #include <algorithm>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
-
-
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -184,25 +181,14 @@ auto index_loader = [](const std::string& filename,
 
 void update_traffic_tile(uint64_t tile_offset,
                          const std::vector<uint64_t>& traffic_params,
-                         uint64_t last_updated) {
+                         uint64_t last_updated, std::string traffic_path) {
       std::cout << "Current path: " << std::filesystem::current_path() << std::endl;
 
   std::cout << tile_offset << ',' << traffic_params.at(0) << ',' << last_updated << std::endl;
-  boost::property_tree::ptree config;
-
-
-  if (filesystem::is_regular_file("../app/valhalla_current.json")) {
-    rapidjson::read_json("../app/valhalla_current.json", config);
-  } else {
-    std::cerr << "Configuration is required" << std::endl;
-    return;
-  }
-
-  // std::vector<std::string> live_traffic_params =
-  //     cmd_args["update-tile-traffic"].as<std::vector<std::string>>();
 
   const auto memory =
-      std::make_shared<MMap>(config.get<std::string>("mjolnir.traffic_extract").c_str());
+      std::make_shared<MMap>(traffic_path.c_str());
+
 
   mtar_t tar;
   tar.pos = tile_offset;
@@ -266,94 +252,44 @@ void update_traffic_tile(uint64_t tile_offset,
 
   tile.header->last_update = last_updated;
 
-  std::cout << "Updated edge_id successfully at "
-            << config.get<std::string>("mjolnir.traffic_extract") << std::endl;
+  std::cout << "Updated edge_id successfully at " << traffic_path << std::endl;
 }
 
-void update_tile_traffic(const boost::property_tree::ptree& config,
-                         uint64_t tile_offset,
-                         uint64_t traffic_update_timestamp,
-                         std::vector<std::string> traffic_params) {
+
+int handle_tile_offset_index(std::string config_file_path) {
+  boost::property_tree::ptree config;
+  if (filesystem::is_regular_file(config_file_path)) {
+    rapidjson::read_json(config_file_path, config);
+  } else {
+    std::cerr << "Configuration is required" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  std::unordered_map<std::string, size_t> tar_index;
+
   const auto memory =
       std::make_shared<MMap>(config.get<std::string>("mjolnir.traffic_extract").c_str());
 
-  mtar_t tar;
-  tar.pos = tile_offset;
-  tar.stream = memory->data;
-  tar.read = [](mtar_t* tar, void* data, unsigned size) -> int {
-    memcpy(data, reinterpret_cast<char*>(tar->stream) + tar->pos, size);
-    return MTAR_ESUCCESS;
-  };
-  tar.write = [](mtar_t* tar, const void* data, unsigned size) -> int {
-    memcpy(reinterpret_cast<char*>(tar->stream) + tar->pos, data, size);
-    return MTAR_ESUCCESS;
-  };
-  tar.seek = [](mtar_t*, unsigned) -> int { return MTAR_ESUCCESS; };
-  tar.close = [](mtar_t*) -> int { return MTAR_ESUCCESS; };
+  std::unique_ptr<valhalla::midgard::tar> archive(
+      new valhalla::midgard::tar(config.get<std::string>("mjolnir.traffic_extract"), true, true,
+                                 index_loader));
+  std::cout << "Loaded index from .tar archive." << std::endl;
 
-  // Read the tile header
-  mtar_header_t tar_header;
-  mtar_read_header(&tar, &tar_header);
-
-  valhalla::baldr::TrafficTile tile(
-      std::make_unique<MMapGraphMemory>(memory,
-                                        reinterpret_cast<char*>(tar.stream) + tar.pos +
-                                            sizeof(mtar_raw_header_t_),
-                                        tar_header.size));
-
-  for (size_t paramOffset = 2; paramOffset < traffic_params.size();) {
-    uint64_t edge_index = static_cast<uint64_t>(std::stoul(traffic_params[paramOffset]));
-
-    if (edge_index >= tile.header->directed_edge_count) {
-      throw std::runtime_error("Edge index out of bounds");
-    }
-
-    // Access and update the edge's traffic data
-    valhalla::baldr::TrafficSpeed* target_edge =
-        const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + edge_index);
-    target_edge->overall_encoded_speed =
-        static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 1]));
-    target_edge->encoded_speed1 = static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 2]));
-    target_edge->encoded_speed2 = static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 3]));
-    target_edge->encoded_speed3 = static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 4]));
-    target_edge->breakpoint1 = 255;// static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 5]));
-    target_edge->breakpoint2 = 255;//static_cast<uint64_t>(std::stoul(traffic_params[paramOffset + 6]));
-    target_edge->congestion1 = static_cast<uint64_t>(60);//static_cast<uint64_t>(0);
-    target_edge->congestion2 = static_cast<uint64_t>(0);
-    target_edge->congestion3 = static_cast<uint64_t>(0);
-    target_edge->has_incidents = static_cast<uint64_t>(1);//static_cast<uint64_t>(0);
-
-    paramOffset = paramOffset + 7;
+  std::ofstream tar_index_file;
+  std::string fname = config.get<std::string>("mjolnir.tile_dir") +
+                      filesystem::path::preferred_separator + "traffic_tile_offset.csv";
+  tar_index_file.open(fname, std::ofstream::out | std::ofstream::trunc);
+  for (const auto& index : traffic_tiles) {
+    tar_index_file << index.first << "," << index.second << std::endl;
   }
+  tar_index_file.close();
 
-  tile.header->last_update = traffic_update_timestamp;
+  LOG_INFO("Finished with " + std::to_string(traffic_tiles.size()) + " ways.");
+
+  return EXIT_SUCCESS;
 }
 
-// int handle_help(cxxopts::Options options) {
-//   std::cout << options.help() << std::endl;
-//   return EXIT_SUCCESS;
-// }
 
-// int handle_update_tile_traffic(cxxopts::ParseResult cmd_args, std::string config_file_path) {
-//   boost::property_tree::ptree pt;
-//   if (cmd_args.count("config") && filesystem::is_regular_file(config_file_path)) {
-//     rapidjson::read_json(config_file_path, pt);
-//   } else {
-//     std::cerr << "Configuration is required" << std::endl;
-//     return EXIT_FAILURE;
-//   }
-
-//   std::vector<std::string> live_traffic_params =
-//       cmd_args["update-tile-traffic"].as<std::vector<std::string>>();
-
-//   uint64_t tile_offset = static_cast<uint64_t>(std::stoul(live_traffic_params[0]));
-//   uint64_t last_updated = static_cast<uint64_t>(std::stoul(live_traffic_params[1]));
-
-//   update_tile_traffic(pt, tile_offset, last_updated, live_traffic_params);
-//   std::cout << "Updated edge_id successfully at " << pt.get<std::string>("mjolnir.traffic_extract")
-//             << std::endl;
-//   return EXIT_SUCCESS;
-// }
 
 int handle_ways_to_edges(std::string config_file_path) {
   tiles_for_bounding_box(usa_left, usa_bottom, usa_right, usa_top);
@@ -425,86 +361,4 @@ int handle_ways_to_edges(std::string config_file_path) {
   LOG_INFO("Finished with " + std::to_string(ways_edges.size()) + " ways.");
 
   return EXIT_SUCCESS;
-}
-
-int handle_tile_offset_index(std::string config_file_path) {
-  boost::property_tree::ptree config;
-  if (filesystem::is_regular_file(config_file_path)) {
-    rapidjson::read_json(config_file_path, config);
-  } else {
-    std::cerr << "Configuration is required" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  std::unordered_map<std::string, size_t> tar_index;
-
-  const auto memory =
-      std::make_shared<MMap>(config.get<std::string>("mjolnir.traffic_extract").c_str());
-
-  std::unique_ptr<valhalla::midgard::tar> archive(
-      new valhalla::midgard::tar(config.get<std::string>("mjolnir.traffic_extract"), true, true,
-                                 index_loader));
-  std::cout << "Loaded index from .tar archive." << std::endl;
-
-  std::ofstream tar_index_file;
-  std::string fname = config.get<std::string>("mjolnir.tile_dir") +
-                      filesystem::path::preferred_separator + "traffic_tile_offset.csv";
-  tar_index_file.open(fname, std::ofstream::out | std::ofstream::trunc);
-  for (const auto& index : traffic_tiles) {
-    tar_index_file << index.first << "," << index.second << std::endl;
-  }
-  tar_index_file.close();
-
-  LOG_INFO("Finished with " + std::to_string(traffic_tiles.size()) + " ways.");
-
-  return EXIT_SUCCESS;
-}
-
-// int main(int argc, char** argv) {
-//   // args
-//   std::string config_file_path;
-//   try {
-//     // clang-format off
-//     cxxopts::Options options(argv[0], " - Provides utilities for adding traffic to valhalla routing tiles.");
-
-//     options.add_options()
-//         ("h,help", "Print this help message.")
-//         ("c,config", "Path to the json configuration file.",
-//             cxxopts::value<std::string>(config_file_path))
-// 				("update-tile-traffic", "Update traffic for a given tile. Usage: --update-tile-traffic <tile_offset>,<timestamp>,[<edge_index>,<overall_speed>,<speed1>,<speed2>,<speed3>,<breakpoint1>,<breakpoint2>,<congestion1>,<congestion2>,<congestion3>,<has_incidents>,...]",
-//             cxxopts::value<std::vector<std::string>>())
-//         ("ways-to-edges", "Creates a list of edges for each OSM way with some additional attributes")
-//         ("tile-offset-index", "Creates an index of tile name with their offset in traffic_extract file");
-
-//     // clang-format on
-
-//     auto result = options.parse(argc, argv);
-
-//     if (result.count("help")) {
-//       return handle_help(options);
-//     }
-
-//     if (result.count("update-tile-traffic")) {
-//       return handle_update_tile_traffic(result, config_file_path);
-//     }
-
-//     if (result.count("ways-to-edges")) {
-//       return handle_ways_to_edges(config_file_path);
-//     }
-
-//     if (result.count("tile-offset-index")) {
-//       return handle_tile_offset_index(config_file_path);
-//     }
-
-//     std::cout << options.help() << std::endl;
-
-//   } catch (const std::exception& e) {
-//     std::cerr << "Unable to parse command line options because: " << e.what() << std::endl;
-//     return EXIT_FAILURE;
-//   }
-//   return EXIT_FAILURE;
-// }
-
-int main() {
-  return 0;
 }

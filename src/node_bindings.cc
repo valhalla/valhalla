@@ -8,23 +8,12 @@
 #include <iostream>
 
 
-Napi::Number GetLat(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    valhalla::midgard::Point2 point(40.0f, -75.0f); // x = 40.0, y = -75.0
-    return Napi::Number::New(env, point.y()); // y() returns second (aka lat)
-}
-
-Napi::String Hello(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    return Napi::String::New(env, "Hello from N-API!");
-}
-
 Napi::Value HandleTileTraffic(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
 
 
     // Check argument count
-    if (info.Length() < 3) {
+    if (info.Length() < 4) {
         Napi::TypeError::New(env, "Expected 3 arguments: tile_offset, traffic_params, last_updated")
             .ThrowAsJavaScriptException();
         return env.Null();
@@ -67,10 +56,19 @@ Napi::Value HandleTileTraffic(const Napi::CallbackInfo& info) {
     uint64_t last_updated = info[2].As<Napi::Number>().Uint32Value();
 
 
+    if (!info[3].IsString()) {
+        Napi::TypeError::New(env, "traffic_path must be a string")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+    std::string traffic_path = info[3].As<Napi::String>().Utf8Value();
+
+
     try {
 
         // Call the Valhalla traffic utility function
-        update_traffic_tile(tile_offset, traffic_params, last_updated);
+        update_traffic_tile(tile_offset, traffic_params, last_updated, traffic_path);
+        // update_traffic_tile(tile_offset, traffic_params, last_updated, traffic_path);
 
         // Return success indicator
         return Napi::String::New(env, "Traffic tile updated successfully");
@@ -83,8 +81,6 @@ Napi::Value HandleTileTraffic(const Napi::CallbackInfo& info) {
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    exports.Set("hello", Napi::Function::New(env, Hello));
-    exports.Set("getLat", Napi::Function::New(env, GetLat));
     exports.Set("handleTileTraffic", Napi::Function::New(env, HandleTileTraffic));
     return exports;
 }
