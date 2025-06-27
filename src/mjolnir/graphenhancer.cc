@@ -53,15 +53,15 @@ constexpr float kDensityRadius = 2.0f;
 constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDegreeLat;
 
 struct DensityCellId {
-  // Density grid operates with cell_id derived from coordinate by shifting its bits by (32 -
-  // kGridLevel), meaning that bigger level produces smaller cells.
-  // - 17: 362m x 181m cell at 60 latitude, approx 7.5k cells to cover single tile
-  // - 18: 181m x 90m cell at 60 latitude, approx 30k cells to cover single tile
-  // - 19: 90m x 45m cell at 60 latitude, approx 120k cells to cover single tile
-  static constexpr uint32_t kGridLevel = 18; // good compromise between performance and accuracy
+  // `cell_id` is computed by shifting coordinate values by this amount, meaning that a bigger
+  // level produces bigger cells (as fewer bits remain from coordinate).
+  // - 15: 362m x 181m cell at 60 latitude, approx 7.5k cells to cover single tile
+  // - 14: 181m x 90m cell at 60 latitude, approx 30k cells to cover single tile
+  // - 13: 90m x 45m cell at 60 latitude, approx 120k cells to cover single tile
+  static constexpr uint32_t kGridLevel = 14; // good compromise between performance and accuracy
 
   // Cell size in degrees
-  static constexpr float kSizeDeg = static_cast<float>(1 << (32 - kGridLevel)) / 1e7;
+  static constexpr float kSizeDeg = static_cast<float>(1 << kGridLevel) / 1e7;
 
   // Count number of cells required to cover the given bounding box
   static size_t cover_count(const AABB2<PointLL>& bbox) {
@@ -70,11 +70,12 @@ struct DensityCellId {
     return x_cells * y_cells;
   }
 
-  // If lat/lon is represented by 32 bit integer and `kGridLevel` number of higher bits of each
-  // coordinate component are used to identify a cell this coordinate belongs to, the maximum grid
-  // level that keeps cells globally unique is 16, as higher levels will lead to truncating coordinate
-  // higher bits. At the same time, as density is being calculated for a single tile (0.25 deg size)
-  // and its neighbors, such global uniqueness is not required, allowing to such a small type for id.
+  // If lat/lon is represented by 32 bit integer and coordinates are right-shifted by `kGridLevel`
+  // to identify a cell, the minimum grid level that keeps cells globally unique is 16, as smaller
+  // levels will lead to keeping too many coordinate bits that `id_` can hold. At the same time, as
+  // density is being calculated for a single tile (0.25 deg size) and its neighbors, such global
+  // uniqueness is not required, allowing to use such a small type for id.
+  // Alternatively, `uint64_t` can be used for global uniqueness with levels smaller than 16.
   uint32_t id_;
 
   DensityCellId(uint32_t id) : id_(id) {
@@ -84,8 +85,8 @@ struct DensityCellId {
     uint32_t x = static_cast<uint32_t>((ll.lng() + 180.0) * 1e7);
     uint32_t y = static_cast<uint32_t>((ll.lat() + 90.0) * 1e7);
 
-    x = x >> (32 - kGridLevel);
-    y = y >> (32 - kGridLevel);
+    x = x >> kGridLevel;
+    y = y >> kGridLevel;
 
     id_ = (x & 0x00FF) | ((y & 0x00FF) << 16);
   }
