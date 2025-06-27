@@ -231,10 +231,8 @@ TEST(Standalone, AdditionalSpeedAttributes) {
                                {"/costing_options/auto/speed_types/1", "predicted"},
                                {"/trace_options/breakage_distance", "10000"}},
                               {}, &trace_json, "via");
-
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
-
   auto edges = result["edges"].GetArray();
   ASSERT_EQ(edges.Size(), 2);
 
@@ -266,6 +264,40 @@ TEST(Standalone, AdditionalSpeedAttributes) {
               1);
   EXPECT_NEAR(edges[1]["speeds_faded"]["no_flow"].GetInt(), current * 0.5 + base * 0.5, 1);
 
+  api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto",
+                         {{"/shape_match", "edge_walk"},
+                          {"/date_time/type", "1"},
+                          {"/date_time/value", "2025-06-27T08:00"},
+                          {"/trace_options/breakage_distance", "10000"}},
+                         {}, &trace_json, "via");
+  result.Parse(trace_json.c_str());
+  edges = result["edges"].GetArray();
+
+  for (int i = 0; i < edges.Size(); i++) {
+    EXPECT_FALSE(edges[i].HasMember("speeds_faded"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("current_flow"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("predicted_flow"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("constrained_flow"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("free_flow"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("no_flow"));
+  }
+
+  api =
+      gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto",
+                       {{"/shape_match", "edge_walk"}, {"/trace_options/breakage_distance", "10000"}},
+                       {}, &trace_json, "via");
+  result.Parse(trace_json.c_str());
+  edges = result["edges"].GetArray();
+
+  for (int i = 0; i < edges.Size(); i++) {
+    EXPECT_FALSE(edges[i].HasMember("speeds_faded"));
+    EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("predicted_flow"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("current_flow"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("constrained_flow"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("free_flow"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("no_flow"));
+  }
+
   // reset historical traffic
   test::customize_historical_traffic(map.config, [&](DirectedEdge& e) {
     e.set_constrained_flow_speed(0);
@@ -292,10 +324,12 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   result.Parse(trace_json.c_str());
   edges = result["edges"].GetArray();
 
-  EXPECT_FALSE(edges[0].HasMember("speeds_faded"));
-
-  EXPECT_FALSE(edges[1]["speeds_non_faded"].HasMember("current_flow"));
-  EXPECT_FALSE(edges[1]["speeds_non_faded"].HasMember("predicted_flow"));
-  EXPECT_FALSE(edges[1]["speeds_non_faded"].HasMember("constrained_flow"));
-  EXPECT_FALSE(edges[1]["speeds_non_faded"].HasMember("free_flow"));
+  for (int i = 0; i < edges.Size(); i++) {
+    // no faded speeds because edges don't have traffic speed anymore
+    EXPECT_FALSE(edges[i].HasMember("speeds_faded"));
+    EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("current_flow"));
+    EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("predicted_flow"));
+    EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("constrained_flow"));
+    EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("free_flow"));
+  }
 }
