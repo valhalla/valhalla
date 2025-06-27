@@ -1224,10 +1224,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       if (faded) {
         seconds_from_now = time_info.seconds_from_now;
         // if faded current flow is requested, fade the current speed with the speed_types' flow_mask
-        if (initial_flow_mask == kCurrentFlowMask){
+        if (initial_flow_mask == kCurrentFlowMask) {
           flow_mask = costing->flow_mask();
         }
-          flow_mask |= kCurrentFlowMask;
+        flow_mask |= kCurrentFlowMask;
       }
       uint32_t speed = graphtile->GetSpeed(directededge, flow_mask, second_of_week, false,
                                            &flow_sources, seconds_from_now);
@@ -1240,23 +1240,23 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     auto set_speeds = [&](valhalla::TripLeg_Speeds* speeds, bool faded) {
       std::optional<uint32_t> speed;
 
-      speed = get_speed(kCurrentFlowMask, faded);
+      speed = get_speed(kCurrentFlowMask, faded, time_info.second_of_week);
       if (speed.has_value()) {
         speeds->set_current_flow(speed.value());
       }
 
       speed = get_speed(kPredictedFlowMask, faded, time_info.second_of_week);
-      if (speed.has_value()) {
+      if (speed.has_value() && directededge->has_predicted_speed()) {
         speeds->set_predicted_flow(speed.value());
       }
 
       speed = get_speed(kConstrainedFlowMask, faded);
-      if (speed.has_value()) {
+      if (speed.has_value() && directededge->constrained_flow_speed() > 0) {
         speeds->set_constrained_flow(speed.value());
       }
 
       speed = get_speed(kFreeFlowMask, faded);
-      if (speed.has_value()) {
+      if (speed.has_value() && directededge->free_flow_speed() > 0) {
         speeds->set_free_flow(speed.value());
       }
 
@@ -1266,7 +1266,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       }
     };
 
-    if (time_info.valid && controller(kEdgeSpeedsFaded)) {
+    if (time_info.valid && controller(kEdgeSpeedsFaded) &&
+        graphtile->trafficspeed(directededge).speed_valid()) {
       set_speeds(trip_edge->mutable_speeds_faded(), true);
     }
     if (controller(kEdgeSpeedsNonFaded)) {
