@@ -99,7 +99,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
                  const uint32_t tile_date,
                  const Transit& tile_pbf,
                  std::unordered_map<GraphId, uint16_t>& stop_no_access,
-                 const std::string& pbf_fp,
+                 const std::filesystem::path& pbf_fp,
                  std::mutex& lock,
                  builder_stats& stats) {
   // Check if there are no schedule stop pairs in this tile
@@ -109,10 +109,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
   uint32_t schedule_index = 0;
   std::map<TransitSchedule, uint32_t> schedules;
 
-  std::size_t slash_found = pbf_fp.find_last_of("/\\");
-  std::string directory = pbf_fp.substr(0, slash_found);
-
-  std::filesystem::recursive_directory_iterator transit_file_itr(directory);
+  std::filesystem::recursive_directory_iterator transit_file_itr(pbf_fp.parent_path());
   std::filesystem::recursive_directory_iterator end_file_itr;
 
   // lambda to add a schedule

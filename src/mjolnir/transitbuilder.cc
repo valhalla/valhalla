@@ -533,9 +533,9 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // Bail if nothing
   auto hierarchy_properties = pt.get_child("mjolnir");
-  auto transit_config = hierarchy_properties.get_optional<std::string>("transit_dir");
-  std::filesystem::path transit_dir{*transit_config};
-  if (!transit_config || !std::filesystem::exists(transit_dir) ||
+  std::filesystem::path transit_dir{hierarchy_properties.get<std::string>("transit_dir", "")};
+
+  if (transit_dir.empty() || !std::filesystem::exists(transit_dir) ||
       !std::filesystem::is_directory(transit_dir)) {
     LOG_INFO("Transit directory not found. Transit will not be added.");
     return;

@@ -81,7 +81,7 @@ struct tile_transit_info_t {
 
 struct feed_cache_t {
   std::unordered_map<std::string, gtfs::Feed> cache;
-  std::string gtfs_dir;
+  std::filesystem::path gtfs_dir;
 
   feed_cache_t(const std::string& gtfs_dir) : gtfs_dir(gtfs_dir) {
   }
@@ -92,7 +92,7 @@ struct feed_cache_t {
       return found->second;
     }
 
-    auto inserted = cache.insert({feed_object.feed, gtfs::Feed(gtfs_dir + feed_object.feed)});
+    auto inserted = cache.insert({feed_object.feed, gtfs::Feed(gtfs_dir / feed_object.feed)});
     inserted.first->second.read_feed();
     return inserted.first->second;
   }
@@ -923,7 +923,6 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
   // figure out which transit tiles even exist
   std::filesystem::path transit_base_dir{pt.get<std::string>("mjolnir.transit_dir")};
   std::filesystem::path transit_dir = transit_base_dir;
-  transit_dir.append(std::to_string(TileHierarchy::GetTransitLevel().level));
   std::filesystem::recursive_directory_iterator transit_file_itr(transit_dir);
   std::unordered_set<GraphId> all_tiles;
   for (const auto& dir_entry : transit_file_itr) {

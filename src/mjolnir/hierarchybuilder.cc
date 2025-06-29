@@ -556,7 +556,7 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_
       GraphId empty_tile = itr->first;
       std::filesystem::path file_location{tile_dir};
       file_location.append(GraphTile::FileSuffix(empty_tile.Tile_Base()));
-      remove(file_location.c_str());
+      std::filesystem::remove(file_location);
       LOG_DEBUG("Remove file: " + file_location.string());
     }
   }
