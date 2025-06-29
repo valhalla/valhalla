@@ -65,9 +65,10 @@ typename std::enable_if<has_data<Container>::value, bool>::type inline save(
   // Technically this is a race condition but its super unlikely (famous last words)
   // TODO(nils): what am I missing here? why the while loop?
   //   how can tmp_location be empty after 1st iteration? how can a file be created in the loop?
-  while (tmp_location.empty() || std::filesystem::exists(tmp_location))
+  while (tmp_location.empty() || std::filesystem::exists(tmp_location)) {
     tmp_location = fpath;
-  tmp_location += generate_tmp_suffix();
+    tmp_location += generate_tmp_suffix();
+  }
 
   std::ofstream file(tmp_location, std::ios::out | std::ios::binary | std::ios::ate);
   file.write(data.data(), data.size());

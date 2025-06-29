@@ -119,7 +119,7 @@ TEST(Filesystem, save_file_valid_input) {
 }
 
 TEST(Filesystem, save_file_invalid_input) {
-  std::vector<std::string> tests{"", "/etc/", "/tmp/", "/var/"};
+  std::vector<std::filesystem::path> tests{"", "/etc/", "/tmp/", "/var/"};
 
   for (const auto& test : tests)
     EXPECT_FALSE(vfs::save<std::string>(test)) << "FAILED " << test;
