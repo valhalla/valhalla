@@ -88,7 +88,8 @@ protected:
    * @param filename   name of the file on the file system to read into memory
    * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
    */
-  static std::shared_ptr<const valhalla::IncidentsTile> read_tile(const std::string& filename) {
+  static std::shared_ptr<const valhalla::IncidentsTile>
+  read_tile(const std::filesystem::path& filename) {
     // open the file for reading. its normal for this to fail when the file has been removed
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file.is_open()) {
@@ -105,7 +106,7 @@ protected:
     // try to parse the stream
     std::shared_ptr<valhalla::IncidentsTile> tile(new valhalla::IncidentsTile);
     if (!tile->ParseFromCodedStream(&cs)) {
-      LOG_WARN("Incident Watcher failed to parse " + filename);
+      LOG_WARN("Incident Watcher failed to parse " + filename.string());
       return {};
     }
 

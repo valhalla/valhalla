@@ -921,8 +921,8 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
       pt.get<unsigned int>("mjolnir.concurrency", std::max(static_cast<unsigned int>(1),
                                                            std::thread::hardware_concurrency()));
   // figure out which transit tiles even exist
-  std::filesystem::path transit_base_dir{pt.get<std::string>("mjolnir.transit_dir")};
-  std::filesystem::path transit_dir = transit_base_dir;
+  std::filesystem::path transit_dir{pt.get<std::string>("mjolnir.transit_dir")};
+
   std::filesystem::recursive_directory_iterator transit_file_itr(transit_dir);
   std::unordered_set<GraphId> all_tiles;
   for (const auto& dir_entry : transit_file_itr) {

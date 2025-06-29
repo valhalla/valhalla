@@ -5,9 +5,7 @@
 
 using namespace valhalla;
 
-const std::string scratch_dir = std::string("data") + std::filesystem::path::preferred_separator +
-                                std::string("incident_loading") +
-                                std::filesystem::path::preferred_separator;
+const std::filesystem::path scratch_dir{"data/incident_loading"};
 
 class incident_loading : public testing::Test {
 protected:
@@ -44,25 +42,25 @@ struct testable_singleton : public incident_singleton_t {
 };
 
 TEST_F(incident_loading, read_tile) {
-  std::string filename = scratch_dir + "foobar";
+  auto filepath = scratch_dir / "foobar";
 
   // no file to read
-  ASSERT_FALSE(testable_singleton::read_tile(filename)) << " should fail to find the file to read";
+  ASSERT_FALSE(testable_singleton::read_tile(filepath)) << " should fail to find the file to read";
 
   // failed to parse
   {
-    std::ofstream f(filename);
+    std::ofstream f(filepath);
     f << "bazqux";
   }
-  ASSERT_FALSE(testable_singleton::read_tile(filename)) << " should fail to parse the file";
+  ASSERT_FALSE(testable_singleton::read_tile(filepath)) << " should fail to parse the file";
 
   // empty but valid
   IncidentsTile t;
   {
-    std::ofstream f(filename, std::ofstream::out | std::ofstream::trunc);
+    std::ofstream f(filepath, std::ofstream::out | std::ofstream::trunc);
     f << t.SerializeAsString();
   }
-  ASSERT_FALSE(testable_singleton::read_tile(filename)) << " should ignore empty tile";
+  ASSERT_FALSE(testable_singleton::read_tile(filepath)) << " should ignore empty tile";
 
   // actually something
   auto* loc = t.mutable_locations()->Add();
@@ -71,10 +69,10 @@ TEST_F(incident_loading, read_tile) {
   loc->set_end_offset(1);
   loc->set_metadata_index(0);
   {
-    std::ofstream f(filename, std::ofstream::out | std::ofstream::trunc);
+    std::ofstream f(filepath, std::ofstream::out | std::ofstream::trunc);
     f << t.SerializeAsString();
   }
-  ASSERT_TRUE(testable_singleton::read_tile(filename)) << " should return valid tile";
+  ASSERT_TRUE(testable_singleton::read_tile(filepath)) << " should return valid tile";
 }
 
 TEST_F(incident_loading, update_tile) {
@@ -119,9 +117,9 @@ TEST_F(incident_loading, disabled) {
 
 TEST_F(incident_loading, watch) {
   // both configs
-  auto log_path = scratch_dir + "log";
-  for (const auto& conf :
-       std::vector<std::tuple<std::string, std::string, std::unordered_set<baldr::GraphId>>>{
+  auto log_path = scratch_dir / "log";
+  for (const auto& conf : std::vector<
+           std::tuple<std::string, std::filesystem::path, std::unordered_set<baldr::GraphId>>>{
            {"incident_dir", scratch_dir, {}},
            {"incident_log", log_path, {}},
            {"incident_dir", scratch_dir, {baldr::GraphId{11, 1, 0}, baldr::GraphId{66, 2, 0}}},
@@ -129,19 +127,17 @@ TEST_F(incident_loading, watch) {
        }) {
     // build config
     boost::property_tree::ptree config;
-    config.put(std::get<0>(conf), std::get<1>(conf));
+    config.put(std::get<0>(conf), std::get<1>(conf).string());
     config.put("incident_max_loading_latency", 0);
 
     // map a log file
     baldr::GraphId snake_eyes{11, 1, 0};
-    auto snake_eyes_name = scratch_dir + baldr::GraphTile::FileSuffix(snake_eyes, ".pbf");
+    auto snake_eyes_name = scratch_dir / baldr::GraphTile::FileSuffix(snake_eyes, ".pbf");
     baldr::GraphId box_cars{66, 2, 0};
-    auto box_cars_name = scratch_dir + baldr::GraphTile::FileSuffix(box_cars, ".pbf");
-    ASSERT_TRUE(
-        std::filesystem::create_directories(std::filesystem::path(snake_eyes_name).parent_path()));
-    ASSERT_TRUE(
-        std::filesystem::create_directories(std::filesystem::path(box_cars_name).parent_path()));
-    midgard::sequence<uint64_t> log(log_path, true, 1);
+    auto box_cars_name = scratch_dir / baldr::GraphTile::FileSuffix(box_cars, ".pbf");
+    ASSERT_TRUE(std::filesystem::create_directories(snake_eyes_name.parent_path()));
+    ASSERT_TRUE(std::filesystem::create_directories(box_cars_name.parent_path()));
+    midgard::sequence<uint64_t> log(log_path.string(), true, 1);
 
     // if its a static tileset we must preload the changelog before the watch function maps the file
     // this is because the sequence object doesnt listen for changes to the size of the mapped file
@@ -321,9 +317,8 @@ TEST_F(incident_loading, constructor) {
 TEST_F(incident_loading, get) {
   // setup some data for it to get
   baldr::GraphId box_cars{66, 2, 0};
-  auto box_cars_name = scratch_dir + baldr::GraphTile::FileSuffix(box_cars, ".pbf");
-  ASSERT_TRUE(
-      std::filesystem::create_directories(std::filesystem::path(box_cars_name).parent_path()));
+  auto box_cars_name = scratch_dir / baldr::GraphTile::FileSuffix(box_cars, ".pbf");
+  ASSERT_TRUE(std::filesystem::create_directories(box_cars_name.parent_path()));
   IncidentsTile box_cars_tile;
   auto* loc = box_cars_tile.mutable_locations()->Add();
   loc->set_edge_index(12);
@@ -344,7 +339,7 @@ TEST_F(incident_loading, get) {
 
   // get the one that is there
   boost::property_tree::ptree config;
-  config.put("incident_dir", scratch_dir);
+  config.put("incident_dir", scratch_dir.string());
   auto got = incident_singleton_t::get(box_cars, config, {});
   ASSERT_TRUE(got);
   ASSERT_TRUE(test::pbf_equals(box_cars_tile, *got));

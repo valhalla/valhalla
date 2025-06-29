@@ -437,7 +437,7 @@ void statistics::add(const statistics& stats) {
   roulette_data.Add(stats.roulette_data);
 }
 
-statistics::RouletteData::RouletteData() : shape_bb(), way_IDs(), way_shapes(), unroutable_nodes() {
+statistics::RouletteData::RouletteData() : shape_bb(), way_shapes(), way_IDs(), unroutable_nodes() {
 }
 
 void statistics::RouletteData::AddTask(const AABB2<PointLL>& bb,
