@@ -1,6 +1,5 @@
 #include "argparse_utils.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -12,6 +11,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <filesystem>
 #include <fstream>
 #include <future>
 #include <list>
@@ -121,7 +121,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 }
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   size_t batch, isolated, radius;
   bool extrema = false;

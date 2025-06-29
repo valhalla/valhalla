@@ -38,8 +38,16 @@ def get_config(
 
     config = _sanitize_config(default_config.copy())
 
-    config["mjolnir"]["tile_dir"] = str(Path(tile_dir).resolve())
-    config["mjolnir"]["tile_extract"] = str(Path(tile_extract).resolve())
+    config["mjolnir"]["tile_dir"] = (
+        ""
+        if isinstance(tile_dir, str) and not str(tile_dir)
+        else str(Path(tile_dir).resolve(strict=True))
+    )
+    config["mjolnir"]["tile_extract"] = (
+        ""
+        if isinstance(tile_extract, str) and not str(tile_extract)
+        else str(Path(tile_extract).resolve(strict=True))
+    )
     config["mjolnir"]["logging"]["type"] = "std_out" if verbose else ""
 
     return config

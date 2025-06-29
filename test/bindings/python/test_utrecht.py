@@ -40,17 +40,17 @@ class TestBindings(unittest.TestCase):
         del cls.actor
 
     def test_config(self):
-        config = get_config(self.tiles_path, self.extract_path)
+        config = get_config(self.extract_path, self.tiles_path)
 
         self.assertEqual(config['mjolnir']['tile_dir'], str(self.tiles_path.resolve()))
         self.assertEqual(config['mjolnir']['tile_extract'], str(self.extract_path.resolve()))
     
     def test_config_actor(self):
         # shouldn't load the extract, but we cant test that from python
-        config = get_config(self.tiles_path)
+        config = get_config("", self.tiles_path)
         with open(self.config_path, 'w') as f:
             json.dump(config, f, indent=2)
-            
+
         actor = Actor(str(self.config_path))
         self.assertIn('tileset_last_modified', actor.status())
     
@@ -113,7 +113,7 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(len(iso['features']), 6)  # 4 isochrones and the 2 point layers
 
     def test_change_config(self):
-        config = get_config(self.tiles_path, self.extract_path)
+        config = get_config(self.extract_path, self.tiles_path)
         config['service_limits']['bicycle']['max_distance'] = 1
         with open(self.config_path, 'w') as f:
             json.dump(config, f, indent=2)

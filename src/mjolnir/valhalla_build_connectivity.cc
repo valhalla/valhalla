@@ -1,7 +1,6 @@
 #include "argparse_utils.h"
 #include "baldr/connectivity_map.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
@@ -10,6 +9,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -41,7 +42,7 @@ struct RGB {
 
 // Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 

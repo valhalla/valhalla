@@ -1,11 +1,11 @@
 #include "mjolnir/sqlite3.h"
 #include "midgard/logging.h"
-#include "valhalla/filesystem.h"
 
 #include <sqlite3.h>
 // needs to be after sqlite include
 #include <spatialite.h>
 
+#include <filesystem>
 #include <mutex>
 
 namespace {
@@ -49,7 +49,7 @@ std::optional<Sqlite3> Sqlite3::open(const std::string& path, int flags) {
     return {};
   }
 
-  if (!(flags & SQLITE_OPEN_CREATE) && !filesystem::exists(path)) {
+  if (!(flags & SQLITE_OPEN_CREATE) && !std::filesystem::exists(path)) {
     return {};
   }
 
