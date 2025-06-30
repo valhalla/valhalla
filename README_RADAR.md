@@ -11,6 +11,7 @@ Radar extends Valhalla in two main ways for live traffic.
 1. Building various files needed for live traffic. Some of these are already built into Valhalla but we made some modifications
   a. Modified ways_to_edges which builds ways_to_edges.db. Now it includes shortcuts, direction, and length of edge
   b. Added traffic_tile_offset which builds tile offsets from a traffic.tar
+  c. Added build-verification and verify CLI tools to help verify changes made to the traffic.tar to ensure that the file doesn't get corrupted
 
 1. Building a NAPI extension that is used by https://github.com/radarlabs/valhalla-traffic-builder to ingest traffic into the traffic.tar
 
@@ -62,6 +63,17 @@ This will build  `node_bindings.node` to `/build`. See https://github.com/radarl
 **Generating traffic tile offset**
 ```
 ```
+
+**Generating traffic_verify.txt**
+```bash
+valhalla_traffic_tool -c valhalla.json --build-verification
+```
+
+**Verifying traffic.tar against a traffic_verification.txt**
+```bash
+valhalla_traffic_tool --verify --traffic-path traffic_current.tar --verify-path traffic_verification.txt
+```
+
 
 **Other useful tools**
 ```

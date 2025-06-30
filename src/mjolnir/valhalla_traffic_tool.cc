@@ -39,8 +39,14 @@ int main(int argc, char** argv) {
             cxxopts::value<std::string>(config_file_path))
 				("update-tile-traffic", "Update traffic for a given tile. Usage: --update-tile-traffic <tile_offset>,<timestamp>,[<edge_index>,<overall_speed>,<speed1>,<speed2>,<speed3>,<breakpoint1>,<breakpoint2>,<congestion1>,<congestion2>,<congestion3>,<has_incidents>,...]",
             cxxopts::value<std::vector<std::string>>())
-        ("ways-to-edges", "Creates a list of edges for each OSM way with some additional attributes")
-        ("tile-offset-index", "Creates an index of tile name with their offset in traffic_extract file");
+        ("build-verification", "Creates a verification file for the traffic.tar file. To be used with verify")
+        ("verify", "Verifies the traffic.tar file. To be used before replacing new traffic.tar file to ensure it has not been corrupted. Usage: --verify-path <verify_path> --traffic-path <traffic_path>")
+        ("tile-offset-index", "Creates an index of tile name with their offset in traffic_extract file")
+        ("verify-path", "Path to the verification file.",
+        cxxopts::value<std::string>())
+        ("traffic-path", "Path to the traffic.tar file.",
+        cxxopts::value<std::string>())
+        ;
 
     // clang-format on
 
@@ -50,13 +56,24 @@ int main(int argc, char** argv) {
       return handle_help(options);
     }
 
-
-    if (result.count("ways-to-edges")) {
-      return handle_ways_to_edges(config_file_path);
-    }
-
     if (result.count("tile-offset-index")) {
       return handle_tile_offset_index(config_file_path);
+    }
+
+    if (result.count("build-verification")) {
+      return handle_build_verification(config_file_path);
+    }
+
+    if (result.count("verify")) {
+      if (!result.count("verify-path")) {
+        std::cerr << "Please provide a path to verify with --verify-path" << std::endl;
+        return EXIT_FAILURE;
+      }
+      if (!result.count("traffic-path")) {
+        std::cerr << "Please provide a path to the traffic.tar file with --traffic-path" << std::endl;
+        return EXIT_FAILURE;
+      }
+      return handle_verify(result["traffic-path"].as<std::string>(), result["verify-path"].as<std::string>());
     }
 
     std::cout << options.help() << std::endl;
