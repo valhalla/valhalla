@@ -257,11 +257,6 @@ int main(int argc, char* argv[]) {
       auto edge_info = tile->edgeinfo(edge.e);
       auto names = edge_info.GetNames();
 
-
-      if (edge.e->is_shortcut() ) {
-        std::cout << "shortcut " << names.size() << std::endl;
-      }
-
       if (names.size() == 0 && !unnamed) {
         continue;
       }
