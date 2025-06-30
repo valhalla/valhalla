@@ -14,6 +14,8 @@ namespace mjolnir {
 struct EdgeAndDirection {
   bool forward;
   baldr::GraphId edgeid;
+  uint32_t length;
+  bool shortcut;
 };
 
 /**

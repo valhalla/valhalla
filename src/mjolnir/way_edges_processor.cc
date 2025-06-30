@@ -2,7 +2,7 @@
 #include "baldr/edgeinfo.h"
 
 #include <fstream>
-
+// #include <iostream>
 namespace valhalla {
 namespace mjolnir {
 
@@ -14,8 +14,16 @@ void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirec
 
   for (const auto& way : ways_edges) {
     ways_file << way.first;
+
+    bool isFirst = true;
     for (auto edge : way.second) {
-      ways_file << "," << (uint32_t)edge.forward << "," << (uint64_t)edge.edgeid;
+      if (isFirst) {
+        ways_file << "," << (uint32_t)edge.forward << "|" << (uint64_t)edge.edgeid << "|" << edge.length << "|" << (uint32_t)edge.shortcut;
+        isFirst = false;
+      }
+      else {
+        ways_file << "|" << (uint32_t)edge.forward << "|" << (uint64_t)edge.edgeid << "|" << edge.length << "|" << (uint32_t)edge.shortcut;
+      }
     }
     ways_file << std::endl;
   }
@@ -46,7 +54,7 @@ collect_way_edges(baldr::GraphReader& reader, const std::string& filename) {
       // Skip transit, connection, and shortcut edges
       if (edge->IsTransitLine() || edge->use() == baldr::Use::kTransitConnection ||
           edge->use() == baldr::Use::kEgressConnection ||
-          edge->use() == baldr::Use::kPlatformConnection || edge->is_shortcut()) {
+          edge->use() == baldr::Use::kPlatformConnection) {
         continue;
       }
 
@@ -55,9 +63,20 @@ collect_way_edges(baldr::GraphReader& reader, const std::string& filename) {
         continue;
       }
 
-      // Get the way Id and store edge information
-      uint64_t wayid = tile->edgeinfo(edge).wayid();
-      ways_edges[wayid].push_back({edge->forward(), edge_id});
+      if (edge->is_shortcut()) {
+        auto edges = reader.RecoverShortcut(edge_id);
+        for (auto sub_edge_id : edges) {
+          baldr::graph_tile_ptr sub_edge_tile = reader.GetGraphTile(sub_edge_id);
+          const baldr::DirectedEdge* sub_edge = sub_edge_tile->directededge(sub_edge_id);
+
+          uint64_t wayid = tile->edgeinfo(sub_edge).wayid();
+          ways_edges[wayid].push_back({edge->forward(), edge_id, edge->length(), true});
+        }
+      } else {
+        // Get the way Id and store edge information
+        uint64_t wayid = tile->edgeinfo(edge).wayid();
+        ways_edges[wayid].push_back({edge->forward(), edge_id, edge->length(), false});
+      }
     }
   }
   if (!filename.empty()) {

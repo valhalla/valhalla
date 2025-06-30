@@ -249,13 +249,14 @@ int main(int argc, char* argv[]) {
       ++set;
 
       // shortcuts arent real and maybe we dont want ferries
-      if (edge.e->is_shortcut() || (!ferries && edge.e->use() == Use::kFerry)) {
+      if ((!ferries && edge.e->use() == Use::kFerry)) {
         continue;
       }
 
       // no name no thanks
       auto edge_info = tile->edgeinfo(edge.e);
       auto names = edge_info.GetNames();
+
       if (names.size() == 0 && !unnamed) {
         continue;
       }
