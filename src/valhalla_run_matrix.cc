@@ -171,12 +171,13 @@ int main(int argc, char* argv[]) {
   std::unordered_map<std::string, float> max_matrix_distance;
   for (const auto& kv : config.get_child("service_limits")) {
     // Skip over any service limits that are not for a costing method
-    if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
-        kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
-        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "status" || kv.first == "max_timedep_distance_matrix" ||
-        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions") {
+    if (kv.first == "allow_hard_exclusions" || kv.first == "centroid" ||
+        kv.first == "hierarchy_limits" || kv.first == "isochrone" || kv.first == "max_alternates" ||
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "max_exclude_locations" ||
+        kv.first == "max_exclude_polygons_length" || kv.first == "max_radius" ||
+        kv.first == "max_reachability" || kv.first == "max_timedep_distance" ||
+        kv.first == "max_timedep_distance_matrix" || kv.first == "skadi" || kv.first == "status" ||
+        kv.first == "trace") {
       continue;
     }
     max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
