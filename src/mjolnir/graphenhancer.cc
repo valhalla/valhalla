@@ -875,7 +875,7 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   return true;
 }
 
-float NodeRoadlengths(const graph_tile_ptr& tile,  const NodeInfo* node) {
+float NodeRoadlengths(const graph_tile_ptr& tile, const NodeInfo* node) {
   float roadlengths = 0.0f;
   const DirectedEdge* directededge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
