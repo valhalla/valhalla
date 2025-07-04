@@ -6,7 +6,7 @@ Baldr is essentially a set of various data structures and algorithms which deal 
 
 ## Components
 
-### GraphId
+### `GraphId`
 
 `GraphId` ([source](https://github.com/valhalla/valhalla/blob/master/valhalla/baldr/graphid.h)) is a **unique identifier** of a _node_ or an _edge_ within the [tiled, hierarchical graph](tiles.md).
 
@@ -22,21 +22,21 @@ It includes:
 
 Internally, Valhalla uses a **64-bit integer** value to represent `GraphId`. This representation supports efficient comparison and hashing operations and allows for reasonable ranges of field values.
 
-Here's the definition. The fields are presented with the most significant bit (MSb) first - see [Bit numbering](https://en.wikipedia.org/wiki/Bit_numbering) for more info.
+Here's the bit layout of the value. The fields are presented with the most significant bit (MSb) first - see [Bit numbering](https://en.wikipedia.org/wiki/Bit_numbering) for more info.
 
 ```text
        MSb                                     LSb
        ▼                                       ▼
 bit   64         46        25         3        0
-pos    +----------+---------+---------+--------+
-       | RESERVED | id      | tileid  | level  |
-       +----------+---------+---------+--------+
+pos    ┌──────────┬─────────┬─────────┬────────┐
+       │ RESERVED │ id      │ tileid  │ level  │
+       └──────────┴─────────┴─────────┴────────┘
 size     18         21        22        3
 ```
 
 #### Fields
 
-Order is based on field position in bit layout, from field starting at the Most significant to one ending at Least significant bit.
+Order is based on field position in bit layout, from field starting at the MSb to one ending at LSb.
 
 | Field | Bits | Description |
 |---|---|---|
@@ -52,22 +52,22 @@ Order is based on field position in bit layout, from field starting at the Most 
 | Field | Bits | Decimal | Binary |
 |---|---|---|---|
 | RESERVED | 18 |  |  |
-| `id` | 21 | `1234567` | `0b100101101011010000111` |
-| `tileid` | 22 | `5869` | `0b0000000001011011101101` |
-| `level` | 3 | `1` | `0b001` |
+| `id` | 21 | 1234567 | `0b100101101011010000111` |
+| `tileid` | 22 | 5869 | `0b0000000001011011101101` |
+| `level` | 3 | 1 | `0b001` |
 
 - Final value, decimal: `41425194497897`
 - Final value, binary:
 
-    ```cpp
-    0b100101101011010000111'0000000001011011101101'001
+    ```python
+    0b100101101011010000111_0000000001011011101101_001
     ```
 
 ##### Invalid `GraphId`
 
 Invalid `GraphId` value has all non-reserved bits set to `1`:
 
-```cpp
+```python
 0x3fffffffffff
 ```
 
