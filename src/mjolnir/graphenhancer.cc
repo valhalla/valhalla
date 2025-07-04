@@ -929,10 +929,11 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
     }
   }
 
+  // process neighboring tiles
   for (const auto& t : tile_level.tiles.TileList(bbox)) {
     const GraphId tile_id(t, tile_level.level, 0);
     if (tile_id == tile->id()) {
-      continue; // skip current tile
+      continue; // skip current tile as it was processed above
     }
 
     lock.lock();
@@ -947,10 +948,9 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
     const auto end_node = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
       const PointLL node_ll = node->latlng(base_ll);
-      if (!bbox.Contains(node_ll)) {
-        continue;
+      if (bbox.Contains(node_ll)) {
+        density_grid[node_ll] += NodeRoadlengths(newtile, node);
       }
-      density_grid[node_ll] += NodeRoadlengths(newtile, node);
     }
   }
 
