@@ -71,6 +71,68 @@ Invalid `GraphId` value has all non-reserved bits set to `1`:
 0x3fffffffffff
 ```
 
+#### Code
+
+Below are some sample Python functions:
+
+```python linenums="1"
+HIERARCHY_LEVEL_BITS = 3
+HIERARCHY_LEVEL_MASK = 2**HIERARCHY_LEVEL_BITS - 1
+MAX_HIERARCHY_LEVEL = HIERARCHY_LEVEL_MASK
+
+TILE_INDEX_BITS = 22
+TILE_INDEX_MASK = 2**TILE_INDEX_BITS - 1
+MAX_TILE_INDEX = TILE_INDEX_MASK
+
+OBJECT_INDEX_BITS = 21
+OBJECT_INDEX_MASK = 2**OBJECT_INDEX_BITS - 1
+MAX_OBJECT_INDEX = OBJECT_INDEX_MASK
+
+def to_graph_id(
+    hierarchy_level: int,
+    tile_index: int,
+    object_index: int,
+) -> int:
+    """Create 64-bit representation of `GraphId`."""
+
+    assert 0 <= hierarchy_level <= MAX_HIERARCHY_LEVEL
+    assert 0 <= tile_index <= MAX_TILE_INDEX
+    assert 0 <= object_index <= MAX_OBJECT_INDEX
+
+    x = (
+        # 3 bits
+        hierarchy_level
+        # 22 bits, offset by previous field's width
+        | (tile_index << HIERARCHY_LEVEL_BITS)
+        # 21 bits, offset by the combined width of previous fields
+        | (object_index << (HIERARCHY_LEVEL_BITS + TILE_INDEX_BITS))
+    )
+
+    return x
+
+
+def get_hierarchy_level(graph_id: int) -> int:
+    """Hierarchy level from 64-bit representation of `GraphId`."""
+
+    return graph_id & HIERARCHY_LEVEL_MASK
+
+
+def get_tile_index(graph_id: int) -> int:
+    """Tile index from 64-bit representation of `GraphId`."""
+
+    offset = HIERARCHY_LEVEL_BITS
+
+    return (graph_id >> offset) & TILE_INDEX_MASK
+
+
+def get_object_index(graph_id: int) -> int:
+    """Object (node or edge) index from 64-bit representation of `GraphId`."""
+
+    offset = HIERARCHY_LEVEL_BITS + TILE_INDEX_BITS
+
+    return (graph_id >> offset) & OBJECT_INDEX_MASK
+```
+
 ### GraphTileReader
 
 TODO:
