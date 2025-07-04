@@ -16,7 +16,10 @@ It includes:
 - Tile index
 - Node or edge index
 
-> `GraphId` does **not** contain the information about the _kind_ of object it identifies. We cannot tell whether a `GraphId` represents a node or an edge just by looking at it. For example, an ID with object index 0 may represent either a node or an edge. In other words, we could (and usually do) have two objects -  a node and an edge - with the same identifier.
+!!! warning
+       `GraphId` does **not** contain the information about the _kind_ of object it identifies. We cannot tell whether a `GraphId` represents a node or an edge just by looking at it.
+
+       For example, an ID with object index 0 may represent _either_ a node _or_ an edge. In other words, we could (and usually do) have two objects -  a node and an edge - with the same identifier.
 
 #### Implementation
 
