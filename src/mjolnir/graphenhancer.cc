@@ -875,6 +875,20 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   return true;
 }
 
+float NodeRoadlengths(const graph_tile_ptr& tile,  const NodeInfo* node) {
+  float roadlengths = 0.0f;
+  const DirectedEdge* directededge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
+    // Exclude non-roads (parking, walkways, ferries, construction, etc.)
+    if (directededge->is_road() || directededge->use() == Use::kRamp ||
+        directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
+        directededge->use() == Use::kEmergencyAccess) {
+      roadlengths += directededge->length();
+    }
+  }
+  return roadlengths;
+}
+
 /**
  * Build a density index by accumulating edge lengths in each grid cell and convert
  * to the relative density values (0-15) used by the enhancer.
@@ -905,9 +919,24 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
   ankerl::unordered_dense::map<DensityCellId, float> density_grid;
   density_grid.reserve(DensityCellId::cover_count(bbox));
 
+  // Process current tile separately from neighbors to always have a cell for each node in the tile
+  {
+    const PointLL base_ll = tile->header()->base_ll();
+    const auto start_node = tile->node(0);
+    const auto end_node = start_node + tile->header()->nodecount();
+    for (auto node = start_node; node < end_node; ++node) {
+      density_grid[node->latlng(base_ll)] += NodeRoadlengths(tile, node);
+    }
+  }
+
   for (const auto& t : tile_level.tiles.TileList(bbox)) {
+    const GraphId tile_id(t, tile_level.level, 0);
+    if (tile_id == tile->id()) {
+      continue; // skip current tile
+    }
+
     lock.lock();
-    auto newtile = reader.GetGraphTile(GraphId(t, tile_level.level, 0));
+    auto newtile = reader.GetGraphTile(tile_id);
     lock.unlock();
     if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
@@ -917,24 +946,11 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
     const auto start_node = newtile->node(0);
     const auto end_node = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
-      // todo: consider separating iteration over the `tile` and neighbor tiles
       const PointLL node_ll = node->latlng(base_ll);
       if (!bbox.Contains(node_ll)) {
         continue;
       }
-
-      float roadlengths = 0.0f;
-      const DirectedEdge* directededge = newtile->directededge(node->edge_index());
-      for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
-        // Exclude non-roads (parking, walkways, ferries, construction, etc.)
-        if (directededge->is_road() || directededge->use() == Use::kRamp ||
-            directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
-            directededge->use() == Use::kEmergencyAccess) {
-          roadlengths += directededge->length();
-        }
-      }
-
-      density_grid[node_ll] += roadlengths;
+      density_grid[node_ll] += NodeRoadlengths(newtile, node);
     }
   }
 
