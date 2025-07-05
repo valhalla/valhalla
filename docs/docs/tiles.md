@@ -48,56 +48,13 @@ Below are some sample functions to help you obtain latitude and longitude coordi
 
 ### Working with `GraphId`
 
-```python linenums="1"
-HIERARCHY_LEVEL_BITS = 3
-HIERARCHY_LEVEL_MASK = 2**HIERARCHY_LEVEL_BITS - 1
-
-TILE_INDEX_BITS = 22
-TILE_INDEX_MASK = 2**TILE_INDEX_BITS - 1
-
-OBJECT_INDEX_BITS = 21
-OBJECT_INDEX_MASK = 2**OBJECT_INDEX_BITS - 1
-
-
-def get_hierarchy_level(graph_id: int) -> int:
-    """Hierarchy level from 64-bit representation of `GraphId`."""
-
-    return graph_id & HIERARCHY_LEVEL_MASK
-
-
-def get_tile_index(graph_id: int) -> int:
-    """Tile index from 64-bit representation of `GraphId`."""
-
-    offset = HIERARCHY_LEVEL_BITS
-
-    return (graph_id >> offset) & TILE_INDEX_MASK
-
-
-def get_object_index(graph_id: int) -> int:
-    """Object (node or edge) index from 64-bit representation of `GraphId`."""
-
-    offset = HIERARCHY_LEVEL_BITS + TILE_INDEX_BITS
-
-    return (graph_id >> offset) & OBJECT_INDEX_MASK
-```
-
-```python
->>> get_hierarchy_level(73160266)
-2
->>> get_hierarchy_level(142438865769)
-1
-```
-
-```python
->>> get_tile_index(73160266)
-756425
->>> get_tile_index(142438865769)
-37741
-```
+See [`GraphId` page](baldr.md#code) for relevant functions.
 
 ### Working with Latitude and Longitude Coordinates
 
 ```python linenums="1"
+from graphid import get_hierarchy_level, get_tile_index
+
 level_to_size = {
     0: 4.0,
     1: 1.0,

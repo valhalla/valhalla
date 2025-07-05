@@ -23,7 +23,7 @@ It includes:
 
 #### Implementation
 
-Internally, Valhalla uses a **64-bit integer** value to represent `GraphId`. This representation supports efficient comparison and hashing operations and allows for reasonable ranges of field values.
+Internally, Valhalla uses a **64-bit unsigned integer** value to represent `GraphId`. This representation supports efficient comparison and hashing operations and allows for reasonable ranges of field values.
 
 Here's the bit layout of the value. The fields are presented with the most significant bit (MSb) first - see [Bit numbering](https://en.wikipedia.org/wiki/Bit_numbering) for more info.
 
@@ -134,6 +134,20 @@ def get_object_index(graph_id: int) -> int:
     offset = HIERARCHY_LEVEL_BITS + TILE_INDEX_BITS
 
     return (graph_id >> offset) & OBJECT_INDEX_MASK
+```
+
+```python
+>>> get_hierarchy_level(73160266)
+2
+>>> get_hierarchy_level(142438865769)
+1
+```
+
+```python
+>>> get_tile_index(73160266)
+756425
+>>> get_tile_index(142438865769)
+37741
 ```
 
 ### GraphTileReader
