@@ -173,9 +173,16 @@ void create_tile() {
 
   // a place to store it
   auto tile_dir = cfg.get<std::string>("additional_data.elevation");
-  if (!std::filesystem::is_directory(tile_dir) &&
-      (std::filesystem::exists(tile_dir) || !std::filesystem::create_directories(tile_dir)))
-    throw std::runtime_error("Couldnt make directory to store elevation");
+  if (!std::filesystem::is_directory(tile_dir)) {
+    std::cerr << tile_dir << " exists: " << std::filesystem::exists(tile_dir) << std::endl;
+    std::error_code ec;
+    std::cerr << tile_dir << " was created: " << !std::filesystem::create_directories(tile_dir, ec)
+              << std::endl;
+    if (ec.value()) {
+      throw std::runtime_error(ec.message());
+    }
+  }
+  // throw std::runtime_error("Couldnt make directory to store elevation");
 
   // actually store it
   std::ofstream file(tile_dir + "/N40W077.hgt", std::ios::binary | std::ios::trunc);
