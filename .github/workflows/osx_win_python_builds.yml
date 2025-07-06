@@ -325,6 +325,13 @@ jobs:
             -DENABLE_GDAL=ON \
             -DVALHALLA_VERSION_MODIFIFER=${{ steps.vars.outputs.version_modifier || '' }}
 
+      - name: Delete cache to save the latest
+        run: |
+          KEY="${{ steps.vcpkg-restore.outputs.cache-primary-key }}"
+          gh cache delete ${KEY} || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Save vcpkg packages (always, to avoid redundant rebuilds)
         uses: actions/cache/save@v3
         with:
