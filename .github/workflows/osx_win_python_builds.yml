@@ -10,7 +10,7 @@ on:
   # We run this once a week so we regularly publish pyvalhalla-weekly
   # but not on _every_ master commit
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "0 0 * * 0"
   push:
     paths-ignore:
       - "*.md"
