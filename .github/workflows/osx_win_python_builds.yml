@@ -55,7 +55,7 @@ jobs:
   build_python_wheels_linux:
     name: Build Linux Python wheels
     runs-on: ubuntu-latest
-    if: ${{ github.env.PUBLISH_PYPI }}
+    if: ${{ env.PUBLISH_PYPI }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -122,7 +122,7 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: ${{ github.env.SETUP_TMATE }}
+        if: ${{ env.SETUP_TMATE }}
         with:
           detached: true
   
@@ -193,7 +193,7 @@ jobs:
       # only package python bindings if it's not a PR
 
       - name: Determine package to publish
-        if: ${{ github.env.PUBLISH_PYPI }}
+        if: ${{ env.PUBLISH_PYPI }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
@@ -202,14 +202,14 @@ jobs:
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: ${{ github.env.PUBLISH_PYPI }}
+        if: ${{ env.PUBLISH_PYPI }}
         env:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
           MACOSX_DEPLOYMENT_TARGET: 14
 
       - name: Upload wheels
-        if: ${{ github.env.PUBLISH_PYPI }}
+        if: ${{ env.PUBLISH_PYPI }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-osx-arm64
@@ -218,7 +218,7 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ github.env.SETUP_TMATE }}
+        if: ${{ env.SETUP_TMATE }}
         with:
           detached: true
   
@@ -336,7 +336,7 @@ jobs:
           ./build/$BUILD_TYPE/valhalla_service.exe ./test/win/valhalla.json isochrone "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
       
       - name: Determine package to publish
-        if: ${{ github.env.PUBLISH_PYPI }}
+        if: ${{ env.PUBLISH_PYPI }}
         shell: bash
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
@@ -352,7 +352,7 @@ jobs:
           ls -l build/vcpkg_installed/custom-x64-windows/bin
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: ${{ github.env.PUBLISH_PYPI }}
+        if: ${{ env.PUBLISH_PYPI }}
         env:
           # used in setup.py
           CIBW_ENVIRONMENT: >
@@ -363,7 +363,7 @@ jobs:
             delvewheel repair --add-path build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}
 
       - name: Upload wheels
-        if: ${{ github.env.PUBLISH_PYPI }}
+        if: ${{ env.PUBLISH_PYPI }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-win-amd64
@@ -372,7 +372,7 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ github.env.SETUP_TMATE }}
+        if: ${{ env.SETUP_TMATE }}
         with:
           detached: true
 
@@ -381,7 +381,7 @@ jobs:
     needs: [build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
-    if: ${{ github.env.PUBLISH_PYPI }}
+    if: ${{ env.PUBLISH_PYPI }}
     steps:
       - uses: actions/checkout@v4
 
@@ -402,7 +402,7 @@ jobs:
     needs: [verify_wheels, build_osx, build_win]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
-    if: ${{ github.env.PUBLISH_PYPI }}
+    if: ${{ env.PUBLISH_PYPI }}
 
     permissions:
       id-token: write # This is required for requesting the JWT from Github for PyPI
