@@ -51,7 +51,7 @@ Transit read_pbf(const GraphId& id, const std::string& transit_dir, std::string&
   file_path.append(fname);
   file_name = file_path.string();
   Transit transit;
-  transit = read_pbf(file_path);
+  transit = read_pbf(file_name);
   return transit;
 }
 

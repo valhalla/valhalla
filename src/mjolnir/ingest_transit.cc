@@ -783,7 +783,7 @@ void stitch_tiles(const std::filesystem::path& transit_dir,
       // now if it was generated or not. If it's missing, it's just the "base"
       // onestop ID and we also don't patch it here, since (for now) nodes' onestop
       // IDs aren't used anywhere after this code block
-      auto tile = read_pbf(current_path);
+      auto tile = read_pbf(current_path.string());
       std::unordered_map<std::string, GraphId> needed;
       for (const auto& stop_pair : tile.stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
@@ -805,7 +805,7 @@ void stitch_tiles(const std::filesystem::path& transit_dir,
         auto neighbor_id = *unchecked.cbegin();
         unchecked.erase(unchecked.begin());
         auto neighbor_file_name = get_tile_path(transit_dir, neighbor_id);
-        auto neighbor = read_pbf(neighbor_file_name, lock);
+        auto neighbor = read_pbf(neighbor_file_name.string(), lock);
         for (const auto& node : neighbor.nodes()) {
           const auto node_type = static_cast<NodeType>(node.type());
           if (node_type != NodeType::kMultiUseTransitPlatform) {

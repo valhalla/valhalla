@@ -146,7 +146,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           if (ext == ".pbf") {
             curr_tile_pbf = tile_pbf;
           } else {
-            curr_tile_pbf = read_pbf(transit_file_itr->path(), lock);
+            curr_tile_pbf = read_pbf(transit_file_itr->path().string(), lock);
           }
         }
 
@@ -894,7 +894,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         file_name += ".pbf";
         std::filesystem::path file_path{transit_dir};
         file_path.append(file_name);
-        Transit endtransit = read_pbf(file_path, lock);
+        Transit endtransit = read_pbf(file_path.string(), lock);
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
@@ -1019,7 +1019,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
       return;
     }
 
-    Transit tile_pbf = read_pbf(pbf_fp, lock);
+    Transit tile_pbf = read_pbf(pbf_fp.string(), lock);
     // Get Valhalla tile - get a read only instance for reference and
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
