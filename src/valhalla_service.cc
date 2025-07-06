@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
 
 #ifdef ENABLE_SERVICES
-    if (pos_args.size() < 1 || pos_args.size() > 3 || pos_args.size() == 2) {
+    if (pos_args.size() < 1 || pos_args.size() > 3) {
       throw cxxopts::exceptions::exception("[FATAL] Too many or few arguments, see --help:\n");
     }
 #else
