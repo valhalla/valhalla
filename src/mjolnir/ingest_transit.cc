@@ -92,7 +92,8 @@ struct feed_cache_t {
       return found->second;
     }
 
-    auto inserted = cache.insert({feed_object.feed, gtfs::Feed(gtfs_dir / feed_object.feed)});
+    auto inserted =
+        cache.insert({feed_object.feed, gtfs::Feed((gtfs_dir / feed_object.feed).string())});
     inserted.first->second.read_feed();
     return inserted.first->second;
   }
