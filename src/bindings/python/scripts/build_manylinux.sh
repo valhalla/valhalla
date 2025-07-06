@@ -24,7 +24,7 @@ cmake -B ${BUILD_DIR} \
 
 echo "[INFO] Building & installing libvalhalla..."
 LDFLAGS=-fno-lto cmake --build ${BUILD_DIR} -- -j$(nproc) > /dev/null
-make -C ${BUILD_DIR} install
+${MAKE} -C ${BUILD_DIR} install
 
 ccache -s
 
