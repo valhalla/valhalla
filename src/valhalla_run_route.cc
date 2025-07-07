@@ -469,7 +469,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a command line test tool for shortest path routing.\n"
       "Use the -j option for specifying the locations and costing method and options.");
 
@@ -493,7 +493,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (iterations > 1) {

@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a program that reads protobuf files and creates Level 3 Transit Tiles."
       "\n\n");
 
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     if (result.count("target_directory")) {

@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     // https://github.com/jarro2783/cxxopts/blob/302302b30839505703d37fb82f536c53cf9172fa/src/example.cpp
     cxxopts::Options options(
         program,
-        program + " " + VALHALLA_VERSION +
+        program + " " + VALHALLA_PRINT_VERSION +
             "\n\n"
             "a program that creates the route graph\nfrom one or multiple osm.pbf extract(s)\n");
 
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true, &list_stages))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true, &list_stages))
       return EXIT_SUCCESS;
 
     // Convert stage strings to BuildStage

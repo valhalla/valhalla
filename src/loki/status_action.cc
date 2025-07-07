@@ -44,7 +44,7 @@ void loki_worker_t::status(Api& request) const {
 
   // info that's always returned
   auto* status = request.mutable_status();
-  status->set_version(VALHALLA_VERSION);
+  status->set_version(VALHALLA_PRINT_VERSION);
   status->set_tileset_last_modified(get_tileset_last_modified(reader));
   for (const auto& action : actions) {
     auto* action_pbf = status->mutable_available_actions()->Add();

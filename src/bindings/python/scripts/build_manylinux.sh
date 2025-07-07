@@ -12,18 +12,19 @@ echo "[INFO] ccache dir is $(ccache -k cache_dir) with CCACHE_DIR=${CCACHE_DIR:-
 # have no own dependencies which might be installed on the system and thus outdated
 export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
 
-cmake -B ${BUILD_DIR} \
+cmake -B ${BUILD_DIR} -G Ninja \
   -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
   -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF `# turns off lto, which triggers a gcc/ld bug` \
   -DENABLE_PYTHON_BINDINGS=OFF `# setuptools will build the bindings` \
   -DENABLE_TESTS=OFF \
   -DENABLE_SINGLE_FILES_WERROR=OFF \
   -DENABLE_GDAL=ON \
-  -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_BUILD_TYPE=Release \
+  -DVALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER:-}
 
 echo "[INFO] Building & installing libvalhalla..."
-LDFLAGS=-fno-lto cmake --build ${BUILD_DIR} -- -j$(nproc) > /dev/null
-make -C ${BUILD_DIR} install
+LDFLAGS=-fno-lto cmake --build ${BUILD_DIR} -j$(nproc) > /dev/null
+cmake --install ${BUILD_DIR}
 
 ccache -s
 

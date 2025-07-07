@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "valhalla_benchmark_admins is a program to time the admin queries\n");
 
     options.add_options()
@@ -191,11 +191,11 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("version")) {
-      std::cout << "valhalla_benchmark_admins " << VALHALLA_VERSION << "\n";
+      std::cout << "valhalla_benchmark_admins " << VALHALLA_PRINT_VERSION << "\n";
       return EXIT_SUCCESS;
     }
   } catch (cxxopts::exceptions::exception& e) {

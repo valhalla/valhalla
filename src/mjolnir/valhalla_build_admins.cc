@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "valhalla_build_admins is a program that creates a administrative SQLite database from \n"
       "one or multiple osm.pbf files. The admin db is used during graph building to enrich \n"
       "nodes and edges."
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     // input files are positional

@@ -48,7 +48,7 @@ TEST(Sample, create_tile) {
   // input for gzip
   auto src_func = [&tile](z_stream& s) -> int {
     s.next_in = static_cast<Byte*>(static_cast<void*>(tile.data()));
-    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(decltype(tile)::value_type));
+    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(int16_t));
     return Z_FINISH;
   };
 
@@ -214,7 +214,7 @@ TEST(Sample, store) {
   // input for gzip
   auto src_func = [&tile](z_stream& s) -> int {
     s.next_in = static_cast<Byte*>(static_cast<void*>(tile.data()));
-    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(decltype(tile)::value_type));
+    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(int16_t));
     return Z_FINISH;
   };
 

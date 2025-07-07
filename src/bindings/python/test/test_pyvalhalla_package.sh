@@ -5,7 +5,7 @@
 
 set -x -o errexit -o pipefail -o nounset
 
-python -m valhalla --help | grep "Available commands:"
+python -m valhalla --help | grep "Available commands"
 
 bin_path=$(python -m valhalla print_bin_path)
 binaries=$(find "$bin_path" -type f)

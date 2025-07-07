@@ -5,25 +5,16 @@ import shutil
 import sys
 from typing import Optional
 
-IS_OSX = platform.system().lower() == "darwin"
-IS_WIN = platform.system().lower() == "windows"
-IS_LINUX = platform.system().lower() == "linux"
-
-if IS_LINUX:
-    from auditwheel.wheeltools import InWheel
-elif IS_WIN:
-    from delocate.wheeltools import InWheel
-
 from pybind11.setup_helpers import Pybind11Extension
-from setuptools import setup, Extension
+from setuptools import setup
+from auditwheel.wheeltools import InWheel
 from wheel.bdist_wheel import bdist_wheel as BDistWheelCommand  # noqa: E402
-
 
 DEFAULT_VALHALLA_BUILD_DIR = "./build_manylinux"
 
 THIS_DIR = Path(__file__).parent.resolve()
 BINARIES = [
-    # "valhalla_service", # sadly auditwheel(/patchelf?) corrupts valhalla_service somehow
+    "valhalla_service", # this needed a custom-built "patchelf" for auditwheel to properly fix
     "valhalla_build_tiles",
     "valhalla_build_admins",
     "valhalla_add_predicted_traffic",
@@ -31,13 +22,9 @@ BINARIES = [
     "valhalla_ingest_transit",
     "valhalla_convert_transit",
 ]
-
-# verify build dir; needs to be an absolute path for InWheel context manager further below
-# $VALHALLA_BUILD_BIN_DIR is set by GHA
-valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR", DEFAULT_VALHALLA_BUILD_DIR)).absolute()
-if not valhalla_build_dir.is_dir():
-    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
-    valhalla_build_dir = None
+IS_OSX = platform.system().lower() == "darwin"
+IS_WIN = platform.system().lower() == "windows"
+IS_LINUX = platform.system().lower() == "linux"
 
 
 class ValhallaBDistWheelCommand(BDistWheelCommand):
@@ -72,6 +59,13 @@ class ValhallaBDistWheelCommand(BDistWheelCommand):
 
             print(f"Updating RECORD file of {whl_dist_path}")
 
+
+# verify build dir; needs to be an absolute path for InWheel context manager further below
+# $VALHALLA_BUILD_BIN_DIR is set by GHA
+valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR", DEFAULT_VALHALLA_BUILD_DIR)).absolute()
+if not valhalla_build_dir.is_dir():
+    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
+    valhalla_build_dir = None
 
 include_dirs = [
     str(THIS_DIR.joinpath("third_party", "date", "include")),
@@ -152,12 +146,12 @@ ext_modules = [
     ),
 ]
 
-# if we push master, we upload to pyvalhalla-git
+# if we push master, we upload to pyvalhalla-weekly
 # this is set in GHA when publishing
 pkg = os.environ.get('VALHALLA_RELEASE_PKG')
-if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-git"]):
-    print(f"[WARNING] VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}', defaulting to 'pyvalhalla-git'")
-    pkg = "pyvalhalla-git"
+if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-weekly"]):
+    print(f"[WARNING] VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}', defaulting to 'pyvalhalla-weekly'")
+    pkg = "pyvalhalla-weekly"
 print(f"Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}")
 
 # open README.md for PyPI
