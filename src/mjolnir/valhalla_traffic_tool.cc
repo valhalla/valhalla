@@ -41,12 +41,14 @@ int main(int argc, char** argv) {
             cxxopts::value<std::vector<std::string>>())
         ("build-verification", "Creates a verification file for the traffic.tar file. To be used with verify")
         ("verify", "Verifies the traffic.tar file. To be used before replacing new traffic.tar file to ensure it has not been corrupted. Usage: --verify-path <verify_path> --traffic-path <traffic_path>")
+        ("copy-traffic", "Copies traffic data from src to dest file. Usage: --input-traffic-path <input-traffic-path> --traffic-path <traffic_path>")
         ("tile-offset-index", "Creates an index of tile name with their offset in traffic_extract file")
         ("verify-path", "Path to the verification file.",
         cxxopts::value<std::string>())
         ("traffic-path", "Path to the traffic.tar file.",
         cxxopts::value<std::string>())
-        ;
+        ("input-traffic-path", "Path to input traffic.tar file.",
+        cxxopts::value<std::string>());
 
     // clang-format on
 
@@ -74,6 +76,18 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
       }
       return handle_verify(result["traffic-path"].as<std::string>(), result["verify-path"].as<std::string>());
+    }
+
+    if (result.count("copy-traffic")) {
+      if (!result.count("input-traffic-path")) {
+        std::cerr << "Please provide a path to the input traffic.tar file with --input-traffic-path" << std::endl;
+        return EXIT_FAILURE;
+      }
+      if (!result.count("traffic-path")) {
+        std::cerr << "Please provide a path to the traffic.tar file with --traffic-path" << std::endl;
+        return EXIT_FAILURE;
+      }
+      return handle_copy_traffic(result["input-traffic-path"].as<std::string>(), result["traffic-path"].as<std::string>());
     }
 
     std::cout << options.help() << std::endl;

@@ -11,6 +11,6 @@ int handle_tile_offset_index(std::string config_file_path);
 
 int handle_build_verification(std::string config_file_path);
 int handle_verify(std::string traffic_file_path, std::string verify_path);
-
+int handle_copy_traffic(std::string traffic_src_path, std::string traffic_dest_path);
 
 #endif // TRAFFIC_H

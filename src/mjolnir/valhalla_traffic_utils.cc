@@ -97,9 +97,9 @@ auto index_loader = [](const std::string& filename,
                                                                  size / sizeof(tile_index_entry));
 
   for (const auto& entry : entries) {
-    std::cout << "tile_id: " << entry.tile_id << ", offset: " << entry.offset << std::endl;
+    // std::cout << "tile_id: " << entry.tile_id << ", offset: " << entry.offset << std::endl;
     valhalla::baldr::GraphId graph_id(entry.tile_id);
-    std::cout << std::to_string(graph_id) << std::endl;
+    // std::cout << std::to_string(graph_id) << std::endl;
     traffic_tiles.emplace(std::to_string(graph_id), entry.offset - 512);
   }
 
@@ -276,8 +276,7 @@ int handle_build_verification(std::string config_file_path) {
 
 int handle_verify(std::string traffic_file_path, std::string verify_path) {
 
-  const auto memory =
-      std::make_shared<MMap>(traffic_file_path.c_str());
+  const auto memory = std::make_shared<MMap>(traffic_file_path.c_str());
 
   mtar_t tar;
   tar.pos = 0;
@@ -333,8 +332,8 @@ int handle_verify(std::string traffic_file_path, std::string verify_path) {
                                                 sizeof(mtar_raw_header_t_),
                                             tar_header.size));
       if (tile.header->tile_id != tile_id) {
-        std::cerr << "Tile ID mismatch at offset " << offset << ": expected " << tile_id
-                  << ", got " << tile.header->tile_id << "\n";
+        std::cerr << "Tile ID mismatch at offset " << offset << ": expected " << tile_id << ", got "
+                  << tile.header->tile_id << "\n";
         return 1;
       }
 
@@ -353,4 +352,84 @@ int handle_verify(std::string traffic_file_path, std::string verify_path) {
   file.close();
 
   return 0;
+}
+
+int handle_copy_traffic(std::string traffic_src_path, std::string traffic_dest_path) {
+  std::cout << "Starting to copy traffic data from " << traffic_src_path << " to "
+            << traffic_dest_path << std::endl;
+
+  const auto src_memory = std::make_shared<MMap>(traffic_src_path.c_str());
+
+  mtar_t src_tar;
+  src_tar.pos = 0;
+
+  src_tar.stream = src_memory->data;
+  src_tar.read = [](mtar_t* src_tar, void* data, unsigned size) -> int {
+    memcpy(data, reinterpret_cast<char*>(src_tar->stream) + src_tar->pos, size);
+    return MTAR_ESUCCESS;
+  };
+
+  src_tar.write = [](mtar_t* src_tar, const void* data, unsigned size) -> int {
+    memcpy(reinterpret_cast<char*>(src_tar->stream) + src_tar->pos, data, size);
+    return MTAR_ESUCCESS;
+  };
+  src_tar.seek = [](mtar_t*, unsigned) -> int { return MTAR_ESUCCESS; };
+  src_tar.close = [](mtar_t*) -> int { return MTAR_ESUCCESS; };
+
+  // Read the tile header
+  mtar_header_t src_tar_header;
+  mtar_read_header(&src_tar, &src_tar_header);
+
+  const auto dest_memory = std::make_shared<MMap>(traffic_dest_path.c_str());
+
+  mtar_t dest_tar;
+  dest_tar.pos = 0;
+
+  dest_tar.stream = dest_memory->data;
+  dest_tar.read = [](mtar_t* dest_tar, void* data, unsigned size) -> int {
+    memcpy(data, reinterpret_cast<char*>(dest_tar->stream) + dest_tar->pos, size);
+    return MTAR_ESUCCESS;
+  };
+
+  dest_tar.write = [](mtar_t* dest_tar, const void* data, unsigned size) -> int {
+    memcpy(reinterpret_cast<char*>(dest_tar->stream) + dest_tar->pos, data, size);
+    return MTAR_ESUCCESS;
+  };
+  dest_tar.seek = [](mtar_t*, unsigned) -> int { return MTAR_ESUCCESS; };
+  dest_tar.close = [](mtar_t*) -> int { return MTAR_ESUCCESS; };
+
+  // Read the tile header
+  mtar_header_t dest_tar_header;
+  mtar_read_header(&dest_tar, &dest_tar_header);
+
+  // std::unordered_map<std::string, size_t> tar_index;
+
+  std::unique_ptr<valhalla::midgard::tar> archive(
+      new valhalla::midgard::tar(traffic_dest_path, true, true, index_loader));
+
+  for (const auto& index : traffic_tiles) {
+
+    valhalla::baldr::TrafficTile src_tile(
+        std::make_unique<MMapGraphMemory>(src_memory,
+                                          reinterpret_cast<char*>(src_tar.stream) + index.second +
+                                              sizeof(mtar_raw_header_t_),
+                                          src_tar_header.size));
+
+    valhalla::baldr::TrafficTile dest_tile(
+        std::make_unique<MMapGraphMemory>(dest_memory,
+                                          reinterpret_cast<char*>(dest_tar.stream) + index.second +
+                                              sizeof(mtar_raw_header_t_),
+                                          dest_tar_header.size));
+
+    if (src_tile.header->tile_id == dest_tile.header->tile_id) {
+      std::memcpy(const_cast<TrafficSpeed*>(dest_tile.speeds),
+                  const_cast<const TrafficSpeed*>(src_tile.speeds),
+                  sizeof(TrafficSpeed) * src_tile.header->directed_edge_count);
+    }
+  }
+
+  std::cout << "Finished copying traffic data from " << traffic_src_path << " to "
+            << traffic_dest_path << std::endl;
+
+  return EXIT_SUCCESS;
 }
