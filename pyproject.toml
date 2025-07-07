@@ -43,7 +43,7 @@ manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
 [tool.cibuildwheel.windows]
 # installing from github for now, to get early support to patch executables
 # https://github.com/adang1345/delvewheel/issues/62
-before-all = "pip install https://github.com/adang1345/delvewheel/archive/master.zip"
+before-all = "pip install https://github.com/adang1345/delvewheel/archive/8b90061.zip"
 repair-wheel-command = "delvewheel repair --analyze-existing-exes --add-path build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}"
 # this should be sync'd with the GHA cmake command
 environment = { VALHALLA_BUILD_BIN_DIR="build/Release" }

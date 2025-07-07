@@ -1,4 +1,14 @@
 from pathlib import Path
+import platform
+import sysconfig
+import sys
+
+# on Win we need to add the path to vendored DLLs manually, see
+# https://github.com/adang1345/delvewheel/issues/62#issuecomment-2977988121
+# the DLLs are installed to site-packages/ directly for some reason, see
+# https://github.com/adang1345/delvewheel/issues/64
+if platform.system().lower() == "windows":
+    sys.path.append(sysconfig.get_paths()["purelib"])
 
 try:
     from ._valhalla import *
