@@ -326,9 +326,10 @@ jobs:
             -DVALHALLA_VERSION_MODIFIFER=${{ steps.vars.outputs.version_modifier || '' }}
 
       - name: Delete cache to save the latest
+        shell: bash
         run: |
           KEY="${{ steps.vcpkg-restore.outputs.cache-primary-key }}"
-          gh cache delete ${KEY} || true
+          gh cache delete ${{ steps.vcpkg-restore.outputs.cache-primary-key }} || true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
