@@ -392,8 +392,7 @@ jobs:
         with:
           detached: true
 
-  verify_wheels:
-    name: Verify wheels with executables in a fresh environment
+  verify_wheels_linux:
     needs: [publish_pypi, build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
@@ -412,10 +411,32 @@ jobs:
           apt-get install -y file
           python -m pip install dist/*cp313-manylinux*.whl
           ./src/bindings/python/test/test_pyvalhalla_package.sh
+
+  verify_wheels_osx:
+    needs: [publish_pypi, build_osx]
+    runs-on: macos-14
+    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Run test
+        run: |
+          python -m pip install dist/*cp313-macos_*_arm64.whl
+          python -m valhalla valhalla_service -h
+          python -m valhalla valhalla_build_tiles -h
   
   upload_all:
     name: Upload if release
-    needs: [publish_pypi, verify_wheels, build_osx, build_win]
+    needs: [publish_pypi, verify_wheels_linux, verify_wheels_osx, build_win]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
