@@ -6,11 +6,12 @@ import sys
 from typing import Optional
 
 from pybind11.setup_helpers import Pybind11Extension
-from setuptools import setup, Extension
+from setuptools import setup
+# this context manager works is platform-agnostic
 from auditwheel.wheeltools import InWheel
 from wheel.bdist_wheel import bdist_wheel as BDistWheelCommand  # noqa: E402
 
-DEFAULT_VALHALLA_BUILD_DIR = "./build_manylinux"
+DEFAULT_VALHALLA_BUILD_DIR = "./build"
 
 THIS_DIR = Path(__file__).parent.resolve()
 BINARIES = [
@@ -26,11 +27,21 @@ IS_OSX = platform.system().lower() == "darwin"
 IS_WIN = platform.system().lower() == "windows"
 IS_LINUX = platform.system().lower() == "linux"
 
+# verify build dir; needs to be an absolute path for InWheel context manager further below
+# $VALHALLA_BUILD_BIN_DIR is set by GHA
+valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR", DEFAULT_VALHALLA_BUILD_DIR)).absolute()
+if not valhalla_build_dir.is_dir():
+    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
+    valhalla_build_dir = None
+
 
 class ValhallaBDistWheelCommand(BDistWheelCommand):
     "Subclass to patch the wheel in ./dist and add Valhalla binaries"
     def run(self) -> None:
         super().run()
+
+        if not valhalla_build_dir.is_dir():
+            return
         
         # get the wheel path
         impl_tag, abi_tag, plat_tag = self.get_tag()
@@ -59,13 +70,6 @@ class ValhallaBDistWheelCommand(BDistWheelCommand):
 
             print(f"Updating RECORD file of {whl_dist_path}")
 
-
-# verify build dir; needs to be an absolute path for InWheel context manager further below
-# $VALHALLA_BUILD_BIN_DIR is set by GHA
-valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR", DEFAULT_VALHALLA_BUILD_DIR)).absolute()
-if not valhalla_build_dir.is_dir():
-    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
-    valhalla_build_dir = None
 
 include_dirs = [
     str(THIS_DIR.joinpath("third_party", "date", "include")),
@@ -96,8 +100,8 @@ elif IS_WIN:
         library_dirs.append("C:/Program Files/valhalla/lib")
 
 # determine libraries to link to
+# this is pretty annoying.. don't know any other way though..
 if IS_WIN:
-    # this is pretty annoying, especially with absl.. don't know any other way though..
     libraries.extend([
         "valhalla",
         "libprotobuf-lite",

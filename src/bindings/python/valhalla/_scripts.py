@@ -1,4 +1,5 @@
 from pathlib import Path
+import platform
 from shutil import which
 import subprocess
 import sys
@@ -6,6 +7,7 @@ import sys
 from . import PYVALHALLA_DIR
 
 PYVALHALLA_BIN_DIR = PYVALHALLA_DIR.joinpath("bin").resolve()
+IS_WIN = platform.system().lower() == "windows"
 
 
 def run(from_main=False) -> None:
@@ -23,7 +25,7 @@ def run(from_main=False) -> None:
 
     if not which(prog):
         raise FileNotFoundError(f"Can't find executable at {prog}")
-    prog_path = PYVALHALLA_BIN_DIR.joinpath(prog).resolve()
+    prog_path = PYVALHALLA_BIN_DIR.joinpath(prog + (".exe" if IS_WIN and from_main else "")).resolve()
 
     print(f"[INFO] Running {prog_path} with args: {prog_args}...")
 

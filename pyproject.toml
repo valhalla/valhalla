@@ -41,8 +41,12 @@ archs = "native"
 manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
 
 [tool.cibuildwheel.windows]
-before-all = "pip install conan delvewheel"
-repair-wheel-command = "delvewheel repair --add-path {project}/build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}"
+# installing from github for now, to get early support to patch executables
+# https://github.com/adang1345/delvewheel/issues/62
+before-all = "pip install https://github.com/adang1345/delvewheel/archive/master.zip"
+repair-wheel-command = "delvewheel repair --analyze-existing-exes --add-path {project}/build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}"
+# this should be sync'd with the GHA cmake command
+environment = { VALHALLA_BUILD_BIN_DIR="build/Release" }
 
 [tool.cibuildwheel.linux]
 # we remove some system libraries to try and simulate a more pristine environment before testing
@@ -58,7 +62,7 @@ before-all = """
 """
 # e.g. geos is both installed to the system and built from source, need to prioritize the latter
 # VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_manylinux.sh' above
-environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux"}
+environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux" }
 
 [tool.cibuildwheel.macos]
 environment = { LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH" }

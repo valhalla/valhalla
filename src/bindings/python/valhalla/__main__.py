@@ -40,7 +40,6 @@ def main():
 
     if prog_or_opt in ("--help", "-h"):
         print_help()
-        sys.exit(0)
     elif prog_or_opt == PRINT_BIN_PATH:
         # useful when another script wants to run the executables directly for some reason
         print(PYVALHALLA_BIN_DIR)
