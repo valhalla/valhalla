@@ -30,7 +30,7 @@ Available commands (in {PYVALHALLA_BIN_DIR}):
     )
     for exe in exe_names:
         print(
-            f"\t{exe}:<{fixed_width} - For help see 'python -m valhalla {exe if not IS_WIN else exe[:-4]} --help'"
+            f"\t{exe:<{fixed_width}} - For help see 'python -m valhalla {exe if not IS_WIN else exe[:-4]} --help'"
         )
 
 

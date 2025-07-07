@@ -382,12 +382,12 @@ jobs:
           name: wheels-win-amd64
           path: wheelhouse/*.whl
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ env.SETUP_TMATE }}
-        with:
-          detached: true
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
+      #   # only run this if manually invoked and debug_enabled == true or a previous step failed
+      #   if: ${{ env.SETUP_TMATE }}
+      #   with:
+      #     detached: true
 
   verify_wheels_linux:
     name: Verify wheels with executables in a fresh environment
