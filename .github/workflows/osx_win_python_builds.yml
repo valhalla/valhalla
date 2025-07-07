@@ -134,7 +134,7 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: ${{ env.SETUP_TMATE || (failure() && (github.repository_owner == 'valhalla')) }}
+        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
         with:
           detached: true
   
@@ -231,7 +231,7 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ env.SETUP_TMATE || (failure() && (github.repository_owner == 'valhalla')) }}
+        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
         with:
           detached: true
   
@@ -334,6 +334,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Save vcpkg packages (always, to avoid redundant rebuilds)
+        if: always()
         uses: actions/cache/save@v3
         with:
           key: ${{ steps.vcpkg-restore.outputs.cache-primary-key }}
@@ -394,7 +395,7 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ env.SETUP_TMATE || (failure() && (github.repository_owner == 'valhalla')) }}
+        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
         with:
           detached: true
 
