@@ -431,7 +431,7 @@ jobs:
       - name: Run test
         shell: bash
         run: |
-          python -m pip install dist/*cp313-macos_14_0_arm64.whl
+          python -m pip install $(find dist -type f -name "*cp313-macos_14_0_arm64.whl")
           python -m valhalla valhalla_service -h
           python -m valhalla valhalla_build_tiles -h
   
