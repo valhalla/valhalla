@@ -134,7 +134,7 @@ jobs:
 
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-        if: ${{ env.SETUP_TMATE || ((github.job.status != 'success') && (github.repository_owner == 'valhalla')) }}
+        if: ${{ env.SETUP_TMATE || (failure() && (github.repository_owner == 'valhalla')) }}
         with:
           detached: true
   
@@ -231,7 +231,7 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ env.SETUP_TMATE || ((github.job.status != 'success') && (github.repository_owner == 'valhalla')) }}
+        if: ${{ env.SETUP_TMATE || (failure() && (github.repository_owner == 'valhalla')) }}
         with:
           detached: true
   
@@ -394,7 +394,7 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked and debug_enabled == true or a previous step failed
-        if: ${{ env.SETUP_TMATE || ((github.job.status != 'success') && (github.repository_owner == 'valhalla')) }}
+        if: ${{ env.SETUP_TMATE || (failure() && (github.repository_owner == 'valhalla')) }}
         with:
           detached: true
 
