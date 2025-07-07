@@ -31,7 +31,7 @@ IS_LINUX = platform.system().lower() == "linux"
 # $VALHALLA_BUILD_BIN_DIR is set by GHA
 valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR", DEFAULT_VALHALLA_BUILD_DIR)).absolute()
 if not valhalla_build_dir.is_dir():
-    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
+    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...", file=sys.stderr)
     valhalla_build_dir = None
 
 
@@ -40,7 +40,9 @@ class ValhallaBDistWheelCommand(BDistWheelCommand):
     def run(self) -> None:
         super().run()
 
+        # in the context of this class, valhalla_build_dir can't be None
         if not valhalla_build_dir.is_dir():
+            print(f"[WARNING] No valid valhalla build directory, skipping adding executables..", file=sys.stderr)
             return
         
         # get the wheel path
@@ -51,7 +53,7 @@ class ValhallaBDistWheelCommand(BDistWheelCommand):
             print(f"[FATAL] is not an existing wheel: {whl_dist_path}")
             sys.exit(1)
 
-        print(f"Patching wheel {whl_dist_path} to include Valhalla binaries from {valhalla_build_dir}.")
+        print(f"[INFO] Patching wheel {whl_dist_path} to include Valhalla binaries from {valhalla_build_dir}.", file=sys.stderr)
 
         # copy the valhalla binaries and make sure we rewrite the RECORD file
         # NOTE, InWheel context changes the root dir, so all relative paths will be relative
@@ -62,13 +64,13 @@ class ValhallaBDistWheelCommand(BDistWheelCommand):
             wheel_bin_dir.mkdir()
             for source_bin_path in source_bin_paths:
                 if not source_bin_path.is_file():
-                    print(f"{source_bin_path} does not exist, skipping...")
+                    print(f"[WARNING] {source_bin_path} does not exist, skipping...", file=sys.stderr)
                     continue
                 wheel_binary_path = wheel_bin_dir.joinpath(source_bin_path.name)
                 shutil.copy(source_bin_path, wheel_binary_path)
-                print(f"Copied {source_bin_path.name} into wheel at {wheel_binary_path}")
+                print(f"[INFO] Copied {source_bin_path.name} into wheel at {wheel_binary_path}", file=sys.stderr)
 
-            print(f"Updating RECORD file of {whl_dist_path}")
+            print(f"[INFO] Updating RECORD file of {whl_dist_path}", file=sys.stderr)
 
 
 include_dirs = [
