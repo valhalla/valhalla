@@ -61,7 +61,6 @@ before-all = """
 environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux"}
 
 [tool.cibuildwheel.macos]
-environment = { LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH", VALHALLA_BUILD_BIN_DIR="build" }
 repair-wheel-command = [
     'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-listdeps {wheel}',
     'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}'
