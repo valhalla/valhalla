@@ -43,7 +43,7 @@ void serialize_admins(const TripLeg& trip_path, rapidjson::writer_wrapper_t& wri
 
 void serialize_speeds(const valhalla::TripLeg_Edge& edge,
                       bool is_faded,
-                      std::function<uint64_t(float)> speed_serializer,
+                      const std::function<uint64_t(float)>& speed_serializer,
                       rapidjson::writer_wrapper_t& writer) {
   auto speeds = is_faded ? edge.speeds_faded() : edge.speeds_non_faded();
   writer.start_object(is_faded ? "speeds_faded" : "speeds_non_faded");
