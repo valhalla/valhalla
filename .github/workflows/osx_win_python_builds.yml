@@ -373,6 +373,7 @@ jobs:
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
           CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
+            VALHALLA_BUILD_BIN_DIR=build/Release
 
       - name: Upload wheels
         # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
