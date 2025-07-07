@@ -273,7 +273,7 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   result.Parse(trace_json.c_str());
   edges = result["edges"].GetArray();
 
-  for (int i = 0; i < edges.Size(); i++) {
+  for (rapidjson::SizeType i = 0; i < edges.Size(); i++) {
     EXPECT_FALSE(edges[i].HasMember("speeds_faded"));
     EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("current_flow"));
     EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("predicted_flow"));
@@ -289,7 +289,7 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   result.Parse(trace_json.c_str());
   edges = result["edges"].GetArray();
 
-  for (int i = 0; i < edges.Size(); i++) {
+  for (rapidjson::SizeType i = 0; i < edges.Size(); i++) {
     EXPECT_FALSE(edges[i].HasMember("speeds_faded"));
     EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("predicted_flow"));
     EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("current_flow"));
@@ -324,7 +324,7 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   result.Parse(trace_json.c_str());
   edges = result["edges"].GetArray();
 
-  for (int i = 0; i < edges.Size(); i++) {
+  for (rapidjson::SizeType i = 0; i < edges.Size(); i++) {
     // no faded speeds because edges don't have traffic speed anymore
     EXPECT_FALSE(edges[i].HasMember("speeds_faded"));
     EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("current_flow"));
