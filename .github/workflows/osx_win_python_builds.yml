@@ -374,8 +374,7 @@ jobs:
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
           CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
-          CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: >
-            delvewheel repair --add-path build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}
+            VALHALLA_BUILD_BIN_DIR=build/Release
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -391,7 +390,7 @@ jobs:
         with:
           detached: true
 
-  verify_wheels:
+  verify_wheels_linux:
     name: Verify wheels with executables in a fresh environment
     needs: [publish_pypi, build_python_wheels_linux]
     runs-on: ubuntu-latest
@@ -411,10 +410,34 @@ jobs:
           apt-get install -y file
           python -m pip install dist/*cp313-manylinux*.whl
           ./src/bindings/python/test/test_pyvalhalla_package.sh
-  
+
+  verify_wheels_win:
+    name: Verify wheels with executables in a fresh environment
+    needs: [publish_pypi, build_win]
+    runs-on: windows-2022
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      
+      - name: Run test
+        shell: bash
+        run: |
+          python -m pip install dist/*cp313-win_amd64.whl
+          python -m valhalla valhalla_service -h
+          python -m valhalla valhalla_build_tiles -h
+
   upload_all:
     name: Upload if release
-    needs: [publish_pypi, verify_wheels, build_osx, build_win]
+    needs: [publish_pypi, verify_wheels_linux, verify_wheels_win, build_osx]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
