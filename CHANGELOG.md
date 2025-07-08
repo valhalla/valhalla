@@ -100,7 +100,6 @@
    * CHANGED: Replace robin-hood-hashing with `ankerl::unordered_dense::{map, set}` [#5325](https://github.com/valhalla/valhalla/pull/5325)
    * CHANGED: Speed up density calculus by using grid index [#5328](https://github.com/valhalla/valhalla/pull/5328)
    * CHANGED: refactor to make valhalla/filesystem functionally redundant [#5319](https://github.com/valhalla/valhalla/pull/5319)
-   * ADDED: Valhalla executables to Windows Python distribution [#5348](https://github.com/valhalla/valhalla/pull/5348)
    * ADDED: Distribute C++ executables for Windows Python bindings [#5348](https://github.com/valhalla/valhalla/pull/5348)
    * ADDED: Distribute C++ executables for OSX Python bindings [#5301](https://github.com/valhalla/valhalla/pull/5301)
    * ADDED: `trace_attributes` now also returns all the speed informations on edges when `edge.speeds_faded` or `edge.speeds_non_faded` is set in request. Also `edge.speed_type` returns how the edge speed was set [#5324](https://github.com/valhalla/valhalla/pull/5324)
