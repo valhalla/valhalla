@@ -2,7 +2,7 @@ import subprocess
 import sys
 from typing import Optional
 
-from ._scripts import PYVALHALLA_BIN_DIR, run
+from ._scripts import PYVALHALLA_BIN_DIR, run, IS_WIN
 from . import __version__
 
 PRINT_BIN_PATH = "print_bin_path"
@@ -28,6 +28,10 @@ Available commands (in {PYVALHALLA_BIN_DIR}):
 \t{PRINT_BIN_PATH:<{fixed_width}} - Print the absolute path of directory containing the C++ executables
 """
     )
+    for exe in exe_names:
+        print(
+            f"\t{exe:<{fixed_width}} - For help see 'python -m valhalla {exe if not IS_WIN else exe[:-4]} --help'"
+        )
 
 
 def main():
@@ -40,7 +44,6 @@ def main():
 
     if prog_or_opt in ("--help", "-h"):
         print_help()
-        sys.exit(0)
     elif prog_or_opt == PRINT_BIN_PATH:
         # useful when another script wants to run the executables directly for some reason
         print(PYVALHALLA_BIN_DIR)

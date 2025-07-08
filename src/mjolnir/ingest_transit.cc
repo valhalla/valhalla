@@ -4,7 +4,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "just_gtfs/just_gtfs.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -21,6 +20,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <future>
 #include <memory>
@@ -81,7 +81,7 @@ struct tile_transit_info_t {
 
 struct feed_cache_t {
   std::unordered_map<std::string, gtfs::Feed> cache;
-  std::string gtfs_dir;
+  std::filesystem::path gtfs_dir;
 
   feed_cache_t(const std::string& gtfs_dir) : gtfs_dir(gtfs_dir) {
   }
@@ -92,7 +92,8 @@ struct feed_cache_t {
       return found->second;
     }
 
-    auto inserted = cache.insert({feed_object.feed, gtfs::Feed(gtfs_dir + feed_object.feed)});
+    auto inserted =
+        cache.insert({feed_object.feed, gtfs::Feed((gtfs_dir / feed_object.feed).string())});
     inserted.first->second.read_feed();
     return inserted.first->second;
   }
@@ -121,10 +122,13 @@ struct unique_transit_t {
   std::unordered_map<std::string, size_t> lines;
 };
 
-std::string get_tile_path(const std::string& tile_dir, const GraphId& tile_id) {
+std::filesystem::path get_tile_path(const std::filesystem::path& tile_base_dir,
+                                    const GraphId& tile_id) {
   auto file_name = GraphTile::FileSuffix(tile_id);
   file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-  return tile_dir + file_name;
+  std::filesystem::path file_path{tile_base_dir};
+  file_path.append(file_name);
+  return file_path;
 };
 
 // converts service start/end dates of the form (yyyymmdd) into epoch seconds
@@ -142,7 +146,8 @@ std::string get_onestop_id_base(const std::string& stop_id, const std::string& f
 }
 
 // Read from GTFS feed, sort data into the unique tiles they belong to
-std::priority_queue<tile_transit_info_t> select_transit_tiles(const std::string& gtfs_path) {
+std::priority_queue<tile_transit_info_t>
+select_transit_tiles(const std::filesystem::path& gtfs_path) {
 
   std::set<GraphId> tiles;
   const auto& local_tiles = TileHierarchy::levels().back().tiles;
@@ -157,15 +162,15 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const std::string&
     return tile_map.insert({graphid, tile_transit_info_t{graphid}}).first->second;
   };
 
-  filesystem::recursive_directory_iterator gtfs_feed_itr(gtfs_path);
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::recursive_directory_iterator gtfs_feed_itr(gtfs_path);
+  std::filesystem::recursive_directory_iterator end_file_itr;
   for (; gtfs_feed_itr != end_file_itr; ++gtfs_feed_itr) {
     const auto& feed_path = gtfs_feed_itr->path();
-    if (gtfs_feed_itr->is_directory() && filesystem::is_empty(feed_path)) {
+    if (gtfs_feed_itr->is_directory() && std::filesystem::is_empty(feed_path)) {
       LOG_ERROR("Feed directory " + feed_path.string() + " is empty");
       continue;
     }
-    if (filesystem::is_directory(feed_path)) {
+    if (std::filesystem::is_directory(feed_path)) {
       // feed_path has a trailing separator
       const auto feed_name = feed_path.filename().string();
 
@@ -667,8 +672,8 @@ void write_shapes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
 }
 
 // pre-processes feed data and writes to the pbfs (calls the 'write' functions)
-void ingest_tiles(const std::string& gtfs_dir,
-                  const std::string& transit_dir,
+void ingest_tiles(const std::filesystem::path& gtfs_dir,
+                  const std::filesystem::path& transit_dir,
                   const uint32_t pbf_trip_limit,
                   std::priority_queue<tile_transit_info_t>& queue,
                   unique_transit_t& uniques,
@@ -695,7 +700,7 @@ void ingest_tiles(const std::string& gtfs_dir,
     auto current_path = tile_path;
 
     // collect all the feeds in this tile
-    feed_cache_t feeds(gtfs_dir);
+    feed_cache_t feeds(gtfs_dir.string());
     for (const auto& route : current.routes) {
       feeds(route.first);
     }
@@ -717,11 +722,13 @@ void ingest_tiles(const std::string& gtfs_dir,
                 dangles;
 
       if (trip_count >= pbf_trip_limit) {
-        LOG_INFO("Writing " + current_path);
+        LOG_INFO("Writing " + current_path.string());
         write_pbf(tile, current_path);
         tile.Clear();
         trip_count = 0;
-        current_path = tile_path + "." + std::to_string(ext++);
+        current_path = tile_path;
+        current_path += ".";
+        current_path += std::to_string(ext++);
       }
     }
 
@@ -731,7 +738,7 @@ void ingest_tiles(const std::string& gtfs_dir,
 
     // write the last tile
     if (tile.stop_pairs_size()) {
-      LOG_INFO("Writing " + current_path);
+      LOG_INFO("Writing " + current_path.string());
       write_pbf(tile, current_path);
     }
   }
@@ -739,7 +746,7 @@ void ingest_tiles(const std::string& gtfs_dir,
 }
 
 // connect the stop_pairs that span multiple tiles by processing dangling tiles
-void stitch_tiles(const std::string& transit_dir,
+void stitch_tiles(const std::filesystem::path& transit_dir,
                   const std::unordered_set<GraphId>& all_tiles,
                   std::list<GraphId>& tiles,
                   std::mutex& lock) {
@@ -776,7 +783,7 @@ void stitch_tiles(const std::string& transit_dir,
       // now if it was generated or not. If it's missing, it's just the "base"
       // onestop ID and we also don't patch it here, since (for now) nodes' onestop
       // IDs aren't used anywhere after this code block
-      auto tile = read_pbf(current_path);
+      auto tile = read_pbf(current_path.string());
       std::unordered_map<std::string, GraphId> needed;
       for (const auto& stop_pair : tile.stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
@@ -798,7 +805,7 @@ void stitch_tiles(const std::string& transit_dir,
         auto neighbor_id = *unchecked.cbegin();
         unchecked.erase(unchecked.begin());
         auto neighbor_file_name = get_tile_path(transit_dir, neighbor_id);
-        auto neighbor = read_pbf(neighbor_file_name, lock);
+        auto neighbor = read_pbf(neighbor_file_name.string(), lock);
         for (const auto& node : neighbor.nodes()) {
           const auto node_type = static_cast<NodeType>(node.type());
           if (node_type != NodeType::kMultiUseTransitPlatform) {
@@ -840,11 +847,12 @@ void stitch_tiles(const std::string& transit_dir,
       lock.lock();
       write_pbf(tile, current_path);
       lock.unlock();
-      LOG_INFO(current_path + " stitched " + std::to_string(found) + " of " +
+      LOG_INFO(current_path.string() + " stitched " + std::to_string(found) + " of " +
                std::to_string(needed.size()) + " stops");
-
-      current_path = tile_path + "." + std::to_string(ext++);
-    } while (filesystem::exists(current_path));
+      current_path = tile_path;
+      current_path += ".";
+      current_path += std::to_string(ext++);
+    } while (std::filesystem::exists(current_path));
   }
 }
 } // namespace
@@ -855,19 +863,13 @@ namespace mjolnir {
 // thread and call ingest_tiles
 std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   // remove transit directory if it exists
-  std::string transit_dir = pt.get<std::string>("mjolnir.transit_dir");
-  if (transit_dir.back() != filesystem::path::preferred_separator) {
-    transit_dir.push_back(filesystem::path::preferred_separator);
-  }
-  if (filesystem::exists(transit_dir) && !filesystem::is_empty(transit_dir)) {
-    LOG_WARN("Non-empty " + transit_dir + " will be purged of tiles");
-    filesystem::remove_all(transit_dir);
+  std::filesystem::path transit_dir{pt.get<std::string>("mjolnir.transit_dir")};
+  if (std::filesystem::exists(transit_dir) && !std::filesystem::is_empty(transit_dir)) {
+    LOG_WARN("Non-empty " + transit_dir.string() + " will be purged of tiles");
+    std::filesystem::remove_all(transit_dir);
   }
 
-  std::string gtfs_dir = pt.get<std::string>("mjolnir.transit_feeds_dir");
-  if (gtfs_dir.back() != filesystem::path::preferred_separator) {
-    gtfs_dir.push_back(filesystem::path::preferred_separator);
-  }
+  std::filesystem::path gtfs_dir{pt.get<std::string>("mjolnir.transit_feeds_dir")};
 
   auto thread_count =
       pt.get<unsigned int>("mjolnir.concurrency", std::max(static_cast<unsigned int>(1),
@@ -920,18 +922,14 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
       pt.get<unsigned int>("mjolnir.concurrency", std::max(static_cast<unsigned int>(1),
                                                            std::thread::hardware_concurrency()));
   // figure out which transit tiles even exist
-  auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
-  if (transit_dir.back() != filesystem::path::preferred_separator) {
-    transit_dir.push_back(filesystem::path::preferred_separator);
-  }
-  filesystem::recursive_directory_iterator transit_file_itr(
-      transit_dir + std::to_string(TileHierarchy::GetTransitLevel().level));
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::path transit_dir{pt.get<std::string>("mjolnir.transit_dir")};
+
+  std::filesystem::recursive_directory_iterator transit_file_itr(transit_dir);
   std::unordered_set<GraphId> all_tiles;
-  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (filesystem::is_regular_file(transit_file_itr->path()) &&
-        transit_file_itr->path().extension() == ".pbf") {
-      all_tiles.emplace(GraphTile::GetTileId(transit_file_itr->path().string()));
+  for (const auto& dir_entry : transit_file_itr) {
+    if (std::filesystem::is_regular_file(dir_entry.path()) &&
+        dir_entry.path().extension() == ".pbf") {
+      all_tiles.emplace(GraphTile::GetTileId(dir_entry.path().string()));
     }
   }
 
@@ -957,12 +955,12 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
   LOG_INFO("Finished");
 }
 
-Transit read_pbf(const std::string& file_name, std::mutex& lock) {
+Transit read_pbf(const std::filesystem::path& file_name, std::mutex& lock) {
   lock.lock();
   std::fstream file(file_name, std::ios::in | std::ios::binary);
   if (!file) {
     lock.unlock();
-    throw std::runtime_error("Couldn't load " + file_name);
+    throw std::runtime_error("Couldn't load " + file_name.string());
   }
   std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   lock.unlock();
@@ -977,15 +975,15 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
 #endif
   Transit transit;
   if (!transit.ParseFromCodedStream(&cs)) {
-    throw std::runtime_error("Couldn't load " + file_name);
+    throw std::runtime_error("Couldn't load " + file_name.string());
   }
   return transit;
 }
 
-Transit read_pbf(const std::string& file_name) {
+Transit read_pbf(const std::filesystem::path& file_name) {
   std::fstream file(file_name, std::ios::in | std::ios::binary);
   if (!file) {
-    throw std::runtime_error("Couldn't load " + file_name);
+    throw std::runtime_error("Couldn't load " + file_name.string());
   }
   std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
@@ -999,12 +997,12 @@ Transit read_pbf(const std::string& file_name) {
 #endif
   Transit transit;
   if (!transit.ParseFromCodedStream(&cs)) {
-    throw std::runtime_error("Couldn't load " + file_name);
+    throw std::runtime_error("Couldn't load " + file_name.string());
   }
   return transit;
 }
 
-void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
+void write_pbf(const Transit& tile, const std::filesystem::path& transit_tile) {
   // check for empty stop pairs and routes.
   if (tile.stop_pairs_size() == 0 && tile.routes_size() == 0 && tile.shapes_size() == 0) {
     LOG_WARN(transit_tile.string() + " had no data and will not be stored");
@@ -1012,8 +1010,8 @@ void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   }
 
   // write pbf to file
-  if (!filesystem::exists(transit_tile.parent_path())) {
-    filesystem::create_directories(transit_tile.parent_path());
+  if (!std::filesystem::exists(transit_tile.parent_path())) {
+    std::filesystem::create_directories(transit_tile.parent_path());
   }
 #if GOOGLE_PROTOBUF_VERSION >= 3001000
   auto size = tile.ByteSizeLong();
