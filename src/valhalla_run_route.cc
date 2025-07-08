@@ -28,6 +28,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -456,7 +457,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::string json_str, json_file;
   boost::property_tree::ptree config;
