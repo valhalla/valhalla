@@ -98,6 +98,7 @@
    * ADDED: script to analyze build logs for warnings [#5312](https://github.com/valhalla/valhalla/pull/5312)
    * CHANGED: Replace robin-hood-hashing with `ankerl::unordered_dense::{map, set}` [#5325](https://github.com/valhalla/valhalla/pull/5325)
    * CHANGED: Speed up density calculus by using grid index [#5328](https://github.com/valhalla/valhalla/pull/5328)
+   * ADDED: Distribute C++ executables for OSX Python bindings [#5301](https://github.com/valhalla/valhalla/pull/5301)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
