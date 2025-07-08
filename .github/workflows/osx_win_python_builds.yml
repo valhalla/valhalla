@@ -139,6 +139,8 @@ jobs:
           detached: true
   
   build_osx:
+    # this is the arm64 image for macos-13
+    # we want the lowest available version to build the Python bindings
     runs-on: macos-14
     name: Build OSX & Python wheels
     needs: [publish_pypi]
@@ -219,6 +221,8 @@ jobs:
         env:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+            VALHALLA_BUILD_BIN_DIR="build"
+            LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
           MACOSX_DEPLOYMENT_TARGET: 14
 
       - name: Upload wheels
@@ -391,7 +395,6 @@ jobs:
           detached: true
 
   verify_wheels_linux:
-    name: Verify wheels with executables in a fresh environment
     needs: [publish_pypi, build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
@@ -411,6 +414,29 @@ jobs:
           python -m pip install dist/*cp313-manylinux*.whl
           ./src/bindings/python/test/test_pyvalhalla_package.sh
 
+  verify_wheels_osx:
+    needs: [publish_pypi, build_osx]
+    runs-on: macos-14
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Run test
+        shell: bash
+        run: |
+          python -m pip install dist/*cp313-macosx_*_arm64.whl
+          python -m valhalla valhalla_service -h
+          python -m valhalla valhalla_build_tiles -h
+  
   verify_wheels_win:
     name: Verify wheels with executables in a fresh environment
     needs: [publish_pypi, build_win]
@@ -427,17 +453,17 @@ jobs:
         with:
           path: dist
           merge-multiple: true
-      
+
       - name: Run test
         shell: bash
         run: |
           python -m pip install dist/*cp313-win_amd64.whl
           python -m valhalla valhalla_service -h
-          python -m valhalla valhalla_build_tiles -h
+          python -m valhalla valhalla_build_tiles -h 
 
   upload_all:
     name: Upload if release
-    needs: [publish_pypi, verify_wheels_linux, verify_wheels_win, build_osx]
+    needs: [publish_pypi, verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
