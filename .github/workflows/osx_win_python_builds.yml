@@ -141,7 +141,7 @@ jobs:
   build_osx:
     # this is the arm64 image for macos-13
     # we want the lowest available version to build the Python bindings
-    runs-on: macos-13-xlarge
+    runs-on: macos-14
     name: Build OSX & Python wheels
     needs: [publish_pypi]
     steps:
@@ -416,7 +416,7 @@ jobs:
 
   verify_wheels_osx:
     needs: [publish_pypi, build_osx]
-    runs-on: macos-13-xlarge
+    runs-on: macos-14
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
