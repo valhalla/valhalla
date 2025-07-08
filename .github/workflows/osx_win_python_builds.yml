@@ -139,7 +139,9 @@ jobs:
           detached: true
   
   build_osx:
-    runs-on: macos-14
+    # this is the arm64 image for macos-13
+    # we want the lowest available version to build the Python bindings
+    runs-on: macos-13-xlarge
     name: Build OSX & Python wheels
     needs: [publish_pypi]
     steps:
@@ -206,7 +208,7 @@ jobs:
       # only package python bindings if it's not a PR
 
       - name: Determine package to publish
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
@@ -215,7 +217,7 @@ jobs:
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
@@ -224,18 +226,18 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: 14
 
       - name: Upload wheels
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-osx-arm64
           path: wheelhouse/*.whl
 
-      # - name: Setup tmate session
-      #   uses: mxschmitt/action-tmate@v3
-      #   # only run this if manually invoked and debug_enabled == true or a previous step failed
-      #   if: ${{ env.SETUP_TMATE }}
-      #   with:
-      #     detached: true
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # only run this if manually invoked and debug_enabled == true or a previous step failed
+        if: ${{ env.SETUP_TMATE }}
+        with:
+          detached: true
   
   build_win:
     name: Build Win & Python wheels
@@ -414,8 +416,8 @@ jobs:
 
   verify_wheels_osx:
     needs: [publish_pypi, build_osx]
-    runs-on: macos-14
-    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    runs-on: macos-13-xlarge
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
 

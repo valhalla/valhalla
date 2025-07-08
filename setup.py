@@ -134,6 +134,9 @@ else:
 
 ext_modules = [
     Pybind11Extension(
+        # TODO: currently this installs the extension module directly to site-packages
+        # we want to move it to the site-packages/valhalla folder with "valhalla._valhalla"
+        # NOTE: this has impact on Windows where we need to add the DLL path manually
         "_valhalla",
         [os.path.join("src", "bindings", "python", "valhalla", "_valhalla.cc")],
         cxx_std=17,
@@ -180,7 +183,6 @@ setup(
     url="https://github.com/valhalla/valhalla",
     packages=["valhalla"],
     package_dir={"": "./src/bindings/python"},
-    include_package_data=True,
     ext_modules=ext_modules,
     entry_points=script_entrypoints,
     # if we found executables we'll package them to let them go through auditing package (auditwheel etc.)
