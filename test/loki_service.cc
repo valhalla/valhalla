@@ -378,12 +378,12 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
                                             "centroid",
                                             "status",
                                         }) {
-  auto run_dir = VALHALLA_BUILD_DIR "test" +
-                 std::string(1, std::filesystem::path::preferred_separator) + "loki_service_tmp";
+  std::filesystem::path run_dir{VALHALLA_BUILD_DIR "test"};
+  run_dir.append("loki_service_tmp");
   if (!std::filesystem::is_directory(run_dir) && !std::filesystem::create_directories(run_dir))
     throw std::runtime_error("Couldnt make directory to run from");
 
-  auto config = test::make_config(run_dir,
+  auto config = test::make_config(run_dir.string(),
                                   {{"service_limits.skadi.max_shape", "100"},
                                    {"service_limits.max_exclude_locations", "0"}},
                                   {"loki.actions", "mjolnir.tile_extract", "mjolnir.tile_dir"});

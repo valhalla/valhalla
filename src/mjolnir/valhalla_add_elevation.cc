@@ -10,6 +10,7 @@
 
 #include <cstdlib>
 #include <deque>
+#include <filesystem>
 #include <iostream>
 #include <vector>
 
@@ -26,7 +27,7 @@ std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
     return {};
 
   auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
-  if (!tile_dir || !filesystem::exists(*tile_dir)) {
+  if (!tile_dir || !std::filesystem::exists(*tile_dir)) {
     LOG_WARN("Tile storage directory does not exist");
     return {};
   }
@@ -61,7 +62,7 @@ std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
  * */
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> tiles;
   boost::property_tree::ptree config;
@@ -94,7 +95,7 @@ int main(int argc, char** argv) {
       return EXIT_FAILURE;
     } else {
       for (const auto& tile : result["concurrency"].as<std::vector<std::string>>()) {
-        if (filesystem::exists(tile) && filesystem::is_regular_file(tile))
+        if (std::filesystem::exists(tile) && std::filesystem::is_regular_file(tile))
           return EXIT_FAILURE;
       }
       std::cerr << "All tile files are invalid\n\n" << options.help() << "\n\n";
