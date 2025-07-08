@@ -3,19 +3,19 @@
 This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
-> `pyvalhalla(-git)` packages are currently only published for:
+> `pyvalhalla(-weekly)` packages are currently only published for:
 > - `linux-x86_x64`
 > - `win-amd64`
 > - `macos-arm64`
 
-On top of the (very) high-level Python bindings, we package some data-building Valhalla executables to ease the process of graph creation.
+On top of the (very) high-level Python bindings, we package some data-building Valhalla executables to ease the process of graph creation or run Valhalla as a service, see [below](#valhalla-executables-linux-x86_x64-only).
 
 ### Installation
 
 We distribute all currently maintained CPython versions as **binary wheels** for Win64, MacOS (`arm64`) and Linux (`x86_64`) distributions with `glibc>=2.28`. We **do not** offer a source distribution on PyPI.
 
-`pip install pyvalhalla` to install the most recent Valhalla **release**.
-`pip install pyvalhalla-weekly` to install the most recent Valhalla **master commit**.
+`pip install pyvalhalla` to install the most recent Valhalla **release**.  
+`pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
 
 ### Usage
 
@@ -48,6 +48,7 @@ route = actor.route({"locations": [...]})
 #### Valhalla executables (**`linux-x86_x64` only**)
 
 To access the C++ (native) executables, there are 2 options:
+
 - (recommended) execute the module, e.g. `python -m valhalla valhalla_build_tiles -h`
 - execute the Python wrapper scripts directly, e.g. `valhalla_build_tiles -h`
 
@@ -57,6 +58,7 @@ To access the C++ (native) executables, there are 2 options:
 Executing the scripts directly might also not work properly if there's a system-wide Valhalla installation, unless the Python environment's `bin/` folder has higher priority than system folders in `$PATH`. The module execution uses an explicit Python executable which should be preferred.
 
 There are also some additional commands we added:
+
 - `--help`: print the help for `python -m valhalla` explicitly
 - `--quiet`: redirect `stdout` of the C++ executables to `/dev/null`; can be added **once** anywhere in the command, will not be forwarded to a C++ executable
 - `print_bin_path`: simply prints the absolute path to the package-internal `bin/` directory where the C++ executables are; useful if the executables should be accessed directly in some script
