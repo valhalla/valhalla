@@ -21,7 +21,7 @@ public:
   /**
    * Constructor
    */
-  OSMAccessRestriction() : except_destination_(0) {};
+  OSMAccessRestriction() : except_destination_(0){};
 
   /**
    * Destructor.
