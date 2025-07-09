@@ -2872,7 +2872,7 @@ struct graph_parser {
           ProcessPronunciationTag(OSMLinguistic::Type::kJunctionName, alphabet);
         }
       }
-    } // end tags loop
+    }
 
     if (!use_direction_on_ways_) {
 
@@ -3872,8 +3872,6 @@ struct graph_parser {
         }
       }
     }
-
-    // destonly access restrictions here
 
     // Add the way to the list
     ways_->push_back(way_);
