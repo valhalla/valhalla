@@ -236,8 +236,12 @@ message TripLeg {
     }
     repeated Level levels = 61;
     uint32 level_precision = 62;
-    Speeds speeds_faded = 63;
-    Speeds speeds_non_faded = 64;
+    oneof has_speeds_faded {
+      Speeds speeds_faded = 63;
+    }
+    oneof has_speeds_non_faded {
+      Speeds speeds_non_faded = 64;
+    }
     SpeedType speed_type = 65;
   }
 
