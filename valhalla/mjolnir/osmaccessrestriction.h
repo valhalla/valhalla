@@ -69,12 +69,12 @@ public:
    */
   void set_direction(AccessRestrictionDirection direction);
 
-  /** 
+  /**
    * Whether or not the restriction applies to local traffic
    */
   bool except_destination() const;
 
-  /** 
+  /**
    * Set flag for whether or not the restriction applies to local traffic
    */
   void set_except_destination(const bool except_destination);

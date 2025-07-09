@@ -991,10 +991,10 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(tag_.second.substr(0, pos) == "true" ? true : false);  
+        restriction.set_value(tag_.second.substr(0, pos) == "true" ? true : false);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(tag_.second == "true" ? true : false);  
+        restriction.set_value(tag_.second == "true" ? true : false);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1004,10 +1004,10 @@ struct graph_parser {
       restriction.set_type(AccessType::kHazmat);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(tag_.second.substr(0, pos) == "true" ? true : false);  
+        restriction.set_value(tag_.second.substr(0, pos) == "true" ? true : false);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(tag_.second == "true" ? true : false);  
+        restriction.set_value(tag_.second == "true" ? true : false);
       }
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
@@ -1021,10 +1021,10 @@ struct graph_parser {
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(tag_.second.substr(0, pos) == "true" ? true : false);  
+        restriction.set_value(tag_.second.substr(0, pos) == "true" ? true : false);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(tag_.second == "true" ? true : false);  
+        restriction.set_value(tag_.second == "true" ? true : false);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1035,10 +1035,10 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1050,10 +1050,10 @@ struct graph_parser {
       restriction.set_direction(AccessRestrictionDirection::kForward);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1065,10 +1065,10 @@ struct graph_parser {
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1079,10 +1079,10 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1094,10 +1094,10 @@ struct graph_parser {
       restriction.set_direction(AccessRestrictionDirection::kForward);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1109,10 +1109,10 @@ struct graph_parser {
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1123,10 +1123,10 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1138,10 +1138,10 @@ struct graph_parser {
       restriction.set_direction(AccessRestrictionDirection::kForward);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1153,10 +1153,10 @@ struct graph_parser {
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1167,10 +1167,10 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1182,10 +1182,10 @@ struct graph_parser {
       restriction.set_direction(AccessRestrictionDirection::kForward);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1197,10 +1197,10 @@ struct graph_parser {
       restriction.set_direction(AccessRestrictionDirection::kBackward);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1211,10 +1211,10 @@ struct graph_parser {
       restriction.set_modes(kTruckAccess);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)) * 100);
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second) * 100);  
+        restriction.set_value(std::stof(tag_.second) * 100);
       }
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1224,10 +1224,10 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxAxles);
       auto pos = tag_.second.find("~");
       if (pos != std::string::npos) {
-        restriction.set_value(std::stof(tag_.second.substr(0, pos)));  
+        restriction.set_value(std::stof(tag_.second.substr(0, pos)));
         restriction.set_except_destination(true);
       } else {
-        restriction.set_value(std::stof(tag_.second));  
+        restriction.set_value(std::stof(tag_.second));
       }
       restriction.set_modes(kTruckAccess);
       osmdata_.access_restrictions.insert(
@@ -2874,7 +2874,6 @@ struct graph_parser {
       }
     } // end tags loop
 
-
     if (!use_direction_on_ways_) {
 
       uint8_t alpha = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
@@ -3875,7 +3874,6 @@ struct graph_parser {
     }
 
     // destonly access restrictions here
-    
 
     // Add the way to the list
     ways_->push_back(way_);
