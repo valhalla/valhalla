@@ -41,6 +41,28 @@ void serialize_admins(const TripLeg& trip_path, rapidjson::writer_wrapper_t& wri
   writer.end_array();
 }
 
+void serialize_speeds(const valhalla::TripLeg_Edge& edge,
+                      bool is_faded,
+                      const std::function<uint64_t(float)>& speed_serializer,
+                      rapidjson::writer_wrapper_t& writer) {
+  auto speeds = is_faded ? edge.speeds_faded() : edge.speeds_non_faded();
+  writer.start_object(is_faded ? "speeds_faded" : "speeds_non_faded");
+  if (speeds.has_current_flow()) {
+    writer("current_flow", speed_serializer(speeds.current_flow()));
+  }
+  if (speeds.has_predicted_flow()) {
+    writer("predicted_flow", speed_serializer(speeds.predicted_flow()));
+  }
+  if (speeds.has_constrained_flow()) {
+    writer("constrained_flow", speed_serializer(speeds.constrained_flow()));
+  }
+  if (speeds.has_free_flow()) {
+    writer("free_flow", speed_serializer(speeds.free_flow()));
+  }
+  writer("no_flow", speed_serializer(speeds.no_flow()));
+  writer.end_object();
+}
+
 void serialize_edges(const AttributesController& controller,
                      const Options& options,
                      const TripLeg& trip_path,
@@ -52,6 +74,9 @@ void serialize_edges(const AttributesController& controller,
   if (options.units() == Options::miles) {
     scale = kMilePerKm;
   }
+  auto serialize_speed = [scale](float speed) -> uint64_t {
+    return static_cast<uint64_t>(std::round(speed * scale));
+  };
 
   // Loop over edges to add attributes
   for (int i = 1; i < trip_path.node().size(); i++) {
@@ -63,13 +88,13 @@ void serialize_edges(const AttributesController& controller,
         writer("truck_route", edge.truck_route());
       }
       if (controller(kEdgeTruckSpeed) && (edge.truck_speed() > 0)) {
-        writer("truck_speed", static_cast<uint64_t>(std::round(edge.truck_speed() * scale)));
+        writer("truck_speed", serialize_speed(edge.truck_speed()));
       }
       if (controller(kEdgeSpeedLimit) && (edge.speed_limit() > 0)) {
         if (edge.speed_limit() == kUnlimitedSpeedLimit) {
           writer("speed_limit", std::string("unlimited"));
         } else {
-          writer("speed_limit", static_cast<uint64_t>(std::round(edge.speed_limit() * scale)));
+          writer("speed_limit", serialize_speed(edge.speed_limit()));
         }
       }
       if (controller(kEdgeDensity)) {
@@ -188,7 +213,18 @@ void serialize_edges(const AttributesController& controller,
         writer("road_class", to_string(static_cast<baldr::RoadClass>(edge.road_class())));
       }
       if (controller(kEdgeSpeed)) {
-        writer("speed", static_cast<uint64_t>(std::round(edge.speed() * scale)));
+        writer("speed", serialize_speed(edge.speed()));
+      }
+      if (controller(kEdgeSpeedType)) {
+        writer("speed_type", to_string(static_cast<baldr::SpeedType>(edge.speed_type())));
+      }
+      if (controller(kEdgeSpeedsFaded) &&
+          options.date_time_type() == Options::DateTimeType::Options_DateTimeType_current &&
+          edge.has_speeds_faded()) {
+        serialize_speeds(edge, true, serialize_speed, writer);
+      }
+      if (controller(kEdgeSpeedsNonFaded)) {
+        serialize_speeds(edge, false, serialize_speed, writer);
       }
       if (controller(kEdgeCountryCrossing)) {
         writer("country_crossing", edge.country_crossing());
