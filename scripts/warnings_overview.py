@@ -60,7 +60,7 @@ def main():
     )
     if list_parameters:
         for files_amount, warning_id in list_parameters:
-            print(f"  {warning_id}: max {"all" if files_amount != -1 else files_amount} source paths")
+            print(f"  {warning_id}: max {'all' if files_amount != -1 else files_amount} source paths")
 
     warnings_counter = Counter()
     warnings_files_requested = defaultdict(int)
