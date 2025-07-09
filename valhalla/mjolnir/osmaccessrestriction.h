@@ -69,6 +69,16 @@ public:
    */
   void set_direction(AccessRestrictionDirection direction);
 
+  /** 
+   * Whether or not the restriction applies to local traffic
+   */
+  bool except_destination() const;
+
+  /** 
+   * Set flag for whether or not the restriction applies to local traffic
+   */
+  void set_except_destination(const bool except_destination);
+
 protected:
   uint64_t value_ = 0;
 
@@ -78,7 +88,9 @@ protected:
   };
   Attributes attributes_ = {0, 0};
   AccessRestrictionDirection direction_ = AccessRestrictionDirection::kBoth;
-  uint16_t spare_[2] = {0, 0};
+  uint16_t except_destination_ : 1;
+  uint16_t spare_ : 15;
+  uint16_t spare1_ = 0;
   uint8_t spare2_ = 0;
 };
 

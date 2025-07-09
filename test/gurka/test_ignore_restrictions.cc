@@ -179,3 +179,68 @@ TEST(CommonRestrictionsFail, Truck) {
     FAIL() << "Expected to fail with a different error code.";
   }
 }
+
+
+using params_t =
+    std::tuple<std::string, std::string, std::string, std::string, std::string, std::string>;
+class DestinationAccessRestrictionTest : public ::testing::TestWithParam<params_t> {};
+// class TestHierarchyLimits : public ::testing::TestWithParam<HierarchyLimitsTestParams> {};
+TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestriction) {
+  std::string tag, value, conditional_value, costing, costing_key, costing_value; 
+  std::tie(tag, value, conditional_value, costing, costing_key, costing_value) = GetParam();
+
+  const std::string ascii_map = R"(
+      A----B-----C----D
+    )";
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+                            {"BC",
+                             {
+                                 {"highway", "residential"},
+                                 {tag, value},
+                                 {tag + ":conditional", conditional_value},
+                             }},
+                            {"CD", {{"highway", "residential"}}}};
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/destination_access_restrictions",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}, {"thor.costmatrix.allow_second_pass", "1"} });
+
+  // second pass
+  valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
+                                           {{"/costing_options/" + costing + "/" + costing_key, costing_value}});
+
+  // better yet, call costmatrix which gives us a warning on second pass
+  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, "truck",
+                                           {{"/costing_options/" + costing + "/" + costing_key, costing_value}, {"/prioritize_bidirectional", "1"}});
+  ASSERT_TRUE(route.info().warnings().size() > 0);
+  EXPECT_EQ(route.info().warnings(0).code(), 400);
+
+}
+
+INSTANTIATE_TEST_SUITE_P(DestinationAccessRestriction,
+                         DestinationAccessRestrictionTest,
+                         ::testing::ValuesIn([](){ 
+                           std::vector<params_t> res;
+                          std::array<std::string, 4> conditional_values = {"none @ destination", "none @ (destination)", "none @ delivery","no @ destination"};
+                           for (const auto& auto_opts : {"height", "length"}) {
+                              for (const auto& cv : conditional_values) {
+
+                              res.emplace_back("max" + std::string(auto_opts), "3", cv, "auto", auto_opts, "5");
+                              res.emplace_back("max" + std::string(auto_opts) + ":forward", "3", cv, "auto", auto_opts, "5");
+                              }
+                           }
+
+                           for (const auto& truck_opts : {"height", "length", "width", "weight", "axles"}) {
+                              for (const auto& cv : conditional_values) {
+                              res.emplace_back("max" + std::string(truck_opts), "3", cv, "truck", std::string(truck_opts) == "axles" ? "axle_count" : truck_opts, "5");
+                              if (std::string(truck_opts) != "axles")
+                                res.emplace_back("max" + std::string(truck_opts) + ":forward", "3", cv, "truck", std::string(truck_opts) == "axles" ? "axle_count" : truck_opts, "5");
+                              }
+                           }
+
+                           // don't forget hazmat
+                           res.emplace_back("hazmat", "true", "none @ destination", "truck", "hazmat", "1");
+                           return res;
+                          }()));
