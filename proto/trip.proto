@@ -101,6 +101,11 @@ message TripLeg {
     kBothSides = 3;
   }
 
+  enum SpeedType {
+    kTagged = 0;
+    kClassified = 1;
+  }
+
   message LaneConnectivity {
     uint64 from_way_id = 1;
     string from_lanes = 2;
@@ -113,6 +118,14 @@ message TripLeg {
     float end_percent = 3;
     bool starts_segment = 4;
     bool ends_segment = 5;
+  }
+
+  message Speeds {
+    float predicted_flow = 1;
+    float constrained_flow = 2;
+    float free_flow = 3;
+    float current_flow = 4;
+    float no_flow = 5;
   }
 
   message Restriction{
@@ -215,6 +228,13 @@ message TripLeg {
     }
     repeated Level levels = 61;
     uint32 level_precision = 62;
+    oneof has_speeds_faded {
+      Speeds speeds_faded = 63;
+    }
+    oneof has_speeds_non_faded {
+      Speeds speeds_non_faded = 64;
+    }
+    SpeedType speed_type = 65;
   }
 
   message IntersectingEdge {

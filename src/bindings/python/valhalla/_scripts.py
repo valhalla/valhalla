@@ -1,11 +1,14 @@
 from pathlib import Path
+import platform
 from shutil import which
 import subprocess
 import sys
+import sysconfig
 
 from . import PYVALHALLA_DIR
 
 PYVALHALLA_BIN_DIR = PYVALHALLA_DIR.joinpath("bin").resolve()
+IS_WIN = platform.system().lower() == "windows"
 
 
 def run(from_main=False) -> None:
@@ -23,7 +26,7 @@ def run(from_main=False) -> None:
 
     if not which(prog):
         raise FileNotFoundError(f"Can't find executable at {prog}")
-    prog_path = PYVALHALLA_BIN_DIR.joinpath(prog).resolve()
+    prog_path = PYVALHALLA_BIN_DIR.joinpath(prog + (".exe" if IS_WIN and from_main else "")).resolve()
 
     print(f"[INFO] Running {prog_path} with args: {prog_args}...")
 
@@ -40,6 +43,11 @@ def run(from_main=False) -> None:
         [str(prog_path)] + prog_args,
         stderr=sys.stderr,
         stdout=subprocess.DEVNULL if is_quiet else sys.stdout,
+        # on Win we need to add the path to vendored DLLs manually, see
+        # https://github.com/adang1345/delvewheel/issues/62#issuecomment-2977988121
+        # the DLLs are installed to site-packages/ directly for some reason, see
+        # https://github.com/adang1345/delvewheel/issues/64
+        env=dict(PATH=f"{sysconfig.get_paths()['purelib']}" if IS_WIN else None),
     )
 
     # raises CalledProcessError if not successful

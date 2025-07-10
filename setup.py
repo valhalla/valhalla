@@ -6,11 +6,12 @@ import sys
 from typing import Optional
 
 from pybind11.setup_helpers import Pybind11Extension
-from setuptools import setup, Extension
+from setuptools import setup
+# InWheel is platform-agnostic
 from auditwheel.wheeltools import InWheel
 from wheel.bdist_wheel import bdist_wheel as BDistWheelCommand  # noqa: E402
 
-DEFAULT_VALHALLA_BUILD_DIR = "./build_manylinux"
+DEFAULT_VALHALLA_BUILD_DIR = "./build"
 
 THIS_DIR = Path(__file__).parent.resolve()
 BINARIES = [
@@ -26,11 +27,23 @@ IS_OSX = platform.system().lower() == "darwin"
 IS_WIN = platform.system().lower() == "windows"
 IS_LINUX = platform.system().lower() == "linux"
 
+# verify build dir; needs to be an absolute path for InWheel context manager further below
+# $VALHALLA_BUILD_BIN_DIR is set by GHA
+valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR", DEFAULT_VALHALLA_BUILD_DIR)).absolute()
+if not valhalla_build_dir.is_dir():
+    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
+    valhalla_build_dir = None
+
 
 class ValhallaBDistWheelCommand(BDistWheelCommand):
     "Subclass to patch the wheel in ./dist and add Valhalla binaries"
     def run(self) -> None:
         super().run()
+
+        # in the context of this class, valhalla_build_dir can't be None
+        if not valhalla_build_dir.is_dir():
+            print(f"[WARNING] No valid valhalla build directory, skipping adding executables..")
+            return
         
         # get the wheel path
         impl_tag, abi_tag, plat_tag = self.get_tag()
@@ -40,7 +53,7 @@ class ValhallaBDistWheelCommand(BDistWheelCommand):
             print(f"[FATAL] is not an existing wheel: {whl_dist_path}")
             sys.exit(1)
 
-        print(f"Patching wheel {whl_dist_path} to include Valhalla binaries from {valhalla_build_dir}.")
+        print(f"[INFO] Patching wheel {whl_dist_path} to include Valhalla binaries from {valhalla_build_dir}.")
 
         # copy the valhalla binaries and make sure we rewrite the RECORD file
         # NOTE, InWheel context changes the root dir, so all relative paths will be relative
@@ -51,21 +64,14 @@ class ValhallaBDistWheelCommand(BDistWheelCommand):
             wheel_bin_dir.mkdir()
             for source_bin_path in source_bin_paths:
                 if not source_bin_path.is_file():
-                    print(f"{source_bin_path} does not exist, skipping...")
+                    print(f"[WARNING] {source_bin_path} does not exist, skipping...")
                     continue
                 wheel_binary_path = wheel_bin_dir.joinpath(source_bin_path.name)
                 shutil.copy(source_bin_path, wheel_binary_path)
-                print(f"Copied {source_bin_path.name} into wheel at {wheel_binary_path}")
+                print(f"[INFO] Copied {source_bin_path.name} into wheel at {wheel_binary_path}")
 
-            print(f"Updating RECORD file of {whl_dist_path}")
+            print(f"[INFO] Updating RECORD file of {whl_dist_path}")
 
-
-# verify build dir; needs to be an absolute path for InWheel context manager further below
-# $VALHALLA_BUILD_BIN_DIR is set by GHA
-valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR", DEFAULT_VALHALLA_BUILD_DIR)).absolute()
-if not valhalla_build_dir.is_dir():
-    print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
-    valhalla_build_dir = None
 
 include_dirs = [
     str(THIS_DIR.joinpath("third_party", "date", "include")),
@@ -96,8 +102,8 @@ elif IS_WIN:
         library_dirs.append("C:/Program Files/valhalla/lib")
 
 # determine libraries to link to
+# this is pretty annoying.. don't know any other way though..
 if IS_WIN:
-    # this is pretty annoying, especially with absl.. don't know any other way though..
     libraries.extend([
         "valhalla",
         "libprotobuf-lite",
@@ -134,6 +140,9 @@ else:
 
 ext_modules = [
     Pybind11Extension(
+        # TODO: currently this installs the extension module directly to site-packages
+        # we want to move it to the site-packages/valhalla folder with "valhalla._valhalla"
+        # NOTE: this has impact on Windows where we need to add the DLL path manually
         "_valhalla",
         [os.path.join("src", "bindings", "python", "valhalla", "_valhalla.cc")],
         cxx_std=17,
@@ -180,7 +189,6 @@ setup(
     url="https://github.com/valhalla/valhalla",
     packages=["valhalla"],
     package_dir={"": "./src/bindings/python"},
-    include_package_data=True,
     ext_modules=ext_modules,
     entry_points=script_entrypoints,
     # if we found executables we'll package them to let them go through auditing package (auditwheel etc.)

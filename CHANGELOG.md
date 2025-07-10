@@ -3,6 +3,7 @@
    * REMOVED: validity checks for historical speeds [#5087](https://github.com/valhalla/valhalla/pull/5087)
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
+   * REMOVED: `valhalla/filesystem` from the project in favor of the std equivalent [#5321](https://github.com/valhalla/valhalla/pull/5321)
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
@@ -42,6 +43,7 @@
    * FIXED: Number of compile/linker issues on Windows for the test targets. [#5313](https://github.com/valhalla/valhalla/pull/5313)
    * FIXED: Fix reference to the GHA variable to resolve `version_modifier` on CI [#5333](https://github.com/valhalla/valhalla/pull/5333)
    * FIXED: Ability to run `valhalla_service` with `[CONCURRENCY]` arg [#5335](https://github.com/valhalla/valhalla/pull/5335)
+   * FIXED: version modifier in `/status` response [#5357](https://github.com/valhalla/valhalla/pull/5357)
    * FIXED: Cover **all** nodes in the current tile by density index [#5338](https://github.com/valhalla/valhalla/pull/5338)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
@@ -99,6 +101,10 @@
    * ADDED: script to analyze build logs for warnings [#5312](https://github.com/valhalla/valhalla/pull/5312)
    * CHANGED: Replace robin-hood-hashing with `ankerl::unordered_dense::{map, set}` [#5325](https://github.com/valhalla/valhalla/pull/5325)
    * CHANGED: Speed up density calculus by using grid index [#5328](https://github.com/valhalla/valhalla/pull/5328)
+   * CHANGED: refactor to make valhalla/filesystem functionally redundant [#5319](https://github.com/valhalla/valhalla/pull/5319)
+   * ADDED: Distribute C++ executables for Windows Python bindings [#5348](https://github.com/valhalla/valhalla/pull/5348)
+   * ADDED: Distribute C++ executables for OSX Python bindings [#5301](https://github.com/valhalla/valhalla/pull/5301)
+   * ADDED: `trace_attributes` now also returns all the speed informations on edges when `edge.speeds_faded` or `edge.speeds_non_faded` is set in request. Also `edge.speed_type` returns how the edge speed was set [#5324](https://github.com/valhalla/valhalla/pull/5324)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

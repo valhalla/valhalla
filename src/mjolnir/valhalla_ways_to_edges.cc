@@ -1,6 +1,5 @@
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/way_edges_processor.h"
 
@@ -8,6 +7,7 @@
 #include <cxxopts.hpp>
 
 #include <cstdlib>
+#include <filesystem>
 #include <string>
 
 using namespace valhalla::baldr;
@@ -17,7 +17,7 @@ namespace vm = valhalla::mjolnir;
 // Main application to create a list wayids and directed edges belonging
 // to ways that are drivable.
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 
@@ -52,11 +52,11 @@ int main(int argc, char** argv) {
 
   GraphReader reader(config.get_child("mjolnir"));
 
-  std::string fname = config.get<std::string>("mjolnir.tile_dir") +
-                      filesystem::path::preferred_separator + "way_edges.txt";
+  std::filesystem::path file_path = {config.get<std::string>("mjolnir.tile_dir")};
+  file_path.append("way_edges.txt");
 
   // Collect all way edges
-  auto ways_edges = vm::collect_way_edges(reader, fname);
+  auto ways_edges = vm::collect_way_edges(reader, file_path.string());
 
   LOG_INFO("Finished with " + std::to_string(ways_edges.size()) + " ways.");
 
