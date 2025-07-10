@@ -19,6 +19,13 @@ inline valhalla::RoadClass GetRoadClass(const baldr::RoadClass road_class) {
   return kTripLegRoadClass[static_cast<int>(road_class)];
 }
 
+// Associate SpeedType values to TripLeg proto
+constexpr TripLeg_SpeedType kTripLegSpeedType[] = {TripLeg_SpeedType_kTagged,
+                                                   TripLeg_SpeedType_kClassified};
+inline TripLeg_SpeedType GetTripLegSpeedType(const baldr::SpeedType speed_type) {
+  return kTripLegSpeedType[static_cast<int>(speed_type)];
+}
+
 // Associate Surface values to TripLeg proto
 constexpr TripLeg_Surface kTripLegSurface[] =
     {TripLeg_Surface_kPavedSmooth, TripLeg_Surface_kPaved,     TripLeg_Surface_kPavedRough,
