@@ -47,16 +47,16 @@ void serialize_speeds(const valhalla::TripLeg_Edge& edge,
                       rapidjson::writer_wrapper_t& writer) {
   auto speeds = is_faded ? edge.speeds_faded() : edge.speeds_non_faded();
   writer.start_object(is_faded ? "speeds_faded" : "speeds_non_faded");
-  if (speeds.has_current_flow_case()) {
+  if (speeds.current_flow()) {
     writer("current_flow", speed_serializer(speeds.current_flow()));
   }
-  if (speeds.has_predicted_flow_case()) {
+  if (speeds.predicted_flow()) {
     writer("predicted_flow", speed_serializer(speeds.predicted_flow()));
   }
-  if (speeds.has_constrained_flow_case()) {
+  if (speeds.constrained_flow()) {
     writer("constrained_flow", speed_serializer(speeds.constrained_flow()));
   }
-  if (speeds.has_free_flow_case()) {
+  if (speeds.free_flow()) {
     writer("free_flow", speed_serializer(speeds.free_flow()));
   }
   writer("no_flow", speed_serializer(speeds.no_flow()));
