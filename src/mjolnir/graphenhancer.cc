@@ -77,6 +77,8 @@ struct DensityCellId {
   // uniqueness is not required, allowing to use such a small type for id.
   // Alternatively, `uint64_t` can be used for global uniqueness with levels smaller than 16.
   uint32_t id_;
+  static constexpr uint32_t kComponentBits = sizeof(id_) * 8 / 2;
+  static constexpr uint32_t kComponentMask = (1 << kComponentBits) - 1;
 
   DensityCellId(uint32_t id) : id_(id) {
   }
@@ -88,7 +90,7 @@ struct DensityCellId {
     x = x >> kGridLevel;
     y = y >> kGridLevel;
 
-    id_ = (x & 0x00FF) | ((y & 0x00FF) << 16);
+    id_ = (x & kComponentMask) | ((y & kComponentMask) << kComponentBits);
   }
 
   // Neighboring cells ids within the given radius in degrees
@@ -97,8 +99,8 @@ struct DensityCellId {
     const int y_neighbors = std::ceil(radius_lat_deg / DensityCellId::kSizeDeg);
 
     // Convert cell_id back to x, y coordinates
-    const int x = id_ & 0x00FF;
-    const int y = (id_ >> 16) & 0x00FF;
+    const int x = id_ & kComponentMask;
+    const int y = (id_ >> kComponentBits) & kComponentMask;
 
     std::vector<DensityCellId> neighbors;
     neighbors.reserve(4 * x_neighbors * y_neighbors);
@@ -106,7 +108,8 @@ struct DensityCellId {
       for (int ny = -y_neighbors; ny <= y_neighbors; ny++) {
         // Keep only neighbors within the radius
         if (nx * nx + ny * ny <= x_neighbors * y_neighbors) {
-          uint32_t neighbor_id = ((x + nx) & 0x00FF) | (((y + ny) & 0x00FF) << 16);
+          uint32_t neighbor_id =
+              ((x + nx) & kComponentMask) | (((y + ny) & kComponentMask) << kComponentBits);
           neighbors.push_back(neighbor_id);
         }
       }
