@@ -1,5 +1,4 @@
 #include "mjolnir/graphenhancer.h"
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -9,7 +8,6 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
 #include "midgard/constants.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
@@ -22,13 +20,10 @@
 #include "scoped_timer.h"
 #include "speed_assigner.h"
 
-#include <boost/format.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/io/wkt/wkt.hpp>
+#include <ankerl/unordered_dense.h>
 
-#include <cinttypes>
+#include <cstdint>
+#include <functional>
 #include <future>
 #include <limits>
 #include <list>
@@ -50,19 +45,94 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// Geometry types for admin queries
-typedef boost::geometry::model::d2::point_xy<double> point_type;
-typedef boost::geometry::model::polygon<point_type> polygon_type;
-typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
-
 // Number of tries when determining not thru edges
 constexpr uint32_t kMaxNoThruTries = 256;
 
 // Radius (km) to use for density
 constexpr float kDensityRadius = 2.0f;
-constexpr float kDensityRadius2 = kDensityRadius * kDensityRadius;
 constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDegreeLat;
 
+struct DensityCellId {
+  // `cell_id` is computed by shifting coordinate values by this amount, meaning that a bigger
+  // level produces bigger cells (as fewer bits remain from coordinate).
+  // - 15: 362m x 181m cell at 60 latitude, approx 7.5k cells to cover single tile
+  // - 14: 181m x 90m cell at 60 latitude, approx 30k cells to cover single tile
+  // - 13: 90m x 45m cell at 60 latitude, approx 120k cells to cover single tile
+  static constexpr uint32_t kGridLevel = 14; // good compromise between performance and accuracy
+
+  // Cell size in degrees
+  static constexpr float kSizeDeg = static_cast<float>(1 << kGridLevel) / 1e7;
+
+  // Count number of cells required to cover the given bounding box
+  static size_t cover_count(const AABB2<PointLL>& bbox) {
+    const size_t x_cells = static_cast<size_t>(floor(bbox.Width() / kSizeDeg)) + 1;
+    const size_t y_cells = static_cast<size_t>(floor(bbox.Height() / kSizeDeg)) + 1;
+    return x_cells * y_cells;
+  }
+
+  // If lat/lon is represented by 32 bit integer and coordinates are right-shifted by `kGridLevel`
+  // to identify a cell, the minimum grid level that keeps cells globally unique is 16, as smaller
+  // levels will lead to keeping too many coordinate bits that `id_` can hold. At the same time, as
+  // density is being calculated for a single tile (0.25 deg size) and its neighbors, such global
+  // uniqueness is not required, allowing to use such a small type for id.
+  // Alternatively, `uint64_t` can be used for global uniqueness with levels smaller than 16.
+  uint32_t id_;
+
+  DensityCellId(uint32_t id) : id_(id) {
+  }
+
+  DensityCellId(const PointLL& ll) {
+    uint32_t x = static_cast<uint32_t>((ll.lng() + 180.0) * 1e7);
+    uint32_t y = static_cast<uint32_t>((ll.lat() + 90.0) * 1e7);
+
+    x = x >> kGridLevel;
+    y = y >> kGridLevel;
+
+    id_ = (x & 0x00FF) | ((y & 0x00FF) << 16);
+  }
+
+  // Neighboring cells ids within the given radius in degrees
+  std::vector<DensityCellId> neighbors(float radius_lng_deg, float radius_lat_deg) const {
+    const int x_neighbors = std::ceil(radius_lng_deg / DensityCellId::kSizeDeg);
+    const int y_neighbors = std::ceil(radius_lat_deg / DensityCellId::kSizeDeg);
+
+    // Convert cell_id back to x, y coordinates
+    const int x = id_ & 0x00FF;
+    const int y = (id_ >> 16) & 0x00FF;
+
+    std::vector<DensityCellId> neighbors;
+    neighbors.reserve(4 * x_neighbors * y_neighbors);
+    for (int nx = -x_neighbors; nx <= x_neighbors; nx++) {
+      for (int ny = -y_neighbors; ny <= y_neighbors; ny++) {
+        // Keep only neighbors within the radius
+        if (nx * nx + ny * ny <= x_neighbors * y_neighbors) {
+          uint32_t neighbor_id = ((x + nx) & 0x00FF) | (((y + ny) & 0x00FF) << 16);
+          neighbors.push_back(neighbor_id);
+        }
+      }
+    }
+    return neighbors;
+  }
+
+  bool operator==(const DensityCellId& other) const {
+    return id_ == other.id_;
+  }
+
+  bool operator!=(const DensityCellId& other) const {
+    return !(*this == other);
+  }
+};
+} // namespace
+
+namespace std {
+template <> struct hash<DensityCellId> {
+  size_t operator()(const DensityCellId& cell) const {
+    return cell.id_;
+  }
+};
+} // namespace std
+
+namespace {
 // A little struct to hold stats information during each threads work
 struct enhancer_stats {
   float max_density; //(km/km2)
@@ -806,83 +876,99 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
 }
 
 /**
- * Get the road density around the specified lat,lng position. This is a
- * value from 0-15 indicating a relative road density. This can be used
- * in costing methods to help avoid dense, urban areas.
- * @param  reader        Graph reader
- * @param  lock          Mutex for locking while tiles are retrieved
- * @param  ll            Lat,lng position
- * @param  maxdensity    (OUT) max density found
- * @param  tiles         Tiling (for getting list of required tiles)
- * @param  local_level   Level of the local tiles.
- * @return  Returns the relative road density (0-15) - higher values are
- *          more dense.
+ * Build a density index by accumulating edge lengths in each grid cell and convert
+ * to the relative density values (0-15) used by the enhancer.
+ * This dramatically speeds up density calculations by pre-computing densities.
+ * @param reader        Graph reader
+ * @param lock          Mutex for thread-safe tile access
+ * @param tile          Current tile being processed
+ * @param local_level   Local hierarchy level
+ * @param stats         Reference to stats object to update max_density
+ * @return              Density grid mapping cell IDs to relative density values (0-15)
  */
-uint32_t GetDensity(GraphReader& reader,
-                    std::mutex& lock,
-                    const PointLL& ll,
-                    enhancer_stats& stats,
-                    const Tiles<PointLL>& tiles,
-                    uint8_t local_level) {
-  // Radius is in km - turn into meters
-  auto rm = kDensityRadius * kMetersPerKm;
-  auto mr2 = rm * rm;
+ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphReader& reader,
+                                                                        std::mutex& lock,
+                                                                        const graph_tile_ptr& tile,
+                                                                        const TileLevel& tile_level,
+                                                                        enhancer_stats& stats) {
+  // To properly count density on the tile edges, the bbox should be extended by the density radius,
+  // rounded up to the grid cell size to get fully filled edge cells
+  const AABB2<PointLL> tile_bbox = tile->BoundingBox();
+  const float lat_cos = cosf(kRadPerDeg * tile_bbox.Center().lat());
+  const float density_lng_deg = kDensityLatDeg / lat_cos;
+  const AABB2<PointLL> bbox(tile_bbox.minpt().lng() - (density_lng_deg + DensityCellId::kSizeDeg),
+                            tile_bbox.minpt().lat() - (kDensityLatDeg + DensityCellId::kSizeDeg),
+                            tile_bbox.maxpt().lng() + (density_lng_deg + DensityCellId::kSizeDeg),
+                            tile_bbox.maxpt().lat() + (kDensityLatDeg + DensityCellId::kSizeDeg));
 
-  // Use distance approximator for all distance checks
-  DistanceApproximator<PointLL> approximator(ll);
+  // Grid where each cell contains a sum of lengths of all edges of all nodes within the cell
+  ankerl::unordered_dense::map<DensityCellId, float> density_grid;
+  density_grid.reserve(DensityCellId::cover_count(bbox));
 
-  // Get a list of tiles required for a node search within this radius
-  auto lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
-  AABB2<PointLL> bbox(ll.lng() - lngdeg, ll.lat() - kDensityLatDeg, ll.lng() + lngdeg,
-                      ll.lat() + kDensityLatDeg);
-  std::vector<int32_t> tilelist = tiles.TileList(bbox);
-
-  // For all tiles needed to find nodes within the radius...find nodes within
-  // the radius (squared) and add lengths of directed edges
-  float roadlengths = 0.0f;
-  for (const auto t : tilelist) {
-    // Check all the nodes within the tile. Skip if tile has no nodes (can be
-    // an empty tile added for connectivity map logic).
+  for (const auto& t : tile_level.tiles.TileList(bbox)) {
     lock.lock();
-    auto newtile = reader.GetGraphTile(GraphId(t, local_level, 0));
+    auto newtile = reader.GetGraphTile(GraphId(t, tile_level.level, 0));
     lock.unlock();
     if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
     }
-    PointLL base_ll = newtile->header()->base_ll();
+
+    const PointLL base_ll = newtile->header()->base_ll();
     const auto start_node = newtile->node(0);
     const auto end_node = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
-      // Check if within radius
-      if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
-        // Get all directed edges and add length
-        const DirectedEdge* directededge = newtile->directededge(node->edge_index());
-        for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
-          // Exclude non-roads (parking, walkways, ferries, construction, etc.)
-          if (directededge->is_road() || directededge->use() == Use::kRamp ||
-              directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
-              directededge->use() == Use::kEmergencyAccess) {
-            roadlengths += directededge->length();
-          }
+      // todo: consider separating iteration over the `tile` and neighbor tiles
+      const PointLL node_ll = node->latlng(base_ll);
+      if (!bbox.Contains(node_ll)) {
+        continue;
+      }
+
+      float roadlengths = 0.0f;
+      const DirectedEdge* directededge = newtile->directededge(node->edge_index());
+      for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
+        // Exclude non-roads (parking, walkways, ferries, construction, etc.)
+        if (directededge->is_road() || directededge->use() == Use::kRamp ||
+            directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
+            directededge->use() == Use::kEmergencyAccess) {
+          roadlengths += directededge->length();
         }
       }
+
+      density_grid[node_ll] += roadlengths;
     }
   }
 
-  // Form density measure as km/km^2. Convert roadlengths to km and divide by 2
-  // (since 2 directed edges per edge)
-  float density = (roadlengths * 0.0005f) / (kPi * kDensityRadius2);
-  if (density > stats.max_density) {
-    stats.max_density = density;
+  // The difference between cell areas at the top of the 0.25 tile vs cell at the bottom of that tile
+  // reaches 1.2% at 70s latitude, which is acceptable here
+  const float cell_size_km = DensityCellId::kSizeDeg * kMetersPerDegreeLat / kMetersPerKm;
+  const float cell_area = cell_size_km * cell_size_km * lat_cos;
+
+  // Now build the density index where each cell contains density value for nodes in that cell
+  ankerl::unordered_dense::map<DensityCellId, uint32_t> density_index;
+  density_index.reserve(density_grid.size());
+  for (const auto& [cell_id, _] : density_grid) {
+    float roadlengths = 0.0f;
+
+    const auto neighbors = cell_id.neighbors(density_lng_deg, kDensityLatDeg);
+    for (const auto& neighbor : neighbors) {
+      if (auto it = density_grid.find(neighbor); it != density_grid.end()) {
+        roadlengths += it->second;
+      }
+    }
+
+    // Form density measure as km/km^2. Convert roadlengths to km and divide by 2
+    // (since 2 directed edges per edge)
+    float density = (roadlengths * 0.0005f) / (cell_area * neighbors.size());
+    if (density > stats.max_density) {
+      stats.max_density = density;
+    }
+
+    // Convert to relative density (0-15)
+    const uint32_t relative_value = std::round(density * 0.7f);
+    density_index[cell_id] = std::min(relative_value, 15u);
   }
 
-  // Convert density into a relative value from 0-16.
-  uint32_t relative_density = std::round(density * 0.7f);
-  if (relative_density > 15) {
-    relative_density = 15;
-  }
-  stats.density_counts[relative_density]++;
-  return relative_density;
+  return density_index;
 }
 
 /**
@@ -1310,8 +1396,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {}};
-  const auto& local_level = TileHierarchy::levels().back().level;
-  const auto& tiles = TileHierarchy::levels().back().tiles;
+  const TileLevel& tile_level = TileHierarchy::levels().back();
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
@@ -1351,7 +1436,7 @@ void enhance(const boost::property_tree::ptree& pt,
     // First pass - update links (set use to ramp or turn channel) and
     // set opposing local index.
     for (uint32_t i = 0; i < tilebuilder->header()->nodecount(); i++) {
-      GraphId startnode(id, local_level, i);
+      GraphId startnode(id, tile_level.level, i);
       NodeInfo& nodeinfo = tilebuilder->node_builder(i);
 
       // Get headings of the edges - set in NodeInfo. Set driveability info
@@ -1422,16 +1507,19 @@ void enhance(const boost::property_tree::ptree& pt,
       }
     }
 
+    const auto density_index = BuildDensityIndex(reader, lock, tile, tile_level, stats);
+
     // Second pass - add admin information and edge transition information.
-    PointLL base_ll = tilebuilder->header()->base_ll();
+    const PointLL base_ll = tilebuilder->header()->base_ll();
     for (uint32_t i = 0; i < tilebuilder->header()->nodecount(); i++) {
-      GraphId startnode(id, local_level, i);
+      GraphId startnode(id, tile_level.level, i);
       NodeInfo& nodeinfo = tilebuilder->node_builder(i);
 
       // Get relative road density and local density if the urban tag is not set
       uint32_t density = 0;
       if (!use_urban_tag) {
-        density = GetDensity(reader, lock, nodeinfo.latlng(base_ll), stats, tiles, local_level);
+        density = density_index.find(nodeinfo.latlng(base_ll))->second;
+        stats.density_counts[density]++;
         nodeinfo.set_density(density);
       }
 
@@ -1491,7 +1579,7 @@ void enhance(const boost::property_tree::ptree& pt,
                directededge.use() == Use::kPedestrianCrossing ||
                directededge.use() == Use::kSidewalk || directededge.use() == Use::kTrack)) {
 
-            std::vector<int> access = country_access.at(country_code);
+            const std::vector<int>& access = country_access.at(country_code);
             // leaves tile flag indicates that we have an access record for this edge.
             // leaves tile flag is updated later to the real value.
             if (directededge.leaves_tile()) {
@@ -1690,7 +1778,7 @@ void enhance(const boost::property_tree::ptree& pt,
     // Write the new file
     lock.lock();
     tilebuilder->StoreTileData();
-    LOG_TRACE((boost::format("GraphEnhancer completed tile %1%") % tile_id).str());
+    LOG_TRACE("GraphEnhancer completed tile " + std::to_string(tile_id));
 
     // Check if we need to clear the tile cache
     if (reader.OverCommitted()) {
@@ -1742,9 +1830,10 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // Start the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
-                                 std::cref(access_file), std::ref(hierarchy_properties),
-                                 std::ref(tilequeue), std::ref(lock), std::ref(results.back())));
+    thread =
+        std::make_shared<std::thread>(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
+                                      std::cref(access_file), std::ref(hierarchy_properties),
+                                      std::ref(tilequeue), std::ref(lock), std::ref(results.back()));
   }
 
   // Wait for them to finish up their work

@@ -432,8 +432,7 @@ const std::string check_tz_map(const date::tzdb& db) {
   for (const auto& tz : db.zones) {
     // only add entirely new zones if we didn't see them as link target yet
     if (tz_name_to_id.find(tz.name()) == tz_name_to_id.end() &&
-        std::find(new_zones_names.begin(), new_zones_names.end(), tz.name()) ==
-            new_zones_names.end()) {
+        new_zones_names.find(tz.name()) == new_zones_names.end()) {
       new_zones_msg.emplace_back(tz.name());
     }
   }

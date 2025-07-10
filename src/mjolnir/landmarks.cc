@@ -3,7 +3,6 @@
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "loki/search.h"
 #include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -14,6 +13,7 @@
 #include <osmium/io/pbf_input.hpp>
 #include <sqlite3.h>
 
+#include <filesystem>
 #include <future>
 #include <string_view>
 #include <thread>
@@ -58,18 +58,18 @@ struct LandmarkDatabase::db_pimpl {
   db_pimpl(const std::string& db_name, bool read_only)
       : insert_stmt(nullptr), bounding_box_stmt(nullptr) {
     // create parent directory if it doesn't exist
-    const filesystem::path parent_dir = filesystem::path(db_name).parent_path();
-    if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+    const std::filesystem::path parent_dir = std::filesystem::path(db_name).parent_path();
+    if (!std::filesystem::exists(parent_dir) && !std::filesystem::create_directories(parent_dir)) {
       throw std::runtime_error("Can't create parent directory " + parent_dir.string());
     }
 
     // figure out if we need to create database or can just open it up
     const auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    if (!filesystem::exists(db_name)) {
+    if (!std::filesystem::exists(db_name)) {
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
     } else if (!read_only) {
-      filesystem::remove(db_name);
+      std::filesystem::remove(db_name);
       LOG_INFO("deleting existing landmark database " + db_name + ", creating a new one");
     }
 
@@ -192,7 +192,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   sql += ")";
 
   // callback for the sql query
-  auto populate_landmarks = [](void* data, int argc, char** argv, char** col_names) {
+  auto populate_landmarks = [](void* data, int /*argc*/, char** argv, char** /*col_names*/) {
     std::vector<Landmark>* landmarks = static_cast<std::vector<Landmark>*>(data);
 
     int64_t landmark_id = static_cast<int64_t>(std::stoi(argv[0]));
@@ -400,7 +400,7 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
         updated_tiles++;
       }
       // reset the tile builder to this new tile
-      tile_builder_ptr.reset(new GraphTileBuilder(tile_dir, (*it).first.Tile_Base(), true));
+      tile_builder_ptr = std::make_unique<GraphTileBuilder>(tile_dir, (*it).first.Tile_Base(), true);
     }
 
     // retrieve the landmark to be added
@@ -464,9 +464,9 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::vector<std::promise<std::string>> sequence_file_names(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    threads[i].reset(new std::thread(FindLandmarkEdges, std::cref(pt.get_child("mjolnir")),
-                                     std::cref(vec_tileset), i, num_threads,
-                                     std::ref(sequence_file_names[i])));
+    threads[i] = std::make_shared<std::thread>(FindLandmarkEdges, std::cref(pt.get_child("mjolnir")),
+                                               std::cref(vec_tileset), i, num_threads,
+                                               std::ref(sequence_file_names[i]));
   }
 
   // join all the threads and collect the sequence file names
@@ -505,8 +505,8 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   const std::string tile_dir = reader.tile_dir();
   for (size_t i = 0; i < num_threads; ++i) {
     // assume the data size that each thread processes doesn't affect performance a lot
-    threads[i].reset(new std::thread(UpdateTiles, std::ref(merged_sequence_file), tile_dir, db_name,
-                                     i, num_threads, std::ref(stats_info[i])));
+    threads[i] = std::make_shared<std::thread>(UpdateTiles, std::ref(merged_sequence_file), tile_dir,
+                                               db_name, i, num_threads, std::ref(stats_info[i]));
   }
 
   for (auto& thread : threads) {

@@ -1,15 +1,10 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "baldr/complexrestriction.h"
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
 #include "graph_lua_proc.h"
-#include "midgard/aabb2.h"
 #include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/polyline2.h"
 #include "midgard/sequence.h"
-#include "midgard/tiles.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
 #include "mjolnir/osmlinguistic.h"
@@ -4429,7 +4424,7 @@ struct graph_parser {
     }
   }
 
-  void ProcessNameTag(const robin_hood::pair<std::string, std::string>& tag,
+  void ProcessNameTag(const std::pair<std::string, std::string>& tag,
                       std::string& name_w_lang,
                       std::string& language,
                       bool is_lang_pronunciation = false) {
@@ -4470,7 +4465,7 @@ struct graph_parser {
     std::vector<std::string> tokens = GetTagTokens(t, ':');
     if (tokens.size() == 2) {
 
-      std::string lang = tokens.at(1);
+      const std::string& lang = tokens.at(1);
       if (stringLanguage(lang) != Language::kNone &&
           !tag.second.empty()) // name:en, name:ar, name:fr, etc
       {
@@ -4491,7 +4486,7 @@ struct graph_parser {
     }
   }
 
-  void ProcessLeftRightNameTag(const robin_hood::pair<std::string, std::string>& tag,
+  void ProcessLeftRightNameTag(const std::pair<std::string, std::string>& tag,
                                std::string& name_left_right_w_lang,
                                std::string& lang_left_right,
                                bool is_lang_pronunciation = false) {
@@ -4872,7 +4867,7 @@ struct graph_parser {
   std::unordered_map<std::string, TagHandler> tag_handlers_;
   // Tag handlers capture these fields
   OSMWay way_;
-  robin_hood::pair<std::string, std::string> tag_;
+  std::pair<std::string, std::string> tag_;
   uint64_t osmid_;
 
   const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
@@ -5035,7 +5030,7 @@ struct graph_parser {
   // this lets us only have to iterate over the whole set once
   size_t current_way_node_index_;
   uint64_t last_node_, last_way_, last_relation_;
-  robin_hood::unordered_map<uint64_t, size_t> loop_nodes_;
+  ankerl::unordered_dense::map<uint64_t, size_t> loop_nodes_;
 
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;

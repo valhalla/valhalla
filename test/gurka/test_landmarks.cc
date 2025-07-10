@@ -3,6 +3,7 @@
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/landmarks.h"
+#include "mjolnir/util.h"
 #include "odin/enhancedtrippath.h"
 #include "test/test.h"
 
@@ -370,7 +371,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       Landmark landmark(value.second);
 
       // check data correctness
-      std::vector<PointLL> shape = ei.shape();
+      const std::vector<PointLL>& shape = ei.shape();
       auto point = shape[shape.size() / 2];
       check_landmark(landmark, point);
     }
@@ -384,7 +385,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       Landmark landmark(v.substr(1));
 
       // check data correctness
-      std::vector<PointLL> shape = ei.shape();
+      const std::vector<PointLL>& shape = ei.shape();
       auto point = shape[shape.size() / 2];
       check_landmark(landmark, point);
     }

@@ -2,6 +2,7 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/location.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -215,7 +216,7 @@ bool add_date_to_locations(Options& options,
     }
   }
 
-  return std::find_if(locations.begin(), locations.end(), [](valhalla::Location loc) {
+  return std::find_if(locations.begin(), locations.end(), [](const valhalla::Location& loc) {
            return !loc.date_time().empty();
          }) != locations.end();
 }

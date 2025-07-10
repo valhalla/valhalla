@@ -759,7 +759,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         const auto prev_pred = rev_pred.predecessor() == kInvalidLabel
                                    ? GraphId{}
                                    : edgelabels_reverse_[rev_pred.predecessor()].edgeid();
-        expansion_callback_(graphreader, rev_pred.opp_edgeid(), prev_pred, "bidirectional_astar",
+        expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "bidirectional_astar",
                             Expansion_EdgeStatus_settled, rev_pred.cost().secs,
                             rev_pred.path_distance(), rev_pred.cost().cost,
                             Expansion_ExpansionType_reverse);

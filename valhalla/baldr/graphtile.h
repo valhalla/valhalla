@@ -3,7 +3,6 @@
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
-#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -24,13 +23,12 @@
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/turnlanes.h>
-#include <valhalla/filesystem.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
 
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <iterator>
 #include <memory>
 
@@ -100,7 +98,8 @@ public:
    * @param  tile_data graph tile raw bytes
    * @param  disk_location tile filesystem path
    */
-  static void SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location);
+  static void SaveTileToFile(const std::vector<char>& tile_data,
+                             const std::filesystem::path& disk_location);
 
   /**
    * Destructor
