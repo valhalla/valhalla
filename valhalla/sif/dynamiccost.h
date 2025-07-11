@@ -685,12 +685,13 @@ public:
         tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
     bool time_allowed = false;
+    bool timed_in_range = false;
 
     for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restriction = restrictions[i];
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
-      if (!ignore_non_vehicular_restrictions_ &&
+      if ((!timed_in_range) && !ignore_non_vehicular_restrictions_ &&
           (access_type == baldr::AccessType::kTimedAllowed ||
            access_type == baldr::AccessType::kTimedDenied ||
            access_type == baldr::AccessType::kDestinationAllowed)) {
@@ -712,9 +713,9 @@ public:
 
             // We are in range at the time we are allowed at this edge
             if (access_type == baldr::AccessType::kTimedAllowed)
-              return true;
+              timed_in_range = true;
             else if (access_type == baldr::AccessType::kDestinationAllowed)
-              return allow_conditional_destination_ || is_dest;
+              timed_in_range = allow_conditional_destination_ || is_dest;
             else
               return false;
           }
@@ -730,7 +731,7 @@ public:
     // if we have time allowed restrictions then these restrictions are
     // the only time we can route here.  Meaning all other time is restricted.
     // We looped over all the time allowed restrictions and we were never in range.
-    return !time_allowed || (current_time == 0);
+    return timed_in_range || !time_allowed || (current_time == 0);
   }
 
   /**
