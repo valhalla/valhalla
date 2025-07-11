@@ -104,7 +104,11 @@ bool AccessRestriction::operator<(const AccessRestriction& other) const {
       if (type() == other.type()) {
         return value() < other.value();
       }
-      return type() < other.type();
+      // the way in which access restrictions are evaluated
+      // makes it necessary to keep all the timed restrictions
+      // at the end
+      return type() == AccessType::kMaxAxles ? other.type() > AccessType::kMaxAxleLoad
+                                             : type() < other.type();
     }
     return modes() < other.modes();
   }

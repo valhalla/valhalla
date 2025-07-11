@@ -314,6 +314,46 @@ TEST(Standalone, TruckSpeeds) {
   EXPECT_EQ(de_both_2->truck_speed(), 15);
 }
 
+TEST(StandAlone, TestTruck) {
+  const gurka::ways ways = {
+      {"AB", {{"highway", "secondary"}}},
+      {"BC", {{"highway", "secondary"}}},
+      {"CD", {{"highway", "secondary"}}},
+      {"AE",
+       {
+           {"highway", "secondary"},
+           {"maxaxles", "1"},
+           {"hgv:conditional", "yes @ (09:00-18:00)"},
+       }},
+      {"EF", {{"highway", "secondary"}}},
+  };
+
+  const std::string ascii_map = R"(
+      A----------B-----C----D
+      |
+      E
+      |
+      |
+      F
+    )";
+
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/test_maxaxles_timed",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
+
+  // this one should fail not because of time constraint but because of maxaxles
+  try {
+    valhalla::Api route =
+        gurka::do_action(valhalla::Options::route, map, {"D", "F"}, "truck",
+                         {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-10T16:00"}});
+    FAIL() << "Expected route to fail.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected different error code.";
+  }
+}
+
 TEST(Standalone, UseTruckRoute) {
   constexpr double gridsize = 500;
 
