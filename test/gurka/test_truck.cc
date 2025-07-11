@@ -345,9 +345,10 @@ TEST(StandAlone, TestTruck) {
 
   // this one should fail not because of time constraint but because of maxaxles
   try {
-    valhalla::Api route =
-        gurka::do_action(valhalla::Options::route, map, {"D", "F"}, "truck",
-                         {{"/costing_options/truck/height", "3"}, {"/date_time/type", "1"}, {"/date_time/value", "2020-10-10T16:00"}});
+    valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"D", "F"}, "truck",
+                                           {{"/costing_options/truck/height", "3"},
+                                            {"/date_time/type", "1"},
+                                            {"/date_time/value", "2020-10-10T16:00"}});
     FAIL() << "Expected route to fail.";
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
     FAIL() << "Expected different error code.";
