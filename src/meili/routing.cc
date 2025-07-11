@@ -162,12 +162,13 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const sif::cost_ptr_t& costing,
                           const Label& pred_edgelabel,
                           const graph_tile_ptr& tile,
-                          uint8_t& restriction_idx) {
+                          uint8_t& restriction_idx,
+                          uint8_t& destonly_access_restr_mask) {
   bool valid_pred =
       (!pred_edgelabel.edgeid().Is_Valid() && costing->Allowed(edge, tile, sif::kDisallowShortcut)) ||
       edgeid == pred_edgelabel.edgeid();
-  bool restricted =
-      !costing->Allowed(edge, false, pred_edgelabel, tile, edgeid, 0, 0, restriction_idx);
+  bool restricted = !costing->Allowed(edge, false, pred_edgelabel, tile, edgeid, 0, 0,
+                                      restriction_idx, destonly_access_restr_mask);
   return valid_pred || !restricted;
 }
 
@@ -406,7 +407,9 @@ find_shortest_path(baldr::GraphReader& reader,
 
       // Skip it if its not allowed
       uint8_t restriction_idx = -1;
-      if (!IsEdgeAllowed(directededge, edgeid, costing, label, tile, restriction_idx)) {
+      uint8_t destonly_restriction_mask = 0;
+      if (!IsEdgeAllowed(directededge, edgeid, costing, label, tile, restriction_idx,
+                         destonly_restriction_mask)) {
         continue;
       }
 
@@ -549,8 +552,10 @@ find_shortest_path(baldr::GraphReader& reader,
 
         // Skip if edge is not allowed
         uint8_t restriction_idx = -1;
-        if (!directed_edge || !IsEdgeAllowed(directed_edge, origin_edge.id, costing, label,
-                                             start_tile, restriction_idx)) {
+        uint8_t destonly_restriction_mask = 0;
+        if (!directed_edge ||
+            !IsEdgeAllowed(directed_edge, origin_edge.id, costing, label, start_tile, restriction_idx,
+                           destonly_restriction_mask)) {
           continue;
         }
 

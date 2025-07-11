@@ -240,6 +240,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   uint8_t restriction_idx = kInvalidRestriction;
+  uint8_t destonly_restriction_mask = 0;
   if (FORWARD) {
     // Why is is_dest false?
     // We have to consider next cases:
@@ -250,14 +251,15 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     // The result path will be correct, because there are cosing.Allowed calls inside recost_forward
     // function in second time.
     if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, localtime,
-                           time_info.timezone_index, restriction_idx) ||
+                           time_info.timezone_index, restriction_idx, destonly_restriction_mask) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
                              &edgestatus_forward_, localtime, time_info.timezone_index)) {
       return false;
     }
   } else {
     if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
-                                  time_info.timezone_index, restriction_idx) ||
+                                  time_info.timezone_index, restriction_idx,
+                                  destonly_restriction_mask) ||
         costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
                              &edgestatus_reverse_, localtime, time_info.timezone_index)) {
       return false;
@@ -334,7 +336,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      restriction_idx, 0,
                                      meta.edge->destonly() ||
                                          (costing_->is_hgv() && meta.edge->destonly_hgv()),
-                                     meta.edge->forwardaccess() & kTruckAccess);
+                                     meta.edge->forwardaccess() & kTruckAccess,
+                                     pred.destonly_access_restr_mask() & destonly_restriction_mask);
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
@@ -353,7 +356,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      restriction_idx, 0,
                                      opp_edge->destonly() ||
                                          (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                                     opp_edge->forwardaccess() & kTruckAccess);
+                                     opp_edge->forwardaccess() & kTruckAccess,
+                                     pred.destonly_access_restr_mask() & destonly_restriction_mask);
     adjacencylist_reverse_.add(idx);
   }
 
@@ -1024,13 +1028,21 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
     }
+
+    // we call this to find out if we're starting on access restrictions with a local traffic
+    // exemption and push this info into the label
+    uint8_t destonly_restriction_mask = 0;
+    costing_->GetExemptedAccessRestrictions(access_mode_, directededge, tile, edgeid,
+                                            destonly_restriction_mask);
+
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      kInvalidRestriction, !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      sif::InternalTurn::kNoTurn, 0,
                                      directededge->destonly() ||
                                          (costing_->is_hgv() && directededge->destonly_hgv()),
-                                     directededge->forwardaccess() & kTruckAccess);
+                                     directededge->forwardaccess() & kTruckAccess,
+                                     destonly_restriction_mask);
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1123,6 +1135,13 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
     }
+
+    // we call this to find out if we're starting on access restrictions with a local traffic
+    // exemption and push this info into the label
+    uint8_t destonly_restriction_mask = 0;
+    costing_->GetExemptedAccessRestrictions(access_mode_, directededge, tile, edgeid,
+                                            destonly_restriction_mask);
+
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
@@ -1130,7 +1149,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                                      sif::InternalTurn::kNoTurn, kInvalidRestriction,
                                      directededge->destonly() ||
                                          (costing_->is_hgv() && directededge->destonly_hgv()),
-                                     directededge->forwardaccess() & kTruckAccess);
+                                     directededge->forwardaccess() & kTruckAccess,
+                                     destonly_restriction_mask);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as reached, sending the opposing because this is the reverse tree

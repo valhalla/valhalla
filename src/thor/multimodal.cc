@@ -352,11 +352,13 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     uint32_t tripid = 0;
     uint32_t blockid = 0;
     uint8_t restriction_idx = -1;
+    uint8_t destonly_restriction_mask = 0;
     const auto dest_edge_itr = destinations_.find(edgeid);
     const bool is_dest = dest_edge_itr != destinations_.cend();
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
+      if (!tc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx,
+                       destonly_restriction_mask)) {
         continue;
       }
       // check if excluded.
@@ -441,7 +443,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
       // Regular edge - use the appropriate costing and check if access is allowed
       // and the walking distance didn't exceed (can't check in Allowed())
-      if (!pc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx) ||
+      if (!pc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx,
+                       destonly_restriction_mask) ||
           walking_distance > max_walking_dist_) {
         continue;
       }
@@ -725,9 +728,11 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this directed edge) or
     // access is not allowed for this mode.
     uint8_t restriction_idx = -1;
+    uint8_t destonly_restriction_mask = 0;
     const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (es->set() == EdgeSet::kPermanent ||
-        !costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
+        !costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx,
+                          destonly_restriction_mask)) {
       continue;
     }
 

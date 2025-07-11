@@ -64,7 +64,8 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictions) {
                                        },
                                        {{"type", "restriction"}, {"restriction", "no_straight_on"}}}};
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, relations, "test/data/ignore_non_vehicular_restrictions",
+      gurka::buildtiles(layout, ways, {}, relations,
+                        VALHALLA_BUILD_DIR "test/data/ignore_non_vehicular_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   // first, route through turn restriction, should fail...
   try {
@@ -112,7 +113,8 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictionsFail) {
       {"EF", {{"highway", "secondary"}}},
   };
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_non_vehicular_restrictions",
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/ignore_non_vehicular_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   // should fail, too low
   try {
@@ -154,7 +156,8 @@ TEST(CommonRestrictionsFail, Truck) {
                             {"CD", {{"highway", "residential"}}}};
 
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_non_vehicular_restrictions_truck",
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/ignore_non_vehicular_restrictions_truck",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
 
   // too long
@@ -203,7 +206,8 @@ TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestriction) {
                             {"CD", {{"highway", "residential"}}}};
 
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/destination_access_restrictions",
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/destination_access_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
                          {"thor.costmatrix.allow_second_pass", "1"}});
 
@@ -250,3 +254,145 @@ INSTANTIATE_TEST_SUITE_P(
       res.emplace_back("hazmat", "true", "none @ destination", "truck", "hazmat", "1");
       return res;
     }()));
+
+TEST(StandAlone, TestTruck) {
+  const gurka::ways ways = {
+      {"AB", {{"highway", "secondary"}}},
+      {"BC", {{"highway", "secondary"}}},
+      {"CD", {{"highway", "secondary"}}},
+      {"AE", {{"highway", "secondary"}}},
+      {"EF",
+       {{"highway", "secondary"},{"maxaxles", "1"} , {"hgv:conditional", "yes @ (09:00-18:00)"},}},
+  };
+
+    const std::string ascii_map = R"(
+      A----------B-----C----D
+      |
+      E
+      |
+      |
+      F
+    )";
+
+   auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/test_blah",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
+
+  // this one should fail not because of time constraint but because of maxaxles
+  try {
+    valhalla::Api route =
+        gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "truck",
+                         {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-10T16:00"}});
+    FAIL() << "Expected route to fail.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected different error code.";
+  }
+}
+
+TEST(StandAlone, TestDestinationAR) {
+  const std::string ascii_map = R"(
+      A-6--B--7--C-8--D--9--E
+      |    |     |    |     |
+     1|    |2    |3   |4    |5
+      |    |     |    |     |
+      F----G-----H----I-----J
+      |    |     |    |     |
+     a|    |b    |c   |d    |e
+      |    |     |    |     |
+      K--f-L-----M----N---g-O
+    )";
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const gurka::ways ways = {
+      {"AB",
+       {
+           {"highway", "residential"},
+           {"maxweight", "3"},
+           {"maxweight:conditional", "none @ destination"},
+       }},
+      {"BC",
+       {
+           {"highway", "residential"},
+           {"maxweight", "3"},
+           {"maxweight:conditional", "none @ destination"},
+       }},
+      {"CD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"AF", {{"highway", "residential"}}},
+      {"FK",
+       {
+           {"highway", "residential"},
+           {"maxweight", "3"},
+           {"maxweight:conditional", "none @ destination"},
+       }},
+      {"KL",
+       {
+           {"highway", "residential"},
+           {"maxweight", "3"},
+           {"maxweight:conditional", "none @ destination"},
+           {"maxheight", "3"},
+           {"maxheight:conditional", "none @ destination"},
+       }},
+      {"LM", {{"highway", "residential"}}},
+      {"MN",
+       {
+           {"highway", "residential"},
+           {"maxweight", "3"},
+           {"maxweight:conditional", "none @ destination"},
+           {"maxheight", "3"},
+           {"maxheight:conditional", "no @ destination"},
+       }},
+      {"NO",
+       {
+           {"highway", "residential"},
+           {"maxheight", "3.1"},
+           {"maxheight:conditional", "none @ destination"},
+           {"maxwidth", "3.1"},
+           {"maxwidth:conditional", "none @ delivery"},
+       }},
+      {"JO", {{"highway", "residential"}}},
+  };
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/destination_access_restrictions",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
+                         {"thor.costmatrix.allow_second_pass", "1"}, {"thor.costmatrix.check_reverse_connection", "1"}});
+
+  // second pass
+  // valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
+  //                                        {{"/costing_options/truck/weight", "6"}});
+
+  // better yet, call costmatrix which gives us a warning on second pass
+  auto route =
+      gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, "truck",
+                       {{"/costing_options/truck/weight", "6"}, {"/prioritize_bidirectional", "1"}});
+  ASSERT_TRUE(route.info().warnings_size() == 0);
+
+  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"M"}, "truck",
+                           {{"/costing_options/truck/weight", "6"},
+                            {"/costing_options/truck/height", "6"},
+                            {"/prioritize_bidirectional", "1"}});
+  ASSERT_TRUE(route.info().warnings_size() == 1);
+  EXPECT_EQ(route.info().warnings(0).code(), 400);
+
+  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"f"}, {"1"}, "truck",
+                           {{"/costing_options/truck/weight", "6"},
+                            {"/costing_options/truck/height", "6"},
+                            {"/prioritize_bidirectional", "1"}});
+  ASSERT_TRUE(route.info().warnings_size() == 0);
+
+  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"f"}, {"g"}, "auto",
+                           {{"/costing_options/auto/width", "6"},
+                            {"/costing_options/auto/height", "6"},
+                            {"/prioritize_bidirectional", "1"}});
+  ASSERT_TRUE(route.info().warnings_size() == 0);
+
+  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"f"}, {"e"}, "auto",
+                           {{"/costing_options/auto/width", "6"},
+                            {"/costing_options/auto/height", "6"},
+                            {"/prioritize_bidirectional", "1"}});
+  ASSERT_TRUE(route.info().warnings_size() == 1);
+  EXPECT_EQ(route.info().warnings(0).code(), 400);
+}

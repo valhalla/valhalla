@@ -179,26 +179,29 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
     uint8_t restriction_idx = kInvalidRestriction;
+    uint8_t destonly_restriction_mask = 0;
     // is_dest is false, because it is a traversal algorithm in this context, not a path search
     // algorithm. In other words, destination edges are not defined for this Dijkstra's algorithm.
     const bool is_dest = false;
     if (offset_time.valid) {
       // With date time we check time dependent restrictions and access
       const bool allowed =
-          FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid,
-                                      offset_time.local_time, nodeinfo->timezone(), restriction_idx)
-                  : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
-                                             offset_time.local_time, nodeinfo->timezone(),
-                                             restriction_idx);
+          FORWARD
+              ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
+                                  nodeinfo->timezone(), restriction_idx, destonly_restriction_mask)
+              : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid,
+                                         offset_time.local_time, nodeinfo->timezone(),
+                                         restriction_idx, destonly_restriction_mask);
       if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true,
                                            todo, offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
-      const bool allowed = FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid, 0,
-                                                       0, restriction_idx)
-                                   : costing_->AllowedReverse(directededge, pred, opp_edge, t2,
-                                                              oppedgeid, 0, 0, restriction_idx);
+      const bool allowed =
+          FORWARD ? costing_->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
+                                      restriction_idx, destonly_restriction_mask)
+                  : costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedgeid, 0, 0,
+                                             restriction_idx, destonly_restriction_mask);
 
       if (!allowed || costing_->Restricted(directededge, pred, bdedgelabels_, tile, edgeid, true)) {
         continue;
@@ -529,10 +532,12 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     uint32_t tripid = 0;
     uint32_t blockid = 0;
     uint8_t restriction_idx = kInvalidRestriction;
+    uint8_t destonly_restriction_mask = 0;
     const bool is_dest = false;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
-      if (!tc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
+      if (!tc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx,
+                       destonly_restriction_mask)) {
         continue;
       }
 
@@ -619,7 +624,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       // Regular edge - use the appropriate costing and check if access
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
-      if (!pc->Allowed(directededge, false, pred, tile, edgeid, 0, 0, restriction_idx) ||
+      if (!pc->Allowed(directededge, false, pred, tile, edgeid, 0, 0, restriction_idx,
+                       destonly_restriction_mask) ||
           walking_distance > max_walking_dist_) {
         continue;
       }

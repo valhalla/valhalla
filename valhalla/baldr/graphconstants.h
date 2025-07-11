@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -754,6 +755,27 @@ enum class AccessType : uint8_t {
   kDestinationAllowed = 8,
   kMaxAxles = 9
 };
+
+constexpr unsigned int kHazmatMask = 1;
+constexpr unsigned int kMaxHeightMask = 2;
+constexpr unsigned int kMaxWidthMask = 4;
+constexpr unsigned int kMaxLengthMask = 8;
+constexpr unsigned int kMaxWeightMask = 16;
+constexpr unsigned int kMaxAxleLoadMask = 32;
+constexpr unsigned int kMaxAxlesMask = 64;
+
+// convert between the enum value and the corresponding mask
+constexpr std::array<unsigned int, 10> kAccessRestrictionMasks{kHazmatMask,
+                                                               kMaxHeightMask,
+                                                               kMaxWidthMask,
+                                                               kMaxLengthMask,
+                                                               kMaxWeightMask,
+                                                               kMaxAxleLoadMask,
+                                                               0,
+                                                               0,
+                                                               0,
+                                                               kMaxAxlesMask};
+constexpr uint8_t kInvalidAccessRestrictionMask = std::numeric_limits<uint8_t>::max();
 
 // Minimum meters offset from start/end of shape for finding heading
 constexpr float kMinMetersOffsetForHeading = 15.0f;

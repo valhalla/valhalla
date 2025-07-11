@@ -76,7 +76,8 @@ public:
             const InternalTurn internal_turn,
             const uint8_t path_id = 0,
             const bool destonly = false,
-            const bool hgv_access = false)
+            const bool hgv_access = false,
+            const uint8_t destonly_access_restr_mask = 0)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
@@ -89,7 +90,8 @@ public:
         closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
         internal_turn_(static_cast<uint8_t>(internal_turn)), unpaved_(edge->unpaved()),
         has_measured_speed_(has_measured_speed), hgv_access_(hgv_access), bridge_(edge->bridge()),
-        tunnel_(edge->tunnel()), cost_(cost), sortcost_(sortcost) {
+        tunnel_(edge->tunnel()), cost_(cost), sortcost_(sortcost),
+        destonly_access_restr_mask_(destonly_access_restr_mask) {
     dest_only_ = destonly ? destonly : edge->destonly();
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -397,6 +399,14 @@ public:
     return hgv_access_;
   }
 
+  /**
+   * Get the access restriction mask for restrictions with a local
+   * traffic exemption
+   */
+  uint8_t destonly_access_restr_mask() const {
+    return destonly_access_restr_mask_;
+  }
+
 protected:
   // predecessor_: Index to the predecessor edge label information.
   // Note: invalid predecessor value uses all 32 bits (so if this needs to
@@ -467,7 +477,11 @@ protected:
   // Flag indicating edge is a tunnel.
   uint32_t tunnel_ : 1;
 
-  uint32_t spare : 10;
+  // Mask indicating whether the path started on
+  // an access restriction with an exemption for local traffic
+  uint32_t destonly_access_restr_mask_ : 7;
+
+  uint32_t spare : 3;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
@@ -519,7 +533,8 @@ public:
                 const InternalTurn internal_turn,
                 const uint8_t path_id = 0,
                 const bool destonly = false,
-                const bool hgv_access = false)
+                const bool hgv_access = false,
+                const uint8_t destonly_access_restr_mask = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -533,7 +548,8 @@ public:
                   internal_turn,
                   path_id,
                   destonly,
-                  hgv_access),
+                  hgv_access,
+                  destonly_access_restr_mask),
         transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -604,7 +620,8 @@ public:
               const uint8_t restriction_idx,
               const uint8_t path_id = 0,
               const bool destonly = false,
-              const bool hgv_access = false)
+              const bool hgv_access = false,
+              const uint8_t destonly_access_restr_mask = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -618,7 +635,8 @@ public:
                   internal_turn,
                   path_id,
                   destonly,
-                  hgv_access),
+                  hgv_access,
+                  destonly_access_restr_mask),
         transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
         not_thru_pruning_(not_thru_pruning), distance_(dist) {
   }
@@ -661,7 +679,8 @@ public:
               const uint8_t restriction_idx,
               const uint8_t path_id = 0,
               const bool destonly = false,
-              const bool hgv_access = false)
+              const bool hgv_access = false,
+              const uint8_t destonly_access_restr_mask = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -675,7 +694,8 @@ public:
                   internal_turn,
                   path_id,
                   destonly,
-                  hgv_access),
+                  hgv_access,
+                  destonly_access_restr_mask),
         transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
         not_thru_pruning_(not_thru_pruning), distance_(0.0f) {
   }
@@ -713,7 +733,8 @@ public:
               const sif::InternalTurn internal_turn,
               const uint8_t path_id = 0,
               const bool destonly = false,
-              const bool hgv_access = false)
+              const bool hgv_access = false,
+              const uint8_t destonly_access_restr_mask = 0)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -727,7 +748,8 @@ public:
                   internal_turn,
                   path_id,
                   destonly,
-                  hgv_access),
+                  hgv_access,
+                  destonly_access_restr_mask),
         transition_cost_({}), not_thru_pruning_(!edge->not_thru()), distance_(dist) {
     opp_edgeid_ = {};
   }

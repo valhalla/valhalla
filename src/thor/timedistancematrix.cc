@@ -106,17 +106,19 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing
     // method), or if a complex restriction prevents this path.
     uint8_t restriction_idx = kInvalidRestriction;
+    uint8_t destonly_restriction_mask = 0;
     const bool is_dest = dest_edges_.find(edgeid) != dest_edges_.cend();
     if (FORWARD) {
       if (!costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
-                             nodeinfo->timezone(), restriction_idx) ||
+                             nodeinfo->timezone(), restriction_idx, destonly_restriction_mask) ||
           costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, nullptr,
                                offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
     } else {
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id,
-                                    offset_time.local_time, nodeinfo->timezone(), restriction_idx) ||
+                                    offset_time.local_time, nodeinfo->timezone(), restriction_idx,
+                                    destonly_restriction_mask) ||
           (costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, false, nullptr,
                                 offset_time.local_time, nodeinfo->timezone()))) {
         continue;
