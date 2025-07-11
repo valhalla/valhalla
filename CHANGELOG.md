@@ -46,6 +46,7 @@
    * FIXED: version modifier in `/status` response [#5357](https://github.com/valhalla/valhalla/pull/5357)
    * FIXED: unknowns should be 500 and not 400 [#5359](https://github.com/valhalla/valhalla/pull/5359)
    * FIXED: Cover **all** nodes in the current tile by density index [#5338](https://github.com/valhalla/valhalla/pull/5338)
+   * FIXED: early return when evaluating access restrictions [#5363](https://github.com/valhalla/valhalla/pull/5363)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
