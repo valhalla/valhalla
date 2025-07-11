@@ -208,7 +208,7 @@ jobs:
       # only package python bindings if it's not a PR
 
       - name: Determine package to publish
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
@@ -217,13 +217,17 @@ jobs:
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
             VALHALLA_BUILD_BIN_DIR="build"
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
           MACOSX_DEPLOYMENT_TARGET: 14
+
+      - name: Git status
+        run: |
+          git status
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}

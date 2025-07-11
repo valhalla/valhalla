@@ -89,6 +89,8 @@ To run Valhalla locally or your own server, we recommend using our Docker image.
 
 ### Via Python bindings
 
+| [![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)] | [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)] |
+
 We publish our (very) high-level Python bindings to PyPI:
 - [`pyvalhalla`](https://pypi.org/project/pyvalhalla/): follows Github releases
 - [`pyvalhalla-weekly`](https://pypi.org/project/pyvalhalla-weekly/): follows Github master branch

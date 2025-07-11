@@ -1,5 +1,7 @@
 ## Valhalla Python bindings
 
+| [![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)] | [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)] |
+
 This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
