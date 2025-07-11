@@ -2451,6 +2451,13 @@
       "description": "Sets the hazmat flag to true."
     },
     {
+      "key": "hazmat:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Exemptions for local traffic for hazmat access restrictions."
+    },
+    {
       "key": "hazmat",
       "value": "yes",
       "object_types": [
@@ -3862,11 +3869,25 @@
       "description": "Maxaxleload for hgv."
     },
     {
+      "key": "maxaxleload:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Exemptions for local traffic for maxaxleload for hgv."
+    },
+    {
       "key": "maxaxles",
       "object_types": [
         "way"
       ],
       "description": "Maxaxles for hgv."
+    },
+    {
+      "key": "maxaxles:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Exemptions for local traffic for maxaxles for hgv."
     },
     {
       "key": "maxheight",
@@ -3881,6 +3902,27 @@
         "way"
       ],
       "description": "Maxheight for hgv in forward direction."
+    },
+    {
+      "key": "maxheight:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic."
+    },
+    {
+      "key": "maxheight:forward:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic in forward direction."
+    },
+    {
+      "key": "maxheight:backward:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic in backward direction."
     },
     {
       "key": "maxheight:backward",
@@ -3916,6 +3958,27 @@
         "way"
       ],
       "description": "Maxlength for hgv in backward direction."
+    },
+    {
+      "key": "maxlength:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic."
+    },
+    {
+      "key": "maxlength:forward:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic in forward direction."
+    },
+    {
+      "key": "maxlength:backward:conditional",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxheight exemptions for local traffic in backward direction."
     },
     {
       "key": "maxspeed",

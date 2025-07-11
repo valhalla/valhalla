@@ -26,9 +26,10 @@ namespace baldr {
 AccessRestriction::AccessRestriction(const uint32_t edgeindex,
                                      const AccessType type,
                                      const uint32_t modes,
-                                     const uint64_t value)
-    : edgeindex_(edgeindex), type_(static_cast<uint32_t>(type)), modes_(modes), spare_(0),
-      value_(value) {
+                                     const uint64_t value,
+                                     const bool except_destination)
+    : edgeindex_(edgeindex), type_(static_cast<uint32_t>(type)), modes_(modes),
+      except_destination_(except_destination), spare_(0), value_(value) {
 }
 
 // Get the internal edge Id.
@@ -49,6 +50,14 @@ AccessType AccessRestriction::type() const {
 // Get the modes impacted by access restriction.
 uint32_t AccessRestriction::modes() const {
   return modes_;
+}
+
+bool AccessRestriction::except_destination() const {
+  return static_cast<bool>(except_destination_);
+}
+
+void AccessRestriction::set_except_destination(const bool except_destination) {
+  except_destination_ = static_cast<uint64_t>(except_destination);
 }
 
 // Get the value
