@@ -96,6 +96,14 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
           node.graph_id.set_id(last_node.graph_id.id());
         }
 
+        // if (node.graph_id == 3375362) {
+        //   // auto base_ll = TileHierarchy::get_tiling(2).Base(421920);
+        //   auto node_ll = node.node.latlng();
+        //   LOG_WARN("SortGraph, tile_id: " + std::to_string(node.graph_id.tileid()) + ", graph_id: "
+        //   + std::to_string(node.graph_id.value) + ", id: " + std::to_string(node.graph_id.id()) +
+        //   ", lng/lat: " + std::to_string(node_ll.x()) + ", " + std::to_string(node_ll.y()));
+        // }
+
         // if this node marks the start of an edge, keep track of the edge and the node
         // so we can later tell the edge where the first node in the series is
         if (node.is_start()) {
@@ -210,6 +218,14 @@ void ConstructEdges(const std::string& ways_file,
     way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
     nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1),
                      graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
+
+    if (nodes.back().graph_id.value == 3375362) {
+      auto gid = nodes.back().graph_id;
+      auto node_ll = way_node.node.latlng();
+      LOG_WARN("ConstructEdges, tile_id: " + std::to_string(gid.tileid()) +
+               ", graph_id: " + std::to_string(gid.value) + ", id: " + std::to_string(gid.id()) +
+               ", lng/lat: " + std::to_string(node_ll.x()) + ", " + std::to_string(node_ll.y()));
+    }
 
     // Iterate through the nodes of the way until we find an intersection
     while (current_way_node_index < way_nodes.size()) {
@@ -1152,6 +1168,15 @@ void BuildTileSet(const std::string& ways_file,
         graphtile.nodes().emplace_back(base_ll, node_ll, node.access(), node.type(),
                                        node.traffic_signal(), node.tagged_access(),
                                        node.private_access(), node.cash_only_toll());
+
+        // auto s = graphtile.nodes().size();
+        // if (auto gid = (*node_itr).graph_id; gid.value == 3375362) {
+        //   auto t = gid.tileid();
+        //   LOG_WARN("BuildTileSet, tile_id: " + std::to_string(gid.tileid()) + ", graph_id: " +
+        //   std::to_string(gid.value) + ", id: " + std::to_string(gid.id()) + ", lng/lat: " +
+        //   std::to_string(node_ll.x()) + ", " + std::to_string(node_ll.y()));
+        // }
+
         graphtile.nodes().back().set_edge_index(graphtile.directededges().size() -
                                                 bundle.node_edges.size());
         graphtile.nodes().back().set_edge_count(bundle.node_edges.size());

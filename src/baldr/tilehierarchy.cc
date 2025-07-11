@@ -52,7 +52,16 @@ midgard::AABB2<midgard::PointLL> TileHierarchy::GetGraphIdBoundingBox(const Grap
 GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const uint8_t level) {
   GraphId id;
   if (level < levels().size()) {
+    // if (pointll.ApproximatelyEqual(midgard::PointLL{179.999999, -16.773998})) {
+    //   auto a = pointll;
+    // }
     auto tile_id = levels()[level].tiles.TileId(pointll);
+    // if (tile_id == 421920) {
+    //     GraphId gid = {static_cast<uint32_t>(tile_id), level, 0};
+    //     LOG_WARN("GetGraphId, tile_id: " + std::to_string(gid.tileid()) + ", graph_id: " +
+    //     std::to_string(gid.value) + ", id: " + std::to_string(gid.id()) + ", lng/lat: " +
+    //     std::to_string(pointll.x()) + ", " + std::to_string(pointll.y()));
+    // }
     if (tile_id >= 0) {
       id = {static_cast<uint32_t>(tile_id), level, 0};
     }
