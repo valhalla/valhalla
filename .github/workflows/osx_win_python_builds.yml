@@ -361,7 +361,7 @@ jobs:
           ls -l build/vcpkg_installed/custom-x64-windows/bin
       
       - name: Determine package to publish
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         shell: bash
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
@@ -371,7 +371,7 @@ jobs:
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           # used in setup.py
           CIBW_ENVIRONMENT: >
@@ -381,7 +381,7 @@ jobs:
             VALHALLA_BUILD_BIN_DIR=build/Release
 
       - name: Upload wheels
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-win-amd64
@@ -441,7 +441,7 @@ jobs:
     name: Verify wheels with executables in a fresh environment
     needs: [publish_pypi, build_win]
     runs-on: windows-2022
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
 

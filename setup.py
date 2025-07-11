@@ -143,7 +143,7 @@ ext_modules = [
         # TODO: currently this installs the extension module directly to site-packages
         # we want to move it to the site-packages/valhalla folder with "valhalla._valhalla"
         # NOTE: this has impact on Windows where we need to add the DLL path manually
-        "_valhalla",
+        "valhalla._valhalla",
         [os.path.join("src", "bindings", "python", "valhalla", "_valhalla.cc")],
         cxx_std=17,
         include_pybind11=False,  # use submodule'd pybind11
