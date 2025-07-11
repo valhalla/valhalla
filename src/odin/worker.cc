@@ -89,6 +89,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
       }
     }
   } catch (const std::exception& e) {
+    LOG_ERROR("500::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error({299, std::string(e.what())}, info, request);
   }
 
