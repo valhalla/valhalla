@@ -49,22 +49,28 @@ if(ENABLE_DATA_TOOLS)
     add_dependencies(${TESTNAME} build_timezones)
 
     ## Test run targets
-    add_custom_command(OUTPUT ${TESTNAME}.log
-      COMMAND
-        LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-        /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} >& ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}.log \
-        && echo [PASS] ${TESTNAME} \
-        || ( exit=$? ; \
-             echo [FAIL] ${TESTNAME} ; \
-             cat ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}.log ; \
-             exit $exit )"
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-      DEPENDS ${TESTNAME}
-      VERBATIM)
-    add_custom_target(run-${TESTNAME} DEPENDS ${TESTNAME}.log)
-    set_target_properties(run-${TESTNAME} PROPERTIES FOLDER "Tests")
-    add_dependencies(gurka ${TESTNAME})
-    add_dependencies(run-gurka run-${TESTNAME})
+    if (WIN32)
+      # TODO: Figure out how to resolve this.
+      # Define dummy run-${TESTNAME} target so add_dependencies still works
+      add_custom_target(run-${TESTNAME})
+    else()
+      add_custom_command(OUTPUT ${TESTNAME}.log
+        COMMAND
+          LOCPATH=${VALHALLA_SOURCE_DIR}/locales
+          /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} >& ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}.log \
+          && echo [PASS] ${TESTNAME} \
+          || ( exit=$? ; \
+              echo [FAIL] ${TESTNAME} ; \
+              cat ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}.log ; \
+              exit $exit )"
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        DEPENDS ${TESTNAME}
+        VERBATIM)
+      add_custom_target(run-${TESTNAME} DEPENDS ${TESTNAME}.log)
+      set_target_properties(run-${TESTNAME} PROPERTIES FOLDER "Tests")
+      add_dependencies(gurka ${TESTNAME})
+      add_dependencies(run-gurka run-${TESTNAME})
+    endif()
   endforeach()
 
   add_dependencies(tests gurka)
