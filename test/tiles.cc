@@ -58,7 +58,7 @@ TEST(Tiles, TestRowCol) {
   EXPECT_EQ(tileid1, tileid2) << "TileId does not match using row,col";
 
   // https://github.com/valhalla/valhalla/issues/5360
-  std::vector<PointLL::first_type> xs = {179.9999986, 180., -179.9999986, -180.};
+  std::vector<PointLL::first_type> xs = {179.9999986, 180., 180.001, -179.9999986, -180., -180.001};
   for (const PointLL::first_type x : xs) {
     EXPECT_LT(tiles.Col(x), tiles.ncolumns());
   }
