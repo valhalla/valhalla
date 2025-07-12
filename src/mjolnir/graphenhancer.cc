@@ -1521,13 +1521,6 @@ void enhance(const boost::property_tree::ptree& pt,
       // Get relative road density and local density if the urban tag is not set
       uint32_t density = 0;
       if (!use_urban_tag) {
-        if (density_index.find(nodeinfo.latlng(base_ll)) == density_index.end()) {
-          auto node_ll = nodeinfo.latlng(base_ll);
-          LOG_WARN("DensityBuilder, tile_id: " + std::to_string(tile->id().tileid()) +
-                   ", graph_id: " + std::to_string(startnode.value) +
-                   ", id: " + std::to_string(startnode.id()) +
-                   ", lng/lat: " + std::to_string(node_ll.x()) + ", " + std::to_string(node_ll.y()));
-        }
         density = density_index.find(nodeinfo.latlng(base_ll))->second;
         stats.density_counts[density]++;
         nodeinfo.set_density(density);
