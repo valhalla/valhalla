@@ -11,7 +11,7 @@ from setuptools import setup
 from auditwheel.wheeltools import InWheel
 from wheel.bdist_wheel import bdist_wheel as BDistWheelCommand  # noqa: E402
 
-DEFAULT_VALHALLA_BUILD_DIR = "./build"
+DEFAULT_VALHALLA_BUILD_DIR = "./build_manylinux"
 
 THIS_DIR = Path(__file__).parent.resolve()
 BINARIES = [
@@ -138,22 +138,22 @@ else:
         "-lluajit-5.1",
     ])
 
-ext_modules = [
-    Pybind11Extension(
-        # TODO: currently this installs the extension module directly to site-packages
-        # we want to move it to the site-packages/valhalla folder with "valhalla._valhalla"
-        # NOTE: this has impact on Windows where we need to add the DLL path manually
-        "_valhalla",
-        [os.path.join("src", "bindings", "python", "valhalla", "_valhalla.cc")],
-        cxx_std=17,
-        include_pybind11=False,  # use submodule'd pybind11
-        library_dirs=library_dirs,
-        include_dirs=include_dirs,
-        extra_link_args=extra_link_args,
-        extra_compile_args=extra_compile_args,
-        libraries=libraries,
-    ),
-]
+# config the C++ extension build
+ext_modules = list()
+for module, path in (("_valhalla", "valhalla._valhalla"), ("graph_utils", "valhalla.utils.graph_utils")):
+    ext_modules.append(
+        Pybind11Extension(
+            path,
+            [os.path.join("src", "bindings", "python", "src", f"{module}.cc")],
+            cxx_std=17,
+            include_pybind11=False,  # use submodule'd pybind11
+            library_dirs=library_dirs,
+            include_dirs=include_dirs,
+            extra_link_args=extra_link_args,
+            extra_compile_args=extra_compile_args,
+            libraries=libraries,
+        )
+    )
 
 # if we push master, we upload to pyvalhalla-weekly
 # this is set in GHA when publishing
@@ -187,14 +187,16 @@ setup(
     author="Nils Nolde",
     author_email="nilsnolde+pyvalhalla@proton.me",
     url="https://github.com/valhalla/valhalla",
-    packages=["valhalla"],
-    package_dir={"": "./src/bindings/python"},
+    packages=["valhalla", "valhalla.utils"],
+    package_dir={
+        "": "src/bindings/python",
+    },
     ext_modules=ext_modules,
     entry_points=script_entrypoints,
     # if we found executables we'll package them to let them go through auditing package (auditwheel etc.)
     cmdclass={"bdist_wheel": ValhallaBDistWheelCommand if valhalla_build_dir else BDistWheelCommand},
     classifiers=[
-        "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: Implementation :: CPython",
     ],
