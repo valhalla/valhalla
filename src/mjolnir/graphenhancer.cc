@@ -125,6 +125,8 @@ struct DensityCellId {
     return !(*this == other);
   }
 };
+
+using DensityIndex = ankerl::unordered_dense::map<DensityCellId, uint32_t>;
 } // namespace
 
 namespace std {
@@ -878,6 +880,20 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   return true;
 }
 
+float NodeRoadlengths(const graph_tile_ptr& tile, const NodeInfo* node) {
+  float roadlengths = 0.0f;
+  const DirectedEdge* directededge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
+    // Exclude non-roads (parking, walkways, ferries, construction, etc.)
+    if (directededge->is_road() || directededge->use() == Use::kRamp ||
+        directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
+        directededge->use() == Use::kEmergencyAccess) {
+      roadlengths += directededge->length();
+    }
+  }
+  return roadlengths;
+}
+
 /**
  * Build a density index by accumulating edge lengths in each grid cell and convert
  * to the relative density values (0-15) used by the enhancer.
@@ -889,11 +905,11 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
  * @param stats         Reference to stats object to update max_density
  * @return              Density grid mapping cell IDs to relative density values (0-15)
  */
-ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphReader& reader,
-                                                                        std::mutex& lock,
-                                                                        const graph_tile_ptr& tile,
-                                                                        const TileLevel& tile_level,
-                                                                        enhancer_stats& stats) {
+DensityIndex BuildDensityIndex(GraphReader& reader,
+                               std::mutex& lock,
+                               const graph_tile_ptr& tile,
+                               const TileLevel& tile_level,
+                               enhancer_stats& stats) {
   // To properly count density on the tile edges, the bbox should be extended by the density radius,
   // rounded up to the grid cell size to get fully filled edge cells
   const AABB2<PointLL> tile_bbox = tile->BoundingBox();
@@ -908,9 +924,25 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
   ankerl::unordered_dense::map<DensityCellId, float> density_grid;
   density_grid.reserve(DensityCellId::cover_count(bbox));
 
+  // Process current tile separately from neighbors to always have a cell for each node in the tile
+  {
+    const PointLL base_ll = tile->header()->base_ll();
+    const auto start_node = tile->node(0);
+    const auto end_node = start_node + tile->header()->nodecount();
+    for (auto node = start_node; node < end_node; ++node) {
+      density_grid[node->latlng(base_ll)] += NodeRoadlengths(tile, node);
+    }
+  }
+
+  // process neighboring tiles
   for (const auto& t : tile_level.tiles.TileList(bbox)) {
+    const GraphId tile_id(t, tile_level.level, 0);
+    if (tile_id == tile->id()) {
+      continue; // skip current tile as it was processed above
+    }
+
     lock.lock();
-    auto newtile = reader.GetGraphTile(GraphId(t, tile_level.level, 0));
+    auto newtile = reader.GetGraphTile(tile_id);
     lock.unlock();
     if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
@@ -920,24 +952,10 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
     const auto start_node = newtile->node(0);
     const auto end_node = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
-      // todo: consider separating iteration over the `tile` and neighbor tiles
       const PointLL node_ll = node->latlng(base_ll);
-      if (!bbox.Contains(node_ll)) {
-        continue;
+      if (bbox.Contains(node_ll)) {
+        density_grid[node_ll] += NodeRoadlengths(newtile, node);
       }
-
-      float roadlengths = 0.0f;
-      const DirectedEdge* directededge = newtile->directededge(node->edge_index());
-      for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
-        // Exclude non-roads (parking, walkways, ferries, construction, etc.)
-        if (directededge->is_road() || directededge->use() == Use::kRamp ||
-            directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
-            directededge->use() == Use::kEmergencyAccess) {
-          roadlengths += directededge->length();
-        }
-      }
-
-      density_grid[node_ll] += roadlengths;
     }
   }
 
@@ -947,7 +965,7 @@ ankerl::unordered_dense::map<DensityCellId, uint32_t> BuildDensityIndex(GraphRea
   const float cell_area = cell_size_km * cell_size_km * lat_cos;
 
   // Now build the density index where each cell contains density value for nodes in that cell
-  ankerl::unordered_dense::map<DensityCellId, uint32_t> density_index;
+  DensityIndex density_index;
   density_index.reserve(density_grid.size());
   for (const auto& [cell_id, _] : density_grid) {
     float roadlengths = 0.0f;
@@ -1510,7 +1528,9 @@ void enhance(const boost::property_tree::ptree& pt,
       }
     }
 
-    const auto density_index = BuildDensityIndex(reader, lock, tile, tile_level, stats);
+    // Get relative road density and local density if the urban tag is not set
+    const auto density_index =
+        !use_urban_tag ? BuildDensityIndex(reader, lock, tile, tile_level, stats) : DensityIndex{};
 
     // Second pass - add admin information and edge transition information.
     const PointLL base_ll = tilebuilder->header()->base_ll();
@@ -1518,10 +1538,9 @@ void enhance(const boost::property_tree::ptree& pt,
       GraphId startnode(id, tile_level.level, i);
       NodeInfo& nodeinfo = tilebuilder->node_builder(i);
 
-      // Get relative road density and local density if the urban tag is not set
       uint32_t density = 0;
-      if (!use_urban_tag) {
-        density = density_index.find(nodeinfo.latlng(base_ll))->second;
+      if (auto it = density_index.find(nodeinfo.latlng(base_ll)); it != density_index.end()) {
+        density = it->second;
         stats.density_counts[density]++;
         nodeinfo.set_density(density);
       }
