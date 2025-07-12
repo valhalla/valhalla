@@ -1099,9 +1099,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // we call this to find out if we're starting on access restrictions with a local traffic
       // exemption and push this info into the label
-      uint8_t destonly_restriction_mask = 0;
-      costing_->GetExemptedAccessRestrictions(access_mode_, directededge, tile, edgeid,
-                                              destonly_restriction_mask);
+    auto destonly_restriction_mask = costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
 
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_, ec, d,
                              !directededge->not_thru(), !(costing_->IsClosed(directededge, tile)),
@@ -1196,9 +1194,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
 
       // we call this to find out if we're starting on access restrictions with a local traffic
       // exemption and push this info into the label
-      uint8_t destonly_restriction_mask = 0;
-      costing_->GetExemptedAccessRestrictions(access_mode_, directededge, tile, edgeid,
-                                              destonly_restriction_mask);
+    auto destonly_restriction_mask = costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
 
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
                              !opp_dir_edge->not_thru(), !(costing_->IsClosed(directededge, tile)),

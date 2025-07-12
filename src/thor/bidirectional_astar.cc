@@ -1031,9 +1031,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
     // we call this to find out if we're starting on access restrictions with a local traffic
     // exemption and push this info into the label
-    uint8_t destonly_restriction_mask = 0;
-    costing_->GetExemptedAccessRestrictions(access_mode_, directededge, tile, edgeid,
-                                            destonly_restriction_mask);
+    auto destonly_restriction_mask = costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
 
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      kInvalidRestriction, !(costing_->IsClosed(directededge, tile)),
@@ -1138,9 +1136,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
 
     // we call this to find out if we're starting on access restrictions with a local traffic
     // exemption and push this info into the label
-    uint8_t destonly_restriction_mask = 0;
-    costing_->GetExemptedAccessRestrictions(access_mode_, directededge, tile, edgeid,
-                                            destonly_restriction_mask);
+    auto destonly_restriction_mask = costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
 
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),

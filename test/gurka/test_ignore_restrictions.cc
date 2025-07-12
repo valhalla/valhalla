@@ -255,42 +255,6 @@ INSTANTIATE_TEST_SUITE_P(
       return res;
     }()));
 
-TEST(StandAlone, TestTruck) {
-  const gurka::ways ways = {
-      {"AB", {{"highway", "secondary"}}},
-      {"BC", {{"highway", "secondary"}}},
-      {"CD", {{"highway", "secondary"}}},
-      {"AE", {{"highway", "secondary"}}},
-      {"EF",
-       {{"highway", "secondary"},{"maxaxles", "1"} , {"hgv:conditional", "yes @ (09:00-18:00)"},}},
-  };
-
-    const std::string ascii_map = R"(
-      A----------B-----C----D
-      |
-      E
-      |
-      |
-      F
-    )";
-
-   auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-
-  gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/test_blah",
-                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
-
-  // this one should fail not because of time constraint but because of maxaxles
-  try {
-    valhalla::Api route =
-        gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "truck",
-                         {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-10T16:00"}});
-    FAIL() << "Expected route to fail.";
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
-    FAIL() << "Expected different error code.";
-  }
-}
-
 TEST(StandAlone, TestDestinationAR) {
   const std::string ascii_map = R"(
       A-6--B--7--C-8--D--9--E

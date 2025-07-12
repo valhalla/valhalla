@@ -179,7 +179,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
     uint8_t restriction_idx = kInvalidRestriction;
-    uint8_t destonly_restriction_mask = 0;
+    uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
     // is_dest is false, because it is a traversal algorithm in this context, not a path search
     // algorithm. In other words, destination edges are not defined for this Dijkstra's algorithm.
     const bool is_dest = false;
@@ -258,7 +258,8 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                                  restriction_idx, pred.path_id(),
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
-                                 directededge->forwardaccess() & kTruckAccess);
+                                 directededge->forwardaccess() & kTruckAccess,
+                                 pred.destonly_access_restr_mask() & destonly_restriction_mask);
 
     } else {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
@@ -270,7 +271,8 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                                  restriction_idx, pred.path_id(),
                                  opp_edge->destonly() ||
                                      (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                                 opp_edge->forwardaccess() & kTruckAccess);
+                                 opp_edge->forwardaccess() & kTruckAccess,
+                                 pred.destonly_access_restr_mask() & destonly_restriction_mask);
     }
     adjacencylist_.add(idx);
   }
@@ -839,13 +841,16 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
+      auto destonly_restriction_mask = costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, kInvalidRestriction, multipath_ ? path_id : 0,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
-                                 directededge->forwardaccess() & kTruckAccess);
+                                 directededge->forwardaccess() & kTruckAccess,
+                                 destonly_restriction_mask);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -931,13 +936,20 @@ void Dijkstras::SetDestinationLocations(
       // we want is for the expansion to continue when it encounters the first
       // closure and stop when it exits the closure (which can span multiple
       // consecutive edges)
+
+      // we call this to find out if we're starting on access restrictions with a local traffic
+      // exemption and push this info into the label
+      auto destonly_restriction_mask =
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
-                                 directededge->forwardaccess() & kTruckAccess);
+                                 directededge->forwardaccess() & kTruckAccess,
+                                 destonly_restriction_mask);
       adjacencylist_.add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? path_id : 0);
     }

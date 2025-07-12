@@ -231,7 +231,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
     // (based on costing method)
     uint8_t restriction_idx = kInvalidRestriction;
-    uint8_t destonly_restriction_mask = 0;
+    uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
     if (FORWARD) {
       if (!costing_->Allowed(meta.edge, dest_path_edge, pred, tile, meta.edge_id,
                              time_info.local_time, nodeinfo->timezone(), restriction_idx,
@@ -284,7 +284,8 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                restriction_idx, 0,
                                meta.edge->destonly() ||
                                    (costing_->is_hgv() && meta.edge->destonly_hgv()),
-                               meta.edge->forwardaccess() & kTruckAccess);
+                               meta.edge->forwardaccess() & kTruckAccess,
+                               pred.destonly_access_restr_mask() & destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
                                mode_, transition_cost,
@@ -296,7 +297,8 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                restriction_idx, 0,
                                opp_edge->destonly() ||
                                    (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                               opp_edge->forwardaccess() & kTruckAccess);
+                               opp_edge->forwardaccess() & kTruckAccess,
+                               pred.destonly_access_restr_mask() & destonly_restriction_mask);
     }
 
     auto& edge_label = edgelabels_.back();
@@ -765,6 +767,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
 
       // Add EdgeLabel to the adjacency list
       uint32_t idx = edgelabels_.size();
+      auto destonly_restriction_mask = costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
 
       if (FORWARD) {
         edgelabels_.emplace_back(kInvalidLabel, edgeid, GraphId(), directededge, cost, sortcost, dist,
@@ -773,7 +776,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                                  kInvalidRestriction, 0,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
-                                 directededge->forwardaccess() & kTruckAccess);
+                                 directededge->forwardaccess() & kTruckAccess,
+                                 destonly_restriction_mask);
       } else {
         edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, Cost{}, false,
@@ -782,7 +786,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                                  kInvalidRestriction, 0,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
-                                 directededge->forwardaccess() & kTruckAccess);
+                                 directededge->forwardaccess() & kTruckAccess,
+                                 destonly_restriction_mask);
       }
 
       auto& edge_label = edgelabels_.back();

@@ -660,18 +660,17 @@ public:
                                                   baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
-  inline void GetExemptedAccessRestrictions(uint32_t access_mode,
-                                            const baldr::DirectedEdge* edge,
+  inline uint8_t GetExemptedAccessRestrictions(const baldr::DirectedEdge* edge,
                                             const graph_tile_ptr& tile,
-                                            const baldr::GraphId& edgeid,
-                                            uint8_t& destonly_access_restr_mask) {
+                                            const baldr::GraphId& edgeid) {
 
-    if (ignore_restrictions_ || !(edge->access_restriction() & access_mode) ||
+    uint8_t destonly_access_restr_mask;
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_) ||
         allow_destination_only_)
-      return;
+      return 0;
 
     const std::vector<baldr::AccessRestriction>& restrictions =
-        tile->GetAccessRestrictions(edgeid.id(), access_mode);
+        tile->GetAccessRestrictions(edgeid.id(), access_mask_);
 
     for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restr = restrictions[i];
@@ -680,6 +679,7 @@ public:
             baldr::kAccessRestrictionMasks[static_cast<size_t>(restr.type())];
       }
     }
+    return destonly_access_restr_mask;
   }
 
   /***
