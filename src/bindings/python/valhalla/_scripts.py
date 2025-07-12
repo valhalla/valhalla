@@ -3,7 +3,6 @@ import platform
 from shutil import which
 import subprocess
 import sys
-import sysconfig
 
 from . import PYVALHALLA_DIR
 
@@ -47,7 +46,11 @@ def run(from_main=False) -> None:
         # https://github.com/adang1345/delvewheel/issues/62#issuecomment-2977988121
         # the DLLs are installed to site-packages/ directly for some reason, see
         # https://github.com/adang1345/delvewheel/issues/64
-        env=dict(PATH=f"{sysconfig.get_paths()['purelib']}" if IS_WIN else None),
+        env=dict(
+            PATH=(
+                f"{Path(__file__).parent.parent.joinpath("valhalla.libs").resolve()}" if IS_WIN else None
+            )
+        ),
     )
 
     # raises CalledProcessError if not successful
