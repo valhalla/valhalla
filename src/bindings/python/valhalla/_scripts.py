@@ -48,7 +48,7 @@ def run(from_main=False) -> None:
         # https://github.com/adang1345/delvewheel/issues/64
         env=dict(
             PATH=(
-                f"{Path(__file__).parent.parent.joinpath("valhalla.libs").resolve()}" if IS_WIN else None
+                f"{Path(__file__).parent.parent.joinpath('valhalla.libs').resolve()}" if IS_WIN else None
             )
         ),
     )
