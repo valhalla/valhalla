@@ -99,8 +99,8 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     uint8_t destonly_restriction_mask = 0;
     const bool is_dest = dest_edges_.find(edgeid.value) != dest_edges_.cend();
     if (FORWARD) {
-      if (!current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
-                                    restriction_idx, destonly_restriction_mask) ||
+      if (!current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx,
+                                    destonly_restriction_mask) ||
           current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
         continue;
       }

@@ -841,7 +841,8 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
-      auto destonly_restriction_mask = costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+      auto destonly_restriction_mask =
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
 
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),

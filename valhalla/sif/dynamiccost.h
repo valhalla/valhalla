@@ -661,8 +661,8 @@ public:
   }
 
   inline uint8_t GetExemptedAccessRestrictions(const baldr::DirectedEdge* edge,
-                                            const graph_tile_ptr& tile,
-                                            const baldr::GraphId& edgeid) {
+                                               const graph_tile_ptr& tile,
+                                               const baldr::GraphId& edgeid) {
 
     uint8_t destonly_access_restr_mask;
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_) ||

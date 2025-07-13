@@ -767,7 +767,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
 
       // Add EdgeLabel to the adjacency list
       uint32_t idx = edgelabels_.size();
-      auto destonly_restriction_mask = costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+      auto destonly_restriction_mask =
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
 
       if (FORWARD) {
         edgelabels_.emplace_back(kInvalidLabel, edgeid, GraphId(), directededge, cost, sortcost, dist,

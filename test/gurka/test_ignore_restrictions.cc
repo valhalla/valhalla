@@ -322,7 +322,8 @@ TEST(StandAlone, TestDestinationAR) {
   gurka::map map =
       gurka::buildtiles(layout, ways, {}, {}, "test/data/destination_access_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
-                         {"thor.costmatrix.allow_second_pass", "1"}, {"thor.costmatrix.check_reverse_connection", "1"}});
+                         {"thor.costmatrix.allow_second_pass", "1"},
+                         {"thor.costmatrix.check_reverse_connection", "1"}});
 
   // second pass
   // valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
