@@ -163,9 +163,11 @@ if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-weekly"]):
     pkg = "pyvalhalla-weekly"
 print(f"Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}")
 
-# create __modulename__.py for Windows executables to link to the right vendored libs
-with open(os.path.join(THIS_DIR, "src", "bindings", "python", "valhalla", "__modulename__.py"), "w") as f:
+# some extra info
+with open(os.path.join(THIS_DIR, "src", "bindings", "python", "valhalla", "__moduleinfo__.py"), "w") as f:
     f.write(f"__modulename__ = \"{pkg}\"")
+    f.write(f"\n__version_modifier__ = \"{os.environ.get('VALHALLA_VERSION_MODIFIER', '')}\"")
+    f.write("\n")
 
 # open README.md for PyPI
 with open(os.path.join(THIS_DIR, "src", "bindings", "python", "README.md"), encoding="utf-8") as f:

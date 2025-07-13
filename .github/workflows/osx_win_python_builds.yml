@@ -222,6 +222,7 @@ jobs:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
             VALHALLA_BUILD_BIN_DIR="build"
+            VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
           MACOSX_DEPLOYMENT_TARGET: 14
 
@@ -379,6 +380,7 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
             VALHALLA_BUILD_BIN_DIR=build/Release
+            VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
 
       - name: Upload wheels
         # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -438,7 +440,6 @@ jobs:
           python -m valhalla valhalla_build_tiles -h
   
   verify_wheels_win:
-    name: Verify wheels with executables in a fresh environment
     needs: [publish_pypi, build_win]
     runs-on: windows-2022
     # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}

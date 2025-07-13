@@ -13,11 +13,12 @@ IS_WIN = platform.system().lower() == "windows"
 # Need to get the actual package name for Windows to get the
 # correct path for the vendored libs
 try:
-    from .__modulename__ import __modulename__
+    from .__moduleinfo__ import __modulename__, __version_modifier__
 except ModuleNotFoundError as e:
     if IS_WIN:
         raise e
     __modulename__ == "undefined"
+    __version_modifier__ == ""
 
 with PYVALHALLA_DIR.joinpath("__modulename__.py").open() as f:
     VENDORED_LIB_DIR = Path(__file__).parent.parent.joinpath(__modulename__ + ".libs").resolve()
