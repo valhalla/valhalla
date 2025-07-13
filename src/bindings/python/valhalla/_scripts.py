@@ -20,8 +20,9 @@ except ModuleNotFoundError as e:
     __modulename__ == "undefined"
     __version_modifier__ == ""
 
-with PYVALHALLA_DIR.joinpath("__modulename__.py").open() as f:
-    VENDORED_LIB_DIR = Path(__file__).parent.parent.joinpath(__modulename__ + ".libs").resolve()
+# on the filesystem it's not pyvalhalla-weekly, but pyvalhalla_weekly
+mpath = __modulename__.replace("-", "_")
+VENDORED_LIB_DIR = Path(__file__).parent.parent.joinpath(mpath + ".libs").resolve()
 
 
 def run(from_main=False) -> None:
