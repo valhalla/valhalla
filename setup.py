@@ -140,11 +140,11 @@ else:
 
 # config the C++ extension build
 ext_modules = list()
-for module, path in (("_valhalla", "valhalla._valhalla"), ("graph_utils", "valhalla.utils.graph_utils")):
+for path, srcs in (("valhalla._valhalla", ("_valhalla",)), ("valhalla.utils.graph_utils", ("graph_utils", "graph_id"))):
     ext_modules.append(
         Pybind11Extension(
             path,
-            [os.path.join("src", "bindings", "python", "src", f"{module}.cc")],
+            list(map(lambda x: os.path.join("src", "bindings", "python", "src", x + ".cc"), srcs)),
             cxx_std=17,
             include_pybind11=False,  # use submodule'd pybind11
             library_dirs=library_dirs,

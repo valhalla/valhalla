@@ -16,11 +16,12 @@ function(set_output_python rel_path)
 endfunction()
 
 # add and install module(s)
-foreach(PYMOD _valhalla graph_utils)
-  message(STATUS "Installing ${PYMOD}")
-  pybind11_add_module(${PYMOD} ${CMAKE_CURRENT_SOURCE_DIR}/src/${PYMOD}.cc)
-  target_link_libraries(${PYMOD} PRIVATE valhalla)
-endforeach()
+pybind11_add_module(_valhalla ${CMAKE_CURRENT_SOURCE_DIR}/src/_valhalla.cc)
+target_link_libraries(_valhalla PRIVATE valhalla)
+pybind11_add_module(graph_utils 
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_utils.cc
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_id.cc)
+target_link_libraries(graph_utils PRIVATE valhalla)
 
 set_target_properties(_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla)
 set_target_properties(graph_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
@@ -32,6 +33,7 @@ set(py_srcs
   valhalla/config.py
   valhalla/actor.py
   valhalla/utils/__init__.py
+  valhalla/utils/graph_utils.pyi
   valhalla/utils/decode_polyline.py)
 foreach (py_src ${py_srcs})
   set_output_python(${py_src})
@@ -47,4 +49,4 @@ install(TARGETS graph_utils
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils
   DESTINATION "${Python_SITEARCH}"
   COMPONENT runtime
-  FILES_MATCHING PATTERN "*.py")
+  FILES_MATCHING PATTERN "*.py*")
