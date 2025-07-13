@@ -45,7 +45,6 @@ class TestBindings(unittest.TestCase):
 
         # happy paths
         self.assertEqual(get_tile_base_lon_lat(gid), test_pt)
-        print(test_pt)
         self.assertEqual(get_tile_id_from_lon_lat(gid.level(), test_pt), GraphId(gid.tileid(), gid.level(), 0))
 
         # exceptions

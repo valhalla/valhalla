@@ -15,7 +15,7 @@ def print_help():
 
     # TODO: we also want the git commit to show here, probably written to __version__.py by setup.py's BDistWheelCommand
     print(
-        F"""
+        f"""
 valhalla Python package {__version__}
 
 pyvalhalla package provides a CLI to run Valhalla C++ executables. Arguments are simply passed on as they are.

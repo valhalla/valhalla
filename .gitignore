@@ -48,6 +48,7 @@ site/
 
 # python bindings
 src/bindings/python/valhalla/__version__.py
+src/bindings/python/valhalla/__modulename__.py
 **/*.egg-info
 dist
 wheelhouse

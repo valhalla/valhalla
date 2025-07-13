@@ -2,8 +2,6 @@
 
 #include <pybind11/pybind11.h>
 
-#include <string>
-
 PYBIND11_MODULE(graph_utils, m) {
   pyvalhalla::init_graphid(m);
 }

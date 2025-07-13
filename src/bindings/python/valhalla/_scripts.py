@@ -6,8 +6,21 @@ import sys
 
 from . import PYVALHALLA_DIR
 
+
 PYVALHALLA_BIN_DIR = PYVALHALLA_DIR.joinpath("bin").resolve()
 IS_WIN = platform.system().lower() == "windows"
+
+# Need to get the actual package name for Windows to get the
+# correct path for the vendored libs
+try:
+    from .__modulename__ import __modulename__
+except ModuleNotFoundError as e:
+    if IS_WIN:
+        raise e
+    __modulename__ == "undefined"
+
+with PYVALHALLA_DIR.joinpath("__modulename__.py").open() as f:
+    VENDORED_LIB_DIR = Path(__file__).parent.parent.joinpath(__modulename__ + ".libs").resolve()
 
 
 def run(from_main=False) -> None:
@@ -44,11 +57,7 @@ def run(from_main=False) -> None:
         stdout=subprocess.DEVNULL if is_quiet else sys.stdout,
         # on Win we need to add the path to vendored DLLs manually, see
         # https://github.com/adang1345/delvewheel/issues/62#issuecomment-2977988121
-        env=(
-            dict(PATH=(f"{Path(__file__).parent.parent.joinpath('valhalla.libs').resolve()}"))
-            if IS_WIN
-            else None
-        ),
+        env=(dict(PATH=str(VENDORED_LIB_DIR)) if IS_WIN else None),
     )
 
     # raises CalledProcessError if not successful
