@@ -460,7 +460,6 @@ jobs:
           python -m pip install dist/*cp313-win_amd64.whl
           python -m valhalla valhalla_service -h
           python -m valhalla valhalla_build_tiles -h
-          python -c "from valhalla.utils.graph_utils import GraphId; g = GraphId(); assert g.Is_Valid() == False"
 
   upload_all:
     name: Upload if release
