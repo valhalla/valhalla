@@ -7,16 +7,13 @@ except ModuleNotFoundError:
 from .actor import Actor
 from .config import get_config, get_help
 
-# if run from CMake, Docker or tests
+# if run from CMake, Docker or test
 try:
     from .__version__ import __version__
 
-    try:
-        from .__moduleinfo__ import __version_modifier__
-
-        __version__ = f"{__version__}-{__version_modifier__}" if __version_modifier__ else __version__
-    except ModuleNotFoundError:
-        pass
+    # extend with version modifier (so far the git hash)
+    if (idx := VALHALLA_PRINT_VERSION.find("-")) != -1:  # noqa: F405
+        __version__ = __version__ + VALHALLA_PRINT_VERSION[:idx]  # noqa: F405
 except ModuleNotFoundError:
     __version__ = "undefined"
 

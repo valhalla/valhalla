@@ -4,24 +4,14 @@ from shutil import which
 import subprocess
 import sys
 
-from . import PYVALHALLA_DIR
+from . import PYVALHALLA_DIR, VALHALLA_PYTHON_PACKAGE
 
 
 PYVALHALLA_BIN_DIR = PYVALHALLA_DIR.joinpath("bin").resolve()
 IS_WIN = platform.system().lower() == "windows"
 
-# Need to get the actual package name for Windows to get the
-# correct path for the vendored libs
-try:
-    from .__moduleinfo__ import __modulename__, __version_modifier__
-except ModuleNotFoundError as e:
-    if IS_WIN:
-        raise e
-    __modulename__ == "undefined"
-    __version_modifier__ == ""
-
 # on the filesystem it's not pyvalhalla-weekly, but pyvalhalla_weekly
-mpath = __modulename__.replace("-", "_")
+mpath = VALHALLA_PYTHON_PACKAGE.replace("-", "_")
 VENDORED_LIB_DIR = Path(__file__).parent.parent.joinpath(mpath + ".libs").resolve()
 
 

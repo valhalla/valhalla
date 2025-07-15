@@ -34,6 +34,14 @@ if not valhalla_build_dir.is_dir():
     print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
     valhalla_build_dir = None
 
+# if we push master, we upload to pyvalhalla-weekly
+# this is set in GHA when publishing
+pkg = os.environ.get('VALHALLA_RELEASE_PKG')
+if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-weekly"]):
+    print(f"[WARNING] VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}', defaulting to 'pyvalhalla-weekly'")
+    pkg = "pyvalhalla-weekly"
+print(f"Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}")
+
 
 class ValhallaBDistWheelCommand(BDistWheelCommand):
     "Subclass to patch the wheel in ./dist and add Valhalla binaries"
@@ -85,7 +93,7 @@ include_dirs = [
 library_dirs = ["/usr/local/lib", "/usr/local/lib64"]
 libraries = list()
 extra_link_args = list()
-extra_compile_args = list()
+extra_compile_args = [f"-DVALHALLA_PYTHON_PACKAGE={pkg}"]
 
 # determine the directories for compiling
 if IS_OSX:
@@ -154,20 +162,6 @@ for path, srcs in (("valhalla._valhalla", ("_valhalla",)), ("valhalla.utils.grap
             libraries=libraries,
         )
     )
-
-# if we push master, we upload to pyvalhalla-weekly
-# this is set in GHA when publishing
-pkg = os.environ.get('VALHALLA_RELEASE_PKG')
-if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-weekly"]):
-    print(f"[WARNING] VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}', defaulting to 'pyvalhalla-weekly'")
-    pkg = "pyvalhalla-weekly"
-print(f"Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}")
-
-# some extra info
-with open(os.path.join(THIS_DIR, "src", "bindings", "python", "valhalla", "__moduleinfo__.py"), "w") as f:
-    f.write(f"__modulename__ = \"{pkg}\"")
-    f.write(f"\n__version_modifier__ = \"{os.environ.get('VALHALLA_VERSION_MODIFIER', '')}\"")
-    f.write("\n")
 
 # open README.md for PyPI
 with open(os.path.join(THIS_DIR, "src", "bindings", "python", "README.md"), encoding="utf-8") as f:
