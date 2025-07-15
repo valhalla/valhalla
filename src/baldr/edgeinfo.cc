@@ -541,44 +541,57 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     writer("speed_limit", static_cast<uint64_t>(speed_limit()));
   }
 
-  std::vector<std::vector<std::pair<float, float>>> levels;
-  for (const auto& [tag, value] : GetTags()) {
-    if (tag == TaggedValue::kLevels) {
-      std::vector<std::pair<float, float>> decoded;
-      uint32_t precision;
-      std::tie(decoded, precision) = decode_levels(value);
-      if (decoded.size()) {
-        levels.push_back(decoded);
-      }
-    }
-  }
-
-  if (levels.size()) {
-    writer.start_array("levels");
-    // precision variable causes issues in the json writer
-    writer.set_precision(1);
-    for (auto& level : levels) {
-      for (auto& range : level) {
-        if (range.first == range.second) {
-          writer(range.first);
-        } else {
-          writer.start_array();
-          writer(range.first);
-          writer(range.second);
-          writer.end_array();
-        }
-      }
-    }
-    writer.end_array();
-  }
-
   std::vector<std::pair<std::string, uint64_t>> keyToValSpeedLimits;
   for (const auto& [tag, value] : GetTags()) {
-    if (tag == TaggedValue::kConditionalSpeedLimits) {
-      const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
-      keyToValSpeedLimits.push_back({l->td_.to_string(), l->speed_});
+    switch (tag) {
+      case TaggedValue::kLayer:
+        break;
+      case TaggedValue::kLinguistic:
+        break;
+      case TaggedValue::kBssInfo:
+        break;
+      case TaggedValue::kLevel:
+        break;
+      case TaggedValue::kLevelRef:
+        break;
+      case TaggedValue::kLandmark:
+        break;
+      case TaggedValue::kLevels: {
+        writer.start_array("levels");
+        std::vector<std::pair<float, float>> decoded;
+        uint32_t precision;
+        std::tie(decoded, precision) = decode_levels(value);
+
+        // precision variable causes issues in the json writer
+        writer.set_precision(1);
+        for (auto& range : decoded) {
+          if (range.first == range.second) {
+            // single number
+            writer(range.first);
+          } else {
+            // range
+            writer.start_array();
+            writer(range.first);
+            writer(range.second);
+            writer.end_array();
+          }
+        }
+        writer.end_array();
+        break;
+      }
+      case TaggedValue::kConditionalSpeedLimits: {
+        const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
+        keyToValSpeedLimits.push_back({l->td_.to_string(), l->speed_});
+        break;
+      }
+      case TaggedValue::kTunnel:
+        break;
+      case TaggedValue::kBridge:
+        break;
     }
   }
+  // Ensure there is only one "conditional_speed_limits" key in the JSON response,
+  // even if there is more than one kConditionalSpeedLimits tag.
   if (keyToValSpeedLimits.size()) {
     writer.start_object("conditional_speed_limits");
     for (auto& p : keyToValSpeedLimits) {

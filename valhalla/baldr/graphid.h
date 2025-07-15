@@ -2,10 +2,10 @@
 #define VALHALLA_BALDR_GRAPHID_H_
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/rapidjson_fwd.h>
 
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
