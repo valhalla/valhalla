@@ -13,7 +13,7 @@ try:
 
     # extend with version modifier (so far the git hash)
     if (idx := VALHALLA_PRINT_VERSION.find("-")) != -1:
-        __version__ = __version__ + VALHALLA_PRINT_VERSION[:idx]
+        __version__ = __version__ + VALHALLA_PRINT_VERSION[idx:]
 except ModuleNotFoundError:
     __version__ = "undefined"
 
