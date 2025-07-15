@@ -541,7 +541,7 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
     writer("speed_limit", static_cast<uint64_t>(speed_limit()));
   }
 
-  std::vector<std::pair<std::string, uint64_t>> keyToValSpeedLimits;
+  std::vector<std::pair<std::string, uint64_t>> conditional_speed_limits;
   for (const auto& [tag, value] : GetTags()) {
     switch (tag) {
       case TaggedValue::kLayer:
@@ -581,7 +581,7 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
       }
       case TaggedValue::kConditionalSpeedLimits: {
         const ConditionalSpeedLimit* l = reinterpret_cast<const ConditionalSpeedLimit*>(value.data());
-        keyToValSpeedLimits.push_back({l->td_.to_string(), l->speed_});
+        conditional_speed_limits.push_back({l->td_.to_string(), l->speed_});
         break;
       }
       case TaggedValue::kTunnel:
@@ -592,10 +592,10 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
   }
   // Ensure there is only one "conditional_speed_limits" key in the JSON response,
   // even if there is more than one kConditionalSpeedLimits tag.
-  if (keyToValSpeedLimits.size()) {
+  if (!conditional_speed_limits.empty()) {
     writer.start_object("conditional_speed_limits");
-    for (auto& p : keyToValSpeedLimits) {
-      writer(p.first, static_cast<uint64_t>(p.second));
+    for (auto& [condition, speed] : conditional_speed_limits) {
+      writer(condition, speed);
     }
     writer.end_object();
   }
