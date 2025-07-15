@@ -8,6 +8,8 @@ try:
 except ModuleNotFoundError:
     from _valhalla import _Actor
 
+__all__ = ["Actor"]
+
 
 # TODO: wasteful for dict input/output; more reasonable would be to extend
 #   the Actor's action C++ interfaces with a JSON arg
