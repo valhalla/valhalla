@@ -13,6 +13,7 @@ LABEL org.opencontainers.image.authors="Kevin Kreiser <kevinkreiser@gmail.com>"
 
 ARG CONCURRENCY
 ARG ADDITIONAL_TARGETS
+ARG VERSION_MODIFIER=""
 
 # set paths
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
@@ -34,7 +35,7 @@ RUN rm -rf build && mkdir build
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
-RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off -DVALHALLA_VERSION_MODIFIER=${VERSION_MODIFIER}
 RUN make all ${ADDITIONAL_TARGETS} -j${CONCURRENCY:-$(nproc)}
 RUN make install
 
@@ -51,7 +52,7 @@ RUN rm -rf valhalla
 #RUN rm -f valhalla_*.debug
 #RUN strip --strip-debug --strip-unneeded valhalla_* || true
 #RUN strip /usr/local/lib/libvalhalla.a
-#RUN strip /usr/local/lib/python3.12/dist-packages/valhalla/python_valhalla*.so
+#RUN strip /usr/local/lib/python3.12/dist-packages/valhalla/_valhalla*.so
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image

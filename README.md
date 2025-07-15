@@ -18,9 +18,9 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 ## Build Status
 
-| Linux | macOS | Windows | Code Coverage |
-| ----- | ----- | ------- | ------------- |
-| [![Circle CI](https://circleci.com/gh/valhalla/valhalla/tree/master.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla/tree/master) | [![macOS CI](https://github.com/valhalla/valhalla/actions/workflows/osx.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/osx.yml) | [![Windows CI](https://github.com/valhalla/valhalla/actions/workflows/win.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/win.yml) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
+| Linux | macOS & Windows | Code Coverage |
+| ----- | --------------- | ------------- |
+| [![Circle CI](https://circleci.com/gh/valhalla/valhalla/tree/master.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla/tree/master) | [![Windows & macOS CI](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
 
 
 ## License
@@ -77,11 +77,28 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 ## Installation
 
-To run Valhalla locally or your own server, we recommend using our Docker image. Checkout our docker image here: <https://github.com/orgs/valhalla/packages>. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
+For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](https://valhalla.github.io/valhalla).
+
+### From source
 
 If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
 
-For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](https://valhalla.github.io/valhalla).
+### With docker
+
+To run Valhalla locally or your own server, we recommend using our Docker image. Checkout our docker image here: <https://github.com/orgs/valhalla/packages>. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
+
+### Via Python bindings
+
+We publish our (very) high-level Python bindings to PyPI:
+- [`pyvalhalla`](https://pypi.org/project/pyvalhalla/): follows Github releases
+- [`pyvalhalla-weekly`](https://pypi.org/project/pyvalhalla-weekly/): follows Github master branch
+
+> [!NOTE]
+> The below is only valid for `linux-x86_x64` so far.
+
+The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](https://valhalla.github.io/valhalla/README_python).
+
+To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the desired wheel from [PyPI](https://pypi.org/project/pyvalhalla-weekly), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
 
 ## Contributing
 
@@ -100,6 +117,9 @@ They are enabled by the `-DENABLE_BENCHMARKS=On` CMake flag and are currently on
 Linux and MacOS.
 
 ## Command Line Tools
+
+> [!TIP]
+> Easily install various Valhalla command line tools like `valhalla_build_tiles` with the [Python bindings](https://valhalla.github.io/valhalla/README_python), e.g. via [PyPI](https://pypi.org/project/pyvalhalla/#files). This currently **only works for `linux-x64`**.
 
 ### `valhalla_service` aka one-shot mode
 
@@ -129,6 +149,5 @@ The following projects are open-source and built with the intention to make it e
 - [**valhalla-qgis-plugin**](https://github.com/gis-ops/valhalla-qgis-plugin): A QGIS plugin for Valhalla, also available in the [official QGIS plugin store](https://plugins.qgis.org/plugins/valhalla/). **Note**, it's almost deprecated and will be replaced with a much superior alternative.
 - [**routingpy**](https://github.com/gis-ops/routingpy): A Python client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available on [PyPI](https://pypi.org/project/routingpy/).
 - [**routingjs**](https://github.com/gis-ops/routingjs): A TypeScript client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available as engine-specific packages on [npm](https://www.npmjs.com/package/@routingjs/valhalla).
-- [**pyvalhalla**](https://github.com/gis-ops/pyvalhalla): Python bindings for Valhalla, so its APIs can be used from within Python without a HTTP service. Available on [PyPI](https://pypi.org/project/pyvalhalla/).
 - [**Valhalla_jll.jl**](https://github.com/JuliaBinaryWrappers/Valhalla_jll.jl): Valhalla binaries shipped for Julia.
 - [**valhalla-go**](https://github.com/pufferffish/valhalla-go): Valhalla Golang bindings via cgo

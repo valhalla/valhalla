@@ -4,7 +4,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
@@ -16,6 +15,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <filesystem>
 #include <future>
 #include <iostream>
 #include <list>
@@ -565,7 +565,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
 }
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 
@@ -573,7 +573,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "valhalla_build_statistics is a program that builds a statistics database.\n\n");
 
     options.add_options()
@@ -585,7 +585,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
