@@ -102,6 +102,7 @@
    * CHANGED: refactor to make valhalla/filesystem functionally redundant [#5319](https://github.com/valhalla/valhalla/pull/5319)
    * ADDED: Distribute C++ executables for Windows Python bindings [#5348](https://github.com/valhalla/valhalla/pull/5348)
    * ADDED: Distribute C++ executables for OSX Python bindings [#5301](https://github.com/valhalla/valhalla/pull/5301)
+   * ADDED: Add option `edge.traffic_signal` to trace attributes []()
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

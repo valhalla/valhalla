@@ -196,6 +196,9 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeForward)) {
         writer("forward", edge.forward());
       }
+      if (controller(kEdgeTrafficSignal)) {
+        writer("traffic_signal", edge.traffic_signal());
+      }
       if (controller(kEdgeLevels)) {
         if (edge.levels_size()) {
           writer.start_array("levels");
