@@ -1111,9 +1111,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       cost.cost += edge.distance();
 
       // 2 adjustments related only to properly handle trivial routes:
-      //   - "transition_cost" is used to store the traversed secs & length
+      //   - "transition_cost" is used to store the total edge cost
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
-      // Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_, edgecost, d,
                              !directededge->not_thru(), !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
