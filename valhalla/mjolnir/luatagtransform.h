@@ -7,17 +7,17 @@ extern "C" {
 #include <lualib.h>
 }
 
-#include <osmium/osm/tag.hpp>
 #include <valhalla/mjolnir/osmdata.h>
 
-#include <robin_hood.h>
+#include <ankerl/unordered_dense.h>
+#include <osmium/osm/tag.hpp>
 
 #include <string>
 
 namespace valhalla {
 namespace mjolnir {
 
-using Tags = robin_hood::unordered_map<std::string, std::string>;
+using Tags = ankerl::unordered_dense::map<std::string, std::string>;
 
 /**
  */

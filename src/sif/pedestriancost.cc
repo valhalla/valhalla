@@ -1,6 +1,6 @@
 #include "sif/pedestriancost.h"
-#include "baldr/accessrestriction.h"
 #include "baldr/graphconstants.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
 #include "proto/options.pb.h"
@@ -10,6 +10,7 @@
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
+
 #include <random>
 #endif
 

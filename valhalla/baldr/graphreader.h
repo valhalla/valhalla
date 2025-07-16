@@ -1,5 +1,14 @@
 #pragma once
 
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtile.h>
+#include <valhalla/baldr/tilegetter.h>
+#include <valhalla/baldr/tilehierarchy.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/pointll.h>
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <algorithm>
 #include <cstdint>
 #include <memory>
@@ -7,20 +16,12 @@
 #include <string>
 #include <unordered_map>
 
-#include <boost/property_tree/ptree.hpp>
-
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphtile.h>
-#include <valhalla/baldr/tilegetter.h>
-#include <valhalla/baldr/tilehierarchy.h>
-
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/sequence.h>
-
-#include <valhalla/proto/incidents.pb.h>
-
 namespace valhalla {
+class IncidentsTile;
+namespace midgard {
+struct tar;
+}
+
 namespace baldr {
 
 struct tile_gone_error_t : public std::runtime_error {
@@ -907,12 +908,7 @@ public:
    * Returns the location of the tile extract
    * @return  Returns the tile extract file path.
    */
-  const std::string& tile_extract() const {
-    static std::string empty_str;
-    if (tile_extract_->tiles.empty())
-      return empty_str;
-    return tile_extract_->archive->tar_file;
-  }
+  const std::string& tile_extract() const;
 
   /**
    * Returns the tilesets location whether thats a tile_dir or a tile_extract. Purely url
@@ -1016,10 +1012,5 @@ public:
 protected:
   GraphReader& reader_;
 };
-
-// Given the Location relation, return the full metadata
-const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
-                    const valhalla::IncidentsTile::Location& incident_location);
 } // namespace baldr
 } // namespace valhalla

@@ -1,14 +1,5 @@
-#include <future>
-#include <memory>
-#include <thread>
-#include <utility>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
-
+#include "mjolnir/graphbuilder.h"
 #include "baldr/conditional_speed_limit.h"
-#include "filesystem.h"
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -25,13 +16,21 @@
 #include "mjolnir/admin.h"
 #include "mjolnir/edgeinfobuilder.h"
 #include "mjolnir/ferry_connections.h"
-#include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/sqlite3.h"
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
+
+#include <filesystem>
+#include <future>
+#include <memory>
+#include <thread>
+#include <utility>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -66,9 +65,9 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   // tons of nodes that no edges reference, but we need them because they are the means by which
   // we know what edges connect to a given node from the nodes perspective
 
-  auto start_node_edge_file = filesystem::path(edges_file);
+  auto start_node_edge_file = std::filesystem::path(edges_file);
   start_node_edge_file.replace_filename(start_node_edge_file.filename().string() + ".starts.tmp");
-  auto end_node_edge_file = filesystem::path(edges_file);
+  auto end_node_edge_file = std::filesystem::path(edges_file);
   end_node_edge_file.replace_filename(end_node_edge_file.filename().string() + ".ends.tmp");
   using edge_ends_t = sequence<std::pair<uint32_t, uint32_t>>;
   std::unique_ptr<edge_ends_t> starts(new edge_ends_t(start_node_edge_file.string(), true));
@@ -145,8 +144,8 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   // clean up tmp files
   starts.reset();
   ends.reset();
-  filesystem::remove(start_node_edge_file);
-  filesystem::remove(end_node_edge_file);
+  std::filesystem::remove(start_node_edge_file);
+  std::filesystem::remove(end_node_edge_file);
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
@@ -323,6 +322,7 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
   // Get the way Ids of the edges at the endnode
   std::vector<uint64_t> wayids;
   auto bundle = collect_node_edges(node_itr, nodes, edges);
+  wayids.reserve(bundle.node_edges.size());
   for (const auto& edge : bundle.node_edges) {
     wayids.push_back((*ways[edge.first.wayindex_]).osmwayid_);
   }
@@ -919,9 +919,10 @@ void BuildTileSet(const std::string& ways_file,
                                  truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
                                  n, has_signal, has_stop, has_yield,
                                  ((has_stop || has_yield) ? node.minor() : false), restrictions,
-                                 bike_network, edge.attributes.reclass_ferry);
-          graphtile.directededges().emplace_back(de);
-          DirectedEdge& directededge = graphtile.directededges().back();
+                                 bike_network, edge.attributes.reclass_ferry,
+                                 static_cast<RoadClass>(edge.attributes.importance_hierarchy));
+
+          DirectedEdge& directededge = graphtile.directededges().emplace_back(de);
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin
           // file. ferries don't have overrides in country access logic, so use this bit to indicate
           // if the speed has been set via the duration and length
@@ -1610,7 +1611,7 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
 
   auto get_pronunciations = [](const std::vector<std::string>& pronunciation_tokens,
                                const std::vector<baldr::Language>& pronunciation_langs,
-                               const std::map<size_t, size_t> indexMap, const size_t key,
+                               const std::map<size_t, size_t>& indexMap, const size_t key,
                                const baldr::PronunciationAlphabet verbal_type) {
     linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone),
                                     0,

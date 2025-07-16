@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -103,7 +104,7 @@ TEST(TruckSpeed, MaxTruckSpeed) {
                         {"/date_time/value", "current"}});
 
   test::customize_live_traffic_data(map.config, [&](baldr::GraphReader& reader,
-                                                    baldr::TrafficTile& tile, u_int32_t index,
+                                                    baldr::TrafficTile& tile, uint32_t index,
                                                     valhalla::baldr::TrafficSpeed* traffic_speed) {
     baldr::GraphId tile_id(tile.header->tile_id);
     auto AB = gurka::findEdge(reader, map.nodes, "AB", "B", tile_id);
@@ -124,7 +125,7 @@ TEST(TruckSpeed, MaxTruckSpeed) {
                         {"/costing_options/truck/speed_types/0", "current"}});
 
   test::customize_live_traffic_data(map.config, [&](baldr::GraphReader& reader,
-                                                    baldr::TrafficTile& tile, u_int32_t index,
+                                                    baldr::TrafficTile& tile, uint32_t index,
                                                     valhalla::baldr::TrafficSpeed* traffic_speed) {
     baldr::GraphId tile_id(tile.header->tile_id);
     auto AB = gurka::findEdge(reader, map.nodes, "AB", "B", tile_id);

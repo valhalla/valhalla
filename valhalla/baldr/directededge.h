@@ -1,11 +1,12 @@
 #ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/turn.h>
+
+#include <cstdint>
 
 namespace valhalla {
 namespace baldr {
@@ -1070,6 +1071,15 @@ public:
   uint32_t shortcut() const {
     return shortcut_;
   }
+
+  /**
+   * We hijack the shortcut mask to move   ferry edges to lower
+   * hierarchies. Will be set during the graph build and re-set during the
+   * hierarchy builder.
+   * @param rc    the road class which should determine the edge's hierarchy
+   * @param reset whether is_shortcut_ should be set false
+   */
+  void set_hierarchy_roadclass(const baldr::RoadClass rc, const bool reset = false);
 
   /**
    * Set the mask for whether this edge represents a shortcut between 2 nodes.

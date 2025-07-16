@@ -1,14 +1,14 @@
 #ifndef VALHALLA_MJOLNIR_IDTABLE_H
 #define VALHALLA_MJOLNIR_IDTABLE_H
 
+#include "midgard/logging.h"
+
+#include <ankerl/unordered_dense.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
-
-#include <robin_hood.h>
-
-#include <midgard/logging.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -103,7 +103,7 @@ public:
   }
 
 private:
-  robin_hood::unordered_map<uint64_t, uint64_t> bitmarkers_;
+  ankerl::unordered_dense::map<uint64_t, uint64_t> bitmarkers_;
 };
 
 } // namespace mjolnir

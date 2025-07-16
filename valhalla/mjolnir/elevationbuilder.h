@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_ELEVATIONBUILDER_H
 #define VALHALLA_MJOLNIR_ELEVATIONBUILDER_H
 
-#include <deque>
+#include "baldr/graphid.h"
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/graphid.h"
+#include <deque>
 
 namespace valhalla {
 namespace mjolnir {

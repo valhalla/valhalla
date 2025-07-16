@@ -1,17 +1,7 @@
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <cxxopts.hpp>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
+#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
@@ -21,6 +11,17 @@
 #include "thor/optimizer.h"
 #include "thor/timedistancematrix.h"
 #include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -85,7 +86,7 @@ void LogResults(const bool optimize,
 
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::string json_str;
   uint32_t iterations;
@@ -97,7 +98,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a command line test tool for time+distance matrix routing.\n"
       "Use the -j option for specifying source to target locations.");
 
@@ -120,7 +121,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("json")) {
@@ -171,12 +172,13 @@ int main(int argc, char* argv[]) {
   std::unordered_map<std::string, float> max_matrix_distance;
   for (const auto& kv : config.get_child("service_limits")) {
     // Skip over any service limits that are not for a costing method
-    if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
-        kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
-        kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
-        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "status" || kv.first == "max_timedep_distance_matrix" ||
-        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions") {
+    if (kv.first == "allow_hard_exclusions" || kv.first == "centroid" ||
+        kv.first == "hierarchy_limits" || kv.first == "isochrone" || kv.first == "max_alternates" ||
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "max_exclude_locations" ||
+        kv.first == "max_exclude_polygons_length" || kv.first == "max_radius" ||
+        kv.first == "max_reachability" || kv.first == "max_timedep_distance" ||
+        kv.first == "max_timedep_distance_matrix" || kv.first == "skadi" || kv.first == "status" ||
+        kv.first == "trace") {
       continue;
     }
     max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +

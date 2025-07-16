@@ -249,7 +249,7 @@
     },
     "source_to_target_algorithm": "select_optimal",
     "costmatrix": {
-      "check_reverse_connections": false,
+      "check_reverse_connection": false,
       "allow_second_pass": false,
       "max_reserved_locations": 25,
       "hierarchy_limits": {

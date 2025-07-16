@@ -1,12 +1,10 @@
-
 #include "argparse_utils.h"
-#include "filesystem.h"
 #include "mjolnir/add_predicted_speeds.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
-#include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <string>
 
@@ -16,16 +14,16 @@ namespace vj = valhalla::mjolnir;
 namespace bpt = boost::property_tree;
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
-  filesystem::path traffic_tile_dir;
+  std::filesystem::path traffic_tile_dir;
   bool summary = false;
   boost::property_tree::ptree config;
   try {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "adds predicted traffic to valhalla tiles.\n");
     options.add_options()
       ("h,help", "Print this help message.")
@@ -39,13 +37,13 @@ int main(int argc, char** argv) {
     options.parse_positional({"traffic-tile-dir"});
     options.positional_help("Traffic tile dir");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
     if (!result.count("traffic-tile-dir")) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
       return EXIT_SUCCESS;
     }
-    traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
+    traffic_tile_dir = std::filesystem::path(result["traffic-tile-dir"].as<std::string>());
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;

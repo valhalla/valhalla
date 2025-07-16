@@ -2043,19 +2043,28 @@ function nodes_proc (kv, nokeys)
     hov = hov_tag or 0
   end
 
-  --check for gates, bollards, and sump_busters
+  --check for gates, bollards, walls and sump_busters
   local gate = kv["barrier"] == "gate" or kv["barrier"] == "yes" or
-    kv["barrier"] == "lift_gate" or kv["barrier"] == "swing_gate"
+    kv["barrier"] == "lift_gate" or kv["barrier"] == "swing_gate" or
+    kv["barrier"] == "sliding_beam"
   local bollard = false
   local sump_buster = false
+  local wall = false
 
   if gate == false then
     --if there was a bollard cars can't get through it
     bollard = kv["barrier"] == "bollard" or kv["barrier"] == "block" or
-      kv["barrier"] == "jersey_barrier" or kv["bollard"] == "removable" or false
+      kv["bollard"] == "removable" or kv["barrier"] == "kissing_gate" or 
+      kv["barrier"] == "motorcycle_barrier" or kv["barrier"] == "cycle_barrier" or 
+      kv["barrier"] == "chain" or kv["barrier"] == "bar" or false
 
     --if sump_buster then no access for auto, hov, and taxi unless a tag exists.
     sump_buster = kv["barrier"] == "sump_buster" or false
+
+    --if there is a kind of wall, there is no access for all profiles unless a tag exists
+    wall = kv["barrier"] == "fence" or kv["barrier"] == "barrier_board" or 
+        kv["barrier"] == "wall" or kv["barrier"] == "jersey_barrier" or 
+        kv["barrier"] == "debris" or false
 
     --save the following as gates.
     if (bollard and (kv["bollard"] == "rising")) then
@@ -2089,11 +2098,24 @@ function nodes_proc (kv, nokeys)
       motorcycle = motorcycle_tag or 1024
       emergency = emergency_tag or 16
       hov = hov_tag or 0
+    --wall = true shuts off access unless a tag exists.
+    elseif wall == true then
+      auto = auto_tag or 0
+      truck = truck_tag or 0
+      bus = bus_tag or 0
+      taxi = taxi_tag or 0
+      foot = foot_tag or 0
+      wheelchair = wheelchair_tag or 0
+      bike = bike_tag or 0
+      moped = moped_tag or 0
+      motorcycle = motorcycle_tag or 0
+      emergency = emergency_tag or 0
+      hov = hov_tag or 0
     end
   end
 
   --if nothing blocks access at this node assume access is allowed.
-  if gate == false and bollard == false and sump_buster == false and access == "true" then
+  if gate == false and bollard == false and sump_buster == false and wall == false and access == "true" then
     if kv["highway"] == "crossing" or kv["railway"] == "crossing" or
        kv["footway"] == "crossing" or kv["cycleway"] == "crossing" or
        kv["foot"] == "crossing" or kv["bicycle"] == "crossing" or

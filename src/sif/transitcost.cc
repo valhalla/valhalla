@@ -1,13 +1,12 @@
 #include "sif/transitcost.h"
-#include "baldr/accessrestriction.h"
 #include "baldr/graphconstants.h"
-#include "midgard/constants.h"
-#include "midgard/logging.h"
+#include "baldr/rapidjson_utils.h"
 #include "proto_conversions.h"
 #include "worker.h"
 
 #ifdef INLINE_TEST
 #include "test.h"
+
 #include <random>
 #endif
 

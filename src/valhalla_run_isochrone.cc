@@ -1,13 +1,3 @@
-#include <cmath>
-#include <cstdint>
-#include <cxxopts.hpp>
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
@@ -20,6 +10,17 @@
 #include "tyr/serializers.h"
 #include "worker.h"
 
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cmath>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <vector>
+
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -29,7 +30,7 @@ using namespace valhalla::thor;
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::string json_str;
   std::string filename = "";
@@ -39,7 +40,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a simple command line test tool for generating an isochrone.\n"
       "Use the -j option for specifying the location and isocrhone options.\n\n");
 
@@ -55,7 +56,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("json")) {
@@ -146,7 +147,7 @@ int main(int argc, char* argv[]) {
   auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find locations
-  std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+  const std::shared_ptr<DynamicCost>& cost = mode_costing[static_cast<uint32_t>(mode)];
   const auto projections = Search(locations, reader, cost);
   std::vector<PathLocation> path_location;
   for (const auto& loc : locations) {

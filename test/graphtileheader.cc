@@ -1,6 +1,5 @@
 
 #include "baldr/graphtileheader.h"
-
 #include "test.h"
 
 using namespace std;

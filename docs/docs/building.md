@@ -37,26 +37,82 @@ Instead of installing the dependencies system-wide, you can also opt to use [`vc
 
 The following commands should work on all platforms:
 
+### Clone sources
+
 ```bash
 git clone --recurse-submodules https://github.com/valhalla/valhalla
 cd valhalla
-
+# Clone vcpkg for dependencies:
 git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout <some-tag>
-./vcpkg/bootstrap-vcpkg.sh
-# windows: cmd.exe /c bootstrap-vcpkg.bat
-
-# only build Release versions of dependencies, not Debug
-echo "set(VCPKG_BUILD_TYPE Release)" >> vcpkg/triplets/x64-linux.cmake
-# windows: echo.set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
-# osx: echo "set(VCPKG_BUILD_TYPE release)" >> vcpkg/triplets/arm64-osx.cmake
-
-# vcpkg will install everything during cmake configuration
-# if you want to ENABLE_SERVICES=ON, install https://github.com/kevinkreiser/prime_server#build-and-install (no Windows)
-cmake -B build -DCMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake -DENABLE_SERVICE=OFF
-cmake --build build -- -j$(nproc)
-# windows: cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
-# osx: cmake --build build -- -j$(sysctl -n hw.physicalcpu)
 ```
+### Bootstrap `vcpkg`
+
+=== "Linux"
+    ```bash
+    ./vcpkg/bootstrap-vcpkg.sh
+    ```
+=== "macOS"
+    ```bash
+    ./vcpkg/bootstrap-vcpkg.sh
+    ```
+=== "Windows"
+    ```bash
+    cmd.exe /c .\vcpkg\bootstrap-vcpkg.bat
+    ```
+
+#### Set build type (Optional)
+
+To build only release build without any debug symbols:
+
+
+=== "Linux"
+    ```bash
+    echo "set(VCPKG_BUILD_TYPE Release)" >> vcpkg/triplets/x64-linux.cmake
+    ```
+=== "macOS"
+    ```bash
+    echo "set(VCPKG_BUILD_TYPE release)" >> vcpkg/triplets/arm64-osx.cmake
+    ```
+=== "Windows"
+    ```bash
+    echo set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
+    ```
+
+### Configure CMake
+
+`vcpkg` will install everything during cmake configuration.
+
+If you want to `ENABLE_SERVICES=ON`, install [prime_server](https://github.com/kevinkreiser/prime_server#build-and-install) (Not available for Windows).
+
+=== "Linux"
+    ```bash
+    cmake -B build -DCMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake -DENABLE_SERVICES=OFF
+    ```
+=== "macOS"
+    ```bash
+    cmake -B build -DCMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake -DENABLE_SERVICES=OFF
+    ```
+=== "Windows"
+    ```bash
+    cmake -B build -DCMAKE_TOOLCHAIN_FILE=%CD%\vcpkg\scripts\buildsystems\vcpkg.cmake -DENABLE_SERVICES=OFF
+    ```
+
+### Build
+
+=== "Linux"
+    ```bash
+    cmake --build build -- -j$(nproc)
+    ```
+=== "macOS"
+    ```bash
+    cmake --build build -- -j$(sysctl -n hw.physicalcpu)
+    ```
+=== "Windows"
+    ```bash
+    # /m:4 = Use up to 4 processes
+    cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+    ```
+
 
 ## Platform-specific builds
 
@@ -81,7 +137,7 @@ sudo make -C build install
 
 Both arm64 and x64 should build cleanly with the below commands.
 
-To install Valhalla on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
+To install Valhalla on macOS, you need to install its dependencies with [Homebrew](https://brew.sh):
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
@@ -163,7 +219,7 @@ The following script should be enough to make some routing data and start a serv
 ```bash
 # download some data and make tiles out of it
 # NOTE: you can feed multiple extracts into pbfgraphbuilder
-wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
+wget https://download.geofabrik.de/europe/switzerland-latest.osm.pbf https://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
 # get the config and setup
 mkdir -p valhalla_tiles
 valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json

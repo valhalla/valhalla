@@ -1,8 +1,3 @@
-#include <cmath>
-#include <filesystem>
-#include <sys/mman.h>
-#include <sys/stat.h>
-
 #include "gurka.h"
 #include "loki/worker.h"
 #include "microtar.h"
@@ -11,6 +6,15 @@
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/traffictile.h>
+
+#ifndef _WIN32
+#include <sys/mman.h>
+#endif
+
+#include <sys/stat.h>
+
+#include <cmath>
+#include <filesystem>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

@@ -2,7 +2,6 @@
 #include "thor/edgestatus.h"
 #include "baldr/graphtile.h"
 #include "config.h"
-
 #include "test.h"
 
 using namespace std;

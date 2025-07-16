@@ -1,22 +1,21 @@
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "scoped_timer.h"
-
-#include <boost/property_tree/ptree.hpp>
-
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "scoped_timer.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -43,6 +42,14 @@ struct OldToNewNodes {
       : node_id(node), highway_node(highway), arterial_node(arterial), local_node(local), density(d) {
   }
 };
+
+// Gets the hierarchy level respecting ramp & ferry-related edges which can be marked
+// with a different road class: links will have the lowest connecting non-link road class,
+// ferry-connecting edges will have kPrimary
+uint8_t get_hierarchy_level(const DirectedEdge* de) {
+  return de->is_shortcut() ? TileHierarchy::get_level(static_cast<RoadClass>(de->shortcut()))
+                           : TileHierarchy::get_level(de->classification());
+}
 
 // Add a downward transition edge if the node is valid.
 bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
@@ -132,7 +139,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       // Despite the road class, Bike Share Stations' connections are always at local level
       return (2 == current_level);
     } else {
-      return (TileHierarchy::get_level(directededge->classification()) == current_level);
+      return (get_hierarchy_level(directededge) == current_level);
     }
   };
 
@@ -302,6 +309,9 @@ void FormTilesInNewLevel(GraphReader& reader,
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 
+      // reset shortcuts after hijacking them for reclassification
+      newedge.set_hierarchy_roadclass(RoadClass::kMotorway, true);
+
       // Add directed edge
       tilebuilder->directededges().emplace_back(std::move(newedge));
     }
@@ -425,7 +435,7 @@ void CreateNodeAssociations(GraphReader& reader,
         } else if (directededge->use() != Use::kTransitConnection &&
                    directededge->use() != Use::kEgressConnection &&
                    directededge->use() != Use::kPlatformConnection) {
-          levels[TileHierarchy::get_level(directededge->classification())] = true;
+          levels[get_hierarchy_level(directededge)] = true;
         }
       }
 
@@ -544,10 +554,10 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_
     if (!itr->second) {
       // Remove the file
       GraphId empty_tile = itr->first;
-      std::string file_location = tile_dir + filesystem::path::preferred_separator +
-                                  GraphTile::FileSuffix(empty_tile.Tile_Base());
-      remove(file_location.c_str());
-      LOG_DEBUG("Remove file: " + file_location);
+      std::filesystem::path file_location{tile_dir};
+      file_location.append(GraphTile::FileSuffix(empty_tile.Tile_Base()));
+      std::filesystem::remove(file_location);
+      LOG_DEBUG("Remove file: " + file_location.string());
     }
   }
 }
@@ -589,7 +599,8 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   // Update the end nodes to all transit connections in the transit hierarchy
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (transit_dir && filesystem::exists(*transit_dir) && filesystem::is_directory(*transit_dir)) {
+  if (transit_dir && std::filesystem::exists(*transit_dir) &&
+      std::filesystem::is_directory(*transit_dir)) {
     UpdateTransitConnections(reader, old_to_new_file);
   }
 

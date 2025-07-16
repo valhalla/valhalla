@@ -1,8 +1,10 @@
-#include <filesystem>
-
 #include "gurka.h"
+#include "mjolnir/util.h"
 #include "test/test.h"
+
 #include <gtest/gtest.h>
+
+#include <filesystem>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

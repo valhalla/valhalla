@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <sstream>
+#include <thread>
 #include <utility>
 
 #ifdef ENABLE_GDAL

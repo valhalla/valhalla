@@ -1,9 +1,9 @@
-#include <iostream>
-
 #include "baldr/rapidjson_utils.h"
+#include "thor/worker.h"
+
 #include <boost/property_tree/ptree.hpp>
 
-#include "thor/worker.h"
+#include <iostream>
 
 int main(int argc, char** argv) {
 

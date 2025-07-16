@@ -8,7 +8,7 @@ commands:
     steps:
       - run: |
           apt-get update --assume-yes
-          env DEBIAN_FRONTEND=noninteractive apt install --yes --quiet sudo python3-pip python3-requests git curl file
+          env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet sudo python3-pip python3-requests git curl file
   check_ci_lint:
     steps:
       - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
@@ -46,7 +46,12 @@ jobs:
           key: ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.cache/ccache
-      - run: scripts/clang-tidy-only-diff.sh 4
+      # clang-tidy is quite slow and might take much longer than default 10m limit
+      - run:
+          name: Run clang-tidy checks
+          no_output_timeout: 30m
+          # Limit concurrency to 6 to avoid OOMKills on CircleCI runners.
+          command: scripts/clang-tidy-only-diff.sh 6
       - run: sudo make -C build install
       - run: make -C build package
       - run: |
@@ -56,7 +61,7 @@ jobs:
 
   build-release:
     docker:
-      - image: ubuntu:24.04
+      - image: ubuntu:22.04
     resource_class: xlarge
     steps:
       - checkout

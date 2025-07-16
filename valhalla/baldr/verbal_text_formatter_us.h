@@ -1,12 +1,12 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_US_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_US_H_
 
+#include <valhalla/baldr/verbal_text_formatter.h>
+
 #include <array>
 #include <regex>
 #include <string>
 #include <utility>
-
-#include <valhalla/baldr/verbal_text_formatter.h>
 
 namespace valhalla {
 namespace baldr {

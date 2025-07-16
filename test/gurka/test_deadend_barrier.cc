@@ -178,7 +178,7 @@ TEST_P(BollardBarrier, BikeAllowedNoOtherInformation) {
 }
 
 const std::vector<std::string> gates = {"gate", "yes", "lift_gate", "swing_gate"};
-const std::vector<std::string> bollards = {"bollard", "block", "jersey_barrier"};
+const std::vector<std::string> bollards = {"bollard", "block", "cycle_barrier"};
 
 INSTANTIATE_TEST_SUITE_P(GateBasicAccess, DeadendBarrier, testing::ValuesIn(gates));
 INSTANTIATE_TEST_SUITE_P(BollardBasicAccess, DeadendBarrier, testing::ValuesIn(bollards));

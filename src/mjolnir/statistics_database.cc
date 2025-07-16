@@ -1,11 +1,11 @@
-#include "statistics.h"
-#include <cstdint>
-
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/sqlite3.h"
+#include "statistics.h"
 
 #include <sqlite3.h>
+
+#include <cstdint>
+#include <filesystem>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -16,8 +16,8 @@ namespace mjolnir {
 
 void statistics::build_db() {
   std::string database = "statistics.sqlite";
-  if (filesystem::exists(database)) {
-    filesystem::remove(database);
+  if (std::filesystem::exists(database)) {
+    std::filesystem::remove(database);
   }
 
   auto db = Sqlite3::open(database, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);

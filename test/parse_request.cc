@@ -1,15 +1,15 @@
-#include <cctype>
-#include <iostream>
-#include <string>
-#include <vector>
-
+#include "baldr/rapidjson_utils.h"
 #include "proto/options.pb.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
+#include "test.h"
 #include "worker.h"
 
-#include "test.h"
+#include <cctype>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 
