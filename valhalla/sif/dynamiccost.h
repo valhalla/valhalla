@@ -321,18 +321,25 @@ public:
    * or highways are excluded in the request.
    * @param  edge           Pointer to a directed edge.
    * @param  pred           Predecessor edge information.
+   * @param  forward        Check edge on the forward or reverse path (from destination towards
+   * origin).
    * @return Returns true if edge should be excluded.
    */
-  inline bool CheckExclusions(const baldr::DirectedEdge* edge, const EdgeLabel& pred) const {
+  inline bool
+  CheckExclusions(const baldr::DirectedEdge* edge, const EdgeLabel& pred, const bool forward) const {
+    auto isDriveOnto = [forward](bool condition, bool pred_condition) {
+      return forward == condition && pred_condition != condition;
+    };
     return has_excludes_ &&
-           ((exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
-            (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-            (exclude_tolls_ && !pred.toll() && edge->toll()) ||
-            (exclude_highways_ && pred.classification() != baldr::RoadClass::kMotorway &&
-             edge->classification() == baldr::RoadClass::kMotorway) ||
+           ((exclude_bridges_ && isDriveOnto(edge->bridge(), pred.bridge())) ||
+            (exclude_tunnels_ && isDriveOnto(edge->tunnel(), pred.tunnel())) ||
+            (exclude_tolls_ && isDriveOnto(edge->toll(), pred.toll())) ||
+            (exclude_highways_ &&
+             isDriveOnto(edge->classification() == baldr::RoadClass::kMotorway,
+                         pred.classification() == baldr::RoadClass::kMotorway)) ||
             (exclude_ferries_ &&
-             !(pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry) &&
-             (edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry)) ||
+             isDriveOnto(edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry,
+                         pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry)) ||
             (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_)));
   }
 
