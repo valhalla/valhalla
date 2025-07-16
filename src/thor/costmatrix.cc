@@ -958,7 +958,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
           continue;
         }
 
-        // remember: transition_cost is abused in SetSources/Targets: cost is secs, secs is length
+        // initial labels' transition cost is the full edge cost
         Cost partial_cost = rev_pred.cost() + fwd_label.cost() -
                             ((fwd_label.transition_cost() + rev_pred.transition_cost()) * 0.5);
 
