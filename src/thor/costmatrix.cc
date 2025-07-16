@@ -821,8 +821,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
       // if source percent along edge is larger than target percent along,
       // can't connect on this edge
-      auto& source_edge = find_correlated_edge(options.sources(source), fwd_pred.edgeid());
-      auto& target_edge = find_correlated_edge(options.targets(target), fwd_pred.edgeid());
+      auto source_edge = find_correlated_edge(options.sources(source), fwd_pred.edgeid());
+      auto target_edge = find_correlated_edge(options.targets(target), fwd_pred.edgeid());
       if (source_edge.percent_along() > target_edge.percent_along()) {
         continue;
       }
@@ -1302,9 +1302,9 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
       path_edges.emplace_back(std::move(opp_edge_id));
   }
 
-  const auto& source_edge =
+  const auto source_edge =
       find_correlated_edge(request.options().sources(source_idx), path_edges.front());
-  const auto& target_edge =
+  const auto target_edge =
       find_correlated_edge(request.options().targets(target_idx), path_edges.back());
   float source_pct = static_cast<float>(source_edge.percent_along());
   float target_pct = static_cast<float>(target_edge.percent_along());
