@@ -242,7 +242,7 @@ protected:
       // this happens when the tile is updated during the loop. in that case its possible that
       // the current iteration will load the tile and that it will again be loaded in the next
       auto current_scan = time(nullptr);
-      size_t update_count = 0;
+      [[maybe_unused]] size_t update_count = 0;
       seen.clear();
 
       // we are in memory map mode

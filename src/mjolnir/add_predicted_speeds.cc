@@ -225,8 +225,8 @@ void UpdateTiles(const std::string& tile_dir,
   thread_name << std::this_thread::get_id();
 
   // Iterate through the tiles and parse them
-  size_t total = tile_end - tile_start;
-  double count = 0;
+  [[maybe_unused]] size_t total = tile_end - tile_start;
+  [[maybe_unused]] double count = 0;
   TrafficStats stat{};
   for (; tile_start != tile_end; ++tile_start) {
     LOG_INFO(thread_name.str() + " parsing traffic data for " + std::to_string(tile_start->first));
@@ -270,8 +270,8 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
   mutable_config.get_child("mjolnir").erase("tile_extract");
 
   GraphReader reader(mutable_config.get_child("mjolnir"));
-  int shortcuts_with_speed = 0;
-  int non_dr_with_speed = 0;
+  [[maybe_unused]] int shortcuts_with_speed = 0;
+  [[maybe_unused]] int non_dr_with_speed = 0;
   std::vector<uint32_t> dr_class_edges_links(8);
   std::vector<uint32_t> dr_road_class_edges(8);
   std::vector<uint32_t> pred_road_class_edges(8);
@@ -333,7 +333,7 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
   LOG_INFO("non drivable with speed = " + std::to_string(non_dr_with_speed));
   LOG_INFO("Shortcuts with speed = " + std::to_string(shortcuts_with_speed));
 
-  uint32_t totaldrivable = 0, totalpt = 0, totalff = 0, totaldrivablelink = 0;
+  [[maybe_unused]] uint32_t totaldrivable = 0, totalpt = 0, totalff = 0, totaldrivablelink = 0;
   for (uint32_t i = 0; i < 8; i++) {
     float pct1 = 100.0f * (float)pred_road_class_edges[i] / dr_road_class_edges[i];
     float pct2 = 100.0f * (float)ff_road_class_edges[i] / dr_road_class_edges[i];
