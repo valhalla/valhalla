@@ -504,7 +504,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   geos_helper_t::get();
 
   // for each admin area (relation)
-  uint32_t count = 0;
+  [[maybe_unused]] uint32_t count = 0;
   for (const auto& admin : admin_data.admins) {
     std::pair<std::string, uint64_t> admin_info(admin_data.name_offset_map.name(admin.name_index),
                                                 admin.id);

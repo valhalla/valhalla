@@ -123,7 +123,7 @@ private:
 
   // Sets "culdesac" labels to loop roads and saves ways.
   void fix(sequence<OSMWay>& osm_way_seq) {
-    size_t number_of_culdesac = 0;
+    [[maybe_unused]] size_t number_of_culdesac = 0;
     for (const auto& loop_way_id_to_meta : loops_meta_) {
       const auto& meta = loop_way_id_to_meta.second;
       if (meta.is_culdesac()) {
