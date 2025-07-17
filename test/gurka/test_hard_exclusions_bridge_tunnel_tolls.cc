@@ -15,7 +15,7 @@ const std::vector<std::string> kExclusionParameters = {"exclude_bridges", "exclu
 constexpr double grid_size_meters = 100.;
 
 const std::string ascii_map = R"(
-  E----F----G----H----I----A----J----K----L
+  E====F====G----H====I----A----J====K----L
                                 |    |
                                 |    |
                                 |    |
@@ -29,7 +29,7 @@ const gurka::ways ways = {
     {"GH", {{"highway", "residential"}}},
     {"HI", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
     {"IA", {{"highway", "residential"}}},
-    {"IJ", {{"highway", "residential"}}},
+    {"AJ", {{"highway", "residential"}}},
     {"JK", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
     {"KL", {{"highway", "residential"}}},
     {"JM", {{"highway", "residential"}}},
@@ -73,8 +73,8 @@ gurka::map ExclusionTest::map = {};
 gurka::map ExclusionTest::mapNotAllowed = {};
 
 TEST_P(ExclusionTest, InTheMiddle) {
-  check_result("0", {"I", "L"}, {"IJ", "JK", "KL"}, map, GetParam());
-  check_result("1", {"I", "L"}, {"IJ", "JM", "MN", "NK", "KL"}, map, GetParam());
+  check_result("0", {"I", "L"}, {"IA", "AJ", "JK", "KL"}, map, GetParam());
+  check_result("1", {"I", "L"}, {"IA", "AJ", "JM", "MN", "NK", "KL"}, map, GetParam());
 }
 
 TEST_P(ExclusionTest, InTheBeginning) {
@@ -88,9 +88,9 @@ TEST_P(ExclusionTest, InTheEnd) {
 }
 
 TEST_P(ExclusionTest, InTheMiddleNotAllowed) {
-  check_result("0", {"I", "L"}, {"IJ", "JK", "KL"}, mapNotAllowed, GetParam());
+  check_result("0", {"I", "L"}, {"IA", "AJ", "JK", "KL"}, mapNotAllowed, GetParam());
   try {
-    check_result("1", {"I", "L"}, {"IJ", "JM", "MN", "NK", "KL"}, mapNotAllowed, GetParam());
+    check_result("1", {"I", "L"}, {"IA", "AJ", "JM", "MN", "NK", "KL"}, mapNotAllowed, GetParam());
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 145); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
