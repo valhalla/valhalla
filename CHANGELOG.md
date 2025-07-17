@@ -47,6 +47,7 @@
    * FIXED: unknowns should be 500 and not 400 [#5359](https://github.com/valhalla/valhalla/pull/5359)
    * FIXED: Cover **all** nodes in the current tile by density index [#5338](https://github.com/valhalla/valhalla/pull/5338)
    * FIXED: Narrowing bug leading to nodes being misplaced in wrong tiles [#5364](https://github.com/valhalla/valhalla/pull/5364)
+   * FIXED: wrong integer types in expansion properties [#5380](https://github.com/valhalla/valhalla/pull/5380)
    * FIXED: Trivial CostMatrix and multiple candidates [#5376](https://github.com/valhalla/valhalla/pull/5376)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
