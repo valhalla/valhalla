@@ -157,22 +157,18 @@ TEST(Standalone, RetrieveEdgeTrafficSignal) {
     A--B--C--D
   )";
 
-  const gurka::ways ways = {
-    {"ABC", {{"highway", "primary"}}},
-    {"CD",  {{"highway", "primary"}}}
-  };
+  const gurka::ways ways = {{"ABC", {{"highway", "primary"}}}, {"CD", {{"highway", "primary"}}}};
 
   const gurka::nodes nodes = {
-    {"B", {{"highway", "traffic_signals"}, {"traffic_signals:direction", "forward"}}}
-  };
+      {"B", {{"highway", "traffic_signals"}, {"traffic_signals:direction", "forward"}}}};
 
   const double gridsize = 10;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/traffic_signal_edge_attributes");
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C", "D"}, "auto", {},
-                              {}, &trace_json, "via");
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C", "D"}, "auto",
+                              {}, {}, &trace_json, "via");
 
   rapidjson::Document result;
   result.Parse(trace_json.c_str());
