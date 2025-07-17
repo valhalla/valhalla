@@ -43,6 +43,10 @@
    * FIXED: Number of compile/linker issues on Windows for the test targets. [#5313](https://github.com/valhalla/valhalla/pull/5313)
    * FIXED: Fix reference to the GHA variable to resolve `version_modifier` on CI [#5333](https://github.com/valhalla/valhalla/pull/5333)
    * FIXED: Ability to run `valhalla_service` with `[CONCURRENCY]` arg [#5335](https://github.com/valhalla/valhalla/pull/5335)
+   * FIXED: version modifier in `/status` response [#5357](https://github.com/valhalla/valhalla/pull/5357)
+   * FIXED: unknowns should be 500 and not 400 [#5359](https://github.com/valhalla/valhalla/pull/5359)
+   * FIXED: Cover **all** nodes in the current tile by density index [#5338](https://github.com/valhalla/valhalla/pull/5338)
+   * FIXED: Narrowing bug leading to nodes being misplaced in wrong tiles [#5364](https://github.com/valhalla/valhalla/pull/5364)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
