@@ -177,7 +177,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       uint8_t& restriction_idx) const override;
+                       uint8_t& restriction_idx,
+                       uint8_t& destonly_access_restr_mask) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -204,7 +205,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              uint8_t& restriction_idx) const override;
+                              uint8_t& restriction_idx,
+                              uint8_t& destonly_access_restr_mask) const override;
 
   /**
    * Callback for Allowed doing mode  specific restriction checks
@@ -413,7 +415,8 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       uint8_t& restriction_idx) const {
+                       uint8_t& restriction_idx,
+                       uint8_t& destonly_access_restr_mask) const {
 
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
@@ -430,7 +433,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx);
+                                           tz_index, restriction_idx, destonly_access_restr_mask);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -442,7 +445,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              uint8_t& restriction_idx) const {
+                              uint8_t& restriction_idx,
+                              uint8_t& destonly_access_restr_mask) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -456,7 +460,8 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx);
+                                           current_time, tz_index, restriction_idx,
+                                           destonly_access_restr_mask);
 }
 
 bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
@@ -748,7 +753,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       uint8_t& restriction_idx) const override;
+                       uint8_t& restriction_idx,
+                       uint8_t& destonly_access_restr_mask) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -775,7 +781,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              uint8_t& restriction_idx) const override;
+                              uint8_t& restriction_idx,
+                              uint8_t& destonly_access_restr_mask) const override;
 };
 
 // Check if access is allowed on the specified edge.
@@ -786,7 +793,8 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const baldr::GraphId& edgeid,
                       const uint64_t current_time,
                       const uint32_t tz_index,
-                      uint8_t& restriction_idx) const {
+                      uint8_t& restriction_idx,
+                      uint8_t& destonly_access_restr_mask) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -800,7 +808,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx);
+                                           tz_index, restriction_idx, destonly_access_restr_mask);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -812,7 +820,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const baldr::GraphId& opp_edgeid,
                              const uint64_t current_time,
                              const uint32_t tz_index,
-                             uint8_t& restriction_idx) const {
+                             uint8_t& restriction_idx,
+                             uint8_t& destonly_access_restr_mask) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -826,7 +835,8 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx);
+                                           current_time, tz_index, restriction_idx,
+                                           destonly_access_restr_mask);
 }
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
@@ -881,7 +891,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       uint8_t& restriction_idx) const override;
+                       uint8_t& restriction_idx,
+                       uint8_t& destonly_access_restr_mask) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -907,7 +918,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              uint8_t& restriction_idx) const override;
+                              uint8_t& restriction_idx,
+                              uint8_t& destonly_access_restr_mask) const override;
 
   /**
    * Returns the cost to traverse the edge and an estimate of the actual time
@@ -965,7 +977,8 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       uint8_t& restriction_idx) const {
+                       uint8_t& restriction_idx,
+                       uint8_t& destonly_access_restr_mask) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
   // a not thru region and a heading selected an edge entering the
@@ -981,7 +994,7 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
   }
 
   return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx);
+                                           tz_index, restriction_idx, destonly_access_restr_mask);
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -993,7 +1006,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              uint8_t& restriction_idx) const {
+                              uint8_t& restriction_idx,
+                              uint8_t& destonly_access_restr_mask) const {
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -1006,7 +1020,8 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
   return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
-                                           current_time, tz_index, restriction_idx);
+                                           current_time, tz_index, restriction_idx,
+                                           destonly_access_restr_mask);
 }
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
