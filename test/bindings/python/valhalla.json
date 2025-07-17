@@ -111,7 +111,11 @@
           "1": 400,
           "2": 100
         },
-        "expand_within_distance": { "0": 1e8, "1": 20000, "2": 5000 }
+        "expand_within_distance": {
+          "0": 100000000.0,
+          "1": 20000,
+          "2": 5000
+        }
       }
     },
     "unidirectional_astar": {
@@ -120,7 +124,11 @@
           "1": 400,
           "2": 100
         },
-        "expand_within_distance": { "0": 1e8, "1": 100000, "2": 5000 }
+        "expand_within_distance": {
+          "0": 100000000.0,
+          "1": 100000,
+          "2": 5000
+        }
       }
     }
   },
@@ -317,14 +325,22 @@
           "1": 400,
           "2": 100
         },
-        "max_expand_within_distance": { "0": 1e8, "1": 100000, "2": 5000 }
+        "max_expand_within_distance": {
+          "0": 100000000.0,
+          "1": 100000,
+          "2": 5000
+        }
       },
       "bidirectional_astar": {
         "max_allowed_up_transitions": {
           "1": 400,
           "2": 100
         },
-        "max_expand_within_distance": { "0": 1e8, "1": 20000, "2": 5000 }
+        "max_expand_within_distance": {
+          "0": 100000000.0,
+          "1": 20000,
+          "2": 5000
+        }
       }
     },
     "allow_hard_exclusions": false

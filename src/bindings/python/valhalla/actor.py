@@ -8,6 +8,8 @@ try:
 except ModuleNotFoundError:
     from _valhalla import _Actor
 
+__all__ = ["Actor"]
+
 
 # TODO: wasteful for dict input/output; more reasonable would be to extend
 #   the Actor's action C++ interfaces with a JSON arg
@@ -74,27 +76,27 @@ class Actor(_Actor):
         super(Actor, self).__init__(self._config_path)
 
     @dict_or_str
-    def route(self, req: Union[str, dict]):
+    def route(self, req: Union[str, dict]) -> Union[str, dict]:
         return super().route(req)
 
     @dict_or_str
-    def locate(self, req: Union[str, dict]):
+    def locate(self, req: Union[str, dict]) -> Union[str, dict]:
         return super().locate(req)
 
     @dict_or_str
-    def isochrone(self, req: Union[str, dict]):
+    def isochrone(self, req: Union[str, dict]) -> Union[str, dict]:
         return super().isochrone(req)
 
     @dict_or_str
-    def matrix(self, req: Union[str, dict]):
+    def matrix(self, req: Union[str, dict]) -> Union[str, dict]:
         return super().matrix(req)
 
     @dict_or_str
-    def trace_route(self, req: Union[str, dict]):
+    def trace_route(self, req: Union[str, dict]) -> Union[str, dict]:
         return super().trace_route(req)
 
     @dict_or_str
-    def trace_attributes(self, req: Union[str, dict]):
+    def trace_attributes(self, req: Union[str, dict]) -> Union[str, dict]:
         return super().trace_attributes(req)
 
     @dict_or_str
@@ -102,17 +104,17 @@ class Actor(_Actor):
         return super().height(req)
 
     @dict_or_str
-    def transit_available(self, req: Union[str, dict]):
+    def transit_available(self, req: Union[str, dict]) -> Union[str, dict]:
         return super().transit_available(req)
 
     @dict_or_str
-    def expansion(self, req: Union[str, dict]):
+    def expansion(self, req: Union[str, dict]) -> Union[str, dict]:
         return super().expansion(req)
 
     @dict_or_str
-    def centroid(self, req: Union[str, dict]):
+    def centroid(self, req: Union[str, dict]) -> Union[str, dict]:
         return super().centroid(req)
 
     @dict_or_str
-    def status(self, req: Union[str, dict] = ""):
+    def status(self, req: Union[str, dict] = "") -> Union[str, dict]:
         return super().status(req)

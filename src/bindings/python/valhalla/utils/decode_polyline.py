@@ -1,5 +1,7 @@
 from typing import List, Tuple
 
+__all__ = ["decode_polyline"]
+
 
 def decode_polyline(
     polyline: str, precision: int = 6, order: str = "lnglat"

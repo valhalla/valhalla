@@ -3,6 +3,8 @@ from typing import Union, Dict
 
 from .valhalla_build_config import config as default_config, Optional, help_text
 
+__all__ = ["get_help", "get_config"]
+
 
 def _sanitize_config(dict_: dict = None) -> dict:
     """remove the "Optional" values from the config."""

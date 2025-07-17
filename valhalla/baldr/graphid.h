@@ -198,6 +198,13 @@ public:
   }
 
   /**
+   * Advances the id
+   */
+  GraphId operator+=(uint32_t offset) const {
+    return GraphId(tileid(), level(), id() + offset);
+  }
+
+  /**
    * Less than operator for sorting.
    * @param  rhs  Right hand side graph Id for comparison.
    * @return  Returns true if this GraphId is less than the right hand side.

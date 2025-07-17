@@ -11,7 +11,7 @@ from setuptools import setup
 from auditwheel.wheeltools import InWheel
 from wheel.bdist_wheel import bdist_wheel as BDistWheelCommand  # noqa: E402
 
-DEFAULT_VALHALLA_BUILD_DIR = "./build"
+DEFAULT_VALHALLA_BUILD_DIR = "./build_manylinux"
 
 THIS_DIR = Path(__file__).parent.resolve()
 BINARIES = [
@@ -33,6 +33,14 @@ valhalla_build_dir: Optional[Path] = Path(os.environ.get("VALHALLA_BUILD_BIN_DIR
 if not valhalla_build_dir.is_dir():
     print(f"[WARNING] Couldn't find $VALHALLA_BUILD_BIN_DIR={valhalla_build_dir} (default './build_manylinux'), skipping Valhalla executables...")
     valhalla_build_dir = None
+
+# if we push master, we upload to pyvalhalla-weekly
+# this is set in GHA when publishing
+pkg = os.environ.get('VALHALLA_RELEASE_PKG')
+if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-weekly"]):
+    print(f"[WARNING] VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}', defaulting to 'pyvalhalla-weekly'")
+    pkg = "pyvalhalla-weekly"
+print(f"Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}")
 
 
 class ValhallaBDistWheelCommand(BDistWheelCommand):
@@ -85,7 +93,10 @@ include_dirs = [
 library_dirs = ["/usr/local/lib", "/usr/local/lib64"]
 libraries = list()
 extra_link_args = list()
-extra_compile_args = list()
+extra_compile_args = [f"-DVALHALLA_PYTHON_PACKAGE={pkg}"]
+if version_modifier := os.environ.get("VALHALLA_VERSION_MODIFIER"):
+    print(f"[INFO] Building with version modifier: {version_modifier}")
+    extra_compile_args.append(f"-DVALHALLA_VERSION_MODIFIER={version_modifier}")
 
 # determine the directories for compiling
 if IS_OSX:
@@ -138,30 +149,22 @@ else:
         "-lluajit-5.1",
     ])
 
-ext_modules = [
-    Pybind11Extension(
-        # TODO: currently this installs the extension module directly to site-packages
-        # we want to move it to the site-packages/valhalla folder with "valhalla._valhalla"
-        # NOTE: this has impact on Windows where we need to add the DLL path manually
-        "_valhalla",
-        [os.path.join("src", "bindings", "python", "valhalla", "_valhalla.cc")],
-        cxx_std=17,
-        include_pybind11=False,  # use submodule'd pybind11
-        library_dirs=library_dirs,
-        include_dirs=include_dirs,
-        extra_link_args=extra_link_args,
-        extra_compile_args=extra_compile_args,
-        libraries=libraries,
-    ),
-]
-
-# if we push master, we upload to pyvalhalla-weekly
-# this is set in GHA when publishing
-pkg = os.environ.get('VALHALLA_RELEASE_PKG')
-if not pkg or (pkg not in ["pyvalhalla", "pyvalhalla-weekly"]):
-    print(f"[WARNING] VALHALLA_RELEASE_PKG not set to a supported value: '{pkg}', defaulting to 'pyvalhalla-weekly'")
-    pkg = "pyvalhalla-weekly"
-print(f"Building package for {pkg} with $VALHALLA_RELEASE_PKG={os.environ.get('VALHALLA_RELEASE_PKG')}")
+# config the C++ extension build
+ext_modules = list()
+for path, srcs in (("valhalla._valhalla", ("_valhalla",)), ("valhalla.utils.graph_utils", ("graph_utils", "graph_id"))):
+    ext_modules.append(
+        Pybind11Extension(
+            path,
+            list(map(lambda x: os.path.join("src", "bindings", "python", "src", x + ".cc"), srcs)),
+            cxx_std=17,
+            include_pybind11=False,  # use submodule'd pybind11
+            library_dirs=library_dirs,
+            include_dirs=include_dirs,
+            extra_link_args=extra_link_args,
+            extra_compile_args=extra_compile_args,
+            libraries=libraries,
+        )
+    )
 
 # open README.md for PyPI
 with open(os.path.join(THIS_DIR, "src", "bindings", "python", "README.md"), encoding="utf-8") as f:
@@ -187,14 +190,16 @@ setup(
     author="Nils Nolde",
     author_email="nilsnolde+pyvalhalla@proton.me",
     url="https://github.com/valhalla/valhalla",
-    packages=["valhalla"],
-    package_dir={"": "./src/bindings/python"},
+    packages=["valhalla", "valhalla.utils"],
+    package_dir={
+        "": "src/bindings/python",
+    },
     ext_modules=ext_modules,
     entry_points=script_entrypoints,
     # if we found executables we'll package them to let them go through auditing package (auditwheel etc.)
     cmdclass={"bdist_wheel": ValhallaBDistWheelCommand if valhalla_build_dir else BDistWheelCommand},
     classifiers=[
-        "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: Implementation :: CPython",
     ],
