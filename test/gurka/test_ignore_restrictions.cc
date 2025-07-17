@@ -180,13 +180,26 @@ TEST(CommonRestrictionsFail, Truck) {
   }
 }
 
-using params_t =
-    std::tuple<std::string, std::string, std::string, std::string, std::string, std::string>;
-class DestinationAccessRestrictionTest : public ::testing::TestWithParam<params_t> {};
-// class TestHierarchyLimits : public ::testing::TestWithParam<HierarchyLimitsTestParams> {};
-TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestriction) {
+struct params_t {
+
   std::string tag, value, conditional_value, costing, costing_key, costing_value;
-  std::tie(tag, value, conditional_value, costing, costing_key, costing_value) = GetParam();
+
+  params_t(const std::string& tag,
+           const std::string& value,
+           const std::string& conditional_value,
+           const std::string& costing,
+           const std::string& costing_key,
+           const std::string& costing_value)
+      : tag(tag), value(value), conditional_value(conditional_value), costing(costing),
+        costing_key(costing_key), costing_value(costing_value) {};
+};
+
+class DestinationAccessRestrictionTest : public ::testing::TestWithParam<params_t> {};
+
+TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestriction) {
+  // std::string tag, value, conditional_value, costing, costing_key, costing_value;
+  // std::tie(tag, value, conditional_value, costing, costing_key, costing_value) = GetParam();
+  params_t p = GetParam();
 
   const std::string ascii_map = R"(
       A----B-----C----D
@@ -197,8 +210,8 @@ TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestriction) {
                             {"BC",
                              {
                                  {"highway", "residential"},
-                                 {tag, value},
-                                 {tag + ":conditional", conditional_value},
+                                 {p.tag, p.value},
+                                 {p.tag + ":conditional", p.conditional_value},
                              }},
                             {"CD", {{"highway", "residential"}}}};
 
@@ -210,11 +223,11 @@ TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestriction) {
   // second pass
   valhalla::Api route =
       gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
-                       {{"/costing_options/" + costing + "/" + costing_key, costing_value}});
+                       {{"/costing_options/" + p.costing + "/" + p.costing_key, p.costing_value}});
 
   // better yet, call costmatrix which gives us a warning on second pass
   route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, "truck",
-                           {{"/costing_options/" + costing + "/" + costing_key, costing_value},
+                           {{"/costing_options/" + p.costing + "/" + p.costing_key, p.costing_value},
                             {"/prioritize_bidirectional", "1"}});
   ASSERT_TRUE(route.info().warnings().size() > 0);
   EXPECT_EQ(route.info().warnings(0).code(), 400);

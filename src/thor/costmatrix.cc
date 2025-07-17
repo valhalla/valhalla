@@ -64,9 +64,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       check_reverse_connection_(config.get<bool>("costmatrix.check_reverse_connection", false)),
       max_iterations_(std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultIterations),
                                static_cast<uint32_t>(1))),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -821,22 +821,31 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
       // if source percent along edge is larger than target percent along,
       // can't connect on this edge
-      if (find_correlated_edge(options.sources(source), fwd_pred.edgeid()).percent_along() >
-          find_correlated_edge(options.targets(target), fwd_pred.edgeid()).percent_along()) {
+      const auto source_edge = find_correlated_edge(options.sources(source), fwd_pred.edgeid());
+      const auto target_edge = find_correlated_edge(options.targets(target), fwd_pred.edgeid());
+      if (source_edge.percent_along() > target_edge.percent_along()) {
         continue;
       }
 
-      // remember: transition_cost is abused in SetSources/Targets: cost is secs, secs is length
-      float s =
-          std::abs(fwd_pred.cost().secs + rev_label.cost().secs - rev_label.transition_cost().cost);
+      // initial labels' transition cost is the full edge cost
+      Cost partial_cost = fwd_pred.cost() + rev_label.cost() -
+                          ((fwd_pred.transition_cost() + rev_label.transition_cost()) * 0.5);
 
       // Update best connection and set found = true.
       // distance computation only works with the casts.
-      uint32_t d = std::abs(static_cast<int>(fwd_pred.path_distance()) +
-                            static_cast<int>(rev_label.path_distance()) -
-                            static_cast<int>(rev_label.transition_cost().secs));
-      best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, Cost(s, s), d);
-      best_connection_[idx].found = true;
+      graph_tile_ptr tile = nullptr;
+      auto* de = graphreader.directededge(GraphId(source_edge.graph_id()), tile);
+      uint32_t d =
+          std::abs(static_cast<int>(fwd_pred.path_distance()) +
+                   static_cast<int>(rev_label.path_distance()) - static_cast<int>(de->length()));
+      best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, partial_cost, d);
+      if (best_connection_[idx].max_iterations == 0) {
+        best_connection_[idx].max_iterations =
+            n + GetThreshold(mode_,
+                             edgelabel_[MATRIX_FORW][source].size() +
+                                 edgelabel_[MATRIX_REV][target].size(),
+                             max_iterations_);
+      }
 
       // Update status and update threshold if this is the last location
       // to find for this source or target
@@ -942,22 +951,33 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
           return;
         }
 
-        if (find_correlated_edge(options.sources(source), fwd_label.edgeid()).percent_along() >
-            find_correlated_edge(options.targets(target), fwd_label.edgeid()).percent_along()) {
+        const auto source_edge = find_correlated_edge(options.sources(source), fwd_label.edgeid());
+        const auto target_edge = find_correlated_edge(options.targets(target), fwd_label.edgeid());
+
+        if (source_edge.percent_along() > target_edge.percent_along()) {
           continue;
         }
 
-        // remember: transition_cost is abused in SetSources/Targets: cost is secs, secs is length
-        float s =
-            std::abs(rev_pred.cost().secs + fwd_label.cost().secs - fwd_label.transition_cost().cost);
+        // initial labels' transition cost is the full edge cost
+        Cost partial_cost = rev_pred.cost() + fwd_label.cost() -
+                            ((fwd_label.transition_cost() + rev_pred.transition_cost()) * 0.5);
 
         // Update best connection and set found = true.
         // distance computation only works with the casts.
-        uint32_t d = std::abs(static_cast<int>(rev_pred.path_distance()) +
-                              static_cast<int>(fwd_label.path_distance()) -
-                              static_cast<int>(fwd_label.transition_cost().secs));
-        best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(s, s), d);
-        best_connection_[source_idx].found = true;
+        graph_tile_ptr tile = nullptr;
+        auto* de = graphreader.directededge(GraphId(source_edge.graph_id()), tile);
+        uint32_t d =
+            std::abs(static_cast<int>(rev_pred.path_distance()) +
+                     static_cast<int>(fwd_label.path_distance()) - static_cast<int>(de->length()));
+        best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), partial_cost, d);
+        // best_connection_[source_idx].found = true;
+        if (best_connection_[source_idx].max_iterations == 0) {
+          best_connection_[source_idx].max_iterations =
+              n + GetThreshold(mode_,
+                               edgelabel_[MATRIX_FORW][source].size() +
+                                   edgelabel_[MATRIX_REV][target].size(),
+                               max_iterations_);
+        }
 
         // Update status and update threshold if this is the last location
         // to find for this source or target
@@ -1091,10 +1111,9 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       cost.cost += edge.distance();
 
       // 2 adjustments related only to properly handle trivial routes:
-      //   - "transition_cost" is used to store the traversed secs & length
+      //   - "transition_cost" is used to store the total edge cost
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
-      Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_, ec, d,
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_, edgecost, d,
                              !directededge->not_thru(), !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
@@ -1181,11 +1200,10 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       cost.cost += edge.distance();
 
       // 2 adjustments related only to properly handle trivial routes:
-      //   - "transition_cost" is used to store the traversed secs & length
+      //   - "transition_cost" is used to store the total edge cost
       //   - "path_id" is used to store whether the opp edge is even allowed (e.g. no oneway)
-      Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
-      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             !opp_dir_edge->not_thru(), !(costing_->IsClosed(directededge, tile)),
+      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, edgecost,
+                             d, !opp_dir_edge->not_thru(), !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),

@@ -1848,40 +1848,38 @@ function filter_tags_generic(kv)
   kv["maxspeed:hgv:backward"] = normalize_speed(kv["maxspeed:hgv:backward"])
 
   local access_restriction_tags = {
-    "maxweight", "maxheight", "maxlength", "maxwidth", "hazmat", "maxaxles", "maxaxleload"
-  }
-
-  for _, restr_tag in pairs(access_restriction_tags) do 
-    -- find out if there are exemptions
-    local conditional_tag = string.format("%s:conditional", restr_tag)
-    local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
-    if except_destination == 1 then 
-      kv[restr_tag] = tostring(kv[restr_tag]) .. "~" -- parse this later in the graphparser
-    end
-  end
-
-  local directed_access_restriction_tags = {
-    "maxweight", "maxheight", "maxlength", "maxwidth", "hazmat"
+    ["maxweight"]   = true,
+    ["maxheight"]   = true,
+    ["maxlength"]   = true,
+    ["maxwidth"]    = true,
+    ["hazmat"]      = true,
+    ["maxaxles"]    = false,
+    ["maxaxleload"] = false
   }
 
   local directions = {
     "forward", "backward"
   }
 
-  -- also look for local exemptions in uni-directional restrictions
-  for _, restr_key in pairs(directed_access_restriction_tags) do 
-    for _, direction in pairs(directions) do 
-      local key = restr_key .. "_" .. direction
-      local tag = restr_key .. ":" .. direction
-      local conditional_tag = string.format("%s:conditional", tag)
-      local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
-      if except_destination == 1 then 
-        kv[key] = tostring(kv[key]) .. "~" -- parse this later in the graphparser
+  for restr_key, directed in pairs(access_restriction_tags) do 
+    -- find out if there are exemptions
+    local conditional_tag = string.format("%s:conditional", restr_key)
+    local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
+    if except_destination == 1 then 
+      kv[restr_key] = tostring(kv[restr_key]) .. "~" -- parse this later in graphparser
+    end
+    if directed then 
+      for _, direction in pairs(directions) do
+        local key = restr_key .. "_" .. direction
+        local tag = restr_key .. ":" .. direction
+        local conditional_tag = string.format("%s:conditional", tag)
+        local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
+        if except_destination == 1 then 
+          kv[key] = tostring(kv[key]) .. "~"
+        end
       end
     end
   end
-
-
 
   if (kv["hgv:national_network"] or kv["hgv:state_network"] or kv["hgv"] == "local" or kv["hgv"] == "designated") then
     kv["truck_route"] = "true"
