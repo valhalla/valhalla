@@ -191,7 +191,7 @@ struct params_t {
            const std::string& costing_key,
            const std::string& costing_value)
       : tag(tag), value(value), conditional_value(conditional_value), costing(costing),
-        costing_key(costing_key), costing_value(costing_value) {};
+        costing_key(costing_key), costing_value(costing_value){};
 };
 
 class DestinationAccessRestrictionTest : public ::testing::TestWithParam<params_t> {};
