@@ -422,6 +422,14 @@ lit = {
   ["sunset-sunrise"] = "true"
 }
 
+-- used the most common combinations according to taginfo
+conditional_access_restriction = {
+  ["none @ destination"]  = 1,
+  ["none @ delivery"]  = 1,
+  ["no @ destination"]  = 1,
+  ["none @ (destination)"]  = 1,
+}
+
 --node proc needs the same info as above but in the form of a mask so duplicate..
 motor_vehicle_node = {
 ["yes"] = 1,
@@ -1838,6 +1846,40 @@ function filter_tags_generic(kv)
   kv["maxspeed:hgv"] = normalize_speed(kv["maxspeed:hgv"])
   kv["maxspeed:hgv:forward"] = normalize_speed(kv["maxspeed:hgv:forward"])
   kv["maxspeed:hgv:backward"] = normalize_speed(kv["maxspeed:hgv:backward"])
+
+  local access_restriction_tags = {
+    ["maxweight"]   = true,
+    ["maxheight"]   = true,
+    ["maxlength"]   = true,
+    ["maxwidth"]    = true,
+    ["hazmat"]      = true,
+    ["maxaxles"]    = false,
+    ["maxaxleload"] = false
+  }
+
+  local directions = {
+    "forward", "backward"
+  }
+
+  for restr_key, directed in pairs(access_restriction_tags) do 
+    -- find out if there are exemptions
+    local conditional_tag = string.format("%s:conditional", restr_key)
+    local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
+    if except_destination == 1 then 
+      kv[restr_key] = tostring(kv[restr_key]) .. "~" -- parse this later in graphparser
+    end
+    if directed then 
+      for _, direction in pairs(directions) do
+        local key = restr_key .. "_" .. direction
+        local tag = restr_key .. ":" .. direction
+        local conditional_tag = string.format("%s:conditional", tag)
+        local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
+        if except_destination == 1 then 
+          kv[key] = tostring(kv[key]) .. "~"
+        end
+      end
+    end
+  end
 
   if (kv["hgv:national_network"] or kv["hgv:state_network"] or kv["hgv"] == "local" or kv["hgv"] == "designated") then
     kv["truck_route"] = "true"
