@@ -236,9 +236,9 @@ void serialize_nodes(const PathLocation& location,
   writer.end_array();
 }
 
-void serialize(const PathLocation& location,
+void serialize(rapidjson::writer_wrapper_t& writer,
+               const PathLocation& location,
                GraphReader& reader,
-               rapidjson::writer_wrapper_t& writer,
                bool verbose) {
   // serialze all the edges
   writer.start_object();
@@ -283,7 +283,7 @@ std::string serializeLocate(const Api& request,
 
   for (const auto& location : locations) {
     try {
-      serialize(projections.at(location), reader, writer, request.options().verbose());
+      serialize(writer, projections.at(location), reader, request.options().verbose());
     } catch (const std::exception& e) {
       serialize(writer, location.latlng_, "No data found for location", request.options().verbose());
     }

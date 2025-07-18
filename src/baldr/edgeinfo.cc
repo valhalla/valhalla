@@ -562,8 +562,10 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
         uint32_t precision;
         std::tie(decoded, precision) = decode_levels(value);
 
-        // precision variable causes issues in the json writer
-        writer.set_precision(1);
+        if (!precision)
+          precision = 3;
+
+        writer.set_precision(precision);
         for (auto& range : decoded) {
           if (range.first == range.second) {
             // single number
@@ -590,8 +592,7 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
         break;
     }
   }
-  // Ensure there is only one "conditional_speed_limits" key in the JSON response,
-  // even if there is more than one kConditionalSpeedLimits tag.
+
   if (!conditional_speed_limits.empty()) {
     writer.start_object("conditional_speed_limits");
     for (auto& [condition, speed] : conditional_speed_limits) {
