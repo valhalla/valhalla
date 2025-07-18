@@ -334,7 +334,6 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   }
 }
 
-
 TEST(Standalone, RetrieveEdgeTrafficSignal) {
   const std::string ascii_map = R"(
     A--B--C--D
