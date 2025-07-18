@@ -118,7 +118,7 @@ TEST(Standalone, InterpolatedPoints) {
   ASSERT_EQ(result_doc["matched_points"][5]["edge_index"].GetInt(), 1);
 }
 
-TEST(Standalone, RetrieveTrafficSignal) {
+TEST(Standalone, RetrieveNodeTrafficSignal) {
   const std::string ascii_map = R"(
     A---B---C
         |
@@ -133,7 +133,7 @@ TEST(Standalone, RetrieveTrafficSignal) {
 
   const double gridsize = 10;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/traffic_signal_attributes");
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/traffic_signal_node_attributes");
 
   std::string trace_json;
   auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "auto", {},
@@ -332,4 +332,35 @@ TEST(Standalone, AdditionalSpeedAttributes) {
     EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("constrained_flow"));
     EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("free_flow"));
   }
+}
+
+TEST(Standalone, RetrieveEdgeTrafficSignal) {
+  const std::string ascii_map = R"(
+    A--B--C--D
+  )";
+
+  const gurka::ways ways = {{"ABC", {{"highway", "primary"}}}, {"CD", {{"highway", "primary"}}}};
+
+  const gurka::nodes nodes = {
+      {"B", {{"highway", "traffic_signals"}, {"traffic_signals:direction", "forward"}}}};
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/traffic_signal_edge_attributes");
+
+  std::string trace_json;
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C", "D"}, "auto",
+                              {}, {}, &trace_json, "via");
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+
+  auto edges = result["edges"].GetArray();
+  ASSERT_EQ(edges.Size(), 2);
+
+  EXPECT_TRUE(edges[0].HasMember("traffic_signal"));
+  EXPECT_TRUE(edges[0]["traffic_signal"].GetBool());
+
+  EXPECT_TRUE(edges[1].HasMember("traffic_signal"));
+  EXPECT_FALSE(edges[1]["traffic_signal"].GetBool());
 }

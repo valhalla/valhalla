@@ -110,6 +110,7 @@
    * ADDED: `trace_attributes` now also returns all the speed informations on edges when `edge.speeds_faded` or `edge.speeds_non_faded` is set in request. Also `edge.speed_type` returns how the edge speed was set [#5324](https://github.com/valhalla/valhalla/pull/5324)
    * CHANGED: Use `ankerl::unordered_dense` for `loki::Reach()` for faster search [#5384](https://github.com/valhalla/valhalla/pull/5384)
    * ADDED: support for destination exceptions for access restrictions [#5354](https://github.com/valhalla/valhalla/pull/5354)
+   * ADDED: Add option `edge.traffic_signal` to trace attributes [#5385](https://github.com/valhalla/valhalla/pull/5385)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
