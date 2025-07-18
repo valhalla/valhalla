@@ -108,6 +108,7 @@
    * ADDED: Distribute C++ executables for Windows Python bindings [#5348](https://github.com/valhalla/valhalla/pull/5348)
    * ADDED: Distribute C++ executables for OSX Python bindings [#5301](https://github.com/valhalla/valhalla/pull/5301)
    * ADDED: `trace_attributes` now also returns all the speed informations on edges when `edge.speeds_faded` or `edge.speeds_non_faded` is set in request. Also `edge.speed_type` returns how the edge speed was set [#5324](https://github.com/valhalla/valhalla/pull/5324)
+   * CHANGED: Use `ankerl::unordered_dense` for `loki::Reach()` for faster search [#5384](https://github.com/valhalla/valhalla/pull/5384)
    * ADDED: support for destination exceptions for access restrictions [#5354](https://github.com/valhalla/valhalla/pull/5354)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
