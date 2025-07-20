@@ -3,11 +3,11 @@ set -u
 
 valhalla_image=$1
 
-custom_file_folder="$PWD/tests/custom_files"
-admin_db="${custom_file_folder}/admin_data/admins.sqlite"
-timezone_db="${custom_file_folder}/timezone_data/timezones.sqlite"
-ANDORRA="$PWD/tests/andorra-latest.osm.pbf"
-LIECHTENSTEIN="$PWD/tests/liechtenstein-latest.osm.pbf"
+custom_file_folder="$PWD/docker_tests/custom_files"
+admin_db="${custom_file_folder}/admins.sqlite"
+timezone_db="${custom_file_folder}/timezones.sqlite"
+UTRECHT="$PWD/test/data/utrecht_netherlands.osm.pbf"
+AMSTERDAM="$PWD/test/data/amsterdam.osm.pbf"
 default_speeds_config="${custom_file_folder}/default_speeds.json"
 
 # keep requesting a route until it succeeds
@@ -19,7 +19,7 @@ wait_for_docker() {
     if [[ 0 -eq $? ]]; then
      return
     fi
-    sleep 1
+    sleep 2
     count=$(($count + 1))
     echo "Tried $count times"
   done
@@ -36,30 +36,25 @@ last_mod_tiles() {
 route_request="curl -s -XPOST 'http://localhost:8002/route' -H'Content-Type: application/json' --data-raw '{
     \"locations\": [
         {
-            \"lat\": 42.546504,
-            \"lon\": 1.591129
+            \"lat\": 52.11530314,
+            \"lon\": 5.08815505
         },
         {
-            \"lat\": 42.507667,
-            \"lon\": 1.542721
+            \"lat\": 52.11932621,
+            \"lon\": 5.10742859
         }
     ],
     \"costing\": \"auto\"
 }'"
 
-# Get Andorra to test with
 if ! test -d "${custom_file_folder}"; then
   mkdir -p ${custom_file_folder}
 fi
-if ! test -f "${ANDORRA}"; then
-  wget http://download.geofabrik.de/europe/andorra-latest.osm.pbf -O ${ANDORRA}
-fi
-cp ${ANDORRA} ${custom_file_folder}
+cp ${UTRECHT} ${custom_file_folder}
 
 #### FULL BUILD ####
 echo "#### Full build test, no extract ####"
-tileset_name="andorra_tiles"
-tile_tar="${custom_file_folder}/${tileset_name}.tar"
+tileset_name="utrecht_tiles"
 docker run -d --name valhalla_full -p 8002:8002 -v $custom_file_folder:/custom_files \
         -e tileset_name=$tileset_name -e use_tiles_ignore_pbf=False -e build_elevation=False \
         -e build_admins=True -e build_time_zones=True -e build_tar=False \
@@ -83,7 +78,6 @@ eval $route_request > /dev/null
 mod_date_tiles=$(last_mod_tiles $tileset_name)
 mod_date_admins=$(stat -c %y ${admin_db})
 mod_date_timezones=$(stat -c %y ${timezone_db})
-
 
 #### Change the config dynamically ####
 echo "#### Change config test ####"
@@ -157,10 +151,7 @@ docker rm valhalla_no_config_update
 echo "#### Add PBF test ####"
 # reset the config
 rm ${custom_file_folder}/valhalla.json
-if ! test -f "${LIECHTENSTEIN}"; then
-  wget http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf -O "${LIECHTENSTEIN}"
-fi
-cp "${LIECHTENSTEIN}" "${custom_file_folder}"
+cp "${AMSTERDAM}" "${custom_file_folder}"
 
 docker restart valhalla_full
 wait_for_docker

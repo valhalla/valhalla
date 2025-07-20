@@ -38,6 +38,7 @@ COPY --from=builder /usr/local /usr/local
 COPY --from=builder /usr/local/lib/python3.12/dist-packages/valhalla /usr/local/lib/python3.12/dist-packages/
 COPY docker/scripts/. /valhalla/scripts
 
+# default expected env vars
 ENV use_tiles_ignore_pbf=True
 ENV build_tar=True
 ENV serve_tiles=True

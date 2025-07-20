@@ -7,6 +7,7 @@ set -o errexit -o pipefail -o nounset
 
 # Strategy:
 #   - rebuild if:
+#     - admins or tz db don't exist
 #     - build_elevation is true and elevation doesn't exist (force)
 #     - tile extract or folder doesn't exist (force)
 #     - use_tiles_ignore_pbf is false and new file constellations exist
@@ -19,12 +20,14 @@ fi
 # determine if extras were requested
 do_elevation="False"
 do_transit="False"
+do_admins="False"
+do_timezones="False"
 # anything other than True or Force will result in not building the dbs
-if ([[ "${build_admins}" == "True" ]] && ! test -f "${ADMIN_DB}") || [[ "${build_admins}" != "Force" ]]; then
-  do_admins="False"
+if ([[ "${build_admins}" == "True" ]] && ! test -f "${ADMIN_DB}") || [[ "${build_admins}" == "Force" ]]; then
+  do_admins="True"
 fi
 if ([[ "${build_time_zones}" == "True" ]] && ! test -f "${TIMEZONE_DB}") || [[ "${build_time_zones}" == "Force" ]]; then
-  do_timezones="False"
+  do_timezones="True"
 fi
 if [[ "${build_elevation}" == "True" ]] || [[ "${build_elevation}" == "Force" ]]; then
   do_elevation="True"
