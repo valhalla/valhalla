@@ -38,7 +38,7 @@ class Actor(_Actor):
         created.
 
         For details on parameters for each function consult Valhalla's documentation:
-        https://github.com/valhalla/valhalla/blob/master/docs/api
+        https://github.com/valhalla/valhalla/blob/master/docs/docs/api
         """
         # make sure there's a valhalla.json file
         if isinstance(config, dict):
