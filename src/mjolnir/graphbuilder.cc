@@ -395,7 +395,7 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
         (forward && direction == AccessRestrictionDirection::kForward) ||
         (!forward && direction == AccessRestrictionDirection::kBackward)) {
       AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(),
-                                           r->second.value());
+                                           r->second.value(), r->second.except_destination());
       graphtile.AddAccessRestriction(access_restriction);
       modes |= r->second.modes();
     }
