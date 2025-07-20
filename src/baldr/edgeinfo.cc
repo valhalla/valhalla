@@ -562,10 +562,9 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
         uint32_t precision;
         std::tie(decoded, precision) = decode_levels(value);
 
-        if (!precision)
-          precision = 3;
+        if (precision)
+          writer.set_precision(precision);
 
-        writer.set_precision(precision);
         for (auto& range : decoded) {
           if (range.first == range.second) {
             // single number
