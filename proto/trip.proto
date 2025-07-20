@@ -235,6 +235,7 @@ message TripLeg {
       Speeds speeds_non_faded = 64;
     }
     SpeedType speed_type = 65;
+    bool traffic_signal = 66;
   }
 
   message IntersectingEdge {
