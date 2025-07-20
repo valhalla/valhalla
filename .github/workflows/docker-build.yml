@@ -91,10 +91,11 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
       
       - name: Test latest scripted image
+        if: github.ref == 'refs/heads/nn-integrate-community-docker-image'
         run: |
           sudo apt-get update > /dev/null
           sudo apt-get install -y moreutils tree > /dev/null
-          sudo /bin/bash -c "./tests/test.sh nilsnolde/valhalla:latest"
+          sudo /bin/bash -c "./docker/test.sh ghcr.io/valhalla/valhalla-scripted:test"
 
   create-manifests:
     strategy:
