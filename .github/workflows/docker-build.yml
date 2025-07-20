@@ -18,19 +18,9 @@ jobs:
           - os: ubuntu-latest
             platform: linux/amd64
             tagsuffix: amd64
-            image: valhalla
           - os: ubuntu-24.04-arm
             platform: linux/arm64
             tagsuffix: arm64
-            image: valhalla
-          - os: ubuntu-latest
-            platform: linux/amd64
-            tagsuffix: amd64
-            image: valhalla-scripted
-          - os: ubuntu-24.04-arm
-            platform: linux/arm64
-            tagsuffix: arm64
-            image: valhalla-scripted
     outputs:
       tag: ${{ steps.extract_tag.outputs.tag }}
 
@@ -72,7 +62,22 @@ jobs:
           provenance: false # needed to be able to converge into one image
           platforms: ${{ matrix.platform }}
           push: true
-          tags: ghcr.io/valhalla/${{ matrix.image }}:test-${{ matrix.tagsuffix }}
+          tags: ghcr.io/valhalla/valhalla:test-${{ matrix.tagsuffix }}
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+          build-args: |
+            VERSION_MODIFIER=${{ steps.extract_gitsha.outputs.version_modifier }}
+
+      - name: Build and push latest - scripted image
+        if: github.ref == 'refs/heads/nn-integrate-community-docker-image'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile-scripted
+          provenance: false # needed to be able to converge into one image
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: ghcr.io/valhalla/valhalla-scripted:test-${{ matrix.tagsuffix }}
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
           build-args: |
@@ -86,7 +91,20 @@ jobs:
           provenance: false # needed to be able to converge into one image
           platforms: ${{ matrix.platform }}
           push: true
-          tags: ghcr.io/valhalla/${{ matrix.image }}:${{ steps.extract_tag.outputs.tag }}-${{ matrix.tagsuffix }}
+          tags: ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }}-${{ matrix.tagsuffix }}
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
+
+      - name: Build and push tag - scripted image
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile-scripted
+          provenance: false # needed to be able to converge into one image
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: ghcr.io/valhalla/valhalla-scripted:${{ steps.extract_tag.outputs.tag }}-${{ matrix.tagsuffix }}
           cache-from: type=gha,scope=${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
       
