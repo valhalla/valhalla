@@ -30,22 +30,7 @@ do_build_tar() {
   fi
 }
 
-# find out the owner of the mapped volume and warn if it's root
-dir_owner=$(stat --format '%U' "${CUSTOM_FILES}")
-echo ""
-echo "INFO: Running container with user $(whoami) UID $(id --user) and GID $(id --group)."
-if [[ ${dir_owner} == "root" ]]; then
-  if [[ $(id --user) != "59999" ]] || [[ $(id --group) != "59999" ]]; then
-    echo "ERROR: If you run with custom UID or GID you have to create the mapped directory to the container's /custom_files manually before starting the image"
-    exit 1
-  fi
-fi
-echo ""
-
-# the env vars with True default are set in the dockerfile, others are evaluated in configure_valhalla.sh
-if [[ -z $server_threads ]]; then
-  export server_threads=$(nproc)
-fi
+export server_threads=${server_threads:-$(nproc)}
 
 if [[ -z $build_tar ]]; then
   build_tar="True"

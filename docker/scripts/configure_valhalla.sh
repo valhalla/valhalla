@@ -26,7 +26,7 @@ fi
 if ([[ "${build_time_zones}" == "True" ]] && ! test -f "${TIMEZONE_DB}") || [[ "${build_time_zones}" == "Force" ]]; then
   do_timezones="False"
 fi
-if [[ "${build_elevation}" == "True" ]] || [[ "${build_elevation}" == "Force" ]] || ! ([[ -z "${min_x}" ]] && [[ -z "${min_y}" ]] && [[ -z "${max_x}" ]] && [[ -z "${max_y}" ]]); then
+if [[ "${build_elevation}" == "True" ]] || [[ "${build_elevation}" == "Force" ]]; then
   do_elevation="True"
 fi
 # if there's no transit tiles yet, but it should build transit, then do that; or force and remove

@@ -41,7 +41,7 @@ Then it's a simple
 ```shell script
 # optionally build the base image yourself before or download it by default
 # docker build -t ghcr.io/valhalla/valhalla:latest .
-docker build -t ghcr.io/valhalla/valhalla-scripted:latest .
+docker build  -f docker/Dockerfile-scripted -t ghcr.io/valhalla/valhalla-scripted:latest .
 ```
 
 The `--build-arg`s are:
