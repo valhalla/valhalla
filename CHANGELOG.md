@@ -48,6 +48,7 @@
    * FIXED: Cover **all** nodes in the current tile by density index [#5338](https://github.com/valhalla/valhalla/pull/5338)
    * FIXED: Narrowing bug leading to nodes being misplaced in wrong tiles [#5364](https://github.com/valhalla/valhalla/pull/5364)
    * FIXED: wrong integer types in expansion properties [#5380](https://github.com/valhalla/valhalla/pull/5380)
+   * FIXED: fix: `std::terminate` on unsupported request format for some actions [#5387](https://github.com/valhalla/valhalla/pull/5387)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
@@ -110,6 +111,7 @@
    * ADDED: `trace_attributes` now also returns all the speed informations on edges when `edge.speeds_faded` or `edge.speeds_non_faded` is set in request. Also `edge.speed_type` returns how the edge speed was set [#5324](https://github.com/valhalla/valhalla/pull/5324)
    * CHANGED: Use `ankerl::unordered_dense` for `loki::Reach()` for faster search [#5384](https://github.com/valhalla/valhalla/pull/5384)
    * ADDED: support for destination exceptions for access restrictions [#5354](https://github.com/valhalla/valhalla/pull/5354)
+   * ADDED: Add option `edge.traffic_signal` to trace attributes [#5385](https://github.com/valhalla/valhalla/pull/5385)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
