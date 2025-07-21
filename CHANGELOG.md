@@ -111,6 +111,7 @@
    * CHANGED: Use `ankerl::unordered_dense` for `loki::Reach()` for faster search [#5384](https://github.com/valhalla/valhalla/pull/5384)
    * ADDED: support for destination exceptions for access restrictions [#5354](https://github.com/valhalla/valhalla/pull/5354)
    * ADDED: Add option `edge.traffic_signal` to trace attributes [#5385](https://github.com/valhalla/valhalla/pull/5385)
+   * CHANGED: Decouple `traffic_signal` on node from `kNodeType` in `TripLegBuilder` []()
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
