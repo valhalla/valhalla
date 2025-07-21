@@ -6,9 +6,20 @@ on:
     tags:
       - "*"
     paths-ignore:
+      - ".circleci"
+      - ".github"
+      - "!.github/workflows/docker-build.yml"
       - ".gitignore"
       - "**.md"
-      - "test/"
+      - "**test**"
+      - "docs/"
+      - "**vcpkg**"
+      - "run_route_scripts/"
+      - ".*"
+      - "pyproject.toml"
+      - "*.cfg"
+      - "setup.py"
+      - "taginfo.json"
 jobs:
   build_and_publish:
     strategy:
