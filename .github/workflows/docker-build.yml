@@ -137,7 +137,7 @@ jobs:
           docker manifest push ghcr.io/valhalla/${{ matrix.image }}:${{ needs.build_and_publish.outputs.tag }}
 
       - name: Create and push latest manifest
-        if: github.ref == 'refs/heads/master'
+        if: github.ref == 'refs/heads/nn-integrate-community-docker-image'
         run: |
           docker manifest create \
             ghcr.io/valhalla/valhalla:test \
@@ -147,6 +147,7 @@ jobs:
       
 
   test-image:
+    if: github.ref == 'refs/heads/nn-integrate-community-docker-image'
     strategy:
       matrix:
         include:
@@ -163,7 +164,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test latest scripted image
-        if: github.ref == 'refs/heads/nn-integrate-community-docker-image'
         run: |
           docker pull ghcr.io/valhalla/valhalla-scripted:test
           sudo apt-get update > /dev/null
