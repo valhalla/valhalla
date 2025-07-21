@@ -1941,8 +1941,10 @@ void TripLegBuilder::Build(
 
     if (controller(kNodeType)) {
       trip_node->set_type(GetTripLegNodeType(node->type()));
-      if (node->traffic_signal())
-        trip_node->set_traffic_signal(true);
+    }
+
+    if (controller(kNodeTrafficSignal)) {
+        trip_node->set_traffic_signal(node->traffic_signal());
     }
 
     if (node->intersection() == IntersectionType::kFork) {
