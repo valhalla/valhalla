@@ -88,7 +88,7 @@ constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSp
 
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
-    0.5f, // Trunk
+    0.0f, // Trunk
     0.0f, // Primary
     0.0f, // Secondary
     0.0f, // Tertiary
