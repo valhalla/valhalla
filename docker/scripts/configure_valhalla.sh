@@ -247,7 +247,7 @@ if [[ $use_default_speeds_config == "True" ]]; then
   jq --arg d "${DEFAULT_SPEEDS_CONFIG}" '.mjolnir.default_speeds_config = $d' "${CONFIG_FILE}" | sponge "${CONFIG_FILE}"
 fi
 
-if [[ "${do_build}" == "True" ]] || [[ updated_default_speed_config == "True" ]]; then
+if [[ "${do_build}" == "True" ]] || [[ $updated_default_speed_config == "True" ]]; then
   echo ""
   echo "==============================="
   echo "= Enhancing the initial graph ="

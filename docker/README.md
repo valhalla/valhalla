@@ -96,7 +96,7 @@ Put the unzipped GTFS feeds as subfolders in the main gtfs folder, e.g. `gtfs_fe
 To enable `multimodal` routing, you'll need to map the directory which contains all the GTFS feeds to the container's `/gtfs_feeds` directory, e.g.
 
 ```
-docker run -dt -v gtfs_feeds:/gtfs_feeds -v $PWD/custom_files:/custom_files -p 8002:8002 --name valhalla nilsnolde/docker-valhalla:latest
+docker run -dt -v gtfs_feeds:/gtfs_feeds -v $PWD/custom_files:/custom_files -p 8002:8002 --name valhalla valhalla/valhalla-scripted:latest
 ```
 
 #### Build Valhalla with arbitrary OSM data
