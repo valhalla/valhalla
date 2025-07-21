@@ -2,8 +2,8 @@
 
 theme:
   name: material
-  logo: images/valhalla.png
-  favicon: images/valhalla.png
+  logo: images/valhalla_logo.png
+  favicon: images/valhalla_logo.png
   features:
     - content.tabs.link
     - navigation.instant
