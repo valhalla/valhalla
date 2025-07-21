@@ -121,18 +121,10 @@ message TripLeg {
   }
 
   message Speeds {
-    oneof has_predicted_flow {
-      float predicted_flow = 1;
-    }
-    oneof has_constrained_flow {
-      float constrained_flow = 2;
-    }
-    oneof has_free_flow {
-      float free_flow = 3;
-    }
-    oneof has_current_flow {
-      float current_flow = 4;
-    }
+    float predicted_flow = 1;
+    float constrained_flow = 2;
+    float free_flow = 3;
+    float current_flow = 4;
     float no_flow = 5;
   }
 
@@ -236,9 +228,14 @@ message TripLeg {
     }
     repeated Level levels = 61;
     uint32 level_precision = 62;
-    Speeds speeds_faded = 63;
-    Speeds speeds_non_faded = 64;
+    oneof has_speeds_faded {
+      Speeds speeds_faded = 63;
+    }
+    oneof has_speeds_non_faded {
+      Speeds speeds_non_faded = 64;
+    }
     SpeedType speed_type = 65;
+    bool traffic_signal = 66;
   }
 
   message IntersectingEdge {

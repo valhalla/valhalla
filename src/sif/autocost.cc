@@ -460,6 +460,9 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+  if (restriction.except_destination() && allow_destination_only_)
+    return true;
+
   switch (restriction.type()) {
     case AccessType::kMaxHeight:
       return height_ <= static_cast<float>(restriction.value() * 0.01);

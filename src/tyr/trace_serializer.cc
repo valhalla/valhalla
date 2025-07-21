@@ -47,16 +47,16 @@ void serialize_speeds(const valhalla::TripLeg_Edge& edge,
                       rapidjson::writer_wrapper_t& writer) {
   auto speeds = is_faded ? edge.speeds_faded() : edge.speeds_non_faded();
   writer.start_object(is_faded ? "speeds_faded" : "speeds_non_faded");
-  if (speeds.has_current_flow()) {
+  if (speeds.current_flow()) {
     writer("current_flow", speed_serializer(speeds.current_flow()));
   }
-  if (speeds.has_predicted_flow()) {
+  if (speeds.predicted_flow()) {
     writer("predicted_flow", speed_serializer(speeds.predicted_flow()));
   }
-  if (speeds.has_constrained_flow()) {
+  if (speeds.constrained_flow()) {
     writer("constrained_flow", speed_serializer(speeds.constrained_flow()));
   }
-  if (speeds.has_free_flow()) {
+  if (speeds.free_flow()) {
     writer("free_flow", speed_serializer(speeds.free_flow()));
   }
   writer("no_flow", speed_serializer(speeds.no_flow()));
@@ -220,7 +220,7 @@ void serialize_edges(const AttributesController& controller,
       }
       if (controller(kEdgeSpeedsFaded) &&
           options.date_time_type() == Options::DateTimeType::Options_DateTimeType_current &&
-          edge.has_speeds_faded()) {
+          edge.has_speeds_faded_case()) {
         serialize_speeds(edge, true, serialize_speed, writer);
       }
       if (controller(kEdgeSpeedsNonFaded)) {
@@ -231,6 +231,9 @@ void serialize_edges(const AttributesController& controller,
       }
       if (controller(kEdgeForward)) {
         writer("forward", edge.forward());
+      }
+      if (controller(kEdgeTrafficSignal)) {
+        writer("traffic_signal", edge.traffic_signal());
       }
       if (controller(kEdgeLevels)) {
         if (edge.levels_size()) {
