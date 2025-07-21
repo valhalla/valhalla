@@ -1,4 +1,4 @@
-[![ci tests](https://github.com/nilsnolde/docker-valhalla/actions/workflows/tests.yml/badge.svg)](https://github.com/nilsnolde/docker-valhalla/actions/workflows/tests.yml)
+[![Test & Publish Docker image](https://github.com/valhalla/valhalla/actions/workflows/docker-build.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/docker-build.yml)
 
 # Valhalla Docker images
 
