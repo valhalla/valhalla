@@ -111,6 +111,9 @@ jobs:
             CCACHE_DIR=/host/project/.cache/ccache
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
+            VALHALLA_BUILD_BIN_DIR="build_manylinux"
+          # uncomment when testing
+          # CIBW_BUILD: cp313-*
 
       - name: Delete cache to save the latest
         run: |
@@ -225,6 +228,8 @@ jobs:
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
           MACOSX_DEPLOYMENT_TARGET: 14
+          # uncomment when testing
+          # CIBW_BUILD: cp313-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -381,6 +386,8 @@ jobs:
             VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
             VALHALLA_BUILD_BIN_DIR=build/Release
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
+          # uncomment when testing
+          # CIBW_BUILD: cp313-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -397,7 +404,7 @@ jobs:
           detached: true
 
   verify_wheels_linux:
-    needs: [publish_pypi, build_python_wheels_linux]
+    needs: [build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -417,7 +424,7 @@ jobs:
           ./src/bindings/python/test/test_pyvalhalla_package.sh
 
   verify_wheels_osx:
-    needs: [publish_pypi, build_osx]
+    needs: [build_osx]
     runs-on: macos-14
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
@@ -440,7 +447,7 @@ jobs:
           python -m valhalla valhalla_build_tiles -h
   
   verify_wheels_win:
-    needs: [publish_pypi, build_win]
+    needs: [build_win]
     runs-on: windows-2022
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
@@ -464,7 +471,7 @@ jobs:
 
   upload_all:
     name: Upload if release
-    needs: [publish_pypi, verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
+    needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
