@@ -200,8 +200,9 @@ public:
   /**
    * Advances the id
    */
-  GraphId operator+=(uint32_t offset) const {
-    return GraphId(tileid(), level(), id() + offset);
+  GraphId& operator+=(uint32_t offset) {
+    value += offset;
+    return *this;
   }
 
   /**
