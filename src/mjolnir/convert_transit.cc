@@ -549,7 +549,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   // stations and platforms are connected by platformconnections
 
   // Iterate through the platform and their edges
-  uint32_t transitedges = 0;
+  [[maybe_unused]] uint32_t transitedges = 0;
   for (const auto& stop_edges : stop_edge_map) {
     // Get the platform information
     GraphId platform_graphid = stop_edges.second.origin_pbf_graphid;
@@ -1292,7 +1292,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   }
 
   if (total_dep_count) {
-    float percent =
+    [[maybe_unused]] float percent =
         static_cast<float>(total_midnight_dep_count) / static_cast<float>(total_dep_count);
     percent *= 100;
 
