@@ -66,7 +66,7 @@ jobs:
     name: Build Linux Python wheels
     runs-on: ubuntu-latest
     needs: [publish_pypi]
-    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -112,7 +112,8 @@ jobs:
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
             VALHALLA_BUILD_BIN_DIR="build_manylinux"
-          CIBW_BUILD: cp313-*
+          # uncomment when testing
+          # CIBW_BUILD: cp313-*
 
       - name: Delete cache to save the latest
         run: |
@@ -227,6 +228,8 @@ jobs:
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
           MACOSX_DEPLOYMENT_TARGET: 14
+          # uncomment when testing
+          # CIBW_BUILD: cp313-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -383,6 +386,8 @@ jobs:
             VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
             VALHALLA_BUILD_BIN_DIR=build/Release
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
+          # uncomment when testing
+          # CIBW_BUILD: cp313-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -402,7 +407,7 @@ jobs:
     needs: [build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
-    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
