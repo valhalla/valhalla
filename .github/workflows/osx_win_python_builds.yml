@@ -66,7 +66,7 @@ jobs:
     name: Build Linux Python wheels
     runs-on: ubuntu-latest
     needs: [publish_pypi]
-    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -208,7 +208,7 @@ jobs:
       # only package python bindings if it's not a PR
 
       - name: Determine package to publish
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
@@ -217,7 +217,7 @@ jobs:
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
@@ -227,7 +227,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: 14
 
       - name: Upload wheels
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-osx-arm64
@@ -362,7 +362,7 @@ jobs:
           ls -l build/vcpkg_installed/custom-x64-windows/bin
       
       - name: Determine package to publish
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         shell: bash
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
@@ -372,7 +372,7 @@ jobs:
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           # used in setup.py
           CIBW_ENVIRONMENT: >
@@ -383,7 +383,7 @@ jobs:
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
 
       - name: Upload wheels
-        # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-win-amd64
@@ -400,7 +400,7 @@ jobs:
     needs: [publish_pypi, build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
-    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -419,7 +419,7 @@ jobs:
   verify_wheels_osx:
     needs: [publish_pypi, build_osx]
     runs-on: macos-14
-    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -442,7 +442,7 @@ jobs:
   verify_wheels_win:
     needs: [publish_pypi, build_win]
     runs-on: windows-2022
-    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
