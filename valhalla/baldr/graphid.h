@@ -201,7 +201,7 @@ public:
    * Advances the id
    */
   GraphId& operator+=(uint32_t offset) {
-    value += offset;
+    set_id(id() + offset);
     return *this;
   }
 

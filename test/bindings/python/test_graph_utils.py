@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import copy
 import unittest
 from valhalla.utils.graph_utils import GraphId, get_tile_base_lon_lat, get_tile_id_from_lon_lat, get_tile_ids_from_bbox
 
@@ -27,10 +28,12 @@ class TestBindings(unittest.TestCase):
     def test_operators(self):
         v_test = 674464002
         gid_original = GraphId(v_test)
-        gid_plus = gid_original
+        # need to copy explicitly
+        gid_plus = copy.copy(gid_original)
 
         # operator+/operator+=, __add__, __iadd__
         gid_plus += 1
+        self.assertNotEqual(gid_plus, gid_original)
         self.assertEqual(gid_plus, GraphId(gid_original.tileid(), gid_original.level(), gid_original.id() + 1))
         gid_plus = gid_plus + 1
         self.assertEqual(gid_plus, GraphId(gid_original.tileid(), gid_original.level(), gid_original.id() + 2))

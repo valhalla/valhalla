@@ -48,7 +48,17 @@ void init_graphid(pybind11::module& m) {
       .def(py::self == py::self)               // operator==(const GraphId&)
       .def(py::self != py::self)               // operator!=(const GraphId&)
       .def("__bool__", &vb::GraphId::Is_Valid) // operator bool
-      .def("__repr__", [](const vb::GraphId& graph_id) { return std::to_string(graph_id); });
+      .def("__repr__",
+           [](const vb::GraphId& graph_id) { return "<GraphId(" + std::to_string(graph_id) + ")>"; })
+      // pickling support auto-provides copy/deepcopy support
+      .def(py::pickle(
+          // get_state
+          [](const vb::GraphId& gid) { return py::make_tuple(gid.value); },
+          // set_state
+          [](py::tuple t) {
+            vb::GraphId gid(t[0].cast<uint64_t>());
+            return gid;
+          }));
 
   m.def(
       "get_tile_base_lon_lat",
