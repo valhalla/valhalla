@@ -13,20 +13,19 @@ def print_help():
     exe_names = [p.name for p in PYVALHALLA_BIN_DIR.iterdir()]
     fixed_width = len(max(exe_names, key=lambda x: len(x)))
 
-    # TODO: we also want the git commit to show here, probably written to __version__.py by setup.py's BDistWheelCommand
     print(
-        F"""
-valhalla Python package {__version__}
+        f"""Valhalla Python package {__version__}
 
-pyvalhalla package provides a CLI to run Valhalla C++ executables. Arguments are simply passed on as they are.
-One notable exception is --quiet/-q, which will forward the C++ executable's stdout to /dev/null.
-'python -m valhalla --help' will print this help.
+pyvalhalla package provides a CLI to run Valhalla C++ executables. Arguments are simply passed on as they are,
+except for
+  - --version/-v, which will print the full PyPI version plus the git master commit it compiled from
+  - --quiet/-q, which will forward the C++ executable's stdout to /dev/null.
+  - 'python -m valhalla --help' will print this help.
 
 Example usage: 'python -m valhalla --quiet valhalla_build_tiles -c valhalla.json -s initialize -e build test.pbf'
 
 Available commands (in {PYVALHALLA_BIN_DIR}):
-\t{PRINT_BIN_PATH:<{fixed_width}} - Print the absolute path of directory containing the C++ executables
-"""
+\t{PRINT_BIN_PATH:<{fixed_width}} - Print the absolute path of directory containing the C++ executables"""
     )
     for exe in exe_names:
         print(
@@ -47,6 +46,8 @@ def main():
     elif prog_or_opt == PRINT_BIN_PATH:
         # useful when another script wants to run the executables directly for some reason
         print(PYVALHALLA_BIN_DIR)
+    elif prog_or_opt in ("--version", "-v"):
+        print(__version__)
     else:
         exc: Optional[Exception] = None
         try:
@@ -58,7 +59,7 @@ def main():
                 sys.exit(0)
 
             if isinstance(exc, subprocess.CalledProcessError):
-                print(f"Failed calling command '{exc.cmd}'\n")
+                print(f"Failed calling Valhalla executable '{exc.cmd}'\n")
 
             print_help()
             print("Sub-command failed with:\n")
