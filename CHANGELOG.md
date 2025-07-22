@@ -113,6 +113,7 @@
    * ADDED: support for destination exceptions for access restrictions [#5354](https://github.com/valhalla/valhalla/pull/5354)
    * ADDED: Add option `edge.traffic_signal` to trace attributes [#5385](https://github.com/valhalla/valhalla/pull/5385)
    * CHANGED: Cleaned up Dockerfile a bit to make caching more effective [#5396](https://github.com/valhalla/valhalla/pull/5396)
+   * ADDED: Port https://github.com/nilsnolde/docker-valhalla, an orchestrated/scripted Docker image for convenience [#5388](https://github.com/valhalla/valhalla/pull/5388)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
