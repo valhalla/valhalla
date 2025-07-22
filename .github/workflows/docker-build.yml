@@ -60,6 +60,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: docker/Dockerfile
           provenance: false # needed to be able to converge into one image
           platforms: ${{ matrix.platform }}
           push: true
@@ -90,6 +91,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
+          file: docker/Dockerfile
           provenance: false # needed to be able to converge into one image
           platforms: ${{ matrix.platform }}
           push: true
