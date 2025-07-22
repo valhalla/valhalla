@@ -1,5 +1,7 @@
 ## Valhalla Python bindings
 
+| [![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)] | [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)] |
+
 This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
 > [!NOTE]
@@ -23,10 +25,10 @@ We distribute all currently maintained CPython versions as **binary wheels** for
 
 Find a more extended notebook in `./examples`, e.g. how to [use the actor](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/examples/actor_examples.ipynb).
 
-Before using the Python bindings you need to have access to a routable Valhalla graph. Either install Valhalla from source and built the graph from OSM compatible data or use our [Valhalla docker image](https://github.com/gis-ops/docker-valhalla) for a painless experience, e.g. this will build the routing graph for Andorra in `./custom_files`:
+Before using the Python bindings you need to have access to a routable Valhalla graph. Either install Valhalla from source and built the graph from OSM compatible data or use our [Valhalla docker image](https://github.com/valhalla/valhalla/docker/README.md) for a painless experience, e.g. this will build the routing graph for Andorra in `./custom_files`:
 
 ```shell
-docker run --rm --name valhalla_gis-ops -p 8002:8002 -v $PWD/custom_files:/custom_files -e tile_urls=https://download.geofabrik.de/europe/andorra-latest.osm.pbf gisops/valhalla:latest
+docker run --rm --name valhalla -p 8002:8002 -v $PWD/custom_files:/custom_files -e tile_urls=https://download.geofabrik.de/europe/andorra-latest.osm.pbf ghcr.io/valhalla/valhalla-scripted:latest
 ```
 
 Once you have created a graph locally, you can use it like this:
@@ -88,7 +90,7 @@ Once built, start a container to actually build Valhalla using AlmaLinux 8:
 ```shell
 cd valhalla
 docker run -dt -v $PWD:/valhalla-py --name valhalla-py --workdir /valhalla-py ghcr.io/valhalla/manylinux:2_28_valhalla_python
-docker exec -t valhalla-py /valhalla-py/src/bindings/python/build_linux.sh build_manylinux 3.13
+docker exec -t valhalla-py /valhalla-py/src/bindings/python/scripts/build_manylinux.sh build_manylinux 3.13
 ```
 
 This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.12 installations.
