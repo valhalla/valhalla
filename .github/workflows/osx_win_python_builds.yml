@@ -66,7 +66,7 @@ jobs:
     name: Build Linux Python wheels
     runs-on: ubuntu-latest
     needs: [publish_pypi]
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -111,6 +111,8 @@ jobs:
             CCACHE_DIR=/host/project/.cache/ccache
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
+            VALHALLA_BUILD_BIN_DIR="build_manylinux"
+          CIBW_BUILD: cp313-*
 
       - name: Delete cache to save the latest
         run: |
@@ -397,10 +399,10 @@ jobs:
           detached: true
 
   verify_wheels_linux:
-    needs: [publish_pypi, build_python_wheels_linux]
+    needs: [build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    # if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -417,7 +419,7 @@ jobs:
           ./src/bindings/python/test/test_pyvalhalla_package.sh
 
   verify_wheels_osx:
-    needs: [publish_pypi, build_osx]
+    needs: [build_osx]
     runs-on: macos-14
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
@@ -440,7 +442,7 @@ jobs:
           python -m valhalla valhalla_build_tiles -h
   
   verify_wheels_win:
-    needs: [publish_pypi, build_win]
+    needs: [build_win]
     runs-on: windows-2022
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
@@ -464,7 +466,7 @@ jobs:
 
   upload_all:
     name: Upload if release
-    needs: [publish_pypi, verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
+    needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
