@@ -115,6 +115,7 @@
    * CHANGED: Cleaned up Dockerfile a bit to make caching more effective [#5396](https://github.com/valhalla/valhalla/pull/5396)
    * ADDED: Port https://github.com/nilsnolde/docker-valhalla, an orchestrated/scripted Docker image for convenience [#5388](https://github.com/valhalla/valhalla/pull/5388)
    * ADDED: Graph utilities for Python bindings [#5367](https://github.com/valhalla/valhalla/pull/5367)
+   * CHANGED: Decouple `traffic_signal` on node from `kNodeType` in `TripLegBuilder` [#5349](https://github.com/valhalla/valhalla/pull/5394)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
