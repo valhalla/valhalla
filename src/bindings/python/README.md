@@ -90,7 +90,7 @@ Once built, start a container to actually build Valhalla using AlmaLinux 8:
 ```shell
 cd valhalla
 docker run -dt -v $PWD:/valhalla-py --name valhalla-py --workdir /valhalla-py ghcr.io/valhalla/manylinux:2_28_valhalla_python
-docker exec -t valhalla-py /valhalla-py/src/bindings/python/build_linux.sh build_manylinux 3.13
+docker exec -t valhalla-py /valhalla-py/src/bindings/python/scripts/build_manylinux.sh build_manylinux 3.13
 ```
 
 This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.12 installations.
