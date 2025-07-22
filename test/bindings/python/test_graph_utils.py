@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import copy
+import pickle
 import unittest
 from valhalla.utils.graph_utils import GraphId, get_tile_base_lon_lat, get_tile_id_from_lon_lat, get_tile_ids_from_bbox
 
@@ -41,6 +42,26 @@ class TestBindings(unittest.TestCase):
         # operator bool, __bool__
         self.assertTrue(gid_original)
         self.assertFalse(GraphId())
+
+    def test_pickling(self):
+        gid = GraphId(674464002)
+
+        pickled = pickle.dumps(gid)
+        unpickled = pickle.loads(pickled)
+
+        self.assertEqual(gid, unpickled)
+        
+        # shallow copy support
+        gid_cp = copy.copy(gid)
+        self.assertEqual(gid, gid_cp)
+        gid_cp += 1
+        self.assertNotEqual(gid, gid_cp)
+        
+        # deep copy support (should be same as shallow copy anyways)
+        gid_cp = copy.deepcopy(gid)
+        self.assertEqual(gid, gid_cp)
+        gid_cp += 1
+        self.assertNotEqual(gid, gid_cp)
 
     def test_get_tile_base_lon_lat_and_reverse(self):
         gid = GraphId(674464002)
