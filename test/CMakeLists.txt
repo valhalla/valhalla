@@ -385,10 +385,12 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
-      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_utrecht.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py
+      ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_graph_utils.py
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/valhalla.json
       utrecht_tiles
       _valhalla
+      graph_utils
     VERBATIM)
   add_custom_target(run-python_valhalla DEPENDS python_valhalla.log)
   set_target_properties(run-python_valhalla PROPERTIES FOLDER "Python Bindings")
