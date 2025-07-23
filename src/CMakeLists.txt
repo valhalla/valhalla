@@ -54,6 +54,7 @@ function(valhalla_module)
     PUBLIC
       $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
       $<$<BOOL:${MSVC}>:NOMINMAX>
+      $<$<BOOL:${VALHALLA_VERSION_MODIFIER}>:VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}>
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
     PRIVATE
@@ -138,7 +139,7 @@ set(valhalla_hdrs
     ${VALHALLA_SOURCE_DIR}/valhalla/valhalla.h
     ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem_utils.h
     ${VALHALLA_SOURCE_DIR}/valhalla/proto_conversions.h
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     )
@@ -146,7 +147,6 @@ set(valhalla_hdrs
 set(valhalla_src
     config.cc
     worker.cc
-    filesystem.cc
     proto_conversions.cc
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
@@ -172,8 +172,10 @@ target_compile_definitions(valhalla
     $<$<BOOL:${MSVC}>:NOMINMAX>
     HAS_REMOTE_API=0
     AUTO_DOWNLOAD=0
+    $<$<BOOL:${VALHALLA_VERSION_MODIFIER}>:VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}>
   PRIVATE
-    ${libvalhalla_compile_definitions})
+    ${libvalhalla_compile_definitions}
+  )
 
 target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 

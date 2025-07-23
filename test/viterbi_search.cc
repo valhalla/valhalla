@@ -178,6 +178,7 @@ std::vector<size_t> generate_column_counts(size_t column_length,
                                            std::uniform_int_distribution<size_t> count_distribution) {
   std::vector<size_t> counts;
 
+  counts.reserve(column_length);
   for (size_t i = 0; i < column_length; i++) {
     counts.push_back(count_distribution(COUNT_GENERATOR));
   }
@@ -187,7 +188,7 @@ std::vector<size_t> generate_column_counts(size_t column_length,
 
 std::vector<Column> generate_columns(std::uniform_int_distribution<int> transition_cost_distribution,
                                      std::uniform_int_distribution<int> emission_cost_distribution,
-                                     std::vector<size_t> column_counts) {
+                                     const std::vector<size_t>& column_counts) {
   std::vector<Column> columns;
 
   for (const auto count : column_counts) {

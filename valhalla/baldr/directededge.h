@@ -1073,6 +1073,15 @@ public:
   }
 
   /**
+   * We hijack the shortcut mask to move   ferry edges to lower
+   * hierarchies. Will be set during the graph build and re-set during the
+   * hierarchy builder.
+   * @param rc    the road class which should determine the edge's hierarchy
+   * @param reset whether is_shortcut_ should be set false
+   */
+  void set_hierarchy_roadclass(const baldr::RoadClass rc, const bool reset = false);
+
+  /**
    * Set the mask for whether this edge represents a shortcut between 2 nodes.
    * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
    * (other than the 1-2 higher level edges that superseded by the shortcut).

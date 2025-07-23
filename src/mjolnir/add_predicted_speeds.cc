@@ -6,6 +6,7 @@
 
 #include <boost/tokenizer.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <future>
 #include <iomanip>
@@ -164,9 +165,10 @@ void UpdateTile(const std::string& tile_dir,
                 const GraphId& tile_id,
                 const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
                 TrafficStats& stat) {
-  auto tile_path = tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-  if (!filesystem::exists(tile_path)) {
-    LOG_ERROR("No tile at " + tile_path);
+  std::filesystem::path tile_path{tile_dir};
+  tile_path.append(GraphTile::FileSuffix(tile_id));
+  if (!std::filesystem::exists(tile_path)) {
+    LOG_ERROR("No tile at " + tile_path.string());
     return;
   }
 
@@ -223,8 +225,8 @@ void UpdateTiles(const std::string& tile_dir,
   thread_name << std::this_thread::get_id();
 
   // Iterate through the tiles and parse them
-  size_t total = tile_end - tile_start;
-  double count = 0;
+  [[maybe_unused]] size_t total = tile_end - tile_start;
+  [[maybe_unused]] double count = 0;
   TrafficStats stat{};
   for (; tile_start != tile_end; ++tile_start) {
     LOG_INFO(thread_name.str() + " parsing traffic data for " + std::to_string(tile_start->first));
@@ -238,13 +240,13 @@ void UpdateTiles(const std::string& tile_dir,
   result.set_value(stat);
 }
 std::vector<std::pair<GraphId, std::vector<std::string>>>
-PrepareTrafficTiles(const filesystem::path& traffic_tile_dir) {
+PrepareTrafficTiles(const std::filesystem::path& traffic_tile_dir) {
   std::unordered_map<GraphId, std::vector<std::string>> files_per_tile;
-  for (filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
+  for (std::filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
     if (i->is_regular_file()) {
       // remove any extension
       auto file_name = i->path().string();
-      auto pos = file_name.rfind(filesystem::path::preferred_separator);
+      auto pos = file_name.rfind(std::filesystem::path::preferred_separator);
       file_name = file_name.substr(0, file_name.find('.', pos == std::string::npos ? 0 : pos));
       try {
         // parse it into a tile id and store the file path with it
@@ -268,8 +270,8 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
   mutable_config.get_child("mjolnir").erase("tile_extract");
 
   GraphReader reader(mutable_config.get_child("mjolnir"));
-  int shortcuts_with_speed = 0;
-  int non_dr_with_speed = 0;
+  [[maybe_unused]] int shortcuts_with_speed = 0;
+  [[maybe_unused]] int non_dr_with_speed = 0;
   std::vector<uint32_t> dr_class_edges_links(8);
   std::vector<uint32_t> dr_road_class_edges(8);
   std::vector<uint32_t> pred_road_class_edges(8);
@@ -331,7 +333,7 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
   LOG_INFO("non drivable with speed = " + std::to_string(non_dr_with_speed));
   LOG_INFO("Shortcuts with speed = " + std::to_string(shortcuts_with_speed));
 
-  uint32_t totaldrivable = 0, totalpt = 0, totalff = 0, totaldrivablelink = 0;
+  [[maybe_unused]] uint32_t totaldrivable = 0, totalpt = 0, totalff = 0, totaldrivablelink = 0;
   for (uint32_t i = 0; i < 8; i++) {
     float pct1 = 100.0f * (float)pred_road_class_edges[i] / dr_road_class_edges[i];
     float pct2 = 100.0f * (float)ff_road_class_edges[i] / dr_road_class_edges[i];
@@ -358,7 +360,7 @@ void GenerateSummary(const boost::property_tree::ptree& config) {
 
 //  to process threads and collect results
 void ProcessTrafficTiles(const std::string& tile_dir,
-                         const filesystem::path& traffic_tile_dir,
+                         const std::filesystem::path& traffic_tile_dir,
                          const bool summary,
                          const boost::property_tree::ptree& config) {
 
@@ -375,8 +377,8 @@ void ProcessTrafficTiles(const std::string& tile_dir,
     auto tile_start = tile_end;
     tile_end += (i < at_ceiling ? floor + 1 : floor);
     results.emplace_back();
-    threads[i].reset(
-        new std::thread(UpdateTiles, tile_dir, tile_start, tile_end, std::ref(results.back())));
+    threads[i] = std::make_shared<std::thread>(UpdateTiles, tile_dir, tile_start, tile_end,
+                                               std::ref(results.back()));
   }
 
   // Wait for threads to complete

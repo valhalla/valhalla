@@ -80,7 +80,7 @@ void make_tile() {
                       const uint32_t localedgeidx, const uint32_t opp_local_idx, const bool forward) {
     DirectedEdgeBuilder edge_builder({}, v.first, forward, u.second.Distance(v.second) + .5, 1, 1,
                                      Use::kRoad, RoadClass::kMotorway, localedgeidx, false, false,
-                                     false, false, 0, 0, false);
+                                     false, false, 0, 0, false, RoadClass::kInvalid);
     edge_builder.set_opp_index(opp_local_idx); // How is this different from opp_local_idx
     edge_builder.set_opp_local_idx(opp_local_idx);
     edge_builder.set_localedgeidx(localedgeidx);

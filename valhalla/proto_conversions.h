@@ -1,5 +1,4 @@
 #pragma once
-#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/incidents.pb.h>
@@ -18,6 +17,13 @@ constexpr valhalla::RoadClass kTripLegRoadClass[] = {valhalla::RoadClass::kMotor
                                                      valhalla::RoadClass::kServiceOther};
 inline valhalla::RoadClass GetRoadClass(const baldr::RoadClass road_class) {
   return kTripLegRoadClass[static_cast<int>(road_class)];
+}
+
+// Associate SpeedType values to TripLeg proto
+constexpr TripLeg_SpeedType kTripLegSpeedType[] = {TripLeg_SpeedType_kTagged,
+                                                   TripLeg_SpeedType_kClassified};
+inline TripLeg_SpeedType GetTripLegSpeedType(const baldr::SpeedType speed_type) {
+  return kTripLegSpeedType[static_cast<int>(speed_type)];
 }
 
 // Associate Surface values to TripLeg proto

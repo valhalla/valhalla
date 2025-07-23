@@ -51,6 +51,7 @@ TEST(Logging, FileLoggerTest) {
 
   // start up some threads
   std::vector<std::future<size_t>> results;
+  results.reserve(4);
   for (size_t i = 0; i < 4; ++i) {
     results.emplace_back(std::async(std::launch::async, work));
   }

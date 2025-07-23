@@ -40,7 +40,7 @@ efficient. Before the query, we spatially divide a road network
 we precompute which road segments each square intersects, and add them
 to the square. The query is simply to retrieve all road segments from
 the squares that the radius range covers. See [this slide]
-(http://www.cs.princeton.edu/courses/archive/fall05/cos226/lectures/geosearch.pdf)
+(https://www.cs.princeton.edu/courses/archive/fall05/cos226/lectures/geosearch.pdf)
 at page 7 for details.
 
 ## Map Matching

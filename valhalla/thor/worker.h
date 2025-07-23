@@ -5,7 +5,6 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/meili/match_result.h>
