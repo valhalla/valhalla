@@ -403,7 +403,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         },
         "source_to_target_algorithm": "select_optimal",
         "costmatrix": {
-            "check_reverse_connection": false,
+            "check_reverse_connection": true,
             "allow_second_pass": false,
             "max_reserved_locations": 25,
             "hierarchy_limits": {
