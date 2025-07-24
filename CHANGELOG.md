@@ -112,6 +112,10 @@
    * CHANGED: Use `ankerl::unordered_dense` for `loki::Reach()` for faster search [#5384](https://github.com/valhalla/valhalla/pull/5384)
    * ADDED: support for destination exceptions for access restrictions [#5354](https://github.com/valhalla/valhalla/pull/5354)
    * ADDED: Add option `edge.traffic_signal` to trace attributes [#5385](https://github.com/valhalla/valhalla/pull/5385)
+   * CHANGED: Cleaned up Dockerfile a bit to make caching more effective [#5396](https://github.com/valhalla/valhalla/pull/5396)
+   * ADDED: Port https://github.com/nilsnolde/docker-valhalla, an orchestrated/scripted Docker image for convenience [#5388](https://github.com/valhalla/valhalla/pull/5388)
+   * ADDED: Graph utilities for Python bindings [#5367](https://github.com/valhalla/valhalla/pull/5367)
+   * CHANGED: Decouple `traffic_signal` on node from `kNodeType` in `TripLegBuilder` [#5349](https://github.com/valhalla/valhalla/pull/5394)
    * CHANGED: Use rapidjson for locate serializers [#5260](https://github.com/valhalla/valhalla/pull/5260)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
