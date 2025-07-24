@@ -80,19 +80,21 @@ public:
   void set_except_destination(const bool except_destination);
 
 protected:
-  uint64_t value_ = 0;
-
   struct Attributes {
     uint16_t type_ : 4;
     uint16_t modes_ : 12;
   };
+
+  uint64_t value_ = 0;
+
   Attributes attributes_ = {0, 0};
-  AccessRestrictionDirection direction_ = AccessRestrictionDirection::kBoth;
   uint16_t except_destination_ : 1;
   uint16_t spare_ : 15;
-  uint16_t spare1_ = 0;
+  AccessRestrictionDirection direction_ = AccessRestrictionDirection::kBoth;
   uint8_t spare2_ = 0;
+  uint16_t spare1_ = 0;
 };
+static_assert(sizeof(OSMAccessRestriction) == 16);
 
 } // namespace mjolnir
 } // namespace valhalla
