@@ -1374,7 +1374,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Set node id (OSM node id) if requested
   if (controller.attributes.at(kEdgeNodeId) && start_tile->has_osmids_for_nodes()) {
-    trip_edge->set_osmid(trip_node->osmid());
+    trip_edge->set_begin_node_osmid(trip_node->osmid());
   }
 
   // Set weighted grade if requested
@@ -2127,7 +2127,7 @@ void TripLegBuilder::Build(
 
     // set the endNode ID if requested (look for it in the end_node_tile)
     if (controller.attributes.at(kNodeNodeId) && end_node_tile->has_osmids_for_nodes()) {
-      trip_edge->set_end_osmid(end_node_tile->osmid_for_node(directededge->endnode()));
+      trip_edge->set_end_node_osmid(end_node_tile->osmid_for_node(directededge->endnode()));
     }
 
     // Set begin shape index if requested
