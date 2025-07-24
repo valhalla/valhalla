@@ -498,6 +498,7 @@
    * CHANGED: Use `starts_with()` instead of `substr(0, N)` getting and comparing to prefix [#3702](https://github.com/valhalla/valhalla/pull/3702)
    * ADDED: Ferry support for HGV [#3710](https://github.com/valhalla/valhalla/issues/3710)
    * ADDED: Linting & formatting checks for Python code [#3713](https://github.com/valhalla/valhalla/pull/3713)
+   * CHANGED: Replace unstable geos API with boost::geometry for admin building [#3683](https://github.com/valhalla/valhalla/pull/3683)
    * CHANGED: rename Turkey admin to Türkiye [#3720](https://github.com/valhalla/valhalla/pull/3713)
    * CHANGED: bumped vcpkg version to "2022.08.15" [#3754](https://github.com/valhalla/valhalla/pull/3754)
    * CHANGED: chore: Updates to clang-format 11.0.0 [#3533](https://github.com/valhalla/valhalla/pull/3533)

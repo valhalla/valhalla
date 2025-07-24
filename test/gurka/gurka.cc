@@ -504,7 +504,6 @@ findEdge(valhalla::baldr::GraphReader& reader,
       graph_tile_ptr reverse_tile = tile;
       auto de_endnode_coordinates =
           reader.GetGraphTile(de_endnode, reverse_tile)->get_node_ll(de_endnode);
-
       const auto threshold = 0.00001; // Degrees.  About 1m at the equator
       if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
           std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
