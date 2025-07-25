@@ -3,7 +3,7 @@
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/turn.h>
 
 #include <cstdint>
@@ -1189,9 +1189,9 @@ public:
 
   /**
    * Create a json object representing this edge
-   * @return  Returns the json object
+   *  @param writer The writer json object to represent the object
    */
-  json::MapPtr json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // 1st 8-byte word

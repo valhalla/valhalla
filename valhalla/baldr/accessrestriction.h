@@ -2,7 +2,7 @@
 #define VALHALLA_BALDR_ACCESSRESTRICTION_H_
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 
 #include <cstdint>
 
@@ -71,7 +71,7 @@ public:
    */
   void set_value(const uint64_t v);
 
-  const json::MapPtr json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
   /**
    * operator < - for sorting. Sort by edge Id.
