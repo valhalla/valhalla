@@ -91,8 +91,8 @@ protected:
   uint16_t except_destination_ : 1;
   uint16_t spare_ : 15;
   AccessRestrictionDirection direction_ = AccessRestrictionDirection::kBoth;
-  uint8_t spare2_ = 0;
-  uint16_t spare1_ = 0;
+  uint8_t spare1_ = 0;
+  uint16_t spare2_ = 0;
 };
 static_assert(sizeof(OSMAccessRestriction) == 16);
 
