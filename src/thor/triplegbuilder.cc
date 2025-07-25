@@ -1926,7 +1926,7 @@ void TripLegBuilder::Build(
           // Get the tile for the edgestartnode
           graph_tile_ptr startnode_tile;
           graphreader.GetGraphTile(edgestartnode, startnode_tile);
-          if (startnode_tile->has_osmids_for_nodes()) {
+          if ((startnode_tile != nullptr) && startnode_tile->has_osmids_for_nodes()) {
             // Set the osm id of the startnode of the edge
             trip_node->set_osmid(startnode_tile->osmid_for_node(edgestartnode));
           } else {
