@@ -61,7 +61,7 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
                                                       kInitialEdgeLabelCountBidirDijkstra)),
       max_reserved_locations_count_(
           config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
-      check_reverse_connection_(config.get<bool>("costmatrix.check_reverse_connection", false)),
+      check_reverse_connection_(config.get<bool>("costmatrix.check_reverse_connection", true)),
       max_iterations_(std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultIterations),
                                static_cast<uint32_t>(1))),
       access_mode_(kAutoAccess),
