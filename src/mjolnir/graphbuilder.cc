@@ -6,7 +6,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -27,6 +26,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
+#include <filesystem>
 #include <future>
 #include <memory>
 #include <thread>
@@ -65,9 +65,9 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   // tons of nodes that no edges reference, but we need them because they are the means by which
   // we know what edges connect to a given node from the nodes perspective
 
-  auto start_node_edge_file = filesystem::path(edges_file);
+  auto start_node_edge_file = std::filesystem::path(edges_file);
   start_node_edge_file.replace_filename(start_node_edge_file.filename().string() + ".starts.tmp");
-  auto end_node_edge_file = filesystem::path(edges_file);
+  auto end_node_edge_file = std::filesystem::path(edges_file);
   end_node_edge_file.replace_filename(end_node_edge_file.filename().string() + ".ends.tmp");
   using edge_ends_t = sequence<std::pair<uint32_t, uint32_t>>;
   std::unique_ptr<edge_ends_t> starts(new edge_ends_t(start_node_edge_file.string(), true));
@@ -144,8 +144,8 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   // clean up tmp files
   starts.reset();
   ends.reset();
-  filesystem::remove(start_node_edge_file);
-  filesystem::remove(end_node_edge_file);
+  std::filesystem::remove(start_node_edge_file);
+  std::filesystem::remove(end_node_edge_file);
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;
@@ -395,7 +395,7 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
         (forward && direction == AccessRestrictionDirection::kForward) ||
         (!forward && direction == AccessRestrictionDirection::kBackward)) {
       AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(),
-                                           r->second.value());
+                                           r->second.value(), r->second.except_destination());
       graphtile.AddAccessRestriction(access_restriction);
       modes |= r->second.modes();
     }

@@ -3,7 +3,6 @@
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "loki/search.h"
 #include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
@@ -14,6 +13,7 @@
 #include <osmium/io/pbf_input.hpp>
 #include <sqlite3.h>
 
+#include <filesystem>
 #include <future>
 #include <string_view>
 #include <thread>
@@ -58,18 +58,18 @@ struct LandmarkDatabase::db_pimpl {
   db_pimpl(const std::string& db_name, bool read_only)
       : insert_stmt(nullptr), bounding_box_stmt(nullptr) {
     // create parent directory if it doesn't exist
-    const filesystem::path parent_dir = filesystem::path(db_name).parent_path();
-    if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+    const std::filesystem::path parent_dir = std::filesystem::path(db_name).parent_path();
+    if (!std::filesystem::exists(parent_dir) && !std::filesystem::create_directories(parent_dir)) {
       throw std::runtime_error("Can't create parent directory " + parent_dir.string());
     }
 
     // figure out if we need to create database or can just open it up
     const auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-    if (!filesystem::exists(db_name)) {
+    if (!std::filesystem::exists(db_name)) {
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
     } else if (!read_only) {
-      filesystem::remove(db_name);
+      std::filesystem::remove(db_name);
       LOG_INFO("deleting existing landmark database " + db_name + ", creating a new one");
     }
 
@@ -514,7 +514,7 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   }
 
   // collect and log the stats
-  size_t tiles = 0, edges = 0, landmarks = 0;
+  [[maybe_unused]] size_t tiles = 0, edges = 0, landmarks = 0;
   for (std::promise<std::tuple<size_t, size_t, size_t>>& s : stats_info) {
     std::tuple<size_t, size_t, size_t> data = s.get_future().get();
     tiles += std::get<0>(data);

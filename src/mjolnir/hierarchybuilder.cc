@@ -4,7 +4,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
@@ -13,6 +12,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <filesystem>
 #include <string>
 #include <utility>
 #include <vector>
@@ -274,7 +274,8 @@ void FormTilesInNewLevel(GraphReader& reader,
         auto restrictions = tile->GetAccessRestrictions(base_edge_id.id(), kAllAccess);
         for (const auto& res : restrictions) {
           tilebuilder->AddAccessRestriction(AccessRestriction(tilebuilder->directededges().size(),
-                                                              res.type(), res.modes(), res.value()));
+                                                              res.type(), res.modes(), res.value(),
+                                                              res.except_destination()));
         }
       }
 
@@ -554,10 +555,10 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_
     if (!itr->second) {
       // Remove the file
       GraphId empty_tile = itr->first;
-      std::string file_location = tile_dir + filesystem::path::preferred_separator +
-                                  GraphTile::FileSuffix(empty_tile.Tile_Base());
-      remove(file_location.c_str());
-      LOG_DEBUG("Remove file: " + file_location);
+      std::filesystem::path file_location{tile_dir};
+      file_location.append(GraphTile::FileSuffix(empty_tile.Tile_Base()));
+      std::filesystem::remove(file_location);
+      LOG_DEBUG("Remove file: " + file_location.string());
     }
   }
 }
@@ -599,7 +600,8 @@ void HierarchyBuilder::Build(const boost::property_tree::ptree& pt,
   // Update the end nodes to all transit connections in the transit hierarchy
   auto hierarchy_properties = pt.get_child("mjolnir");
   auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-  if (transit_dir && filesystem::exists(*transit_dir) && filesystem::is_directory(*transit_dir)) {
+  if (transit_dir && std::filesystem::exists(*transit_dir) &&
+      std::filesystem::is_directory(*transit_dir)) {
     UpdateTransitConnections(reader, old_to_new_file);
   }
 

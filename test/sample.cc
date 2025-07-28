@@ -8,6 +8,7 @@
 #include <lz4frame.h>
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <list>
 
@@ -48,7 +49,7 @@ TEST(Sample, create_tile) {
   // input for gzip
   auto src_func = [&tile](z_stream& s) -> int {
     s.next_in = static_cast<Byte*>(static_cast<void*>(tile.data()));
-    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(decltype(tile)::value_type));
+    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(int16_t));
     return Z_FINISH;
   };
 
@@ -214,7 +215,7 @@ TEST(Sample, store) {
   // input for gzip
   auto src_func = [&tile](z_stream& s) -> int {
     s.next_in = static_cast<Byte*>(static_cast<void*>(tile.data()));
-    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(decltype(tile)::value_type));
+    s.avail_in = static_cast<unsigned int>(tile.size() * sizeof(int16_t));
     return Z_FINISH;
   };
 
@@ -243,9 +244,9 @@ TEST(Sample, store) {
   // empty file
   EXPECT_FALSE(s.store("/N00/N00E009.hgt", {}));
 
-  filesystem::remove("test/data/sample/N00/N00E009.hgt");
-  filesystem::remove("test/data/sample/N00/N00E005.hgt");
-  filesystem::remove("test/data/sample/N00/N00E005.hgt.gz");
+  std::filesystem::remove("test/data/sample/N00/N00E009.hgt");
+  std::filesystem::remove("test/data/sample/N00/N00E005.hgt");
+  std::filesystem::remove("test/data/sample/N00/N00E005.hgt.gz");
 }
 
 } // namespace

@@ -2,13 +2,15 @@
 
 theme:
   name: material
-  logo: images/valhalla.png
-  favicon: images/valhalla.png
+  logo: images/valhalla_logo.svg
+  favicon: images/valhalla_logo.svg
   features:
+    - content.tabs.link
     - navigation.instant
     - navigation.sections
     - navigation.top
     - toc.follow
+    - content.code.copy
   palette:
     - scheme: default
       toggle:
@@ -60,6 +62,7 @@ nav:
   - Introduction for Users: valhalla-intro.md
   - Build from Source: building.md
   - Terminology: terminology.md
+  - Python bindings: README_python.md
   - Public APIs:
       - API Overview: api/index.md
       - Protocol Buffers: api/protocol-buffers.md

@@ -780,8 +780,8 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
 
     HandleOnlyRestrictionProperties(results, hierarchy_properties);
 
-    uint32_t forward_restrictions_count = 0;
-    uint32_t reverse_restrictions_count = 0;
+    [[maybe_unused]] uint32_t forward_restrictions_count = 0;
+    [[maybe_unused]] uint32_t reverse_restrictions_count = 0;
 
     for (const auto& stat : results) {
       forward_restrictions_count += stat.forward_restrictions_count + stat.restrictions.size();

@@ -107,7 +107,7 @@ public:
     overflowbucket_.clear();
     while (currentbucket_ != buckets_.end()) {
       currentbucket_->clear();
-      currentbucket_++;
+      ++currentbucket_;
     }
 
     // Reset current bucket and cost

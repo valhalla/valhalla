@@ -5,7 +5,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/vector2.h"
@@ -21,6 +20,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <future>
 #include <memory>
 #include <set>
@@ -99,7 +99,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
                  const uint32_t tile_date,
                  const Transit& tile_pbf,
                  std::unordered_map<GraphId, uint16_t>& stop_no_access,
-                 const std::string& pbf_fp,
+                 const std::filesystem::path& pbf_fp,
                  std::mutex& lock,
                  builder_stats& stats) {
   // Check if there are no schedule stop pairs in this tile
@@ -109,11 +109,8 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
   uint32_t schedule_index = 0;
   std::map<TransitSchedule, uint32_t> schedules;
 
-  std::size_t slash_found = pbf_fp.find_last_of("/\\");
-  std::string directory = pbf_fp.substr(0, slash_found);
-
-  filesystem::recursive_directory_iterator transit_file_itr(directory);
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::recursive_directory_iterator transit_file_itr(pbf_fp.parent_path());
+  std::filesystem::recursive_directory_iterator end_file_itr;
 
   // lambda to add a schedule
   auto add_schedule = [&schedule_index, &schedules,
@@ -134,7 +131,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (filesystem::is_regular_file(transit_file_itr->path())) {
+    if (std::filesystem::is_regular_file(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
       std::string ext = transit_file_itr->path().extension().string();
       std::string file_name = fname.substr(0, fname.size() - ext.size());
@@ -149,7 +146,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           if (ext == ".pbf") {
             curr_tile_pbf = tile_pbf;
           } else {
-            curr_tile_pbf = read_pbf(fname, lock);
+            curr_tile_pbf = read_pbf(transit_file_itr->path().string(), lock);
           }
         }
 
@@ -552,7 +549,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   // stations and platforms are connected by platformconnections
 
   // Iterate through the platform and their edges
-  uint32_t transitedges = 0;
+  [[maybe_unused]] uint32_t transitedges = 0;
   for (const auto& stop_edges : stop_edge_map) {
     // Get the platform information
     GraphId platform_graphid = stop_edges.second.origin_pbf_graphid;
@@ -895,8 +892,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
             GraphId(end_platform_graphid.tileid(), end_platform_graphid.level(), 0));
         boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
         file_name += ".pbf";
-        const std::string file = transit_dir + filesystem::path::preferred_separator + file_name;
-        Transit endtransit = read_pbf(file, lock);
+        std::filesystem::path file_path{transit_dir};
+        file_path.append(file_name);
+        Transit endtransit = read_pbf(file_path.string(), lock);
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
@@ -1012,15 +1010,16 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(), 0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
-    const std::string pbf_fp = transit_dir + filesystem::path::preferred_separator + file_name;
+    std::filesystem::path pbf_fp{transit_dir};
+    pbf_fp.append(file_name);
 
     // Make sure it exists
-    if (!filesystem::exists(pbf_fp)) {
-      LOG_ERROR("File not found.  " + pbf_fp);
+    if (!std::filesystem::exists(pbf_fp)) {
+      LOG_ERROR("File not found.  " + pbf_fp.string());
       return;
     }
 
-    Transit tile_pbf = read_pbf(pbf_fp, lock);
+    Transit tile_pbf = read_pbf(pbf_fp.string(), lock);
     // Get Valhalla tile - get a read only instance for reference and
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
@@ -1196,14 +1195,14 @@ namespace mjolnir {
 std::unordered_set<GraphId> convert_transit(const ptree& pt) {
 
   // figure out which transit tiles even exist
-  filesystem::recursive_directory_iterator transit_file_itr(
-      pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::GetTransitLevel().level));
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::path transit_dir{pt.get<std::string>("mjolnir.transit_dir")};
+  transit_dir.append(std::to_string(TileHierarchy::GetTransitLevel().level));
+  std::filesystem::recursive_directory_iterator transit_file_itr(transit_dir);
+  std::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     auto tile_path = transit_file_itr->path();
-    if (filesystem::is_regular_file(transit_file_itr->path()) &&
+    if (std::filesystem::is_regular_file(transit_file_itr->path()) &&
         (tile_path.extension() == ".pbf" || std::isdigit(tile_path.string().back()))) {
       all_tiles.emplace(GraphTile::GetTileId(tile_path.string()));
     }
@@ -1293,7 +1292,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   }
 
   if (total_dep_count) {
-    float percent =
+    [[maybe_unused]] float percent =
         static_cast<float>(total_midnight_dep_count) / static_cast<float>(total_dep_count);
     percent *= 100;
 

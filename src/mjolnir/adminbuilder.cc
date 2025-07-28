@@ -1,5 +1,4 @@
 #include "mjolnir/adminbuilder.h"
-#include "filesystem.h"
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/sqlite3.h"
@@ -12,6 +11,7 @@
 #include <sqlite3.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -375,8 +375,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return false;
   }
 
-  const filesystem::path parent_dir = filesystem::path(*database).parent_path();
-  if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+  const std::filesystem::path parent_dir = std::filesystem::path(*database).parent_path();
+  if (!std::filesystem::exists(parent_dir) && !std::filesystem::create_directories(parent_dir)) {
     LOG_ERROR("Can't create parent directory " + parent_dir.string());
     return false;
   }
@@ -504,7 +504,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   geos_helper_t::get();
 
   // for each admin area (relation)
-  uint32_t count = 0;
+  [[maybe_unused]] uint32_t count = 0;
   for (const auto& admin : admin_data.admins) {
     std::pair<std::string, uint64_t> admin_info(admin_data.name_offset_map.name(admin.name_index),
                                                 admin.id);
@@ -786,8 +786,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   LOG_INFO("Writing database to disk.");
-  if (filesystem::exists(*database)) {
-    filesystem::remove(*database);
+  if (std::filesystem::exists(*database)) {
+    std::filesystem::remove(*database);
   }
 
   auto db_on_disk = Sqlite3::open((*database).c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
