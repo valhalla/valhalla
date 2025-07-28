@@ -92,19 +92,19 @@ void statistics::create_tile_tables(Sqlite3& db) {
   std::string sql;
 
   // Create table for tiles
-  sql = "SELECT InitSpatialMetaData(1); CREATE TABLE tiledata (";
-  sql += "tileid INTEGER PRIMARY KEY,";
-  sql += "tilearea REAL,";
-  sql += "totalroadlen REAL,";
-  sql += "motorway REAL,";
-  sql += "pmary REAL,";
-  sql += "secondary REAL,";
-  sql += "tertiary REAL,";
-  sql += "trunk REAL,";
-  sql += "residential REAL,";
-  sql += "unclassified REAL,";
-  sql += "serviceother REAL";
-  sql += ")";
+  sql = "SELECT InitSpatialMetaData(1); CREATE TABLE tiledata ("
+        "tileid INTEGER PRIMARY KEY,"
+        "tilearea REAL,"
+        "totalroadlen REAL,"
+        "motorway REAL,"
+        "pmary REAL,"
+        "secondary REAL,"
+        "tertiary REAL,"
+        "trunk REAL,"
+        "residential REAL,"
+        "unclassified REAL,"
+        "serviceother REAL"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -112,8 +112,7 @@ void statistics::create_tile_tables(Sqlite3& db) {
     return;
   }
   // Add tile geometry column
-  sql = "SELECT AddGeometryColumn('tiledata', ";
-  sql += "'geom', 4326, 'POLYGON', 2)";
+  sql = "SELECT AddGeometryColumn('tiledata', 'geom', 4326, 'POLYGON', 2)";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -121,15 +120,15 @@ void statistics::create_tile_tables(Sqlite3& db) {
     return;
   }
   // Create table for tile data of road classes
-  sql = "CREATE TABLE rclasstiledata (";
-  sql += "tileid INTEGER,";
-  sql += "type TEXT NOT NULL,";
-  sql += "oneway REAL,";
-  sql += "maxspeed REAL,";
-  sql += "internaledges INTEGER,";
-  sql += "named REAL,";
-  sql += "FOREIGN KEY (tileid) REFERENCES tiledata(tileid)";
-  sql += ")";
+  sql = "CREATE TABLE rclasstiledata ("
+        "tileid INTEGER,"
+        "type TEXT NOT NULL,"
+        "oneway REAL,"
+        "maxspeed REAL,"
+        "internaledges INTEGER,"
+        "named REAL,"
+        "FOREIGN KEY (tileid) REFERENCES tiledata(tileid)"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -137,18 +136,18 @@ void statistics::create_tile_tables(Sqlite3& db) {
     return;
   }
   // Create table for truck tile data of road classes
-  sql = "CREATE TABLE truckrclasstiledata (";
-  sql += "tileid INTEGER,";
-  sql += "type TEXT NOT NULL,";
-  sql += "hazmat REAL,";
-  sql += "truck_route REAL,";
-  sql += "height INTEGER,";
-  sql += "width INTEGER,";
-  sql += "length INTEGER,";
-  sql += "weight INTEGER,";
-  sql += "axle_load INTEGER,";
-  sql += "FOREIGN KEY (tileid) REFERENCES tiledata(tileid)";
-  sql += ")";
+  sql = "CREATE TABLE truckrclasstiledata ("
+        "tileid INTEGER,"
+        "type TEXT NOT NULL,"
+        "hazmat REAL,"
+        "truck_route REAL,"
+        "height INTEGER,"
+        "width INTEGER,"
+        "length INTEGER,"
+        "weight INTEGER,"
+        "axle_load INTEGER,"
+        "FOREIGN KEY (tileid) REFERENCES tiledata(tileid)"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -163,17 +162,17 @@ void statistics::create_country_tables(Sqlite3& db) {
   std::string sql;
 
   // Create tables for country data
-  sql = "CREATE TABLE countrydata (";
-  sql += "isocode TEXT PRIMARY KEY,";
-  sql += "motorway REAL,";
-  sql += "pmary REAL,";
-  sql += "secondary REAL,";
-  sql += "tertiary REAL,";
-  sql += "trunk REAL,";
-  sql += "residential REAL,";
-  sql += "unclassified REAL,";
-  sql += "serviceother REAL";
-  sql += ")";
+  sql = "CREATE TABLE countrydata ("
+        "isocode TEXT PRIMARY KEY,"
+        "motorway REAL,"
+        "pmary REAL,"
+        "secondary REAL,"
+        "tertiary REAL,"
+        "trunk REAL,"
+        "residential REAL,"
+        "unclassified REAL,"
+        "serviceother REAL"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -181,15 +180,15 @@ void statistics::create_country_tables(Sqlite3& db) {
     return;
   }
   // Create table for country data of road classes
-  sql = "CREATE TABLE rclassctrydata (";
-  sql += "isocode TEXT NOT NULL,";
-  sql += "type TEXT NOT NULL,";
-  sql += "oneway REAL,";
-  sql += "maxspeed REAL,";
-  sql += "internaledges INTEGER,";
-  sql += "named REAL,";
-  sql += "FOREIGN KEY (isocode) REFERENCES countrydata(isocode)";
-  sql += ")";
+  sql = "CREATE TABLE rclassctrydata ("
+        "isocode TEXT NOT NULL,"
+        "type TEXT NOT NULL,"
+        "oneway REAL,"
+        "maxspeed REAL,"
+        "internaledges INTEGER,"
+        "named REAL,"
+        "FOREIGN KEY (isocode) REFERENCES countrydata(isocode)"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -197,18 +196,18 @@ void statistics::create_country_tables(Sqlite3& db) {
     return;
   }
   // Create table for truck country data of road classes
-  sql = "CREATE TABLE truckrclassctrydata (";
-  sql += "isocode TEXT NOT NULL,";
-  sql += "type TEXT NOT NULL,";
-  sql += "hazmat REAL,";
-  sql += "truck_route REAL,";
-  sql += "height INTEGER,";
-  sql += "width INTEGER,";
-  sql += "length INTEGER,";
-  sql += "weight INTEGER,";
-  sql += "axle_load INTEGER,";
-  sql += "FOREIGN KEY (isocode) REFERENCES countrydata(isocode)";
-  sql += ")";
+  sql = "CREATE TABLE truckrclassctrydata ("
+        "isocode TEXT NOT NULL,"
+        "type TEXT NOT NULL,"
+        "hazmat REAL,"
+        "truck_route REAL,"
+        "height INTEGER,"
+        "width INTEGER,"
+        "length INTEGER,"
+        "weight INTEGER,"
+        "axle_load INTEGER,"
+        "FOREIGN KEY (isocode) REFERENCES countrydata(isocode)"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -223,10 +222,10 @@ void statistics::create_exit_tables(Sqlite3& db) {
   std::string sql;
 
   // Create table for exit data in tiles
-  sql = "CREATE TABLE tile_exitinfo (";
-  sql += "tileid INTEGER NOT NULL,";
-  sql += "exitsign REAL";
-  sql += ")";
+  sql = "CREATE TABLE tile_exitinfo ("
+        "tileid INTEGER NOT NULL,"
+        "exitsign REAL"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -235,10 +234,10 @@ void statistics::create_exit_tables(Sqlite3& db) {
   }
 
   // Create table for fork data in tiles
-  sql = "CREATE TABLE tile_forkinfo (";
-  sql += "tileid INTEGER NOT NULL,";
-  sql += "exitsign REAL";
-  sql += ")";
+  sql = "CREATE TABLE tile_forkinfo ("
+        "tileid INTEGER NOT NULL,"
+        "exitsign REAL"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -247,10 +246,10 @@ void statistics::create_exit_tables(Sqlite3& db) {
   }
 
   // Create table for exit data in countries
-  sql = "CREATE TABLE ctry_exitinfo (";
-  sql += "isocode TEXT NOT NULL,";
-  sql += "exitsign REAL";
-  sql += ")";
+  sql = "CREATE TABLE ctry_exitinfo ("
+        "isocode TEXT NOT NULL,"
+        "exitsign REAL"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -259,10 +258,10 @@ void statistics::create_exit_tables(Sqlite3& db) {
   }
 
   // Create table for fork data in countries
-  sql = "CREATE TABLE ctry_forkinfo (";
-  sql += "isocode TEXT NOT NULL,";
-  sql += "exitsign REAL";
-  sql += ")";
+  sql = "CREATE TABLE ctry_forkinfo ("
+        "isocode TEXT NOT NULL,"
+        "exitsign REAL"
+        ")";
   ret = sqlite3_exec(db.get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -272,7 +271,6 @@ void statistics::create_exit_tables(Sqlite3& db) {
 }
 
 void statistics::insert_tile_data(Sqlite3& db, sqlite3_stmt* stmt) {
-
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
@@ -285,9 +283,9 @@ void statistics::insert_tile_data(Sqlite3& db, sqlite3_stmt* stmt) {
     return;
   }
   sql = "INSERT INTO tiledata (tileid, tilearea, totalroadlen, motorway, pmary, secondary, "
-        "tertiary, trunk, residential, unclassified, serviceother, geom) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326))";
-  ret = sqlite3_prepare_v2(db.get(), sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
+        "tertiary, trunk, residential, unclassified, serviceother, geom) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, GeomFromText(?, 4326))";
+  ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
     LOG_ERROR(std::string(sqlite3_errmsg(db.get())));
@@ -353,8 +351,8 @@ void statistics::insert_tile_data(Sqlite3& db, sqlite3_stmt* stmt) {
     return;
   }
 
-  sql = "INSERT INTO rclasstiledata (tileid, type, oneway, maxspeed, internaledges, named) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?)";
+  sql = "INSERT INTO rclasstiledata (tileid, type, oneway, maxspeed, internaledges, named) "
+        "VALUES (?, ?, ?, ?, ?, ?)";
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -410,8 +408,8 @@ void statistics::insert_tile_data(Sqlite3& db, sqlite3_stmt* stmt) {
   }
 
   sql = "INSERT INTO truckrclasstiledata (tileid, type, hazmat, truck_route, height, width, "
-        "length, weight, axle_load) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "length, weight, axle_load) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -481,8 +479,8 @@ void statistics::insert_country_data(Sqlite3& db, sqlite3_stmt* stmt) {
     return;
   }
   sql = "INSERT INTO countrydata (isocode, motorway, pmary, secondary, tertiary, trunk, "
-        "residential, unclassified, serviceother)";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "residential, unclassified, serviceother)"
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -526,8 +524,8 @@ void statistics::insert_country_data(Sqlite3& db, sqlite3_stmt* stmt) {
     return;
   }
 
-  sql = "INSERT INTO rclassctrydata (isocode, type, oneway, maxspeed, internaledges, named) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?)";
+  sql = "INSERT INTO rclassctrydata (isocode, type, oneway, maxspeed, internaledges, named) "
+        "VALUES (?, ?, ?, ?, ?, ?)";
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -583,8 +581,8 @@ void statistics::insert_country_data(Sqlite3& db, sqlite3_stmt* stmt) {
   }
 
   sql = "INSERT INTO truckrclassctrydata (isocode, type, hazmat, truck_route, height, width, "
-        "length, weight, axle_load) ";
-  sql += "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "length, weight, axle_load) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -654,8 +652,8 @@ void statistics::insert_exit_data(Sqlite3& db, sqlite3_stmt* stmt) {
     return;
   }
 
-  sql = "INSERT INTO tile_exitinfo (tileid, exitsign) ";
-  sql += "VALUES (?, ?)";
+  sql = "INSERT INTO tile_exitinfo (tileid, exitsign) "
+        "VALUES (?, ?)";
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -698,8 +696,8 @@ void statistics::insert_exit_data(Sqlite3& db, sqlite3_stmt* stmt) {
     return;
   }
 
-  sql = "INSERT INTO tile_forkinfo (tileid, exitsign) ";
-  sql += "VALUES (?, ?)";
+  sql = "INSERT INTO tile_forkinfo (tileid, exitsign) "
+        "VALUES (?, ?)";
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -741,8 +739,8 @@ void statistics::insert_exit_data(Sqlite3& db, sqlite3_stmt* stmt) {
     return;
   }
 
-  sql = "INSERT INTO ctry_exitinfo (isocode, exitsign) ";
-  sql += "VALUES (?, ?)";
+  sql = "INSERT INTO ctry_exitinfo (isocode, exitsign) "
+        "VALUES (?, ?)";
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -783,8 +781,8 @@ void statistics::insert_exit_data(Sqlite3& db, sqlite3_stmt* stmt) {
     return;
   }
 
-  sql = "INSERT INTO ctry_forkinfo (isocode, exitsign) ";
-  sql += "VALUES (?, ?)";
+  sql = "INSERT INTO ctry_forkinfo (isocode, exitsign) "
+        "VALUES (?, ?)";
   ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
