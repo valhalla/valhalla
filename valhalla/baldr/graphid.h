@@ -2,9 +2,10 @@
 #define VALHALLA_BALDR_GRAPHID_H_
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 
 #include <cstdint>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -169,9 +170,9 @@ public:
 
   /**
    * The json representation of the id
-   * @return  json
+   * @param writer The writer json object to represent the id
    */
-  json::Value json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
   /**
    * Post increments the id.
