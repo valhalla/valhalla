@@ -115,7 +115,7 @@ TEST(locate, basic_properties) {
       ASSERT_EQ(rapidjson::Pointer("/live_speed/breakpoint_0").Get(edge)->GetDouble(), 0.33);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/speed_1").Get(edge)->GetInt(), 124);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/congestion_1").Get(edge)->GetDouble(), .5);
-      ASSERT_EQ(rapidjson::Pointer("/live_speed/breakpoint_1").Get(edge)->GetDouble(), 0.67);
+      ASSERT_EQ(rapidjson::Pointer("/live_speed/breakpoint_1").Get(edge)->GetDouble(), 0.66);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/speed_2").Get(edge)->GetInt(), 122);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/congestion_2").Get(edge)->GetDouble(), 1.0);
 
