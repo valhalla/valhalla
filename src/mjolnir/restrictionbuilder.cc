@@ -1,5 +1,4 @@
 #include "mjolnir/restrictionbuilder.h"
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -9,7 +8,6 @@
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "mjolnir/complexrestrictionbuilder.h"
-#include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmrestriction.h"
 #include "scoped_timer.h"

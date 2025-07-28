@@ -3,12 +3,9 @@
 #include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/time_info.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
 #include "proto_conversions.h"
 
 #include <algorithm>
-#include <exception>
 #include <vector>
 
 using namespace valhalla::baldr;

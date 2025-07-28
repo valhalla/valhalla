@@ -7,7 +7,6 @@
 #include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/sqlite3.h"
-#include "mjolnir/util.h"
 #include "sif/nocost.h"
 
 #include <osmium/io/pbf_input.hpp>

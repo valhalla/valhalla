@@ -2,12 +2,6 @@
 #include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/motorcyclecost.h"
-#include "sif/motorscootercost.h"
-#include "sif/pedestriancost.h"
-#include "tyr/actor.h"
 
 #include <boost/property_tree/ptree.hpp>
 
