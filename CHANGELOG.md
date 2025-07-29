@@ -93,7 +93,6 @@
    * CHANGED: Removed ferry reclassification and only move edges in hierarchy [#5269](https://github.com/valhalla/valhalla/pull/5269)
    * CHANGED: More clang-tidy fixes [#5253](https://github.com/valhalla/valhalla/pull/5253)
    * CHANGED: Removed unused headers [#5254](https://github.com/valhalla/valhalla/pull/5254)
-   * CHANGED: Use rapidjson for height serializer [#5277](https://github.com/valhalla/valhalla/pull/5277)
    * ADDED: "destination_only_hgv" in directed edge json [#5281](https://github.com/valhalla/valhalla/pull/5281)
    * CHANGED: Link libvalhalla to libgeos. Build command to use `nmake` on Windows instead of `make`. Skipping check for `CMAKE_BUILD_TYPE` when using a multi-config generator like Visual Studio or XCode. [#5294](https://github.com/valhalla/valhalla/pull/5294)
    * ADDED: workflow to publish Python bindings for all major platforms to PyPI [#5280](https://github.com/valhalla/valhalla/pull/5280)
@@ -119,6 +118,7 @@
    * CHANGED: Decouple `traffic_signal` on node from `kNodeType` in `TripLegBuilder` [#5349](https://github.com/valhalla/valhalla/pull/5394)
    * CHANGED: Use rapidjson for locate serializers [#5260](https://github.com/valhalla/valhalla/pull/5260)
    * CHANGED: set`check_reverse_connection` default value to `true` [#5404](https://github.com/valhalla/valhalla/pull/5404)
+   * CHANGED: Use rapidjson for height serializer [#5277](https://github.com/valhalla/valhalla/pull/5277)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
