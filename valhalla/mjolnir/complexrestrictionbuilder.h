@@ -7,7 +7,6 @@
 #include <cstdint>
 #include <vector>
 
-using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {
