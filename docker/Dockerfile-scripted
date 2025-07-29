@@ -11,6 +11,7 @@ LABEL org.opencontainers.image.authors="nilsnolde+github@proton.me"
 # remove some stuff from the original image
 RUN cd /usr/local/bin && \
   preserve="valhalla_service valhalla_build_tiles valhalla_build_config valhalla_build_admins valhalla_build_timezones valhalla_build_elevation valhalla_ways_to_edges valhalla_build_extract valhalla_export_edges valhalla_add_predicted_traffic valhalla_ingest_transit valhalla_convert_transit valhalla_add_landmarks valhalla_build_landmarks" && \
+  if [ -f "valhalla_get_compressed_encoded_speeds" ]; then preserve="$preserve valhalla_get_compressed_encoded_speeds"; fi && \
   mv $preserve .. && \
   for f in valhalla*; do rm $f; done && \
   cd .. && mv $preserve ./bin

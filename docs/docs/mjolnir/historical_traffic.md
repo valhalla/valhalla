@@ -32,6 +32,17 @@ The first three columns are required to assign historical traffic to an edge, wh
 
 The `historical_speeds` column contains more detailed information about how the traffic on a segment changes over the week. It requires the estimated speed (in km/h) of a road segment in 5 minute intervals covering a whole week. This leads to a total of 2016 speed values per road segment, which should start at Sunday 0:00. The `historical_speeds` column contains an DCT-II encoded version of the 2016 speed values. It can be obtained by using functions whose implementation can be found in the valhalla source code. First `compress_speed_buckets(const float* speeds)` can be called to obtain an array of coefficients. In a next step `encode_compressed_speeds(const int16_t* coefficients)` can be used to convert these to the string encoded version of the speed values, which can be put into the CSV-file.
 
+
+#### Using the `valhalla_get_compressed_encoded_speeds` Tool
+
+You can use the `valhalla_get_compressed_encoded_speeds` command-line tool to generate the compressed and encoded string for the `historical_speeds` column. This tool accepts a comma-separated list of 2016 speed values (in km/h) using the `-s` parameter. For example:
+
+```
+valhalla_get_compressed_encoded_speeds -s 0,10,20,30,...
+```
+
+Replace the values after `-s` with your 2016 comma-separated speed values. The tool will output the encoded string, which you can directly use in the `historical_speeds` column of your CSV file.
+
 Finally, the speed of each way has to be put into the correct place in a folder hierarchy. This folder hierarch should look similar to valhalla’s tile hierarchy. An example tile hierarchy could look like this:
 ```
 .

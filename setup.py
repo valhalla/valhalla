@@ -19,6 +19,7 @@ BINARIES = [
     "valhalla_build_tiles",
     "valhalla_build_admins",
     "valhalla_add_predicted_traffic",
+    "valhalla_get_compressed_encoded_speeds",
     "valhalla_add_landmarks",
     "valhalla_ingest_transit",
     "valhalla_convert_transit",
