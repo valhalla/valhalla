@@ -178,7 +178,6 @@ void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& wr
   writer.end_array();
 }
 
-// sroute_serializer_osrm and isochrone_serializer are still depending on this
 json::ArrayPtr serializeWarnings(const valhalla::Api& api) {
   auto warnings = json::array({});
   for (const auto& warning : api.info().warnings()) {
