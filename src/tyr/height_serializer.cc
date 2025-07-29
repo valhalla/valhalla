@@ -14,8 +14,7 @@ void serialize_range_height(rapidjson::writer_wrapper_t& writer,
                             const uint32_t precision,
                             const double no_data_value) {
   writer.start_array("range_height");
-  // precisoin is sent with value 0 which breaks the condition: maxDecimalPlaces >= 1 and causes an
-  // error
+  // rapidjson can't handle 0 precision
   writer.set_precision(std::max(precision, 1u));
   // for each posting
   auto range = ranges.cbegin();
