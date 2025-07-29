@@ -8,6 +8,17 @@ using namespace valhalla::baldr;
 
 namespace {
 
+namespace {
+inline void
+write_with_precision(rapidjson::writer_wrapper_t& writer, double value, uint32_t precision) {
+  if (precision == 0) {
+    writer(static_cast<int64_t>(std::round(value)));
+  } else {
+    writer(value);
+  }
+}
+} // namespace
+
 void serialize_range_height(rapidjson::writer_wrapper_t& writer,
                             const std::vector<double>& ranges,
                             const std::vector<double>& heights,
@@ -21,21 +32,12 @@ void serialize_range_height(rapidjson::writer_wrapper_t& writer,
 
   for (const auto height : heights) {
     writer.start_array();
-
-    if (precision == 0) {
-      // cast to integer after rounding instead of changing tests in valhalla/test/skadi_service.cc
-      writer(static_cast<int64_t>(std::round(*range)));
-    } else {
-      writer(*range);
-    }
+    write_with_precision(writer, *range, precision);
 
     if (height == no_data_value) {
       writer(nullptr);
-    } else if (precision == 0) {
-      // cast to integer after rounding instead of changing tests in valhalla/test/skadi_service.cc
-      writer(static_cast<int64_t>(std::round(height)));
     } else {
-      writer(height);
+      write_with_precision(writer, height, precision);
     }
     writer.end_array();
     ++range;
@@ -53,11 +55,8 @@ void serialize_height(rapidjson::writer_wrapper_t& writer,
     // add all heights's to an array
     if (height == no_data_value) {
       writer(nullptr);
-    } else if (precision == 0) {
-      // cast to integer after rounding instead of changing tests in valhalla/test/skadi_service.cc
-      writer(static_cast<int64_t>(std::round(height)));
     } else {
-      writer(height);
+      write_with_precision(writer, height, precision);
     }
   }
   writer.end_array();
@@ -66,7 +65,7 @@ void serialize_height(rapidjson::writer_wrapper_t& writer,
 void serialize_shape(rapidjson::writer_wrapper_t& writer,
                      const google::protobuf::RepeatedPtrField<valhalla::Location>& shape) {
   writer.start_array("shape");
-  writer.set_precision(6);
+  writer.set_precision(kCoordinatePrecision);
   for (const auto& p : shape) {
     writer.start_object();
     writer("lat", p.ll().lat());
