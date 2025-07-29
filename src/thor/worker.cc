@@ -1,9 +1,6 @@
 #include "thor/worker.h"
-#include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
 #include "thor/isochrone.h"
-#include "tyr/actor.h"
 
 #include <boost/property_tree/ptree.hpp>
 

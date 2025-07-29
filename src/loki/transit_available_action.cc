@@ -1,4 +1,3 @@
-#include "baldr/connectivity_map.h"
 #include "loki/worker.h"
 #include "midgard/distanceapproximator.h"
 #include "tyr/serializers.h"

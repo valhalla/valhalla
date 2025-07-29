@@ -1,11 +1,8 @@
 #ifndef VALHALLA_MJOLNIR_IDTABLE_H
 #define VALHALLA_MJOLNIR_IDTABLE_H
 
-#include "midgard/logging.h"
-
 #include <ankerl/unordered_dense.h>
 
-#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
