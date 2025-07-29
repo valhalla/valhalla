@@ -65,7 +65,7 @@ void serialize_height(rapidjson::writer_wrapper_t& writer,
 void serialize_shape(rapidjson::writer_wrapper_t& writer,
                      const google::protobuf::RepeatedPtrField<valhalla::Location>& shape) {
   writer.start_array("shape");
-  writer.set_precision(kCoordinatePrecision);
+  writer.set_precision(tyr::kCoordinatePrecision);
   for (const auto& p : shape) {
     writer.start_object();
     writer("lat", p.ll().lat());
