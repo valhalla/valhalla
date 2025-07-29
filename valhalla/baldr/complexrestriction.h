@@ -3,7 +3,6 @@
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/util.h>
 
 #include <cstdint>
