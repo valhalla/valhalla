@@ -1,11 +1,7 @@
 #include "statistics.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
 #include "baldr/json.h"
-#include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
-#include "mjolnir/graphvalidator.h"
 
 #include <boost/property_tree/ptree.hpp>
 

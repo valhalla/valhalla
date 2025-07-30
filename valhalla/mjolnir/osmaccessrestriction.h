@@ -21,7 +21,7 @@ public:
   /**
    * Constructor
    */
-  OSMAccessRestriction() = default;
+  OSMAccessRestriction() : except_destination_(0){};
 
   /**
    * Destructor.
@@ -69,18 +69,32 @@ public:
    */
   void set_direction(AccessRestrictionDirection direction);
 
-protected:
-  uint64_t value_ = 0;
+  /**
+   * Whether or not the restriction applies to local traffic
+   */
+  bool except_destination() const;
 
+  /**
+   * Set flag for whether or not the restriction applies to local traffic
+   */
+  void set_except_destination(const bool except_destination);
+
+protected:
   struct Attributes {
     uint16_t type_ : 4;
     uint16_t modes_ : 12;
   };
+
+  uint64_t value_ = 0;
+
   Attributes attributes_ = {0, 0};
+  uint16_t except_destination_ : 1;
+  uint16_t spare_ : 15;
   AccessRestrictionDirection direction_ = AccessRestrictionDirection::kBoth;
-  uint16_t spare_[2] = {0, 0};
-  uint8_t spare2_ = 0;
+  uint8_t spare1_ = 0;
+  uint16_t spare2_ = 0;
 };
+static_assert(sizeof(OSMAccessRestriction) == 16);
 
 } // namespace mjolnir
 } // namespace valhalla

@@ -3,23 +3,18 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
-#include "baldr/graphreader.h"
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
-#include "mjolnir/edgeinfobuilder.h"
 #include "mjolnir/ferry_connections.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
-#include "mjolnir/sqlite3.h"
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
 
@@ -395,7 +390,7 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
         (forward && direction == AccessRestrictionDirection::kForward) ||
         (!forward && direction == AccessRestrictionDirection::kBackward)) {
       AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(),
-                                           r->second.value());
+                                           r->second.value(), r->second.except_destination());
       graphtile.AddAccessRestriction(access_restriction);
       modes |= r->second.modes();
     }

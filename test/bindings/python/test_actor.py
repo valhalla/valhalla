@@ -4,8 +4,10 @@ import json
 import os
 from pathlib import Path
 import re
+from tempfile import NamedTemporaryFile
 import unittest
-from valhalla import Actor, get_config
+from valhalla import Actor, get_config, VALHALLA_PYTHON_PACKAGE, VALHALLA_PRINT_VERSION, __version__
+from valhalla.__version__ import __version_tuple__
 
 
 PWD = Path(os.path.dirname(os.path.abspath(__file__)))
@@ -23,21 +25,26 @@ def has_cyrillic(text):
 class TestBindings(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.config_path = PWD.joinpath('valhalla.json')
         cls.tiles_path = Path('test/data/utrecht_tiles')
         cls.extract_path = Path('test/data/utrecht_tiles/tiles.tar')
 
-        cls.actor = Actor(str(cls.config_path))
-        
-        # remember the old config and write it back after the tests
-        with open(cls.config_path) as f:
-            cls.config = json.load(f)
+        cls.actor = Actor(str(PWD.joinpath('valhalla.json')))
 
     @classmethod
     def tearDownClass(cls):
-        with open(cls.config_path, 'w') as f:
-            json.dump(cls.config, f, indent=2)
         del cls.actor
+
+    def test_version_python_package_constant(self):
+        self.assertIn("pyvalhalla", VALHALLA_PYTHON_PACKAGE)
+        self.assertEqual(".".join([str(x) for x in __version_tuple__[:3]]), VALHALLA_PRINT_VERSION)
+
+        version_modifier = VALHALLA_PRINT_VERSION[VALHALLA_PRINT_VERSION.find("-"):]
+        if version_modifier:
+            self.assertIn(version_modifier, __version__)
+        else:
+            # for releases there should always be a version modifier,
+            # as they're guaranteed to be run by CI
+            self.assertNotEqual("pyvalhalla", VALHALLA_PYTHON_PACKAGE)
 
     def test_config(self):
         config = get_config(self.extract_path, self.tiles_path)
@@ -48,10 +55,8 @@ class TestBindings(unittest.TestCase):
     def test_config_actor(self):
         # shouldn't load the extract, but we cant test that from python
         config = get_config("", self.tiles_path)
-        with open(self.config_path, 'w') as f:
-            json.dump(config, f, indent=2)
 
-        actor = Actor(str(self.config_path))
+        actor = Actor(config)
         self.assertIn('tileset_last_modified', actor.status())
     
     def test_config_no_tiles(self):
@@ -113,13 +118,15 @@ class TestBindings(unittest.TestCase):
         self.assertEqual(len(iso['features']), 6)  # 4 isochrones and the 2 point layers
 
     def test_change_config(self):
-        config = get_config(self.extract_path, self.tiles_path)
-        config['service_limits']['bicycle']['max_distance'] = 1
-        with open(self.config_path, 'w') as f:
-            json.dump(config, f, indent=2)
+        with NamedTemporaryFile('w+') as tmp:
+            config = get_config(self.extract_path, self.tiles_path)
+            config['service_limits']['bicycle']['max_distance'] = 1
+            json.dump(config, tmp, indent=2)
 
-        actor = Actor(str(self.config_path))
+            tmp.seek(0)
 
-        with self.assertRaises(RuntimeError) as e:
-            actor.route(json.dumps({"locations":[{"lat":52.08813,"lon":5.03231},{"lat":52.09987,"lon":5.14913}],"costing":"bicycle","directions_options":{"language":"ru-RU"}}))
-        self.assertIn('exceeds the max distance limit', str(e.exception))
+            actor = Actor(str(tmp.name))
+
+            with self.assertRaises(RuntimeError) as e:
+                actor.route(json.dumps({"locations":[{"lat":52.08813,"lon":5.03231},{"lat":52.09987,"lon":5.14913}],"costing":"bicycle","directions_options":{"language":"ru-RU"}}))
+            self.assertIn('exceeds the max distance limit', str(e.exception))

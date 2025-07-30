@@ -1,7 +1,6 @@
 #include "argparse_utils.h"
 #include "baldr/double_bucket_queue.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
 #include "sif/edgelabel.h"
 
 #include <cxxopts.hpp>

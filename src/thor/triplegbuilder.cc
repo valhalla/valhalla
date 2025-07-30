@@ -1285,6 +1285,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_forward(directededge->forward());
   }
 
+  // Set traffic signal if requested
+  if (controller(kEdgeTrafficSignal)) {
+    trip_edge->set_traffic_signal(directededge->traffic_signal());
+  }
+
   if (controller(kEdgeLevels)) {
     trip_edge->set_level_precision(std::max(static_cast<uint32_t>(1), levels.second));
     for (const auto& level : levels.first) {
@@ -1936,8 +1941,10 @@ void TripLegBuilder::Build(
 
     if (controller(kNodeType)) {
       trip_node->set_type(GetTripLegNodeType(node->type()));
-      if (node->traffic_signal())
-        trip_node->set_traffic_signal(true);
+    }
+
+    if (controller(kNodeTrafficSignal) && node->traffic_signal()) {
+      trip_node->set_traffic_signal(true);
     }
 
     if (node->intersection() == IntersectionType::kFork) {
