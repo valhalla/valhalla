@@ -1,6 +1,5 @@
 #include "loki/search.h"
 #include "loki/worker.h"
-#include "tyr/actor.h"
 
 #include <unordered_map>
 

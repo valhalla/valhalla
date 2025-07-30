@@ -1,9 +1,7 @@
 #include "baldr/streetnames.h"
 #include "baldr/streetname.h"
 #include "baldr/verbal_text_formatter.h"
-#include "baldr/verbal_text_formatter_us.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
 #include "proto/common.pb.h"
 
 #include <optional>

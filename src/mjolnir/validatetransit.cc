@@ -6,7 +6,6 @@
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/logging.h"
-#include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/servicedays.h"
 #include "mjolnir/util.h"

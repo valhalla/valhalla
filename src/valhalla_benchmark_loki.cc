@@ -1,10 +1,8 @@
 #include "argparse_utils.h"
-#include "baldr/rapidjson_utils.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "sif/costfactory.h"
-#include "worker.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
