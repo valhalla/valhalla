@@ -6,8 +6,7 @@ from pathlib import Path
 import re
 from tempfile import NamedTemporaryFile
 import unittest
-from valhalla import Actor, get_config, VALHALLA_PYTHON_PACKAGE, VALHALLA_PRINT_VERSION, __version__
-from valhalla.__version__ import __version_tuple__
+from valhalla import Actor, get_config, VALHALLA_PYTHON_PACKAGE, VALHALLA_PRINT_VERSION
 
 
 PWD = Path(os.path.dirname(os.path.abspath(__file__)))
@@ -36,6 +35,14 @@ class TestBindings(unittest.TestCase):
 
     def test_version_python_package_constant(self):
         self.assertIn("pyvalhalla", VALHALLA_PYTHON_PACKAGE)
+
+        # The CMake build of course doesn't have the setuptools-scm generated __version__.py
+        try:
+            from valhalla import __version__
+            from valhalla.__version__ import __version_tuple__
+        except ModuleNotFoundError:
+            return
+        
         self.assertEqual(".".join([str(x) for x in __version_tuple__[:3]]), VALHALLA_PRINT_VERSION)
 
         version_modifier = VALHALLA_PRINT_VERSION[VALHALLA_PRINT_VERSION.find("-"):]
