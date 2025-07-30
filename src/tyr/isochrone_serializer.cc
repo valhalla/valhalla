@@ -1,4 +1,5 @@
 #include "baldr/json.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "tyr/serializers.h"
 #include "worker.h"

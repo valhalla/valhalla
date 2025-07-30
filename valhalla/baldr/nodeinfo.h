@@ -4,6 +4,7 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/rapidjson_fwd.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 
 namespace valhalla {
