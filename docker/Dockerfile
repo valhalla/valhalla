@@ -81,4 +81,4 @@ COPY --from=builder /usr/local/lib/python3.12/dist-packages/valhalla /usr/local/
 RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
 
 # python smoke test
-RUN python3 -c "import valhalla; import sys; print(sys.version, valhalla)"
+RUN python3 -c "import valhalla, sys; print(sys.version, valhalla)"
