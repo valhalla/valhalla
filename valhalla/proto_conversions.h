@@ -545,6 +545,7 @@ const std::string& Options_Units_Enum_Name(const Options::Units unit);
 bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a);
 const std::string& FilterAction_Enum_Name(const FilterAction action);
 bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t);
+const std::string& DirectionsType_Enum_Name(const DirectionsType t);
 bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p);
 bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc);
 bool Location_Type_Enum_Parse(const std::string& type, Location::Type* t);

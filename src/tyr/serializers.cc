@@ -460,11 +460,12 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
 }
 
 void serializeCostOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
-  writer.start_object("cost_options");
+  writer.start_object("options");
   auto options = api.options();
-  writer("maneuver_penalty", options.maneuver_penalty());
-  writer("gate_cost", options.gate_cost());
-  writer("gate_penalty", options.gate_penalty());
+  writer("units", valhalla::Options_Units_Enum_Name(options.units()));
+  writer("directions_type", valhalla::DirectionsType_Enum_Name(options.directions_type()));
+  writer("format", valhalla::Options_Format_Enum_Name(options.format()));
+  writer("action", valhalla::Options_Action_Enum_Name(options.action()));
   writer.end_object();
 }
 
