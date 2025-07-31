@@ -6,7 +6,7 @@
   "instructions": {
     "arrive": {
       "phrases": {
-        "0": "الوصول:",
+        "0": "الوصول: <TIME>",
         "1": "الوصول: <TIME> الى<TRANSIT_STOP>."
       },
       "example_phrases": {
