@@ -459,15 +459,12 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
   return via_waypoints;
 }
 
-// Function for serialization of cost options
 void serializeCostOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
-
-  writer.start_object();
-
-  writer("maneuver_penalty", api.options().maneuver_penalty());
-  writer("gate_cost", api.options().gate_cost());
-  writer("gate_penalty", api.options().gate_penalty())
-
+  writer.start_object("cost_options");
+  auto options = api.options();
+  writer("maneuver_penalty", options.maneuver_penalty());
+  writer("gate_cost", options.gate_cost());
+  writer("gate_penalty", options.gate_penalty());
   writer.end_object();
 }
 

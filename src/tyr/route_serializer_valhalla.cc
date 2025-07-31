@@ -721,6 +721,7 @@ std::string serialize(Api& api) {
     writer("id", api.options().id());
   }
 
+  serializeCostOptions(api, writer);
   writer.end_object(); // outer object
 
   return writer.get_buffer();
