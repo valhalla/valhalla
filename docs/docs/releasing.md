@@ -1,6 +1,6 @@
 # Releasing a new Valhalla version
 
-We are using http://semver.org/ for versioning with major, minor and patch versions.
+We are using <https://semver.org/> for versioning with major, minor and patch versions.
 
 ## Guarantees
 
@@ -8,7 +8,7 @@ We are giving the following guarantees between versions:
 
 ### Major version change
 
-- There are no guarantees about compatiblity of APIs or datasets
+- There are no guarantees about compatibility of APIs or datasets
 - Breaking changes will be noted as `BREAKING` in the changelog
 
 ### Minor version change

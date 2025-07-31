@@ -18,6 +18,7 @@ jobs:
             mingw64-boost \
             mingw64-protobuf \
             mingw64-geos \
+            mingw64-gdal \
             mingw64-python3 \
             protobuf-compiler
       - uses: actions/checkout@v2
@@ -39,7 +40,7 @@ jobs:
             -DENABLE_PYTHON_BINDINGS=ON \
             -DENABLE_CCACHE=OFF \
             -DENABLE_TESTS=OFF \
-            -DENABLE_BENCHMARKS=OFF \
+            -DENABLE_GDAL=ON \
             -DLOGGING_LEVEL=DEBUG \
             -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a \
             -DPYTHON_EXECUTABLE=/usr/x86_64-w64-mingw32/bin/python3 \

@@ -1,13 +1,13 @@
 #ifndef VALHALLA_ODIN_MANEUVERSBUILDER_H_
 #define VALHALLA_ODIN_MANEUVERSBUILDER_H_
 
-#include <cstdint>
-#include <list>
-
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
+
+#include <cstdint>
+#include <list>
 
 namespace valhalla {
 namespace odin {
@@ -318,6 +318,14 @@ protected:
    * @param maneuvers The list of maneuvers to process.
    */
   void CollapseMergeManeuvers(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Add relevant landmarks to maneuvers as direction support.
+   * Each maneuver should get the landmarks accosiated with edges that make up the previous maneuver.
+   *
+   * @param maneuvers The list of maneuvers to add landmarks.
+   */
+  void AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& maneuvers);
 
   const Options& options_;
   EnhancedTripLeg* trip_path_;

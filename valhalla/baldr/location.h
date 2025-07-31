@@ -1,13 +1,13 @@
 #ifndef VALHALLA_BALDR_LOCATION_H_
 #define VALHALLA_BALDR_LOCATION_H_
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/proto/common.pb.h>
+
 #include <cstdint>
 #include <optional>
 #include <string>
-
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -35,7 +35,7 @@ public:
    * Optional filters supplied in the request.
    *
    * NOTE: this struct must be kept in sync with the protobuf defined
-   * valhalla::Location::SearchFilter in tripcommon.proto.
+   * valhalla::Location::SearchFilter in common.proto.
    */
   struct SearchFilter {
   public:
@@ -43,15 +43,21 @@ public:
                  valhalla::RoadClass max_road_class = valhalla::RoadClass::kMotorway,
                  bool exclude_tunnel = false,
                  bool exclude_bridge = false,
+                 bool exclude_toll_ = false,
                  bool exclude_ramp = false,
-                 bool exclude_closures = true);
+                 bool exclude_ferry_ = false,
+                 bool exclude_closures = true,
+                 float level = kMaxLevel);
 
     valhalla::RoadClass min_road_class_;
     valhalla::RoadClass max_road_class_;
     bool exclude_tunnel_;
     bool exclude_bridge_;
+    bool exclude_toll_;
     bool exclude_ramp_;
+    bool exclude_ferry_;
     bool exclude_closures_;
+    float level_;
 
   protected:
   };
@@ -71,6 +77,7 @@ public:
            unsigned int min_inbound_reach = 0,
            unsigned long radius = 0,
            const PreferredSide& side = PreferredSide::EITHER,
+           valhalla::RoadClass street_side_cutoff = valhalla::RoadClass::kServiceOther,
            const SearchFilter& search_filter = SearchFilter(),
            std::optional<int8_t> preferred_layer = {});
 
@@ -109,6 +116,7 @@ public:
   float search_cutoff_;
   float street_side_tolerance_;
   float street_side_max_distance_;
+  valhalla::RoadClass street_side_cutoff_;
   SearchFilter search_filter_;
 
   // coordinates of the location as used for altering the side of street

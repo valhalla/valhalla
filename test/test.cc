@@ -1,30 +1,28 @@
 #include "test.h"
-
 #include "baldr/graphmemory.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
+#include "microtar.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
-#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+
 #ifndef _MSC_VER
 #include <sys/mman.h>
 #endif
-#include <sys/stat.h>
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 #include <boost/algorithm/string.hpp>
-
-#include "filesystem.h"
-#include "microtar.h"
+#include <fcntl.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <sys/stat.h>
 
 namespace {
 // TODO: this should support boost::property_tree::path
@@ -222,6 +220,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
       "mjolnir": {
         "concurrency": 1,
         "admin": "%%/admin.sqlite",
+        "landmarks": "%%/landmarks.sqlite",
         "data_processing": {
           "allow_alt_name": false,
           "apply_country_overrides": true,
@@ -296,6 +295,29 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 200000.0,
           "max_locations": 5
         },
+        "hierarchy_limits": {
+            "allow_modification": false,
+            "costmatrix": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                }
+            },
+            "unidirectional_astar": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
+            },
+            "bidirectional_astar": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000}
+            }
+        },
         "isochrone": {
           "max_contours": 4,
           "max_distance": 25000.0,
@@ -309,6 +331,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "max_radius": 200,
         "max_reachability": 100,
         "max_timedep_distance": 500000,
+        "max_distance_disable_hierarchy_culling": 0,
         "motor_scooter": {
           "max_distance": 500000.0,
           "max_locations": 50,
@@ -378,7 +401,36 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "service": {
           "proxy": "ipc://%%/thor"
         },
-        "source_to_target_algorithm": "select_optimal"
+        "source_to_target_algorithm": "select_optimal",
+        "costmatrix": {
+            "check_reverse_connection": true,
+            "allow_second_pass": false,
+            "max_reserved_locations": 25,
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                }
+            }
+        },
+        "bidirectional_astar": {
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000}
+            }
+        },
+        "unidirectional_astar": {
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
+            }
+        }
       }
     }
   )";
@@ -408,7 +460,7 @@ make_clean_graphreader(const boost::property_tree::ptree& mjolnir_conf) {
   struct ResettingGraphReader : valhalla::baldr::GraphReader {
     ResettingGraphReader(const boost::property_tree::ptree& pt) : GraphReader(pt) {
       // Reset the statically initialized tile_extract_ member variable
-      tile_extract_.reset(new valhalla::baldr::GraphReader::tile_extract_t(pt));
+      tile_extract_ = std::make_shared<valhalla::baldr::GraphReader::tile_extract_t>(pt);
     }
   };
   return std::make_shared<ResettingGraphReader>(mjolnir_conf);
@@ -440,8 +492,8 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
   std::string traffic_extract = config.get<std::string>("mjolnir.traffic_extract");
 
-  filesystem::path parent_dir = filesystem::path(traffic_extract).parent_path();
-  if (!filesystem::exists(parent_dir)) {
+  std::filesystem::path parent_dir = std::filesystem::path(traffic_extract).parent_path();
+  if (!std::filesystem::exists(parent_dir)) {
     std::stringstream ss;
     ss << "Traffic extract directory " << parent_dir.string() << " does not exist";
     throw std::runtime_error(ss.str());

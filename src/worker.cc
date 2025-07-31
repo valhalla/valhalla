@@ -1,28 +1,26 @@
-#include <iostream>
-#include <sstream>
-#include <typeinfo>
-#include <unordered_map>
-
+#include "loki/worker.h"
+#include "baldr/attributes_controller.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
-#include "baldr/location.h"
-#include "loki/worker.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/util.h"
-#include "odin/worker.h"
 #include "proto_conversions.h"
 #include "sif/costfactory.h"
-#include "thor/worker.h"
 #include "worker.h"
 
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
 
+#include <sstream>
+#include <typeinfo>
+#include <unordered_map>
+
 using namespace valhalla;
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 using namespace prime_server;
 #endif
 
@@ -68,7 +66,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {124, {124, "No edge/node costing provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "costing_required"}},
     {125, {125, "No costing method found", 400, HTTP_400, OSRM_INVALID_OPTIONS, "wrong_costing"}},
     {126, {126, "No shape provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_required"}},
-    {127, {127, "Recostings require both name and costing parameters", 400, HTTP_400, OSRM_INVALID_OPTIONS, "recosting_parse_failed"}},
+    {127, {127, "Recostings require a valid costing parameter", 400, HTTP_400, OSRM_INVALID_OPTIONS, "recosting_parse_failed"}},
+    {128, {128, "Recostings require a unique 'name' field for each recosting", 400, HTTP_400, OSRM_INVALID_OPTIONS, "no_recosting_duplicate_names"}},
     {130, {130, "Failed to parse location", 400, HTTP_400, OSRM_INVALID_VALUE, "location_parse_failed"}},
     {131, {131, "Failed to parse source", 400, HTTP_400, OSRM_INVALID_VALUE, "source_parse_failed"}},
     {132, {132, "Failed to parse target", 400, HTTP_400, OSRM_INVALID_VALUE, "target_parse_failed"}},
@@ -103,7 +102,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {170, {170, "Locations are in unconnected regions. Go check/edit the map at osm.org", 400, HTTP_400, OSRM_NO_ROUTE, "impossible_route"}},
     {171, {171, "No suitable edges near location", 400, HTTP_400, OSRM_NO_SEGMENT, "no_edges_near"}},
     {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
-    {199, {199, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
+    {199, {199, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
     {202, {202, "Could not build directions for TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "directions_building_failed"}},
@@ -116,7 +115,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {230, {230, "Invalid DirectionsLeg_Maneuver_Type in method FormTurnInstruction", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_turn"}},
     {231, {231, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeTwoDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_two"}},
     {232, {232, "Invalid DirectionsLeg_Maneuver_Type in method FormRelativeThreeDirection", 400, HTTP_400, OSRM_INVALID_URL, "wrong_maneuver_form_relative_three"}},
-    {299, {299, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
+    {299, {299, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {312, {312, "Insufficiently specified required parameter 'shape' or 'encoded_polyline'", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_parse_failed"}},
     {313, {313, "'resample_distance' must be >= ", 400, HTTP_400, OSRM_INVALID_URL, "wrong_resample_distance"}},
     {314, {314, "Too many shape points", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_shape_points"}},
@@ -135,8 +134,10 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {443, {443, "Exact route match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, "shape_match_failed"}},
     {444, {444, "Map Match algorithm failed to find path", 400, HTTP_400, OSRM_NO_SEGMENT, "map_match_failed"}},
     {445, {445, "Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input.", 400, HTTP_400, OSRM_INVALID_URL, "wrong_match_type"}},
-    {499, {499, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
+    {499, {499, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
+    {504, {504, "This service does not support GeoTIFF serialization.", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
+    {599, {599, "Unknown serialization error", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
 };
 
 // unordered map for warning pairs
@@ -152,9 +153,54 @@ const std::unordered_map<int, std::string> warning_codes = {
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
   {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
-  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"}
+  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"},
+  {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
+  {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
+  {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
+  {208, R"(Hard exclusions are not allowed on this server, ignoring hard excludes)"},
+  {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
+  {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
+  {211, R"(This action doesn't support requested format, using json instead)"},
+  // 3xx is used when costing or location options were specified but we had to change them internally for some reason
+  {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
+  {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
+  {302, R"("search_filter.level" was specified without a custom "search_cutoff", setting default default cutoff to )"},
+  {303, R"("search_cutoff" exceeds maximum allowed value due to "search_filter.level" being specified, clamping cutoff to )"},
+  // 4xx is used when we do sneaky important things the user should be aware of
+  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
 };
 // clang-format on
+
+bool is_format_supported(Options::Action action, Options::Format format) {
+  constexpr uint16_t kFormatActionSupport[] = {
+      // json
+      0xFFFF, // all actions support json
+      // gpx
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route),
+      // osrm
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
+          (1 << Options::trace_attributes) | (1 << Options::locate) | (1 << Options::status) |
+          (1 << Options::sources_to_targets) | (1 << Options::expansion),
+      // pbf
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
+          (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
+          (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
+  // geotiff
+#ifdef ENABLE_GDAL
+      (1 << Options::isochrone),
+#else
+      0,
+#endif
+  };
+  static_assert(std::size(kFormatActionSupport) == Options::Format_ARRAYSIZE,
+                "Please update format_action array to match Options::Action_ARRAYSIZE");
+
+  if (Options::Action_IsValid(action) && Options::Format_IsValid(format)) {
+    return (kFormatActionSupport[format] & (1 << action)) != 0;
+  } else {
+    return false;
+  }
+}
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
   rapidjson::Document d;
@@ -200,7 +246,7 @@ bool add_date_to_locations(Options& options,
     }
   }
 
-  return std::find_if(locations.begin(), locations.end(), [](valhalla::Location loc) {
+  return std::find_if(locations.begin(), locations.end(), [](const valhalla::Location& loc) {
            return !loc.date_time().empty();
          }) != locations.end();
 }
@@ -364,6 +410,13 @@ void parse_location(valhalla::Location* location,
   if (street_side_max_distance) {
     location->set_street_side_max_distance(*street_side_max_distance);
   }
+  auto street_side_cutoff = rapidjson::get_optional<std::string>(r_loc, "/street_side_cutoff");
+  if (street_side_cutoff) {
+    valhalla::RoadClass cutoff_street_side;
+    if (RoadClass_Enum_Parse(*street_side_cutoff, &cutoff_street_side)) {
+      location->set_street_side_cutoff(cutoff_street_side);
+    }
+  }
 
   boost::optional<bool> exclude_closures;
   // is it json?
@@ -388,9 +441,17 @@ void parse_location(valhalla::Location* location,
     // search_filter.exclude_bridge
     location->mutable_search_filter()->set_exclude_bridge(
         rapidjson::get<bool>(*search_filter, "/exclude_bridge", false));
+    // search_filter.exclude_toll
+    location->mutable_search_filter()->set_exclude_toll(
+        rapidjson::get<bool>(*search_filter, "/exclude_toll", false));
     // search_filter.exclude_ramp
     location->mutable_search_filter()->set_exclude_ramp(
         rapidjson::get<bool>(*search_filter, "/exclude_ramp", false));
+    // search_filter.exclude_ferry
+    location->mutable_search_filter()->set_exclude_ferry(
+        rapidjson::get<bool>(*search_filter, "/exclude_ferry", false));
+    location->mutable_search_filter()->set_level(
+        rapidjson::get<float>(*search_filter, "/level", baldr::kMaxLevel));
     // search_filter.exclude_closures
     exclude_closures = rapidjson::get_optional<bool>(*search_filter, "/exclude_closures");
   } // or is it pbf
@@ -419,6 +480,8 @@ void parse_location(valhalla::Location* location,
   if (!location->search_filter().has_max_road_class_case()) {
     location->mutable_search_filter()->set_max_road_class(valhalla::kMotorway);
   }
+  if (!location->search_filter().has_level_case())
+    location->mutable_search_filter()->set_level(baldr::kMaxLevel);
 
   float waiting_secs = rapidjson::get<float>(r_loc, "/waiting", 0.f);
   switch (location->type()) {
@@ -528,7 +591,7 @@ void parse_locations(const rapidjson::Document& doc,
   // Forward valhalla_exception_t types as-is, since they contain a more specific error message
   catch (const valhalla_exception_t& e) {
     throw e;
-  } // generic execptions and other stuff get a generic message
+  } // generic exceptions and other stuff get a generic message
   catch (...) {
     throw valhalla_exception_t{location_parse_error_code};
   }
@@ -566,6 +629,38 @@ void parse_contours(const rapidjson::Document& doc,
     // You need at least something
     if (!c.has_time_case() && !c.has_distance_case()) {
       throw valhalla_exception_t{111};
+    }
+  }
+}
+
+// parse all costings needed to fulfill the request, including recostings
+void parse_recostings(const rapidjson::Document& doc,
+                      const std::string& key,
+                      valhalla::Options& options) {
+  // make sure we only have unique recosting names in the end
+  std::unordered_set<std::string> names;
+  auto check_name = [&names](const valhalla::Costing& recosting) -> void {
+    if (!recosting.has_name_case()) {
+      throw valhalla_exception_t{127};
+    } else if (!names.insert(recosting.name()).second) {
+      throw valhalla_exception_t{128};
+    }
+  };
+
+  // look either in JSON & PBF
+  auto recostings = rapidjson::get_child_optional(doc, "/recostings");
+  if (recostings && recostings->IsArray()) {
+    names.reserve(recostings->GetArray().Size());
+    for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
+      // parse the options
+      std::string key = "/recostings/" + std::to_string(i);
+      sif::ParseCosting(doc, key, options.add_recostings());
+      check_name(*options.recostings().rbegin());
+    }
+  } else if (options.recostings().size()) {
+    for (auto& recosting : *options.mutable_recostings()) {
+      check_name(recosting);
+      sif::ParseCosting(doc, key, &recosting, recosting.type());
     }
   }
 }
@@ -629,19 +724,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_jsonp(*jsonp);
   }
 
-  // so that we serialize correctly at the end we fix up any request discrepancies
+  if (!is_format_supported(options.action(), options.format())) {
+    options.set_format(Options::json);
+    add_warning(api, 211);
+  }
   if (options.format() == Options::pbf) {
-    const std::unordered_set<Options::Action> pbf_actions{
-        Options::route,    Options::optimized_route,  Options::trace_route,
-        Options::centroid, Options::trace_attributes, Options::status,
-    };
-    // if its not a pbf supported action we reset to json
-    if (pbf_actions.count(options.action()) == 0) {
-      options.set_format(Options::json);
-    } // and if it is then jsonp wont work because javascript doesnt support byte arrays
-    else {
-      options.clear_jsonp();
-    }
+    // jsonp wont work because javascript doesnt support byte arrays
+    options.clear_jsonp();
   }
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
@@ -727,7 +816,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_closures", true);
   }
 
-  // set the costing based on the name given, redundant for pbf input
+  // set the costing based on the name given and parse its costing options
   Costing::Type costing;
   if (!valhalla::Costing_Enum_Parse(costing_str, &costing))
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
@@ -790,16 +879,28 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.set_shape_format(polyline5);
     } else if (*shape_format == "geojson") {
       options.set_shape_format(geojson);
+    } else if (*shape_format == "no_shape") {
+      if (action == Options::height) {
+        throw valhalla_exception_t{164};
+      }
+      options.set_shape_format(no_shape);
     } else {
       // Throw an error if shape format is invalid
       throw valhalla_exception_t{164};
     }
+  } else if (action == Options::sources_to_targets) {
+    options.set_shape_format(options.has_shape_format_case() ? options.shape_format() : no_shape);
   }
 
   // whether or not to output b64 encoded openlr
   auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
   if (linear_references) {
     options.set_linear_references(*linear_references);
+  }
+
+  auto admin_crossings = rapidjson::get_optional<bool>(doc, "/admin_crossings");
+  if (admin_crossings) {
+    options.set_admin_crossings(*admin_crossings);
   }
 
   // whatever our costing is, check to see if we are going to ignore_closures
@@ -815,6 +916,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       break;
     }
   }
+
+  // TODO(nils): if we parse the costing options before the ignore_closures logic,
+  //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
+  //   as in the above logic the costing options aren't even parsed yet,
+  //   so how can it determine "ignore_closures" there?
+  sif::ParseCosting(doc, "/costing_options", options);
 
   // if any of the locations params have a date_time object in their locations, we'll remember
   // only /sources_to_targets will parse more than one location collection and there it's fine
@@ -915,6 +1022,19 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  // Get the elevation interval for returning elevation along the path in a route or
+  // trace attribute call. Defaults to 0.0 (no elevation is returned)
+  constexpr float kMaxElevationInterval = 1000.0f;
+  auto elevation_interval = rapidjson::get_optional<float>(doc, "/elevation_interval");
+  if (elevation_interval) {
+    options.set_elevation_interval(
+        std::max(std::min(*elevation_interval, kMaxElevationInterval), 0.0f));
+  } else {
+    // Constrain to range [0-kMaxElevationInterval]
+    options.set_elevation_interval(
+        std::max(std::min(options.elevation_interval(), kMaxElevationInterval), 0.0f));
+  }
+
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", options.range()));
   constexpr uint32_t MAX_HEIGHT_PRECISION = 2;
@@ -923,24 +1043,16 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_height_precision(*height_precision);
   }
 
-  options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
-
-  // Parse all of the costing options in their specified order
-  sif::ParseCosting(doc, "/costing_options", options);
+  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
+  if (options.action() == Options::sources_to_targets) {
+    options.set_verbose(
+        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
+  } else {
+    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  }
 
   // parse any named costings for re-costing a given path
-  auto recostings = rapidjson::get_child_optional(doc, "/recostings");
-  if (recostings && recostings->IsArray()) {
-    for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
-      // parse the options
-      std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCosting(doc, key, options.add_recostings());
-      if (!options.recostings().rbegin()->has_name_case()) {
-        throw valhalla_exception_t{127};
-      }
-    }
-    // TODO: throw if not all names are unique?
-  }
+  parse_recostings(doc, "/recostings", options);
 
   // get the locations in there
   parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
@@ -975,7 +1087,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else {
+  } else if (!options.has_matrix_locations_case()) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 
@@ -1019,7 +1131,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       throw valhalla_exception_t(144, *exp_action_str);
     }
     options.set_expansion_action(exp_action);
-  } else if (options.action() == Options_Action_expansion) {
+  }
+  if (options.action() == Options::expansion && options.expansion_action() == Options::no_action) {
     throw valhalla_exception_t(115, std::string("action"));
   }
 
@@ -1039,6 +1152,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // should the expansion track opposites?
   options.set_skip_opposites(rapidjson::get<bool>(doc, "/skip_opposites", options.skip_opposites()));
+
+  // should the expansion be less verbose, printing each edge only once, default false
+  options.set_dedupe(rapidjson::get<bool>(doc, "/dedupe", options.dedupe()));
 
   // get the contours in there
   parse_contours(doc, options.mutable_contours());
@@ -1142,6 +1258,16 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // whether to return guidance_views, default false
   options.set_guidance_views(rapidjson::get<bool>(doc, "/guidance_views", options.guidance_views()));
 
+  // whether to return bannerInstructions in OSRM serializer, default false
+  options.set_banner_instructions(
+      rapidjson::get<bool>(doc, "/banner_instructions", options.banner_instructions()));
+
+  // whether to return voiceInstructions in OSRM serializer, default false
+  options.set_voice_instructions(
+      rapidjson::get<bool>(doc, "/voice_instructions", options.voice_instructions()));
+
+  options.set_turn_lanes(rapidjson::get<bool>(doc, "/turn_lanes", options.turn_lanes()));
+
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =
       rapidjson::get<bool>(doc, "/roundabout_exits",
@@ -1169,12 +1295,12 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
 }
 
 // function to add warnings to proto info object
-void add_warning(valhalla::Api& api, unsigned code) {
-  auto message = warning_codes.find(code);
-  if (message != warning_codes.end()) {
-    auto* warning = api.mutable_info()->mutable_warnings()->Add();
-    warning->set_description(message->second);
-    warning->set_code(message->first);
+void add_warning(valhalla::Api& api, unsigned code, const std::string& extra) {
+  auto warning = warning_codes.find(code);
+  if (warning != warning_codes.end()) {
+    auto* warning_pbf = api.mutable_info()->mutable_warnings()->Add();
+    warning_pbf->set_description(warning->second + extra);
+    warning_pbf->set_code(warning->first);
   }
 }
 
@@ -1239,7 +1365,133 @@ void ParseApi(const std::string& request, Options::Action action, valhalla::Api&
   from_json(document, action, api);
 }
 
-#ifdef HAVE_HTTP
+hierarchy_limits_config_t
+parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
+                                   const std::string& algorithm,
+                                   const bool uses_dist) {
+  std::vector<HierarchyLimits> max_hierarchy_limits;
+  std::vector<HierarchyLimits> default_hierarchy_limits;
+  default_hierarchy_limits.reserve(baldr::TileHierarchy::levels().size());
+  max_hierarchy_limits.reserve(baldr::TileHierarchy::levels().size());
+  bool found = true;
+  bool is_bidir = algorithm != "unidirectional_astar";
+  // get the default and max allowed values for each level
+  for (auto it = baldr::TileHierarchy::levels().begin(); it != baldr::TileHierarchy::levels().end();
+       ++it) {
+
+    // get the service limits
+    HierarchyLimits max_hl;
+    auto max_allowed_up_transitions =
+        config.get_child_optional("service_limits.hierarchy_limits." + algorithm +
+                                  ".max_allowed_up_transitions." + std::to_string(it->level));
+    found = found && ((it->level == 0) || max_allowed_up_transitions);
+    max_hl.set_max_up_transitions(
+        max_allowed_up_transitions
+            ? max_allowed_up_transitions->get_value<uint32_t>(kDefaultMaxUpTransitions[it->level])
+            : kDefaultMaxUpTransitions[it->level]);
+
+    // if the algorithm uses distance to decide whether to expand a given level, set that property as
+    // well
+    if (uses_dist) {
+      auto max_expand_within_dist =
+          config.get_child_optional("service_limits.hierarchy_limits." + algorithm +
+                                    ".max_expand_within_distance." + std::to_string(it->level));
+      found = found && (algorithm == "costmatrix" || max_expand_within_dist);
+      max_hl.set_expand_within_dist(
+          max_expand_within_dist
+              ? max_expand_within_dist->get_value<float>(kDefaultExpansionWithinDist[it->level])
+          : is_bidir ? kDefaultExpansionWithinDistBidir[it->level]
+                     : kDefaultExpansionWithinDist[it->level]);
+    }
+    max_hierarchy_limits.push_back(max_hl);
+
+    // now the defaults
+    HierarchyLimits default_hl;
+    auto default_max_up_transitions = config.get_child_optional(
+        "thor." + algorithm + ".hierarchy_limits.max_up_transitions." + std::to_string(it->level));
+    found = found && ((it->level == 0) || default_max_up_transitions);
+    default_hl.set_max_up_transitions(
+        default_max_up_transitions
+            ? default_max_up_transitions->get_value<uint32_t>(kDefaultMaxUpTransitions[it->level])
+            : kDefaultMaxUpTransitions[it->level]);
+
+    // if the algorithm uses distance to decide whether to expand a given level, set that property
+    // as well
+    if (uses_dist) {
+      auto default_expand_within_dist = config.get_child_optional(
+          "thor." + algorithm + ".hierarchy_limits.expand_within_distance." +
+          std::to_string(it->level));
+      found = found && (algorithm == "costmatrix" || default_expand_within_dist);
+      default_hl.set_expand_within_dist(
+          default_expand_within_dist
+              ? default_expand_within_dist->get_value<float>(kDefaultExpansionWithinDist[it->level])
+          : is_bidir ? kDefaultExpansionWithinDistBidir[it->level]
+                     : kDefaultExpansionWithinDist[it->level]);
+    }
+    default_hierarchy_limits.push_back(default_hl);
+  }
+
+  if (!found)
+    LOG_WARN("Incomplete config for hierarchy limits found for " + algorithm +
+             ". Falling back to defaults");
+
+  return {max_hierarchy_limits, default_hierarchy_limits};
+};
+
+bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
+                            sif::cost_ptr_t& cost,
+                            const valhalla::Costing_Options& options,
+                            const hierarchy_limits_config_t& config,
+                            const bool allow_modifications,
+                            const bool use_hierarchy_limits) {
+
+  // keep track whether we need to mess with user provided limits
+  bool add_warning = false;
+
+  // for backwards compatibility, we need to track if the defaults are used. This matters in
+  // unidirectional astar, where hierarchy limits are modified based on the astar heuristic
+  bool default_limits = true;
+  for (size_t i = 0; i < hierarchy_limits.size(); ++i) {
+    HierarchyLimits& limits = hierarchy_limits[i];
+
+    // special case: hierarchy culling option is enabled (checked in loki)
+    if (options.disable_hierarchy_pruning()) {
+      limits.set_max_up_transitions(kUnlimitedTransitions);
+      continue;
+    }
+
+    // use defaults if modification is not allowed by the service or if user did not specify any
+    // limits;
+    if (!allow_modifications || (limits.max_up_transitions() == kUnlimitedTransitions &&
+                                 limits.expand_within_dist() == kMaxDistance)) {
+      add_warning = add_warning || (limits.max_up_transitions() != kUnlimitedTransitions ||
+                                    limits.expand_within_dist() != kMaxDistance);
+      if (use_hierarchy_limits) {
+        limits.set_max_up_transitions(config.default_limits[i].max_up_transitions());
+        limits.set_expand_within_dist(config.default_limits[i].expand_within_dist());
+      }
+      continue;
+    }
+    default_limits = false;
+    // clamp to max values defined in service_limits
+    if (limits.max_up_transitions() > config.max_limits[i].max_up_transitions()) {
+      limits.set_max_up_transitions(config.max_limits[i].max_up_transitions());
+      add_warning = true;
+    }
+
+    if (limits.expand_within_dist() < 0 || // float might be negative
+        limits.expand_within_dist() > config.max_limits[i].expand_within_dist()) {
+      limits.set_expand_within_dist(config.max_limits[i].expand_within_dist());
+      add_warning = true;
+    }
+  }
+
+  cost->SetDefaultHierarchyLimits(default_limits);
+
+  return add_warning;
+}
+
+#ifdef ENABLE_SERVICES
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
   // block all but get and post
   if (request.method != method_t::POST && request.method != method_t::GET) {

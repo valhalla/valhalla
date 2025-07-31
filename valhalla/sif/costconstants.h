@@ -28,13 +28,13 @@ enum class VehicleType : uint8_t {
   kCar = 0,
   kMotorcycle = 1,
   kBus = 2,
-  kTractorTrailer = 3,
+  kTruck = 3,
   kMotorScooter = 4,
   kFourWheelDrive = 5
 };
 
 // Pedestrian travel type
-enum class PedestrianType : uint8_t { kFoot = 0, kWheelchair = 1, kSegway = 2 };
+enum class PedestrianType : uint8_t { kFoot = 0, kWheelchair = 1, kBlind = 2 };
 
 // Bicycle travel type
 enum class BicycleType : uint8_t {

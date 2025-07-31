@@ -3,7 +3,6 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 
 #include <array>
@@ -213,7 +212,7 @@ public:
           if (cs.HasMember("iso3166-2")) {
             code.push_back('.');
             if (code.size() == (code += cs["iso3166-2"].GetString()).size())
-              throw std::runtime_error("Cannot have emtpy state code");
+              throw std::runtime_error("Cannot have empty state code");
           }
         }
         if (tables.count(code))

@@ -1,0 +1,76 @@
+name: Check if tz git submodule is up to date
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+jobs:
+  check_tz:
+    name: Check if latest tag commit differs from the commit the submodule currently points to
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: Run script
+        shell: bash
+        run: |
+          set -e 
+
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          latest_tag=$(git -C third_party/tz ls-remote --tags --refs --quiet origin | tail --lines 1 | awk '{print $2}' | cut --delimiter='/' --fields=3 )
+          latest_tag_commit=$(git -C third_party/tz rev-list -n 1 $latest_tag)
+          current_commit=$(git -C ./third_party/tz rev-parse HEAD)
+
+          if [[ $latest_tag_commit != $current_commit ]]; then 
+              echo "New tz release available: ${latest_tag}"
+              new_branch="gha-bump-tz-${latest_tag}"
+              git checkout -b $new_branch
+
+              # update the submodule 
+              git -C third_party/tz checkout "${latest_tag}"
+              git add third_party/tz
+
+              # update the url in valhalla_build_timezones 
+              url_old=$(grep -oP "url=\"\Khttps://github.com/.*(?=\")" scripts/valhalla_build_timezones)
+              url_new=$(echo ${url_old} | sed -E "s/download\/[0-9]{4}[a-z]/download\/${latest_tag}/")
+
+              # first make sure the file is actually available
+
+              set +e
+              curl -Is --fail-with-body ${url_new} >/dev/null
+
+              if [[ $? -eq 0 ]]; then 
+                  # only replace if it's available
+                  url_old_escaped=$(echo "${url_old}" | sed 's/[\&/]/\\&/g')
+                  url_new_escaped=$(echo "${url_new}" | sed 's/[\&/]/\\&/g')
+                  sed -i -e "s/${url_old_escaped}/${url_new_escaped}/" scripts/valhalla_build_timezones
+                  git add scripts/valhalla_build_timezones
+
+                  echo "Updated timezone shapefile download URL:"
+                  git diff scripts/valhalla_build_timezones
+              fi
+
+              set -e
+              # commit and push 
+              git commit -m "bumped tz to ${latest_tag}"
+              git push origin "${new_branch}"
+
+              # open new PR 
+              body=$(echo "See [here](https://github.com/eggert/tz/blob/main/NEWS) for the latest changes made to tz.\
+              Created by workflow run [#${WORKFLOW_RUN_ID}](https://github.com/valhalla/valhalla/actions/runs/${WORKFLOW_RUN_ID})." | xargs)
+              gh pr create --base master --head $new_branch --title "Bump tz to ${latest_tag}" --body "${body}"
+
+              exit 1
+          fi
+
+          echo "tz up to date"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WORKFLOW_RUN_ID: ${{ github.run_id }}
+          WORKFLOW_JOB_ID: ${{ github.job }}

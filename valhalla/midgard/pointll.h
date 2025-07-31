@@ -1,12 +1,13 @@
 #pragma once
 
-#include <cmath>
-#include <limits>
-#include <tuple>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/point2.h>
+
+#include <cmath>
+#include <limits>
+#include <tuple>
 
 namespace valhalla {
 namespace midgard {
@@ -53,9 +54,6 @@ public:
    * Parent constructor. Forwards to parent.
    */
   GeoPoint(const PointXY<PrecisionT>& p) : PointXY<PrecisionT>(p) {
-  }
-
-  virtual ~GeoPoint() {
   }
 
   /**
@@ -242,10 +240,9 @@ public:
    * @param  p2  End point of the segment.
    * @return  Returns a positive value if this point is left of the segment.
    */
-  virtual value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
+  value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
     return (p2.lng() - p1.lng()) * (lat() - p1.lat()) - (lng() - p1.lng()) * (p2.lat() - p1.lat());
   }
-  using PointXY<PrecisionT>::IsLeft;
 
   /**
    * Tests whether this point is within a polygon.

@@ -1,12 +1,11 @@
 #include "baldr/curler.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
 
 #include <memory>
 #include <stdexcept>
 #include <string>
 
-#ifdef CURL_STATICLIB
+#ifdef ENABLE_HTTP
 
 #if defined(_MSC_VER) && !defined(NOGDI)
 #define NOGDI // prevents winsock2.h drag in wingdi.h

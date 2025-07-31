@@ -1,7 +1,6 @@
 #ifndef __VALHALLA_UTIL_H__
 #define __VALHALLA_UTIL_H__
 
-#include <cstdint>
 #include <functional>
 #include <vector>
 

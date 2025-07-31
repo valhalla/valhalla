@@ -2,7 +2,8 @@
 #define VALHALLA_BALDR_TIMEDOMAIN_H_
 
 #include <valhalla/baldr/graphconstants.h>
-#include <vector>
+
+#include <stdexcept>
 
 namespace valhalla {
 namespace baldr {
@@ -93,8 +94,8 @@ public:
 
   /**
    * Set the day when this time domain starts
-   * @param beging_day_dow   the begin_day_dow.
-   *                         begin_day_dow = begin day or dow enum (i.e. 1st Sunday in some month)
+   * @param begin_day_dow   the begin_day_dow.
+   *                        begin_day_dow = begin day or dow enum (i.e. 1st Sunday in some month)
    */
   void set_begin_day_dow(const uint8_t begin_day_dow) {
     if (daterange.type == kYMD && begin_day_dow > kMaxDateRangeDay) {
@@ -310,20 +311,27 @@ public:
     return value;
   }
 
+  /**
+   * Provides a string representation of a condition in format close to the
+   * [opening hours](https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification)
+   */
+  std::string to_string() const;
+
 protected:
+  // represents a single date/time range from https://wiki.openstreetmap.org/wiki/Key:opening_hours
   struct DateRange {
-    uint64_t type : 1;
-    uint64_t dow : 7;           // day of week for this restriction
-    uint64_t begin_hrs : 5;     // begin hours
-    uint64_t begin_mins : 6;    // begin minutes
-    uint64_t begin_month : 4;   // begin month
-    uint64_t begin_day_dow : 5; // begin day or dow enum i.e. 1st Sunday
-    uint64_t begin_week : 3;    // which week does this start.  i.e. 1st week in Oct
-    uint64_t end_hrs : 5;       // end hours
-    uint64_t end_mins : 6;      // end minutes
-    uint64_t end_month : 4;     // end month
-    uint64_t end_day_dow : 5;   // end day or dow enum i.e. last Sunday
-    uint64_t end_week : 3;      // which week does this end.  i.e. last week in Oct
+    uint64_t type : 1;          // type of day_dow, 0 - day of month [1,31], 1 - nth day of week [1,7]
+    uint64_t dow : 7;           // day of week mask, e.g. 0b0111110 for Mo-Fr as week starts from Su
+    uint64_t begin_hrs : 5;     // begin hours, 0 if not set
+    uint64_t begin_mins : 6;    // begin minutes, 0 if not set
+    uint64_t begin_month : 4;   // begin month, from 1 (January) to 12 (December), 0 if not set
+    uint64_t begin_day_dow : 5; // begin day of month or nth dow, i.e. 1st Sunday
+    uint64_t begin_week : 3;    // which week does this start, i.e. 1st week in Oct
+    uint64_t end_hrs : 5;       // end hours, 0 if not set
+    uint64_t end_mins : 6;      // end minutes, 0 if not set
+    uint64_t end_month : 4;     // end month, from 1 (January) to 12 (December), 0 if not set
+    uint64_t end_day_dow : 5;   // end day of month or nth dow, i.e. last Sunday
+    uint64_t end_week : 3;      // which week does this end, i.e. last week in Oct
     uint64_t spare : 10;
 
   } daterange;

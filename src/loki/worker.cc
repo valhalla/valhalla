@@ -1,25 +1,15 @@
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <functional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-
-#include "baldr/json.h"
-#include "baldr/rapidjson_utils.h"
-#include "midgard/logging.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/motorcyclecost.h"
-#include "sif/motorscootercost.h"
-#include "sif/pedestriancost.h"
-#include "tyr/actor.h"
-
+#include "loki/worker.h"
 #include "loki/polygon_search.h"
 #include "loki/search.h"
-#include "loki/worker.h"
+#include "midgard/logging.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <functional>
+#include <stdexcept>
+#include <string>
+#include <unordered_set>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -31,7 +21,10 @@ using namespace valhalla::loki;
 namespace valhalla {
 namespace loki {
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
+                                    Api& request,
                                     std::optional<valhalla_exception_t> required_exception) {
+  bool has_302 = false, has_303 = false;
+
   if (locations->size()) {
     for (auto& location : *locations) {
       if (!location.has_minimum_reachability_case())
@@ -50,15 +43,35 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
       if (!location.has_node_snap_tolerance_case())
         location.set_node_snap_tolerance(default_node_snap_tolerance);
 
-      if (!location.has_search_cutoff_case())
-        location.set_search_cutoff(default_search_cutoff);
+      const bool has_level =
+          location.has_search_filter() && location.search_filter().level() != baldr::kMaxLevel;
 
+      if (!location.has_search_cutoff_case() && !has_level) {
+        // no level and no cutoff, provide regular default
+        location.set_search_cutoff(default_search_cutoff);
+      } else if (location.has_search_cutoff_case() && has_level) {
+        // level and cutoff, clamp value to limit candidate search in case of bogus level input
+        if (location.search_cutoff() > kMaxIndoorSearchCutoff) {
+          has_303 = true;
+          location.set_search_cutoff(kMaxIndoorSearchCutoff);
+        }
+      } else if (!location.has_search_cutoff_case() && has_level) {
+        // level and no cutoff, set special default
+        location.set_search_cutoff(kDefaultIndoorSearchCutoff);
+        has_302 = true;
+      }
+      // if there is a level search filter and
       if (!location.has_street_side_tolerance_case())
         location.set_street_side_tolerance(default_street_side_tolerance);
 
       if (!location.has_street_side_max_distance_case())
         location.set_street_side_max_distance(default_street_side_max_distance);
     }
+    if (has_302)
+      add_warning(request, 302, std::to_string(kDefaultIndoorSearchCutoff));
+    if (has_303)
+      add_warning(request, 303, std::to_string(kMaxIndoorSearchCutoff));
+
   } else if (required_exception) {
     throw *required_exception;
   }
@@ -69,6 +82,24 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   // using the costing we can determine what type of edge filtering to use
   if (!allow_none && options.costing_type() == Costing::none_) {
     throw valhalla_exception_t{124};
+  }
+
+  if (!allow_hard_exclusions) {
+    bool exclusion_detected = false;
+    for (auto& pair : options.costings()) {
+      auto opts = pair.second.options();
+      exclusion_detected = exclusion_detected || opts.exclude_bridges() || opts.exclude_tolls() ||
+                           opts.exclude_tunnels() || opts.exclude_highways() ||
+                           opts.exclude_ferries();
+      opts.set_exclude_bridges(false);
+      opts.set_exclude_tolls(false);
+      opts.set_exclude_tunnels(false);
+      opts.set_exclude_highways(false);
+      opts.set_exclude_ferries(false);
+    }
+    if (exclusion_detected) {
+      add_warning(api, 208);
+    }
   }
 
   const auto& costing_str = Costing_Enum_Name(options.costing_type());
@@ -163,7 +194,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
-      min_resample(config.get<float>("service_limits.skadi.min_resample")) {
+      min_resample(config.get<float>("service_limits.skadi.min_resample")),
+      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)) {
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -185,7 +217,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
-        kv.first == "max_exclude_polygons_length" || kv.first == "skadi" || kv.first == "status") {
+        kv.first == "max_exclude_polygons_length" ||
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
+        kv.first == "status" || kv.first == "allow_hard_exclusions" ||
+        kv.first == "hierarchy_limits") {
       continue;
     }
     if (kv.first != "trace") {
@@ -245,6 +280,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
   allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
   max_timedep_dist_matrix = config.get<size_t>("service_limits.max_timedep_distance_matrix", 0);
+  // assign max_distance_disable_hierarchy_culling
+  max_distance_disable_hierarchy_culling =
+      config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
+  allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
 
   // signal that the worker started successfully
   started();
@@ -262,7 +301,55 @@ void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_functio
   reader->SetInterrupt(interrupt);
 }
 
-#ifdef HAVE_HTTP
+// Check if total arc distance exceeds the max distance limit for disable_hierarchy_pruning.
+// If true, add a warning and set the disable_hierarchy_pruning costing option to false.
+void loki_worker_t::check_hierarchy_distance(Api& request) {
+  auto& options = *request.mutable_options();
+  // Bail early if the mode of travel is not vehicular.
+  // Bike and pedestrian don't use hierarchies anyway.
+  if (options.costing_type() == Costing_Type_bicycle ||
+      options.costing_type() == Costing_Type_pedestrian) {
+    return;
+  }
+
+  // If disable_hierarchy_pruning is not true, skip the rest.
+  auto costing_options = options.mutable_costings()->find(options.costing_type());
+  if (!costing_options->second.options().disable_hierarchy_pruning()) {
+    return;
+  }
+
+  // For route action check if total distances between locations exceed the max limit.
+  // For matrix action, check every pair of source and target.
+  bool max_distance_exceeded = false;
+  if (request.options().action() == Options_Action_sources_to_targets) {
+    for (auto& source : *options.mutable_sources()) {
+      for (auto& target : *options.mutable_targets()) {
+        if (to_ll(source).Distance(to_ll(target)) > max_distance_disable_hierarchy_culling) {
+          max_distance_exceeded = true;
+          break;
+        }
+      }
+    }
+  } else {
+    auto locations = options.locations();
+    float arc_distance = 0.0f;
+    for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
+      arc_distance += to_ll(*source).Distance(to_ll(*(source + 1)));
+      if (arc_distance > max_distance_disable_hierarchy_culling) {
+        max_distance_exceeded = true;
+        break;
+      }
+    }
+  }
+
+  // Turn off disable_hierarchy_pruning and add a warning if max limit exceeded.
+  if (max_distance_exceeded) {
+    add_warning(request, 205);
+    costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
+  }
+}
+
+#ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t
 loki_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,
@@ -325,8 +412,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
       case Options::expansion:
         if (options.expansion_action() == Options::route) {
           route(request);
-        } else {
+        } else if (options.expansion_action() == Options::isochrone) {
           isochrones(request);
+        } else {
+          matrix(request);
         }
         result.messages.emplace_back(request.SerializeAsString());
         break;
@@ -338,7 +427,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error(e, info, request);
   } catch (const std::exception& e) {
-    LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
+    LOG_ERROR("500::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error({199, std::string(e.what())}, info, request);
   }
 

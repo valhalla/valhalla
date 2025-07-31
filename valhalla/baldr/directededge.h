@@ -1,11 +1,12 @@
 #ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/turn.h>
+
+#include <cstdint>
 
 namespace valhalla {
 namespace baldr {
@@ -237,7 +238,7 @@ public:
   void set_curvature(const uint32_t factor);
 
   /**
-   * Flag indicating the edge is a dead end (no other driveable
+   * Flag indicating the edge is a dead end (no other drivable
    * roads at the end node of this edge).
    * @return  Returns true if this edge is a dead end.
    */
@@ -246,7 +247,7 @@ public:
   }
 
   /**
-   * Set the flag indicating the edge is a dead end (no other driveable
+   * Set the flag indicating the edge is a dead end (no other drivable
    * roads at the end node of this edge).
    * @param d  True if this edge is a dead end.
    */
@@ -268,20 +269,6 @@ public:
   void set_toll(const bool toll);
 
   /**
-   * Does this edge have a seasonal access (e.g., closed in the winter)?
-   * @return  Returns true if this edge has seasonal access, false if not.
-   */
-  bool seasonal() const {
-    return seasonal_;
-  }
-
-  /**
-   * Sets the flag indicating this edge has seasonal access.
-   * @param  seasonal  True if this edge has seasonal access, false if not.
-   */
-  void set_seasonal(const bool seasonal);
-
-  /**
    * Is this edge part of a private or no through road that allows access
    * only if required to get to a destination?
    * @return  Returns true if the edge is destination only / private access.
@@ -298,6 +285,24 @@ public:
    *                   destination only), false if not.
    */
   void set_dest_only(const bool destonly);
+
+  /**
+   * Is this edge part of a private or no through road for HGV that allows access
+   * only if required to get to a destination? If destonly() is true, this is true.
+   * @return  Returns true if the edge is destination only / private access for HGV.
+   */
+  bool destonly_hgv() const {
+    return dest_only_hgv_;
+  }
+
+  /**
+   * Sets the destination only (private) flag for HGV. This indicates the
+   * edge should allow access only to locations that are destinations and
+   * not allow HGV "through" traffic
+   * @param  destonly_hgv  True if the edge is private for HGV (allows access to
+   *                       destination only), false if not.
+   */
+  void set_dest_only_hgv(const bool destonly_hgv);
 
   /**
    * Is this edge part of a tunnel?
@@ -562,6 +567,17 @@ public:
    */
   Use use() const {
     return static_cast<Use>(use_);
+  }
+
+  /**
+   * Evaluates a basic set of conditions to determine if this directed edge is a valid potential
+   * member of a shortcut. This is used while forming and resolving shortcuts.
+   * @return true if the edge is not a shortcut, not related to transit and not under construction
+   */
+  bool can_form_shortcut() const {
+    return !is_shortcut() && !bss_connection() && use() != Use::kTransitConnection &&
+           use() != Use::kEgressConnection && use() != Use::kPlatformConnection &&
+           use() != Use::kConstruction;
   }
 
   /**
@@ -851,16 +867,16 @@ public:
   void set_dismount(const bool dismount);
 
   /**
-   * Get if a sidepath for bicycling should be preffered instead of this edge
-   * @return  Returns if a sidepath should be preffered for cycling
+   * Get if a sidepath for bicycling should be preferred instead of this edge
+   * @return  Returns if a sidepath should be preferred for cycling
    */
   bool use_sidepath() const {
     return use_sidepath_;
   }
 
   /**
-   * Set if a sidepath for bicycling should be preffered instead of this edge
-   * @param  use_sidepath  true if sidepath should be preffered for cycling over this edge
+   * Set if a sidepath for bicycling should be preferred instead of this edge
+   * @param  use_sidepath  true if sidepath should be preferred for cycling over this edge
    */
   void set_use_sidepath(const bool use_sidepath);
 
@@ -1057,6 +1073,15 @@ public:
   }
 
   /**
+   * We hijack the shortcut mask to move   ferry edges to lower
+   * hierarchies. Will be set during the graph build and re-set during the
+   * hierarchy builder.
+   * @param rc    the road class which should determine the edge's hierarchy
+   * @param reset whether is_shortcut_ should be set false
+   */
+  void set_hierarchy_roadclass(const baldr::RoadClass rc, const bool reset = false);
+
+  /**
    * Set the mask for whether this edge represents a shortcut between 2 nodes.
    * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
    * (other than the 1-2 higher level edges that superseded by the shortcut).
@@ -1074,6 +1099,29 @@ public:
    */
   uint32_t superseded() const {
     return superseded_;
+  }
+
+#ifdef _WIN32
+  // TODO: Workaround for missing strings.h on Windows. Replace with platform independent
+  //       std::countr_zero in C++20 (see https://en.cppreference.com/w/cpp/numeric/countr_zero).
+  int ffs(int mask) const {
+    if (0 == mask)
+      return 0;
+
+    int idx;
+    for (idx = 1; !(mask & 1); ++idx)
+      mask >>= 1;
+    return idx;
+  }
+#endif
+
+  /**
+   * Unlike superseded(), this does not return the raw mask but the shortcut index
+   * that was originally passed to set_superseded().
+   * @return  Returns the index of the set bit in the superseded mask.
+   */
+  uint32_t superseded_idx() const {
+    return ffs(superseded_);
   }
 
   /**
@@ -1141,9 +1189,9 @@ public:
 
   /**
    * Create a json object representing this edge
-   * @return  Returns the json object
+   *  @param writer The writer json object to represent the object
    */
-  json::MapPtr json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // 1st 8-byte word
@@ -1199,15 +1247,16 @@ protected:
   uint64_t tunnel_ : 1;         // Is this edge part of a tunnel
   uint64_t bridge_ : 1;         // Is this edge part of a bridge?
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
-  uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
-  uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
+  uint64_t spare1_ : 1;         // Used to be "seasonal", was never used, can be reclaimed
+  uint64_t deadend_ : 1;        // Leads to a dead-end (no other drivable roads) TODO
   uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
   uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge
   uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge
   uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
-  uint64_t spare4_ : 4;
+  uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
+  uint64_t spare4_ : 3;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

@@ -1,7 +1,7 @@
 #include "gurka.h"
-#include <gtest/gtest.h>
-
 #include "odin/enhancedtrippath.h"
+
+#include <gtest/gtest.h>
 
 using namespace valhalla;
 
@@ -11,7 +11,7 @@ void validate_turn_lanes(valhalla::Api& result,
 
   ASSERT_EQ(expected_lanes.size(), etl.node_size() - 1);
 
-  for (size_t i = 1; i < etl.node_size(); ++i) {
+  for (int i = 1; i < etl.node_size(); ++i) {
     auto prev_edge = etl.GetPrevEdge(i);
     ASSERT_TRUE(prev_edge) << "Expected prev_edge on node index " << i;
     ASSERT_EQ(prev_edge->turn_lanes_size(), expected_lanes[i - 1].first)

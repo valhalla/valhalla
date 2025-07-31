@@ -1,7 +1,6 @@
 #include <cstdint>
 // -*- mode: c++ -*-
 #include "meili/routing.h"
-
 #include "test.h"
 
 using namespace valhalla;
@@ -17,9 +16,9 @@ struct simple_label {
 };
 
 void Add(baldr::DoubleBucketQueue<simple_label>& adjlist, const std::vector<simple_label>& costs) {
-  uint32_t idx = 0;
-  for (const auto cost : costs) {
-    adjlist.add(idx++);
+  // C++20 use iota
+  for (uint32_t idx = 0; idx < costs.size(); ++idx) {
+    adjlist.add(idx);
   }
 }
 
@@ -145,6 +144,7 @@ TEST(Routing, Benchmark) {
   std::mt19937 gen(rd());
   std::vector<simple_label> costs;
   size_t N = 1000000;
+  costs.reserve(N);
   for (size_t i = 0; i < N; ++i) {
     costs.push_back({std::floor(test::rand01(gen) * N)});
   }

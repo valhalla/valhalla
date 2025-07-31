@@ -1,41 +1,34 @@
-#include <cstdint>
-
-#include "statistics.h"
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-#include <future>
-#include <iostream>
-#include <list>
-#include <mutex>
-#include <ostream>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <thread>
-#include <utility>
-#include <vector>
-
-#include "config.h"
-
+#include "argparse_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "statistics.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cstdint>
+#include <deque>
+#include <filesystem>
+#include <future>
+#include <iostream>
+#include <list>
+#include <mutex>
+#include <random>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
-
-filesystem::path config_file_path;
 
 namespace {
 
@@ -550,8 +543,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // Spawn the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(build, std::cref(pt), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
+    thread = std::make_shared<std::thread>(build, std::cref(pt), std::ref(tilequeue), std::ref(lock),
+                                           std::ref(results.back()));
   }
 
   // Wait for threads to finish
@@ -571,64 +564,39 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   stats.roulette_data.GenerateTasks(pt);
 }
 
-bool ParseArguments(int argc, char* argv[]) {
+int main(int argc, char** argv) {
+  const auto program = std::filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
+
   try {
     // clang-format off
-    cxxopts::Options options("valhalla_build_statistics",
-        "valhalla_build_statistics " VALHALLA_VERSION "\n\n"
-        "valhalla_build_statistics is a program that builds a statistics database.\n\n");
+    cxxopts::Options options(
+      program,
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
+      "valhalla_build_statistics is a program that builds a statistics database.\n\n");
 
     options.add_options()
       ("h,help", "Print this help message")
       ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
-      exit(0);
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_build_statistics " << VALHALLA_VERSION << "\n";
-      exit(0);
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
-      return true;
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-    }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
-  }
-
-  return false;
-}
-
-int main(int argc, char** argv) {
-  if (!ParseArguments(argc, argv)) {
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
+      return EXIT_SUCCESS;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
-  // check the type of input
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.string(), pt);
-
-  // configure logging
-  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto loggin_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(loggin_config);
-  }
-
-  BuildStatistics(pt);
+  BuildStatistics(config);
 
   return EXIT_SUCCESS;
 }

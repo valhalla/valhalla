@@ -1,23 +1,12 @@
-#include <cstdint>
-#include <functional>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include "odin/worker.h"
+#include "midgard/logging.h"
+#include "odin/directionsbuilder.h"
+#include "tyr/serializers.h"
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/json.h"
-#include "midgard/logging.h"
-
-#include "midgard/util.h"
-#include "odin/directionsbuilder.h"
-#include "odin/util.h"
-#include "odin/worker.h"
-#include "tyr/serializers.h"
-
-#include "proto/trip.pb.h"
+#include <functional>
+#include <string>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -50,7 +39,7 @@ std::string odin_worker_t::narrate(Api& request) const {
 }
 
 void odin_worker_t::status(Api&) const {
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   // if we are in the process of shutting down we signal that here
   // should react by draining traffic (though they are likely doing this as they are usually the ones
   // who sent us the request to shutdown)
@@ -60,7 +49,7 @@ void odin_worker_t::status(Api&) const {
 #endif
 }
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t
 odin_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,
@@ -96,6 +85,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
       }
     }
   } catch (const std::exception& e) {
+    LOG_ERROR("500::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error({299, std::string(e.what())}, info, request);
   }
 

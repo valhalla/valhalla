@@ -1,13 +1,12 @@
-#include <optional>
-#include <string>
-#include <unordered_map>
+#include "odin/markup_formatter.h"
+#include "proto/common.pb.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/format.hpp>
 
-#include "odin/markup_formatter.h"
-#include "proto/common.pb.h"
+#include <optional>
+#include <string>
+#include <unordered_map>
 
 namespace {
 constexpr auto kQuotesTag = "<QUOTES>";
@@ -21,8 +20,8 @@ constexpr auto KDoubleQuotes = "\"";
 const std::string& PronunciationAlphabetToString(valhalla::Pronunciation_Alphabet alphabet) {
   static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
       values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "ipa"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "x-katakana"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "x-jeita"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kKatakana, "katakana"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kJeita, "jeita"},
              {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "nt-sampa"}};
   auto f = values.find(alphabet);
   if (f == values.cend())

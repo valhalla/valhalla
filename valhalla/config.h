@@ -1,6 +1,9 @@
-/* Minimal valhalla/config.h template for minimal CMake build configuration */
+#pragma once
+#include "valhalla.h"
 
-#include <valhalla/valhalla.h>
+#include <boost/property_tree/ptree.hpp>
+
+#include <string>
 
 #define VALHALLA_STRINGIZE_NX(A) #A
 #define VALHALLA_STRINGIZE(A) VALHALLA_STRINGIZE_NX(A)
@@ -9,6 +12,12 @@
 
 // clang-format off
 #define VALHALLA_VERSION VALHALLA_STRINGIZE(VALHALLA_VERSION_MAJOR) "." VALHALLA_STRINGIZE(VALHALLA_VERSION_MINOR) "." VALHALLA_STRINGIZE(VALHALLA_VERSION_PATCH)
+#ifdef VALHALLA_VERSION_MODIFIER
+#define VALHALLA_VERSION_PRECISE VALHALLA_VERSION "-" VALHALLA_STRINGIZE(VALHALLA_VERSION_MODIFIER)
+#define VALHALLA_PRINT_VERSION VALHALLA_VERSION_PRECISE
+#else
+#define VALHALLA_PRINT_VERSION VALHALLA_VERSION
+#endif
 // clang-format on
 
 /* Name of package */
@@ -31,3 +40,9 @@
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION VALHALLA_VERSION
+
+namespace valhalla {
+
+const boost::property_tree::ptree& config(const std::string& config_file_or_inline = "");
+
+} // namespace valhalla

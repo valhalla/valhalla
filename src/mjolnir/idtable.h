@@ -1,15 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_IDTABLE_H
 #define VALHALLA_MJOLNIR_IDTABLE_H
 
-#include <algorithm>
+#include <ankerl/unordered_dense.h>
+
 #include <cmath>
 #include <cstdint>
 #include <fstream>
-#include <vector>
-
-#include <robin_hood.h>
-
-#include <midgard/logging.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -71,7 +67,7 @@ public:
   /**
    * Deserializes the table from file
    * @param file_name  the file from which to deserialize the table
-   * @return true if it was succesfully deserialized
+   * @return true if it was successfully deserialized
    */
   bool deserialize(const std::string& file_name) {
     std::ifstream file(file_name, std::ios::in | std::ios::binary | std::ios::ate);
@@ -104,7 +100,7 @@ public:
   }
 
 private:
-  robin_hood::unordered_map<uint64_t, uint64_t> bitmarkers_;
+  ankerl::unordered_dense::map<uint64_t, uint64_t> bitmarkers_;
 };
 
 } // namespace mjolnir

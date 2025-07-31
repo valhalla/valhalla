@@ -10,10 +10,11 @@ jobs:
     name: Build and deploy docs
 
     runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'valhalla' }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python 3
         uses: actions/setup-python@v4

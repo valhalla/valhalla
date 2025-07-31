@@ -1,11 +1,7 @@
 #include "mjolnir/util.h"
-
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-#include "midgard/aabb2.h"
 #include "midgard/logging.h"
-#include "midgard/point2.h"
-#include "midgard/polyline2.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphbuilder.h"
@@ -13,34 +9,22 @@
 #include "mjolnir/graphfilter.h"
 #include "mjolnir/graphvalidator.h"
 #include "mjolnir/hierarchybuilder.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/transitbuilder.h"
+#include "scoped_timer.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include <filesystem>
+#include <regex>
+
 using namespace valhalla::midgard;
 
 namespace {
-
-struct spatialite_singleton_t {
-  static const spatialite_singleton_t& get_instance() {
-    static spatialite_singleton_t s;
-    return s;
-  }
-
-private:
-  spatialite_singleton_t() {
-    spatialite_initialize();
-  }
-  ~spatialite_singleton_t() {
-    spatialite_shutdown();
-  }
-};
 
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
@@ -51,6 +35,7 @@ const std::string tile_manifest_file = "tile_manifest.json";
 const std::string access_file = "access.bin";
 const std::string pronunciation_file = "pronunciation.bin";
 const std::string bss_nodes_file = "bss_nodes.bin";
+const std::string linguistic_node_file = "linguistics_node.bin";
 const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
@@ -68,9 +53,19 @@ namespace mjolnir {
  */
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value,
-                          std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
-                          boost::algorithm::token_compress_off);
+  boost::algorithm::split(
+      tokens, tag_value,
+      [delim](auto&& PH1) { return std::equal_to<char>()(delim, std::forward<decltype(PH1)>(PH1)); },
+      boost::algorithm::token_compress_off);
+
+  return tokens;
+}
+
+std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str) {
+  std::regex regex_str(delim_str);
+  std::vector<std::string> tokens(std::sregex_token_iterator(tag_value.begin(), tag_value.end(),
+                                                             regex_str, -1),
+                                  std::sregex_token_iterator());
   return tokens;
 }
 
@@ -161,27 +156,56 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
-std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
-  if (!handle) {
-    return nullptr;
-  }
+/**
+ * Get the index of the opposing edge at the end node. This is on the local hierarchy,
+ * before adding transition and shortcut edges. Make sure that even if the end nodes
+ * and lengths match that the correct edge is selected (match shape) since some loops
+ * can have the same length and end node.
+ */
+uint32_t GetOpposingEdgeIndex(const graph_tile_ptr& endnodetile,
+                              const baldr::GraphId& startnode,
+                              const graph_tile_ptr& tile,
+                              const baldr::DirectedEdge& edge) {
+  // Get the nodeinfo at the end of the edge
+  const baldr::NodeInfo* nodeinfo = endnodetile->node(edge.endnode().id());
 
-  spatialite_singleton_t::get_instance();
-  void* conn = spatialite_alloc_connection();
-  spatialite_init_ex(handle, conn, 0);
-  return std::shared_ptr<void>(conn, [](void* c) { spatialite_cleanup_ex(c); });
+  // Iterate through the directed edges and return when the end node matches the specified
+  // node, the length matches, and the shape matches (or edgeinfo offset matches)
+  const baldr::DirectedEdge* directededge = endnodetile->directededge(nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    if (directededge->endnode() == startnode && directededge->length() == edge.length()) {
+      // If in the same tile and the edgeinfo offset matches then the shape and names will match
+      if (endnodetile == tile && directededge->edgeinfo_offset() == edge.edgeinfo_offset()) {
+        return i;
+      } else {
+        // Need to compare shape if not in the same tile or different EdgeInfo (could be different
+        // names in opposing directions)
+        if (shapes_match(tile->edgeinfo(&edge).shape(),
+                         endnodetile->edgeinfo(directededge).shape())) {
+          return i;
+        }
+      }
+    }
+  }
+  LOG_ERROR("Could not find opposing edge index");
+  return baldr::kMaxEdgesPerNode;
 }
 
 bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
-                    const BuildStage end_stage,
-                    const bool release_osmpbf_memory) {
+                    const BuildStage end_stage) {
+  SCOPED_TIMER();
   auto remove_temp_file = [](const std::string& fname) {
-    if (filesystem::exists(fname)) {
-      filesystem::remove(fname);
+    if (std::filesystem::exists(fname)) {
+      std::filesystem::remove(fname);
     }
   };
+
+  if (input_files.size() > 1) {
+    LOG_WARN(
+        "Tile building using more than one osm.pbf extract is discouraged. Consider merging the extracts into one file. See this issue for more info: https://github.com/valhalla/valhalla/issues/3925 ");
+  }
 
   // Take out tile_extract and tile_url from property tree as tiles must only use the tile_dir
   auto config = original_config;
@@ -191,8 +215,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Get the tile directory (make sure it ends with the preferred separator
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
-  if (tile_dir.back() != filesystem::path::preferred_separator) {
-    tile_dir.push_back(filesystem::path::preferred_separator);
+  if (tile_dir.back() != std::filesystem::path::preferred_separator) {
+    tile_dir.push_back(std::filesystem::path::preferred_separator);
   }
 
   // During the initialize stage the tile directory will be purged (if it already exists)
@@ -201,22 +225,22 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // set up the directories and purge old tiles if starting at the parsing stage
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
       auto level_dir = tile_dir + std::to_string(level.level);
-      if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
+      if (std::filesystem::exists(level_dir) && !std::filesystem::is_empty(level_dir)) {
         LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-        filesystem::remove_all(level_dir);
+        std::filesystem::remove_all(level_dir);
       }
     }
 
     // check for transit level.
     auto level_dir =
         tile_dir + std::to_string(valhalla::baldr::TileHierarchy::GetTransitLevel().level);
-    if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
+    if (std::filesystem::exists(level_dir) && !std::filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-      filesystem::remove_all(level_dir);
+      std::filesystem::remove_all(level_dir);
     }
 
     // Create the directory if it does not exist
-    filesystem::create_directories(tile_dir);
+    std::filesystem::create_directories(tile_dir);
   }
 
   // Set up the temporary (*.bin) files used during processing
@@ -226,8 +250,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string edges_bin = tile_dir + edges_file;
   std::string tile_manifest = tile_dir + tile_manifest_file;
   std::string access_bin = tile_dir + access_file;
-  std::string pronunciation_bin = tile_dir + pronunciation_file;
   std::string bss_nodes_bin = tile_dir + bss_nodes_file;
+  std::string linguistic_node_bin = tile_dir + linguistic_node_file;
   std::string cr_from_bin = tile_dir + cr_from_file;
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
@@ -240,12 +264,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (start_stage <= BuildStage::kParseWays && BuildStage::kParseWays <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
-                                         way_nodes_bin, access_bin, pronunciation_bin);
-
-    // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory && BuildStage::kParseWays == end_stage) {
-      OSMPBF::Parser::free();
-    }
+                                         way_nodes_bin, access_bin);
 
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
@@ -261,11 +280,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     PBFGraphParser::ParseRelations(config.get_child("mjolnir"), input_files, cr_from_bin, cr_to_bin,
                                    osm_data);
 
-    // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory && BuildStage::kParseRelations == end_stage) {
-      OSMPBF::Parser::free();
-    }
-
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
       osm_data.write_to_temp_files(tile_dir);
@@ -277,12 +291,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
     PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
-                               osm_data);
-
-    // Free all protobuf memory - cannot use the protobuffer lib after this!
-    if (release_osmpbf_memory) {
-      OSMPBF::Parser::free();
-    }
+                               linguistic_node_bin, osm_data);
 
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
@@ -309,7 +318,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (start_stage == BuildStage::kBuild) {
       // Read OSMData from files if building tiles is the first stage
       osm_data.read_from_temp_files(tile_dir);
-      if (filesystem::exists(tile_manifest)) {
+      if (std::filesystem::exists(tile_manifest)) {
         tiles = TileManifest::ReadFromFile(tile_manifest).tileset;
       } else {
         // TODO: Remove this backfill in the future, and make calling constructedges stage
@@ -321,7 +330,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, pronunciation_bin, tiles);
+                        cr_to_bin, linguistic_node_bin, tiles);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -401,16 +410,57 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(nodes_bin);
     remove_temp_file(edges_bin);
     remove_temp_file(access_bin);
-    remove_temp_file(pronunciation_bin);
     remove_temp_file(bss_nodes_bin);
     remove_temp_file(cr_from_bin);
     remove_temp_file(cr_to_bin);
+    remove_temp_file(linguistic_node_bin);
     remove_temp_file(new_to_old_bin);
     remove_temp_file(old_to_new_bin);
     remove_temp_file(tile_manifest);
     OSMData::cleanup_temp_files(tile_dir);
   }
   return true;
+}
+
+std::string TileManifest::ToString() const {
+  rapidjson::writer_wrapper_t writer(4096);
+  writer.start_object();
+  writer.start_array("tiles");
+  for (const auto& tile : tileset) {
+    writer.start_object();
+    writer.start_object("graphid");
+    tile.first.json(writer);
+    writer.end_object();
+    writer("node_index", static_cast<uint64_t>(tile.second));
+    writer.end_object();
+  }
+  writer.end_array();
+  writer.end_object();
+  return writer.get_buffer();
+}
+
+void TileManifest::LogToFile(const std::string& filename) const {
+  std::ofstream handle;
+  handle.open(filename);
+  handle << ToString();
+  handle.close();
+  LOG_INFO("Writing tile manifest to " + filename);
+}
+
+TileManifest TileManifest::ReadFromFile(const std::string& filename) {
+  ptree manifest;
+  rapidjson::read_json(filename, manifest);
+  LOG_INFO("Reading tile manifest from " + filename);
+  std::map<baldr::GraphId, size_t> tileset;
+  for (const auto& tile_info : manifest.get_child("tiles")) {
+    const ptree& graph_id = tile_info.second.get_child("graphid");
+    const baldr::GraphId id(graph_id.get<uint64_t>("value"));
+    const size_t node_index = tile_info.second.get<size_t>("node_index");
+    tileset.insert({id, node_index});
+  }
+  LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
+           filename);
+  return TileManifest{tileset};
 }
 
 } // namespace mjolnir

@@ -1,13 +1,6 @@
 #ifndef VALHALLA_THOR_Dijkstras_H_
 #define VALHALLA_THOR_Dijkstras_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -18,6 +11,11 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
+
+#include <cstdint>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -70,8 +68,15 @@ public:
    * @param  expansion_callback  the functor to call back when the Dijkstra makes progress
    *                             on a given edge
    */
-  using expansion_callback_t = std::function<
-      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, uint32_t, float)>;
+  using expansion_callback_t = std::function<void(baldr::GraphReader&,
+                                                  const baldr::GraphId,
+                                                  const baldr::GraphId,
+                                                  const char*,
+                                                  const Expansion::EdgeStatus,
+                                                  float,
+                                                  uint32_t,
+                                                  float,
+                                                  const Expansion_ExpansionType)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }
@@ -102,7 +107,8 @@ protected:
   ComputeMultiModal(google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
                     baldr::GraphReader& graphreader,
                     const sif::mode_costing_t& mode_costing,
-                    const sif::TravelMode mode);
+                    const sif::TravelMode mode,
+                    const valhalla::Options& options);
 
   // A child-class must implement this to learn about what nodes were expanded
   virtual void ExpandingNode(baldr::GraphReader&,
@@ -129,8 +135,8 @@ protected:
   uint32_t dow_;
   uint32_t day_;
   uint32_t max_transfer_distance_;
+  uint32_t max_walking_dist_;
   std::string origin_date_time_;
-  uint32_t start_time_;
   std::unordered_map<std::string, uint32_t> operators_;
   std::unordered_set<uint32_t> processed_tiles_;
 

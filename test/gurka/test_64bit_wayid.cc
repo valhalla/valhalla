@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -7,13 +8,17 @@ void find_ids(baldr::GraphReader& reader, std::multiset<uint64_t> osm_way_ids) {
   // check all edges have correct edge info
   for (const auto& tile_id : reader.GetTileSet()) {
     auto tile = reader.GetGraphTile(tile_id);
-    for (auto edge = tile_id; edge.id() < tile->header()->directededgecount(); ++edge) {
-      // we should find every way id in the tile set
-      auto info = tile->edgeinfo(tile->directededge(edge));
+    for (auto edge_id = tile_id; edge_id.id() < tile->header()->directededgecount(); ++edge_id) {
+      // we should find every way id in the tile set, unless it's a shortcut, no way id there
+      auto* edge = tile->directededge(edge_id);
+      if (edge->is_shortcut()) {
+        continue;
+      }
+      auto info = tile->edgeinfo(edge);
       auto id = info.wayid();
       auto found = osm_way_ids.find(id);
       if (found == osm_way_ids.cend()) {
-        EXPECT_FALSE(found == osm_way_ids.cend()) << " couldnt find " << info.wayid();
+        ASSERT_FALSE(found == osm_way_ids.cend()) << " couldnt find " << info.wayid();
         return;
       }
       osm_way_ids.erase(found);
@@ -72,7 +77,7 @@ TEST(WayIds, way_ids1) {
   };
   // keep one for each directed edge
   std::multiset<uint64_t> osm_way_ids;
-  for (int i = 0; i < ids.size(); ++i) {
+  for (size_t i = 0; i < ids.size(); ++i) {
     const auto& id = ids[i];
     osm_way_ids.emplace(std::stoull(id));
     osm_way_ids.emplace(std::stoull(id));

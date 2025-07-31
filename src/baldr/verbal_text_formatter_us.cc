@@ -1,9 +1,5 @@
-#include <iostream>
-#include <memory>
-
-#include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
-#include "midgard/util.h"
+#include "baldr/verbal_text_formatter.h"
 
 namespace valhalla {
 namespace baldr {

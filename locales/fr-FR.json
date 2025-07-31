@@ -45,7 +45,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -85,7 +88,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -143,7 +149,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -175,7 +184,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilomètres",
@@ -229,7 +241,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -366,7 +381,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "ferry_label": "Ferry",
       "example_phrases": {
@@ -395,7 +413,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "ferry_label": "Ferry",
       "example_phrases": {
@@ -448,7 +469,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -456,7 +480,7 @@
         ],
         "1": [
           "Entrez dans le rond-point et prenez la 1er sortie.",
-          "Entrez dans le rond-point et prenez la 2e sortie.",
+          "Entrez dans le rond-point et prenez la 2nd sortie.",
           "Entrez dans le rond-point et prenez la 3ème sortie.",
           "Entrez dans le rond-point et prenez la 4ème sortie.",
           "Entrez dans le rond-point et prenez la 5ème sortie.",
@@ -545,7 +569,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -725,7 +752,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -753,7 +783,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -902,7 +935,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -949,7 +985,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -984,7 +1023,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -1023,7 +1065,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -1076,7 +1121,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1116,7 +1164,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1163,7 +1214,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilomètres",
@@ -1399,7 +1453,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -1439,7 +1496,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -1495,7 +1555,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1583,7 +1646,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilomètres",
@@ -1958,7 +2024,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -1998,7 +2067,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -2040,7 +2112,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -2088,7 +2163,10 @@
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "gauche",
@@ -2173,10 +2251,26 @@
         ]
       }
     },
+    "pass": {
+      "phrases": {
+        "0": "Pass <OBJECT_LABEL>.",
+        "1": "Pass traffic signals on <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "the gate",
+        "the bollards",
+        "ways intersection"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pass the gate."
+        ]
+      }
+    },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Prenez l'ascenseur.",
+        "1": "Prenez l'ascenseur jusqu'au niveau <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2189,8 +2283,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Prenez les escaliers.",
+        "1": "Prenez les escaliers jusqu'au niveau <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2203,8 +2297,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Prenez l'escalator.",
+        "1": "Prenez l'escalator jusqu'au niveau <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2217,14 +2311,14 @@
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Entrez dans le bâtiment.",
+        "1": "Entrez dans le bâtiment et continuez sur <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé"
       ],
       "example_phrases": {
         "0": [
@@ -2237,14 +2331,14 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Sortez du bâtiment.",
+        "1": "Sortez du bâtiment et continuez sur <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "l'allée",
         "la piste cyclable",
         "la piste de vélo de montagne",
-        "the crosswalk"
+        "le passage protégé"
       ],
       "example_phrases": {
         "0": [

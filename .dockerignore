@@ -29,7 +29,6 @@ valhalla_skadi_worker
 valhalla_thor_worker
 valhalla_tyr_worker
 valhalla_associate_segments
-valhalla_fetch_transit
 valhalla_pack_elevation
 genfiles/
 locales/*.UTF-8
@@ -45,6 +44,7 @@ libvalhalla.la
 date_time_zonespec.csv
 mason/
 mason_packages/
+.DS_Store
 
 # scripts
 scripts/gdal-2.0.0/
@@ -60,9 +60,23 @@ CMakeLists.txt.user
 /CMakeSettings.json
 .idea
 /.tidytmp
+vcpkg*/
+overlay-ports-vcpkg/
+vcpkg-configuration.json
+run_route_scripts/
+test_requests/
 
-# documentation
-site/
-
-.DS_Store
+# docker
 Dockerfile
+
+# CI
+.github/
+.circleci/
+.pre-commit-config.yaml
+
+# docs etc
+site/
+docs/
+CONTRIBUTING.md
+NEWS 
+taginfo.json

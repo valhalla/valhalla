@@ -1,10 +1,7 @@
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphid.h"
 #include "midgard/pointll.h"
-
 #include "test.h"
-
-#include <boost/property_tree/ptree.hpp>
 
 using namespace std;
 using namespace valhalla::baldr;
@@ -57,7 +54,7 @@ TEST(TileHierarchy, Tiles) {
   EXPECT_EQ(ids.size(), 4) << "Should have found 4 results.";
 }
 
-TEST(TileHeirarchy, parent) {
+TEST(TileHierarchy, parent) {
   GraphId id(1440 * 16 + 16, 3, 0);
   auto level2 = TileHierarchy::parent(id);
   EXPECT_EQ(level2, GraphId(id.tileid(), 2, 0));

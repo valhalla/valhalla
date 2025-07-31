@@ -1,13 +1,13 @@
 #include "midgard/logging.h"
-#include "filesystem.h"
 
+#include <cassert>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
-#include <sstream>
 #include <stdexcept>
 
 #ifdef __ANDROID__
@@ -38,9 +38,15 @@ std::string TimeStamp() {
   std::chrono::duration<double> fractional_seconds =
       (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);
   // format the string
-  std::string buffer("year/mo/dy hr:mn:sc.xxxxxx");
-  snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f", gmt.tm_year + 1900,
-           gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min, fractional_seconds.count());
+  std::string buffer("year/mo/dy hr:mn:sc.xxxxxx0");
+  [[maybe_unused]] int ret =
+      snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f",
+               gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
+               fractional_seconds.count());
+  assert(ret == static_cast<int>(buffer.length()) - 1);
+
+  // Remove trailing null terminator added by snprintf.
+  buffer.pop_back();
   return buffer;
 }
 
@@ -243,9 +249,9 @@ protected:
       try {
         // Ensure directory for log file exists. Otherwise, log file creation is silently skipped.
         // e.g. if "mjolnir.logging.file_name" points to location inside "mjolnir.tile_dir"
-        const auto parent_dir = filesystem::path(file_name).parent_path();
-        if (!filesystem::is_directory(parent_dir)) {
-          if (!filesystem::create_directories(parent_dir)) {
+        const auto parent_dir = std::filesystem::path(file_name).parent_path();
+        if (!std::filesystem::is_directory(parent_dir)) {
+          if (!std::filesystem::create_directories(parent_dir)) {
             throw std::runtime_error("Cannot create directory for log file: " + parent_dir.string());
           }
         }

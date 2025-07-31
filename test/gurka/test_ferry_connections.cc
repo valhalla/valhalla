@@ -1,7 +1,10 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
+
+uint8_t LEVEL_O = baldr::TileHierarchy::get_level(baldr::RoadClass::kPrimary);
 
 class FerryTest : public ::testing::TestWithParam<std::string> {
 protected:
@@ -64,9 +67,9 @@ public:
                                                         {"D", "E"},
                                                         {"I", "J"}};
     for (const auto& node_pair : node_pairs) {
-      auto edge =
-          std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, node_pair[0], node_pair[1]));
-      if (edge->classification() > valhalla::baldr::RoadClass::kPrimary) {
+      auto edge_id =
+          std::get<0>(gurka::findEdgeByNodes(graph_reader, layout, node_pair[0], node_pair[1]));
+      if (edge_id.level() != LEVEL_O) {
         return false;
       }
     }
@@ -111,19 +114,24 @@ TEST(Standalone, ShortFerry) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
-  auto BC_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "B", "C"));
-  auto DE_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "D", "E"));
+  auto [BC_edge_id, BC_edge] = gurka::findEdgeByNodes(graph_reader, layout, "B", "C");
+  auto [DE_edge_id, DE_edge] = gurka::findEdgeByNodes(graph_reader, layout, "D", "E");
 
-  EXPECT_EQ(BC_edge->classification(), baldr::RoadClass::kPrimary);
-  EXPECT_EQ(DE_edge->classification(), baldr::RoadClass::kPrimary);
+  EXPECT_EQ(BC_edge_id.level(), LEVEL_O);
+  EXPECT_EQ(DE_edge_id.level(), LEVEL_O);
+  EXPECT_EQ(BC_edge->classification(), baldr::RoadClass::kServiceOther);
+  EXPECT_EQ(DE_edge->classification(), baldr::RoadClass::kServiceOther);
 }
 
 TEST(Standalone, TruckFerryDuration) {
-  // corresponds to 33.3 m/sec (120 km/h) in the below map
-  uint32_t ferry_secs = 9;
+  // corresponds to 21.4 m/sec (~77 km/h) in the below map
+  uint32_t ferry_secs = 14;
 
   const std::string ascii_map = R"(
           A--B--C--D
+          |        |
+          |        |
+          |        |
           |        |
           E--------F
     )";
@@ -151,7 +159,16 @@ TEST(Standalone, TruckFerryDuration) {
   // verify we took the ferry edge and the duration tag was respected
   auto ferry_edge = fastest.trip().routes(0).legs(0).node(1).edge();
   ASSERT_EQ(ferry_edge.use(), valhalla::TripLeg_Use::TripLeg_Use_kFerryUse);
-  ASSERT_NEAR(ferry_edge.speed(), ferry_edge.length_km() / (ferry_secs * kHourPerSec), 0.1);
+  ASSERT_NEAR(ferry_edge.speed(), ferry_edge.length_km() / (ferry_secs * kHourPerSec), 0.2);
+  ASSERT_NEAR(fastest.directions().routes(0).legs(0).summary().time(), 50, 0.1);
+
+  // pass a higher ferry cost and make sure it's added to the time
+  valhalla::Api higher_ferry_cost =
+      gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
+                       {{"/costing_options/truck/use_ferry", "1"},
+                        {"/costing_options/truck/ferry_cost", "10"}});
+
+  ASSERT_NEAR(higher_ferry_cost.directions().routes(0).legs(0).summary().time(), 60, 0.1);
 }
 
 TEST_F(FerryTest, DoNotReclassifyFerryConnection) {
@@ -198,7 +215,7 @@ TEST(Standalone, ReclassifyFerryConnectionRouteModes) {
                             {"GH", no_hgv_car},
                             {"HI", no_hgv_car}};
 
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 1000);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
 
   // working modes
@@ -215,7 +232,6 @@ TEST(Standalone, ReclassifyFerryConnectionRouteModes) {
     };
   }
 }
-
 TEST_P(FerryTest, ReclassifyFerryConnectionPerMode) {
   // for these values of 'highway' tag edge class is upgraded in order to connect ferry to a
   // high-class road
@@ -225,6 +241,559 @@ TEST_P(FerryTest, ReclassifyFerryConnectionPerMode) {
     EXPECT_TRUE(edges_were_reclassified({{"highway", cls}}, GetParam()));
   }
 }
+
+TEST(Standalone, ReclassifyFerryUntagDestOnly) {
+  // access=customers should be untagged if it's present on connecting edge(s)
+  // see https://github.com/valhalla/valhalla/issues/3941#issuecomment-1407713742
+  // CD is destonly -> should untag BC, CD and take the faster path
+  // EF is not destonly -> shouldn't untag FG and take the detour
+  const std::string ascii_map = R"(
+    A--B--C--D------E--F---G--H--M
+       |  |            |   |
+       I--J            K---L
+  )";
+
+  std::map<std::string, std::string> trunk = {{"highway", "trunk"}};
+  std::map<std::string, std::string> destonly = {
+      {"highway", "residential"},
+      {"access", "customers"},
+  };
+  std::map<std::string, std::string> not_destonly = {{"highway", "residential"}};
+
+  const gurka::ways ways = {
+      {"AB", trunk},
+      {"BC", destonly}, // destonly should be removed when building the graph
+      {"BIJC", not_destonly},
+      {"CD", destonly},
+      {"DE",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+      {"EF", not_destonly},
+      {"FG", destonly}, // should stay destonly and low-class bcs connecting edge isn't and this will
+                        // be penalized
+      {"FKLG", not_destonly},
+      {"GH", not_destonly},
+      {"HM", trunk},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_destonly");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // see if BC was untagged and upclassed
+  auto tagged = gurka::findEdge(reader, layout, "BC", "C");
+  EXPECT_FALSE(std::get<1>(tagged)->destonly()) << "Edge BC shouldn't be destonly";
+  EXPECT_TRUE(std::get<0>(tagged).level() == LEVEL_O);
+
+  // see if FX & XG are still tagged and low class
+  auto untagged = gurka::findEdge(reader, layout, "FG", "G");
+  EXPECT_TRUE(std::get<1>(untagged)->destonly()) << "Edge FG should be destonly";
+  EXPECT_FALSE(std::get<0>(untagged).level() == LEVEL_O);
+
+  // see if FKLG is upclassed
+  auto upclassed = gurka::findEdge(reader, layout, "FKLG", "G");
+  EXPECT_TRUE(std::get<0>(upclassed).level() == LEVEL_O);
+
+  // we expect to take the shorter route on the left and the detour on the right
+  std::vector<std::string> modes = {"auto", "motorcycle", "taxi", "bus", "hov", "truck"};
+  for (const auto& mode : modes) {
+    auto res = gurka::do_action(valhalla::Options::route, map, {"A", "M"}, mode);
+    gurka::assert::raw::expect_path(res, {"AB", "BC", "CD", "DE", "EF", "FKLG", "GH", "HM"},
+                                    mode + " failed.");
+  }
+}
+
+TEST(Standalone, ReclassifyFerryNodePair) {
+  // Test to validate that the shortest path between 2 edges between a node
+  // pair takes the shorter, higher class road (not the longer, lower class)
+
+  const std::string ascii_map = R"(
+    A--B--C--D------E
+       |  |
+       I--J
+  )";
+
+  std::map<std::string, std::string> trunk = {{"highway", "trunk"}};
+  std::map<std::string, std::string> secondary = {{"highway", "secondary"}};
+  std::map<std::string, std::string> residential = {{"highway", "residential"}};
+
+  const gurka::ways ways = {
+      {"AB", trunk},
+      {"BC", secondary},
+      {"BIJC", residential},
+      {"CD", secondary},
+      {"DE",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_nodepair");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // make sure BC and CD are upclassed
+  auto upclassed = gurka::findEdge(reader, layout, "BC", "C");
+  EXPECT_EQ(std::get<0>(upclassed).level(), LEVEL_O);
+  auto upclassed2 = gurka::findEdge(reader, layout, "CD", "D");
+  EXPECT_EQ(std::get<0>(upclassed2).level(), LEVEL_O);
+
+  // make sure edge BIJC is not upclassed
+  auto not_upclassed = gurka::findEdge(reader, layout, "BIJC", "C");
+  EXPECT_EQ(std::get<0>(not_upclassed).level(), 2);
+}
+
+TEST(Standalone, ReclassifyCorrectPath) {
+  // Test to validate that the shortest path between 2 edges between a node
+  // pair takes the shorter, higher class road (not the longer, lower class)
+
+  const std::string ascii_map = R"(
+    A--Z--B--C--D------E
+          |  |
+       F--G  J--K
+          |  |
+       I--H  L--M
+  )";
+
+  std::map<std::string, std::string> trunk = {{"highway", "trunk"}};
+  std::map<std::string, std::string> secondary = {{"highway", "secondary"}};
+  std::map<std::string, std::string> residential = {{"highway", "residential"}};
+  std::map<std::string, std::string> driveway = {{"highway", "service"}, {"service", "driveway"}};
+
+  const gurka::ways ways = {
+      {"AZ", trunk},
+      {"ZB", secondary},
+      {"BC", secondary},
+      {"CD", secondary},
+      {"BG", residential},
+      {"GH", residential},
+      {"GF", driveway},
+      {"HI", driveway},
+      {"CJ", residential},
+      {"JL", residential},
+      {"JK", driveway},
+      {"LM", driveway},
+      {"DE",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_correct_path");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // make sure ZB, BC and CD are upclassed
+  auto upclassed1 = gurka::findEdge(reader, layout, "ZB", "B");
+  EXPECT_EQ(std::get<0>(upclassed1).level(), LEVEL_O);
+  auto upclassed2 = gurka::findEdge(reader, layout, "BC", "C");
+  EXPECT_EQ(std::get<0>(upclassed2).level(), LEVEL_O);
+  auto upclassed3 = gurka::findEdge(reader, layout, "CD", "D");
+  EXPECT_EQ(std::get<0>(upclassed3).level(), LEVEL_O);
+
+  // make sure other edges are not upclassed
+  auto not_upclassed1 = gurka::findEdge(reader, layout, "BG", "G");
+  EXPECT_EQ(std::get<0>(not_upclassed1).level(), 2);
+  auto not_upclassed2 = gurka::findEdge(reader, layout, "GH", "H");
+  EXPECT_EQ(std::get<0>(not_upclassed2).level(), 2);
+  auto not_upclassed3 = gurka::findEdge(reader, layout, "CJ", "J");
+  EXPECT_EQ(std::get<0>(not_upclassed3).level(), 2);
+  auto not_upclassed4 = gurka::findEdge(reader, layout, "JL", "L");
+  EXPECT_EQ(std::get<0>(not_upclassed4).level(), 2);
+  auto not_upclassed5 = gurka::findEdge(reader, layout, "GF", "F");
+  EXPECT_EQ(std::get<0>(not_upclassed5).level(), 2);
+  auto not_upclassed6 = gurka::findEdge(reader, layout, "HI", "I");
+  EXPECT_EQ(std::get<0>(not_upclassed6).level(), 2);
+  auto not_upclassed7 = gurka::findEdge(reader, layout, "JK", "K");
+  EXPECT_EQ(std::get<0>(not_upclassed7).level(), 2);
+  auto not_upclassed8 = gurka::findEdge(reader, layout, "LM", "M");
+  EXPECT_EQ(std::get<0>(not_upclassed8).level(), 2);
+}
+
+TEST(Standalone, ReclassifySeparateInboundAndOutbound) {
+  // Sometimes ferry path is connected to the separate inbound and outbound pathways.
+  // Both of them should be reclassified if both of them lead to the high road class.
+
+  const std::string ascii_map = R"(
+            A
+            |
+            |
+            B
+           / \
+          /   \
+         C     D
+        /      |
+    E--F---------------G
+    H-----I------------J
+           \  /
+            --
+  )";
+
+  std::map<std::string, std::string> primary = {{"highway", "primary"}, {"oneway", "yes"}};
+  std::map<std::string, std::string> service = {{"highway", "service"}, {"oneway", "yes"}};
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+      {"BCF", service},
+      {"IDB", service},
+      {"EFG", primary},
+      {"JIH", primary},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_inbound_outbound");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // make sure that both service roads get reclassified
+  auto outbound_service = gurka::findEdge(reader, layout, "BCF", "F");
+  EXPECT_EQ(std::get<0>(outbound_service).level(), LEVEL_O);
+  auto inbound_service = gurka::findEdge(reader, layout, "IDB", "B");
+  EXPECT_EQ(std::get<0>(inbound_service).level(), LEVEL_O);
+}
+
+TEST(Standalone, ReclassifyInboundOnly) {
+  const std::string ascii_map = R"(
+            A
+            |
+            |
+            B
+           /
+          /
+         C
+        /
+    E--F---------------G
+    H-----I------------J
+  )";
+
+  std::map<std::string, std::string> primary = {{"highway", "primary"}, {"oneway", "yes"}};
+  std::map<std::string, std::string> service = {{"highway", "service"}, {"oneway", "yes"}};
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+      {"BCF", service},
+      {"EFG", primary},
+      {"JIH", primary},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_outbound_only");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto outbound_service = gurka::findEdge(reader, layout, "BCF", "F");
+  EXPECT_EQ(std::get<0>(outbound_service).level(), LEVEL_O);
+}
+
+TEST(Standalone, ReclassifyOutboundOnly) {
+  const std::string ascii_map = R"(
+            A
+            |
+            |
+            B
+             \
+              \
+               D
+               |
+    E--F---------------G
+    H-----I------------J
+           \  /
+            --
+  )";
+
+  std::map<std::string, std::string> primary = {{"highway", "primary"}, {"oneway", "yes"}};
+  std::map<std::string, std::string> service = {{"highway", "service"}, {"oneway", "yes"}};
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+      {"IDB", service},
+      {"EFG", primary},
+      {"JIH", primary},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_inbound_only");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto inbound_service = gurka::findEdge(reader, layout, "IDB", "B");
+  EXPECT_EQ(std::get<0>(inbound_service).level(), LEVEL_O);
+}
+
+TEST(Standalone, ConsiderBlockedRoads) {
+  // Nodes that block the path should be considered when the fastest way from ferry to high class road
+  // is evaluated, as otherwise found shortest path might be not traversable
+
+  const std::string ascii_map = R"(
+    A-------B   M
+            |   |
+            |   |
+        D---C-1-N
+       /        |
+      E         |
+       \        |
+        F-------O
+                |
+                P
+
+  )";
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+
+      // shorter road that is blocked by block
+      {"C1N", {{"highway", "service"}}},
+
+      // longer unblocked road
+      {"BC", {{"highway", "service"}}},
+      {"CD", {{"highway", "service"}}},
+      {"DE", {{"highway", "service"}}},
+      {"EF", {{"highway", "service"}}},
+      {"FO", {{"highway", "service"}}},
+
+      {"MNOP", {{"highway", "primary"}}},
+  };
+
+  const gurka::nodes nodes = {
+      {"1",
+       {
+           {"barrier", "block"},
+           {"motor_vehicle", "no"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_reclassify_block");
+
+  // sanity check that the longer route is taken
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "M"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FO", "MNOP", "MNOP"});
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // long not blocked road should be reclassified
+  for (const auto& name : {"BC", "CD", "DE", "EF", "FO"}) {
+    const auto way = gurka::findEdge(reader, layout, name, name + 1);
+    EXPECT_EQ(std::get<0>(way).level(), LEVEL_O);
+  }
+
+  // short blocked route is not reclassified
+  auto blocked = gurka::findEdge(reader, layout, "C1N", "N");
+  EXPECT_EQ(std::get<1>(blocked)->classification(), valhalla::baldr::RoadClass::kServiceOther);
+}
+
+TEST(Standalone, MultiModalReclassify) {
+  // Sometimes ferries are connected by dedicated roads for different modes of transport.
+  // Reclassification should reclassify as much roads as needed to cover all modes of transport.
+
+  const std::string ascii_map = R"(
+      A=====X
+      |
+      |
+      B   I---M==N
+     /|   |\
+    / |   | \
+   E  |   |  K
+   |  |   |  |
+   F  |   |  J
+    \ |   | /
+     \|   |/
+      C   H
+      |   |
+      D---G
+  )";
+
+  const std::map<std::string, std::string> service = {{"highway", "service"}};
+  const std::map<std::string, std::string> non_hgv = {{"highway", "service"},
+                                                      {"access", "no"},
+                                                      {"hgv", "no"},
+                                                      {"motor_vehicle", "permissive"},
+                                                      {"toll", "yes"}};
+  const std::map<std::string, std::string> hgv_only = {{"highway", "service"},
+                                                       {"access", "no"},
+                                                       {"hgv", "permissive"},
+                                                       {"toll", "yes"}};
+
+  const gurka::ways ways = {
+      {"AX",
+       {
+           {"name", "Le Shuttle"},
+           {"route", "shuttle_train"},
+           {"service", "car_shuttle"},
+           {"bicycle", "yes"},
+           {"bus", "yes"},
+           {"foot", "no"},
+           {"hgv", "yes"},
+           {"motorcar", "yes"},
+           {"motorcycle", "yes"},
+           {"tunnel", "yes"},
+           {"duration", "35"},
+       }},
+      {"AB", service},
+
+      {"BEFC", non_hgv},
+      {"BC", hgv_only},
+
+      {"CDGH", service},
+
+      {"HJKI", hgv_only},
+      {"HI", non_hgv},
+
+      {"IM", service},
+
+      {"MN", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_multimodal");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  for (const std::string way : {"AB", "BEFC", "BC", "CDGH", "HJKI", "HI", "IM"}) {
+    auto edge = gurka::findEdge(reader, layout, way, way.substr(way.size() - 1));
+    EXPECT_EQ(std::get<0>(edge).level(), LEVEL_O) << way;
+  }
+}
+
+TEST(Standalone, ReclassifyNothingReclassified) {
+  // Test to validate that if no edges are found with the target classification
+  // nothing gets reclassified.
+
+  const std::string ascii_map = R"(
+    A--B--C--D------E
+  )";
+
+  std::map<std::string, std::string> secondary = {{"highway", "secondary"}};
+  std::map<std::string, std::string> tertiary = {{"highway", "tertiary"}};
+
+  const gurka::ways ways = {
+      {"AB", secondary},
+      {"BC", secondary},
+      {"CD", tertiary},
+      {"DE",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_nothing");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  // make sure no edges are upclassed
+  auto not_upclassed1 = gurka::findEdge(reader, layout, "AB", "B");
+  EXPECT_EQ(std::get<0>(not_upclassed1).level(), 1);
+  auto not_upclassed2 = gurka::findEdge(reader, layout, "BC", "C");
+  EXPECT_EQ(std::get<0>(not_upclassed2).level(), 1);
+  auto not_upclassed3 = gurka::findEdge(reader, layout, "CD", "D");
+  EXPECT_EQ(std::get<0>(not_upclassed3).level(), 1);
+}
+
+class ExcludeFerryTest : public ::testing::TestWithParam<std::string> {
+protected:
+  static gurka::map map;
+  static void SetUpTestSuite() {
+
+    const std::string ascii_map = R"(
+    A----1---B----C--D------E
+  )";
+
+    const gurka::ways ways = {
+        {"AB", {{"highway", "secondary"}}},
+        {"BC", {{"route", "ferry"}}},
+        {"CD", {{"highway", "secondary"}}},
+        {"DE", {{"highway", "secondary"}}},
+    };
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/exclude_ferry");
+    baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+  }
+};
+
+gurka::map ExcludeFerryTest::map = {};
+
+TEST_P(ExcludeFerryTest, ExcludeFerry) {
+  const auto default_result = gurka::do_action(valhalla::Options::route, map, {"1", "D"}, GetParam());
+  gurka::assert::raw::expect_path(default_result, {"AB", "BC", "CD"});
+
+  try {
+    const auto result =
+        gurka::do_action(valhalla::Options::route, map, {"1", "D"}, GetParam(),
+                         {{"/costing_options/" + GetParam() + "/exclude_ferries", "1"}});
+    FAIL() << "Expected no path to be found";
+  } catch (valhalla_exception_t& e) { EXPECT_EQ(e.code, 442); } catch (...) {
+    FAIL() << "Failed with unexpected error code";
+  }
+}
+INSTANTIATE_TEST_SUITE_P(ExcludeFerry,
+                         ExcludeFerryTest,
+                         ::testing::Values("auto",
+                                           "truck",
+                                           "motor_scooter",
+                                           "pedestrian",
+                                           "bicycle",
+                                           "motorcycle",
+                                           "taxi",
+                                           "bus"));
 
 INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,
                          FerryTest,

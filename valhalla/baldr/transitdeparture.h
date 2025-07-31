@@ -1,8 +1,9 @@
 #ifndef VALHALLA_BALDR_TRANSITDEPARTURE_H_
 #define VALHALLA_BALDR_TRANSITDEPARTURE_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
+
+#include <cstdint>
 
 namespace valhalla {
 namespace baldr {
@@ -62,7 +63,7 @@ public:
    * @param  routeindex  Route index within the tile.
    * @param  blockid  Block Id.
    * @param  headsign_offset  Offset to headsign within the text/name table.
-   * @param  start_time   Departure time (seconds from midnight)
+   * @param  departure_time   Start time for the frequency (seconds from midnight)
    * @param  end_time     End time for departures (seconds from midnight)
    * @param  frequency    Seconds between successive departures.
    * @param  elapsed_time     Elapsed time to next stop
@@ -75,7 +76,7 @@ public:
                    const uint32_t routeindex,
                    const uint32_t blockid,
                    const uint32_t headsign_offset,
-                   const uint32_t start_time,
+                   const uint32_t departure_time,
                    const uint32_t end_time,
                    const uint32_t frequency,
                    const uint32_t elapsed_time,

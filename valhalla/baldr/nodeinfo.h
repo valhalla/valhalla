@@ -1,21 +1,31 @@
 #ifndef VALHALLA_BALDR_NODEINFO_H_
 #define VALHALLA_BALDR_NODEINFO_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
+
+#include <cstdint>
 
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kMaxEdgesPerNode = 127;     // Maximum edges per node
-constexpr uint32_t kMaxAdminsPerTile = 4095;   // Maximum Admins per tile
-constexpr uint32_t kMaxTimeZonesPerTile = 511; // Maximum TimeZones index
-constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on local level
+constexpr uint32_t kMaxEdgesPerNode = 127;    // Maximum edges per node
+constexpr uint32_t kMaxAdminsPerTile = 4095;  // Maximum Admins per tile
+constexpr uint32_t kMaxTimeZoneIdExt1 = 1023; // Maximum TimeZones index for first extension level
+// constexpr uint32_t kMaxTimeZoneIdExt2 =
+//    2047; // Maximum TimeZones index for second extension level; not needed yet
+constexpr uint32_t kMaxLocalEdgeIndex = 7; // Max. index of edges on local level
+
+// Elevation precision. Elevation is clamped to a range of -500 meters to 7683 meters
+constexpr uint32_t kNodeMaxStoredElevation = 32767; // 15 bits
+constexpr float kNodeElevationPrecision = 0.25f;
+constexpr float kNodeMinElevation = -500.0f;
+constexpr float kNodeMaxElevation =
+    kNodeMinElevation + (kNodeElevationPrecision * kNodeMaxStoredElevation);
 
 // Heading shrink factor to reduce max heading of 359 to 255
 constexpr float kHeadingShrinkFactor = (255.0f / 359.0f);
@@ -149,7 +159,10 @@ public:
    * @return  Returns the timezone index.
    */
   uint32_t timezone() const {
-    return timezone_;
+    return timezone_ | (timezone_ext_1_ << 9);
+    // replace with this if a new timezone ever gets created from a previously new
+    // timezone (reference release is 2023c)
+    // return timezone_ | (timezone_ext_1_ << 9) | (time_zone_ext_2_ << 10);
   }
 
   /**
@@ -200,6 +213,16 @@ public:
   }
 
   /**
+   * Evaluates a basic set of conditions to determine if this node is eligible for contraction.
+   * @return true if the node has at least 2 edges and does not represent a fork, gate or toll booth.
+   */
+  bool can_contract() const {
+    return edge_count() >= 2 && intersection() != IntersectionType::kFork &&
+           type() != NodeType::kGate && type() != NodeType::kTollBooth &&
+           type() != NodeType::kTollGantry && type() != NodeType::kSumpBuster;
+  }
+
+  /**
    * Set the node type.
    * @param  type  node type.
    */
@@ -245,6 +268,20 @@ public:
    *             left-side driving.
    */
   void set_drive_on_right(const bool rsd);
+
+  /**
+   * Get the elevation at this node.
+   * @return Returns the elevation in meters.
+   */
+  float elevation() const {
+    return kNodeMinElevation + (elevation_ * kNodeElevationPrecision);
+  }
+
+  /**
+   * Set the elevation at this node.
+   * @param Elevation in meters.
+   */
+  void set_elevation(const float elevation);
 
   /**
    * Was the access information originally set in the data?
@@ -399,8 +436,8 @@ public:
    */
   inline uint32_t heading(const uint32_t localidx) const {
     if (localidx > kMaxLocalEdgeIndex) {
-      LOG_WARN("Local index " + std::to_string(localidx) + " exceeds max value of " +
-               std::to_string(kMaxLocalEdgeIndex) + ", returning heading of 0");
+      LOG_DEBUG("Local index " + std::to_string(localidx) + " exceeds max value of " +
+                std::to_string(kMaxLocalEdgeIndex) + ", returning heading of 0");
       return 0;
     }
     // Make sure everything is 64 bit!
@@ -450,11 +487,11 @@ public:
   }
 
   /**
-   * Returns the json representation of the object
+   * the json representation of the object
    * @param tile the tile required to get admin information
-   * @return  json object
+   * @param writer The writer json object to represent the id
    */
-  json::MapPtr json(const graph_tile_ptr& tile) const;
+  void json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // Organized into 8-byte words so structure will align to 8 byte boundaries.
@@ -476,6 +513,7 @@ protected:
   uint64_t density_ : 4;        // Relative road density
   uint64_t traffic_signal_ : 1; // Traffic signal
   uint64_t mode_change_ : 1;    // Mode change allowed?
+                                // Also used for aggregation of edges at filter stage
   uint64_t named_ : 1;          // Is this a named intersection?
 
   uint64_t transition_index_ : 21;   // Index into the node transitions to the first transition
@@ -489,7 +527,13 @@ protected:
   uint64_t tagged_access_ : 1;       // Was access initially tagged?
   uint64_t private_access_ : 1;      // Is the access private?
   uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
-  uint64_t spare2_ : 17;
+  uint64_t elevation_ : 15;          // Encoded elevation (meters)
+  uint64_t timezone_ext_1_ : 1;      // To keep compatibility when new timezones are added
+  // uncomment a new timezone ever gets created from a previously new
+  // timezone (reference release is 2023c)
+  // uint64_t timezone_ext_2_ : 1;
+
+  uint64_t spare2_ : 1;
 
   // For not transit levels its the headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to
   // nearest 2 degrees)for all other levels.

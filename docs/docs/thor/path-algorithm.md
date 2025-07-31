@@ -12,7 +12,7 @@ Thor uses several different algorithms to compute the least cost path. These alg
 
 #### A\*
 
-The basic algorithm provided within Thor is an A\* algorithm. This algorithm searches in one direction - from the origin towards the destination. The A\* heuristic is added to the cost to help guide the search more rapidly towards the destination. The A\* method has been superceded for most cases by the bidirectional A\* algorithm which has better performance. Also, the A\* algorithm does not work as well with transitions to upper hierarchy levels as the path approaches the destination.
+The basic algorithm provided within Thor is an A\* algorithm. This algorithm searches in one direction - from the origin towards the destination. The A\* heuristic is added to the cost to help guide the search more rapidly towards the destination. The A\* method has been superseded for most cases by the bidirectional A\* algorithm which has better performance. Also, the A\* algorithm does not work as well with transitions to upper hierarchy levels as the path approaches the destination.
 
 #### Bidirectional A\*
 
@@ -70,7 +70,7 @@ EdgeStatus is constructed given an initial size of the edge status map. To avoid
 
 The AdjacencyList class provides a sorting order to the edge labels that are marked as temporary and are adjacent to edges that have lowest cost path found. The adjacency list uses a bucket sort implementation for performance. An "overflow" bucket is maintained to allow reduced memory use - costs outside the current bucket range get placed into the overflow bucket and are moved into the low-level buckets as needed. The adjacency list stores indexes into a list (vector) of labels where complete cost and predecessor information are stored. The adjacency list simply provides a fast sorting method. Benchmarks show a marked improvement over using an STL priority_queue, even in cases where the overflow bucket is utilized.
 
-An AdjacencyList is contructed using a minimum cost (based on the A* heuristic distance from the origin location to the destination location), a range of costs held within the bucket sort, and a bucket size. All costs above mincost + range are stored in an "overflow" bucket. The following methods are provided in the AdjacencyList class:
+An AdjacencyList is constructed using a minimum cost (based on the A* heuristic distance from the origin location to the destination location), a range of costs held within the bucket sort, and a bucket size. All costs above mincost + range are stored in an "overflow" bucket. The following methods are provided in the AdjacencyList class:
 
 - **Add** - Adds a label index to the sorted list. Adds it to the appropriate bucket given the sort cost. If the sortcost is greater than maxcost_ the label is placed in the overflow bucket. If the sortcost is < the current bucket cost then the label is placed at the front of the current bucket (this prevents underflow).
 - **DecreaseCost** - The specified label index now has a smaller cost.  Reorders it in the sorted bucket list.

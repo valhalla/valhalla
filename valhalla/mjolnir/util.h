@@ -1,26 +1,22 @@
 #ifndef VALHALLA_MJOLNIR_UTIL_H_
 #define VALHALLA_MJOLNIR_UTIL_H_
 
-#include <boost/property_tree/ptree.hpp>
+#include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtileptr.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/pointll.h>
+
+#include <boost/property_tree/ptree_fwd.hpp>
+
 #include <list>
 #include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include <sqlite3.h>
-// needs to be after sqlite include
-#include <spatialite.h>
-
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
-
 namespace valhalla {
 namespace mjolnir {
-
-using boost::property_tree::ptree;
 
 // Stages of the Valhalla tile building pipeline
 enum class BuildStage : int8_t {
@@ -104,6 +100,14 @@ inline std::string to_string(BuildStage stg) {
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim = ';');
 
 /**
+ * Splits a tag into a vector of strings.
+ * @param  tag_value  tag to split
+ * @param  delim      delimiter
+ * @return the vector of strings
+ */
+std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str);
+
+/**
  * Remove double quotes.
  * @param  s
  * @return string string with no quotes.
@@ -120,20 +124,27 @@ bool shapes_match(const std::vector<midgard::PointLL>& shape1,
                   const std::vector<midgard::PointLL>& shape2);
 
 /**
+ * Get the index of the opposing edge at the end node. This is on the local hierarchy,
+ * before adding transition and shortcut edges. Make sure that even if the end nodes
+ * and lengths match that the correct edge is selected (match shape) since some loops
+ * can have the same length and end node.
+ * @param  endnodetile   Graph tile at the end node.
+ * @param  startnode     Start node of the directed edge.
+ * @param  tile          Graph tile of the edge
+ * @param  directededge  Directed edge to match.
+ */
+uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
+                              const baldr::GraphId& startnode,
+                              const graph_tile_ptr& tile,
+                              const baldr::DirectedEdge& edge);
+
+/**
  * Compute a curvature metric given an edge shape.
  * @param  shape  Shape of an edge (list of lat,lon vertices).
  * @return Returns a curvature measure [0-15] where higher numbers indicate
  *         more curved and tighter turns.
  */
 uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
-
-/**
- * Will allocate a spatialite connection
- *
- * @param handle The sqlite database handle
- * @return a shared pointer to the connection which cleans up after itself when destructed
- */
-std::shared_ptr<void> make_spatialite_cache(sqlite3* handle);
 
 /**
  * Build an entire valhalla tileset give a config file and some input pbfs. The
@@ -147,11 +158,10 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle);
  * unusable afterwards.  Set to false if you need to perform protobuf operations after building tiles.
  * @return Returns true if no errors occur, false if an error occurs.
  */
-bool build_tile_set(const ptree& config,
+bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
-                    const BuildStage end_stage = BuildStage::kValidate,
-                    const bool release_osmpbf_memory = true);
+                    const BuildStage end_stage = BuildStage::kValidate);
 
 // The tile manifest is a JSON-serializable index of tiles to be processed during the build stage of
 // valhalla_build_tiles'. It can be used to distribute shard keys when building tiles with
@@ -177,45 +187,13 @@ bool build_tile_set(const ptree& config,
 //   ]
 // }
 struct TileManifest {
-
   std::map<baldr::GraphId, size_t> tileset;
 
-  std::string ToString() const {
-    baldr::json::ArrayPtr array = baldr::json::array({});
-    for (const auto& tile : tileset) {
-      const baldr::json::Value& graphid = tile.first.json();
-      const baldr::json::MapPtr& item = baldr::json::map(
-          {{"graphid", graphid}, {"node_index", static_cast<uint64_t>(tile.second)}});
-      array->emplace_back(item);
-    }
-    std::stringstream manifest;
-    manifest << *baldr::json::map({{"tiles", array}});
-    return manifest.str();
-  }
+  std::string ToString() const;
 
-  void LogToFile(const std::string& filename) const {
-    std::ofstream handle;
-    handle.open(filename);
-    handle << ToString();
-    handle.close();
-    LOG_INFO("Writing tile manifest to " + filename);
-  }
+  void LogToFile(const std::string& filename) const;
 
-  static TileManifest ReadFromFile(const std::string& filename) {
-    ptree manifest;
-    rapidjson::read_json(filename, manifest);
-    LOG_INFO("Reading tile manifest from " + filename);
-    std::map<baldr::GraphId, size_t> tileset;
-    for (const auto& tile_info : manifest.get_child("tiles")) {
-      const ptree& graph_id = tile_info.second.get_child("graphid");
-      const baldr::GraphId id(graph_id.get<uint64_t>("value"));
-      const size_t node_index = tile_info.second.get<size_t>("node_index");
-      tileset.insert({id, node_index});
-    }
-    LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
-             filename);
-    return TileManifest{tileset};
-  }
+  static TileManifest ReadFromFile(const std::string& filename);
 };
 } // namespace mjolnir
 } // namespace valhalla

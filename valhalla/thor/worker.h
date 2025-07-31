@@ -1,17 +1,10 @@
 #ifndef __VALHALLA_THOR_SERVICE_H__
 #define __VALHALLA_THOR_SERVICE_H__
 
-#include <cstdint>
-#include <tuple>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/meili/match_result.h>
@@ -32,10 +25,15 @@
 #include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
 
+#include <boost/property_tree/ptree.hpp>
+
+#include <tuple>
+#include <vector>
+
 namespace valhalla {
 namespace thor {
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 void run_service(const boost::property_tree::ptree& config);
 #endif
 
@@ -45,7 +43,7 @@ public:
   thor_worker_t(const boost::property_tree::ptree& config,
                 const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
   virtual ~thor_worker_t();
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
                                                 void* request_info,
                                                 const std::function<void()>& interrupt) override;
@@ -53,12 +51,6 @@ public:
   virtual void cleanup() override;
 
   static void adjust_scores(valhalla::Options& options);
-
-  static std::string offset_date(baldr::GraphReader& reader,
-                                 const std::string& in_dt,
-                                 const baldr::GraphId& in_edge,
-                                 float offset,
-                                 const baldr::GraphId& out_edge);
 
   void route(Api& request);
   std::string matrix(Api& request);
@@ -83,6 +75,8 @@ protected:
                                           const Location& origin,
                                           const Location& destination,
                                           const Options& options);
+  thor::MatrixAlgorithm*
+  get_matrix_algorithm(Api& request, const bool has_time, const std::string& costing);
   void route_match(Api& request);
   /**
    * Returns the results of the map match where the first float is the normalized
@@ -134,10 +128,18 @@ protected:
   float max_timedep_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
+  bool costmatrix_allow_second_pass;
   std::shared_ptr<baldr::GraphReader> reader;
   meili::MapMatcherFactory matcher_factory;
   baldr::AttributesController controller;
   Centroid centroid_gen;
+
+  // Hierarchy limits
+  bool allow_hierarchy_limits_modifications;
+  // ignored if allow_hierarchy_limits_modifications is false
+  hierarchy_limits_config_t hierarchy_limits_config_astar;
+  hierarchy_limits_config_t hierarchy_limits_config_bidirectional_astar;
+  hierarchy_limits_config_t hierarchy_limits_config_costmatrix;
 
 private:
   std::string service_name() const override {

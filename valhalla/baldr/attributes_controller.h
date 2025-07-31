@@ -1,8 +1,8 @@
 #pragma once
+#include <valhalla/proto/options.pb.h>
+
 #include <string>
 #include <unordered_map>
-
-#include <valhalla/proto/options.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -11,6 +11,9 @@ namespace baldr {
 const std::string kEdgeNames = "edge.names";
 const std::string kEdgeLength = "edge.length";
 const std::string kEdgeSpeed = "edge.speed";
+const std::string kEdgeSpeedType = "edge.speed_type";
+const std::string kEdgeSpeedsFaded = "edge.speeds_faded";
+const std::string kEdgeSpeedsNonFaded = "edge.speeds_non_faded";
 const std::string kEdgeRoadClass = "edge.road_class";
 const std::string kEdgeBeginHeading = "edge.begin_heading";
 const std::string kEdgeEndHeading = "edge.end_heading";
@@ -59,6 +62,7 @@ const std::string kEdgeWeightedGrade = "edge.weighted_grade";
 const std::string kEdgeMaxUpwardGrade = "edge.max_upward_grade";
 const std::string kEdgeMaxDownwardGrade = "edge.max_downward_grade";
 const std::string kEdgeMeanElevation = "edge.mean_elevation";
+const std::string kEdgeElevation = "edge.elevation";
 const std::string kEdgeLaneCount = "edge.lane_count";
 const std::string kEdgeLaneConnectivity = "edge.lane_connectivity";
 const std::string kEdgeCycleLane = "edge.cycle_lane";
@@ -68,6 +72,7 @@ const std::string kEdgeShoulder = "edge.shoulder";
 const std::string kEdgeSidewalk = "edge.sidewalk";
 const std::string kEdgeDensity = "edge.density";
 const std::string kEdgeSpeedLimit = "edge.speed_limit";
+const std::string kEdgeConditionalSpeedLimits = "edge.conditional_speed_limits";
 const std::string kEdgeTruckSpeed = "edge.truck_speed";
 const std::string kEdgeTruckRoute = "edge.truck_route";
 const std::string kEdgeDefaultSpeed = "edge.default_speed";
@@ -75,6 +80,11 @@ const std::string kEdgeDestinationOnly = "edge.destination_only";
 const std::string kEdgeIsUrban = "edge.is_urban";
 const std::string kEdgeTaggedValues = "edge.tagged_values";
 const std::string kEdgeIndoor = "edge.indoor";
+const std::string kEdgeLandmarks = "edge.landmarks";
+const std::string kEdgeCountryCrossing = "edge.country_crossing";
+const std::string kEdgeForward = "edge.forward";
+const std::string kEdgeLevels = "edge.levels";
+const std::string kEdgeTrafficSignal = "edge.traffic_signal";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
@@ -92,6 +102,7 @@ const std::string kNodeIntersectingEdgeSignInfo = "node.intersecting_edge.sign_i
 const std::string kNodeElapsedTime = "node.elapsed_time";
 const std::string kNodeAdminIndex = "node.admin_index";
 const std::string kNodeType = "node.type";
+const std::string kNodeTrafficSignal = "node.traffic_signal";
 const std::string kNodeFork = "node.fork";
 const std::string kNodeTransitPlatformInfoType = "node.transit_platform_info.type";
 const std::string kNodeTransitPlatformInfoOnestopId = "node.transit_platform_info.onestop_id";

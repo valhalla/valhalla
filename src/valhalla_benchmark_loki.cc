@@ -1,5 +1,15 @@
+#include "argparse_utils.h"
+#include "loki/search.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "sif/costfactory.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
 #include <algorithm>
 #include <atomic>
+#include <filesystem>
 #include <fstream>
 #include <future>
 #include <list>
@@ -9,23 +19,7 @@
 #include <tuple>
 #include <vector>
 
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-
-#include "baldr/rapidjson_utils.h"
-#include "config.h"
-#include "filesystem.h"
-#include "loki/search.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "sif/costfactory.h"
-#include "worker.h"
-
-filesystem::path config_file_path;
-size_t threads, batch, isolated, radius;
-bool extrema = false;
 std::string costing_str;
-std::vector<std::string> input_files;
 
 using job_t = std::vector<valhalla::baldr::Location>;
 std::vector<job_t> jobs;
@@ -71,64 +65,6 @@ struct result_t {
   }
 };
 using results_t = std::set<result_t>;
-
-int ParseArguments(int argc, char* argv[]) {
-
-  try {
-    // clang-format off
-    cxxopts::Options options(
-      "valhalla_benchmark_loki",
-      "valhalla_benchmark_loki " VALHALLA_VERSION "\n\n"
-      "valhalla_benchmark_loki is a program that does location searches on tiled route data.\n"
-      "To run it use a valid config file to let it know where the tiled route data \n"
-      "is. The input is simply a text file of one location per line\n\n");
-
-    std::string search_type;
-    options.add_options()
-      ("h,help", "Print this help message.")
-      ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("t,threads", "Concurrency to use.", cxxopts::value<size_t>(threads)->default_value(std::to_string(std::thread::hardware_concurrency())))
-      ("b,batch", "Number of locations to group together per search", cxxopts::value<size_t>(batch)->default_value("1"))
-      ("e,extrema", "Show the input locations of the extrema for a given statistic", cxxopts::value<bool>(extrema)->default_value("false"))
-      ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>(isolated))
-      ("r,radius", "How many meters to search away from the input location", cxxopts::value<size_t>(radius)->default_value("0"))
-      ("costing", "Which costing model to use.", cxxopts::value<std::string>(costing_str)->default_value("auto"))
-      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
-    // clang-format on
-
-    options.parse_positional({"input_files"});
-    options.positional_help("LOCATIONS.TXT");
-    auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
-      exit(0);
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_benchmark_loki " << VALHALLA_VERSION << "\n";
-      exit(0);
-    }
-
-    if (!result.count("input_files")) {
-      std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
-      return false;
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
-      return true;
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-    }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
-  }
-
-  return false;
-}
 
 valhalla::sif::cost_ptr_t create_costing() {
   valhalla::Options options;
@@ -183,21 +119,52 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 }
 
 int main(int argc, char** argv) {
-  if (!ParseArguments(argc, argv)) {
+  const auto program = std::filesystem::path(__FILE__).stem().string();
+  // args
+  size_t batch, isolated, radius;
+  bool extrema = false;
+  std::vector<std::string> input_files;
+  boost::property_tree::ptree config;
+
+  try {
+    // clang-format off
+    cxxopts::Options options(
+      program,
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
+      "a program that does location searches on tiled route data.\n"
+      "To run it use a valid config file to let it know where the tiled route data \n"
+      "is. The input is simply a text file of one location per line\n\n");
+
+    std::string search_type;
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>())
+      ("b,batch", "Number of locations to group together per search", cxxopts::value<size_t>(batch)->default_value("1"))
+      ("e,extrema", "Show the input locations of the extrema for a given statistic", cxxopts::value<bool>(extrema)->default_value("false"))
+      ("i,reach", "How many edges need to be reachable before considering it as connected to the larger network", cxxopts::value<size_t>(isolated)->default_value("50"))
+      ("r,radius", "How many meters to search away from the input location", cxxopts::value<size_t>(radius)->default_value("0"))
+      ("costing", "Which costing model to use.", cxxopts::value<std::string>(costing_str)->default_value("auto"))
+      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
+    // clang-format on
+
+    options.parse_positional({"input_files"});
+    options.positional_help("LOCATIONS.TXT");
+    auto result = options.parse(argc, argv);
+    if (!parse_common_args(program, options, result, &config, "loki.logging"))
+      return EXIT_SUCCESS;
+
+    if (!result.count("input_files")) {
+      throw cxxopts::exceptions::exception("Input file is required\n\n" + options.help());
+    }
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
-  }
-
-  // check what type of input we are getting
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.string(), pt);
-
-  // configure logging
-  auto logging_subtree = pt.get_child_optional("loki.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+    return EXIT_FAILURE;
   }
 
   // fill up the queue with work
@@ -218,7 +185,7 @@ int main(int argc, char** argv) {
         throw std::runtime_error("Latitude must be in the range [-90, 90] degrees");
       }
       float lon = valhalla::midgard::circular_range_clamp<float>(std::stof(parts[1]), -180, 180);
-      valhalla::midgard::PointLL ll(lat, lon);
+      valhalla::midgard::PointLL ll(lon, lat);
       valhalla::baldr::Location loc(ll);
       loc.min_inbound_reach_ = loc.min_outbound_reach_ = isolated;
       loc.radius_ = radius;
@@ -236,9 +203,10 @@ int main(int argc, char** argv) {
 
   // start up the threads
   std::list<std::thread> pool;
-  std::vector<std::promise<results_t>> pool_results(threads);
-  for (size_t i = 0; i < threads; ++i) {
-    pool.emplace_back(work, std::cref(pt), std::ref(pool_results[i]));
+  const auto num_threads = config.get<uint32_t>("mjolnir.concurrency");
+  std::vector<std::promise<results_t>> pool_results(num_threads);
+  for (size_t i = 0; i < num_threads; ++i) {
+    pool.emplace_back(work, std::cref(config), std::ref(pool_results[i]));
   }
 
   // let the threads finish up

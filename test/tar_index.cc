@@ -1,7 +1,5 @@
-#include "test.h"
-
 #include "baldr/graphreader.h"
-#include <boost/property_tree/ptree.hpp>
+#include "test.h"
 
 namespace vb = valhalla::baldr;
 

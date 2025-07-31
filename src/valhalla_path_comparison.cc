@@ -1,18 +1,8 @@
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-#include <cxxopts.hpp>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "config.h"
-#include "worker.h"
-
+#include "argparse_utils.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
-#include "baldr/tilehierarchy.h"
+#include "baldr/rapidjson_utils.h"
 #include "loki/search.h"
 #include "meili/map_matcher.h"
 #include "meili/map_matcher_factory.h"
@@ -21,6 +11,16 @@
 #include "sif/costfactory.h"
 #include "thor/pathinfo.h"
 #include "thor/route_matcher.h"
+#include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cstdint>
+#include <filesystem>
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::sif;
@@ -58,11 +58,13 @@ void print_edge(GraphReader& reader,
     auto node_id = pred_edge->endnode();
     auto node_tile = reader.GetGraphTile(node_id);
     auto node = node_tile->node(node_id);
-    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<sif::TravelMode>(0), 0,
-                         {}, kInvalidRestriction, true, false, InternalTurn::kNoTurn);
+    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, static_cast<sif::TravelMode>(0), 0,
+                         kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
-    Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
+
+    auto reader_getter = [&reader]() { return baldr::LimitedGraphReader(reader); };
+    Cost trans_cost = costing->TransitionCost(edge, node, pred_label, tile, reader_getter);
     trans_total += trans_cost;
     std::cout << "TransitionCost cost: " << trans_cost.cost;
     std::cout << " secs: " << trans_cost.secs << "\n";
@@ -83,7 +85,7 @@ void walk_edges(const std::string& shape,
                 GraphReader& reader,
                 const valhalla::sif::mode_costing_t& mode_costings,
                 valhalla::sif::TravelMode mode) {
-  auto cost = mode_costings[static_cast<uint32_t>(mode)];
+  const auto& cost = mode_costings[static_cast<uint32_t>(mode)];
 
   // Get shape
   std::vector<PointLL> shape_pts = decode<std::vector<PointLL>>(shape);
@@ -154,65 +156,56 @@ void walk_edges(const std::string& shape,
 }
 
 // args
-std::string routetype, config;
+std::string routetype, route_config;
 std::string json_str = "";
 std::string shape = "";
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
+  const auto program = std::filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
+
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_path_comparison",
-      "valhalla_path_comparison " VALHALLA_VERSION "\n\n"
-      "valhalla_path_comparison is a simple command line dev tool for comparing the cost between "
+      program,
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
+      "a simple command line dev tool for comparing the cost between "
       "two routes.\n"
       "Use the -j option for specifying the locations or the -s option to enter an encoded shape.\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
       ("t,type", "Route Type: auto|bicycle|pedestrian|truck etc. Default auto.", cxxopts::value<std::string>()->default_value("auto"))
       ("s,shape", "", cxxopts::value<std::string>())
       ("j,json", R"(JSON Example: {"paths":"
         "[[{"lat":12.47,"lon":15.2},{"lat":12.46,"lon":15.21}],[{"lat":12.36,"lon":15.17},{"lat":12.37,"lon":15.18}]],"
-        "costing":"bicycle","costing_options":{"bicycle":{"use_roads":0.55,"use_hills":0.1}}})", cxxopts::value<std::string>())
-      ("config", "positional argument", cxxopts::value<std::string>());
+        "costing":"bicycle","costing_options":{"bicycle":{"use_roads":0.55,"use_hills":0.1}}})", cxxopts::value<std::string>());
     // clang-format on
 
-    options.parse_positional({"config"});
-    options.positional_help("Config file path");
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_path_comparison " << VALHALLA_VERSION << "\n";
-      return EXIT_SUCCESS;
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
-      config = result["config"].as<std::string>();
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
-    }
 
     if (result.count("json")) {
       json_str = result["json"].as<std::string>();
     } else if (result.count("shape")) {
       shape = result["shape"].as<std::string>();
     } else {
-      std::cerr << "The json parameter or shape parameter was not supplied but is required.\n\n"
-                << options.help() << std::endl;
-      return EXIT_FAILURE;
+      throw cxxopts::exceptions::exception(
+          "The json parameter or shape parameter was not supplied but is required.\n\n" +
+          options.help());
     }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
@@ -272,17 +265,8 @@ int main(int argc, char* argv[]) {
     map_match = false;
   }
 
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
-
-  if (!map_match) {
-    rapidjson::Document doc;
-    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
-  }
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // Construct costing
   valhalla::Costing::Type costing;
@@ -291,9 +275,15 @@ int main(int argc, char* argv[]) {
   } else {
     throw std::runtime_error("No costing method found");
   }
+
+  if (!map_match) {
+    rapidjson::Document doc;
+    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
+  }
+
   valhalla::sif::TravelMode mode;
   auto mode_costings = valhalla::sif::CostFactory{}.CreateModeCosting(request.options(), mode);
-  auto cost_ptr = mode_costings[static_cast<uint32_t>(mode)];
+  const auto& cost_ptr = mode_costings[static_cast<uint32_t>(mode)];
 
   // If a shape is entered use edge walking
   if (!map_match) {
@@ -302,7 +292,7 @@ int main(int argc, char* argv[]) {
   }
 
   // If JSON is entered we do map matching
-  MapMatcherFactory map_matcher_factory(pt);
+  MapMatcherFactory map_matcher_factory(config);
   std::shared_ptr<valhalla::meili::MapMatcher> matcher(map_matcher_factory.Create(request.options()));
 
   uint32_t i = 0;

@@ -18,12 +18,18 @@ TEST(locate, basic_properties) {
     G-a--H--b-I)";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "motorway"}}},    {"BC", {{"highway", "primary"}}},
-      {"AD", {{"highway", "residential"}}}, {"BE", {{"highway", "motorway_link"}}},
-      {"CF", {{"highway", "pedestrian"}}},  {"DE", {{"highway", "trunk"}}},
-      {"EF", {{"highway", "secondary"}}},   {"DG", {{"highway", "trunk_link"}}},
-      {"EH", {{"highway", "cycleway"}}},    {"FI", {{"highway", "service"}}},
-      {"GH", {{"highway", "tertiary"}}},    {"HI", {{"highway", "unclassified"}}},
+      {"AB", {{"highway", "motorway"}, {"maxweight", "3.5"}}},
+      {"BC", {{"highway", "primary"}, {"maxheight", "4.8"}}},
+      {"AD", {{"highway", "residential"}, {"maxaxles", "3"}}},
+      {"BE", {{"highway", "motorway_link"}, {"hgv:conditional", "no @ 23:00-05:00"}}},
+      {"CF", {{"highway", "pedestrian"}}},
+      {"DE", {{"highway", "trunk"}}},
+      {"EF", {{"highway", "secondary"}}},
+      {"DG", {{"highway", "trunk_link"}}},
+      {"EH", {{"highway", "cycleway"}}},
+      {"FI", {{"highway", "service"}}},
+      {"GH", {{"highway", "tertiary"}}},
+      {"HI", {{"highway", "unclassified"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
@@ -37,7 +43,7 @@ TEST(locate, basic_properties) {
   test::build_live_traffic_data(map.config);
 
   // turn on some traffic for fun
-  auto traffic_cb = [](baldr::GraphReader& reader, baldr::TrafficTile& tile, int index,
+  auto traffic_cb = [](baldr::GraphReader& /*reader*/, baldr::TrafficTile& /*tile*/, int /*index*/,
                        valhalla::baldr::TrafficSpeed* current) -> void {
     current->overall_encoded_speed = 124 >> 1;
     current->encoded_speed1 = 126 >> 1;
@@ -109,13 +115,18 @@ TEST(locate, basic_properties) {
       ASSERT_EQ(rapidjson::Pointer("/live_speed/breakpoint_0").Get(edge)->GetDouble(), 0.33);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/speed_1").Get(edge)->GetInt(), 124);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/congestion_1").Get(edge)->GetDouble(), .5);
-      ASSERT_EQ(rapidjson::Pointer("/live_speed/breakpoint_1").Get(edge)->GetDouble(), 0.67);
+      ASSERT_EQ(rapidjson::Pointer("/live_speed/breakpoint_1").Get(edge)->GetDouble(), 0.66);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/speed_2").Get(edge)->GetInt(), 122);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/congestion_2").Get(edge)->GetDouble(), 1.0);
 
       // make sure the heading was determined correctly
       auto heading = static_cast<int>(rapidjson::Pointer("/heading").Get(edge)->GetDouble());
       ASSERT_TRUE(std::count(allowed_headings.begin(), allowed_headings.end(), heading));
+
+      // are there access restrictions
+      if (ways.find(way_name)->second.size() == 2) {
+        ASSERT_EQ(rapidjson::Pointer("/access_restrictions").Get(edge)->GetArray().Size(), 1);
+      }
     }
   }
 
@@ -129,4 +140,50 @@ TEST(locate, basic_properties) {
                             reader, &json);
   ASSERT_EQ(result.options().locations(0).heading_tolerance(), 20);
   ASSERT_TRUE(result.options().locations(0).correlation().edges().empty());
+}
+
+TEST(locate, locate_shoulder) {
+  const std::string ascii_map = R"(
+    A---B---C
+    |   |   |
+    D---E---F
+  )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "motorway"}, {"shoulder", "yes"}}},
+                            {"BC",
+                             {{"highway", "motorway"}, {"shoulder", "false"}}}, // Tagged as false
+                            {"AD", {{"highway", "residential"}}},               // No shoulder tag
+                            {"BE", {{"highway", "residential"}, {"shoulder", "yes"}}},
+                            {"CF", {{"highway", "residential"}}},
+                            {"DE", {{"highway", "tertiary"}}},
+                            {"EF", {{"highway", "tertiary"}, {"shoulder", "yes"}}}};
+
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_locate_shoulder_moderate");
+
+  auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  std::string json;
+  auto result = gurka::do_action(valhalla::Options::locate, map, {"B", "C", "E", "F"}, "none", {},
+                                 reader, &json);
+
+  rapidjson::Document response;
+  response.Parse(json);
+
+  std::unordered_map<std::string, bool> expected_shoulders = {{"AB", true},  {"BC", false},
+                                                              {"AD", false}, {"BE", true},
+                                                              {"CF", false}, {"DE", false},
+                                                              {"EF", true}};
+
+  for (size_t i = 0; i < response.GetArray().Size(); ++i) {
+    auto edges = rapidjson::Pointer("/" + std::to_string(i) + "/edges").Get(response)->GetArray();
+    for (const auto& edge : edges) {
+      std::string way_name = edge["edge_info"]["names"][0].GetString();
+
+      ASSERT_TRUE(edge.HasMember("shoulder"));
+
+      bool shoulder_value = edge["shoulder"].GetBool();
+      EXPECT_EQ(shoulder_value, expected_shoulders[way_name])
+          << "Way " << way_name << " has incorrect shoulder value.";
+    }
+  }
 }

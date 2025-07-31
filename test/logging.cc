@@ -1,16 +1,14 @@
 #include "midgard/logging.h"
+#include "test.h"
 
 #include <algorithm>
 #include <cstdio>
 #include <fstream>
-#include <functional>
 #include <future>
 #include <iterator>
 #include <sstream>
 #include <thread>
 #include <vector>
-
-#include "test.h"
 
 using namespace valhalla::midgard;
 
@@ -53,16 +51,13 @@ TEST(Logging, FileLoggerTest) {
 
   // start up some threads
   std::vector<std::future<size_t>> results;
+  results.reserve(4);
   for (size_t i = 0; i < 4; ++i) {
     results.emplace_back(std::async(std::launch::async, work));
   }
 
-  // dont really care about the results but we can pretend
-  int exit_code = 0;
   for (auto& result : results) {
-    try {
-      size_t count = result.get();
-    } catch (std::exception& e) { exit_code++; }
+    ASSERT_NO_THROW(result.get());
   }
 
   // wait for logger to close and reopen the file

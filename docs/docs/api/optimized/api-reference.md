@@ -2,7 +2,7 @@
 
 The Optimized Route service provides a quick computation of time and distance between a set of location sources and location targets and returns them in an optimized route order, along with the shape.
 
-[View an interactive demo](http://valhalla.github.io/demos/optimized_route)
+[View an interactive demo](https://valhalla.github.io/demos/optimized_route)
 
 ## Optimized route service action
 
@@ -21,7 +21,7 @@ Here is an example of an Optimized Route scenario:
 Given a list of cities and the distances and times between each pair, a salesperson wants to visit each city one time by taking the most optimized route and end at a destination (either return to origin or a different destination).
 
 ```json
-{"locations":[{"lat":40.042072,"lon":-76.306572},{"lat":39.992115,"lon":-76.781559},{"lat":39.984519,"lon":-76.6956},{"lat":39.996586,"lon":-76.769028},{"lat":39.984322,"lon":-76.706672}],"costing":"auto","directions_options":{"units":"miles"}}
+{"locations":[{"lat":40.042072,"lon":-76.306572},{"lat":39.992115,"lon":-76.781559},{"lat":39.984519,"lon":-76.6956},{"lat":39.996586,"lon":-76.769028},{"lat":39.984322,"lon":-76.706672}],"costing":"auto","units":"miles"}
 ```
 
 There is an option to name your optimized route request. You can do this by appending the following to your request `&id=`.  The `id` is returned with the response so a user could match to the corresponding request.
@@ -35,11 +35,11 @@ A location must include a latitude and longitude in decimal degrees. The coordin
 | `lat` | Latitude of the location in degrees. |
 | `lon` | Longitude of the location in degrees. |
 
-Refer to the [route location documentation](/turn-by-turn/api-reference.md#locations) for more information on specifying locations.
+Refer to the [route location documentation](../turn-by-turn/api-reference.md#locations) for more information on specifying locations.
 
 ### Costing parameters
 
-The Optimized Route service uses the `auto`, `bicycle` and `pedestrian` costing models available in the Valhalla route service. The **multimodal costing is not supported** for the Optimized Route service at this time.  Refer to the [route costing models](/turn-by-turn/api-reference.md#costing-models) and [costing options](/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
+The Optimized Route service uses the `auto`, `bicycle` and `pedestrian` costing models available in the Valhalla route service. The **multimodal costing is not supported** for the Optimized Route service at this time.  Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 ### Other request options
 
@@ -58,7 +58,7 @@ These are the results of a request to the Optimized Route service.
 | `optimized_route` | Returns an optimized route path from point 'a' to point 'n'.  Given a list of locations, an optimized route with stops at each intermediate location exactly one time, always starting at the first location in the list and ending at the last location.|
 | `locations` | The specified array of lat/lngs from the input request.  The first and last locations in the array will remain the same as the input request.  The intermediate locations may be returned reordered in the response.  Due to the reordering of the intermediate locations, an `original_index` is also part of the `locations` object within the response.  This is an identifier of the location index that will allow a user to easily correlate input locations with output locations. |
 | `units` | Distance units for output. Allowable unit types are mi (miles) and km (kilometers). If no unit type is specified, the units default to kilometers. |
-| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
+| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. |
 
 ## Error checking
 
@@ -70,4 +70,4 @@ This is an example which should return: `400::Location at index 3 is unreachable
 {"locations":[{"lat":40.306600,"lon":-76.900022},{"lat":40.293246,"lon":-76.936230},{"lat":40.448678,"lon":-76.932885},{"lat":40.419753,"lon":-76.999632},{"lat":40.211050,"lon":-76.777071},{"lat":40.306600,"lon":-76.900022}],"costing":"auto"}
 ```
 
-See the [HTTP return codes](/turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
+See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.

@@ -1,9 +1,8 @@
-#include <cassert>
-#include <vector>
-
-#include "meili/geometry_helpers.h"
 #include "meili/map_matcher.h"
 #include "midgard/logging.h"
+
+#include <cassert>
+#include <vector>
 
 namespace {
 
@@ -60,7 +59,7 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
                          int the_restriction_idx)
     : edgeid(the_edgeid), source(the_source), target(the_target),
       first_match_idx(the_first_match_idx), last_match_idx(the_last_match_idx),
-      discontinuity(disconnect), restriction_idx(the_restriction_idx) {
+      restriction_idx(the_restriction_idx), discontinuity(disconnect) {
   if (!edgeid.Is_Valid()) {
     throw std::invalid_argument("Invalid edgeid");
   }
@@ -73,7 +72,7 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
 
 /**
  * Here we return the vector of edge segments between the source and target states. If its a node to
- * node route (meaning no realy edge is traversed) then we use the target_result to say what edge the
+ * node route (meaning no real edge is traversed) then we use the target_result to say what edge the
  * segment should use
  *
  * TODO: we should modify this function to take the range of MatchResults between the source and

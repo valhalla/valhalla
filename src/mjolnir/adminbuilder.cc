@@ -1,21 +1,19 @@
-#include <cstdint>
-#include <string>
-#include <vector>
-
-#include "baldr/graphconstants.h"
-#include "filesystem.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/adminconstants.h"
-#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfadminparser.h"
-#include "mjolnir/util.h"
+#include "mjolnir/sqlite3.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/property_tree/ptree.hpp>
-
 #include <geos_c.h>
+#include <sqlite3.h>
+
+#include <cstdint>
+#include <filesystem>
+#include <string>
+#include <vector>
 
 BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
                                  double,
@@ -142,8 +140,14 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
   auto* outer_ring = geos_helper_t::from_striped_container(polygon.outer());
   std::vector<GEOSGeometry*> inner_rings;
   inner_rings.reserve(polygon.inners().size());
-  for (const auto& inner : polygon.inners())
+
+  // annoying circleci apple clang bug, not reproducible on any other machine..
+  // https://github.com/valhalla/valhalla/pull/4500/files#r1445039739
+  auto unused_size = std::to_string(polygon.inners().size());
+
+  for (const auto& inner : polygon.inners()) {
     inner_rings.push_back(geos_helper_t::from_striped_container(inner));
+  }
   auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
   auto* buffered = GEOSBuffer(geos_poly, 0, 8);
   GEOSNormalize(buffered);
@@ -163,7 +167,8 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
       break;
     }
     default:
-      throw std::runtime_error("Unusable geometry type after buffering");
+      throw std::runtime_error("Unusable geometry type after buffering with inners size " +
+                               unused_size);
   }
   GEOSGeom_destroy(geos_poly);
   GEOSGeom_destroy(buffered);
@@ -274,7 +279,7 @@ void to_rings(const std::pair<std::string, uint64_t>& admin_info,
     // degenerate rings are ignored, unconnected rings or missing relation members cause this
     if (ring.size() < 4 || ring.front() != ring.back()) {
       LOG_WARN("Degenerate ring for " + admin_info.first + " (" + std::to_string(admin_info.second) +
-               ") " + " near lat,lon " + std::to_string(ring.back().y()) + "," +
+               ")  near lat,lon " + std::to_string(ring.back().y()) + "," +
                std::to_string(ring.back().x()));
       continue;
     }
@@ -335,7 +340,7 @@ multipolygon_t to_multipolygon(const std::pair<std::string, uint64_t>& admin_inf
     }
     if (!found) {
       LOG_WARN("Inner with no outer " + admin_info.first + " (" + std::to_string(admin_info.second) +
-               ") " + " near lat,lon " + std::to_string(inner.front().y()) + "," +
+               ")  near lat,lon " + std::to_string(inner.front().y()) + "," +
                std::to_string(inner.front().x()));
     }
   }
@@ -359,71 +364,71 @@ namespace mjolnir {
 /**
  * Build admins from protocol buffer input.
  */
-void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
+bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
                        const std::vector<std::string>& input_files) {
-
-  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-  // relations are defined within the PBFParser class
-  OSMAdminData admin_data = PBFAdminParser::Parse(pt, input_files);
-
-  // done with the protobuffer library, cant use it again after this
-  OSMPBF::Parser::free();
 
   // Bail if bad path
   auto database = pt.get_optional<std::string>("admin");
 
   if (!database) {
-    LOG_INFO("Admin config info not found. Admins will not be created.");
-    return;
+    LOG_ERROR("Admin config info not found. Admins will not be created.");
+    return false;
   }
 
-  if (!filesystem::exists(filesystem::path(*database).parent_path())) {
-    filesystem::create_directories(filesystem::path(*database).parent_path());
+  const std::filesystem::path parent_dir = std::filesystem::path(*database).parent_path();
+  if (!std::filesystem::exists(parent_dir) && !std::filesystem::create_directories(parent_dir)) {
+    LOG_ERROR("Can't create parent directory " + parent_dir.string());
+    return false;
   }
 
-  if (!filesystem::exists(filesystem::path(*database).parent_path())) {
-    LOG_INFO("Admin directory not found. Admins will not be created.");
-    return;
-  }
+  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+  // relations are defined within the PBFParser class
+  OSMAdminData admin_data = PBFAdminParser::Parse(pt, input_files);
 
-  if (filesystem::exists(*database)) {
-    filesystem::remove(*database);
-  }
-
-  sqlite3* db_handle;
   sqlite3_stmt* stmt;
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
 
-  ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                        NULL);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("cannot open " + (*database));
-    sqlite3_close(db_handle);
-    return;
+  // In-memory database that will be dumped to disk at the end
+  auto db = Sqlite3::open(":memory:", SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+  // TODO: these blocks are the same like 20 times or so
+  // let's abstract the sqlite commands somewhere
+  if (!db) {
+    LOG_ERROR("cannot create in-memory database");
+    return false;
   }
 
-  // loading SpatiaLite as an extension
-  auto db_conn = make_spatialite_cache(db_handle);
-
   /* creating an admin POLYGON table */
-  sql = "SELECT InitSpatialMetaData(1); CREATE TABLE admins (";
-  sql += "admin_level INTEGER NOT NULL,";
-  sql += "iso_code TEXT,";
-  sql += "parent_admin INTEGER,";
-  sql += "name TEXT NOT NULL,";
-  sql += "name_en TEXT,";
-  sql += "drive_on_right INTEGER NOT NULL,";
-  sql += "allow_intersection_names INTEGER NOT NULL)";
+  sql = "SELECT InitSpatialMetaData(1); CREATE TABLE admins ("
+        "admin_level INTEGER NOT NULL,"
+        "iso_code TEXT,"
+        "parent_admin INTEGER,"
+        "name TEXT NOT NULL,"
+        "name_en TEXT,"
+        "drive_on_right INTEGER NULL,"
+        "allow_intersection_names INTEGER NULL,"
+        "default_language TEXT,"
+        "supported_languages TEXT)";
 
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
+
+  /* creating a MULTIPOLYGON Geometry column */
+  sql = "SELECT AddGeometryColumn('admins', "
+        "'geom', 4326, 'MULTIPOLYGON', 2)";
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+
+  LOG_INFO("Created admin table.");
 
   /* creating an admin access table
    * We could support all the commented out
@@ -432,87 +437,73 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
    * update the specs on the wiki.
    */
 
-  sql = "CREATE TABLE admin_access (";
-  sql += "admin_id INTEGER NOT NULL,";
-  sql += "iso_code TEXT,";
-  // sql += "motorway INTEGER DEFAULT NULL,";
-  // sql += "motorway_link INTEGER DEFAULT NULL,";
-  sql += "trunk INTEGER DEFAULT NULL,";
-  sql += "trunk_link INTEGER DEFAULT NULL,";
-  // sql += "prim_ary INTEGER DEFAULT NULL,";
-  // sql += "prim_ary_link INTEGER DEFAULT NULL,";
-  // sql += "secondary INTEGER DEFAULT NULL,";
-  // sql += "secondary_link INTEGER DEFAULT NULL,";
-  // sql += "residential INTEGER DEFAULT NULL,";
-  // sql += "residential_link INTEGER DEFAULT NULL,";
-  // sql += "service INTEGER DEFAULT NULL,";
-  // sql += "tertiary INTEGER DEFAULT NULL,";
-  // sql += "tertiary_link INTEGER DEFAULT NULL,";
-  // sql += "road INTEGER DEFAULT NULL,";
-  sql += "track INTEGER DEFAULT NULL,";
-  // sql += "unclassified INTEGER DEFAULT NULL,";
-  // sql += "undefined INTEGER DEFAULT NULL,";
-  // sql += "unknown INTEGER DEFAULT NULL,";
-  // sql += "living_street INTEGER DEFAULT NULL,";
-  sql += "footway INTEGER DEFAULT NULL,";
-  sql += "pedestrian INTEGER DEFAULT NULL,";
-  // sql += "steps INTEGER DEFAULT NULL,";
-  sql += "bridleway INTEGER DEFAULT NULL,";
-  // sql += "construction INTEGER DEFAULT NULL,";
-  sql += "cycleway INTEGER DEFAULT NULL,";
-  // sql += "bus_guideway INTEGER DEFAULT NULL,";
-  sql += "path INTEGER DEFAULT NULL,";
-  sql += "motorroad INTEGER DEFAULT NULL)";
+  sql = "CREATE TABLE admin_access ("
+        "admin_id INTEGER NOT NULL,"
+        "iso_code TEXT,"
+        // "motorway INTEGER DEFAULT NULL,"
+        // "motorway_link INTEGER DEFAULT NULL,"
+        "trunk INTEGER DEFAULT NULL,"
+        "trunk_link INTEGER DEFAULT NULL,"
+        // "prim_ary INTEGER DEFAULT NULL,"
+        // "prim_ary_link INTEGER DEFAULT NULL,"
+        // "secondary INTEGER DEFAULT NULL,"
+        // "secondary_link INTEGER DEFAULT NULL,"
+        // "residential INTEGER DEFAULT NULL,"
+        // "residential_link INTEGER DEFAULT NULL,"
+        // "service INTEGER DEFAULT NULL,"
+        // "tertiary INTEGER DEFAULT NULL,"
+        // "tertiary_link INTEGER DEFAULT NULL,"
+        // "road INTEGER DEFAULT NULL,"
+        "track INTEGER DEFAULT NULL,"
+        // "unclassified INTEGER DEFAULT NULL,"
+        // "undefined INTEGER DEFAULT NULL,"
+        // "unknown INTEGER DEFAULT NULL,"
+        // "living_street INTEGER DEFAULT NULL,"
+        "footway INTEGER DEFAULT NULL,"
+        "pedestrian INTEGER DEFAULT NULL,"
+        // "steps INTEGER DEFAULT NULL,"
+        "bridleway INTEGER DEFAULT NULL,"
+        // "construction INTEGER DEFAULT NULL,"
+        "cycleway INTEGER DEFAULT NULL,"
+        // "bus_guideway INTEGER DEFAULT NULL,"
+        "path INTEGER DEFAULT NULL,"
+        "motorroad INTEGER DEFAULT NULL)";
 
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   LOG_INFO("Created admin access table.");
-
-  /* creating a MULTIPOLYGON Geometry column */
-  sql = "SELECT AddGeometryColumn('admins', ";
-  sql += "'geom', 4326, 'MULTIPOLYGON', 2)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-
-  LOG_INFO("Created admin table.");
+  LOG_INFO("Start populating admin tables.");
 
   /*
    * inserting some MULTIPOLYGONs
    * this time too we'll use a Prepared Statement
    */
-  sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
-  sql += "drive_on_right, allow_intersection_names, geom) VALUES (?, ?, ?, ?, ?, ? ,?, ";
-  sql += "CastToMulti(GeomFromText(?, 4326)))";
+  sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, "
+        "drive_on_right, allow_intersection_names, default_language, supported_languages, geom) "
+        "VALUES (?,?,?,?,?,?,?,?,?,ST_MakeValid(CastToMulti(GeomFromText(?, 4326))))";
 
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
+  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+    LOG_ERROR(std::string(sqlite3_errmsg(db->get())));
   }
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "BEGIN", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   // initialize geos
   geos_helper_t::get();
 
   // for each admin area (relation)
-  uint32_t count = 0;
+  [[maybe_unused]] uint32_t count = 0;
   for (const auto& admin : admin_data.admins) {
     std::pair<std::string, uint64_t> admin_info(admin_data.name_offset_map.name(admin.name_index),
                                                 admin.id);
@@ -568,7 +559,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
     sqlite3_bind_text(stmt, 4, admin_info.first.c_str(), admin_info.first.length(), SQLITE_STATIC);
 
-    std::string name_en;
+    std::string name_en, default_language;
     if (admin.name_en_index) {
       name_en = admin_data.name_offset_map.name(admin.name_en_index);
       sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
@@ -576,133 +567,182 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       sqlite3_bind_null(stmt, 5);
     }
 
-    sqlite3_bind_int(stmt, 6, admin.drive_on_right);
-    sqlite3_bind_int(stmt, 7, admin.allow_intersection_names);
-    sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
+    uint32_t level = admin.admin_level;
+    if (level == 2 || level == 4)
+      sqlite3_bind_int(stmt, 6, admin.drive_on_right);
+    else
+      sqlite3_bind_null(stmt, 6);
 
+    if (level == 2 || level == 4)
+      sqlite3_bind_int(stmt, 7, admin.allow_intersection_names);
+    else
+      sqlite3_bind_null(stmt, 7);
+
+    if (admin.default_language_index) {
+      default_language = admin_data.name_offset_map.name(admin.default_language_index);
+      sqlite3_bind_text(stmt, 8, default_language.c_str(), default_language.length(), SQLITE_STATIC);
+    } else {
+      sqlite3_bind_null(stmt, 8);
+    }
+
+    sqlite3_bind_null(stmt, 9);
+    sqlite3_bind_text(stmt, 10, wkt.c_str(), wkt.length(), SQLITE_STATIC);
     /* performing INSERT INTO */
     ret = sqlite3_step(stmt);
     if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
       continue;
     }
-    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db->get())));
     LOG_ERROR("sqlite3_step() Name: " + admin_data.name_offset_map.name(admin.name_index));
     LOG_ERROR("sqlite3_step() Name:en: " + admin_data.name_offset_map.name(admin.name_en_index));
     LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level));
     LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right));
     LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
               std::to_string(admin.allow_intersection_names));
+    LOG_ERROR("sqlite3_step() Default Language: " +
+              admin_data.name_offset_map.name(admin.default_language_index));
   }
 
   sqlite3_finalize(stmt);
-  ret = sqlite3_exec(db_handle, "COMMIT", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "COMMIT", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Inserted " + std::to_string(count) + " admin areas");
 
   sql = "SELECT CreateSpatialIndex('admins', 'geom')";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created spatial index");
 
   sql = "CREATE INDEX IdxLevel ON admins (admin_level)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created Level index");
 
-  sql = "CREATE INDEX IdxDriveOnRight ON admins (drive_on_right)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  sql =
+      "UPDATE admins AS child SET parent_admin = (SELECT parent.rowid from admins"
+      " AS parent WHERE parent.admin_level < child.admin_level AND ST_Covers(parent.geom, child.geom) "
+      " ORDER BY parent.admin_level DESC LIMIT 1)"; // if multiple candidates, get the one with the
+                                                    // lowest admin_level
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
-  LOG_INFO("Created Drive On Right index");
+  LOG_INFO("Done updating parent admin");
 
-  sql = "CREATE INDEX IdxAllowIntersectionNames ON admins (allow_intersection_names)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  sql = "UPDATE admins AS child SET drive_on_right = (SELECT parent.drive_on_right FROM "
+        "admins AS parent WHERE parent.rowid = child.parent_admin) WHERE parent_admin IS NOT NULL;";
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
-  }
-  LOG_INFO("Created allow intersection names index");
-
-  sql = "update admins set drive_on_right = (select a.drive_on_right from admins";
-  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
-  sql += "a.admin_level and a.drive_on_right=0) where rowid = ";
-  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
-  sql += "and admins.admin_level != a.admin_level and a.drive_on_right=0)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Done updating drive on right column.");
 
-  sql = "update admins set allow_intersection_names = (select a.allow_intersection_names from admins";
-  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
-  sql += "a.admin_level and a.allow_intersection_names=1) where rowid = ";
-  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
-  sql += "and admins.admin_level != a.admin_level and a.allow_intersection_names=1)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  sql = "CREATE INDEX IdxDriveOnRight ON admins (drive_on_right)";
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
+  }
+  LOG_INFO("Created Drive On Right index");
+
+  sql =
+      "UPDATE admins AS child SET allow_intersection_names = (SELECT parent.allow_intersection_names "
+      "FROM admins AS parent WHERE parent.rowid = child.parent_admin) WHERE parent_admin IS NOT NULL;";
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
   }
   LOG_INFO("Done updating allow intersection names column.");
 
-  sql = "update admins set parent_admin = (select a.rowid from admins";
-  sql += " a where ST_Covers(a.geom, admins.geom) and admins.admin_level != ";
-  sql += "a.admin_level) where rowid = ";
-  sql += "(select admins.rowid from admins a where ST_Covers(a.geom, admins.geom) ";
-  sql += "and admins.admin_level != a.admin_level)";
-  ret = sqlite3_exec(db_handle, sql.c_str(), NULL, NULL, &err_msg);
+  sql = "CREATE INDEX IdxAllowIntersectionNames ON admins (allow_intersection_names)";
+  ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
-  LOG_INFO("Done updating Parent admin");
+  LOG_INFO("Created allow intersection names index");
 
-  sql = "INSERT into admin_access (admin_id, iso_code, trunk, trunk_link, track, footway, ";
-  sql += "pedestrian, bridleway, cycleway, path, motorroad) VALUES (";
-  sql += "(select rowid from admins where (name = ? or name_en = ?)), ";
-  sql += "(select iso_code from admins where (name = ? or name_en = ?)), ";
-  sql += "?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  sql = "update admins set supported_languages = ? "
+        "where (name = ? or name_en = ?) and admin_level = ? ";
 
-  ret = sqlite3_prepare_v2(db_handle, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
+  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
-    LOG_ERROR(std::string(sqlite3_errmsg(db_handle)));
+    LOG_ERROR(std::string(sqlite3_errmsg(db->get())));
   }
-  ret = sqlite3_exec(db_handle, "BEGIN", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "BEGIN", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
+  }
+
+  for (const auto& languages : kSupportedLanguages) {
+
+    sqlite3_reset(stmt);
+    sqlite3_clear_bindings(stmt);
+    sqlite3_bind_text(stmt, 1, languages.second.second.c_str(), languages.second.second.length(),
+                      SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, languages.first.c_str(), languages.first.length(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, languages.first.c_str(), languages.first.length(), SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 4, (int)languages.second.first);
+
+    /* performing update */
+    ret = sqlite3_step(stmt);
+    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
+      continue;
+    }
+    LOG_ERROR("Supported Languages: sqlite3_step() error: " + std::string(sqlite3_errmsg(db->get())) +
+              ".  Ignore if not using a planet extract or check if there was a name change for " +
+              languages.first.c_str());
+  }
+
+  sqlite3_finalize(stmt);
+  ret = sqlite3_exec(db->get(), "COMMIT", NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
+  }
+
+  LOG_INFO("Done updating supported languages");
+
+  sql = "INSERT into admin_access (admin_id, iso_code, trunk, trunk_link, track, footway, "
+        "pedestrian, bridleway, cycleway, path, motorroad) VALUES ("
+        "(select rowid from admins where (name = ? or name_en = ?)), "
+        "(select iso_code from admins where (name = ? or name_en = ?)), "
+        "?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), sql.length(), &stmt, NULL);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("SQL error: " + sql);
+    LOG_ERROR(std::string(sqlite3_errmsg(db->get())));
+  }
+  ret = sqlite3_exec(db->get(), "BEGIN", NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    return false;
   }
 
   for (const auto& access : kCountryAccess) {
@@ -730,23 +770,44 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
       continue;
     }
-    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)) +
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db->get())) +
               ".  Ignore if not using a planet extract or check if there was a name change for " +
               access.first.c_str());
   }
 
   sqlite3_finalize(stmt);
-  ret = sqlite3_exec(db_handle, "COMMIT", NULL, NULL, &err_msg);
+  ret = sqlite3_exec(db->get(), "COMMIT", NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
-    sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
-  sqlite3_close(db_handle);
+  LOG_INFO("Writing database to disk.");
+  if (std::filesystem::exists(*database)) {
+    std::filesystem::remove(*database);
+  }
+
+  auto db_on_disk = Sqlite3::open((*database).c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);
+  if (!db_on_disk) {
+    LOG_ERROR("cannot open " + (*database));
+    return false;
+  }
+
+  sqlite3_backup* backup = sqlite3_backup_init(db_on_disk->get(), "main", db->get(), "main");
+  if (backup) {
+    sqlite3_backup_step(backup, -1);
+    sqlite3_backup_finish(backup);
+  }
+  ret = sqlite3_errcode(db_on_disk->get());
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("failed to save database to " + (*database));
+    return false;
+  }
 
   LOG_INFO("Finished.");
+
+  return true;
 }
 
 } // namespace mjolnir

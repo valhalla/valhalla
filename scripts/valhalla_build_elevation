@@ -13,9 +13,10 @@ from multiprocessing.dummy import Pool as ThreadPool
 import os
 from pathlib import Path
 import sys
+from time import sleep
 from typing import List, Iterable, Set
 from urllib import request
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 
 # hack so ArgumentParser can accept negative numbers
 # see https://github.com/valhalla/valhalla/issues/3426
@@ -53,6 +54,12 @@ class TileCompression(Enum):
             return ".lz4"
 
 
+class DownloadStatus(Enum):
+    OK = 1
+    FAILED = 2
+    CORRUPTED = 3
+
+
 parser = argparse.ArgumentParser(description=description)
 method = parser.add_mutually_exclusive_group()
 method.add_argument(
@@ -82,6 +89,13 @@ parser.add_argument(
     type=Path,
 )
 parser.add_argument(
+    "-i",
+    "--inline-config",
+    help="Inline JSON config, will override --config JSON if present",
+    type=str,
+    default='{}',
+)
+parser.add_argument(
     "-o",
     "--outdir",
     help="Absolute or relative path to the directory where the tiles will be saved. Overrides config JSON.",
@@ -109,7 +123,7 @@ group.add_argument(
     "-z",
     "--lz4",
     help="If set, downloaded files will be recompressed with LZ4. Requires lz4. "
-    "Requires ~12% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
+    "Requires ~12%% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
     "initial download, tiles will be several times faster to decompress vz gzip.",
     action="store_true",
 )
@@ -225,7 +239,7 @@ def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
     return tile_infos
 
 
-def download(tile: Tile, output_dir, compression: TileCompression):
+def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
     dest_directory = Path(output_dir, tile.dir)
     dest_directory.mkdir(parents=True, exist_ok=True)
 
@@ -234,42 +248,74 @@ def download(tile: Tile, output_dir, compression: TileCompression):
         # Skip if the file already exists
         return False
 
-    url = f"http://s3.amazonaws.com/elevation-tiles-prod/skadi/{tile.dir}/{tile.name}.gz"
+    url = f"https://elevation-tiles-prod.s3.us-east-1.amazonaws.com/skadi/{tile.dir}/{tile.name}.gz"
 
     LOGGER.info(f"Downloading tile {tile.name}")
-    try:
-        with request.urlopen(url) as res, open(filepath, "wb") as f:
-            if compression is TileCompression.GZIP:
-                f.write(res.read())
-            else:
-                with gzip.GzipFile(fileobj=res, mode="rb") as gz:
-                    uncompressed = gz.read()
-                    if compression is TileCompression.UNCOMPRESSED:
-                        f.write(uncompressed)
-                    elif compression is TileCompression.LZ4:
-                        # Compression level 6 was chosen after some benchmarking as the approx efficient frontier
-                        # between compression time and space savings (decompression time is roughly constant regardless
-                        # of level). The end result is larger than the maximally gzipped tiles from AWS, but only
-                        # by around 12%.
-                        import lz4.frame
 
-                        with lz4.frame.LZ4FrameCompressor(
-                            block_size=lz4.frame.BLOCKSIZE_MAX4MB, compression_level=6
-                        ) as compressor:
-                            # Optimization: we know the exact size of every uncompressed hgt file
-                            f.write(compressor.begin(25934402))
-                            f.write(compressor.compress(uncompressed))
-                            f.write(compressor.flush())
+    download_status = DownloadStatus.FAILED
+    for i in range(5):
+        try:
+            LOGGER.debug(f"Downloading tile {tile.dir}/{tile.name} for the {i}th time.")
 
-            LOGGER.debug(f"Successfully downloaded tile {tile.name}")
+            # tries up to 24 mins with exponentially increasing sleeps in between, starting with 5 seconds
+            sleep((i**2) / 2 * 30)
+            with request.urlopen(url) as res, open(filepath, "wb") as f:
 
-        return True
-    except URLError as e:
-        LOGGER.critical(f"Download failed of elevation tile {tile.dir}/{tile.name}: {e.reason}")
+                if compression is TileCompression.GZIP:
+                    f.write(res.read())
+                else:
+                    with gzip.GzipFile(fileobj=res, mode="rb") as gz:
+                        try:
+                            uncompressed = gz.read()
+                        except Exception as e:
+                            download_status = DownloadStatus.CORRUPTED
+                            LOGGER.error(
+                                f"Decompression error on tile {tile.dir}/{tile.name}: {e}. Likely a corrupted download."
+                            )
+                            continue
+                        if compression is TileCompression.UNCOMPRESSED:
+                            f.write(uncompressed)
+                        elif compression is TileCompression.LZ4:
+                            # Compression level 6 was chosen after some benchmarking as the approx efficient frontier
+                            # between compression time and space savings (decompression time is roughly constant regardless
+                            # of level). The end result is larger than the maximally gzipped tiles from AWS, but only
+                            # by around 12%.
+                            import lz4.frame
+
+                            with lz4.frame.LZ4FrameCompressor(
+                                block_size=lz4.frame.BLOCKSIZE_MAX4MB, compression_level=6
+                            ) as compressor:
+                                # Optimization: we know the exact size of every uncompressed hgt file
+                                f.write(compressor.begin(25934402))
+                                f.write(compressor.compress(uncompressed))
+                                f.write(compressor.flush())
+
+            download_status = DownloadStatus.OK
+            LOGGER.debug(f"Successfully downloaded tile {tile.dir}/{tile.name}")
+            break
+        except HTTPError as e:
+            LOGGER.error(f"Download failed with HTTP error {e.code}: {e.reason}.\nTrying again...")
+            continue
+        except URLError as e:
+            LOGGER.error(
+                f"Download failed of elevation tile {tile.dir}/{tile.name}: {e.reason}.\nTrying again.."
+            )
+            continue
+        except ImportError:
+            LOGGER.critical(
+                "Could not import lz4. Please install lz4 or use another compression format."
+            )
+            sys.exit(1)
+
+    if download_status == DownloadStatus.CORRUPTED:
+        LOGGER.error(f"Tile {tile.dir}/{tile.name} was corrupted, removing it...")
+        filepath.unlink()
         return False
-    except ImportError:
-        LOGGER.critical("Could not import lz4. Please install lz4 or use another compression format.")
-        sys.exit(1)
+    elif download_status == DownloadStatus.FAILED:
+        LOGGER.error(f"Tile {tile.dir}/{tile.name} couldn't be downloaded...")
+        return False
+
+    return True
 
 
 if __name__ == "__main__":
@@ -283,14 +329,17 @@ if __name__ == "__main__":
     elif args.verbosity >= 2:
         LOGGER.setLevel(logging.DEBUG)
 
-    config = None
+    config = dict()
     if args.config:
         with open(args.config) as f:
             config = json.load(f)
 
+    if args.inline_config:
+        config.update(**json.loads(args.inline_config))
+
     if args.outdir:
         elevation_fp = args.outdir
-    elif config is not None:
+    elif config:
         elevation_fp = Path(config["additional_data"]["elevation"] or "elevation")
     else:
         LOGGER.critical("Either config or outdir is required.")
@@ -301,7 +350,7 @@ if __name__ == "__main__":
     elif args.from_bbox:
         tiles = get_tiles_with_bbox(args.from_bbox)
     elif args.from_tiles:
-        if config is None:
+        if not config:
             LOGGER.critical("--from-tiles requires a config to be specified.")
             sys.exit(1)
         tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))

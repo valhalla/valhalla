@@ -1,17 +1,15 @@
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <sys/stat.h>
-#include <utility>
-
-#include "baldr/connectivity_map.h"
-#include "baldr/curl_tilegetter.h"
 #include "baldr/graphreader.h"
-#include "filesystem.h"
+#include "baldr/curl_tilegetter.h"
 #include "incident_singleton.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "shortcut_recovery.h"
+
+#include <sys/stat.h>
+
+#include <filesystem>
+#include <string>
+#include <utility>
 
 using namespace valhalla::midgard;
 
@@ -82,7 +80,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       // TODO: use the "scan" to iterate over tar
-      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, true, index_loader));
+      archive = std::make_shared<midgard::tar>(pt.get<std::string>("tile_extract"), true, true,
+                                               index_loader);
       // map files to graph ids
       if (tiles.empty()) {
         for (const auto& c : archive->contents) {
@@ -105,7 +104,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       }
       // couldn't load it
       if (tiles.empty()) {
-        LOG_WARN("Tile extract contained no usuable tiles");
+        LOG_WARN("Tile extract contained no usable tiles");
         archive.reset();
       } // loaded ok but with possibly bad blocks
       else {
@@ -124,8 +123,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       traffic_from_index = true;
-      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract"), traffic_readonly,
-                                             true, index_loader));
+      traffic_archive = std::make_shared<midgard::tar>(pt.get<std::string>("traffic_extract"),
+                                                       traffic_readonly, true, index_loader);
       if (traffic_tiles.empty()) {
         LOG_WARN(
             "Traffic extract contained no index file, expect degraded performance for tile (re-)loading.");
@@ -145,7 +144,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       }
       // couldn't load it
       if (traffic_tiles.empty()) {
-        LOG_WARN("Traffic tile extract contained no usuable tiles");
+        LOG_WARN("Traffic tile extract contained no usable tiles");
         archive.reset();
       } // loaded ok but with possibly bad blocks
       else {
@@ -183,7 +182,7 @@ void FlatTileCache::Reserve(size_t tile_size) {
 
 // Checks if tile exists in the cache.
 bool FlatTileCache::Contains(const GraphId& graphid) const {
-  return get_index(graphid) != -1;
+  return is_valid(get_index(graphid));
 }
 
 // Lets you know if the cache is too large.
@@ -206,7 +205,7 @@ void FlatTileCache::Clear() {
 // Get a pointer to a graph tile object given a GraphId.
 graph_tile_ptr FlatTileCache::Get(const GraphId& graphid) const {
   auto index = get_index(graphid);
-  if (index == -1)
+  if (is_invalid(index))
     return nullptr;
   return cache_[index];
 }
@@ -448,10 +447,10 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
     std::lock_guard<std::mutex> lock(factoryMutex);
     if (!globalTileCache_) {
       if (use_lru_cache) {
-        globalTileCache_.reset(new TileCacheLRU(max_cache_size, lru_mem_control));
+        globalTileCache_ = std::make_shared<TileCacheLRU>(max_cache_size, lru_mem_control);
       } else {
         // globalTileCache_.reset(new SimpleTileCache(max_cache_size));
-        globalTileCache_.reset(new FlatTileCache(max_cache_size));
+        globalTileCache_ = std::make_shared<FlatTileCache>(max_cache_size);
       }
     }
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
@@ -528,8 +527,9 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   }
   if (tile_dir_.empty())
     return false;
-  std::string file_location =
-      tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(graphid.Tile_Base());
+  std::string file_location = tile_dir_;
+  file_location += std::filesystem::path::preferred_separator;
+  file_location += GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0 ||
          stat((file_location + ".gz").c_str(), &buffer) == 0;
@@ -745,28 +745,30 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   // Lambda to get continuing edge at a node. Skips the specified edge Id
   // transition edges, shortcut edges, and transit connections. Returns
   // nullptr if more than one edge remains or no continuing edge is found.
-  auto continuing_edge = [](const graph_tile_ptr& tile, const GraphId& edgeid,
-                            const NodeInfo* nodeinfo) {
+  bool shortcut_at_node = false;
+  auto continuing_edge = [&shortcut_at_node](const graph_tile_ptr& tile, const GraphId& edgeid,
+                                             const NodeInfo* nodeinfo) {
     uint32_t idx = nodeinfo->edge_index();
-    const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
+    const DirectedEdge* continuing_edge = nullptr;
     const DirectedEdge* directededge = tile->directededge(idx);
+    shortcut_at_node = false;
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, idx++) {
-      if (idx == edgeid.id() || directededge->is_shortcut() ||
-          directededge->use() == Use::kTransitConnection ||
-          directededge->use() == Use::kEgressConnection ||
-          directededge->use() == Use::kPlatformConnection) {
+      shortcut_at_node = shortcut_at_node || directededge->is_shortcut();
+      if (idx == edgeid.id() || !directededge->can_form_shortcut()) {
         continue;
       }
       if (continuing_edge != nullptr) {
-        return static_cast<const DirectedEdge*>(nullptr);
+        continuing_edge = directededge + (nodeinfo->edge_count() - i);
+        continue;
       }
       continuing_edge = directededge;
     }
-    return continuing_edge;
+    return continuing_edge == directededge ? nullptr : continuing_edge;
   };
 
   // No shortcuts on the local level or transit level.
   if (id.level() >= TileHierarchy::levels().back().level) {
+    LOG_DEBUG("GraphReader::GetShortcut was called with a level that doesn't contain shortcuts");
     return {};
   }
 
@@ -784,12 +786,22 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   GraphId edgeid = id;
   const NodeInfo* node = nullptr;
   const DirectedEdge* cont_de = nullptr;
+  const DirectedEdge* first_de = GetOpposingEdge(id);
   while (true) {
     // Get the continuing directed edge. Initial case is to use the opposing
     // directed edge.
-    cont_de = (node == nullptr) ? GetOpposingEdge(id) : continuing_edge(tile, edgeid, node);
+    if (node) {
+      cont_de = continuing_edge(tile, edgeid, node);
+      if (cont_de == first_de) {
+        LOG_DEBUG("GraphReader::GetShortcut edges are in a loop and found no shortcut among them");
+        break;
+      }
+    } else {
+      cont_de = first_de;
+    }
     if (cont_de == nullptr) {
-      return {};
+      LOG_DEBUG("GraphReader::GetShortcut found no clear continuing edge");
+      break;
     }
 
     // Get the end node and end node tile
@@ -803,9 +815,18 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     uint32_t idx = node->edge_index() + cont_de->opp_index();
     edgeid = {endnode.tileid(), endnode.level(), idx};
     directededge = tile->directededge(edgeid);
+
+    // If this edge is itself not the beginning of a shortcut, but we encountered another shortcut
+    // it means we must have started the traversal outside a shortcuts internal edges
+    if (!directededge->superseded() && shortcut_at_node) {
+      LOG_DEBUG(
+          "GraphReader::GetShortcut found a shortcut but it's not superseding the edge it arrived on");
+      break;
+    }
+
     if (directededge->superseded()) {
       // Get the shortcut edge Id that supersedes this edge
-      uint32_t idx = node->edge_index() + (directededge->superseded() - 1);
+      uint32_t idx = node->edge_index() + directededge->superseded_idx() - 1;
       return GraphId(endnode.tileid(), endnode.level(), idx);
     }
   }
@@ -871,11 +892,11 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
     // for each level
     for (uint8_t level = 0; level <= TileHierarchy::GetTransitLevel().level; ++level) {
       // crack open this level of tiles directory
-      filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
-                                std::to_string(level) + filesystem::path::preferred_separator);
-      if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
+      std::filesystem::path root_dir{tile_dir_};
+      root_dir.append(std::to_string(level));
+      if (std::filesystem::exists(root_dir) && std::filesystem::is_directory(root_dir)) {
         // iterate over all the files in there
-        for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+        for (std::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
           if (i->is_regular_file() || i->is_symlink()) {
             // add it if it can be parsed as a valid tile file name
             try {
@@ -903,11 +924,11 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     } // or individually on disk
   } else if (!tile_dir_.empty()) {
     // crack open this level of tiles directory
-    filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
-                              std::to_string(level) + filesystem::path::preferred_separator);
-    if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
+    std::filesystem::path root_dir{tile_dir_};
+    root_dir.append(std::to_string(level));
+    if (std::filesystem::exists(root_dir) && std::filesystem::is_directory(root_dir)) {
       // iterate over all the files in the directory and turn into GraphIds
-      for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+      for (std::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
         if (i->is_regular_file() || i->is_symlink()) {
           // add it if it can be parsed as a valid tile file name
           try {
@@ -918,6 +939,13 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     }
   }
   return tiles;
+}
+
+const std::string& GraphReader::tile_extract() const {
+  static std::string empty_str;
+  if (tile_extract_->tiles.empty())
+    return empty_str;
+  return tile_extract_->archive->tar_file;
 }
 
 AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
@@ -963,6 +991,16 @@ int GraphReader::GetTimezone(const baldr::GraphId& node, graph_tile_ptr& tile) {
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
 }
 
+int GraphReader::GetTimezoneFromEdge(const baldr::GraphId& edge, graph_tile_ptr& tile) {
+  auto nodes = GetDirectedEdgeNodes(edge, tile);
+  if (const auto* node = nodeinfo(nodes.first, tile))
+    return node->timezone();
+  else if (const auto* node = nodeinfo(nodes.second, tile))
+    return node->timezone();
+
+  return 0;
+}
+
 std::shared_ptr<const valhalla::IncidentsTile>
 GraphReader::GetIncidentTile(const GraphId& tile_id) const {
   return enable_incidents_ ? incident_singleton_t::get(tile_id.Tile_Base())
@@ -998,16 +1036,8 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
   return {itile, begin_index, end_index};
 }
 
-const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
-                    const valhalla::IncidentsTile::Location& incident_location) {
-  const auto metadata_index = incident_location.metadata_index();
-  if (metadata_index >= tile->metadata_size()) {
-    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
-                             std::to_string(metadata_index) + " but total incident metadata of " +
-                             std::to_string(tile->metadata_size()));
-  }
-  return tile->metadata(metadata_index);
+graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
+  return reader_.GetGraphTile(graphid);
 }
 
 } // namespace baldr
