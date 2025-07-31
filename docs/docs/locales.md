@@ -142,7 +142,7 @@ Translation files for new languages that are contributed in Transifex are not au
     ```
 2. Make sure the new translation filename is following the <lng-REGION.json> convention.
 3. Update `./.tx/config` with the new translation file mapping.
-4. Update [`test/gurka/test_route_with_narrative_languages::lang_phrase`](https://github.com/valhalla/valhalla/blob/da0a0720b04491d769ff5ce861fc82f0a172a87e/test/gurka/test_route_with_narrative_languages.cc#L51) vector with the new phrase (best let if fail after updating it a bogus phrase which will print the correct one)
+4. Update [`test/gurka/test_route_with_narrative_languages::lang_phrase`](https://github.com/valhalla/valhalla/blob/da0a0720b04491d769ff5ce861fc82f0a172a87e/test/gurka/test_route_with_narrative_languages.cc#L51) vector with the new phrase (best to let if fail after updating with a bogus phrase which will print the correct one)
 
 ### Pushing NEW translation file TO Transifex
 
