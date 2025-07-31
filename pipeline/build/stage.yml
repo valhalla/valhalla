@@ -1,12 +1,19 @@
 parameters:
   name: null
+  display: null
+  enabled: null
   variables: []
+  dependencies: []
 
 stages:
   - stage: ${{ parameters.name }}
     displayName: ${{ parameters.name }}
-    condition: eq(variables['run.build'], 'True')
+    condition: eq(${{ parameters.enabled }}, true)
     variables:
+      - name: app.version.release
+        value: $[or(contains(variables['Build.SourceBranch'], 'master'), contains(variables['Build.SourceBranch'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))]
+      - name: scan.enable.trivy.cache
+        value: $(Pipeline.Workspace)/.cache/trivy
       - ${{ each group in parameters.variables }}:
           - group: ${{ group }}
 
@@ -14,7 +21,8 @@ stages:
       - job: ${{ parameters.name }}
         displayName: ${{ parameters.name }}
         pool:
-          vmImage: ubuntu-22.04
+          name: $(agent.build)
+          vmImage: $(agent.image)
         timeoutInMinutes: 360
         steps:
           - checkout: self
@@ -30,50 +38,111 @@ stages:
               python -m pip install --upgrade conan
             displayName: 'Install dependencies'
           
+          - bash: |
+              echo "<<<<< validate environment >>>>>"
+              source pipeline/build/scripts/10-validate.sh
+            name: validation
+            displayName: Validate
+            condition: succeeded()
+            env:
+              SHARE_CLIENT_SECRET: $(share.client.secret)
+              SHARE_REGISTRY_PASSWORD: $(share.registry.password)
+
+          - bash: |
+              echo "<<<<< define build version >>>>>"
+              source pipeline/build/scripts/11-version.sh
+              echo "##vso[task.setvariable variable=app.version]${VERSION}"
+              echo "##vso[task.setvariable variable=app.version.latest]${LATEST}"
+              echo "##vso[task.setvariable variable=build.version;isOutput=true]${VERSION}"
+            name: version
+            displayName: Version
+            condition: succeeded()
+          
+          - bash: |
+              echo "<<<<< define tag version >>>>>"
+              source pipeline/build/scripts/12-tag.sh
+              echo "##vso[task.setvariable variable=run.tagging.git]${TAG_VERSION}"
+              echo "##vso[task.setvariable variable=app.version]v${TAG_VERSION}_${APP_VERSION}"
+              echo "##vso[task.setvariable variable=build.version;isOutput=true]v${TAG_VERSION}_${APP_VERSION}"
+            name: tag
+            displayName: Tag
+            condition: and(succeeded(), eq(variables['app.version.release'], 'true'))
+            env:
+              SHARE_VERSION_MAJOR: $(share.version.major)
+              BUILD_TAG: $(app.tagging)
+
+          - bash: |
+              echo "<<<<< package application >>>>>"
+              source pipeline/build/scripts/21-package.sh
+              echo "##vso[task.setvariable variable=builder.image]${BUILDER_IMAGE}"
+              echo "##vso[task.setvariable variable=runner.image]${RUNNER_IMAGE}"
+            name: package
+            displayName: Package
+            condition: succeeded()
+            env:
+              SHARE_REGISTRY_PASSWORD: $(share.registry.password)
+              DEVOPS_TOKEN: $(System.AccessToken)
+              BUILD_VERSION: $(run.tagging.git)
+
+          - bash: |
+              echo "<<<<< tag repository >>>>>"
+              source pipeline/build/scripts/22-git.sh
+            name: git
+            displayName: Git
+            condition: and(succeeded(), ne(variables['run.tagging.git'], ''))
+            env:
+              BUILD_VERSION: $(run.tagging.git)
+          
           - task: DownloadSecureFile@1
             name: sonarcert
             displayName: Sonar Certificate
+            condition: and(succeeded(), eq(variables['scan.enable.sonarqube'], 'true'))
             inputs:
-              secureFile: gsep.pfx
-
+              secureFile: sonar.pfx
+          
           - bash: |
-              source pipeline/build/scripts/10-validate.sh
-            name: validate
-            displayName: Validate
+              last_updated=$(date +%m%d%Y)
+              echo $last_updated > trivy.cache.key
+            name: trivyupdate
+            displayName: Trivy Update
+            condition: and(succeeded(), eq(variables['scan.enable.trivy'], 'True'))
+
+          - task: Cache@2
+            inputs:
+              key: 'v2 |  "$(Agent.OS)" | trivy.cache.key'
+              path: $(trivy.cache)
+            name: trivycache
+            displayName: Trivy Cache
+            condition: and(succeeded(), eq(variables['scan.enable.trivy'], 'True'))
+          
+          - bash: |
+              echo "<<<<< scan code, image and licenses >>>>>"
+              source pipeline/build/scripts/30-scan.sh
+            name: scan
+            displayName: Scanners
+            condition: and(succeeded(), eq(variables['scan.enable'], 'true'))
             env:
               SHARE_REGISTRY_PASSWORD: $(share.registry.password)
-              SHARE_CLIENT_SECRET: $(share.client.secret)
-
+              DEVOPS_TOKEN: $(System.AccessToken)
+              SONAR_TOKEN: $(sonar.token)
+              SONAR_CERT_PATH: $(sonarcert.secureFilePath)
+              SONAR_CERT_PASSPHRASE: $(sonar.cert.passphrase)
+              BLACKDUCK_PREFIX: $(blackduck.project.prefix)
+              BLACKDUCK_TOKEN: $(blackduck.api.token)
+          
           - bash: |
-              source pipeline/build/scripts/11-version.sh
-            name: version
-            displayName: Version
-
-
-          - bash: |
-              source pipeline/build/scripts/20-package.sh
-            name: package
-            displayName: Package
-            env:
-              SHARE_REGISTRY_PASSWORD: $(share.registry.password)
-
-          - bash: |
-              source pipeline/build/scripts/21-acr-cleanup.sh
-            name: acrCleanup
-            displayName: ACR Cleanup
-            condition: and(succeeded(), eq(variables['run.acr.cleanup'], 'true'))
+              echo "<<<<< cleanup environment >>>>>"
+              source pipeline/build/scripts/40-cleanup.sh
+            name: Cleanup
+            displayName: Cleanup
+            condition: and(succeeded(), eq(variables['run.cleanup'], 'true'))
             continueOnError: true
             env:
               SHARE_CLIENT_SECRET: $(share.client.secret)
 
           - bash: |
-              source pipeline/build/scripts/30-scan.sh
-            name: scan
-            displayName: Scanners
-            env:
-              SHARE_REGISTRY_PASSWORD: $(share.registry.password)
-              DEVOPS_TOKEN: $(System.AccessToken)
-              BLACKDUCK_PREFIX: $(blackduck.project.prefix)
-              BLACKDUCK_TOKEN: $(blackduck.api.token)
-            condition: and(succeeded(), eq(variables['blackduck.enabled'], 'true'))
-
+              echo "<<<<< notify teams >>>>>"
+              source pipeline/build/scripts/50-teams.sh
+            name: teams
+            displayName: Notification
+            condition: and(failed(), eq(variables['app.version.release'], 'true'))

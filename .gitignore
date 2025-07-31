@@ -1,6 +1,20 @@
-# editor temporary / backup files
+# Folders
 *~
+logs
+trial
+vendor
+.vscode
 
+# Binaries
+bin/*
+*_bin
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Compiler
 genfiles/
 locales/*.UTF-8
 !locales/merge-en.sh
@@ -17,11 +31,7 @@ date_time_zonespec.csv
 mason/
 mason_packages/
 
-# scripts
-scripts/gdal-2.0.0/
-scripts/gdal-2.0.0.tar.gz
-
-# tools
+# Tools
 .cproject
 .project
 .settings
@@ -34,20 +44,24 @@ CMakeLists.txt.user
 vcpkg*/
 *.log
 
-# python
+# Scripts
+scripts/gdal-2.0.0/
+scripts/gdal-2.0.0.tar.gz
+
+# Python
 .venv
-
-# clangd
-.cache/
-
-# documentation
-site/
-*.gph
-
-.DS_Store
-
-# python bindings
 src/bindings/python/valhalla/__version__.py
 **/*.egg-info
 dist
 wheelhouse
+
+# Clang
+.cache/
+
+# Documentation
+site/
+*.gph
+
+# Apple
+*.DS_Store
+._*

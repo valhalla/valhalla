@@ -1,4 +1,5 @@
 #!/bin/bash
+shopt -s nocasematch
 
 echo ${SHARE_REGISTRY_PASSWORD} | \
 docker login ${SHARE_REGISTRY_URL} \
@@ -6,10 +7,8 @@ docker login ${SHARE_REGISTRY_URL} \
 --password-stdin \
 || exit 1
 
-
-DOCKER_TAG=""
 # To allow debugging of a C++ application it needs to be build with special flags (see Dockerfile for details)
-shopt -s nocasematch
+DOCKER_TAG=""
 if [[ "${BUILD_DEBUG_MODE}" == true ]]
 then
   echo "WARNING! Enabling debug mode and assertions for this build"
@@ -18,36 +17,22 @@ fi
 
 if [[ "${APP_VERSION_LATEST}" = true ]]
 then
+  echo "build application with tag: ${APP_NAME}:${APP_VERSION}"
+  echo "build application with tag: latest"
   docker build . --file "Dockerfile" \
   --tag ${SHARE_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
   --tag ${SHARE_REGISTRY_URL}/${APP_NAME}:latest \
   --build-arg DOCKER_TAG="${DOCKER_TAG}" \
   || exit 2
 else
+  echo "build application with tag: ${APP_NAME}:${APP_VERSION}"
   docker build . --file "Dockerfile" \
   --tag ${SHARE_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
   --build-arg DOCKER_TAG="${DOCKER_TAG}" \
   || exit 2
 fi
 
-shopt -s nocasematch
-if [[ "${TRIVY_ENABLED}" = true ]]
-then
-    # scan image for vulnerabilities
-    docker run --rm \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v ${PWD}/.trivyignore:/.trivyignore:ro \
-    aquasec/trivy:0.23.0 \
-    --debug \
-    image \
-    --severity CRITICAL \
-    --ignorefile /.trivyignore \
-    --ignore-unfixed \
-    --timeout 10m \
-    --exit-code 1 \
-    ${SHARE_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
-    || exit 4
-fi
-
+# push image to Azure Container Registry
+echo "<<< push container to container registry >>>"
 docker push -a ${SHARE_REGISTRY_URL}/${APP_NAME} \
-|| exit 5
+|| exit 3

@@ -1,8 +1,64 @@
 #!/bin/bash
 shopt -s nocasematch
 
+# code scanner
+if [[ "${SCAN_ENABLE_SONAR}" == true ]]
+then
+  echo "<<< scan code for improvements >>>"
+  keytool -list -keystore ${SONAR_CERT_PATH} -storepass ${SONAR_CERT_PASS}
+  docker run \
+    --rm \
+    -e SONAR_HOST_URL=${SONAR_URL} \
+    -e SONAR_LOGIN=${SONAR_TOKEN} \
+    -e SONAR_SCANNER_OPTS="-Djavax.net.ssl.keyStore=${SONAR_CERT_PATH} -Djavax.net.ssl.keyStoreType=PKCS12 -Djavax.net.ssl.keyStorePassword=${SONAR_CERT_PASS}" \
+    -v "${BUILD_SOURCESDIRECTORY}:/project" \
+    -v "${SONAR_CERT_PATH}:${SONAR_CERT_PATH}" \
+    sonarsource/sonar-scanner-cli \
+    -Dsonar.projectBaseDir=/project \
+    -Dsonar.projectKey=MICTNTPRXY \
+    -Dsonar.projectName=${APP_NAME} \
+    -Dsonar.projectVersion=${APP_VERSION} \
+    -Dsonar.branch.name=${BUILD_SOURCEBRANCHNAME} \
+    -Dsonar.sources=. \
+    -Dsonar.exclusions=**/*_test.go \
+    -Dsonar.tests=. \
+    -Dsonar.test.inclusions=**/*_test.go
+fi
+
+# vulnerability scanner
+if [[ "${SCAN_ENABLE_TRIVY}" = true ]]
+then
+    echo "<<< scan container for vulnerabilities >>>"
+    if [[ ! -f "${SCAN_ENABLE_TRIVY_CACHE}/db/db.tar.gz" ]]
+    then
+        oras pull ghcr.io/aquasecurity/trivy-db:2
+        mkdir -p "${SCAN_ENABLE_TRIVY_CACHE}/db"
+        mv db.tar.gz "${SCAN_ENABLE_TRIVY_CACHE}/db"
+        ( cd "${SCAN_ENABLE_TRIVY_CACHE}/db" && tar xvf db.tar.gz )
+    else
+        echo 'trivy database found in cache.'
+    fi
+    
+    docker run --rm \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v ${PWD}/.trivyignore:/.trivyignore:ro \
+    -v $HOME/Library/Caches:/root/.cache/ \
+    -v ${SCAN_ENABLE_TRIVY_CACHE}/db:/root/.cache/trivy/db \
+    aquasec/trivy \
+    --cache-dir /root/.cache/trivy \
+    --debug image \
+    --severity CRITICAL \
+    --ignorefile /.trivyignore \
+    --ignore-unfixed \
+    --skip-db-update \
+    --timeout 30m \
+    --exit-code 1 \
+    ${SHARE_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
+    || exit 1
+fi
+
 # license scanner
-if [[ "${BLACKDUCK_ENABLED}" == true ]]
+if [[ "${SCAN_ENABLE_BLACKDUCK}" == true ]]
 then
   # check which phase should be set for the scan (DEVELOPMENT, PLANNING, PRERELEASE, RELEASED, ARCHIVED, DEPRECATED)
   BLACKDUCK_PHASE=PLANNING

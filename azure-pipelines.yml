@@ -7,48 +7,64 @@ trigger:
 
 # Parameters that can be specified when running the pipeline
 parameters:
-  - name: build
-    type: boolean
-    default: true
-  - name: trivy
-    type: boolean
-    default: false
-    displayName: Scan Container with Trivy
-  - name: blackduck
-    type: boolean
-    default: false
-    displayName: Scan Code with BlackDuck
-  - name: acr_cleanup
-    type: boolean
-    default: true
-    displayName: Purge Images in Container Registry
+  - name: container
+    displayName: used application ('build', 'latest' or specific version)
+    type: string
+    default: build
   - name: debug_mode
+    displayName: build in debug mode with assertions
     type: boolean
     default: false
-    displayName: Build in Debug Mode with Assertions
-
+  - name: trivy
+    displayName: scan vulnerabilities (Trivy)
+    type: boolean
+    default: false
+  - name: sonarqube
+    displayName: scan code (SonarQube)
+    type: boolean
+    default: false
+  - name: blackduck
+    displayName: scan licenses (BlackDuck)
+    type: boolean
+    default: false
 
 variables:
+  - name: app.space
+    value: heimdall
   - name: app.key
     value: way
   - name: app.name
     value: valhalla
-  - name: run.build
-    value: ${{ parameters.build }}
-  - name: blackduck.enabled
-    value: ${{ parameters.blackduck }}
-  - name: trivy.enabled
-    value: ${{ parameters.trivy }}
-  - name: run.acr.cleanup
-    value: ${{ parameters.acr_cleanup }}
+  - name: app.tag
+    value: ${{ parameters.container }}
+  - name: app.version
+    value: ${{ parameters.container }}
+  - name: app.version.latest
+    value: ${{ eq(parameters.container, 'build') }}
+  - name: build.enable
+    value: ${{ eq(parameters.container, 'build') }}
   - name: build.debug.mode
-    value: ${{ parameters.debug_mode }}
+    value: ${{ parameters.debug_mode }}  
+  - name: scan.enable
+    value: ${{ or(eq(parameters.trivy, true), eq(parameters.sonarqube, true), eq(parameters.blackduck, true)) }}
+  - name: scan.enable.trivy
+    value: ${{ parameters.trivy }}
+  - name: scan.enable.sonarqube
+    value: ${{ parameters.sonarqube }}
+  - name: scan.enable.blackduck
+    value: ${{ parameters.blackduck }}
+  - name: agent.build
+    value: "Azure Pipelines"
+  - name: agent.image
+    value: "ubuntu-22.04"
 
 stages:
   # BUILD
   - template: pipeline/build/stage.yml
     parameters:
       name: build
+      display: 'build APP'
+      enabled: eq(variables['build.enable'], true)
       variables:
         - way.emea.share
         - blackduck
