@@ -25,6 +25,7 @@ trans.hi = locales/hi-IN.json
 trans.hu = locales/hu-HU.json
 trans.it = locales/it-IT.json
 trans.ja = locales/ja-JP.json
+trans.mn = locales/mn-MN.json
 trans.no = locales/nb-NO.json
 trans.nl = locales/nl-NL.json
 trans.pl = locales/pl-PL.json

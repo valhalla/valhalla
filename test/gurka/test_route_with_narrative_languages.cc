@@ -84,6 +84,8 @@ const std::vector<std::pair<std::string, std::string>> RouteWithNarrativeLanguag
      {"it-IT", "Svolta a destra su Main Street."},
      {"ja", "右方向です。その先Main Streetです。"},
      {"ja-JP", "右方向です。その先Main Streetです。"},
+     {"mn", "баруун эргээд Main Street руу ор."},
+     {"mn-MN", "баруун эргээд Main Street руу ор."},
      {"nb", "Ta til høyre inn på Main Street."},
      {"nb-NO", "Ta til høyre inn på Main Street."},
      {"nl", "Sla rechtsaf naar Main Street."},

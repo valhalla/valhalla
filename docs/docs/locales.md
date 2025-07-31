@@ -94,13 +94,13 @@ To learn more about the Config command, visit https://docs.transifex.com/client/
 
 ### Pulling translation updates from Transifex
 
-Pull acceptable translation files with 16 threads:
+Pull acceptable translation files with 16 threads using `git` timestamps (else it'll use filesystem timestamps which seems completely wrong):
 
 ```
-tx pull --minimum-perc 95 --workers 16
+tx pull --minimum-perc 70 --workers 16 --use-git-timestamps
 ```
 
-Use this command to pull all changes from Transifex into the Valhalla repo (will contain the ones not > 95%).
+Use this command to pull all changes from Transifex into the Valhalla repo (will contain the ones not > 70%).
 
 ```
 tx pull --all
@@ -134,13 +134,15 @@ tx push --all
 
 ### Pulling NEW translation file FROM Transifex
 
-Translation files for new languages that are contributed in Transifex are not automatically downloaded by tx. Use the `--language` flag to force download the new file and PR it to Valhalla.
+Translation files for new languages that are contributed in Transifex are not automatically downloaded by tx:
 
-```
-tx pull --language <lang> --force
-```
-
-Warning: By using --force, the uploaded files will overwrite remote translations, even if they are newer than your uploaded files.
+1. Pull the new language:
+    ```
+    tx pull --language <lang>
+    ```
+2. Make sure the new translation filename is following the <lng-REGION.json> convention.
+3. Update `./.tx/config` with the new translation file mapping.
+4. Update [`test/gurka/test_route_with_narrative_languages::lang_phrase`](https://github.com/valhalla/valhalla/blob/da0a0720b04491d769ff5ce861fc82f0a172a87e/test/gurka/test_route_with_narrative_languages.cc#L51) vector with the new phrase (best let if fail after updating it a bogus phrase which will print the correct one)
 
 ### Pushing NEW translation file TO Transifex
 
