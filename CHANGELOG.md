@@ -49,6 +49,7 @@
    * FIXED: Narrowing bug leading to nodes being misplaced in wrong tiles [#5364](https://github.com/valhalla/valhalla/pull/5364)
    * FIXED: wrong integer types in expansion properties [#5380](https://github.com/valhalla/valhalla/pull/5380)
    * FIXED: fix: `std::terminate` on unsupported request format for some actions [#5387](https://github.com/valhalla/valhalla/pull/5387)
+   * FIXED: uk-UA translation issue with issue with "approach_verbal_alert" [#5182](https://github.com/valhalla/valhalla/pull/5182)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
