@@ -45,10 +45,10 @@
         "läbipääs",
         "rattatee",
         "rada mägiratastele",
-        "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "ülekäigurada",
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakul",
@@ -89,9 +89,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakul",
@@ -150,9 +150,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -185,9 +185,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilomeetrit",
@@ -242,9 +242,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -382,9 +382,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "ferry_label": "Praam",
       "example_phrases": {
@@ -414,9 +414,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "ferry_label": "Praam",
       "example_phrases": {
@@ -470,9 +470,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -570,9 +570,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -753,9 +753,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -784,9 +784,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -936,9 +936,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakule",
@@ -986,9 +986,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakule",
@@ -1024,9 +1024,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakule",
@@ -1066,9 +1066,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakul",
@@ -1122,9 +1122,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1165,9 +1165,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1215,9 +1215,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilomeetrit",
@@ -1454,9 +1454,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakul",
@@ -1497,9 +1497,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakul",
@@ -1556,9 +1556,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1647,9 +1647,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilomeetrit",
@@ -2025,9 +2025,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakul",
@@ -2068,9 +2068,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakul",
@@ -2113,9 +2113,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakul",
@@ -2164,9 +2164,9 @@
         "rattatee",
         "rada mägiratastele",
         "ülekäigurajal",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "trepp",
+        "sild",
+        "tunnel"
       ],
       "relative_directions": [
         "vasakul",
@@ -2253,17 +2253,17 @@
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "Möödu siit: <OBJECT_LABEL>.",
+        "1": "Möödu valgusfooridest <OBJECT_LABEL> teel."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "värav",
+        "piirdetulbad",
+        "teede ristmik"
       ],
       "example_phrases": {
         "0": [
-          "Pass the gate."
+          "Möödu väravast."
         ]
       }
     },
