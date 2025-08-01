@@ -11,13 +11,10 @@
 #include <valhalla/baldr/graphmemory.h>
 #include <valhalla/valhalla.h>
 
-#include <algorithm>
 #include <cstdint>
-#include <exception>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
 #else
 #include <stdint.h>
 #endif
