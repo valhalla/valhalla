@@ -29,10 +29,6 @@ class TestBindings(unittest.TestCase):
 
         cls.actor = Actor(str(PWD.joinpath('valhalla.json')))
 
-    @classmethod
-    def tearDownClass(cls):
-        del cls.actor
-
     def test_version_python_package_constant(self):
         self.assertIn("pyvalhalla", VALHALLA_PYTHON_PACKAGE)
 
