@@ -56,13 +56,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 1
 
       - name: Run Formatter & Linter
         run: |
-          apt-get update --assume-yes
-          env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet sudo python3-pip python3-requests git curl file
+          sudo apt-get update --assume-yes
+          env DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes --quiet sudo python3-pip python3-requests git curl file
           ./scripts/format.sh && ./scripts/error_on_dirty.sh
 
   debug_build:
