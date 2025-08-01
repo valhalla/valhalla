@@ -46,9 +46,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -89,9 +89,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -150,9 +150,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -185,9 +185,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilómetros",
@@ -242,9 +242,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -382,9 +382,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "ferry_label": "Ferri",
       "example_phrases": {
@@ -414,9 +414,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "ferry_label": "Ferri",
       "example_phrases": {
@@ -470,9 +470,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -570,9 +570,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -753,9 +753,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -784,9 +784,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -936,9 +936,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -986,9 +986,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -1024,9 +1024,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -1066,9 +1066,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -1122,9 +1122,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -1165,9 +1165,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -1215,9 +1215,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilómetros",
@@ -1454,9 +1454,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -1497,9 +1497,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -1556,9 +1556,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -1647,9 +1647,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilómetros",
@@ -2025,9 +2025,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -2068,9 +2068,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -2113,9 +2113,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -2164,9 +2164,9 @@
         "el carril bici",
         "el sendero para bicicletas de montaña",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "las escaleras",
+        "el puente",
+        "el túnel"
       ],
       "relative_directions": [
         "izquierda",
@@ -2253,17 +2253,17 @@
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
+        "0": "Pase <OBJECT_LABEL>.",
         "1": "Pass traffic signals on <OBJECT_LABEL>."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
+        "la cancela",
+        "los bolardos",
         "ways intersection"
       ],
       "example_phrases": {
         "0": [
-          "Pass the gate."
+          "Pase la cancela."
         ]
       }
     },
