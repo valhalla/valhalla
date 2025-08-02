@@ -330,6 +330,16 @@ bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t) {
   return true;
 }
 
+const std::string& DirectionsType_Enum_Name(const DirectionsType type) {
+  static const std::unordered_map<int, std::string> types{
+      {DirectionsType::none, "none"},
+      {DirectionsType::maneuvers, "maneuvers"},
+      {DirectionsType::instructions, "instructions"},
+  };
+  auto i = types.find(type);
+  return i == types.cend() ? empty_str : i->second;
+}
+
 bool PreferredSide_Enum_Parse(const std::string& pside, valhalla::Location::PreferredSide* p) {
   static const std::unordered_map<std::string, valhalla::Location::PreferredSide> types{
       {"either", valhalla::Location::either},
