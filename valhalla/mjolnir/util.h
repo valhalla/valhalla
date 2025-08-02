@@ -4,7 +4,6 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 
 #include <boost/property_tree/ptree_fwd.hpp>

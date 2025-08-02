@@ -5,9 +5,7 @@
 #include <valhalla/mjolnir/osmaccessrestriction.h>
 #include <valhalla/mjolnir/osmlinguistic.h>
 #include <valhalla/mjolnir/osmnode.h>
-#include <valhalla/mjolnir/osmnodelinguistic.h>
 #include <valhalla/mjolnir/osmrestriction.h>
-#include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 #include <cstdint>
