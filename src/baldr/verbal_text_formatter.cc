@@ -3,6 +3,11 @@
 #include <optional>
 #include <string>
 
+namespace {
+// Regular expression to find numbers
+const std::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
+} // namespace
+
 namespace valhalla {
 namespace baldr {
 

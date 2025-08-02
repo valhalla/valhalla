@@ -1,6 +1,7 @@
 #pragma once
 
 #include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/directededge.h>
