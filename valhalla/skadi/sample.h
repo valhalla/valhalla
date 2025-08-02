@@ -6,7 +6,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <mutex>
-#include <shared_mutex>
 #include <string>
 #include <vector>
 
