@@ -459,13 +459,79 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
   return via_waypoints;
 }
 
-void serializeCostOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
+void serializeCostOptions(const valhalla::Costing_Options& costing_options, rapidjson::writer_wrapper_t& writer) {
+  writer.start_object("options");
+  if (costing_options.has_maneuver_penalty()) {
+    writer("maneuver_penalty", costing_options.maneuver_penalty());
+  }
+  if(costing_options.has_destination_only_penalty()){
+    writer("destination_only_penalty", costing_options.destination_only_penalty());
+  }
+  writer("filter_stop_action", FilterAction_Enum_Name(costing_options.filter_stop_action()));
+  writer("filter_operator_action", FilterAction_Enum_Name(costing_options.filter_operator_action()));
+  writer("filter_route_action", FilterAction_Enum_Name(costing_options.filter_route_action()));
+  writer.start_array("filter_stop_ids");
+  for (const auto& stopId : costing_options.filter_stop_ids()) {
+    writer(stopId);
+  }
+  writer.end_array(); // filter_stop_ids
+  writer.start_array("filter_operator_ids");
+  for (const auto& operatorId : costing_options.filter_operator_ids()) {
+    writer(operatorId);
+  }
+  writer.end_array(); // filter_operator_ids
+  writer.start_array("filter_route_ids");
+  for (const auto& routeId : costing_options.filter_route_ids()) {
+    writer(routeId);
+  }
+  writer.end_array(); // filter_route_ids
+  writer("fixed_speed", costing_options.fixed_speed());
+  writer("axle_count", costing_options.axle_count());
+  writer("use_lit",costing_options.use_lit());
+  writer("disable_hierarchy_pruning", costing_options.disable_hierarchy_pruning());
+  writer("ignore_non_vehicular_restrictions", costing_options.ignore_non_vehicular_restrictions());
+  writer("use_truck_route", costing_options.use_truck_route());
+  writer("exclude_bridges", costing_options.exclude_bridges());
+  writer("exclude_tunnels", costing_options.exclude_tunnels());
+  writer("exclude_highways", costing_options.exclude_highways());
+  writer("exclude_ferries", costing_options.exclude_ferries());
+  writer("exclude_tolls", costing_options.exclude_tolls());
+  writer("ignore_construction", costing_options.ignore_construction());
+  writer("disable_hierarchy_pruning", costing_options.disable_hierarchy_pruning());
+  writer.end_object();
+}
+
+void serializeOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
   writer.start_object("options");
   auto options = api.options();
+  const std::string& costing_type = Costing_Enum_Name(options.costing_type());
   writer("units", valhalla::Options_Units_Enum_Name(options.units()));
   writer("directions_type", valhalla::DirectionsType_Enum_Name(options.directions_type()));
   writer("format", valhalla::Options_Format_Enum_Name(options.format()));
   writer("action", valhalla::Options_Action_Enum_Name(options.action()));
+  writer("costing_type", costing_type);
+
+  auto costingItr = options.costings().find(options.costing_type());
+  if (costingItr != options.costings().end()) {
+    auto costing = costingItr->second;
+    writer.start_object("costings");
+    writer.start_object(costing_type.c_str());
+    if(costing.has_options()){
+      const valhalla::Costing_Options& costing_options = costing.options();
+      serializeCostOptions(costing_options, writer);
+    }
+    writer("type", Costing_Enum_Name(costing.type()));
+    if(costing.has_name()){
+      writer("name", costing.name());
+    }
+    if(costing.has_filter_closures()){
+      writer("filter_closures", costing.filter_closures());
+    }
+
+    writer.end_object();
+    writer.end_object();
+  }
+
   writer.end_object();
 }
 

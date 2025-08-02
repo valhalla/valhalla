@@ -721,7 +721,7 @@ std::string serialize(Api& api) {
     writer("id", api.options().id());
   }
 
-  osrm::serializeCostOptions(api, writer);
+  osrm::serializeOptions(api, writer);
   writer.end_object(); // outer object
 
   return writer.get_buffer();

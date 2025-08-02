@@ -275,7 +275,7 @@ valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 
 // Serialize costOptions
-void serializeCostOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
+void serializeOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
 
 void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
