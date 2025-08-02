@@ -1,4 +1,5 @@
 #include "baldr/json.h"
+#include "baldr/pathlocation.h"
 #include "tyr/serializers.h"
 
 #include <cstdint>

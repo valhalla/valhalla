@@ -120,6 +120,8 @@
    * CHANGED: Decouple `traffic_signal` on node from `kNodeType` in `TripLegBuilder` [#5349](https://github.com/valhalla/valhalla/pull/5394)
    * CHANGED: Use rapidjson for locate serializers [#5260](https://github.com/valhalla/valhalla/pull/5260)
    * CHANGED: set`check_reverse_connection` default value to `true` [#5404](https://github.com/valhalla/valhalla/pull/5404)
+   * CHANGED: updated translation files and added mn-MN lang [#5425](https://github.com/valhalla/valhalla/pull/5425)
+   * CHANGED: Use rapidjson for height serializer [#5277](https://github.com/valhalla/valhalla/pull/5277)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

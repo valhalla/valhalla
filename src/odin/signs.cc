@@ -1,6 +1,5 @@
 #include "odin/signs.h"
 #include "baldr/verbal_text_formatter.h"
-#include "midgard/logging.h"
 
 #include <algorithm>
 #include <cmath>
