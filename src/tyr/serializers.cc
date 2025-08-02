@@ -462,10 +462,10 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
 void serializeCostOptions(const valhalla::Costing_Options& costing_options,
                           rapidjson::writer_wrapper_t& writer) {
   writer.start_object("options");
-  if (costing_options.has_maneuver_penalty()) {
+  if (costing_options.has_maneuver_penalty_case()) {
     writer("maneuver_penalty", costing_options.maneuver_penalty());
   }
-  if (costing_options.has_destination_only_penalty()) {
+  if(costing_options.has_destination_only_penalty_case()){
     writer("destination_only_penalty", costing_options.destination_only_penalty());
   }
   writer("filter_stop_action", FilterAction_Enum_Name(costing_options.filter_stop_action()));
@@ -521,10 +521,10 @@ void serializeOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& wri
       serializeCostOptions(costing_options, writer);
     }
     writer("type", Costing_Enum_Name(costing.type()));
-    if (costing.has_name()) {
+    if(costing.has_name_case()){
       writer("name", costing.name());
     }
-    if (costing.has_filter_closures()) {
+    if(costing.has_filter_closures_case()){
       writer("filter_closures", costing.filter_closures());
     }
 
