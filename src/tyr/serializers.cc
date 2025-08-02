@@ -488,7 +488,6 @@ void serializeCostOptions(const valhalla::Costing_Options& costing_options, rapi
   writer("fixed_speed", costing_options.fixed_speed());
   writer("axle_count", costing_options.axle_count());
   writer("use_lit",costing_options.use_lit());
-  writer("disable_hierarchy_pruning", costing_options.disable_hierarchy_pruning());
   writer("ignore_non_vehicular_restrictions", costing_options.ignore_non_vehicular_restrictions());
   writer("use_truck_route", costing_options.use_truck_route());
   writer("exclude_bridges", costing_options.exclude_bridges());
