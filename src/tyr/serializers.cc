@@ -459,12 +459,13 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
   return via_waypoints;
 }
 
-void serializeCostOptions(const valhalla::Costing_Options& costing_options, rapidjson::writer_wrapper_t& writer) {
+void serializeCostOptions(const valhalla::Costing_Options& costing_options,
+                          rapidjson::writer_wrapper_t& writer) {
   writer.start_object("options");
   if (costing_options.has_maneuver_penalty()) {
     writer("maneuver_penalty", costing_options.maneuver_penalty());
   }
-  if(costing_options.has_destination_only_penalty()){
+  if (costing_options.has_destination_only_penalty()) {
     writer("destination_only_penalty", costing_options.destination_only_penalty());
   }
   writer("filter_stop_action", FilterAction_Enum_Name(costing_options.filter_stop_action()));
@@ -487,7 +488,7 @@ void serializeCostOptions(const valhalla::Costing_Options& costing_options, rapi
   writer.end_array(); // filter_route_ids
   writer("fixed_speed", costing_options.fixed_speed());
   writer("axle_count", costing_options.axle_count());
-  writer("use_lit",costing_options.use_lit());
+  writer("use_lit", costing_options.use_lit());
   writer("ignore_non_vehicular_restrictions", costing_options.ignore_non_vehicular_restrictions());
   writer("use_truck_route", costing_options.use_truck_route());
   writer("exclude_bridges", costing_options.exclude_bridges());
@@ -515,15 +516,15 @@ void serializeOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& wri
     auto costing = costingItr->second;
     writer.start_object("costings");
     writer.start_object(costing_type.c_str());
-    if(costing.has_options()){
+    if (costing.has_options()) {
       const valhalla::Costing_Options& costing_options = costing.options();
       serializeCostOptions(costing_options, writer);
     }
     writer("type", Costing_Enum_Name(costing.type()));
-    if(costing.has_name()){
+    if (costing.has_name()) {
       writer("name", costing.name());
     }
-    if(costing.has_filter_closures()){
+    if (costing.has_filter_closures()) {
       writer("filter_closures", costing.filter_closures());
     }
 
