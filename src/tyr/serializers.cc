@@ -503,7 +503,7 @@ void serializeCostOptions(const valhalla::Costing_Options& costing_options,
 
 void serializeOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
   writer.start_object("options");
-  auto options = api.options();
+  const auto& options = api.options();
   const std::string& costing_type = Costing_Enum_Name(options.costing_type());
   writer("units", valhalla::Options_Units_Enum_Name(options.units()));
   writer("directions_type", valhalla::DirectionsType_Enum_Name(options.directions_type()));
