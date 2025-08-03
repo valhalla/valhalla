@@ -138,36 +138,36 @@ void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
       if (snapped_points.insert(snapped_current).second) {
         writer.set_precision(tyr::kCoordinatePrecision);
         writer.start_array();
-        writer(snapped_current.lat());
         writer(snapped_current.lng());
+        writer(snapped_current.lat());
         writer.end_array();
       }
     };
     writer.end_array(); // coordinates
     writer("type", "MultiPoint");
     writer.end_object(); // geometry
-    writer("type", "Feature");
     writer.start_object("properties");
-    writer("type", "snapped");
     writer("location_index", static_cast<uint64_t>(idx));
+    writer("type", "snapped");
     writer.end_object(); // properties
+    writer("type", "Feature");
     writer.end_object(); // object
 
     writer.start_object(); // object
-    writer("type", "Feature");
-    writer.start_object("properties");
-    writer("type", "input");
-    writer("location_index", static_cast<uint64_t>(idx));
-    writer.end_object(); // properties
     writer.start_object("geometry");
-    writer("type", "Point");
     // then each user input point as separate Point feature
     const valhalla::LatLng& input_latlng = location.ll();
     writer.start_array("coordinates");
-    writer(input_latlng.lat());
     writer(input_latlng.lng());
-    writer.end_array();  // coordinates
+    writer(input_latlng.lat());
+    writer.end_array(); // coordinates
+    writer("type", "Point");
     writer.end_object(); // geometry
+    writer.start_object("properties");
+    writer("location_index", static_cast<uint64_t>(idx));
+    writer("type", "input");
+    writer.end_object(); // properties
+    writer("type", "Feature");
     writer.end_object(); // object
     idx++;
   }
@@ -305,8 +305,8 @@ std::string serializeIsochroneJson(Api& request,
           for (const auto& pair : *ring) {
             writer.set_precision(tyr::kCoordinatePrecision);
             writer.start_array();
-            writer(pair.lat());
             writer(pair.lng());
+            writer(pair.lat());
             writer.end_array();
           }
           if (polygons)
