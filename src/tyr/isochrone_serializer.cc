@@ -127,7 +127,7 @@ std::string getIntervalColor(std::vector<contour_interval_t>& intervals, size_t 
 void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
   int idx = 0;
   for (const auto& location : request.options().locations()) {
-    writer.start_object(); // object
+    writer.start_object();
     writer.start_object("geometry");
     writer.start_array("coordinates");
     // first add all snapped points as MultiPoint feature per origin point
@@ -151,9 +151,9 @@ void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
     writer("type", "snapped");
     writer.end_object(); // properties
     writer("type", "Feature");
-    writer.end_object(); // object
+    writer.end_object();
 
-    writer.start_object(); // object
+    writer.start_object();
     writer.start_object("geometry");
     // then each user input point as separate Point feature
     const valhalla::LatLng& input_latlng = location.ll();
@@ -168,7 +168,7 @@ void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
     writer("type", "input");
     writer.end_object(); // properties
     writer("type", "Feature");
-    writer.end_object(); // object
+    writer.end_object();
     idx++;
   }
 }
@@ -278,7 +278,7 @@ std::string serializeIsochroneJson(Api& request,
 
     // for each feature on that interval
     for (const auto& feature : interval_contours) {
-      writer.start_object(); // object
+      writer.start_object();
 
       writer.set_precision(2);
       writer.start_object("properties");
@@ -297,8 +297,8 @@ std::string serializeIsochroneJson(Api& request,
       grouped_contours_t groups = GroupContours(polygons, feature);
       // each group is a polygon consisting of an exterior ring and possibly inner rings
       for (const auto& group : groups) {
-        if (polygons && groups.size() > 1)
-          writer.start_array(); // poly
+        if (polygons && groups.size() > 1) // unwrap linestring, or polygon if there's only one
+          writer.start_array();            // poly
         for (const auto& ring : group) {
           if (polygons)
             writer.start_array(); // ring_coords
@@ -315,15 +315,13 @@ std::string serializeIsochroneJson(Api& request,
         if (polygons && groups.size() > 1)
           writer.end_array(); // poly
       }
-      // polygons && geom->size() > 1 ? geom : geom->at(0) // unwrap linestring, or polygon if there's
-      // only one
 
       writer.end_array(); // coordinates
       writer("type", polygons ? groups.size() > 1 ? "MultiPolygon" : "Polygon" : "LineString");
       writer.end_object(); // geometry
 
       writer("type", "Feature");
-      writer.end_object(); // object
+      writer.end_object();
     }
   }
 
