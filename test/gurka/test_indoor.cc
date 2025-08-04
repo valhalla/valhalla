@@ -658,3 +658,46 @@ TEST_F(Levels, EdgeInfoJson) {
     }
   }
 }
+
+TEST(StandAlone, GenericLevelChange) {
+  //
+  constexpr double gridsize_metres = 1;
+
+  const std::string ascii_map = R"(
+      A---B---C---D
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "0"}}},
+      {"BC", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "0;1"}}},
+      {"CD", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "1"}}},
+  };
+
+  // const gurka::nodes nodes = {
+  //     {"B", {{"highway", "elevator"}, {"indoor", "yes"}}},
+  // };
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_access_psv_way", build_config);
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "pedestrian",
+                                 {
+                                     {"/locations/0/node_snap_tolerance", "0"},
+                                     {"/locations/1/node_snap_tolerance", "0"},
+                                     {"/locations/0/radius", "1"},
+                                     {"/locations/1/radius", "1"},
+                                 });
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kGenericLevelChange,
+                                                DirectionsLeg_Maneuver_Type_kContinue,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify single maneuver prior to elevator
+  // int maneuver_index = 0;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, 1, "Change to Level 1.", "", "",
+                                                            "", "");
+}

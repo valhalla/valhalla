@@ -72,6 +72,12 @@ std::vector<std::string> split(const std::string& source, char delimiter) {
 bool is_pair(const std::vector<std::string>& tokens) {
   return (tokens.size() == 2);
 }
+
+bool has_level_changes(
+    const ::google::protobuf::RepeatedPtrField<valhalla::TripLeg_Edge_Level>& levels) {
+  return levels.size() == 1 ? levels[0].start() != levels[0].end() : levels.size() != 0;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -404,6 +410,12 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // if current or next maneuver is an escalator
       else if (curr_man->escalator() || next_man->escalator()) {
         LOG_TRACE("+++ Do Not Combine: if current or next maneuver is an escalator +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      } else if (curr_man->has_level_changes() != next_man->has_level_changes()) {
+        LOG_TRACE("+++ Do Not Combine: if only one maneuver has level changes +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -895,6 +907,10 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
     curr_man->set_escalator(true);
   }
 
+  if (next_man->has_level_changes()) {
+    curr_man->set_has_level_changes(true);
+  }
+
   // If needed, set ramp
   if (next_man->ramp()) {
     curr_man->set_ramp(true);
@@ -1140,7 +1156,8 @@ void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   auto curr_edge = trip_path_->GetCurrEdge(node_index);
 
   // exception: start maneuvers are not helpful for routes starting on stairs or escalators
-  if (curr_edge->IsStepsUse() || curr_edge->IsEscalatorUse()) {
+  if (curr_edge->IsStepsUse() || curr_edge->IsEscalatorUse() ||
+      has_level_changes(curr_edge->levels())) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kNone);
   }
 
@@ -1183,6 +1200,10 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Escalator
   if (prev_edge->IsEscalatorUse()) {
     maneuver.set_escalator(true);
+  }
+
+  if (has_level_changes(prev_edge->levels())) {
+    maneuver.set_has_level_changes(true);
   }
 
   // Ramp
@@ -1838,6 +1859,8 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
   else if (maneuver.building_exit()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kBuildingExit);
     LOG_TRACE("ManeuverType=BUILDING_EXIT");
+  } else if (maneuver.has_level_changes() && !maneuver.end_level_ref().empty()) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kGenericLevelChange);
   }
   // Process simple direction
   else {
@@ -2248,6 +2271,10 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   /////////////////////////////////////////////////////////////////////////////
   // Process building entrance
   if (node->IsBuildingEntrance()) {
+    return false;
+  }
+
+  if (maneuver.has_level_changes() != has_level_changes(prev_edge->levels())) {
     return false;
   }
 

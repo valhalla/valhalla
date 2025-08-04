@@ -135,10 +135,10 @@ Maneuver::Maneuver()
       roundabout_exit_turn_degree_(0), roundabout_exit_shape_index_(0),
       has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
       has_long_street_name_(false), elevator_(false), indoor_steps_(false), escalator_(false),
-      building_enter_(false), building_exit_(false), end_level_ref_(""), transit_connection_(false),
-      travel_mode_(TravelMode::kDrive), rail_(false), bus_(false), vehicle_type_(VehicleType::kCar),
-      pedestrian_type_(PedestrianType::kFoot), bicycle_type_(BicycleType::kRoad),
-      transit_type_(TransitType::kRail),
+      building_enter_(false), building_exit_(false), has_level_changes_(false), end_level_ref_(""),
+      transit_connection_(false), travel_mode_(TravelMode::kDrive), rail_(false), bus_(false),
+      vehicle_type_(VehicleType::kCar), pedestrian_type_(PedestrianType::kFoot),
+      bicycle_type_(BicycleType::kRoad), transit_type_(TransitType::kRail),
       bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
@@ -1226,6 +1226,13 @@ const std::vector<RouteLandmark>& Maneuver::landmarks() const {
 void Maneuver::set_landmarks(const std::vector<RouteLandmark>& landmarks) {
   landmarks_ = landmarks;
 }
+
+const bool Maneuver::has_level_changes() const {
+  return has_level_changes_;
+};
+void Maneuver::set_has_level_changes(const bool has_level_changes) {
+  has_level_changes_ = has_level_changes;
+};
 
 #ifdef LOGGING_LEVEL_TRACE
 std::string Maneuver::ToString() const {
