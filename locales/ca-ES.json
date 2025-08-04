@@ -38,17 +38,17 @@
         "1": "Queda't a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Queda't a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
         "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Queda't a <RELATIVE_DIRECTION> a <JUNCTION_NAME>.",
+        "5": "Queda't a  <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -81,17 +81,17 @@
         "1": "Queda't a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Queda't a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.",
         "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
-        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Queda't a <RELATIVE_DIRECTION> a <JUNCTION_NAME>.",
+        "5": "Queda't a <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -142,17 +142,17 @@
       "phrases": {
         "0": "Continua.",
         "1": "Continua per <STREET_NAMES>.",
-        "2": "Continue at <JUNCTION_NAME>.",
-        "3": "Continue toward <TOWARD_SIGN>."
+        "2": "Continua per  <JUNCTION_NAME>.",
+        "3": "Continua seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -185,9 +185,9 @@
         "el carril bici",
         "la pista de bicicleta de muntanya",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> quilòmetres",
@@ -242,9 +242,9 @@
         "el carril bici",
         "la pista de bicicleta de muntanya",
         "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -375,18 +375,18 @@
         "0": "Agafa el ferri.",
         "1": "Agafa el <STREET_NAMES>.",
         "2": "Agafa el <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Agafa el ferri seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
-      "ferry_label": "Ferry",
+      "ferry_label": "Ferri",
       "example_phrases": {
         "0": [
           "Agafa el ferri."
@@ -407,16 +407,16 @@
         "0": "Agafa el ferri.",
         "1": "Agafa el <STREET_NAMES>.",
         "2": "Agafa el <STREET_NAMES> <FERRY_LABEL>.",
-        "3": "Take the ferry toward <TOWARD_SIGN>."
+        "3": "Agafa el ferri seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "ferry_label": "Ferry",
       "example_phrases": {
@@ -438,41 +438,41 @@
       "phrases": {
         "0": "Entra a la rotonda.",
         "1": "Entra a la rotonda i pren la sortida <ORDINAL_VALUE>.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "2": "Entra a la rotonda i agafa la <ORDINAL_VALUE> sortida de <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Entra a la rotonda i agafa la <ORDINAL_VALUE> sortida de <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua a <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Entra a la rotonda i agafa la <ORDINAL_VALUE> sortida seguint <TOWARD_SIGN>.",
+        "5": "Entra a la rotonda i agafa la sortida de <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Entra a la rotonda i agafa la sortida de <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua a <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Entra a la rotonda i agafa la sortida seguint <TOWARD_SIGN>.",
+        "8": "Entra a <STREET_NAMES>",
+        "9": "Entra a <STREET_NAMES> i agafa la <ORDINAL_VALUE> sortida.",
+        "10": "Entra a <STREET_NAMES> i agafa la <ORDINAL_VALUE> sortida de <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Entra a <STREET_NAMES> i agafa la <ORDINAL_VALUE> sortida de <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua a <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Entra a <STREET_NAMES> i agafa la <ORDINAL_VALUE> sortida seguint <TOWARD_SIGN>.",
+        "13": "Entra a <STREET_NAMES> i agafa la sortida de <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Entra a <STREET_NAMES> i agafa la sortida de <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continua a <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Entra a <STREET_NAMES> i agafa la sortida seguint <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1a",
         "2a",
         "3a",
         "4a",
-        "5ena",
-        "6ena",
-        "7ena",
-        "8ena",
-        "9ena",
-        "10ena"
+        "5a",
+        "6a",
+        "7a",
+        "8a",
+        "9a",
+        "10a"
       ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -538,41 +538,41 @@
       "phrases": {
         "0": "Entra a la rotonda.",
         "1": "Entra a la rotonda i pren la sortida <ORDINAL_VALUE>.",
-        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
-        "8": "Enter <STREET_NAMES>",
-        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
-        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
-        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+        "2": "Entra a la rotonda i agafa la <ORDINAL_VALUE> sortida de <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Entra a la rotonda i agafa la <ORDINAL_VALUE> sortida de <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Entra a la rotonda i agafa la <ORDINAL_VALUE> sortida seguint <TOWARD_SIGN>.",
+        "5": "Entra a la rotonda i agafa la sortida de <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Entra a la rotonda i agafa la sortida de <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Entra a la rotonda i agafa la sortida seguint <TOWARD_SIGN>.",
+        "8": "Entra a <STREET_NAMES>",
+        "9": "Entra a <STREET_NAMES> i agafa la <ORDINAL_VALUE> sortida.",
+        "10": "Entra a <STREET_NAMES> i agafa la <ORDINAL_VALUE> sortida de <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Entra a <STREET_NAMES> i agafa la <ORDINAL_VALUE> sortida de <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Entra a <STREET_NAMES> i agafa la <ORDINAL_VALUE> sortida seguint <TOWARD_SIGN>.",
+        "13": "Entra a <STREET_NAMES> i agafa la sortida de <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Entra a <STREET_NAMES> i agafa la sortida de <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Entra a <STREET_NAMES> i agafa la sortida seguint <TOWARD_SIGN>."
       },
       "ordinal_values": [
         "1a",
         "2a",
         "3a",
         "4a",
-        "5ena",
-        "6ena",
-        "7ena",
-        "8ena",
-        "9ena",
-        "10ena"
+        "5a",
+        "6a",
+        "7a",
+        "8a",
+        "9a",
+        "10a"
       ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -746,16 +746,16 @@
         "0": "Surt de la rotonda.",
         "1": "Surt de la rotonda a <STREET_NAMES>.",
         "2": "Surt de la rotonda a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "Surt de la rotonda seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -777,16 +777,16 @@
         "0": "Surt de la rotonda.",
         "1": "Surt de la rotonda a <STREET_NAMES>.",
         "2": "Surt de la rotonda a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
-        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+        "3": "Surt de la rotonda seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -912,7 +912,7 @@
     },
     "exit_visual": {
       "phrases": {
-        "0": "Exit <EXIT_NUMBERS>"
+        "0": "Sortida <EXIT_NUMBERS>"
       },
       "example_phrases": {
         "0": [
@@ -935,10 +935,10 @@
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -985,10 +985,10 @@
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -1023,10 +1023,10 @@
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -1065,10 +1065,10 @@
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -1110,8 +1110,8 @@
         "1": "Enllaça a <RELATIVE_DIRECTION>.",
         "2": "Enllaça amb <STREET_NAMES>.",
         "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Enllaça seguint <TOWARD_SIGN>.",
+        "5": "Enllaça <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -1121,10 +1121,10 @@
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -1153,8 +1153,8 @@
         "1": "Enllaça a <RELATIVE_DIRECTION>.",
         "2": "Enllaça amb <STREET_NAMES>.",
         "3": "Enllaça a <RELATIVE_DIRECTION> amb <STREET_NAMES>.",
-        "4": "Merge toward <TOWARD_SIGN>.",
-        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Enllaça seguint <TOWARD_SIGN>.",
+        "5": "Enllaça <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "relative_directions": [
         "l'esquerra",
@@ -1164,10 +1164,10 @@
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -1214,10 +1214,10 @@
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> quilòmetres",
@@ -1229,7 +1229,7 @@
         "<MILES> milles",
         "1 milla",
         "mitja milla",
-        "a quarter mile",
+        "un quart de milla",
         "<FEET> peus",
         "menys de 10 peus"
       ],
@@ -1446,17 +1446,17 @@
         "1": "Gir tancat a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Gir tancat a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
         "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Gir tancat a <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Gir tancat a <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -1489,17 +1489,17 @@
         "1": "Gir tancat a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Gir tancat a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.",
         "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
-        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Gir tancat a <RELATIVE_DIRECTION> a <JUNCTION_NAME>.",
+        "5": "Gir tancat a <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -1543,22 +1543,22 @@
       },
       "cardinal_directions": [
         "el nord",
-        "el nordest",
+        "el nord-est",
         "l'est",
-        "el sudest",
+        "el sud-est",
         "el sud",
-        "el sudoest",
+        "el sud-oest",
         "l'oest",
-        "el nordoest"
+        "el nord-oest"
       ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "example_phrases": {
         "0": [
@@ -1611,21 +1611,21 @@
     },
     "start_verbal": {
       "phrases": {
-        "0": "Vés cap <CARDINAL_DIRECTION>.",
-        "1": "Vés cap <CARDINAL_DIRECTION> durant <LENGTH>.",
-        "2": "Vés cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
-        "3": "Vés cap <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
-        "4": "Vés cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
-        "5": "Condueix cap <CARDINAL_DIRECTION>.",
-        "6": "Condueix cap <CARDINAL_DIRECTION> durant <LENGTH>.",
-        "7": "Condueix cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
-        "8": "Condueix cap <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
-        "9": "Condueix cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
-        "10": "Camina cap <CARDINAL_DIRECTION>.",
-        "11": "Camina cap <CARDINAL_DIRECTION> durant <LENGTH>.",
-        "12": "Camina cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
-        "13": "Camina cap <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
-        "14": "Camina cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "0": "Vés cap al <CARDINAL_DIRECTION>.",
+        "1": "Vés cap al <CARDINAL_DIRECTION> durant <LENGTH>.",
+        "2": "Vés cap al <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "3": "Vés cap al <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
+        "4": "Vés cap al <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "5": "Condueix cap al <CARDINAL_DIRECTION>.",
+        "6": "Condueix cap al <CARDINAL_DIRECTION> durant <LENGTH>.",
+        "7": "Condueix cap al <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "8": "Condueix cap al <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
+        "9": "Condueix cap al <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
+        "10": "Camina cap al <CARDINAL_DIRECTION>.",
+        "11": "Camina cap al <CARDINAL_DIRECTION> durant <LENGTH>.",
+        "12": "Camina cap al <CARDINAL_DIRECTION> a <STREET_NAMES>.",
+        "13": "Camina cap al <CARDINAL_DIRECTION> a <STREET_NAMES> durant <LENGTH>.",
+        "14": "Camina cap al <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>.",
         "15": "Pedala cap <CARDINAL_DIRECTION>.",
         "16": "Pedala cap <CARDINAL_DIRECTION> durant <LENGTH>.",
         "17": "Pedala cap <CARDINAL_DIRECTION> a <STREET_NAMES>.",
@@ -1633,23 +1633,23 @@
         "19": "Pedala cap <CARDINAL_DIRECTION> a <BEGIN_STREET_NAMES>."
       },
       "cardinal_directions": [
-        "el nord",
-        "el nordest",
-        "l'est",
-        "el sudest",
-        "el sud",
-        "el sudoest",
-        "l'oest",
-        "el nordoest"
+        "nord",
+        "nord-est",
+        "est",
+        "sud-est",
+        "sud",
+        "sud-oest",
+        "oest",
+        "nord-oest"
       ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> quilòmetres",
@@ -1661,7 +1661,7 @@
         "<MILES> milles",
         "1 milla",
         "mitja milla",
-        "a quarter mile",
+        "un quart de milla",
         "<FEET> peus",
         "menys de 10 peus"
       ],
@@ -1966,7 +1966,7 @@
     "transit_transfer_verbal": {
       "phrases": {
         "0": "Transbordament per agafar el <TRANSIT_NAME>.",
-        "1": "Transbordament per agafar el <TRANSIT_NAME> toward <TRANSIT_HEADSIGN>."
+        "1": "Transbordament per agafar el <TRANSIT_NAME> seguint <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
         "tramvia",
@@ -2017,17 +2017,17 @@
         "1": "Gira a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Gira a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
         "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Gira a <RELATIVE_DIRECTION> a <JUNCTION_NAME>.",
+        "5": "Gira a <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -2060,17 +2060,17 @@
         "1": "Gira a <RELATIVE_DIRECTION> cap a <STREET_NAMES>.",
         "2": "Gira a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.",
         "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
-        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "4": "Gira a <RELATIVE_DIRECTION> a <JUNCTION_NAME>.",
+        "5": "Gira a <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -2105,17 +2105,17 @@
         "3": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES>.",
         "4": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> cap a <STREET_NAMES>.",
         "5": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per continuar per <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "Mitja volta a <RELATIVE_DIRECTION> a <JUNCTION_NAME>.",
+        "7": "Mitja volta a <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -2156,17 +2156,17 @@
         "3": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES>.",
         "4": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> cap a <STREET_NAMES>.",
         "5": "Mitja volta a <RELATIVE_DIRECTION> a <CROSS_STREET_NAMES> per continuar per <STREET_NAMES>.",
-        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
-        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+        "6": "Mitja volta a <RELATIVE_DIRECTION> a <JUNCTION_NAME>.",
+        "7": "Mitja volta a <RELATIVE_DIRECTION> seguint <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "el pas de vianants",
+        "les escales",
+        "el pont",
+        "el túnel"
       ],
       "relative_directions": [
         "l'esquerra",
@@ -2202,7 +2202,7 @@
     "verbal_multi_cue": {
       "phrases": {
         "0": "<CURRENT_VERBAL_CUE> i després <NEXT_VERBAL_CUE>",
-        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+        "1": "<CURRENT_VERBAL_CUE>  i després , a <LENGTH>, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> quilòmetres",
@@ -2214,7 +2214,7 @@
         "<MILES> milles",
         "1 milla",
         "mitja milla",
-        "a quarter mile",
+        "un quart de milla",
         "<FEET> peus",
         "menys de 10 peus"
       ],
@@ -2229,7 +2229,7 @@
     },
     "approach_verbal_alert": {
       "phrases": {
-        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+        "0": "En <LENGTH>, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
         "<KILOMETERS> quilòmetres",
@@ -2241,7 +2241,7 @@
         "<MILES> milles",
         "1 milla",
         "mitja milla",
-        "a quarter mile",
+        "un quart de milla",
         "<FEET> peus",
         "menys de 10 peus"
       ],
@@ -2253,24 +2253,24 @@
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "Passa<OBJECT_LABEL>.",
+        "1": "Passa els semàfors a <OBJECT_LABEL>."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "la porta",
+        "les pilones",
+        "intersecció de la via"
       ],
       "example_phrases": {
         "0": [
-          "Pass the gate."
+          "Passa la porta."
         ]
       }
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Agafa l'ascensor.",
+        "1": "Agafa l'ascensor fins a <LEVEL>"
       },
       "example_phrases": {
         "0": [
@@ -2283,8 +2283,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Agafa les escales.",
+        "1": "Agafa les escales fins a <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2297,8 +2297,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Agafa les escales mecàniques.",
+        "1": "Agafa les escales mecàniques fins a <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2311,14 +2311,14 @@
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Entra a l'edifici.",
+        "1": "Entra a l'edifici, i continua a <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk"
+        "el pas de vianants"
       ],
       "example_phrases": {
         "0": [
@@ -2331,14 +2331,14 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Surt de l'edifici.",
+        "1": "Surt de l'edifici, i continua a <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
         "la pista de bicicleta de muntanya",
-        "the crosswalk"
+        "el pas de vianants"
       ],
       "example_phrases": {
         "0": [

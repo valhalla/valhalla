@@ -8,8 +8,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
-#include <cstdint>
-
 namespace valhalla {
 namespace baldr {
 

@@ -4,6 +4,7 @@
 #include <valhalla/baldr/streetname.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/baldr/verbal_text_formatter_us.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/proto/common.pb.h>
 
 #include <cstdint>

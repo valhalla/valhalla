@@ -6,8 +6,6 @@
 #include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/turn.h>
 
-#include <cstdint>
-
 namespace valhalla {
 namespace baldr {
 

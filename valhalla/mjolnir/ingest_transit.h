@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <list>
-#include <string>
 
 namespace valhalla {
 namespace mjolnir {
