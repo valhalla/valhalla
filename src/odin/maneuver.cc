@@ -1227,7 +1227,7 @@ void Maneuver::set_landmarks(const std::vector<RouteLandmark>& landmarks) {
   landmarks_ = landmarks;
 }
 
-const bool Maneuver::has_level_changes() const {
+bool Maneuver::has_level_changes() const {
   return has_level_changes_;
 };
 void Maneuver::set_has_level_changes(const bool has_level_changes) {
