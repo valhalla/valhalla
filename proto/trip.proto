@@ -236,7 +236,7 @@ message TripLeg {
     }
     SpeedType speed_type = 65;
     bool traffic_signal = 66;
-  }
+  
     oneof has_osmid {
       uint64 begin_node_osmid = 67;
     }
