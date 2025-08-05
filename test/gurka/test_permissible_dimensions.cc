@@ -1,10 +1,11 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
 
 namespace {
-const std::vector<std::string> kSupportedCostingTypes = {"auto", "truck", "bus", "taxi", "hov"};
+const std::vector<std::string> kSupportedCostingTypes = {"auto", "truck", "bus", "taxi"};
 const std::vector<std::string> kUnsupportedCostingTypes = {"bicycle", "pedestrian", "motorcycle",
                                                            "motor_scooter"};
 } // namespace

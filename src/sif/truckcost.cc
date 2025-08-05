@@ -3,15 +3,16 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
-#include "midgard/constants.h"
-#include "midgard/util.h"
+#include "baldr/rapidjson_utils.h"
 #include "proto_conversions.h"
 #include "sif/osrm_car_duration.h"
+
 #include <cassert>
 
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
+
 #include <random>
 #endif
 
@@ -34,7 +35,8 @@ constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
 constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
 constexpr float kDefaultUseTracks = 0.f;         // Avoid tracks by default. Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets =
-    0.f; // Avoid living streets by default. Factor between 0 and 1
+    0.f;                                    // Avoid living streets by default. Factor between 0 and 1
+constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -45,6 +47,8 @@ constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse = 9.5f;
+constexpr float kTCRamp = 1.5f;
+constexpr float kTCRoundabout = 0.5f;
 
 // Default truck attributes
 constexpr float kDefaultTruckWeight = 21.77f;  // Metric Tons (48,000 lbs)
@@ -52,6 +56,7 @@ constexpr float kDefaultTruckAxleLoad = 9.07f; // Metric Tons (20,000 lbs)
 constexpr float kDefaultTruckHeight = 4.11f;   // Meters (13 feet 6 inches)
 constexpr float kDefaultTruckWidth = 2.6f;     // Meters (102.36 inches)
 constexpr float kDefaultTruckLength = 21.64f;  // Meters (71 feet)
+constexpr uint32_t kDefaultAxleCount = 5;      // 5 axles for above truck config
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -63,21 +68,47 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 
 // How much to favor truck routes.
 constexpr float kTruckRouteFactor = 0.85f;
+constexpr float kDefaultUseTruckRoute = 0.0f;
+constexpr float kMinNonTruckRouteFactor = 1.0f;
+
+constexpr float kHighwayFactor[] = {
+    1.0f, // Motorway
+    0.5f, // Trunk
+    0.0f, // Primary
+    0.0f, // Secondary
+    0.0f, // Tertiary
+    0.0f, // Unclassified
+    0.0f, // Residential
+    0.0f  // Service, other
+};
+
+constexpr float kSurfaceFactor[] = {
+    0.0f, // kPavedSmooth
+    0.0f, // kPaved
+    0.0f, // kPaveRough
+    0.1f, // kCompacted
+    0.2f, // kDirt
+    0.5f, // kGravel
+    1.0f  // kPath
+};
 
 // Valid ranges and defaults
-constexpr ranged_default_t<float> kLowClassPenaltyRange{0, kDefaultLowClassPenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kTruckWeightRange{0, kDefaultTruckWeight, 100.0f};
-constexpr ranged_default_t<float> kTruckAxleLoadRange{0, kDefaultTruckAxleLoad, 40.0f};
-constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0f};
-constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
-constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
-constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<float> kLowClassPenaltyRange{0.f, kDefaultLowClassPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kTruckWeightRange{0.f, kDefaultTruckWeight, 100.0f};
+constexpr ranged_default_t<float> kTruckAxleLoadRange{0.f, kDefaultTruckAxleLoad, 40.0f};
+constexpr ranged_default_t<float> kTruckHeightRange{0.f, kDefaultTruckHeight, 10.0f};
+constexpr ranged_default_t<float> kTruckWidthRange{0.f, kDefaultTruckWidth, 10.0f};
+constexpr ranged_default_t<float> kTruckLengthRange{0.f, kDefaultTruckLength, 50.0f};
+constexpr ranged_default_t<float> kUseTollsRange{0.f, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<uint32_t> kAxleCountRange{2, kDefaultAxleCount, 20};
+constexpr ranged_default_t<float> kUseHighwaysRange{0.f, kDefaultUseHighways, 1.0f};
+constexpr ranged_default_t<float> kTopSpeedRange{10.f, kMaxAssumedTruckSpeed, kMaxSpeedKph};
+constexpr ranged_default_t<float> kHGVNoAccessRange{0.f, kMaxPenalty, kMaxPenalty};
+constexpr ranged_default_t<float> kUseTruckRouteRange{0.f, kDefaultUseTruckRoute, 1.0f};
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
-  cfg.disable_ferry_ = true;
-  cfg.disable_rail_ferry_ = true;
   cfg.service_penalty_.def = kDefaultServicePenalty;
   cfg.use_tracks_.def = kDefaultUseTracks;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
@@ -98,7 +129,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  TruckCost(const CostingOptions& costing_options);
+  TruckCost(const Costing& costing_options);
 
   virtual ~TruckCost();
 
@@ -191,42 +222,54 @@ public:
    * the time (seconds) to traverse the edge.
    * @param  edge      Pointer to a directed edge.
    * @param  tile      Current tile.
-   * @param  seconds   Time of week in seconds.
+   * @param  time_info Time info about edge passing.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds,
+                        const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  edge  Directed edge (the to edge)
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  Predecessor edge information.
-   * @return  Returns the cost and time (seconds)
+   * @param  edge          Directed edge (the to edge)
+   * @param  node          Node (intersection) where transition occurs.
+   * @param  pred          Predecessor edge information.
+   * @param  tile          Pointer to the graph tile containing the to edge.
+   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
+   * @return Returns the cost and time (seconds)
    */
-  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
-                              const baldr::NodeInfo* node,
-                              const EdgeLabel& pred) const override;
+  virtual Cost
+  TransitionCost(const baldr::DirectedEdge* edge,
+                 const baldr::NodeInfo* node,
+                 const EdgeLabel& pred,
+                 const graph_tile_ptr& tile,
+                 const std::function<LimitedGraphReader()>& reader_getter) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
    * when using a reverse search (from destination towards the origin).
-   * @param  idx   Directed edge local index
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  the opposing current edge in the reverse tree.
-   * @param  edge  the opposing predecessor in the reverse tree
+   * @param  idx                Directed edge local index
+   * @param  node               Node (intersection) where transition occurs.
+   * @param  pred               the opposing current edge in the reverse tree.
+   * @param  edge               the opposing predecessor in the reverse tree
+   * @param  tile               Graphtile that contains the node and the opp_edge
+   * @param  edge_id            Graph ID of opp_pred_edge to get its tile if needed
+   * @param  reader_getter      Functor that facilitates access to a limited version of the graph
+   * reader
    * @param  has_measured_speed Do we have any of the measured speed types set?
-   * @param  internal_turn  Did we make an turn on a short internal edge.
+   * @param  internal_turn      Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t idx,
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* pred,
                                      const baldr::DirectedEdge* edge,
+                                     const graph_tile_ptr& tile,
+                                     const GraphId& pred_id,
+                                     const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed,
                                      const InternalTurn internal_turn) const override;
 
@@ -247,6 +290,12 @@ public:
   virtual uint8_t travel_type() const override;
 
   /**
+   * Is the current vehicle type HGV?
+   * @return  Returns whether it's a truck.
+   */
+  virtual bool is_hgv() const override;
+
+  /**
    * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
@@ -263,36 +312,40 @@ public:
   }
 
 public:
-  VehicleType type_; // Vehicle type: tractor trailer
-  std::vector<float> speedfactor_;
-  float density_factor_[16]; // Density factor
-  float toll_factor_;        // Factor applied when road has a toll
-  float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
+  VehicleType type_;        // Vehicle type: truck
+  float toll_factor_;       // Factor applied when road has a toll
+  float low_class_penalty_; // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
-  bool hazmat_;     // Carrying hazardous materials
-  float weight_;    // Vehicle weight in metric tons
-  float axle_load_; // Axle load weight in metric tons
-  float height_;    // Vehicle height in meters
-  float width_;     // Vehicle width in meters
-  float length_;    // Vehicle length in meters
+  bool hazmat_;                  // Carrying hazardous materials
+  float weight_;                 // Vehicle weight in metric tons
+  float axle_load_;              // Axle load weight in metric tons
+  float height_;                 // Vehicle height in meters
+  float width_;                  // Vehicle width in meters
+  float length_;                 // Vehicle length in meters
+  float highway_factor_;         // Factor applied when road is a motorway or trunk
+  float non_truck_route_factor_; // Factor applied when road is not part of a designated truck route
+  uint8_t axle_count_;           // Vehicle axle count
 
-  // Density factor used in edge transition costing
-  std::vector<float> trans_density_factor_;
+  // determine if we should allow hgv=no edges and penalize them instead
+  float no_hgv_access_penalty_;
 };
 
 // Constructor
-TruckCost::TruckCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kDrive, kTruckAccess, true),
-      trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
-                            1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+TruckCost::TruckCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kDrive, kTruckAccess, true) {
+  const auto& costing_options = costing.options();
 
-  type_ = VehicleType::kTractorTrailer;
+  type_ = VehicleType::kTruck;
 
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   low_class_penalty_ = costing_options.low_class_penalty();
+  non_truck_route_factor_ =
+      costing_options.use_truck_route() < 0.5f
+          ? kMinNonTruckRouteFactor + 2.f * costing_options.use_truck_route()
+          : ((kMinNonTruckRouteFactor - 5.f) + 12.f * costing_options.use_truck_route());
 
   // Get the vehicle attributes
   hazmat_ = costing_options.hazmat();
@@ -301,12 +354,21 @@ TruckCost::TruckCost(const CostingOptions& costing_options)
   height_ = costing_options.height();
   width_ = costing_options.width();
   length_ = costing_options.length();
+  axle_count_ = costing_options.axle_count();
 
   // Create speed cost table
-  speedfactor_.resize(kMaxSpeedKph + 1, 0);
-  speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
-  for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
-    speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
+  // Preference to use highways. Is a value from 0 to 1
+  // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
+  // of 0). Values between 0.5 and 1 slowly decrease to a maximum of -0.125 (to slightly prefer
+  // highways) while values between 0.5 to 0 slowly increase to a maximum of kMaxHighwayBiasFactor
+  // to avoid/penalize highways.
+  float use_highways = costing_options.use_highways();
+  if (use_highways >= 0.5f) {
+    float f = (0.5f - use_highways);
+    highway_factor_ = f * f * f;
+  } else {
+    float f = 1.0f - (use_highways * 2.0f);
+    highway_factor_ = kMaxHighwayBiasFactor * (f * f);
   }
 
   // Preference to use toll roads (separate from toll booth penalty). Sets a toll
@@ -317,9 +379,11 @@ TruckCost::TruckCost(const CostingOptions& costing_options)
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
-  for (uint32_t d = 0; d < 16; d++) {
-    density_factor_[d] = 0.85f + (d * 0.025f);
-  }
+  // determine what to do with hgv=no edges
+  bool no_hgv_access_penalty_active = !(costing_options.hgv_no_access_penalty() == kMaxPenalty);
+  no_hgv_access_penalty_ = no_hgv_access_penalty_active * costing_options.hgv_no_access_penalty();
+  // set the access mask to both car & truck if that penalty is active
+  access_mask_ = no_hgv_access_penalty_active ? (kAutoAccess | kTruckAccess) : kTruckAccess;
 }
 
 // Destructor
@@ -338,14 +402,23 @@ bool TruckCost::AllowMultiPass() const {
 }
 
 bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+
+  if (restriction.except_destination() && allow_destination_only_)
+    return true;
+
   switch (restriction.type()) {
     case AccessType::kHazmat:
-      if (hazmat_ != restriction.value()) {
+      if (hazmat_ && !restriction.value()) {
         return false;
       }
       break;
     case AccessType::kMaxAxleLoad:
       if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxAxles:
+      if (axle_count_ > static_cast<uint8_t>(restriction.value())) {
         return false;
       }
       break;
@@ -386,10 +459,11 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                                uint8_t& restriction_idx) const {
   // Check access, U-turn, and simple turn restriction.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && (!ignore_turn_restrictions_)) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile))) {
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly_hgv()) ||
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || CheckExclusions(edge, pred)) {
     return false;
   }
 
@@ -409,35 +483,59 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                uint8_t& restriction_idx) const {
   // Check access, U-turn, and simple turn restriction.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly_hgv()) ||
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
+      CheckExclusions(opp_edge, pred)) {
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
-                                           tz_index, restriction_idx);
+  return DynamicCost::EvaluateRestrictions(access_mask_, opp_edge, false, tile, opp_edgeid,
+                                           current_time, tz_index, restriction_idx);
 }
 
 // Get the cost to traverse the edge in seconds
 Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const graph_tile_ptr& tile,
-                         const uint32_t seconds,
+                         const baldr::TimeInfo& time_info,
                          uint8_t& flow_sources) const {
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, true, &flow_sources);
-  auto final_speed = std::min(edge_speed, top_speed_);
-  float sec = edge->length() * speedfactor_[final_speed];
+  auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
+                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, true,
+                                         &flow_sources, time_info.seconds_from_now)
+                        : fixed_speed_;
+
+  auto final_speed =
+      std::min(edge_speed,
+               edge->truck_speed() ? std::min(edge->truck_speed(), top_speed_) : top_speed_);
+
+  float sec = edge->length() * kSpeedFactor[final_speed];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
   }
 
-  // TODO: factor hasn't been extensively tested, might alter the speed penaltys in future
-  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
-  float factor = density_factor_[edge->density()] + speed_penalty;
+  float factor = 1.f;
+  switch (edge->use()) {
+    case Use::kFerry:
+      factor = ferry_factor_;
+      break;
+    case Use::kRailFerry:
+      factor = rail_ferry_factor_;
+      break;
+    default:
+      factor = kDensityFactor[edge->density()] +
+               highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+               kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+               SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
+      break;
+  }
+
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
+  } else {
+    factor *= non_truck_route_factor_;
   }
 
   if (edge->toll()) {
@@ -463,18 +561,24 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 // Returns the time (in seconds) to make the transition from the predecessor
 Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
-                               const EdgeLabel& pred) const {
+                               const EdgeLabel& pred,
+                               const graph_tile_ptr& /*tile*/,
+                               const std::function<LimitedGraphReader()>& /*reader_getter*/) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, idx);
+  c.secs += OSRMCarTurnDuration(edge, node, idx);
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
       edge->classification() == baldr::RoadClass::kServiceOther) {
     c.cost += low_class_penalty_;
   }
+
+  // Penalty if the request wants to avoid hgv=no edges instead of disallowing
+  c.cost +=
+      no_hgv_access_penalty_ * (pred.has_hgv_access() && !(edge->forwardaccess() & kTruckAccess));
 
   // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
@@ -489,9 +593,9 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
 
     if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
-      turn_cost += 1.5f;
+      turn_cost += kTCRamp;
       if (edge->roundabout())
-        turn_cost += 0.5f;
+        turn_cost += kTCRoundabout;
     }
 
     float seconds = turn_cost;
@@ -518,7 +622,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     if (!pred.has_measured_speed()) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
-      seconds *= trans_density_factor_[node->density()];
+      seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
   }
@@ -533,6 +637,9 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                                       const baldr::NodeInfo* node,
                                       const baldr::DirectedEdge* pred,
                                       const baldr::DirectedEdge* edge,
+                                      const graph_tile_ptr& /*tile*/,
+                                      const GraphId& /*pred_id*/,
+                                      const std::function<LimitedGraphReader()>& /*reader_getter*/,
                                       const bool has_measured_speed,
                                       const InternalTurn internal_turn) const {
 
@@ -541,13 +648,17 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
       edge->classification() == baldr::RoadClass::kServiceOther) {
     c.cost += low_class_penalty_;
   }
+
+  // Penalty if the request wants to avoid hgv=no edges instead of disallowing
+  c.cost += no_hgv_access_penalty_ *
+            ((pred->forwardaccess() & kTruckAccess) && !(edge->forwardaccess() & kTruckAccess));
 
   // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
@@ -562,9 +673,9 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 
     if ((edge->use() != Use::kRamp && pred->use() == Use::kRamp) ||
         (edge->use() == Use::kRamp && pred->use() != Use::kRamp)) {
-      turn_cost += 1.5f;
+      turn_cost += kTCRamp;
       if (edge->roundabout())
-        turn_cost += 0.5f;
+        turn_cost += kTCRoundabout;
     }
 
     float seconds = turn_cost;
@@ -590,7 +701,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     if (!has_measured_speed) {
       if (!is_turn)
         seconds *= edge->stopimpact(idx);
-      seconds *= trans_density_factor_[node->density()];
+      seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
   }
@@ -604,7 +715,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  return speedfactor_[top_speed_];
+  return kSpeedFactor[top_speed_];
 }
 
 // Returns the current travel type.
@@ -612,75 +723,38 @@ uint8_t TruckCost::travel_type() const {
   return static_cast<uint8_t>(type_);
 }
 
-void ParseTruckCostOptions(const rapidjson::Document& doc,
-                           const std::string& costing_options_key,
-                           CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::truck);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
-
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
-    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
-
-    // If specified, parse json and set pbf values
-
-    // low_class_penalty
-    pbf_costing_options->set_low_class_penalty(kLowClassPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/low_class_penalty")
-            .get_value_or(kDefaultLowClassPenalty)));
-
-    // hazmat
-    pbf_costing_options->set_hazmat(
-        rapidjson::get_optional<bool>(*json_costing_options, "/hazmat").get_value_or(false));
-
-    // weight
-    pbf_costing_options->set_weight(
-        kTruckWeightRange(rapidjson::get_optional<float>(*json_costing_options, "/weight")
-                              .get_value_or(kDefaultTruckWeight)));
-
-    // axle_load
-    pbf_costing_options->set_axle_load(
-        kTruckAxleLoadRange(rapidjson::get_optional<float>(*json_costing_options, "/axle_load")
-                                .get_value_or(kDefaultTruckAxleLoad)));
-
-    // height
-    pbf_costing_options->set_height(
-        kTruckHeightRange(rapidjson::get_optional<float>(*json_costing_options, "/height")
-                              .get_value_or(kDefaultTruckHeight)));
-
-    // width
-    pbf_costing_options->set_width(
-        kTruckWidthRange(rapidjson::get_optional<float>(*json_costing_options, "/width")
-                             .get_value_or(kDefaultTruckWidth)));
-
-    // length
-    pbf_costing_options->set_length(
-        kTruckLengthRange(rapidjson::get_optional<float>(*json_costing_options, "/length")
-                              .get_value_or(kDefaultTruckLength)));
-
-    // use_tolls
-    pbf_costing_options->set_use_tolls(
-        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
-                           .get_value_or(kDefaultUseTolls)));
-  } else {
-    // Set pbf values to defaults
-    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
-
-    pbf_costing_options->set_low_class_penalty(kDefaultLowClassPenalty);
-    pbf_costing_options->set_hazmat(false);
-    pbf_costing_options->set_weight(kDefaultTruckWeight);
-    pbf_costing_options->set_axle_load(kDefaultTruckAxleLoad);
-    pbf_costing_options->set_height(kDefaultTruckHeight);
-    pbf_costing_options->set_width(kDefaultTruckWidth);
-    pbf_costing_options->set_length(kDefaultTruckLength);
-    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
-    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
-  }
+bool TruckCost::is_hgv() const {
+  return true;
 }
 
-cost_ptr_t CreateTruckCost(const CostingOptions& costing_options) {
+void ParseTruckCostOptions(const rapidjson::Document& doc,
+                           const std::string& costing_options_key,
+                           Costing* c) {
+  c->set_type(Costing::truck);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
+
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
+
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
+  JSON_PBF_RANGED_DEFAULT(co, kLowClassPenaltyRange, json, "/low_class_penalty", low_class_penalty);
+  JSON_PBF_DEFAULT(co, false, json, "/hazmat", hazmat);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckWeightRange, json, "/weight", weight);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckAxleLoadRange, json, "/axle_load", axle_load);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckHeightRange, json, "/height", height);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
+  JSON_PBF_RANGED_DEFAULT_V2(co, kAxleCountRange, json, "/axle_count", axle_count);
+  JSON_PBF_RANGED_DEFAULT(co, kTopSpeedRange, json, "/top_speed", top_speed);
+  JSON_PBF_RANGED_DEFAULT(co, kHGVNoAccessRange, json, "/hgv_no_access_penalty",
+                          hgv_no_access_penalty);
+  JSON_PBF_RANGED_DEFAULT_V2(co, kUseTruckRouteRange, json, "/use_truck_route", use_truck_route);
+}
+
+cost_ptr_t CreateTruckCost(const Costing& costing_options) {
   return std::make_shared<TruckCost>(costing_options);
 }
 
@@ -698,7 +772,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const CostingOptions& costing_options) : TruckCost(costing_options){};
+  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options){};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
@@ -713,10 +787,11 @@ public:
 
 TestTruckCost* make_truckcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "truck", "costing_options":{"truck":{")" << property << R"(":)" << testVal
+     << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestTruckCost(request.options().costing_options(static_cast<int>(Costing::truck)));
+  return new TestTruckCost(request.options().costings().find(Costing::truck)->second);
 }
 
 std::uniform_real_distribution<float>*
@@ -810,7 +885,13 @@ TEST(TruckCost, testTruckCostParams) {
                                     defaults.country_crossing_cost_.def));
   }
 
-  // Ferry transition cost and ferry use not yet supported
+  // ferry_transition_cost_ (Cost.secs)
+  distributor.reset(make_distributor_from_range(defaults.ferry_cost_));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_truckcost_from_json("ferry_cost", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->ferry_transition_cost_.secs,
+                test::IsBetween(defaults.ferry_cost_.min, defaults.ferry_cost_.max));
+  }
 
   // low_class_penalty_
   distributor.reset(make_distributor_from_range(kLowClassPenaltyRange));

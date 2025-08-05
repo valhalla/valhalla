@@ -36,7 +36,7 @@ public:
     valhalla_exception_t e(code);
     if (!e.statsd_key.empty()) {
       Api request;
-      jsonify_error(e, request);
+      serialize_error(e, request);
       service_worker_t::enqueue_statistics(request);
       service_worker_t::cleanup();
     }
@@ -54,7 +54,7 @@ public:
   std::string service_name() const override {
     return "test";
   }
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   virtual prime_server::worker_t::result_t
   work(const std::list<zmq::message_t>&, void*, const std::function<void()>&) {
     throw std::runtime_error("We arent testing the work method directly");

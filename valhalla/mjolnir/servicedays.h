@@ -1,18 +1,14 @@
 #ifndef VALHALLA_MJOLNIR_SERVICEDAYS_H
 #define VALHALLA_MJOLNIR_SERVICEDAYS_H
 
+#include <valhalla/baldr/datetime.h>
+#include <valhalla/baldr/graphconstants.h>
+
 #include <cstdint>
 #include <ctime>
 #include <iomanip>
-#include <iostream>
-#include <locale>
-#include <memory>
-#include <sstream>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace mjolnir {

@@ -1,14 +1,14 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_H_
 
+#include <valhalla/odin/markup_formatter.h>
+#include <valhalla/odin/sign.h>
+
 #include <regex>
 #include <string>
 
 namespace valhalla {
 namespace baldr {
-
-// Regular expression to find numbers
-const std::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
 
 /**
  * The generic verbal text formatter class that prepares strings for use with
@@ -21,9 +21,34 @@ public:
   virtual ~VerbalTextFormatter();
 
   /**
+   * Returns a text-to-speech formatted string based on the specified street name.
+   *
+   * @param  street_name  the source street name to transform.
+   * @param  markup_formatter  the optional markup formatter that could be used.
+   *
+   * @return a text-to-speech formatted string based on the specified street name and markup
+   * formatter.
+   */
+  virtual std::string Format(const std::unique_ptr<baldr::StreetName>& street_name,
+                             const odin::MarkupFormatter* markup_formatter = nullptr) const;
+
+  /**
+   * Returns a text-to-speech formatted string based on the specified sign.
+   *
+   * @param  sign  the source sign to transform.
+   * @param  markup_formatter  the optional markup formatter that could be used.
+   *
+   * @return a text-to-speech formatted string based on the specified sign and markup
+   * formatter.
+   */
+  virtual std::string Format(const odin::Sign& sign,
+                             const odin::MarkupFormatter* markup_formatter = nullptr) const;
+
+  /**
    * Returns a text-to-speech formatted string based on the specified text.
    *
    * @param  text  the source string to transform.
+   *
    * @return a text-to-speech formatted string based on the specified text.
    */
   virtual std::string Format(const std::string& text) const;

@@ -173,7 +173,8 @@ void SetCountryAccess(DirectedEdge& directededge,
                         r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);
     reverse = GetAccess(reverse, country_access.at(static_cast<uint32_t>(AccessTypes::kTrack)),
                         f_oneway_vehicle, f_oneway_bicycle, f_oneway_pedestrian, user_access);
-  } else if (directededge.use() == Use::kFootway &&
+  } else if ((directededge.use() == Use::kFootway || directededge.use() == Use::kSidewalk ||
+              directededge.use() == Use::kPedestrianCrossing) &&
              country_access.at(static_cast<uint32_t>(AccessTypes::kFootway)) != -1) {
     forward = GetAccess(forward, country_access.at(static_cast<uint32_t>(AccessTypes::kFootway)),
                         r_oneway_vehicle, r_oneway_bicycle, r_oneway_pedestrian, user_access);

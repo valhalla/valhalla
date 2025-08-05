@@ -76,3 +76,31 @@ TEST(Alternates, test_long_route) {
   EXPECT_EQ(paths[2], std::vector<std::string>({"AB", "BGHC", "CD"}))
       << "Wrong second alternative route";
 }
+
+TEST(Alternates, test_too_long_detour) {
+  const std::string ascii_map = R"(
+       A------------B-C------------D
+                    | |
+                    | |
+                    | |
+                    | |
+                    | |
+                    E-F
+    )";
+
+  const gurka::ways ways = {
+      {"ABCD", {{"highway", "primary"}, {"maxspeed", "60"}}},
+      {"BE", {{"highway", "motorway"}, {"maxspeed", "120"}}},
+      {"EF", {{"highway", "motorway"}, {"maxspeed", "120"}}},
+      {"FC", {{"highway", "motorway"}, {"maxspeed", "120"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 2000);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/alternates_too_long_detour");
+
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto", {{"/alternates", "1"}});
+  const auto paths = gurka::detail::get_paths(result);
+
+  ASSERT_EQ(paths.size(), 1) << "Got alternative with too long detour";
+}

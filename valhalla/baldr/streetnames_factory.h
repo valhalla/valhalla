@@ -1,11 +1,12 @@
 #ifndef VALHALLA_BALDR_STREETNAMES_FACTORY_H_
 #define VALHALLA_BALDR_STREETNAMES_FACTORY_H_
 
+#include <valhalla/baldr/streetnames.h>
+#include <valhalla/proto/common.pb.h>
+
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/streetnames.h>
 
 namespace valhalla {
 namespace baldr {
@@ -16,6 +17,10 @@ public:
 
   static std::unique_ptr<StreetNames> Create(const std::string& country_code,
                                              const std::vector<std::pair<std::string, bool>>& names);
+
+  static std::unique_ptr<StreetNames>
+  Create(const std::string& country_code,
+         const google::protobuf::RepeatedPtrField<valhalla::StreetName>& names);
 };
 
 } // namespace baldr

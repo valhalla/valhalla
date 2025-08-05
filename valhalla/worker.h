@@ -1,14 +1,12 @@
 #ifndef __VALHALLA_SERVICE_H__
 #define __VALHALLA_SERVICE_H__
-#include <string>
-
-#include <valhalla/baldr/json.h>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/midgard/util.h>
 #include <valhalla/proto/api.pb.h>
+#include <valhalla/sif/dynamiccost.h>
 #include <valhalla/valhalla.h>
 
-#ifdef HAVE_HTTP
+#include <string>
+
+#ifdef ENABLE_SERVICES
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 #endif
@@ -16,6 +14,11 @@
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
+
+struct hierarchy_limits_config_t {
+  std::vector<HierarchyLimits> max_limits;
+  std::vector<HierarchyLimits> default_limits;
+};
 
 /**
  * Project specific error messages and codes that can be converted to http responses
@@ -48,31 +51,88 @@ struct valhalla_exception_t : public std::runtime_error {
   std::string statsd_key;
 };
 
-// TODO: this will go away and Options will be the request object
+/**
+ * Take the json OR pbf request and parse/validate it. If you pass anything but an empty string
+ * for the json request the pbf contents are ignored. If the json request is empty it is assumed
+ * the pbf is filled out.
+ *
+ * @param json_request  A json string in the APIs request format
+ * @param action        Which action to perform
+ * @param api           The pbf request, this will be modified either with the json provided or, if
+ *                      already filled out, it will be validated and the json will be ignored
+ */
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
-#ifdef HAVE_HTTP
+
+/**
+ * Parse hierarchy limits from config. Falls back to default values if none are found at the
+ * given path.
+ *
+ * @param config         the property tree to read from.
+ * @param hierarchy      name of the algorithm to parse from the right config section
+ * @param uses_dist      if true, also parses values for 'expansion within distance'
+ */
+hierarchy_limits_config_t
+parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
+                                   const std::string& path,
+                                   const bool uses_dist);
+
+/**
+ * See if the user supplied custom hierarchy limits and possible override with defaults or clamp
+ * to max allowed values.
+ *
+ * @param hierarchy_limits    user supplied hierarchy limits
+ * @param cost                mode costing
+ * @param config              the max allowed/default hierarchy limits
+ * @param allow_modifications whether modifications are allowed
+ *
+ * @return true if the user passed hierarchy limits but they needed to be tampered with
+ */
+bool check_hierarchy_limits(std::vector<HierarchyLimits>& hierarchy_limits,
+                            sif::cost_ptr_t& cost,
+                            const valhalla::Costing_Options& options,
+                            const hierarchy_limits_config_t& config,
+                            const bool allow_modifications,
+                            const bool use_hierarchy_limits);
+#ifdef ENABLE_SERVICES
+/**
+ * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
+ * it is assumed that the body of the request is protobuf bytes and any json will be ignored. Likewise
+ * if no protobuf mime was passed then we assume json is either in the body or the query params.
+ *
+ * @param http_request  The http request object from which we get the request info
+ * @param api           The pbf request, this will be modified either with the json provided or, if
+ *                      pbf bytes were passed, they will be deserialized into this object and any json
+ *                      will be ignored
+ */
 void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
 
-std::string jsonify_error(const valhalla_exception_t& exception, Api& options);
-#ifdef HAVE_HTTP
-prime_server::worker_t::result_t jsonify_error(const valhalla_exception_t& exception,
-                                               prime_server::http_request_info_t& request_info,
-                                               Api& options);
+std::string serialize_error(const valhalla_exception_t& exception, Api& options);
+
+/**
+ * Adds a warning to the request PBF object.
+ *
+ * @param api   the full request
+ * @param code  the warning code
+ * @param extra an optional string to append to the hard-coded warning message
+ */
+void add_warning(valhalla::Api& api, unsigned code, const std::string& extra = "");
+
+#ifdef ENABLE_SERVICES
+prime_server::worker_t::result_t serialize_error(const valhalla_exception_t& exception,
+                                                 prime_server::http_request_info_t& request_info,
+                                                 Api& options);
 namespace worker {
 using content_type = prime_server::headers_t::value_type;
 const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 const content_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
-const content_type XML_MIME{"Content-type", "text/xml;charset=utf-8"};
+const content_type PBF_MIME{"Content-type", "application/x-protobuf"};
 const content_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
 } // namespace worker
 
-prime_server::worker_t::result_t
-to_response(const std::string& data,
-            prime_server::http_request_info_t& request_info,
-            const Api& options,
-            const worker::content_type& content_type = worker::JSON_MIME,
-            const bool as_attachment = false);
+prime_server::worker_t::result_t to_response(const std::string& data,
+                                             prime_server::http_request_info_t& request_info,
+                                             const Api& options);
 #endif
 
 struct statsd_client_t;
@@ -82,7 +142,7 @@ public:
 
   virtual ~service_worker_t();
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   /**
    * The main work function that stages in the prime_server will call when responding to requests
    *

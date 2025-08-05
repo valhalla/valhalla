@@ -1,8 +1,9 @@
+#include "baldr/json.h"
+#include "baldr/pathlocation.h"
+#include "tyr/serializers.h"
+
 #include <cstdint>
 #include <unordered_set>
-
-#include "baldr/json.h"
-#include "tyr/serializers.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;

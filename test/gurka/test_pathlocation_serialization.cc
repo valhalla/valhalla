@@ -5,8 +5,6 @@
 // with the same properties.
 //
 
-#include <boost/property_tree/ptree.hpp>
-
 #include "baldr/pathlocation.h"
 #include "gurka.h"
 
@@ -96,15 +94,15 @@ TEST_F(PathlocationSerialization, TestEdges) {
 
   valhalla::Location pbfloc;
   PathLocation::toPBF(loc, &pbfloc, reader);
-  EXPECT_EQ(pbfloc.path_edges_size(), 1);
-  EXPECT_EQ(pbfloc.filtered_edges_size(), 0);
+  EXPECT_EQ(pbfloc.correlation().edges_size(), 1);
+  EXPECT_EQ(pbfloc.correlation().filtered_edges_size(), 0);
 
   loc.edges.clear();
   loc.filtered_edges.emplace_back(PathLocation::PathEdge{++id, 1, PointLL{50, 50}, 10});
   pbfloc.Clear();
   PathLocation::toPBF(loc, &pbfloc, reader);
-  EXPECT_EQ(pbfloc.path_edges_size(), 0);
-  EXPECT_EQ(pbfloc.filtered_edges_size(), 1);
+  EXPECT_EQ(pbfloc.correlation().edges_size(), 0);
+  EXPECT_EQ(pbfloc.correlation().filtered_edges_size(), 1);
 }
 
 } // namespace

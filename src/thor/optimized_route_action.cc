@@ -1,9 +1,3 @@
-#include "midgard/constants.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/pedestriancost.h"
 #include "thor/costmatrix.h"
 #include "thor/optimizer.h"
 #include "thor/worker.h"
@@ -21,16 +15,15 @@ void thor_worker_t::optimized_route(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  parse_locations(request);
-  parse_filter_attributes(request);
-  auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
+  adjust_scores(options);
+  auto costing = parse_costing(request);
+  controller = AttributesController(options);
 
   // Use CostMatrix to find costs from each location to every other location
-  CostMatrix costmatrix;
-  std::vector<thor::TimeDistance> td =
-      costmatrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                                max_matrix_distance.find(costing)->second);
+  costmatrix_.set_has_time(check_matrix_time(request, Matrix::CostMatrix));
+  costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
+                             max_matrix_distance.find(costing)->second);
 
   // Return an error if any locations are totally unreachable
   const auto& correlated =
@@ -39,7 +32,8 @@ void thor_worker_t::optimized_route(Api& request) {
   // Set time costs to send to Optimizer.
   std::vector<float> time_costs;
   bool reachable = true;
-  for (size_t i = 0; i < td.size(); ++i) {
+  const auto tds = request.matrix().times();
+  for (size_t i = 0; i < tds.size(); ++i) {
     // If any location is completely unreachable then we cant have a connected path
     if (i % correlated.size() == 0) {
       if (!reachable) {
@@ -47,9 +41,9 @@ void thor_worker_t::optimized_route(Api& request) {
       };
       reachable = false;
     }
-    reachable = reachable || td[i].time != kMaxCost;
+    reachable = reachable || tds.Get(i) != kMaxCost;
     // Keep the times for the reordering
-    time_costs.emplace_back(static_cast<float>(td[i].time));
+    time_costs.emplace_back(static_cast<float>(tds.Get(i)));
   }
 
   Optimizer optimizer;

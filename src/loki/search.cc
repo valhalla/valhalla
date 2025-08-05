@@ -3,13 +3,11 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/reach.h"
 #include "midgard/distanceapproximator.h"
-#include "midgard/linesegment2.h"
 #include "midgard/util.h"
 
 #include <algorithm>
 #include <cmath>
 #include <iterator>
-#include <list>
 #include <unordered_set>
 
 using namespace valhalla::midgard;
@@ -23,24 +21,26 @@ template <typename T> inline T square(T v) {
   return v * v;
 }
 
-bool is_search_filter_triggered(const DirectedEdge* edge,
-                                const DynamicCost& costing,
-                                const graph_tile_ptr& tile,
-                                const Location::SearchFilter& search_filter) {
+bool search_filter(const DirectedEdge* edge,
+                   const DynamicCost& costing,
+                   const graph_tile_ptr& tile,
+                   const Location::SearchFilter& filter) {
   // check if this edge matches any of the exclusion filters
   uint32_t road_class = static_cast<uint32_t>(edge->classification());
-  uint32_t min_road_class = static_cast<uint32_t>(search_filter.min_road_class_);
-  uint32_t max_road_class = static_cast<uint32_t>(search_filter.max_road_class_);
+  uint32_t min_road_class = static_cast<uint32_t>(filter.min_road_class_);
+  uint32_t max_road_class = static_cast<uint32_t>(filter.max_road_class_);
 
   // Note that min_ and max_road_class are integers where, by default, max_road_class
   // is 0 and min_road_class is 7. This filter rejects roads where the functional
   // road class is outside of the min to max range.
   return (road_class > min_road_class || road_class < max_road_class) ||
-         (search_filter.exclude_tunnel_ && edge->tunnel()) ||
-         (search_filter.exclude_bridge_ && edge->bridge()) ||
-         (search_filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
-         (search_filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
-          tile->IsClosed(edge));
+         (filter.exclude_tunnel_ && edge->tunnel()) || (filter.exclude_bridge_ && edge->bridge()) ||
+         (filter.exclude_toll_ && edge->toll()) ||
+         (filter.exclude_ramp_ && (edge->use() == Use::kRamp)) ||
+         (filter.exclude_ferry_ && (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry)) ||
+         (filter.exclude_closures_ && (costing.flow_mask() & kCurrentFlowMask) &&
+          tile->IsClosed(edge)) ||
+         (filter.level_ != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level_));
 }
 
 bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
@@ -49,15 +49,24 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
       location.preferred_side_ == Location::PreferredSide::EITHER)
     return false;
 
-  // need the driving side for this edge
+  // need this for further checking of driving side and road class
   graph_tile_ptr tile;
   auto* opp = reader.GetOpposingEdge(edge.id, tile);
   if (!opp)
     return false;
+
+  // nothing to filter if it is a minor road
+  // since motorway = 0 and service = 7, higher number means smaller road class
+  uint32_t road_class = static_cast<uint32_t>(opp->classification());
+  if (road_class > location.street_side_cutoff_)
+    return false;
+
+  // need the driving side for this edge
   auto* node = reader.GetEndNode(opp, tile);
   if (!node)
     return false;
-  // if its on the right side and you drive on the rigth OR if its not on the right and you dont drive
+
+  // if its on the right side and you drive on the right OR if its not on the right and you dont drive
   // on the right THEN its the same side that you drive on
   bool same = node->drive_on_right() == (edge.sos == PathLocation::SideOfStreet::RIGHT);
   // and then if you were asking for the same and it was the same OR if you were asking for opposite
@@ -79,6 +88,15 @@ bool heading_filter(const Location& location, float angle) {
   }
   return std::min(angle - *location.heading_, (360.f - angle) + *location.heading_) >
          location.heading_tolerance_;
+}
+
+bool layer_filter(const Location& location, int8_t layer) {
+  // no layer - we do not filter
+  if (!location.preferred_layer_) {
+    return false;
+  }
+
+  return *location.preferred_layer_ != layer;
 }
 
 PathLocation::SideOfStreet flip_side(const PathLocation::SideOfStreet side) {
@@ -296,17 +314,22 @@ struct bin_handler_t {
         GraphId id = tile->id();
         id.set_id(node->edge_index() + (edge - start_edge));
         auto info = tile->edgeinfo(edge);
+
         // calculate the heading of the snapped point to the shape for use in heading filter
         size_t index = edge->forward() ? 0 : info.shape().size() - 2;
         float angle =
             tangent_angle(index, candidate.point, info.shape(),
                           GetOffsetForHeading(edge->classification(), edge->use()), edge->forward());
-        // do we want this edge
-        if (costing->Allowed(edge, tile, kDisallowShortcut)) {
+        auto layer = info.layer();
+        // do we want this edge, note we have to re-evaluate the filter check because we may be
+        // seeing these edges a second time (filtered out before)
+        if (costing->Allowed(edge, tile, kDisallowShortcut) &&
+            !search_filter(edge, *costing, tile, location.search_filter_)) {
           auto reach = get_reach(id, edge);
           PathLocation::PathEdge
-              path_edge{id, 0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound};
-          if (heading_filter(location, angle)) {
+              path_edge{id,   0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound,
+                        angle};
+          if (heading_filter(location, angle) || layer_filter(location, layer)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
@@ -320,7 +343,9 @@ struct bin_handler_t {
         if (!other_edge)
           continue;
 
-        if (costing->Allowed(other_edge, other_tile, kDisallowShortcut)) {
+        if (costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
+            !search_filter(other_edge, *costing, other_tile, location.search_filter_)) {
+          auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
           PathLocation::PathEdge path_edge{other_id,
                                            1,
@@ -328,9 +353,10 @@ struct bin_handler_t {
                                            distance,
                                            PathLocation::NONE,
                                            reach.outbound,
-                                           reach.inbound};
+                                           reach.inbound,
+                                           opp_angle};
           // angle is 180 degrees opposite direction of the one above
-          if (heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
+          if (heading_filter(location, opp_angle) || layer_filter(location, layer)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
             correlated.edges.push_back(std::move(path_edge));
@@ -382,6 +408,7 @@ struct bin_handler_t {
           tangent_angle(candidate.index, candidate.point, candidate.edge_info->shape(),
                         GetOffsetForHeading(candidate.edge->classification(), candidate.edge->use()),
                         candidate.edge->forward());
+      auto layer = candidate.edge_info->layer();
       auto sq_tolerance = square(double(location.street_side_tolerance_));
       auto sq_max_distance = square(double(location.street_side_max_distance_));
       auto side =
@@ -394,11 +421,14 @@ struct bin_handler_t {
       auto reach = get_reach(candidate.edge_id, candidate.edge);
       PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
                                        distance,          side,         reach.outbound,
-                                       reach.inbound};
-      // correlate the edge we found
-      if (side_filter(path_edge, location, reader) || heading_filter(location, angle)) {
+                                       reach.inbound,     angle};
+      // correlate the edge we found if its not filtered out
+      bool hard_filtered =
+          search_filter(candidate.edge, *costing, candidate.tile, location.search_filter_);
+      if (!hard_filtered && (side_filter(path_edge, location, reader) ||
+                             heading_filter(location, angle) || layer_filter(location, layer))) {
         filtered.push_back(std::move(path_edge));
-      } else if (correlated_edges.insert(candidate.edge_id).second) {
+      } else if (!hard_filtered && correlated_edges.insert(candidate.edge_id).second) {
         correlated.edges.push_back(std::move(path_edge));
       }
       // correlate its evil twin
@@ -406,14 +436,16 @@ struct bin_handler_t {
       graph_tile_ptr other_tile;
       auto opposing_edge_id = reader.GetOpposingEdgeId(candidate.edge_id, other_edge, other_tile);
 
-      if (other_edge && costing->Allowed(other_edge, other_tile, kDisallowShortcut)) {
+      if (other_edge && costing->Allowed(other_edge, other_tile, kDisallowShortcut) &&
+          !search_filter(other_edge, *costing, other_tile, location.search_filter_)) {
+        auto opp_angle = std::fmod(angle + 180.f, 360.f);
         reach = get_reach(opposing_edge_id, other_edge);
         PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
                                                distance,         flip_side(side),  reach.outbound,
-                                               reach.inbound};
+                                               reach.inbound,    opp_angle};
         // angle is 180 degrees opposite of the one above
-        if (side_filter(other_path_edge, location, reader) ||
-            heading_filter(location, std::fmod(angle + 180.f, 360.f))) {
+        if (side_filter(other_path_edge, location, reader) || heading_filter(location, opp_angle) ||
+            layer_filter(location, layer)) {
           filtered.push_back(std::move(other_path_edge));
         } else if (correlated_edges.insert(opposing_edge_id).second) {
           correlated.edges.push_back(std::move(other_path_edge));
@@ -489,14 +521,22 @@ struct bin_handler_t {
         continue;
       }
 
+      // lots of places below where we might like to know about the opp edge
+      const DirectedEdge* opp_edge = nullptr;
+      graph_tile_ptr opp_tile = tile;
+      GraphId opp_edgeid;
+
       // if this edge is filtered
       const auto* edge = tile->directededge(edge_id);
       if (!costing->Allowed(edge, tile, kDisallowShortcut)) {
-        // then we try its opposing edge
-        edge_id = reader.GetOpposingEdgeId(edge_id, edge, tile);
         // but if we couldnt get it or its filtered too then we move on
-        if (!edge_id.Is_Valid() || !costing->Allowed(edge, tile, kDisallowShortcut))
+        if (!(opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) ||
+            !costing->Allowed(opp_edge, opp_tile, kDisallowShortcut))
           continue;
+        // if we will continue with the opposing edge lets swap it in
+        std::swap(edge, opp_edge);
+        std::swap(tile, opp_tile);
+        std::swap(edge_id, opp_edgeid);
       }
 
       // initialize candidates vector:
@@ -507,8 +547,12 @@ struct bin_handler_t {
       bool all_prefiltered = true;
       for (p_itr = begin; p_itr != end; ++p_itr, ++c_itr) {
         c_itr->sq_distance = std::numeric_limits<double>::max();
+        // for traffic closures we may have only one direction disabled so we must also check opp
+        // before we can be sure that we can completely filter this edge pair for this location
         c_itr->prefiltered =
-            is_search_filter_triggered(edge, *costing, tile, p_itr->location.search_filter_);
+            search_filter(edge, *costing, tile, p_itr->location.search_filter_) &&
+            (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
+            search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_);
         // set to false if even one candidate was not filtered
         all_prefiltered = all_prefiltered && c_itr->prefiltered;
       }
@@ -570,12 +614,10 @@ struct bin_handler_t {
         // is this edge reachable in the right way
         bool reachable = reach.outbound >= p_itr->location.min_outbound_reach_ &&
                          reach.inbound >= p_itr->location.min_inbound_reach_;
-        const DirectedEdge* opp_edge = nullptr;
-        graph_tile_ptr opp_tile = tile;
-        GraphId opp_edgeid;
         // it's possible that it isnt reachable but the opposing is, switch to that if so
         if (!reachable && (opp_edgeid = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)) &&
-            costing->Allowed(opp_edge, opp_tile, kDisallowShortcut)) {
+            costing->Allowed(opp_edge, opp_tile, kDisallowShortcut) &&
+            !search_filter(opp_edge, *costing, opp_tile, p_itr->location.search_filter_)) {
           auto opp_reach = check_reachability(begin, end, opp_tile, opp_edge, opp_edgeid);
           if (opp_reach.outbound >= p_itr->location.min_outbound_reach_ &&
               opp_reach.inbound >= p_itr->location.min_inbound_reach_) {

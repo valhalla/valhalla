@@ -1,6 +1,5 @@
 #include "baldr/nodetransition.h"
 #include "baldr/graphid.h"
-
 #include "test.h"
 
 using namespace std;

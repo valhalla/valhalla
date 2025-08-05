@@ -1,5 +1,5 @@
 #include "gurka.h"
-#include <boost/format.hpp>
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -44,8 +44,6 @@ protected:
   }
 };
 gurka::map NodeType::map = {};
-Api api;
-rapidjson::Document d;
 
 /*************************************************************/
 
@@ -69,10 +67,10 @@ TEST_F(NodeType, test_toll_response) {
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
-  auto json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})",
-                          {}, &api);
+  auto json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})");
 
   // get the osrm json
+  rapidjson::Document d;
   d.Parse(json);
   EXPECT_FALSE(d.HasParseError());
 
@@ -102,10 +100,10 @@ TEST_F(NodeType, test_toll_response2) {
 
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
-  auto json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})",
-                          {}, &api);
+  auto json = actor.route(R"({"costing":"auto","format":"osrm","locations":[)" + locations + R"(]})");
 
   // get the osrm json
+  rapidjson::Document d;
   d.Parse(json);
   EXPECT_FALSE(d.HasParseError());
 

@@ -12,35 +12,20 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "loki/worker.h"
 #include "midgard/constants.h"
-#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
-#include "mjolnir/util.h"
 #include "odin/worker.h"
-#include "proto/trip.pb.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
-#include <osmium/builder/attr.hpp>
-#include <osmium/builder/osm_object_builder.hpp>
-#include <osmium/io/output_iterator.hpp>
-#include <osmium/io/pbf_output.hpp>
-#include <osmium/object_pointer_collection.hpp>
-#include <osmium/osm/object_comparisons.hpp>
-
-#include <regex>
 #include <string>
 #include <tuple>
-
-#include <gtest/gtest.h>
 
 namespace valhalla {
 namespace gurka {
@@ -89,7 +74,8 @@ void build_pbf(const nodelayout& node_locations,
                const nodes& nodes,
                const relations& relations,
                const std::string& filename,
-               const uint64_t initial_osm_id = 0);
+               const uint64_t initial_osm_id = 0,
+               const bool strict = true);
 
 /**
  * Extract list of edge names from route result.
@@ -97,6 +83,22 @@ void build_pbf(const nodelayout& node_locations,
  * @return list of edge names
  */
 std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result);
+
+/**
+ * build a valhalla json request body
+ *
+ * @param location_types vector of locations or shape, sources, targets
+ * @param waypoints      all pointll sequences for all location types
+ * @param costing        which costing name to use, defaults to auto
+ * @param options        overrides parts of the request, supports rapidjson pointer semantics
+ * @param stop_type      break, through, via, break_through
+ * @return json string
+ */
+std::string build_valhalla_request(const std::vector<std::string>& location_types,
+                                   const std::vector<std::vector<midgard::PointLL>>& waypoints,
+                                   const std::string& costing = "auto",
+                                   const std::unordered_map<std::string, std::string>& options = {},
+                                   const std::string& stop_type = "break");
 } // namespace detail
 
 /**
@@ -123,6 +125,24 @@ map buildtiles(const nodelayout& layout,
                    {"mjolnir.concurrency", "1"}});
 
 /**
+ * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,
+ * and builds a set of Valhalla tiles for it.
+ *
+ * @param layout the locations of all the nodes
+ * @param ways the way definitions (which nodes are connected, and their properties
+ * @param nodes properties on any of the defined nodes
+ * @param relations OSM relations that related nodes and ways together
+ * @param config fully fledged valhalla config, the mjolnir section is used to build tiles
+ * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
+ *         (for converting node names to coordinates)
+ */
+map buildtiles(const nodelayout& layout,
+               const ways& ways,
+               const nodes& nodes,
+               const relations& relations,
+               const boost::property_tree::ptree& config);
+
+/**
  * Finds a directed edge in the generated map.  Helpful because the IDs assigned
  * to edges depends on the shape of the map.
  *
@@ -131,6 +151,7 @@ map buildtiles(const nodelayout& layout,
  * @param way_name the way name you want a directed edge for
  * @param end_node the node that should be the target of the directed edge you want
  * @param tile_id optional tile_id to limit the search to
+ * @param way_id optional way_id to limit the search to
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,
@@ -141,7 +162,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
          const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
-         const baldr::GraphId& tile_id = baldr::GraphId{});
+         baldr::GraphId tile_id = baldr::GraphId{},
+         uint64_t way_id = 0,
+         const bool is_shortcut = false);
 
 /**
  * Finds an edge in the graph based on its begin and end node names
@@ -151,11 +174,26 @@ findEdge(valhalla::baldr::GraphReader& reader,
  * @param end_node_name    name of the end node
  * @return the edge_id and its edge
  */
-std::tuple<const baldr::GraphId, const baldr::DirectedEdge*>
+std::tuple<baldr::GraphId, const baldr::DirectedEdge*>
 findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const nodelayout& nodes,
                 const std::string& begin_node_name,
                 const std::string& end_node_name);
+
+/**
+ * Finds a node in the graph based on its node name
+ *
+ * @param reader           graph reader to look up tiles and edges
+ * @param nodes            a lookup table from node names to coordinates
+ * @param node_name        name of the node
+ * @return the node_id
+ */
+baldr::GraphId
+findNode(valhalla::baldr::GraphReader& reader, const nodelayout& nodes, const std::string& node_name);
+
+std::string do_action(const map& map,
+                      valhalla::Api& api,
+                      std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
 
 valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
@@ -170,7 +208,19 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::unordered_map<std::string, std::string>& options = {},
                         std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
                         std::string* json = nullptr,
-                        const std::string& stop_type = "break");
+                        const std::string& stop_type = "break",
+                        std::string* request_json = nullptr);
+
+// overload for /sources_to_targets
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& sources,
+                        const std::vector<std::string>& targets,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options = {},
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* response = nullptr,
+                        std::string* request_json = nullptr);
 
 /* Returns the raw_result formatted as a JSON document in the given format.
  *

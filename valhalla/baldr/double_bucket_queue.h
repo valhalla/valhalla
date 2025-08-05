@@ -1,10 +1,11 @@
 #pragma once
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/util.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/util.h>
 #include <vector>
 
 namespace valhalla {
@@ -98,7 +99,7 @@ public:
   }
 
   /**
-   * Clear all labels from the low-level buckets and the overflow buckets and deallocates buckets
+   * Clear all labels from the low-level buckets and the overflow bucket and deallocate the buckets'
    * memory.
    */
   void clear() {
@@ -106,7 +107,7 @@ public:
     overflowbucket_.clear();
     while (currentbucket_ != buckets_.end()) {
       currentbucket_->clear();
-      currentbucket_++;
+      ++currentbucket_;
     }
 
     // Reset current bucket and cost
@@ -200,10 +201,9 @@ private:
    * @return Returns the bucket that the cost lies within.
    */
   bucket_t& get_bucket(const float cost) {
-    return (cost < currentcost_)
-               ? *currentbucket_
-               : (cost < maxcost_) ? buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)]
-                                   : overflowbucket_;
+    return (cost < currentcost_) ? *currentbucket_
+           : (cost < maxcost_)   ? buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)]
+                                 : overflowbucket_;
   }
 
   /**

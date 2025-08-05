@@ -1,90 +1,28 @@
+#include "argparse_utils.h"
+#include "baldr/connectivity_map.h"
+#include "baldr/tilehierarchy.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
 #include <cassert>
 #include <cstdint>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
 
-#include "baldr/connectivity_map.h"
-#include "baldr/tilehierarchy.h"
-#include "config.h"
-#include "filesystem.h"
-
 using namespace valhalla::baldr;
 
-#include "baldr/rapidjson_utils.h"
-#include <boost/optional.hpp>
-#include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <ostream>
-
-namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
-
-filesystem::path config_file_path;
-std::vector<std::string> input_files;
 
 struct PPMObject {
   std::string magic_num;
   int32_t width, height, maxColVal;
   char* m_image;
 };
-
-bool ParseArguments(int argc, char* argv[]) {
-
-  bpo::options_description options(
-      "connectivitymap " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: connectivitymap [options]\n"
-      "\n"
-      "connectivitymap is a program that creates a PPM image file representing "
-      "the connectivity between tiles."
-      "\n"
-      "\n");
-
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
-      "Path to the json configuration file.")
-      // positional arguments
-      ("input_files",
-       boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("input_files", 16);
-
-  bpo::variables_map vm;
-  try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
-
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
-  }
-
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return true;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "connectivitymap " << VALHALLA_VERSION << "\n";
-    return true;
-  }
-
-  if (vm.count("config")) {
-    if (filesystem::is_regular_file(config_file_path)) {
-      return true;
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options << "\n\n";
-    }
-  }
-
-  return false;
-}
 
 struct RGB {
   uint8_t red;
@@ -104,17 +42,39 @@ struct RGB {
 
 // Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
-  // Parse command line arguments
-  if (!ParseArguments(argc, argv)) {
+  const auto program = std::filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
+
+  try {
+    // clang-format off
+    cxxopts::Options options(
+      program,
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
+      "valhalla_build_connectivity is a program that creates a PPM image file representing\n"
+      "the connectivity between tiles.\n\n");
+
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
+    // clang-format on
+
+    auto result = options.parse(argc, argv);
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
+      return EXIT_SUCCESS;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
-  // Get the config to see which coverage we are using
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.string(), pt);
-
   // Get something we can use to fetch tiles
-  valhalla::baldr::connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
+  valhalla::baldr::connectivity_map_t connectivity_map(config.get_child("mjolnir"));
 
   uint32_t transit_level = TileHierarchy::levels().back().level + 1;
   for (uint32_t level = 0; level <= transit_level; level++) {

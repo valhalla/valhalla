@@ -6,22 +6,22 @@
 #include "midgard/polyline2.h"
 #include "midgard/vector2.h"
 
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/remove_whitespace.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <sys/stat.h>
+
 #include <algorithm>
 #include <array>
 #include <cctype>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <list>
-#include <sstream>
-#include <stdlib.h>
-#include <sys/stat.h>
+#include <random>
 #include <vector>
-
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/remove_whitespace.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
 
 namespace {
 
@@ -46,6 +46,70 @@ resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
   }
   return resampled;
 }
+
+/**
+ *  determines the quadrant of pt1 relative to pt2
+ *
+ *  +-----+-----+
+ *  |     |     |
+ *  |  1  |  0  |
+ *  |     |     |
+ *  +----pt2----+
+ *  |     |     |
+ *  |  2  |  3  |
+ *  |     |     |
+ *  +-----+-----+
+ *
+ */
+template <class coord_t> int8_t quadrant_type(const coord_t& pt1, const coord_t& pt2) {
+  return (pt1.first > pt2.first) ? ((pt1.second > pt2.second) ? 0 : 3)
+                                 : ((pt1.second > pt2.second) ? 1 : 2);
+}
+template int8_t quadrant_type<valhalla::midgard::PointLL>(const valhalla::midgard::PointLL&,
+                                                          const valhalla::midgard::PointLL&);
+
+/**
+ * get the x intercept of an edge {pt1, pt2} with a horizontal line at a given y
+ */
+template <class coord_t>
+typename coord_t::first_type
+x_intercept(const coord_t& pt1, const coord_t& pt2, const typename coord_t::first_type& y) {
+  return pt2.first - ((pt2.second - y) * ((pt1.first - pt2.first) / (pt1.second - pt2.second)));
+}
+
+template valhalla::midgard::PointLL::first_type
+x_intercept<valhalla::midgard::PointLL>(const valhalla::midgard::PointLL&,
+                                        const valhalla::midgard::PointLL&,
+                                        const valhalla::midgard::PointLL::first_type&);
+
+template <class coord_t>
+void adjust_delta(int8_t& delta,
+                  const coord_t& vertex,
+                  const coord_t& next_vertex,
+                  const coord_t& p) {
+  switch (delta) {
+      /* make quadrant deltas wrap around */
+    case 3:
+      delta = -1;
+      break;
+    case -3:
+      delta = 1;
+      break;
+      /* when a quadrant was skipped, check if clockwise or counter-clockwise  */
+    case 2:
+    case -2:
+      if (x_intercept(vertex, next_vertex, p.second) > p.first)
+        delta = -(delta);
+      break;
+  }
+}
+
+template void adjust_delta<valhalla::midgard::PointLL>(int8_t&,
+                                                       const valhalla::midgard::PointLL&,
+                                                       const valhalla::midgard::PointLL&,
+                                                       const valhalla::midgard::PointLL&
+
+);
 
 } // namespace
 
@@ -132,11 +196,19 @@ float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,
                     const float sample_distance,
-                    bool forward) {
+                    bool forward,
+                    size_t first_segment_index,
+                    size_t last_segment_index) {
+  assert(!shape.empty());
+  assert(index < shape.size());
+  first_segment_index = std::min(first_segment_index, index);
+  last_segment_index = std::min(std::max(last_segment_index, index), shape.size() - 1);
   // depending on if we are going forward or backward we choose a different increment
   auto increment = forward ? -1 : 1;
-  auto first_end = forward ? shape.cbegin() : shape.cend() - 1;
-  auto second_end = forward ? shape.cend() - 1 : shape.cbegin();
+  auto first_end =
+      forward ? (shape.cbegin() + first_segment_index) : (shape.cbegin() + last_segment_index);
+  auto second_end =
+      forward ? (shape.cbegin() + last_segment_index) : (shape.cbegin() + first_segment_index);
 
   // u and v will be points we move along the shape until we have enough distance between them or
   // run out of points
@@ -254,16 +326,16 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
   auto last = resampled.back();
   for (auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
     // radians
-    auto lon2 = p->first * -RAD_PER_DEG;
-    auto lat2 = p->second * RAD_PER_DEG;
+    auto lon2 = p->first * -kRadPerDegD;
+    auto lat2 = p->second * kRadPerDegD;
     // how much do we have left on this segment from where we are (in great arc radians)
-    // double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * RAD_PER_DEG - lat2) /
-    // 2.0), 2.0) + cos(resampled.back().second * RAD_PER_DEG) * cos(lat2)
-    // *pow(sin((resampled.back().first * -RAD_PER_DEG - lon2) / 2.0), 2.0)));
+    // double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * kRadPerDegD - lat2) /
+    // 2.0), 2.0) + cos(resampled.back().second * kRadPerDegD) * cos(lat2)
+    // *pow(sin((resampled.back().first * -kRadPerDegD - lon2) / 2.0), 2.0)));
     auto d = (last == *p) ? 0.0
-                          : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
-                                 cos(last.second * RAD_PER_DEG) * cos(lat2) *
-                                     cos(last.first * -RAD_PER_DEG - lon2));
+                          : acos(sin(last.second * kRadPerDegD) * sin(lat2) +
+                                 cos(last.second * kRadPerDegD) * cos(lat2) *
+                                     cos(last.first * -kRadPerDegD - lon2));
     if (std::isnan(d)) {
       // set d to 0, do not skip in case we are preserving coordinates
       d = 0.0;
@@ -272,8 +344,8 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
     // keep placing points while we can fit them
     while (d > remaining) {
       // some precomputed stuff
-      auto lon1 = last.first * -RAD_PER_DEG;
-      auto lat1 = last.second * RAD_PER_DEG;
+      auto lon1 = last.first * -kRadPerDegD;
+      auto lat1 = last.second * kRadPerDegD;
       auto sd = sin(d);
       auto a = sin(d - remaining) / sd;
       auto acs1 = a * cos(lat1);
@@ -283,8 +355,8 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
       auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
       auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
       auto z = a * sin(lat1) + b * sin(lat2);
-      last.first = atan2(y, x) * -DEG_PER_RAD;
-      last.second = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
+      last.first = atan2(y, x) * -kDegPerRadD;
+      last.second = atan2(z, sqrt(x * x + y * y)) * kDegPerRadD;
       resampled.push_back(last);
       // we just consumed a bit
       d -= remaining;
@@ -317,7 +389,7 @@ resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double,
 
 /* Resample a polyline at uniform intervals using more accurate spherical interpolation between
  * points. The length and number of samples is specified. The interval is computed based on
- * the number of samples and the algorithm guarantees that the secified number of samples
+ * the number of samples and the algorithm guarantees that the specified number of samples
  * is exactly produced.
  * This method makes use of several computations explained and demonstrated at:
  *   http://williams.best.vwh.net/avform.htm (reference no longer active)
@@ -342,12 +414,12 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
   PointLL last = resampled.back();
   for (auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
     // Distance between this vertex and last (in great arc radians)
-    auto lon2 = p->first * -RAD_PER_DEG;
-    auto lat2 = p->second * RAD_PER_DEG;
+    auto lon2 = p->first * -kRadPerDegD;
+    auto lat2 = p->second * kRadPerDegD;
     auto d = (last == *p) ? 0.0
-                          : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
-                                 cos(last.second * RAD_PER_DEG) * cos(lat2) *
-                                     cos(last.first * -RAD_PER_DEG - lon2));
+                          : acos(sin(last.second * kRadPerDegD) * sin(lat2) +
+                                 cos(last.second * kRadPerDegD) * cos(lat2) *
+                                     cos(last.first * -kRadPerDegD - lon2));
     if (std::isnan(d)) {
       continue;
     }
@@ -355,8 +427,8 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
     // Place resampled points on this segment as long as remaining distance is < d
     while (remaining < d) {
       // some precomputed stuff
-      auto lon1 = last.first * -RAD_PER_DEG;
-      auto lat1 = last.second * RAD_PER_DEG;
+      auto lon1 = last.first * -kRadPerDegD;
+      auto lat1 = last.second * kRadPerDegD;
       auto sd = sin(d);
       auto a = sin(d - remaining) / sd;
       auto acs1 = a * cos(lat1);
@@ -367,8 +439,8 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
       auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
       auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
       auto z = a * sin(lat1) + b * sin(lat2);
-      last.first = atan2(y, x) * -DEG_PER_RAD;
-      last.second = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
+      last.first = atan2(y, x) * -kDegPerRadD;
+      last.second = atan2(z, sqrt(x * x + y * y)) * kDegPerRadD;
       resampled.push_back(last);
 
       // Update to reduce d and update...
@@ -537,61 +609,32 @@ template bool intersect<PointLL>(const PointLL& u,
 template bool
 intersect<Point2>(const Point2& u, const Point2& v, const Point2& a, const Point2& b, Point2& i);
 
-// Return the intercept of the line passing through uv with the horizontal line defined by y
-template <class coord_t>
-typename coord_t::first_type
-y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y) {
-  if (std::abs(u.first - v.first) < 1e-5) {
-    return u.first;
-  }
-  if (std::abs(u.second - u.second) < 1e-5) {
-    return NAN;
-  }
-  auto m = (v.second - u.second) / (v.first - u.first);
-  auto b = u.second - (u.first * m);
-  return (y - b) / m;
-}
-template PointXY<float>::first_type y_intercept<PointXY<float>>(const PointXY<float>&,
-                                                                const PointXY<float>&,
-                                                                const PointXY<float>::first_type);
-template GeoPoint<float>::first_type y_intercept<GeoPoint<float>>(const GeoPoint<float>&,
-                                                                  const GeoPoint<float>&,
-                                                                  const GeoPoint<float>::first_type);
-template PointXY<double>::first_type y_intercept<PointXY<double>>(const PointXY<double>&,
-                                                                  const PointXY<double>&,
-                                                                  const PointXY<double>::first_type);
-template GeoPoint<double>::first_type
-y_intercept<GeoPoint<double>>(const GeoPoint<double>&,
-                              const GeoPoint<double>&,
-                              const GeoPoint<double>::first_type);
+template <class coord_t, class container_t>
+bool point_in_poly(const coord_t& pt, const container_t& poly) {
+  int8_t quad, next_quad, delta, angle;
+  quad = quadrant_type(poly.front(), pt);
+  angle = 0;
 
-// Return the intercept of the line passing through uv with the vertical line defined by x
-template <class coord_t>
-typename coord_t::first_type
-x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x) {
-  if (std::abs(u.second - v.second) < 1e-5) {
-    return u.second;
+  auto it = poly.begin();
+  for (size_t i = 0; i < poly.size(); ++i) {
+    const coord_t vertex = *it;
+    it++;
+    if (it == poly.end()) {
+      it = poly.begin();
+    }
+    const coord_t& next_vertex = *it;
+    next_quad = quadrant_type(next_vertex, pt);
+    delta = next_quad - quad;
+    adjust_delta(delta, vertex, next_vertex, pt);
+    angle = angle + delta;
+    quad = next_quad;
   }
-  if (std::abs(u.first - v.first) < 1e-5) {
-    return NAN;
-  }
-  auto m = (v.second - u.second) / (v.first - u.first);
-  auto b = u.second - (u.first * m);
-  return x * m + b;
-}
-template PointXY<float>::first_type x_intercept<PointXY<float>>(const PointXY<float>&,
-                                                                const PointXY<float>&,
-                                                                const PointXY<float>::first_type);
-template GeoPoint<float>::first_type x_intercept<GeoPoint<float>>(const GeoPoint<float>&,
-                                                                  const GeoPoint<float>&,
-                                                                  const GeoPoint<float>::first_type);
-template PointXY<double>::first_type x_intercept<PointXY<double>>(const PointXY<double>&,
-                                                                  const PointXY<double>&,
-                                                                  const PointXY<double>::first_type);
-template GeoPoint<double>::first_type
-x_intercept<GeoPoint<double>>(const GeoPoint<double>&,
-                              const GeoPoint<double>&,
-                              const GeoPoint<double>::first_type);
+  return (angle == 4) || (angle == -4);
+};
+
+template bool point_in_poly<valhalla::midgard::PointLL, std::list<valhalla::midgard::PointLL>>(
+    const valhalla::midgard::PointLL&,
+    const std::list<valhalla::midgard::PointLL>&);
 
 template <class container_t>
 typename container_t::value_type::first_type polygon_area(const container_t& polygon) {

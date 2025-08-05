@@ -1,12 +1,8 @@
-#include "midgard/logging.h"
-#include <algorithm>
-#include <exception>
-#include <vector>
-
+#include "thor/map_matcher.h"
 #include "baldr/datetime.h"
 #include "baldr/time_info.h"
-#include "thor/map_matcher.h"
-#include "thor/worker.h"
+
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -42,7 +38,7 @@ init_time_info(const std::vector<valhalla::meili::EdgeSegment>& edge_segments,
       if (!tz)
         continue;
       // if its timestamp based we need to convert that to a date time string on the location
-      if (!options.shape(0).has_date_time() && options.shape(0).time() != -1.0) {
+      if (options.shape(0).date_time().empty() && options.shape(0).time() != -1.0) {
         options.mutable_shape(0)->set_date_time(
             DateTime::seconds_to_date(options.shape(0).time(), tz, false));
       }
@@ -248,13 +244,14 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // get the cost of traversing the node, there is no turn cost the first time
     Cost transition_cost{};
     if (elapsed.secs > 0) {
-      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred);
+      auto reader_getter = [&matcher]() { return baldr::LimitedGraphReader(matcher->graphreader()); };
+      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
       elapsed += transition_cost;
     }
 
     uint8_t flow_sources;
     // Get time along the edge, handling partial distance along the first and last edge.
-    elapsed += costing->EdgeCost(directededge, tile, offset_time_info.second_of_week, flow_sources) *
+    elapsed += costing->EdgeCost(directededge, tile, offset_time_info, flow_sources) *
                (edge_segment.target - edge_segment.source);
 
     // Use timestamps to update elapsed time. Use the timestamp at the interpolation
@@ -283,14 +280,14 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
             directededge,
             elapsed,
             0,
-            0,
             mode,
             0,
-            {},
             baldr::kInvalidRestriction,
             true,
             static_cast<bool>(flow_sources & kDefaultFlowMask),
-            turn};
+            turn,
+            0,
+            directededge->destonly() || (costing->is_hgv() && directededge->destonly_hgv())};
     paths.back().first.emplace_back(
         PathInfo{mode, elapsed, edge_id, 0, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);

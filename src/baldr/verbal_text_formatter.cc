@@ -1,8 +1,12 @@
-
 #include "baldr/verbal_text_formatter.h"
-#include "midgard/util.h"
 
+#include <optional>
 #include <string>
+
+namespace {
+// Regular expression to find numbers
+const std::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
+} // namespace
 
 namespace valhalla {
 namespace baldr {
@@ -13,6 +17,41 @@ VerbalTextFormatter::VerbalTextFormatter(const std::string& country_code,
 }
 
 VerbalTextFormatter::~VerbalTextFormatter() {
+}
+
+std::string VerbalTextFormatter::Format(const std::unique_ptr<baldr::StreetName>& street_name,
+                                        const odin::MarkupFormatter* markup_formatter) const {
+  // Handle the phoneme markup formatting a street name
+  if (markup_formatter) {
+    std::optional<std::string> phoneme_markup_string =
+        markup_formatter->FormatPhonemeElement(street_name);
+    // If phoneme markup string exists then use it
+    if (phoneme_markup_string) {
+      return *phoneme_markup_string;
+    }
+  }
+
+  // Handle other formatting for a street name
+  std::string verbal_text = Format(street_name->value());
+
+  return verbal_text;
+}
+
+std::string VerbalTextFormatter::Format(const odin::Sign& sign,
+                                        const odin::MarkupFormatter* markup_formatter) const {
+  // Handle the phoneme markup formatting for a sign
+  if (markup_formatter) {
+    std::optional<std::string> phoneme_markup_string = markup_formatter->FormatPhonemeElement(sign);
+    // If phoneme markup string exists then use it
+    if (phoneme_markup_string) {
+      return *phoneme_markup_string;
+    }
+  }
+
+  // Handle other formatting for a sign
+  std::string verbal_text = Format(sign.text());
+
+  return verbal_text;
 }
 
 std::string VerbalTextFormatter::Format(const std::string& text) const {

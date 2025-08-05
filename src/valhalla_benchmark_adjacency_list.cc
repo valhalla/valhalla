@@ -1,23 +1,21 @@
-#include <boost/program_options.hpp>
+#include "argparse_utils.h"
+#include "baldr/double_bucket_queue.h"
+#include "midgard/logging.h"
+#include "sif/edgelabel.h"
+
+#include <cxxopts.hpp>
+
 #include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <queue>
 #include <random>
 #include <string>
 #include <vector>
 
-#include "config.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "sif/edgelabel.h"
-
-#include "baldr/double_bucket_queue.h"
-
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
-
-namespace bpo = boost::program_options;
 
 /**
  * Benchmark of adjacency list. Constructs a large number of random numbers,
@@ -106,39 +104,32 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
 }
 
 int main(int argc, char* argv[]) {
+  const auto program = std::filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
 
-  bpo::options_description options(
-      "valhalla " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: adjlistbenchmark [options]\n"
-      "\n"
-      "adjlistbenchmark is benchmark comparing performance of an STL priority_queue"
-      "to the approximate double bucket adjacency list class supplied with Valhalla."
-      "\n"
-      "\n");
-
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.");
-
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
-    bpo::notify(vm);
+    // clang-format off
+    cxxopts::Options options(
+      program,
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
+      "a program which is benchmark comparing performance of an STL priority_queue\n"
+      "to the approximate double bucket adjacency list class supplied with Valhalla.\n\n");
 
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.");
+
+    auto result = options.parse(argc, argv);
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
+      return EXIT_SUCCESS;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
-  }
-
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "AdjacencyListBenchmark " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
   }
 
   // Benchmark with count, maxcost, and bucketsize

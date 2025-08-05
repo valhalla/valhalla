@@ -1,10 +1,9 @@
 #pragma once
 
 #include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
-#include <valhalla/baldr/curler.h>
-#include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphconstants.h>
@@ -25,14 +24,11 @@
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/turnlanes.h>
-
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
-
-#include <valhalla/filesystem.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <iterator>
 #include <memory>
 
@@ -102,7 +98,8 @@ public:
    * @param  tile_data graph tile raw bytes
    * @param  disk_location tile filesystem path
    */
-  static void SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location);
+  static void SaveTileToFile(const std::vector<char>& tile_data,
+                             const std::filesystem::path& disk_location);
 
   /**
    * Destructor
@@ -111,14 +108,17 @@ public:
 
   /**
    * Gets the directory like filename suffix given the graphId
-   * @param  graphid  Graph Id to construct filename.
-   * @param  gzipped  Modifies the suffix if you expect gzipped file names
+   * @param  graphid      Graph Id to construct filename.
+   * @param  gzipped      Modifies the suffix if you expect gzipped file names
    * @param  is_file_path Determines the 1000 separator to be used for file or URL access
+   * @param  tiles        Allows passing a custom tile definition rather than pulling from static
+   *                      hierarchy, which is useful for testing
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
   static std::string FileSuffix(const GraphId& graphid,
                                 const std::string& suffix = valhalla::baldr::SUFFIX_NON_COMPRESSED,
-                                bool is_file_path = true);
+                                bool is_file_path = true,
+                                const TileLevel* tiles = nullptr);
 
   /**
    * Get the tile Id given the full path to the file.
@@ -222,6 +222,43 @@ public:
   }
 
   /**
+   * Get a pointer to an edge extension .
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a pointer to the edge extension.
+   */
+  const DirectedEdgeExt* ext_directededge(const GraphId& edge) const {
+    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
+
+    // Testing against directededgecount since the number of directed edges
+    // should be the same as the number of directed edge extensions
+    if (edge.id() < header_->directededgecount()) {
+      return &ext_directededges_[edge.id()];
+    }
+    throw std::runtime_error("GraphTile DirectedEdgeExt index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(edge.id()) +
+                             " directededgecount= " + std::to_string(header_->directededgecount()));
+  }
+
+  /**
+   * Get a pointer to an edge extension.
+   * @param  idx  Index of the directed edge within the current tile.
+   * @return  Returns a pointer to the edge.
+   */
+  const DirectedEdgeExt* ext_directededge(const size_t idx) const {
+    // Testing against directededgecount since the number of directed edges
+    // should be the same as the number of directed edge extensions
+    if (idx < header_->directededgecount()) {
+      return &ext_directededges_[idx];
+    }
+    throw std::runtime_error("GraphTile DirectedEdgeExt index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+                             " directededgecount= " + std::to_string(header_->directededgecount()));
+  }
+
+  /**
    * Get an iterable set of directed edges from a node in this tile
    * @param  node  Node from which the edges leave
    * @return returns an iterable collection of directed edges
@@ -244,6 +281,30 @@ public:
    * @return returns an iterable collection of directed edges
    */
   midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
+
+  /**
+   * Get an iterable set of directed edges extensions from a node in this tile
+   * @param  node  Node from which the edges leave
+   * @return returns an iterable collection of directed edges extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const NodeInfo* node) const;
+
+  /**
+   * Get an iterable set of directed edges extensions from a node in this tile
+   * @param  node  GraphId of the node from which the edges leave
+   * @return returns an iterable collection of directed edges extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const GraphId& node) const;
+
+  /**
+   * Get an iterable set of directed edges extensions from a node in this tile
+   * WARNING: this only returns edge extensions in this tile, edges at this node on another level
+   *          will not be returned by this method, node transitions must be used
+   *
+   * @param  idx  Index of the node within the current tile
+   * @return returns an iterable collection of directed edges extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const size_t idx) const;
 
   /**
    * Convenience method to get opposing edge Id given a directed edge.
@@ -319,6 +380,15 @@ public:
   }
 
   /**
+   * Get an iterable set of edge extensions in this tile
+   * @return returns an iterable collection of edge extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts() const {
+    return midgard::iterable_t<const DirectedEdgeExt>{ext_directededges_,
+                                                      header_->directededgecount()};
+  }
+
+  /**
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
@@ -346,13 +416,22 @@ public:
   GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t& edge_index) const;
 
   /**
+   * Convenience method to get the directed edge extensions originating at a node.
+   * @param  node_index  Node Id within this tile.
+   * @param  count       (OUT) Number of outbound edges
+   * @param  edge_index  (OUT) Index of the first outbound edge.
+   * @return  Returns a pointer to the first outbound directed edge extension.
+   */
+  const DirectedEdgeExt*
+  GetDirectedEdgeExts(const uint32_t node_index, uint32_t& count, uint32_t& edge_index) const;
+
+  /**
    * Convenience method to get the names for an edge
    * @param  edge  Directed edge
-   * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
    *
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(const DirectedEdge* edge, bool only_tagged_names = false) const;
+  std::vector<std::string> GetNames(const DirectedEdge* edge) const;
 
   /**
    * Convenience method to get the types for the names given the edge
@@ -384,14 +463,39 @@ public:
   std::string GetName(const uint32_t textlist_offset) const;
 
   /**
-   * Convenience method to get the signs for an edge given the directed
-   * edge index.
+   * Given either a DirectedEdge or Node index, returns all the signs including
+   * languages and phonemes.
+   *
+   * To retrieve signs/languages/phonemes for a node, pass signs_on_node=true. Note
+   * that the sign-types specific to nodes are Sign::Type::kJunctionName and
+   * Sign::Type::kTollName.
+   *
+   * The sign types Sign::Type::kPronunciation and Sign::Type::kLanguage can apply
+   * to either node or edge.
+   *
+   * All other sign types are specific to edges.
+   *
    * @param  idx  Directed edge or node index. Used to lookup list of signs.
-   * @param  signs_on_node Are we looking for signs at the node?  These are the
+   * @param  signs_on_node Are we looking for signs at the node?
+   * @return  Returns a vector of signs.
+   */
+  std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
+
+  /**
+   * Given either a DirectedEdge or Node index, returns all the signs.
+   *
+   * @param   idx  Directed edge or node index. Used to lookup list of signs.
+   * @param   index_linguistic_map unordered_map in which the key is a index into the vector of
+   * shields and the tuple contains a pronunciation (w/wo a language) or no pronunciation and just a
+   * language
+   * @param   signs_on_node Are we looking for signs at the node?  These are the
    *                       intersection names.
    * @return  Returns a list (vector) of signs.
    */
-  std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
+  std::vector<SignInfo> GetSigns(
+      const uint32_t idx,
+      std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>& index_linguistic_map,
+      bool signs_on_node = false) const;
 
   /**
    * Get the next departure given the directed edge Id and the current
@@ -400,7 +504,7 @@ public:
    * @param   current_time      Current time (seconds from midnight).
    * @param   day               Days since the tile creation date.
    * @param   dow               Day of week (see graphconstants.h)
-   * @param   date_before_tile  Is the date that was inputed before
+   * @param   date_before_tile  Is the date that was input before
    *                            the tile creation date?
    * @param   wheelchair        Only find departures with wheelchair access if true
    * @param   bicycle           Only find departures with bicycle access if true
@@ -489,7 +593,7 @@ public:
                                                        const uint32_t access) const;
 
   /**
-   * Get an iteratable list of GraphIds given a bin in the tile
+   * Get an iterable list of GraphIds given a bin in the tile
    * @param  column the bin's column
    * @param  row the bin's row
    * @return iterable container of graphids contained in the bin
@@ -497,7 +601,7 @@ public:
   midgard::iterable_t<GraphId> GetBin(size_t column, size_t row) const;
 
   /**
-   * Get an iteratable list of GraphIds given a bin in the tile
+   * Get an iterable list of GraphIds given a bin in the tile
    * @param  index the bin's index in the row major array
    * @return iterable container of graphids contained in the bin
    */
@@ -513,7 +617,7 @@ public:
   /**
    * Convenience method for use with costing to get the speed for an edge given the directed
    * edge and a time (seconds since start of the week). If the current speed of the edge
-   * is 0 then the current speed is ignore and other speed sources are used to prevent
+   * is 0 then the current speed is ignored and other speed sources are used to prevent
    * issues with costing
    *
    * @param  de            Directed edge information.
@@ -523,51 +627,67 @@ public:
    *                       week so we modulus the time to day based seconds
    * @param  flow_sources  Which speed sources were used in this speed calculation. Optional pointer,
    *                       if nullptr is passed in flow_sources does nothing.
+   * @param  seconds_from_now   Absolute number of seconds from now till the moment the edge is
+   * passed. Be careful when setting the value in reverse direction algorithms to use proper value. It
+   * affects the percentage of live-traffic usage on the edge. The bigger seconds_from_now is set the
+   * less percentage is taken. Currently this parameter is set to 0 when building a route with reverse
+   * and bidirectional a*.
    * @return Returns the speed for the edge.
    */
   inline uint32_t GetSpeed(const DirectedEdge* de,
                            uint8_t flow_mask = kConstrainedFlowMask,
-                           uint32_t seconds = kInvalidSecondsOfWeek,
+                           uint64_t seconds = kInvalidSecondsOfWeek,
                            bool is_truck = false,
-                           uint8_t* flow_sources = nullptr) const {
+                           uint8_t* flow_sources = nullptr,
+                           const uint64_t seconds_from_now = 0) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO(danpat): this needs to consider the time - we should not use live speeds if
-    //               the request is not for "now", or we're some X % along the route
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
+
+    constexpr double LIVE_SPEED_FADE = 1. / 3600.;
+    // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
+    // route live-traffic gives more information about current congestion situation. But the further
+    // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
+    // Want to have a smooth decrease function.
+    float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
-    if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
+    if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
       if (live_speed.speed_valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
         *flow_sources |= kCurrentFlowMask;
-        // Live speed covers entire edge, can return early here
         if (live_speed.breakpoint1 == 255) {
+          partial_live_pct = 1.;
+        } else {
+
+          // Since live speed didn't cover the entire edge, lets calculate the coverage
+          // to facilitate blending with other sources for uncovered part
+          partial_live_pct =
+              (
+                  // First section
+                  (live_speed.encoded_speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1
+                                                                          : 0)
+                  // Second section
+                  + (live_speed.encoded_speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
+                         ? (live_speed.breakpoint2 - live_speed.breakpoint1)
+                         : 0)
+                  // Third section
+                  + (live_speed.encoded_speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
+                         ? (255 - live_speed.breakpoint2)
+                         : 0)) /
+              255.0;
+        }
+        partial_live_pct *= live_traffic_multiplier;
+        if (partial_live_pct == 1.) {
           return partial_live_speed;
         }
-
-        // Since live speed didn't cover the entire edge, lets calculate the coverage
-        // to facilitate blending with other sources for uncovered part
-        partial_live_pct =
-            (
-                // First section
-                (live_speed.encoded_speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1 : 0)
-                // Second section
-                + (live_speed.encoded_speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
-                       ? (live_speed.breakpoint2 - live_speed.breakpoint1)
-                       : 0)
-                // Third section
-                + (live_speed.encoded_speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
-                       ? (255 - live_speed.breakpoint2)
-                       : 0)) /
-            255.0;
       }
     }
 
@@ -578,20 +698,14 @@ public:
       seconds %= midgard::kSecondsPerWeek;
       uint32_t idx = de - directededges_;
       float speed = predictedspeeds_.speed(idx, seconds);
-      if (valid_speed(speed)) {
-        *flow_sources |= kPredictedFlowMask;
-        return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
-                                     (1 - partial_live_pct) * (speed + 0.5f));
-      }
-#ifdef LOGGING_LEVEL_TRACE
-      else
-        LOG_TRACE("Predicted speed = " + std::to_string(speed) + " for edge index: " +
-                  std::to_string(idx) + " of tile: " + std::to_string(header_->graphid()));
-#endif
+      *flow_sources |= kPredictedFlowMask;
+      return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
+                                   (1 - partial_live_pct) * (std::max(speed, 0.5f) + 0.5f));
     }
 
     // fallback to constrained if time of week is within 7am to 7pm (or if no time was passed in) and
     // if the edge has constrained speed
+    // kInvalidSecondsOfWeek %= midgard::kSecondsPerDay = 12.1
     seconds %= midgard::kSecondsPerDay;
     auto is_daytime = (25200 < seconds && seconds < 68400);
     if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask) &&

@@ -1,40 +1,34 @@
-#include <cstdint>
-
-#include "statistics.h"
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
-#include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <future>
-#include <iostream>
-#include <list>
-#include <mutex>
-#include <ostream>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <thread>
-#include <utility>
-#include <vector>
-
+#include "argparse_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "statistics.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include <cstdint>
+#include <deque>
+#include <filesystem>
+#include <future>
+#include <iostream>
+#include <list>
+#include <mutex>
+#include <random>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
-
-namespace bpo = boost::program_options;
-filesystem::path config_file_path;
 
 namespace {
 
@@ -45,6 +39,7 @@ struct HGVRestrictionTypes {
   bool length;
   bool weight;
   bool width;
+  bool axles;
 };
 
 bool IsLoopTerminal(const graph_tile_ptr& tile,
@@ -286,7 +281,7 @@ void AddStatistics(statistics& stats,
                    GraphId& node,
                    const NodeInfo& nodeinfo) {
 
-  auto rclass = directededge.classification();
+  const auto rclass = directededge.classification();
   float edge_length = (tileid == directededge.endnode().tileid()) ? directededge.length() * 0.5f
                                                                   : directededge.length() * 0.25f;
 
@@ -434,6 +429,9 @@ void build(const boost::property_tree::ptree& pt,
                   case AccessType::kMaxAxleLoad:
                     hgv.axle_load = true;
                     break;
+                  case AccessType::kMaxAxles:
+                    hgv.axles = true;
+                    break;
                   case AccessType::kMaxHeight:
                     hgv.height = true;
                     break;
@@ -545,8 +543,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // Spawn the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(build, std::cref(pt), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
+    thread = std::make_shared<std::thread>(build, std::cref(pt), std::ref(tilequeue), std::ref(lock),
+                                           std::ref(results.back()));
   }
 
   // Wait for threads to finish
@@ -566,58 +564,39 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   stats.roulette_data.GenerateTasks(pt);
 }
 
-bool ParseArguments(int argc, char* argv[]) {
-  bpo::options_description options("Usage: valhalla_build_statistics --config conf/valhalla.json");
-  options.add_options()("help,h",
-                        "Print this help message")("config,c",
-                                                   boost::program_options::value<filesystem::path>(
-                                                       &config_file_path)
-                                                       ->required(),
-                                                   "Path to the json configuration file.");
-  bpo::variables_map vm;
-  try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n";
-    return false;
-  }
-
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return true;
-  }
-  if (vm.count("config")) {
-    if (filesystem::is_regular_file(config_file_path)) {
-      return true;
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options << "\n\n";
-    }
-  }
-
-  return false;
-}
-
 int main(int argc, char** argv) {
-  if (!ParseArguments(argc, argv)) {
+  const auto program = std::filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
+
+  try {
+    // clang-format off
+    cxxopts::Options options(
+      program,
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
+      "valhalla_build_statistics is a program that builds a statistics database.\n\n");
+
+    options.add_options()
+      ("h,help", "Print this help message")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>());
+    // clang-format on
+
+    auto result = options.parse(argc, argv);
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
+      return EXIT_SUCCESS;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
-  // check the type of input
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.string(), pt);
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto loggin_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(loggin_config);
-  }
-
-  BuildStatistics(pt);
+  BuildStatistics(config);
 
   return EXIT_SUCCESS;
 }

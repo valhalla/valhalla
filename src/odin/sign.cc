@@ -1,12 +1,17 @@
 #include "odin/sign.h"
+#include "baldr/streetname.h"
+#include "midgard/logging.h"
 #include "odin/util.h"
 
 namespace valhalla {
 namespace odin {
 
 // Constructor
-Sign::Sign(const std::string& text, const bool is_route_number)
-    : text_(text), is_route_number_(is_route_number), consecutive_count_(0) {
+Sign::Sign(const std::string& text,
+           const bool is_route_number,
+           const std::optional<baldr::Pronunciation>& pronunciation)
+    : text_(text), is_route_number_(is_route_number), consecutive_count_(0),
+      pronunciation_(pronunciation) {
 }
 
 const std::string& Sign::text() const {
@@ -23,6 +28,10 @@ uint32_t Sign::consecutive_count() const {
 
 void Sign::set_consecutive_count(uint32_t consecutive_count) {
   consecutive_count_ = consecutive_count;
+}
+
+const std::optional<baldr::Pronunciation>& Sign::pronunciation() const {
+  return pronunciation_;
 }
 
 #ifdef LOGGING_LEVEL_TRACE

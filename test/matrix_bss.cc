@@ -1,21 +1,20 @@
-#include "proto/options.pb.h"
-#include "sif/costconstants.h"
-#include "test.h"
-
-#include <iostream>
-#include <string>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <vector>
-
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/worker.h"
-#include "thor/worker.h"
-
+#include "proto/options.pb.h"
+#include "sif/costconstants.h"
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
-#include "thor/costmatrix.h"
+#include "test.h"
+#include "thor/matrixalgorithm.h"
 #include "thor/timedistancebssmatrix.h"
+#include "thor/worker.h"
+
+#include <valhalla/baldr/rapidjson_utils.h>
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -30,25 +29,11 @@ namespace rj = rapidjson;
 
 namespace {
 
-valhalla::sif::cost_ptr_t create_costing() {
-  valhalla::Options options;
-  for (int i = 0; i < valhalla::Costing_MAX; ++i)
-    options.add_costing_options();
-
-  for (auto costing_str : {"pedestrian", "bicycle"}) {
-    valhalla::Costing costing;
-    if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
-      options.set_costing(costing);
-    }
-  }
-  return valhalla::sif::CostFactory{}.Create(options);
-}
-
 // Note that the "loki/radius" is intentionally left to 10, since the bss_connection is a duplication
 // of the existing way on which the bike share sation is projected. It would be advisable to not set
 // radius to 0 so that the algorithm will choose the best projection. Otherwise, the location may be
 // projected uniquely on the bss_connection.
-const auto config =
+const auto cfg =
     test::make_config("test/data/paris_bss_tiles", {{"loki.service_defaults.radius", "10"}});
 } // namespace
 
@@ -61,9 +46,9 @@ class MatrixBssTest : public ::testing::Test {
 public:
   MatrixBssTest() {
     Options options;
-    options.set_costing(Costing::bikeshare);
+    options.set_costing_type(Costing::bikeshare);
     rapidjson::Document doc;
-    sif::ParseCostingOptions(doc, "/costing_options", options);
+    sif::ParseCosting(doc, "/costing_options", options);
     sif::TravelMode mode;
     mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
   }
@@ -128,10 +113,8 @@ public:
     ParseApi(make_matrix_request(sources, targets), Options::sources_to_targets, matrix_request);
     loki_worker.matrix(matrix_request);
 
-    auto matrix_results =
-        timedist_matrix_bss.SourceToTarget(matrix_request.options().sources(),
-                                           matrix_request.options().targets(), reader, mode_costing,
-                                           TravelMode::kPedestrian, 400000.0);
+    timedist_matrix_bss.SourceToTarget(matrix_request, reader, mode_costing,
+                                       sif::TravelMode::kPedestrian, 400000.0);
 
     auto s_size = sources.size();
     auto t_size = targets.size();
@@ -154,8 +137,8 @@ public:
         int route_length = legs.begin()->summary().length() * 1000;
 
         size_t m_result_idx = i * t_size + j;
-        int matrix_time = matrix_results[m_result_idx].time;
-        int matrix_length = matrix_results[m_result_idx].dist;
+        int matrix_time = matrix_request.matrix().times()[m_result_idx];
+        int matrix_length = matrix_request.matrix().distances()[m_result_idx];
 
         EXPECT_NEAR(matrix_time, route_time, kTimeThreshold);
         EXPECT_NEAR(matrix_length, route_length, route_length * kDistancePercentThreshold);
@@ -164,11 +147,11 @@ public:
   }
 
 private:
-  loki_worker_t loki_worker{config};
-  thor_worker_t thor_worker{config};
-  odin_worker_t odin_worker{config};
+  loki_worker_t loki_worker{cfg};
+  thor_worker_t thor_worker{cfg};
+  odin_worker_t odin_worker{cfg};
 
-  GraphReader reader{config.get_child("mjolnir")};
+  GraphReader reader{cfg.get_child("mjolnir")};
   mode_costing_t mode_costing;
   TimeDistanceBSSMatrix timedist_matrix_bss;
 };
@@ -220,6 +203,24 @@ TEST_F(MatrixBssTest, ManyToMany) {
           {48.862484, 2.365708},
           {48.86911, 2.36019},
           {48.865448, 2.363641},
+      });
+}
+
+// this fails, meaning the reverse matrix tree is not the same as the AStar forward tree
+TEST_F(MatrixBssTest, DISABLED_ManyToManyMoreSources) {
+  test(
+      // sources lat - lon
+      {
+          {48.858376, 2.358229},
+          {48.859636, 2.362984},
+          {48.857826, 2.366695},
+          {48.85788, 2.36125},
+      },
+      // targets lat - lon
+      {
+          {48.865032, 2.362484},
+          {48.862484, 2.365708},
+          {48.86911, 2.36019},
       });
 }
 

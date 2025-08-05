@@ -1,10 +1,9 @@
 #include "odin/enhancedtrippath.h"
 #include "baldr/turnlanes.h"
 #include "midgard/util.h"
+#include "test.h"
 
 #include <cstdint>
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla;
@@ -13,11 +12,10 @@ using namespace valhalla::baldr;
 
 namespace {
 
-void TryCalculateRightLeftIntersectingEdgeCounts(
-    uint32_t from_heading,
-    std::unique_ptr<EnhancedTripLeg_Node> node,
-    const IntersectingEdgeCounts& expected_xedge_counts,
-    const TripLeg_TravelMode travel_mode = TripLeg_TravelMode_kDrive) {
+void TryCalculateRightLeftIntersectingEdgeCounts(uint32_t from_heading,
+                                                 std::unique_ptr<EnhancedTripLeg_Node> node,
+                                                 const IntersectingEdgeCounts& expected_xedge_counts,
+                                                 const TravelMode travel_mode = TravelMode::kDrive) {
 
   IntersectingEdgeCounts xedge_counts;
   xedge_counts.clear();

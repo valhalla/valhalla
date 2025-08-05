@@ -1,20 +1,19 @@
 
+#include "baldr/directededge.h"
+#include "baldr/graphreader.h"
+#include "baldr/merge.h"
+#include "baldr/nodeinfo.h"
+#include "baldr/rapidjson_utils.h"
+#include "baldr/tilehierarchy.h"
+#include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <cstdint>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
-#include "baldr/directededge.h"
-#include "baldr/graphreader.h"
-#include "baldr/merge.h"
-#include "baldr/nodeinfo.h"
-#include "baldr/tilehierarchy.h"
-
-#include "test.h"
 
 namespace vb = valhalla::baldr;
 
@@ -39,7 +38,7 @@ struct graph_tile_builder {
                    uint32_t edge_count,
                    uint32_t first_edge) {
     nodes.push_back(vb::NodeInfo(base_ll, std::make_pair(lon, lat), vb::kAllAccess,
-                                 vb::NodeType::kStreetIntersection, false, true, false));
+                                 vb::NodeType::kStreetIntersection, false, true, false, false));
     nodes.back().set_edge_count(edge_count);
     nodes.back().set_edge_index(first_edge);
   }
@@ -105,12 +104,12 @@ struct test_graph_reader : public vb::GraphReader {
 TEST(EdgeCollapser, TestCollapseEdgeSimple) {
   vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
-  // simplest graph with a collapsible node:
-  //
-  //          /---(edge 0)-->\       /---(edge 1)-->\
-  //  (node 0)                (node 1)              (node 2)
-  //          \<--(edge 2)---/       \<--(edge 3)---/
-  //
+  /* simplest graph with a collapsible node:
+
+              /---(edge 0)-->\       /---(edge 1)-->\
+      (node 0)                (node 1)              (node 2)
+              \<--(edge 2)---/       \<--(edge 3)---/
+  */
   valhalla::midgard::PointLL base_ll(0.0f, 0.0f);
   graph_tile_builder builder;
   builder.append_node(base_ll, 0.00f, 0.0f, 1, 0);
@@ -136,16 +135,16 @@ TEST(EdgeCollapser, TestCollapseEdgeSimple) {
   std::vector<vb::GraphId> tiles;
   tiles.push_back(base_id);
 
-  vb::merge::merge(tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
-                   [](const vb::DirectedEdge*) -> bool { return true; },
-                   [&](const vb::merge::path& p) {
-                     count += 1;
-                     for (auto id : p.m_edges) {
-                       EXPECT_EQ(edges.count(id), 1)
-                           << "Edge not found - either invalid or duplicate!";
-                       edges.erase(id);
-                     }
-                   });
+  vb::merge::merge(
+      tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
+      [](const vb::DirectedEdge*) -> bool { return true; },
+      [&](const vb::merge::path& p) {
+        count += 1;
+        for (auto id : p.m_edges) {
+          EXPECT_EQ(edges.count(id), 1) << "Edge not found - either invalid or duplicate!";
+          edges.erase(id);
+        }
+      });
 
   EXPECT_EQ(count, 2) << "Should have collapsed to 2 paths.";
   EXPECT_TRUE(edges.empty()) << "Some edges left over!";
@@ -154,16 +153,17 @@ TEST(EdgeCollapser, TestCollapseEdgeSimple) {
 TEST(EdgeCollapser, TestCollapseEdgeJunction) {
   vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
-  // simplest graph with a non-collapsible node:
-  //
-  //          /---(edge 0)-->\       /---(edge 1)-->\
-  //  (node 0)                (node 1)              (node 2)
-  //          \<--(edge 2)---/  /  \ \<--(edge 4)---/
-  //                           |   |
-  //                  (edge 5) ^   v (edge 3)
-  //                           |   |
-  //                            \  /
-  //                          (node 3)
+  /* simplest graph with a non-collapsible node:
+
+              /---(edge 0)-->\       /---(edge 1)-->\
+      (node 0)                (node 1)              (node 2)
+              \<--(edge 2)---/  /  \ \<--(edge 4)---/
+                               |   |
+                      (edge 5) ^   v (edge 3)
+                               |   |
+                                \  /
+                              (node 3)
+  */
   valhalla::midgard::PointLL base_ll(0.0f, 0.0f);
   graph_tile_builder builder;
   builder.append_node(base_ll, 0.00f, 0.00f, 1, 0);
@@ -192,16 +192,16 @@ TEST(EdgeCollapser, TestCollapseEdgeJunction) {
   std::vector<vb::GraphId> tiles;
   tiles.push_back(base_id);
 
-  vb::merge::merge(tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
-                   [](const vb::DirectedEdge*) -> bool { return true; },
-                   [&](const vb::merge::path& p) {
-                     count += 1;
-                     for (auto id : p.m_edges) {
-                       EXPECT_EQ(edges.count(id), 1)
-                           << "Edge not found - either invalid or duplicate!";
-                       edges.erase(id);
-                     }
-                   });
+  vb::merge::merge(
+      tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
+      [](const vb::DirectedEdge*) -> bool { return true; },
+      [&](const vb::merge::path& p) {
+        count += 1;
+        for (auto id : p.m_edges) {
+          EXPECT_EQ(edges.count(id), 1) << "Edge not found - either invalid or duplicate!";
+          edges.erase(id);
+        }
+      });
 
   EXPECT_EQ(count, 6) << "Should have not collapsed, leaving 6 original paths.";
   EXPECT_TRUE(edges.empty()) << "Some edges left over!";
@@ -210,13 +210,13 @@ TEST(EdgeCollapser, TestCollapseEdgeJunction) {
 TEST(EdgeCollapser, TestCollapseEdgeChain) {
   vb::GraphId base_id = vb::TileHierarchy::GetGraphId(valhalla::midgard::PointLL(0, 0), 0);
 
-  // graph with 3 collapsible edges, all chained together. (e.g: think of the
-  // middle segment as a bridge).
-  //
-  //      /---(e0)-->\    /---(e1)-->\    /---(e3)-->\
-  //  (n0)            (n1)            (n2)            (n3)
-  //      \<--(e2)---/    \<--(e4)---/    \<--(e5)---/
-  //
+  /* graph with 3 collapsible edges, all chained together. (e.g: think of the
+     middle segment as a bridge).
+
+          /---(e0)-->\    /---(e1)-->\    /---(e3)-->\
+      (n0)            (n1)            (n2)            (n3)
+          \<--(e2)---/    \<--(e4)---/    \<--(e5)---/
+  */
   valhalla::midgard::PointLL base_ll(0.0f, 0.0f);
   graph_tile_builder builder;
   builder.append_node(base_ll, 0.00f, 0.0f, 1, 0);
@@ -245,16 +245,16 @@ TEST(EdgeCollapser, TestCollapseEdgeChain) {
   std::vector<vb::GraphId> tiles;
   tiles.push_back(base_id);
 
-  vb::merge::merge(tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
-                   [](const vb::DirectedEdge*) -> bool { return true; },
-                   [&](const vb::merge::path& p) {
-                     count += 1;
-                     for (auto id : p.m_edges) {
-                       EXPECT_EQ(edges.count(id), 1)
-                           << "Edge not found - either invalid or duplicate!";
-                       edges.erase(id);
-                     }
-                   });
+  vb::merge::merge(
+      tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
+      [](const vb::DirectedEdge*) -> bool { return true; },
+      [&](const vb::merge::path& p) {
+        count += 1;
+        for (auto id : p.m_edges) {
+          EXPECT_EQ(edges.count(id), 1) << "Edge not found - either invalid or duplicate!";
+          edges.erase(id);
+        }
+      });
 
   EXPECT_EQ(count, 2) << "Should have collapsed to 2 paths.";
   EXPECT_TRUE(edges.empty()) << "Some edges left over!";

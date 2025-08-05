@@ -1,24 +1,24 @@
 #pragma once
 
-#include <cstdint>
-#include <functional>
-#include <limits>
-#include <memory>
-#include <ostream>
-#include <random>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
-#include <vector>
-
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/util_core.h>
+
+#include <cstdint>
+#include <cstring>
+#include <limits>
+#include <list>
+#include <ostream>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 #define UNUSED(x) (void)(x)
 
@@ -285,15 +285,19 @@ void trim_shape(float start,
  * @param shape  Shape / polyline geometry.
  * @param sample_distance Distance to sample when computing heading.
  * @param forward Boolean value whether to test in forward or reverse direction.
+ * @param first_segment_index Index into the shape pointing to the first stopping point.
+ * @param last_segment_index Index into the shape pointing to the last stopping point.
  * @return Returns the angle in degrees relative to N.
  */
 float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,
                     const float sample_distance,
-                    bool forward);
+                    bool forward,
+                    size_t first_segment_index = 0,
+                    size_t last_segment_index = std::numeric_limits<size_t>::max());
 
-// useful in converting from one iteratable map to another
+// useful in converting from one iterable map to another
 // for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string>
 // >(some_ptree)
 /*
@@ -397,7 +401,7 @@ resample_polyline(const std::vector<PointLL>& polyline, const float length, cons
 /**
  * Resample a polyline at uniform intervals using more accurate spherical interpolation between
  * points. The length and number of samples is specified. The interval is computed based on
- * the number of samples and the algorithm guarantees that the secified number of samples
+ * the number of samples and the algorithm guarantees that the specified number of samples
  * is exactly produced.
  * @param polyline   the list/vector of points in the line
  * @param length     Length (meters) of the polyline
@@ -420,7 +424,7 @@ public:
   using iterator = T*;
   iterable_t(T* first, size_t size) : head(first), tail(first + size), count(size) {
   }
-  iterable_t(T* first, T* end) : head(first), tail(end), count(end - first) {
+  iterable_t(T* first, T* end) : head(first), tail(end), count(tail - head) {
   }
   T* begin() {
     return head;
@@ -428,7 +432,16 @@ public:
   T* end() {
     return tail;
   }
+  const T* begin() const {
+    return head;
+  }
+  const T* end() const {
+    return tail;
+  }
   T& operator[](size_t index) {
+    return *(head + index);
+  }
+  const T& operator[](size_t index) const {
     return *(head + index);
   }
   size_t size() const {
@@ -454,25 +467,13 @@ template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i);
 
 /**
- * Return the intercept of the line passing through uv with the horizontal line defined by y
- * @param u  first point on line
- * @param v  second point on line
- * @param y  y component of horizontal line
- * @return x component (or NaN if parallel) of the intercept of uv with the horizontal line
+ * Check whether a given point lies within a polygon. Uses the simplified winding number algorithm
+ * (http://www.graphicsgems.org/gemsiv/ptpoly_weiler/)
+ *
+ * @return true if the point lies within the given polygon
  */
-template <class coord_t>
-typename coord_t::first_type
-y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y = 0);
-/**
- * Return the intercept of the line passing through uv with the vertical line defined by x
- * @param u  first point on line
- * @param v  second point on line
- * @param x  x component of vertical line
- * @return y component (or NaN if parallel) of the intercept of uv with the vertical line
- */
-template <class coord_t>
-typename coord_t::first_type
-x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x = 0);
+template <class coord_t, class container_t>
+bool point_in_poly(const coord_t& pt, const container_t& poly);
 
 /**
  * Compute the area of a polygon. If your polygon is not twisted or self intersecting
@@ -680,7 +681,7 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
 
 template <typename T> struct Finally {
   T t;
-  explicit Finally(T t) : t(t){};
+  explicit Finally(T t) : t(std::move(t)){};
   Finally() = delete;
   Finally(Finally&& f) = default;
   Finally(const Finally&) = delete;
@@ -694,6 +695,38 @@ template <typename T> struct Finally {
 template <typename T> Finally<T> make_finally(T t) {
   return Finally<T>{t};
 };
+
+template <typename T>
+typename std::enable_if<std::is_trivially_copy_assignable<T>::value, T>::type
+unaligned_read(const void* ptr) {
+  T r;
+  std::memcpy(&r, ptr, sizeof(T));
+  return r;
+}
+
+/**
+ * For some variables, an invalid value needs to be set as: the maximum value it's type can get
+ * @returns the invalid value of the type
+ */
+template <typename numeric_t> numeric_t invalid() {
+  return std::numeric_limits<numeric_t>::max();
+}
+
+/**
+ * For some variables, an invalid value needs to be set as: the maximum value it's type can get
+ * @returns true when the value is invalid
+ */
+template <typename numeric_t> bool is_invalid(numeric_t value) {
+  return value == invalid<numeric_t>();
+}
+
+/**
+ * For some variables, an invalid value needs to be set as: the maximum value it's type can get
+ * @returns true when the value is valid
+ */
+template <typename numeric_t> bool is_valid(numeric_t value) {
+  return value != invalid<numeric_t>();
+}
 
 } // namespace midgard
 } // namespace valhalla

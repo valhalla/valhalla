@@ -1,13 +1,6 @@
 // -*- mode: c++ -*-
 #ifndef MMP_ROUTING_H_
 #define MMP_ROUTING_H_
-#include <cstdint>
-
-#include <algorithm>
-#include <stdexcept>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -17,6 +10,12 @@
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <stdexcept>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace meili {
@@ -56,10 +55,8 @@ public:
                        edge,
                        cost,
                        sortcost,
-                       0.0f,
                        mode,
                        0,
-                       sif::Cost{},
                        restriction_idx,
                        true,
                        false,
@@ -305,8 +302,14 @@ find_shortest_path(baldr::GraphReader& reader,
                    const float max_time);
 
 // Route path iterator. Methods to assist recovering route paths from Labels.
-class RoutePathIterator : public std::iterator<std::forward_iterator_tag, const Label> {
+class RoutePathIterator {
 public:
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = const Label;
+  using difference_type = std::ptrdiff_t;
+  using pointer = const Label*;
+  using reference = const Label&;
+
   // Construct a route path iterator.
   RoutePathIterator(const LabelSet* labelset, const uint32_t label_idx)
       : labelset_(labelset), label_idx_(label_idx) {

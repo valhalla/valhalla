@@ -1,27 +1,23 @@
 #pragma once
 
-#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "filesystem_utils.h"
 #include "midgard/sequence.h"
+#include "proto/incidents.pb.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 #include <chrono>
 #include <condition_variable>
 #include <ctime>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <thread>
 
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-
 namespace {
-
-#ifdef _WIN32
-#define MTIME(st_stat) st_stat.st_mtime
-#elif __APPLE__
-#define MTIME(st_stat) st_stat.st_mtime
-#else
-#define MTIME(st_stat) st_stat.st_mtim.tv_sec
-#endif
 
 constexpr time_t DEFAULT_MAX_LOADING_LATENCY = 60;
 constexpr size_t DEFAULT_MAX_LATENT_COUNT = 5;
@@ -92,7 +88,8 @@ protected:
    * @param filename   name of the file on the file system to read into memory
    * @return a shared pointer with the data of the tile or an empty pointer if it could not be read
    */
-  static std::shared_ptr<const valhalla::IncidentsTile> read_tile(const std::string& filename) {
+  static std::shared_ptr<const valhalla::IncidentsTile>
+  read_tile(const std::filesystem::path& filename) {
     // open the file for reading. its normal for this to fail when the file has been removed
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file.is_open()) {
@@ -109,7 +106,7 @@ protected:
     // try to parse the stream
     std::shared_ptr<valhalla::IncidentsTile> tile(new valhalla::IncidentsTile);
     if (!tile->ParseFromCodedStream(&cs)) {
-      LOG_WARN("Incident Watcher failed to parse " + filename);
+      LOG_WARN("Incident Watcher failed to parse " + filename.string());
       return {};
     }
 
@@ -118,7 +115,7 @@ protected:
       return {};
     }
 
-    // hand back something that isnt modifyable
+    // hand back something that isnt modifiable
     return std::const_pointer_cast<const valhalla::IncidentsTile>(tile);
   }
 
@@ -183,7 +180,7 @@ protected:
    * equal to the timestamp of the last scan that was performed will be read into the incident cache.
    * Tiles which are in the cache but were not found on the disk in the last scan will b epurged as
    * they have been removed from the log. If a static tileset was provided any tiles which are found
-   * in the log but are nto part of the tileset will be ignored. When the timestamp for the last check
+   * in the log but are not part of the tileset will be ignored. When the timestamp for the last check
    * is older than a timestamp for a given file that file is replaced with whatever its contents are
    * on disk.
    *
@@ -200,23 +197,23 @@ protected:
     LOG_INFO("Incident watcher started");
     // try to configure for changelog mode
     std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;
-    filesystem::path inc_log_path(config.get<std::string>("incident_log", ""));
-    filesystem::path inc_dir;
+    std::filesystem::path inc_log_path(config.get<std::string>("incident_log", ""));
+    std::filesystem::path inc_dir;
+    bool inc_dir_exists = false;
     try {
       changelog.reset(new decltype(changelog)::element_type(inc_log_path.string(), false, 0));
       LOG_INFO("Incident watcher configured for mmap changelog mode");
     } // check for a directory scan mode config
     catch (...) {
-      inc_dir = filesystem::path(config.get<std::string>("incident_dir", ""));
-      if (!filesystem::is_directory(inc_dir)) {
-        inc_dir = {};
-      } else {
+      inc_dir = std::filesystem::path(config.get<std::string>("incident_dir", ""));
+      inc_dir_exists = std::filesystem::is_directory(inc_dir);
+      if (!inc_dir_exists) {
         LOG_INFO("Incident watcher configured for directory scan mode");
       }
     }
 
     // bail if there is nothing to do
-    if (!changelog && inc_dir.string().empty()) {
+    if (!changelog && !inc_dir_exists) {
       LOG_INFO("Incident watcher disabled");
       state->initialized.store(true);
       state->signal.notify_one();
@@ -245,7 +242,7 @@ protected:
       // this happens when the tile is updated during the loop. in that case its possible that
       // the current iteration will load the tile and that it will again be loaded in the next
       auto current_scan = time(nullptr);
-      size_t update_count = 0;
+      [[maybe_unused]] size_t update_count = 0;
       seen.clear();
 
       // we are in memory map mode
@@ -277,9 +274,9 @@ protected:
           }
         }
       } // we are in directory scan mode
-      else if (!inc_dir.string().empty()) {
+      else if (inc_dir_exists) {
         // check all of the files
-        for (filesystem::recursive_directory_iterator i(inc_dir), end; i != end; ++i) {
+        for (std::filesystem::recursive_directory_iterator i(inc_dir), end; i != end; ++i) {
           try {
             // if this looks like a tile
             valhalla::baldr::GraphId tile_id;
@@ -287,11 +284,14 @@ protected:
                 (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid()) {
               // and if the tile was updated since the last time we scanned we load it
               seen.insert(tile_id);
-              struct stat s;
-              if (stat(i->path().c_str(), &s) == 0 && last_scan <= MTIME(s)) {
-                // update the tile
-                update_count += update_tile(state, tile_id, read_tile(i->path().string()));
-              }
+              try {
+                time_t m_time = valhalla::filesystem_utils::last_write_time_t(i->path());
+                if (last_scan <= m_time) {
+                  // update the tile
+                  update_count += update_tile(state, tile_id, read_tile(i->path().string()));
+                }
+              } // if we couldnt get the last modified time we skip
+              catch (...) {}
             }
           } // happens when there is a file in the directory that doesnt have a tile-looking name
           catch (...) {}

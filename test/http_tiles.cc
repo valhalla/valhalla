@@ -1,14 +1,12 @@
-#include "test.h"
-
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
+#include "test.h"
 #include "tyr/actor.h"
-#include "valhalla/filesystem.h"
 #include "valhalla/tile_server.h"
 
 #include <prime_server/prime_server.hpp>
 
-#include <ostream>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -18,12 +16,12 @@
 using namespace valhalla;
 
 zmq::context_t context;
+const std::string tile_remote_address{"127.0.0.1:48004"};
 
 std::string get_tile_url() {
   std::ostringstream oss;
-  oss << test_tile_server_t::server_url << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
+  oss << tile_remote_address << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
       << "?version=%version&access_token=%token";
-
   return oss.str();
 }
 
@@ -71,10 +69,10 @@ TEST(HttpTiles, test_no_cache_gz) {
 class HttpTilesWithCache : public ::testing::Test {
 protected:
   void SetUp() override {
-    filesystem::remove_all("url_tile_cache");
+    std::filesystem::remove_all("url_tile_cache");
   }
   void TearDown() override {
-    filesystem::remove_all("url_tile_cache");
+    std::filesystem::remove_all("url_tile_cache");
   }
 };
 
@@ -104,7 +102,7 @@ struct TestTileDownloadData {
     return test_tile_ids.back();
   }
 
-  const std::string tile_url_base = "127.0.0.1:8004/route-tile/v1/";
+  const std::string tile_url_base = tile_remote_address + "/route-tile/v1/";
   const std::string request_params = "?version=%version&access_token=%token";
   const std::string full_tile_url_pattern =
       tile_url_base + baldr::GraphTile::kTilePathPattern + request_params;
@@ -126,9 +124,9 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
 
   std::vector<std::thread> threads;
   threads.reserve(thread_count);
-  for (int thread_i = 0; thread_i < thread_count; ++thread_i) {
+  for (size_t thread_i = 0; thread_i < thread_count; ++thread_i) {
     threads.emplace_back([&, thread_i]() {
-      for (int tile_i = 0; tile_i < tile_count; ++tile_i) {
+      for (size_t tile_i = 0; tile_i < tile_count; ++tile_i) {
         bool is_for_this_thread = ((tile_i % thread_count) == thread_i);
         if (!is_for_this_thread) {
           continue;
@@ -173,9 +171,9 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
 
   std::vector<std::thread> threads;
   threads.reserve(thread_count);
-  for (int thread_i = 0; thread_i < thread_count; ++thread_i) {
+  for (size_t thread_i = 0; thread_i < thread_count; ++thread_i) {
     threads.emplace_back([&, thread_i]() {
-      for (int tile_i = 0; tile_i < tile_count; ++tile_i) {
+      for (size_t tile_i = 0; tile_i < tile_count; ++tile_i) {
         bool is_for_this_thread = ((tile_i % thread_count) == thread_i);
         if (!is_for_this_thread) {
           continue;
@@ -271,7 +269,9 @@ class HttpTilesEnv : public ::testing::Environment {
 public:
   void SetUp() override {
     // start a file server for utrecht tiles
-    test_tile_server_t::start("test/data/utrecht_tiles", context);
+    valhalla::test_tile_server_t server;
+    server.set_url(tile_remote_address);
+    server.start("test/data/utrecht_tiles", context);
   }
 
   void TearDown() override {

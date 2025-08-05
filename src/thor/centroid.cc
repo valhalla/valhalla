@@ -28,7 +28,7 @@ valhalla::Location make_centroid(const valhalla::baldr::GraphId& edge_id,
   location.mutable_ll()->set_lng(mid_point.first);
   location.mutable_ll()->set_lat(mid_point.second);
 
-  auto* path_edge = location.mutable_path_edges()->Add();
+  auto* path_edge = location.mutable_correlation()->mutable_edges()->Add();
   std::for_each(names.begin(), names.end(),
                 [path_edge](const std::string& n) { path_edge->mutable_names()->Add()->assign(n); });
   path_edge->set_begin_node(false);
@@ -165,7 +165,7 @@ thor::ExpansionRecommendation Centroid::ShouldExpand(baldr::GraphReader& reader,
 void Centroid::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
   // TODO: come up with a heuristic based on the expansion we expect to have to do (input locations)
   bucket_count = 20000;
-  edge_label_reservation = 500000;
+  edge_label_reservation = kInitialEdgeLabelCountDijkstras;
 }
 
 // deallocate and prepare for next request

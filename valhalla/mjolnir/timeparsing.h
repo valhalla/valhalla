@@ -1,23 +1,23 @@
 #pragma once
 
+#include <valhalla/baldr/graphconstants.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
 namespace mjolnir {
 
 /**
- * get the dow mask from user inputed string.  try to handle most inputs
+ * get the dow mask from the provided string.  try to handle most inputs
  * @param   dow entered by a user
  * @return dow mask
  */
 uint8_t get_dow_mask(const std::string& dow);
 
 /**
- * get the dow from user inputed string.  try to handle most inputs
+ * get the dow from the provided string.  try to handle most inputs
  * @param   dow entered by a user
  * @return DOW
  */

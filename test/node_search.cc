@@ -1,23 +1,21 @@
 #include "loki/node_search.h"
-#include <cstdint>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-#include <unordered_set>
-
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
-
 #include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <filesystem>
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 
-#include "filesystem.h"
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/graphvalidator.h"
@@ -41,7 +39,7 @@ struct graph_writer {
   void write_tiles();
 
 private:
-  const uint8_t m_level;
+  [[maybe_unused]] const uint8_t m_level;
   std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder>> m_builders;
 };
 
@@ -232,7 +230,8 @@ void graph_builder::write_tiles(uint8_t level) const {
     vm::PointLL end_point = writer.node_latlng(e.second);
 
     DirectedEdgeBuilder edge_builder({}, e.second, forward, start_point.Distance(end_point), 1, 1, {},
-                                     {}, 0, false, 0, 0, false);
+                                     {}, 0, false, false, false, false, 0, 0, false,
+                                     vb::RoadClass::kInvalid);
 
     auto opp = std::make_pair(e.second, e.first);
     auto itr =
@@ -260,7 +259,7 @@ void graph_builder::write_tiles(uint8_t level) const {
       // make more complex edge geom so that there are 3 segments, affine
       // combination doesnt properly handle arcs but who cares
       edge_info_offset = tile.AddEdgeInfo(edge_index, e.first, e.second, 123, 456, 0, 55, shape,
-                                          {std::to_string(edge_index)}, {}, 0, add);
+                                          {std::to_string(edge_index)}, {}, {}, 0, add);
     }
     edge_builder.set_edgeinfo_offset(edge_info_offset);
 
@@ -272,8 +271,8 @@ void graph_builder::write_tiles(uint8_t level) const {
 
 void make_tile() {
   // make sure that all the old tiles are gone before trying to make new ones.
-  if (filesystem::is_directory(test_tile_dir)) {
-    filesystem::remove_all(test_tile_dir);
+  if (std::filesystem::is_directory(test_tile_dir)) {
+    std::filesystem::remove_all(test_tile_dir);
   }
 
   graph_builder builder;

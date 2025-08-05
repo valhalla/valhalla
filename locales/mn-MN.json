@@ -1,0 +1,2353 @@
+{
+  "posix_locale": "mn_MN.UTF-8",
+  "aliases": [
+    "mn"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "Очих: <TIME>.",
+        "1": "Очих: <TRANSIT_STOP>-д <TIME> цагт"
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive: 8:02 AM."
+        ],
+        "1": [
+          "Arrive: 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Очих <TIME> цагт.",
+        "1": "Очих <TRANSIT_STOP>-д <TIME> цагт."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive at 8:02 AM."
+        ],
+        "1": [
+          "Arrive at 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> чигт яв.",
+        "1": "<RELATIVE_DIRECTION> өнгөрөөд <STREET_NAMES> чигт яв.",
+        "2": "<RELATIVE_DIRECTION> өнгөрөөд <BEGIN_STREET_NAMES> чигт яв. Үргэлжүүлэн <STREET_NAMES>.",
+        "3": "<STREET_NAMES> хүртэл явахын тулд <RELATIVE_DIRECTION> яв.",
+        "4": "<JUNCTION_NAME>-д <RELATIVE_DIRECTION> чигт яв.",
+        "5": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION> чигт яв."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> чигт.",
+        "1": "<RELATIVE_DIRECTION> өнгөрөөд <STREET_NAMES> чигт яв.",
+        "2": "<BEGIN_STREET_NAMES> руу <RELATIVE_DIRECTION> чигт яв.",
+        "3": "<STREET_NAMES>-р явахын тулд <RELATIVE_DIRECTION> чигт яв.",
+        "4": "<JUNCTION_NAME>-д <RELATIVE_DIRECTION> чигт яв.",
+        "5": "<TOWARD_SIGN> рүү <RELATIVE_DIRECTION> чигт яв."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road, U.S. 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> нь <STREET_NAMES> боллоо."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> нь <STREET_NAMES> боллоо."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Үргэлжлүүл.",
+        "1": "<STREET_NAMES>-р үргэлжлүүл.",
+        "2": "<JUNCTION_NAME>-д үргэлжлүүл.",
+        "3": "<TOWARD_SIGN> руу үргэлжлүүлэн яв."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Үргэлжлүүл.",
+        "1": "<LENGTH> үргэлжлүүл.",
+        "2": "<STREET_NAMES>-р үргэлжлүүл.",
+        "3": "<STREET_NAMES>-ээр үргэлжлүүлнэ үү <LENGTH>.",
+        "4": "<JUNCTION_NAME>-р үргэлжлүүл.",
+        "5": "<JUNCTION_NAME>-с <LENGTH> үргэлжлүүлнэ үү.",
+        "6": "<TOWARD_SIGN> руу үргэлжлүүлэн яв.",
+        "7": "<TOWARD_SIGN> чиглэлд <LENGTH> яв."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> километр",
+        "1 километр",
+        "<METERS> метр",
+        "10 метрээс бага"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 миль",
+        "хагас миль",
+        "дөрөвний нэг миль",
+        "<FEET> фут",
+        "10 фут хүрэхгүй"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Үргэлжлүүл.",
+        "1": "<STREET_NAMES>-р үргэлжлүүл.",
+        "2": "<JUNCTION_NAME> дээр үргэлжлүүл.",
+        "3": "<TOWARD_SIGN> руу үргэлжлүүлэн яв."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Явах: <TIME>.",
+        "1": "Явах: <TRANSIT_STOP>-с <TIME>."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart: 8:02 AM."
+        ],
+        "1": [
+          "Depart: 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "<TIME> цагт хөдөлнө.",
+        "1": "<TRANSIT_STOP>-с <TIME> цагт хөдөлнө."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart at 8:02 AM."
+        ],
+        "1": [
+          "Depart at 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Таны зорьсон газарт очлоо.",
+        "1": "Та <DESTINATION>-д ирлээ.",
+        "2": "Таны очих газар <RELATIVE_DIRECTION> талд байна.",
+        "3": "<DESTINATION> нь <RELATIVE_DIRECTION> талд байна."
+      },
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 3206 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Таны зорьсон газарт очлоо.",
+        "1": "Та <DESTINATION>-д ирлээ.",
+        "2": "Таны очих газар <RELATIVE_DIRECTION> талд байна.",
+        "3": "<DESTINATION> нь <RELATIVE_DIRECTION> талд байна."
+      },
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Та зорьсон газраа ирнэ.",
+        "1": "Та <DESTINATION> хүрэх болно.",
+        "2": "Таны очих газар <RELATIVE_DIRECTION> байх болно.",
+        "3": "<DESTINATION> нь <RELATIVE_DIRECTION> байх болно."
+      },
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "You will arrive at your destination."
+        ],
+        "1": [
+          "You will arrive at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination will be on the left.",
+          "Your destination will be on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company will be on the left."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Усан онгоцоор яв.",
+        "1": "<STREET_NAMES> замаар яв.",
+        "2": "<STREET_NAMES> <FERRY_LABEL>-р яв.",
+        "3": "<TOWARD_SIGN> руу усан онгоцоор яв."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "ferry_label": "Усан онгоц",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Усан онгоцоор яв.",
+        "1": "<STREET_NAMES> замаар яв.",
+        "2": "<STREET_NAMES> <FERRY_LABEL>-р яв.",
+        "3": "<TOWARD_SIGN> руу усан онгоцоор яв."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "ferry_label": "Усан онгоц",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Тойрог руу ор.",
+        "1": "Тойрог руу ороод <ORDINAL_VALUE> гарцаар гар.",
+        "2": "Тойрог руу ороод <ORDINAL_VALUE> гарцаар <ROUNDABOUT_EXIT_STREET_NAMES> руу гар.",
+        "3": "Тойрог руу ороод <ORDINAL_VALUE> гарцаар <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> руу гар. <ROUNDABOUT_EXIT_STREET_NAMES> замаар үргэлжлүүлэн яв.",
+        "4": "Тойрог руу ороод <TOWARD_SIGN> чиглэлийн <ORDINAL_VALUE> гарцаар гар.",
+        "5": "Тойрог руу ороод <ROUNDABOUT_EXIT_STREET_NAMES> гарцаар гар.",
+        "6": "Тойрог руу ороод <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> руу гарах гарцаар гар. <ROUNDABOUT_EXIT_STREET_NAMES> замаар үргэлжлүүлэн яв.",
+        "7": "Тойрог руу ороод <TOWARD_SIGN> руу гарах гарцаар гар.",
+        "8": "<STREET_NAMES> ор",
+        "9": "<STREET_NAMES> руу ороод <ORDINAL_VALUE> гарцаар гар.",
+        "10": "<STREET_NAMES> орж <ROUNDABOUT_EXIT_STREET_NAMES>-н <ORDINAL_VALUE> гарцаар гар.",
+        "11": "<STREET_NAMES> руу ороод <ORDINAL_VALUE> гарцаар <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> руу гар. <ROUNDABOUT_EXIT_STREET_NAMES> замаар үргэлжлүүлэн яв.",
+        "12": "<STREET_NAMES> руу ороод <TOWARD_SIGN> чиглэлийн <ORDINAL_VALUE> гарцаар гар.",
+        "13": "<STREET_NAMES> орж <ROUNDABOUT_EXIT_STREET_NAMES> гарцаар гар.",
+        "14": "<STREET_NAMES> руу ороод <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES> руу гарах гарцаар гар. <ROUNDABOUT_EXIT_STREET_NAMES> замаар үргэлжлүүлэн яв.",
+        "15": "<STREET_NAMES> руу ороод <TOWARD_SIGN> руу гарах гарцаар гар."
+      },
+      "ordinal_values": [
+        "1-р",
+        "2-р",
+        "3-р",
+        "4-р",
+        "5-р",
+        "6-р",
+        "7-р",
+        "8-р",
+        "9-р",
+        "10-р"
+      ],
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Тойрог руу ор.",
+        "1": "Тойрог руу ороод <ORDINAL_VALUE> гарцаар гар.",
+        "2": "Тойрог руу ороод <ORDINAL_VALUE> гарцаар <ROUNDABOUT_EXIT_STREET_NAMES> руу гар.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Тойрог руу ороод <TOWARD_SIGN> чиглэлийн <ORDINAL_VALUE> гарцаар гар.",
+        "5": "Тойрог руу ороод <ROUNDABOUT_EXIT_STREET_NAMES> гарцаар гар.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Тойрог руу ороод <TOWARD_SIGN> руу гарах гарцаар гар.",
+        "8": "<STREET_NAMES> ор",
+        "9": "<STREET_NAMES> руу ороод <ORDINAL_VALUE> гарцаар гар.",
+        "10": "<STREET_NAMES> орж <ROUNDABOUT_EXIT_STREET_NAMES>-н <ORDINAL VALUE> гарцаар гар.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "<STREET_NAMES> руу ороод <TOWARD_SIGN> чиглэлийн <ORDINAL_VALUE> гарцаар гар.",
+        "13": "<STREET_NAMES> орж <ROUNDABOUT_EXIT_STREET_NAMES> гарцаар гар.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "<STREET_NAMES> руу ороод <TOWARD_SIGN> руу гарах гарцаар гар."
+      },
+      "ordinal_values": [
+        "1-р",
+        "2-р",
+        "3-р",
+        "4-р",
+        "5-р",
+        "6-р",
+        "7-р",
+        "8-р",
+        "9-р",
+        "10-р"
+      ],
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> талын гарцаар гар.",
+        "1": "<RELATIVE_DIRECTION> дээрх <NUMBER_SIGN> гарцаар гар.",
+        "2": "<RELATIVE_DIRECTION> талын <BRANCH_SIGN> гарцаар гар.",
+        "3": "<RELATIVE_DIRECTION> дээрх <NUMBER_SIGN> гарцаар <BRANCH_SIGN> руу гар.",
+        "4": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION> гарцаар гар.",
+        "5": "<TOWARD_SIGN> рүү <RELATIVE_DIRECTION>-н <NUMBER_SIGN> гарцаар гар.",
+        "6": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION>-н <BRANCH_SIGN> гарцаар гар.",
+        "7": "<RELATIVE_DIRECTION>-н <NUMBER_SIGN> гарцаар <TOWARD_SIGN> рүү <BRANCH_SIGN> руу гар.",
+        "8": "<RELATIVE_DIRECTION> дээрх <NAME_SIGN> гарцаар гар.",
+        "10": "<RELATIVE_DIRECTION> дээрх <NAME_SIGN> гарцаар <BRANCH_SIGN> руу гар.",
+        "12": "<TOWARD_SIGN> рүү <RELATIVE_DIRECTION> талын <NAME_SIGN> гарцаар гар.",
+        "14": "<RELATIVE_DIRECTION> дээрх <NAME_SIGN> гарцаар <TOWARD_SIGN> руу <BRANCH_SIGN> руу гар.",
+        "15": "Гарцаар гар.",
+        "16": "<NUMBER_SIGN> гарцаар гар.",
+        "17": "<BRANCH_SIGN> гарцаар гар.",
+        "18": "<NUMBER_SIGN> гарцаар <BRANCH_SIGN> руу гар.",
+        "19": "<TOWARD_SIGN> руу гарцаар гар.",
+        "20": "<TOWARD_SIGN> рүү <NUMBER_SIGN> гарцаар гар.",
+        "21": "<TOWARD_SIGN> руу <BRANCH_SIGN> гарцаар гар.",
+        "22": "<NUMBER_SIGN> гарцаар <TOWARD_SIGN> руу <BRANCH_SIGN> руу гар.",
+        "23": "<NAME_SIGN> гарцаар гар.",
+        "25": "<NAME_SIGN> гарцаар <BRANCH_SIGN> руу ор.",
+        "27": "<TOWARD_SIGN> рүү <NAME_SIGN> гарцаар гар.",
+        "29": "<NAME_SIGN> гарцаар <TOWARD_SIGN> руу <BRANCH_SIGN> руу гар."
+      },
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the US 322 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto US 322 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the US 322 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Тойрог замаас гар.",
+        "1": "Тойрог замаас гараад <STREET_NAMES> руу ор.",
+        "2": "Тойрог замаас гараад <BEGIN_STREET_NAMES> руу яв. <STREET_NAMES>-р үргэлжлүүлэн яв.",
+        "3": "<TOWARD_SIGN> руу тойргоос гар."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road/MD 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Тойрог замаас гар.",
+        "1": "Тойрог замаас гараад <STREET_NAMES> руу ор.",
+        "2": "Exit the roundabout onto <BEGIN_STREET_NAMES>.",
+        "3": "<TOWARD_SIGN> руу тойргоос гар."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road, Maryland 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> талын гарцаар гар.",
+        "1": "<RELATIVE_DIRECTION> дээрх <NUMBER_SIGN> гарцаар гар.",
+        "2": "<RELATIVE_DIRECTION> талын <BRANCH_SIGN> гарцаар гар.",
+        "3": "<RELATIVE_DIRECTION> дээрх <NUMBER_SIGN> гарцаар <BRANCH_SIGN> руу гар.",
+        "4": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION> гарцаар гар.",
+        "5": "<TOWARD_SIGN> рүү <RELATIVE_DIRECTION>-н <NUMBER_SIGN> гарцаар гар.",
+        "6": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION>-н <BRANCH_SIGN> гарцаар гар.",
+        "7": "<RELATIVE_DIRECTION>-н <NUMBER_SIGN> гарцаар <TOWARD_SIGN> рүү <BRANCH_SIGN> руу гар.",
+        "8": "<RELATIVE_DIRECTION> дээрх <NAME_SIGN> гарцаар гар.",
+        "10": "<RELATIVE_DIRECTION> дээрх <NAME_SIGN> гарцаар <BRANCH_SIGN> руу гар.",
+        "12": "<TOWARD_SIGN> рүү <RELATIVE_DIRECTION> талын <NAME_SIGN> гарцаар гар.",
+        "14": "<RELATIVE_DIRECTION> дээрх <NAME_SIGN> гарцаар <TOWARD_SIGN> руу <BRANCH_SIGN> руу гар.",
+        "15": "Гарцаар гар.",
+        "16": "<NUMBER_SIGN> гарцаар гар.",
+        "17": "<BRANCH_SIGN> гарцаар гар.",
+        "18": "<NUMBER_SIGN> гарцаар <BRANCH_SIGN> руу гар.",
+        "19": "<TOWARD_SIGN> руу гарцаар гар.",
+        "20": "<TOWARD_SIGN> рүү <NUMBER_SIGN> гарцаар гар.",
+        "21": "<TOWARD_SIGN> руу <BRANCH_SIGN> гарцаар гар.",
+        "22": "<NUMBER_SIGN> гарцаар <TOWARD_SIGN> руу <BRANCH_SIGN> руу гар.",
+        "23": "<NAME_SIGN> гарцаар гар.",
+        "25": "<NAME_SIGN> гарцаар <BRANCH_SIGN> руу ор.",
+        "27": "<TOWARD_SIGN> рүү <NAME_SIGN> гарцаар гар.",
+        "29": "<NAME_SIGN> гарцаар <TOWARD_SIGN> руу <BRANCH_SIGN> руу гар."
+      },
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the U.S. 3 22 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the U.S. 3 22 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "<EXIT_NUMBERS> гарах"
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Салаанаас <RELATIVE_DIRECTION> яв.",
+        "1": "<NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиглэлтэй яваарай.",
+        "2": "<RELATIVE_DIRECTION> замаар <STREET_NAMES> явах.",
+        "3": "<STREET_NAMES>-н <NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиг барина.",
+        "4": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION>-г үргэлжлүүлээрэй.",
+        "5": "<TOWARD_SIGN> чиглэлийн <NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиглэлтэй яваарай.",
+        "6": "<TOWARD_SIGN> рүү <STREET_NAMES> руу явахын тулд <RELATIVE_DIRECTION> чигээр яв.",
+        "7": "<TOWARD_SIGN> чиглэлийн <STREET_NAMES> руу <NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиглэлтэй яваарай."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "чигээрээ",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take I 895 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto I 895 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take I 895 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto I 895 South toward Annapolis."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> замаар <STREET_NAMES> хүртэл үргэлжлүүлээрэй.",
+        "1": "<RELATIVE_DIRECTION> замаар <NUMBER_SIGN> гарцаар <STREET_NAMES>-р үргэлжлүүлээрэй.",
+        "2": "<TOWARD_SIGN> рүү <STREET_NAMES>-р үргэлжлүүлэхийн тулд <RELATIVE_DIRECTION>-г хадгал.",
+        "3": "<TOWARD_SIGN> рүү <STREET_NAMES>-р үргэлжлүүлэхийн тулд <NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиглэлтэй яваарай."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "чигээрээ",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on I 95 South.",
+          "Keep straight to stay on I 95 South.",
+          "Keep right to stay on I 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on I 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on I 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> замаар <STREET_NAMES> хүртэл үргэлжлүүлээрэй.",
+        "1": "<RELATIVE_DIRECTION> замаар <NUMBER_SIGN> гарцаар <STREET_NAMES>-р үргэлжлүүлээрэй.",
+        "2": "<TOWARD_SIGN> рүү <STREET_NAMES>-р үргэлжлүүлэхийн тулд <RELATIVE_DIRECTION>-г хадгал.",
+        "3": "<TOWARD_SIGN> рүү <STREET_NAMES>-р үргэлжлүүлэхийн тулд <NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиглэлтэй яваарай."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "чигээрээ",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on Interstate 95 South.",
+          "Keep straight to stay on Interstate 95 South.",
+          "Keep right to stay on Interstate 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on Interstate 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Салаанаас <RELATIVE_DIRECTION> яв.",
+        "1": "<NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиглэлтэй яваарай.",
+        "2": "<RELATIVE_DIRECTION> замаар <STREET_NAMES> явах.",
+        "3": "<STREET_NAMES>-н <NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиг барина.",
+        "4": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION>-г үргэлжлүүлээрэй.",
+        "5": "<TOWARD_SIGN> чиглэлийн <NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиглэлтэй яваарай.",
+        "6": "<TOWARD_SIGN> рүү <STREET_NAMES> руу явахын тулд <RELATIVE_DIRECTION> чигээр яв.",
+        "7": "<TOWARD_SIGN> чиглэлийн <STREET_NAMES> руу <NUMBER_SIGN> гарцаар гарахын тулд <RELATIVE_DIRECTION> чиглэлтэй яваарай."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "чигээрээ",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take Interstate 8 95 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto Interstate 8 95 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take Interstate 8 95 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Нийл.",
+        "1": "<RELATIVE_DIRECTION>-р нийл.",
+        "2": "<STREET_NAMES> руу нийл.",
+        "3": "<STREET_NAMES> дээрх <RELATIVE_DIRECTION>-р нийл.",
+        "4": "<TOWARD_SIGN> руу нийл.",
+        "5": "<TOWARD_SIGN> рүү <RELATIVE_DIRECTION>-г нийлнэ."
+      },
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Нийл.",
+        "1": "<RELATIVE_DIRECTION>-р нийл.",
+        "2": "<STREET_NAMES> руу нийл.",
+        "3": "<STREET_NAMES> дээрх <RELATIVE_DIRECTION>-р нийл.",
+        "4": "<TOWARD_SIGN> руу нийл.",
+        "5": "<TOWARD_SIGN> рүү <RELATIVE_DIRECTION>-г нийлнэ."
+      },
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> аялах."
+      },
+      "transit_stop_count_labels": {
+        "one": "буудал",
+        "other": "буудал"
+      },
+      "example_phrases": {
+        "0": [
+          "Travel 1 stop.",
+          "Travel 3 stops."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "<LENGTH> үргэлжлүүл.",
+        "1": "<STREET_NAMES> дээр <LENGTH> үргэлжлүүлнэ үү."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> километр",
+        "1 километр",
+        "<METERS> метр",
+        "10 метрээс бага"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 миль",
+        "хагас миль",
+        "дөрөвний нэг миль",
+        "<FEET> фут",
+        "10 фут хүрэхгүй"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
+        ],
+        "1": [
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> налуу замаар яв.",
+        "1": "<RELATIVE_DIRECTION> талын <BRANCH_SIGN> налуугаар яв.",
+        "2": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION> налуу замаар яв.",
+        "3": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION>-н <BRANCH_SIGN> налуугаар яв.",
+        "4": "<RELATIVE_DIRECTION> талын <NAME_SIGN> налуугаар яв.",
+        "5": "Налуу замаар явахын тулд <RELATIVE_DIRECTION> эргэнэ.",
+        "6": "<BRANCH_SIGN> налуугаар явахын тулд <RELATIVE_DIRECTION> эргэнэ.",
+        "7": "<TOWARD_SIGN> чиглэлийн налуугаар явахын тулд <RELATIVE_DIRECTION> эргэнэ.",
+        "8": "<TOWARD_SIGN> чиглэлийн <BRANCH_SIGN> налуугаар явахын тулд <RELATIVE_DIRECTION> эргээд.",
+        "9": "<RELATIVE_DIRECTION> эргээд <NAME_SIGN> налуугаар яв.",
+        "10": "Налуу замаар яв.",
+        "11": "<BRANCH_SIGN> налуугаар яв.",
+        "12": "<TOWARD_SIGN> руу налуу замаар яв.",
+        "13": "<TOWARD_SIGN> руу <BRANCH_SIGN> налуугаар яв.",
+        "14": "<NAME_SIGN> налуугаар яв."
+      },
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the I 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the PA 283 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the I 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the Soutch Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg ramp."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Налуу замаар явахын тулд шулуун яваарай.",
+        "1": "<BRANCH_SIGN> налуугаар явахын тулд шулуун яваарай.",
+        "2": "<TOWARD_SIGN> чиглэлийн налуу замаар шулуун яв.",
+        "3": "<TOWARD_SIGN> чиглэлийн <BRANCH_SIGN> налуугаар шулуун яв.",
+        "4": "<NAME_SIGN> налуугаар явахын тулд шулуун яваарай."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the US 322 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Налуу замаар явахын тулд шулуун яваарай.",
+        "1": "<BRANCH_SIGN> налуугаар явахын тулд шулуун яваарай.",
+        "2": "<TOWARD_SIGN> чиглэлийн налуу замаар шулуун яв.",
+        "3": "<TOWARD_SIGN> чиглэлийн <BRANCH_SIGN> налуугаар шулуун яв.",
+        "4": "<NAME_SIGN> налуугаар явахын тулд шулуун яваарай."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the U.S. 3 22 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> налуу замаар яв.",
+        "1": "<RELATIVE_DIRECTION> талын <BRANCH_SIGN> налуугаар яв.",
+        "2": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION> налуу замаар яв.",
+        "3": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION>-н <BRANCH_SIGN> налуугаар яв.",
+        "4": "<RELATIVE_DIRECTION> талын <NAME_SIGN> налуугаар яв.",
+        "5": "Налуу замаар явахын тулд <RELATIVE_DIRECTION> эргэнэ.",
+        "6": "<BRANCH_SIGN> налуугаар явахын тулд <RELATIVE_DIRECTION> эргэнэ.",
+        "7": "<TOWARD_SIGN> чиглэлийн налуугаар явахын тулд <RELATIVE_DIRECTION> эргэнэ.",
+        "8": "<TOWARD_SIGN> чиглэлийн <BRANCH_SIGN> налуугаар явахын тулд <RELATIVE_DIRECTION> эргээд.",
+        "9": "<RELATIVE_DIRECTION> эргээд <NAME_SIGN> налуугаар яв.",
+        "10": "Налуу замаар яв.",
+        "11": "<BRANCH_SIGN> налуугаар яв.",
+        "12": "<TOWARD_SIGN> руу налуу замаар яв.",
+        "13": "<TOWARD_SIGN> руу <BRANCH_SIGN> налуугаар яв.",
+        "14": "<NAME_SIGN> налуугаар яв."
+      },
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the Interstate 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the Pennsylvania 2 83 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the Interstate 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the South Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Огцом <RELATIVE_DIRECTION> эргэ.",
+        "1": "<STREET_NAMES>-д огцом <RELATIVE_DIRECTION> гарга.",
+        "2": "<BEGIN_STREET_NAMES> руу огцом <RELATIVE_DIRECTION> эргэ. <STREET_NAMES>-р үргэлжлүүлэн яв.",
+        "3": "<STREET_NAMES> хүртэл огцом <RELATIVE_DIRECTION> тийш яв.",
+        "4": "<JUNCTION_NAME>-с огцом <RELATIVE_DIRECTION> эргэ.",
+        "5": "<TOWARD_SIGN> руу огцом <RELATIVE_DIRECTION> эргэ."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Огцом <RELATIVE_DIRECTION> эргэ.",
+        "1": "<STREET_NAMES>-д огцом <RELATIVE_DIRECTION> гарга.",
+        "2": "<BEGIN_STREET_NAMES> руу огцом <RELATIVE_DIRECTION> эргэ.",
+        "3": "<STREET_NAMES> хүртэл огцом <RELATIVE_DIRECTION> тийш яв.",
+        "4": "<JUNCTION_NAME>-с огцом <RELATIVE_DIRECTION> эргэ.",
+        "5": "<TOWARD_SIGN> руу огцом <RELATIVE_DIRECTION> эргэ."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> руу чиглүүл.",
+        "1": "<STREET_NAMES> дээр <CARDINAL_DIRECTION> руу яв.",
+        "2": "<BEGIN_STREET_NAMES>-с <CARDINAL_DIRECTION> руу яв. <STREET_NAMES>-р үргэлжлүүлэн яв.",
+        "4": "<CARDINAL_DIRECTION> жолоодох.",
+        "5": "<STREET_NAMES> дээр <CARDINAL_DIRECTION> жолоодоорой.",
+        "6": "<BEGIN_STREET_NAMES>-р <CARDINAL_DIRECTION> жолоодлоорой. <STREET_NAMES>-р үргэлжлүүлэн яв.",
+        "8": "<CARDINAL_DIRECTION> алх.",
+        "9": "<STREET_NAMES> дээр <CARDINAL_DIRECTION> алх.",
+        "10": "<BEGIN_STREET_NAMES>-р <CARDINAL_DIRECTION> алх. <STREET_NAMES>-р үргэлжлүүлэн яв.",
+        "16": "<CARDINAL_DIRECTION> дугуй унах.",
+        "17": "<STREET_NAMES> дээр <CARDINAL_DIRECTION> дугуйгаар яв.",
+        "18": "<BEGIN_STREET_NAMES> дээр <CARDINAL_DIRECTION> дугуйгаар яв. <STREET_NAMES>-р үргэлжлүүлэн яв."
+      },
+      "cardinal_directions": [
+        "хойд",
+        "зүүн хойд",
+        "зүүн",
+        "зүүн өмнөд",
+        "өмнөд",
+        "баруун өмнөд",
+        "баруун",
+        "баруун хойд"
+      ],
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head southwest on 5th Avenue.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
+        ],
+        "2": [
+          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "4": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "5": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "6": [
+          "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "8": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "9": [
+          "Walk southwest on 5th Avenue.",
+          "Walk west on the walkway"
+        ],
+        "10": [
+          "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "16": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue.",
+          "Bike east on the cycleway",
+          "Bike north on the mountain bike trail"
+        ],
+        "18": [
+          "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> руу чиглүүл.",
+        "1": "<CARDINAL_DIRECTION> руу <LENGTH> чиглүүл.",
+        "2": "<STREET_NAMES> дээр <CARDINAL_DIRECTION> руу яв.",
+        "3": "<CARDINAL_DIRECTION> руу <STREET_NAMES>-с <LENGTH> зайд яв.",
+        "4": "<BEGIN_STREET_NAMES>-с <CARDINAL_DIRECTION> руу яв.",
+        "5": "<CARDINAL_DIRECTION> жолоодох.",
+        "6": "<CARDINAL_DIRECTION>-г <LENGTH> жолоодох.",
+        "7": "<STREET_NAMES> дээр <CARDINAL_DIRECTION> жолоодоорой.",
+        "8": "<CARDINAL_DIRECTION> машинаар <STREET_NAMES> дээр <LENGTH> явна.",
+        "9": "<BEGIN_STREET_NAMES> дээр <CARDINAL_DIRECTION> жолоодоорой.",
+        "10": "<CARDINAL_DIRECTION> алх.",
+        "11": "<CARDINAL_DIRECTION> алхаж <LENGTH>.",
+        "12": "<STREET_NAMES> дээр <CARDINAL_DIRECTION> алх.",
+        "13": "<STREET_NAMES> дээр <CARDINAL_DIRECTION> алхаж <LENGTH>.",
+        "14": "<BEGIN_STREET_NAMES> дээр <CARDINAL_DIRECTION> алх.",
+        "15": "<CARDINAL_DIRECTION> дугуй унах.",
+        "16": "<CARDINAL_DIRECTION> дугуйгаар <LENGTH> явах.",
+        "17": "<STREET_NAMES> дээр <CARDINAL_DIRECTION> дугуйгаар яв.",
+        "18": "<CARDINAL_DIRECTION> дугуйгаар <STREET_NAMES> дээр <LENGTH> яваарай.",
+        "19": "<BEGIN_STREET_NAMES> дээр <CARDINAL_DIRECTION> дугуйгаар яв."
+      },
+      "cardinal_directions": [
+        "хойд",
+        "зүүн хойд",
+        "зүүн",
+        "зүүн өмнөд",
+        "өмнөд",
+        "баруун өмнөд",
+        "баруун",
+        "баруун хойд"
+      ],
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> километр",
+        "1 километр",
+        "<METERS> метр",
+        "10 метрээс бага"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 миль",
+        "хагас миль",
+        "дөрөвний нэг миль",
+        "<FEET> фут",
+        "10 фут хүрэхгүй"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
+        ],
+        "2": [
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "4": [
+          "Head south on North Prince Street, U.S. 2 22."
+        ],
+        "5": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "6": [
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "8": [
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "9": [
+          "Drive south on North Prince Street, U.S. 2 22."
+        ],
+        "10": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "16": [
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue."
+        ],
+        "18": [
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "<TRANSIT_NAME>-р яв. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> рүү <TRANSIT_NAME>-р яв. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "галт тэрэг",
+        "автобус",
+        "гатлага онгоц",
+        "кабель машин",
+        "гондола",
+        "фуникуляр"
+      ],
+      "transit_stop_count_labels": {
+        "one": "буудал",
+        "other": "буудал"
+      },
+      "example_phrases": {
+        "0": [
+          "Take the New Haven. (1 stop)",
+          "Take the metro. (2 stops)",
+          "Take the bus. (12 stops)"
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST. (10 stops)",
+          "Take the ferry toward Staten Island. (1 stop)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Буудлаас гараарай.",
+        "1": "<TRANSIT_STOP>-с гар.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>-с гар."
+      },
+      "station_label": "Буудал",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Буудлаас гараарай.",
+        "1": "<TRANSIT_STOP>-с гар.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>-с гар."
+      },
+      "station_label": "Буудал",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Буудалруу ороорой.",
+        "1": "<TRANSIT_STOP> руу орно уу.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>-г ороорой."
+      },
+      "station_label": "Буудал",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Буудалруу ороорой.",
+        "1": "<TRANSIT_STOP> руу орно уу.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL>-г ороорой."
+      },
+      "station_label": "Буудал",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Буудлаас шилжиж сууна.",
+        "1": "<TRANSIT_STOP> дээр шилжинэ.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> шилжинэ үү."
+      },
+      "station_label": "Буудал",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Буудлаас шилжиж сууна.",
+        "1": "<TRANSIT_STOP> дээр шилжинэ.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> шилжинэ үү."
+      },
+      "station_label": "Буудал",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> дээр үлдээрэй. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> рүү <TRANSIT_NAME>-р яв. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "галт тэрэг",
+        "автобус",
+        "гатлага онгоц",
+        "кабель машин",
+        "гондола",
+        "фуникуляр"
+      ],
+      "transit_stop_count_labels": {
+        "one": "буудал",
+        "other": "буудал"
+      },
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven. (1 stop)",
+          "Remain on the train. (3 stops)"
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> дээр үлдээрэй.",
+        "1": "<TRANSIT_HEADSIGN> рүү <TRANSIT_NAME>-р яв."
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "галт тэрэг",
+        "автобус",
+        "гатлага онгоц",
+        "кабель машин",
+        "гондола",
+        "фуникуляр"
+      ],
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven."
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "<TRANSIT_NAME>-д суухын тулд шилжээрэй. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> чиглэлд <TRANSIT_NAME>-р явахын тулд шилжээрэй. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "галт тэрэг",
+        "автобус",
+        "гатлага онгоц",
+        "кабель машин",
+        "гондола",
+        "фуникуляр"
+      ],
+      "transit_stop_count_labels": {
+        "one": "буудал",
+        "other": "буудал"
+      },
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven. (1 stop)",
+          "Transfer to take the tram. (4 stops)"
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME>-д явахын тулд шилжээрэй.",
+        "1": "<TRANSIT_HEADSIGN> чиглэлийн <TRANSIT_NAME>-д явахын тулд шилжээрэй."
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "галт тэрэг",
+        "автобус",
+        "гатлага онгоц",
+        "кабель машин",
+        "гондола",
+        "фуникуляр"
+      ],
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven."
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME>-аар яв.",
+        "1": "<TRANSIT_HEADSIGN> рүү <TRANSIT_NAME>-р яв."
+      },
+      "empty_transit_name_labels": [
+        "трамвай",
+        "метро",
+        "галт тэрэг",
+        "автобус",
+        "гатлага онгоц",
+        "кабель машин",
+        "гондола",
+        "фуникуляр"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the New Haven."
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> эргэ.",
+        "1": "<RELATIVE_DIRECTION> эргээд <STREET_NAMES> руу ор.",
+        "2": "<RELATIVE_DIRECTION> эргээд <BEGIN_STREET_NAMES> руу яв. <STREET_NAMES>-р үргэлжлүүлэн яв.",
+        "3": "<RELATIVE_DIRECTION> эргээд <STREET_NAMES> хүртэл.",
+        "4": "<JUNCTION_NAME>-с <RELATIVE_DIRECTION> эргэх.",
+        "5": "<TOWARD_SIGN> рүү <RELATIVE_DIRECTION> эргэх."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> эргэ.",
+        "1": "<RELATIVE_DIRECTION> эргээд <STREET_NAMES> руу ор.",
+        "2": "<RELATIVE_DIRECTION> эргээд <BEGIN_STREET_NAMES> руу ор.",
+        "3": "<RELATIVE_DIRECTION> эргээд <STREET_NAMES> хүртэл.",
+        "4": "<JUNCTION_NAME>-с <RELATIVE_DIRECTION> эргэх.",
+        "5": "<TOWARD_SIGN> рүү <RELATIVE_DIRECTION> эргэх."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> буцаж эргэлт хийгээрэй.",
+        "1": "<RELATIVE_DIRECTION> эргэж, <STREET_NAMES> руу буцаж эргэн ор.",
+        "2": "<RELATIVE_DIRECTION> тийш <STREET_NAMES>-р буцаж эргээд үргэлжлүүлээрэй.",
+        "3": "<CROSS_STREET_NAMES>-с <RELATIVE_DIRECTION> буцаж эргэх.",
+        "4": "<CROSS_STREET_NAMES>-с <RELATIVE_DIRECTION> буцаж эргээд <STREET_NAMES> руу ор.",
+        "5": "<STREET_NAMES>-р үргэлжлүүлэхийн тулд <CROSS_STREET_NAMES>-с <RELATIVE_DIRECTION> буцаж эргэх.",
+        "6": "<JUNCTION_NAME>-с <RELATIVE_DIRECTION> буцаж эргэ.",
+        "7": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION> буцаж эргэлт хийгээрэй."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> буцаж эргэлт хийгээрэй.",
+        "1": "<RELATIVE_DIRECTION> эргэж, <STREET_NAMES> руу буцаж эргэн ор.",
+        "2": "<RELATIVE_DIRECTION> тийш <STREET_NAMES>-р буцаж эргээд үргэлжлүүлээрэй.",
+        "3": "<CROSS_STREET_NAMES>-с <RELATIVE_DIRECTION> буцаж эргэх.",
+        "4": "<CROSS_STREET_NAMES>-с <RELATIVE_DIRECTION> буцаж эргээд <STREET_NAMES> руу ор.",
+        "5": "<STREET_NAMES>-р үргэлжлүүлэхийн тулд <CROSS_STREET_NAMES>-с <RELATIVE_DIRECTION> буцаж эргэх.",
+        "6": "<JUNCTION_NAME>-с <RELATIVE_DIRECTION> буцаж эргэ.",
+        "7": "<TOWARD_SIGN> руу <RELATIVE_DIRECTION> буцаж эргэлт хийгээрэй."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц",
+        "шат",
+        "гүүр",
+        "хонгил"
+      ],
+      "relative_directions": [
+        "зүүн",
+        "баруун"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Дараа нь <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Дараа нь <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> километр",
+        "1 километр",
+        "<METERS> метр",
+        "10 метрээс бага"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 миль",
+        "хагас миль",
+        "дөрөвний нэг миль",
+        "<FEET> фут",
+        "10 фут хүрэхгүй"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "<LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> километр",
+        "1 километр",
+        "<METERS> метр",
+        "10 метрээс бага"
+      ],
+      "us_customary_lengths": [
+        "<MILES> миль",
+        "1 миль",
+        "хагас миль",
+        "дөрөвний нэг миль",
+        "<FEET> фут",
+        "10 фут хүрэхгүй"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "<OBJECT_LABEL>-г өнгөр.",
+        "1": "<OBJECT_LABEL> замын хөдөлгөөний дохио өнгөр."
+      },
+      "object_labels": [
+        "хаалга",
+        "бамбайнууд",
+        "замын уулзвар"
+      ],
+      "example_phrases": {
+        "0": [
+          "Хаалгыг өнгөр."
+        ]
+      }
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Лифтэнд суу.",
+        "1": "<LEVEL> руу лифтээр суу."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the elevator."
+        ],
+        "1": [
+          "Take the elevator to Level 1."
+        ]
+      }
+    },
+    "steps": {
+      "phrases": {
+        "0": "Шатаар яв.",
+        "1": "<LEVEL> руу шатаар яв."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the stairs."
+        ],
+        "1": [
+          "Take the stairs to Level 2."
+        ]
+      }
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Урсдаг шатаар яв.",
+        "1": "Урсдаг шатаар <LEVEL> руу яв."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the escalator."
+        ],
+        "1": [
+          "Take the escalator to Level 3."
+        ]
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Барилга руу ор.",
+        "1": "Барилга руу ороод <STREET_NAMES> дээр үргэлжлүүлээрэй."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the building."
+        ],
+        "1": [
+          "Enter the building, and continue on the walkway."
+        ]
+      }
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Барилгаас гар.",
+        "1": "Барилгаас гараад <STREET_NAMES> дээр үргэлжлүүлээрэй."
+      },
+      "empty_street_name_labels": [
+        "явган хүний ​​зам",
+        "дугуйн зам",
+        "уулын дугуйн зам",
+        "явган хүний гарц"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the building."
+        ],
+        "1": [
+          "Exit the building, and continue on the walkway."
+        ]
+      }
+    }
+  }
+}

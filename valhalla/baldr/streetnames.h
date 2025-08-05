@@ -1,14 +1,16 @@
 #ifndef VALHALLA_BALDR_STREETNAMES_H_
 #define VALHALLA_BALDR_STREETNAMES_H_
 
+#include <valhalla/baldr/streetname.h>
+#include <valhalla/baldr/verbal_text_formatter.h>
+#include <valhalla/baldr/verbal_text_formatter_us.h>
+#include <valhalla/midgard/logging.h>
+#include <valhalla/proto/common.pb.h>
+
 #include <cstdint>
 #include <list>
 #include <memory>
 #include <vector>
-
-#include <valhalla/baldr/streetname.h>
-#include <valhalla/baldr/verbal_text_formatter.h>
-#include <valhalla/baldr/verbal_text_formatter_us.h>
 
 namespace valhalla {
 namespace baldr {
@@ -18,6 +20,8 @@ public:
   StreetNames();
 
   StreetNames(const std::vector<std::pair<std::string, bool>>& names);
+
+  StreetNames(const google::protobuf::RepeatedPtrField<valhalla::StreetName>& names);
 
   virtual ~StreetNames();
 

@@ -1,10 +1,8 @@
 #include "baldr/streetnames_us.h"
 #include "baldr/streetname_us.h"
-
-#include <iostream>
-#include <vector>
-
 #include "test.h"
+
+#include <vector>
 
 using namespace std;
 using namespace valhalla::baldr;

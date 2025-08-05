@@ -1,7 +1,3 @@
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <boost/geometry/geometries/register/ring.hpp>
-
 #include <valhalla/baldr/json.h>
 #include <valhalla/loki/polygon_search.h>
 #include <valhalla/midgard/constants.h>
@@ -9,6 +5,10 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 #include <valhalla/worker.h>
+
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
+#include <boost/geometry/geometries/register/ring.hpp>
 
 namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;
@@ -47,7 +47,7 @@ void correct_ring(ring_bg_t& ring) {
   }
 }
 
-ring_bg_t PBFToRing(const valhalla::Options::Ring& ring_pbf) {
+ring_bg_t PBFToRing(const valhalla::Ring& ring_pbf) {
   ring_bg_t new_ring;
   for (const auto& coord : ring_pbf.coords()) {
     new_ring.push_back({coord.lng(), coord.lat()});
@@ -95,10 +95,15 @@ namespace valhalla {
 namespace loki {
 
 std::unordered_set<vb::GraphId>
-edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>& rings_pbf,
+edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_pbf,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length) {
+  // protect for bogus input
+  if (rings_pbf.empty() || rings_pbf.Get(0).coords().empty() ||
+      !rings_pbf.Get(0).coords()[0].has_lat_case() || !rings_pbf.Get(0).coords()[0].has_lng_case()) {
+    return {};
+  }
 
   // convert to bg object and check length restriction
   double rings_length = 0;
@@ -109,7 +114,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
     rings_length += bg::perimeter(ring_bg, Haversine());
   }
   if (rings_length > max_length) {
-    throw valhalla_exception_t(167, std::to_string(max_length));
+    throw valhalla_exception_t(167, std::to_string(static_cast<size_t>(max_length)) + " meters");
   }
 
   // Get the lowest level and tiles
@@ -122,7 +127,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Options_Ring>&
 
   // first pull out all *unique* bins which intersect the rings
   for (size_t ring_idx = 0; ring_idx < rings_bg.size(); ring_idx++) {
-    auto ring = rings_bg[ring_idx];
+    const auto& ring = rings_bg[ring_idx];
     auto line_intersected = tiles.Intersect(ring);
     for (const auto& tb : line_intersected) {
       for (const auto& b : tb.second) {

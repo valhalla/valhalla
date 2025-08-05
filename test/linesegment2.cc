@@ -1,11 +1,10 @@
-#include <vector>
-
-#include "midgard/constants.h"
 #include "midgard/linesegment2.h"
+#include "midgard/constants.h"
 #include "midgard/point2.h"
 #include "midgard/pointll.h"
-
 #include "test.h"
+
+#include <vector>
 
 using namespace std;
 using namespace valhalla::midgard;

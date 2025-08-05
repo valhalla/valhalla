@@ -1,17 +1,9 @@
-#include <string>
-
+#include "meili/map_matcher_factory.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/costconstants.h"
-#include "sif/motorscootercost.h"
-#include "sif/pedestriancost.h"
-
 #include "meili/candidate_search.h"
 #include "meili/map_matcher.h"
-
-#include "meili/map_matcher_factory.h"
+#include "sif/costconstants.h"
 
 namespace {
 
@@ -29,10 +21,11 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root,
                                      const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : config_(root.get_child("meili")), graphreader_(graph_reader) {
   if (!graphreader_)
-    graphreader_.reset(new baldr::GraphReader(root.get_child("mjolnir")));
-  candidatequery_.reset(
-      new CandidateGridQuery(*graphreader_, local_tile_size() / config_.candidate_search.grid_size,
-                             local_tile_size() / config_.candidate_search.grid_size));
+    graphreader_ = std::make_shared<baldr::GraphReader>(root.get_child("mjolnir"));
+  candidatequery_ =
+      std::make_shared<CandidateGridQuery>(*graphreader_,
+                                           local_tile_size() / config_.candidate_search.grid_size,
+                                           local_tile_size() / config_.candidate_search.grid_size);
 }
 
 MapMatcherFactory::~MapMatcherFactory() {
@@ -56,20 +49,22 @@ Config MapMatcherFactory::MergeConfig(const Options& options) const {
   auto config = config_;
 
   // Check for overrides of matcher related directions options. Override these values in config.
-  if (options.has_search_radius() && config.candidate_search.is_search_radius_customizable) {
+  if (options.has_search_radius_case() && config.candidate_search.is_search_radius_customizable) {
     config.candidate_search.search_radius_meters = options.search_radius();
   }
-  if (options.has_turn_penalty_factor() &&
+  if (options.has_turn_penalty_factor_case() &&
       config.transition_cost.is_turn_penalty_factor_customizable) {
     config.transition_cost.turn_penalty_factor = options.turn_penalty_factor();
   }
-  if (options.has_gps_accuracy() && config.emission_cost.is_gps_accuracy_customizable) {
+  if (options.has_gps_accuracy_case() && config.emission_cost.is_gps_accuracy_customizable) {
     config.emission_cost.gps_accuracy_meters = options.gps_accuracy();
   }
-  if (options.has_breakage_distance() && config.transition_cost.is_breakage_distance_customizable) {
+  if (options.has_breakage_distance_case() &&
+      config.transition_cost.is_breakage_distance_customizable) {
     config.transition_cost.breakage_distance_meters = options.breakage_distance();
   }
-  if (options.has_interpolation_distance() && config.routing.is_interpolation_distance_customizable) {
+  if (options.has_interpolation_distance_case() &&
+      config.routing.is_interpolation_distance_customizable) {
     config.routing.interpolation_distance_meters = options.interpolation_distance();
   }
 

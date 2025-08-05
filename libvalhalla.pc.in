@@ -1,10 +1,12 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
-libdir=${exec_prefix}/@libdir@
-includedir=${prefix}/@includedir@
+libdir=@libdir@
+includedir=@includedir@
 
 Name: libvalhalla
 Description: valhalla c++ library
 Version: @VERSION@
-Libs: -L${libdir} -lvalhalla @deplibs@
-Cflags: -I${includedir}
+Libs: -L${libdir} -lvalhalla
+Libs.private: @LIBS_PRIVATE@
+Requires: @REQUIRES@
+Cflags: -I${includedir} @CFLAGS@

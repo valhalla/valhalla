@@ -1,13 +1,6 @@
 #ifndef VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 #define VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/proto/api.pb.h>
@@ -16,6 +9,10 @@
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
+
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -98,8 +95,9 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   // Hierarchy limits
-  std::vector<sif::HierarchyLimits> hierarchy_limits_forward_;
-  std::vector<sif::HierarchyLimits> hierarchy_limits_reverse_;
+  std::vector<HierarchyLimits> hierarchy_limits_forward_;
+  std::vector<HierarchyLimits> hierarchy_limits_reverse_;
+  bool ignore_hierarchy_limits_;
 
   // A* heuristic
   float cost_diff_;
@@ -109,7 +107,6 @@ protected:
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_forward_;
   std::vector<sif::BDEdgeLabel> edgelabels_reverse_;
-  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_forward_;
@@ -153,7 +150,7 @@ protected:
    * @return returns true if the expansion continued from this node
    */
   template <const ExpansionType expansion_direction>
-  bool Expand(baldr::GraphReader& graphreader,
+  void Expand(baldr::GraphReader& graphreader,
               const baldr::GraphId& node,
               sif::BDEdgeLabel& pred,
               const uint32_t pred_idx,
@@ -229,7 +226,6 @@ protected:
    * @param   origin       The origin location
    * @param   destination  The destination location
    * @param   time_info    What time is it when we start the route
-   * @param   invariant    Static date_time, dont offset the time as the path lengthens
    * @return  Returns the path infos, a list of GraphIds representing the
    *          directed edges along the path - ordered from origin to
    *          destination - along with travel modes and elapsed time.
@@ -238,13 +234,7 @@ protected:
                                               const Options& options,
                                               const valhalla::Location& origin,
                                               const valhalla::Location& dest,
-                                              const baldr::TimeInfo& time_info,
-                                              const bool invariant);
-
-  /**
-   * Modify default (optimized for unidirectional search) hierarchy limits.
-   */
-  void ModifyHierarchyLimits();
+                                              const baldr::TimeInfo& time_info);
 };
 
 // This function checks if the path formed by the two expanding trees

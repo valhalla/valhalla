@@ -1,14 +1,12 @@
 #ifndef VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_
 #define VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_
 
-#include <cstdint>
-#include <map>
-#include <string>
-#include <vector>
-
 #include <valhalla/mjolnir/dataquality.h>
 #include <valhalla/mjolnir/node_expander.h>
 #include <valhalla/mjolnir/osmdata.h>
+
+#include <cstdint>
+#include <string>
 
 namespace valhalla {
 namespace mjolnir {
@@ -32,14 +30,19 @@ constexpr uint32_t kPermanent = 1;
 // be "adjacent" to an node that is permanently labeled.
 constexpr uint32_t kTemporary = 2;
 
+constexpr uint32_t kFerryUpClass = static_cast<uint32_t>(baldr::RoadClass::kPrimary);
+
 // NodeLabel - for simple shortest path
 struct NodeLabel {
   float cost;
   uint32_t node_index;
   uint32_t pred_node_index;
+  uint32_t way_index;
+  bool dest_only;
+  uint16_t access;
 
-  NodeLabel(const float c, const uint32_t n, const uint32_t p)
-      : cost(c), node_index(n), pred_node_index(p) {
+  NodeLabel(float c, uint32_t n, uint32_t p, uint32_t w, bool d, uint16_t a)
+      : cost(c), node_index(n), pred_node_index(p), way_index(w), dest_only(d), access(a) {
   }
 };
 
@@ -54,47 +57,13 @@ struct NodeStatusInfo {
 };
 
 /**
- * Get the best classification for any driveable non-ferry and non-link
- * edges from a node. Skip any reclassified ferry edges
- * @param  edges The file backed list of edges in the graph.
- * @return  Returns the best (most important) classification
- */
-uint32_t GetBestNonFerryClass(const std::map<Edge, size_t>& edges);
-
-/**
- * Form the shortest path from the start node until a node that
- * touches the specified road classification.
- */
-uint32_t ShortestPath(const uint32_t start_node_idx,
-                      const uint32_t node_idx,
-                      sequence<OSMWay>& ways,
-                      sequence<OSMWayNode>& way_nodes,
-                      sequence<Edge>& edges,
-                      sequence<Node>& nodes,
-                      const bool inbound,
-                      const uint32_t rc);
-
-/**
- * Check if the ferry included in this node bundle is short. Must be
- * just one edge and length < 2 km. This prevents forming connections
- * to what are most likely river crossing ferries.
- */
-bool ShortFerry(const uint32_t node_index,
-                node_bundle& bundle,
-                sequence<Edge>& edges,
-                sequence<Node>& nodes,
-                sequence<OSMWay>& ways,
-                sequence<OSMWayNode>& way_nodes);
-
-/**
  * Reclassify edges from a ferry along the shortest path to the
  * specified road classification.
  */
 void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
-                                const std::string& edges_file,
-                                const uint32_t rc);
+                                const std::string& edges_file);
 
 } // namespace mjolnir
 } // namespace valhalla

@@ -1,16 +1,14 @@
-#include "gurka/gurka.h"
-#include "test.h"
-
+#include "loki/reach.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "loki/reach.h"
+#include "gurka/gurka.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
+#include "test.h"
 
 #include <algorithm>
-#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -64,17 +62,17 @@ TEST(Reach, check_all_reach) {
       // if you have non zero reach but you dont have access, something is wrong
       EXPECT_FALSE((reach.outbound > 0 || reach.inbound > 0) &&
                    !(edge->forwardaccess() & kAutoAccess) && !(edge->reverseaccess() & kAutoAccess))
-          << "This edge should have 0 reach as its not accessable: " + std::to_string(edge_id.value) +
+          << "This edge should have 0 reach as its not accessible: " + std::to_string(edge_id.value) +
                  " " + shape_str;
 
       // if inbound is 0 and outbound is not then it must be an edge leaving a dead end
-      // meaning a begin node that is not accessable
+      // meaning a begin node that is not accessible
       EXPECT_FALSE(reach.inbound == 0 && reach.outbound > 0 && costing->Allowed(begin))
           << "Only outbound reach should mean an edge that leaves a dead end: " +
                  std::to_string(edge_id.value) + " " + shape_str;
 
       // if outbound is 0 and inbound is not then it must be an edge entering a dead end
-      // meaning an end node that is not accessable
+      // meaning an end node that is not accessible
       EXPECT_FALSE(reach.inbound > 0 && reach.outbound == 0 && costing->Allowed(end))
           << "Only inbound reach should mean an edge that enters a dead end: " +
                  std::to_string(edge_id.value) + " " + shape_str;
@@ -104,7 +102,7 @@ TEST(Reach, transition_misscount) {
 
   // get an auto costing
   sif::CostFactory factory;
-  auto costing = factory.Create(valhalla::auto_);
+  auto costing = factory.Create(Costing::auto_);
 
   // find the problem edge
   baldr::GraphReader reader(map.config.get_child("mjolnir"));

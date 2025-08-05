@@ -1,12 +1,12 @@
 #ifndef VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 #define VALHALLA_MJOLNIR_PBFGRAPHPARSER_H
 
+#include <valhalla/mjolnir/osmdata.h>
+
 #include <boost/property_tree/ptree.hpp>
-#include <cstdint>
+
 #include <string>
 #include <vector>
-
-#include <valhalla/mjolnir/osmdata.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -23,6 +23,8 @@ public:
    * @param  ways_file                      where to store the ways so they are not in memory
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
    * @param  access_file                    where to store the access tags so they are not in memory
+   * @param  pronunciation_file             where to store the pronunciations so they are not in
+   * memory
    */
   static OSMData ParseWays(const boost::property_tree::ptree& pt,
                            const std::vector<std::string>& input_files,
@@ -53,12 +55,16 @@ public:
    * @param  input_files                    the protobuf files to parse
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
    * @param  bss_nodes_file                 where to store the bss nodes so they are not in memory
+   * @param  linguistic_node_file           where to store the linguistic information for nodes so
+   * they are not in memory
+   *
    * @param  osmdata                        OSM data
    */
   static void ParseNodes(const boost::property_tree::ptree& pt,
                          const std::vector<std::string>& input_files,
                          const std::string& way_nodes_file,
                          const std::string& bss_nodes_file,
+                         const std::string& linguistic_node_file,
                          OSMData& osmdata);
 };
 

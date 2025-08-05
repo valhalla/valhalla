@@ -110,7 +110,7 @@ void EnlargedViterbiSearch::ClonePath(const std::vector<StateId>& path) {
   for (const auto& pair : clone_) {
     const auto added = vs_.AddStateId(pair.second);
     if (!added) {
-      std::runtime_error("generated clone state IDs must be unique");
+      throw std::runtime_error("generated clone state IDs must be unique");
     }
   }
 }

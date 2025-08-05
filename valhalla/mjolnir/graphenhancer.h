@@ -1,9 +1,9 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHENHANCER_H
 #define VALHALLA_MJOLNIR_GRAPHENHANCER_H
 
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
 #include <valhalla/mjolnir/osmdata.h>
+
+#include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
 namespace mjolnir {
@@ -17,7 +17,7 @@ public:
    * Enhance the local level graph tile information.
    * @param pt          property tree containing the hierarchy configuration
    * @param osmdata     OSM data used to enhance the turn lanes.
-   * @param access_file where to store the nodes so they are not in memory
+   * @param access_file where to store the access tags so they are not in memory
    */
   static void Enhance(const boost::property_tree::ptree& pt,
                       const OSMData& osmdata,

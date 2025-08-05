@@ -1,10 +1,11 @@
 #ifndef VALHALLA_MIDGARD_AABB2_H_
 #define VALHALLA_MIDGARD_AABB2_H_
 
-#include <cstdint>
 #include <valhalla/midgard/linesegment2.h>
 #include <valhalla/midgard/point2.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <cstdint>
 #include <vector>
 
 namespace valhalla {
@@ -231,16 +232,6 @@ public:
    *           within the boundary.
    */
   uint32_t Clip(std::vector<coord_t>& pts, const bool closed) const;
-
-  /**
-   * Intersects the segment formed by u,v with the bounding box
-   *
-   * @param  u  the first point in the segment
-   * @param  v  the second point in the segment
-   * @return Returns true if the segment actually intersected the bounding box
-   *         and moves u and v to actually reflect the intersection points
-   */
-  bool Intersect(coord_t& u, coord_t& v) const;
 
   /**
    * Expands (if necessary) the bounding box to include the specified

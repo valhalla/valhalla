@@ -2,6 +2,7 @@
 #include "midgard/encoded.h"
 #include "midgard/util.h"
 #include "test.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -114,14 +115,11 @@ D--3--4--C--5--6--E)";
 
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
-  // TODO: Remove the duplicate 6 when we fix odin to handle uturn maneuver generation with only one
-  // turn around point
   auto expected_shape = decltype(shape){
-      map.nodes["2"], map.nodes["B"], map.nodes["C"], map.nodes["6"],
-      map.nodes["6"], map.nodes["C"], map.nodes["3"],
+      map.nodes["2"], map.nodes["B"], map.nodes["C"], map.nodes["6"], map.nodes["C"], map.nodes["3"],
   };
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_TRUE(shape[i].ApproximatelyEqual(expected_shape[i]));
   }
 }
@@ -160,7 +158,7 @@ TEST(MapMatch, NodeSnapFix) {
 
   auto expected_shape = decltype(shape){map.nodes["B"], map.nodes["C"], map.nodes["F"]};
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_TRUE(shape[i].ApproximatelyEqual(expected_shape[i]));
   }
 }
@@ -253,8 +251,8 @@ gurka::map TrafficBasedTest::map = {};
 uint32_t TrafficBasedTest::current = 0, TrafficBasedTest::historical = 0,
          TrafficBasedTest::constrained = 0, TrafficBasedTest::freeflow = 0;
 
-uint32_t speed_from_edge(const valhalla::Api& api) {
-  uint32_t kmh = -1;
+uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
+  uint32_t kmh = invalid<uint32_t>();
   const auto& nodes = api.trip().routes(0).legs(0).node();
   for (int i = 0; i < nodes.size() - 1; ++i) {
     const auto& node = nodes.Get(i);
@@ -265,8 +263,9 @@ uint32_t speed_from_edge(const valhalla::Api& api) {
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (kmh != -1)
+    if (is_valid(kmh) && compare_with_previous_edge) {
       EXPECT_EQ(kmh, new_kmh);
+    }
     kmh = new_kmh;
   }
   return kmh;
@@ -305,7 +304,9 @@ TEST_F(TrafficBasedTest, forward) {
                                  {"/date_time/value", "2020-10-30T09:00"},
                                  {"/costing_options/auto/speed_types/0", "current"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "map_snap");
-    EXPECT_EQ(speed_from_edge(api), current);
+    // Because of live-traffic smoothing, speed will be mixed with default edge speed in the end of
+    // the route.
+    EXPECT_LE(speed_from_edge(api, false), current);
   }
 
   {

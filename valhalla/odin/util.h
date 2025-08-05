@@ -1,17 +1,12 @@
 #ifndef VALHALLA_ODIN_UTIL_H_
 #define VALHALLA_ODIN_UTIL_H_
 
+#include <valhalla/odin/narrative_dictionary.h>
+
 #include <cstdint>
 #include <locale>
 #include <string>
 #include <unordered_map>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/odin/narrative_dictionary.h>
-#include <valhalla/proto/options.pb.h>
 
 namespace valhalla {
 namespace odin {
@@ -22,6 +17,27 @@ constexpr uint32_t kVerbalAlertElementMaxCount = 1;
 constexpr uint32_t kVerbalPreElementMaxCount = 2;
 constexpr uint32_t kVerbalPostElementMaxCount = 2;
 const std::string kVerbalDelim = ", ";
+
+struct Bcp47Locale {
+  std::string langtag;
+  std::string language;
+  std::string script;
+  std::string region;
+  std::string privateuse;
+
+  std::string get_lang_script() {
+    std::string lang_script = language;
+    if (!script.empty()) {
+      lang_script += "-";
+      lang_script += script;
+    }
+    return lang_script;
+  }
+
+  bool valid() {
+    return !langtag.empty();
+  }
+};
 
 /**
  * Returns the specified item surrounded with quotes.
@@ -36,7 +52,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
                          uint32_t turn_degree_threshold = 40);
 
 /**
- * Get the time from the inputed date.
+ * Get the time from the provided date.
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
  * @param   locale locale
@@ -45,7 +61,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
 std::string get_localized_time(const std::string& date_time, const std::locale& locale);
 
 /**
- * Get the date from the inputed date.
+ * Get the date from the provided date.
  * date_time is in the format of 2015-05-06T08:00
  * @param   date_time in the format of 2015-05-06T08:00
  * @param   locale locale
@@ -67,6 +83,8 @@ const locales_singleton_t& get_locales();
  * @return the map of locales to json strings
  */
 const std::unordered_map<std::string, std::string>& get_locales_json();
+
+Bcp47Locale parse_string_into_locale(const std::string& locale_string);
 
 /**
  * Returns the string representation for a turn lane direction.

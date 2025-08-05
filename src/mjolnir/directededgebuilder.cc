@@ -21,9 +21,13 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const RoadClass rc,
                                          const uint32_t localidx,
                                          const bool signal,
+                                         const bool stop_sign,
+                                         const bool yield_sign,
+                                         const bool minor,
                                          const uint32_t restrictions,
                                          const uint32_t bike_network,
-                                         const bool reclass_ferry)
+                                         const bool reclass_ferry,
+                                         const baldr::RoadClass rc_hierarchy)
     : DirectedEdge() {
   set_endnode(endnode);
   set_use(use);
@@ -34,10 +38,10 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_length(std::max(length, kMinimumEdgeLength), true);
 
   // Override use for ferries/rail ferries. TODO - set this in lua
-  if (way.ferry()) {
+  if (way.ferry() && way.use() != Use::kConstruction) {
     set_use(Use::kFerry);
   }
-  if (way.rail()) {
+  if (way.rail() && way.use() != Use::kConstruction) {
     set_use(Use::kRailFerry);
   }
   set_toll(way.toll());
@@ -49,13 +53,19 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   set_truck_route(way.truck_route());
 
-  // Set destination only to true if the reclass_ferry is set to false and either destination only or
-  // no thru traffic is set. Adding the reclass_ferry check allows us to know if we should override
-  // the destination only attribution
+  if (rc_hierarchy < baldr::RoadClass::kInvalid) {
+    // hijack shortcut flag to indicate whether this needs to be moved in hierarchy builder
+    // will be reset there
+    set_hierarchy_roadclass(rc_hierarchy);
+  }
+
+  // Set destination only to true if we didn't reclassify for ferry and either destination only
+  // or no thru traffic is set.
   set_dest_only(!reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
   if (reclass_ferry && (way.destination_only() || way.no_thru_traffic())) {
     LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
   }
+  set_dest_only_hgv(way.destination_only_hgv());
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());
   set_sac_scale(way.sac_scale());
@@ -63,11 +73,19 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_tunnel(way.tunnel());
   set_roundabout(way.roundabout());
   set_bridge(way.bridge());
+  set_indoor(way.indoor());
   set_link(way.link());
+  set_hov_type(way.hov_type());
   set_classification(rc);
   set_localedgeidx(localidx);
   set_restrictions(restrictions);
   set_traffic_signal(signal);
+
+  set_stop_sign(stop_sign);
+  set_yield_sign(yield_sign);
+
+  // temporarily set the deadend flag to indicate if the stop or yield should be at the minor roads
+  set_deadend(minor);
 
   set_sidewalk_left(way.sidewalk_left());
   set_sidewalk_right(way.sidewalk_right());
@@ -75,6 +93,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   bool tagged_speed =
       (way.tagged_speed() || way.forward_tagged_speed() || way.backward_tagged_speed());
   set_speed_type(tagged_speed ? SpeedType::kTagged : SpeedType::kClassified);
+
+  set_lit(way.lit());
 
   // Set forward flag and access modes (based on direction)
   set_forward(forward);
@@ -140,7 +160,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if ((way.pedestrian_forward() && !forward) || (way.pedestrian_backward() && forward)) {
     reverse_access |= kPedestrianAccess;
   }
-  if (way.use() != Use::kSteps) {
+  if (way.use() != Use::kSteps && way.use() != Use::kConstruction &&
+      way.surface() != Surface::kImpassable) {
     if (way.wheelchair_tag() && way.wheelchair()) {
       forward_access |= kWheelchairAccess;
       reverse_access |= kWheelchairAccess;

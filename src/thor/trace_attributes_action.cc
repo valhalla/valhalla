@@ -1,29 +1,15 @@
-#include <algorithm>
-#include <cstdint>
+#include "meili/match_result.h"
+#include "midgard/logging.h"
+#include "thor/worker.h"
+#include "tyr/serializers.h"
+
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
-#include "baldr/json.h"
-#include "meili/match_result.h"
-#include "midgard/constants.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "odin/enhancedtrippath.h"
-#include "odin/util.h"
-#include "thor/attributes_controller.h"
-#include "thor/worker.h"
-#include "tyr/serializers.h"
-
-#include "proto/directions.pb.h"
-#include "proto/trip.pb.h"
-
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::odin;
 using namespace valhalla::thor;
 
 namespace {
@@ -47,11 +33,11 @@ std::string thor_worker_t::trace_attributes(Api& request) {
   auto _ = measure_scope_time(request);
 
   // Parse request
-  parse_locations(request);
+  adjust_scores(*request.mutable_options());
   parse_costing(request);
   parse_measurements(request);
-  parse_filter_attributes(request, true);
-  const auto& options = *request.mutable_options();
+  const auto& options = request.options();
+  controller = AttributesController(options, true);
 
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a

@@ -2,17 +2,16 @@
 #ifndef MMP_GRID_RANGE_QUERY_H_
 #define MMP_GRID_RANGE_QUERY_H_
 
+#include <valhalla/meili/grid_traversal.h>
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/linesegment2.h>
+
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/linesegment2.h>
-
-#include <valhalla/meili/grid_traversal.h>
 
 namespace valhalla {
 namespace meili {
@@ -128,7 +127,7 @@ private:
   GridTraversal<coord_t> grid_;
 
 // Using vector to represent the grid would be faster than using
-// unordered map but it consumes (much) more memeory as well
+// unordered map but it consumes (much) more memory as well
 #ifdef GRID_USE_VECTOR
   std::vector<std::vector<item_t>> items_;
 #else

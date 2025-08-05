@@ -1,32 +1,18 @@
-#include <boost/format.hpp>
-#include <boost/optional.hpp>
-#include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <cmath>
-#include <cstdint>
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
-#include <queue>
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
-
-#include "baldr/connectivity_map.h"
+#include "argparse_utils.h"
+#include "baldr/attributes_controller.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
-#include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "loki/worker.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
-#include "odin/util.h"
+#include "proto/api.pb.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
 #include "sif/costfactory.h"
-#include "thor/attributes_controller.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/multimodal.h"
 #include "thor/route_matcher.h"
@@ -34,12 +20,18 @@
 #include "thor/unidirectional_astar.h"
 #include "worker.h"
 
-#include "proto/api.pb.h"
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
+#include <boost/format.hpp>
+#include <cxxopts.hpp>
 
-#include "config.h"
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -48,8 +40,6 @@ using namespace valhalla::odin;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 using namespace valhalla::meili;
-
-namespace bpo = boost::program_options;
 
 namespace {
 
@@ -70,14 +60,14 @@ class PathStatistics {
   uint32_t trip_time;
   float trip_dist;
   float arc_dist;
-  uint32_t manuevers;
+  uint32_t maneuvers;
   double elapsed_cost_seconds;
   double elapsed_cost_cost;
 
 public:
   PathStatistics(std::pair<float, float> p1, std::pair<float, float> p2)
       : origin(p1), destination(p2), success("false"), passes(0), runtime(), trip_time(), trip_dist(),
-        arc_dist(), manuevers(), elapsed_cost_seconds(0), elapsed_cost_cost(0) {
+        arc_dist(), maneuvers(), elapsed_cost_seconds(0), elapsed_cost_cost(0) {
   }
 
   void setSuccess(std::string s) {
@@ -98,8 +88,8 @@ public:
   void setArcDist(float d) {
     arc_dist = d;
   }
-  void setManuevers(uint32_t n) {
-    manuevers = n;
+  void setManeuvers(uint32_t n) {
+    maneuvers = n;
   }
   void setElapsedCostSeconds(double secs) {
     elapsed_cost_seconds = secs;
@@ -111,7 +101,7 @@ public:
     valhalla::midgard::logging::Log((boost::format("%f,%f,%f,%f,%s,%d,%d,%d,%f,%f,%d,%f,%f") %
                                      origin.first % origin.second % destination.first %
                                      destination.second % success % passes % runtime % trip_time %
-                                     trip_dist % arc_dist % manuevers % elapsed_cost_seconds %
+                                     trip_dist % arc_dist % maneuvers % elapsed_cost_seconds %
                                      elapsed_cost_cost)
                                         .str(),
                                     " [STATISTICS] ");
@@ -131,7 +121,6 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
                                   PathStatistics& data,
                                   bool multi_run,
                                   uint32_t iterations,
-                                  bool using_astar,
                                   bool using_bd,
                                   bool match_test,
                                   const std::string& routetype,
@@ -139,7 +128,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
   auto t1 = std::chrono::high_resolution_clock::now();
   auto paths =
       pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
-  cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+  const cost_ptr_t& cost = mode_costing[static_cast<uint32_t>(mode)];
 
   // If bidirectional A*, disable use of destination only edges on the first pass.
   // If there is a failure, we allow them on the second pass.
@@ -154,8 +143,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       LOG_INFO("Try again with relaxed hierarchy limits");
       cost->set_pass(1);
       pathalgorithm->Clear();
-      const float expansion_within_factor = (using_astar) ? 4.0f : 2.0f;
-      cost->RelaxHierarchyLimits(using_astar, expansion_within_factor);
+      cost->RelaxHierarchyLimits(using_bd);
       cost->set_allow_destination_only(true);
       paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
       data.incPasses();
@@ -179,8 +167,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
   AttributesController controller;
   auto& trip_path = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
   TripLegBuilder::Build(request.options(), controller, reader, mode_costing, pathedges.begin(),
-                        pathedges.end(), origin, dest, std::list<valhalla::Location>{}, trip_path,
-                        {pathalgorithm->name()});
+                        pathedges.end(), origin, dest, trip_path, {pathalgorithm->name()});
   t2 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("TripLegBuilder took " + std::to_string(msecs) + " ms");
@@ -205,7 +192,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     locations.front().heading_ = std::round(PointLL::HeadingAlongPolyline(shape, 30.f));
     locations.back().heading_ = std::round(PointLL::HeadingAtEndOfPolyline(shape, 30.f));
 
-    std::shared_ptr<DynamicCost> cost = mode_costing[static_cast<uint32_t>(mode)];
+    const std::shared_ptr<DynamicCost>& cost = mode_costing[static_cast<uint32_t>(mode)];
     const auto projections = Search(locations, reader, cost);
     std::vector<PathLocation> path_location;
     valhalla::Options options;
@@ -232,7 +219,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
-      LOG_ERROR("RouteMatcher failed");
+      LOG_ERROR("RouteMatcher failed.");
     }
   }
 
@@ -253,8 +240,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       valhalla::TripLeg trip_leg;
       const auto& pathedges = paths.front();
       TripLegBuilder::Build(request.options(), controller, reader, mode_costing, pathedges.begin(),
-                            pathedges.end(), origin, dest, std::list<valhalla::Location>{}, trip_leg,
-                            {pathalgorithm->name()});
+                            pathedges.end(), origin, dest, trip_leg, {pathalgorithm->name()});
       t2 = std::chrono::high_resolution_clock::now();
       total_trip_leg_builder_ms +=
           std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -271,74 +257,15 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
 
 namespace std {
 
-// TODO: maybe move this into location.h if its actually useful elsewhere than here?
+// TODO: need to pass original json here for extra address bits that we dont store in Location
 std::string to_string(const valhalla::baldr::Location& l) {
   std::string s;
-  for (auto address : {&l.name_, &l.street_, &l.city_, &l.state_, &l.zip_, &l.country_}) {
+  for (auto address : {&l.name_, &l.street_}) {
     s.append(*address);
     s.push_back(',');
   }
   s.erase(s.end() - 1);
   return s;
-}
-
-// TODO: maybe move this into location.h if its actually useful elsewhere than here?
-std::string to_json(const valhalla::baldr::Location& l) {
-  std::string json = "{";
-  json += "\"lat\":";
-  json += std::to_string(l.latlng_.lat());
-
-  json += ",\"lon\":";
-  json += std::to_string(l.latlng_.lng());
-
-  json += ",\"type\":\"";
-  json += (l.stoptype_ == valhalla::baldr::Location::StopType::THROUGH) ? "through" : "break";
-  json += "\"";
-
-  if (l.heading_) {
-    json += ",\"heading\":";
-    json += *l.heading_;
-  }
-
-  if (!l.name_.empty()) {
-    json += ",\"name\":\"";
-    json += l.name_;
-    json += "\"";
-  }
-
-  if (!l.street_.empty()) {
-    json += ",\"street\":\"";
-    json += l.street_;
-    json += "\"";
-  }
-
-  if (!l.city_.empty()) {
-    json += ",\"city\":\"";
-    json += l.city_;
-    json += "\"";
-  }
-
-  if (!l.state_.empty()) {
-    json += ",\"state\":\"";
-    json += l.state_;
-    json += "\"";
-  }
-
-  if (!l.zip_.empty()) {
-    json += ",\"postal_code\":\"";
-    json += l.zip_;
-    json += "\"";
-  }
-
-  if (!l.country_.empty()) {
-    json += ",\"country\":\"";
-    json += l.country_;
-    json += "\"";
-  }
-
-  json += "}";
-
-  return json;
 }
 
 } // namespace std
@@ -367,12 +294,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
                                        valhalla::Location& orig,
                                        valhalla::Location& dest,
                                        PathStatistics& data,
-                                       bool verbose_lanes) {
+                                       bool verbose_lanes,
+                                       valhalla::odin::MarkupFormatter& markup_formatter) {
   // TEMPORARY? Change to PathLocation...
   const PathLocation& origin = PathLocation::fromPBF(orig);
   const PathLocation& destination = PathLocation::fromPBF(dest);
 
-  DirectionsBuilder::Build(api);
+  DirectionsBuilder::Build(api, markup_formatter);
   const auto& trip_directions = api.directions().routes(0).legs(0);
   EnhancedTripLeg etl(*api.mutable_trip()->mutable_routes(0)->mutable_legs(0));
   std::string units = (api.options().units() == valhalla::Options::kilometers ? "km" : "mi");
@@ -384,13 +312,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     const auto& maneuver = trip_directions.maneuver(i);
 
     // Depart instruction
-    if (maneuver.has_depart_instruction()) {
+    if (!maneuver.depart_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.depart_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal depart instruction
-    if (maneuver.has_verbal_depart_instruction()) {
+    if (!maneuver.verbal_depart_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_DEPART: %s") %
                                        maneuver.verbal_depart_instruction())
                                           .str(),
@@ -405,7 +333,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
     // Turn lanes
     // Only for driving and no start/end maneuvers
-    if ((maneuver.travel_mode() == valhalla::DirectionsLeg_TravelMode_kDrive) &&
+    if ((maneuver.travel_mode() == valhalla::TravelMode::kDrive) &&
         !((maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kStart) ||
           (maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kStartRight) ||
           (maneuver.type() == valhalla::DirectionsLeg_Maneuver_Type_kStartLeft) ||
@@ -428,7 +356,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal succinct transition instruction
-    if (maneuver.has_verbal_succinct_transition_instruction()) {
+    if (!maneuver.verbal_succinct_transition_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_SUCCINCT: %s") %
                                        maneuver.verbal_succinct_transition_instruction())
                                           .str(),
@@ -436,7 +364,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal transition alert instruction
-    if (maneuver.has_verbal_transition_alert_instruction()) {
+    if (!maneuver.verbal_transition_alert_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ALERT: %s") %
                                        maneuver.verbal_transition_alert_instruction())
                                           .str(),
@@ -444,7 +372,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal pre transition instruction
-    if (maneuver.has_verbal_pre_transition_instruction()) {
+    if (!maneuver.verbal_pre_transition_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_PRE: %s") %
                                        maneuver.verbal_pre_transition_instruction())
                                           .str(),
@@ -452,7 +380,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Verbal post transition instruction
-    if (maneuver.has_verbal_post_transition_instruction()) {
+    if (!maneuver.verbal_post_transition_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_POST: %s") %
                                        maneuver.verbal_post_transition_instruction())
                                           .str(),
@@ -460,13 +388,13 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
     }
 
     // Arrive instruction
-    if (maneuver.has_arrive_instruction()) {
+    if (!maneuver.arrive_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   %s") % maneuver.arrive_instruction()).str(),
                                       " [NARRATIVE] ");
     }
 
     // Verbal arrive instruction
-    if (maneuver.has_verbal_arrive_instruction()) {
+    if (!maneuver.verbal_arrive_instruction().empty()) {
       valhalla::midgard::logging::Log((boost::format("   VERBAL_ARRIVE: %s") %
                                        maneuver.verbal_arrive_instruction())
                                           .str(),
@@ -518,7 +446,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
   }
   data.setTripTime(trip_directions.summary().time());
   data.setTripDist(trip_directions.summary().length());
-  data.setManuevers(trip_directions.maneuver_size());
+  data.setManeuvers(trip_directions.maneuver_size());
   data.setElapsedCostSeconds(etl.node().rbegin()->cost().elapsed_cost().seconds());
   data.setElapsedCostCost(etl.node().rbegin()->cost().elapsed_cost().cost());
 
@@ -527,90 +455,76 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  bpo::options_description poptions(
-      "valhalla_run_route " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: valhalla_run_route [options]\n"
-      "\n"
-      "valhalla_run_route is a simple command line test tool for shortest path routing. "
-      "\n"
-      "Use -j option for specifying the locations and costing method and options. "
-      "\n"
-      "\n");
+  const auto program = std::filesystem::path(__FILE__).stem().string();
+  // args
+  std::string json_str, json_file;
+  boost::property_tree::ptree config;
 
-  std::string json, json_file, config;
+  bool match_test, verbose_lanes;
   bool multi_run = false;
-  bool match_test = false;
-  bool verbose_lanes = false;
   uint32_t iterations;
 
-  poptions.add_options()("help,h", "Print this help message.")("version,v",
-                                                               "Print the version of this software.")(
-      "json,j", boost::program_options::value<std::string>(&json),
-      "JSON Example: "
-      "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
-      "\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New "
-      "York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40."
-      "749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations "
-      "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
-      "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
-      "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")(
-      "json-file", boost::program_options::value<std::string>(&json_file),
-      "file containing the json query")("match-test", "Test RouteMatcher with resulting shape.")(
-      "multi-run", bpo::value<uint32_t>(&iterations),
-      "Generate the route N additional times before exiting.")(
-      "verbose-lanes", bpo::bool_switch(&verbose_lanes),
-      "Include verbose lanes output in DirectionsTest.")
-      // positional arguments
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("config", 1);
-
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(poptions).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
+    // clang-format off
+    cxxopts::Options options(
+      program,
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
+      "a command line test tool for shortest path routing.\n"
+      "Use the -j option for specifying the locations and costing method and options.");
+
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("j,json", "JSON Example: "
+        "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
+        "\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New "
+        "York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40."
+        "749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations "
+        "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
+        "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
+        "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'", cxxopts::value<std::string>())
+      ("json-file", "File containing the JSON query", cxxopts::value<std::string>())
+      ("match-test", "Test RouteMatcher with resulting shape.", cxxopts::value<bool>(match_test)->default_value("false"))
+      ("multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>(iterations)->default_value("1"))
+      ("verbose-lanes", "Include verbose lanes output in DirectionsTest.", cxxopts::value<bool>(verbose_lanes)->default_value("false"))
+      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
+    // clang-format on
+
+    auto result = options.parse(argc, argv);
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
+      return EXIT_SUCCESS;
+
+    if (iterations > 1) {
+      multi_run = true;
+    }
+
+    if (result.count("json-file") && result.count("json")) {
+      LOG_WARN("json and json-file option are set, using json-file content");
+    } else if (result.count("json-file")) {
+      std::ifstream ifs(result["json-file"].as<std::string>());
+      json_str.assign((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
+    } else if (result.count("json")) {
+      json_str = result["json"].as<std::string>();
+    } else {
+      throw cxxopts::exceptions::exception("Either json or json-file args must be set.");
+    }
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << std::endl;
     return EXIT_FAILURE;
-  }
-
-  if (vm.count("help")) {
-    std::cout << poptions << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "valhalla_run_route " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("match-test")) {
-    match_test = true;
-  }
-
-  if (vm.count("multi-run")) {
-    multi_run = true;
-  }
-
-  if (vm.count("json-file")) {
-    if (vm.count("json")) {
-      LOG_WARN("json and json-file option are set, using json-file content");
-    }
-    std::ifstream ifs(json_file);
-    json.assign((std::istreambuf_iterator<char>(ifs)), (std::istreambuf_iterator<char>()));
   }
 
   // Grab the directions options, if they exist
   valhalla::Api request;
-  valhalla::ParseApi(json, valhalla::Options::route, request);
+  valhalla::ParseApi(json_str, valhalla::Options::route, request);
   const auto& options = request.options();
 
   // Get type of route - this provides the costing method to use.
-  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());
+  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing_type());
   LOG_INFO("routetype: " + routetype);
 
   // Locations
@@ -619,19 +533,6 @@ int main(int argc, char* argv[]) {
     throw;
   }
 
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("thor.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
   // Something to hold the statistics
   uint32_t n = locations.size() - 1;
   PathStatistics data({locations[0].latlng_.lat(), locations[0].latlng_.lng()},
@@ -642,11 +543,11 @@ int main(int argc, char* argv[]) {
     d1 += locations[i].latlng_.Distance(locations[i + 1].latlng_) * kKmPerMeter;
   }
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // Get the maximum distance for time dependent routes
   float max_timedep_distance =
-      pt.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
+      config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 
   auto t0 = std::chrono::high_resolution_clock::now();
 
@@ -658,7 +559,7 @@ int main(int argc, char* argv[]) {
 
   // Find path locations (loki) for sources and targets
   auto tw0 = std::chrono::high_resolution_clock::now();
-  loki_worker_t lw(pt);
+  loki_worker_t lw(config);
   auto tw1 = std::chrono::high_resolution_clock::now();
   auto msw = std::chrono::duration_cast<std::chrono::milliseconds>(tw1 - tw0).count();
   LOG_INFO("Location Worker construction took " + std::to_string(msw) + " ms");
@@ -670,10 +571,11 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
   // Get the route
-  BidirectionalAStar bd(pt.get_child("thor"));
-  MultiModalPathAlgorithm mm(pt.get_child("thor"));
-  TimeDepForward timedep_forward(pt.get_child("thor"));
-  TimeDepReverse timedep_reverse(pt.get_child("thor"));
+  BidirectionalAStar bd(config.get_child("thor"));
+  MultiModalPathAlgorithm mm(config.get_child("thor"));
+  TimeDepForward timedep_forward(config.get_child("thor"));
+  TimeDepReverse timedep_reverse(config.get_child("thor"));
+  MarkupFormatter markup_formatter(config);
   for (uint32_t i = 0; i < n; i++) {
     // Set origin and destination for this segment
     valhalla::Location origin = options.locations(i);
@@ -690,7 +592,7 @@ int main(int argc, char* argv[]) {
       // Use time dependent algorithms if date time is present
       // TODO - this isn't really correct for multipoint routes but should allow
       // simple testing.
-      if (options.has_date_time() && ll1.Distance(ll2) < max_timedep_distance &&
+      if (options.has_date_time_case() && ll1.Distance(ll2) < max_timedep_distance &&
           (options.date_time_type() == valhalla::Options_DateTimeType_depart_at ||
            options.date_time_type() == valhalla::Options_DateTimeType_current)) {
         pathalgorithm = &timedep_forward;
@@ -700,8 +602,8 @@ int main(int argc, char* argv[]) {
       } else {
         // Use bidirectional except for trivial cases (same edge or connected edges)
         pathalgorithm = &bd;
-        for (auto& edge1 : origin.path_edges()) {
-          for (auto& edge2 : dest.path_edges()) {
+        for (auto& edge1 : origin.correlation().edges()) {
+          for (auto& edge2 : dest.correlation().edges()) {
             if (edge1.graph_id() == edge2.graph_id() ||
                 reader.AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()))) {
               pathalgorithm = &timedep_forward;
@@ -710,14 +612,13 @@ int main(int argc, char* argv[]) {
         }
       }
     }
-    bool using_astar = (pathalgorithm == &timedep_forward || pathalgorithm == &timedep_reverse);
     bool using_bd = pathalgorithm == &bd;
 
     // Get the best path
     const valhalla::TripLeg* trip_path = nullptr;
     try {
       trip_path = PathTest(reader, origin, dest, pathalgorithm, mode_costing, mode, data, multi_run,
-                           iterations, using_astar, using_bd, match_test, routetype, request);
+                           iterations, using_bd, match_test, routetype, request);
     } catch (std::runtime_error& rte) { LOG_ERROR("trip_path not found"); }
 
     // If successful get directions
@@ -741,7 +642,8 @@ int main(int argc, char* argv[]) {
 
       // Try the the directions
       auto t1 = std::chrono::high_resolution_clock::now();
-      const auto& trip_directions = DirectionsTest(request, origin, dest, data, verbose_lanes);
+      const auto& trip_directions =
+          DirectionsTest(request, origin, dest, data, verbose_lanes, markup_formatter);
       auto t2 = std::chrono::high_resolution_clock::now();
       auto msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 

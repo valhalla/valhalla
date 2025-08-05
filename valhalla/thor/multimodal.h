@@ -1,25 +1,23 @@
 #ifndef VALHALLA_THOR_MULTIMODAL_H_
 #define VALHALLA_THOR_MULTIMODAL_H_
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/time_info.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace thor {
@@ -74,11 +72,9 @@ public:
   void Clear() override;
 
 protected:
-  // Current walking distance.
-  uint32_t walking_distance_;
-  uint32_t max_label_count_; // Max label count to allow
-  sif::TravelMode mode_;     // Current travel mode
-  uint8_t travel_type_;      // Current travel type
+  uint32_t max_walking_dist_;
+  sif::TravelMode mode_; // Current travel mode
+  uint8_t travel_type_;  // Current travel type
 
   bool date_set_;
   bool date_before_tile_;
@@ -93,15 +89,11 @@ protected:
   std::unordered_map<std::string, uint32_t> operators_;
   std::unordered_set<uint32_t> processed_tiles_;
 
-  // Hierarchy limits.
-  std::vector<sif::HierarchyLimits> hierarchy_limits_;
-
   // A* heuristic
   AStarHeuristic astarheuristic_;
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::MMEdgeLabel> edgelabels_;
-  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::MMEdgeLabel> adjacencylist_;

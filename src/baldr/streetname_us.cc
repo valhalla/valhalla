@@ -1,7 +1,5 @@
-#include <iostream>
-
-#include "baldr/streetname.h"
 #include "baldr/streetname_us.h"
+#include "baldr/streetname.h"
 
 namespace valhalla {
 namespace baldr {
@@ -15,8 +13,10 @@ const std::vector<std::string> StreetNameUs::post_dirs_{" North",     " East",  
 const std::vector<std::string> StreetNameUs::post_cardinal_dirs_{" North", " East", " South",
                                                                  " West"};
 
-StreetNameUs::StreetNameUs(const std::string& value, const bool is_route_number)
-    : StreetName(value, is_route_number) {
+StreetNameUs::StreetNameUs(const std::string& value,
+                           const bool is_route_number,
+                           const std::optional<baldr::Pronunciation>& pronunciation)
+    : StreetName(value, is_route_number, pronunciation) {
 }
 
 std::string StreetNameUs::GetPreDir() const {

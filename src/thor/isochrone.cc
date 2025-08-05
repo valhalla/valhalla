@@ -1,10 +1,8 @@
 #include "thor/isochrone.h"
-#include "baldr/datetime.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
+
 #include <algorithm>
-#include <iostream> // TODO remove if not needed
-#include <map>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -12,36 +10,23 @@ using namespace valhalla::sif;
 
 namespace {
 
-// Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const graph_tile_ptr& tile,
-                       uint32_t routeid,
-                       std::unordered_map<std::string, uint32_t>& operators) {
-  const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
-
-  // Test if the transit operator changed
-  if (transit_route && transit_route->op_by_onestop_id_offset()) {
-    // Get the operator name and look up in the operators map
-    std::string operator_name = tile->GetName(transit_route->op_by_onestop_id_offset());
-    auto operator_itr = operators.find(operator_name);
-    if (operator_itr == operators.end()) {
-      // Operator not found - add to the map
-      uint32_t id = operators.size() + 1;
-      operators[operator_name] = id;
-      return id;
-    } else {
-      return operator_itr->second;
-    }
-  }
-  return 0;
-}
+constexpr float METRIC_PADDING = 10.f;
 
 template <typename PrecisionT>
 std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<PrecisionT>>& pts,
                                                   double distance_along) {
+  // just the endpoint really
+  if (distance_along == 0)
+    return {pts.back(), pts.back()};
+
+  // consume shape until we reach the desired distance
   double suffix_len = 0;
   for (auto from = std::next(pts.rbegin()), to = pts.rbegin(); from != pts.rend(); ++from, ++to) {
+    // add whatever this segment of shape contributes to the overall distance
     PrecisionT len = from->Distance(*to);
     suffix_len += len;
+
+    // we have enough distance now, lets find the exact stopping point along the geom
     if (suffix_len >= distance_along) {
       auto interpolated = from->PointAlongSegment(*to, (suffix_len - distance_along) / len);
       std::vector<GeoPoint<PrecisionT>> res(pts.rbegin(), from);
@@ -50,6 +35,8 @@ std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<Pre
       return res;
     }
   }
+
+  // we got through the whole shape didnt reach the distance, floating point noise probably
   return pts;
 }
 
@@ -57,8 +44,6 @@ std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<Pre
 
 namespace valhalla {
 namespace thor {
-
-constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Default constructor
 Isochrone::Isochrone(const boost::property_tree::ptree& config)
@@ -70,7 +55,7 @@ Isochrone::Isochrone(const boost::property_tree::ptree& config)
 // the travel mode.
 void Isochrone::ConstructIsoTile(const bool multimodal,
                                  const valhalla::Api& api,
-                                 const sif::TravelMode mode) {
+                                 const sif::travel_mode_t mode) {
 
   // Extend the times in the 2-D grid to be 10 minutes beyond the highest contour time.
   // Cost (including penalties) is used when adding to the adjacency list but the elapsed
@@ -79,28 +64,31 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
   auto max_time_itr =
       std::max_element(api.options().contours().begin(), api.options().contours().end(),
                        [](const auto& a, const auto& b) {
-                         return (!a.has_time() && b.has_time()) ||
-                                (a.has_time() && b.has_time() && a.time() < b.time());
+                         return (!a.has_time_case() && b.has_time_case()) ||
+                                (a.has_time_case() && b.has_time_case() && a.time() < b.time());
                        });
-  bool has_time = max_time_itr->has_time();
-  auto max_minutes = has_time ? max_time_itr->time() + 10.0f : std::numeric_limits<float>::min();
+  bool has_time = max_time_itr->has_time_case();
+  auto max_minutes =
+      has_time ? max_time_itr->time() + METRIC_PADDING : std::numeric_limits<float>::min();
   auto max_dist_itr =
       std::max_element(api.options().contours().begin(), api.options().contours().end(),
                        [](const auto& a, const auto& b) {
-                         return (!a.has_distance() && b.has_distance()) ||
-                                (a.has_distance() && b.has_distance() && a.distance() < b.distance());
+                         return (!a.has_distance_case() && b.has_distance_case()) ||
+                                (a.has_distance_case() && b.has_distance_case() &&
+                                 a.distance() < b.distance());
                        });
-  bool has_distance = max_dist_itr->has_distance();
-  auto max_km = has_distance ? max_dist_itr->distance() + 10.0f : std::numeric_limits<float>::min();
+  bool has_distance = max_dist_itr->has_distance_case();
+  auto max_km =
+      has_distance ? max_dist_itr->distance() + METRIC_PADDING : std::numeric_limits<float>::min();
 
   max_seconds_ = has_time ? max_minutes * kSecPerMinute : max_minutes;
   max_meters_ = has_distance ? max_km * kMetersPerKm : max_km;
   float max_distance;
   if (multimodal) {
     max_distance = max_seconds_ * 70.0f * kMPHtoMetersPerSec;
-  } else if (mode == TravelMode::kPedestrian) {
+  } else if (mode == travel_mode_t::kPedestrian) {
     max_distance = max_seconds_ * 5.0f * kMPHtoMetersPerSec;
-  } else if (mode == TravelMode::kBicycle) {
+  } else if (mode == travel_mode_t::kBicycle) {
     max_distance = max_seconds_ * 20.0f * kMPHtoMetersPerSec;
   } else {
     // A driving mode
@@ -185,7 +173,7 @@ std::shared_ptr<const GriddedData<2>> Isochrone::Expand(const ExpansionType& exp
                                                         Api& api,
                                                         GraphReader& reader,
                                                         const sif::mode_costing_t& mode_costing,
-                                                        const TravelMode mode) {
+                                                        const travel_mode_t mode) {
   // Initialize and create the isotile
   ConstructIsoTile(expansion_type == ExpansionType::multimodal, api, mode);
   // Compute the expansion
@@ -311,29 +299,47 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
 ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreader*/,
                                                 const sif::EdgeLabel& pred,
                                                 const ExpansionType route_type) {
+  float time;
+  uint32_t dist;
   if (route_type == ExpansionType::multimodal) {
     // Skip edges with large penalties (e.g. ferries?), MMCompute function will skip expanding this
     // label
     if (pred.cost().cost > max_seconds_ * 2) {
       return ExpansionRecommendation::prune_expansion;
     }
+    time = pred.predecessor() == kInvalidLabel ? 0.f : mmedgelabels_[pred.predecessor()].cost().secs;
+    dist =
+        pred.predecessor() == kInvalidLabel ? 0 : mmedgelabels_[pred.predecessor()].path_distance();
+  } else {
+    time = pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].cost().secs;
+    dist =
+        pred.predecessor() == kInvalidLabel ? 0 : bdedgelabels_[pred.predecessor()].path_distance();
   }
+
   // Continue if the time and distance intervals have been met. This bus or rail line goes beyond the
   // max but need to consider others so we just continue here. Tells MMExpand function to skip
   // updating or pushing the label back
-  float time =
-      pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].cost().secs;
-  float distance =
-      pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].path_distance();
   // prune the edge if its start is above max contour
-  if (time > max_seconds_ && distance > max_meters_)
-    return ExpansionRecommendation::prune_expansion;
-  return ExpansionRecommendation::continue_expansion;
+
+  ExpansionRecommendation recommendation = (time > max_seconds_ && dist > max_meters_)
+                                               ? ExpansionRecommendation::prune_expansion
+                                               : ExpansionRecommendation::continue_expansion;
+
+  // track expansion
+  if (inner_expansion_callback_ && (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
+                                    dist <= (max_meters_ - METRIC_PADDING * kMetersPerKm))) {
+    if (!expansion_callback_) {
+      expansion_callback_ = inner_expansion_callback_;
+    }
+  } else if (expansion_callback_) {
+    expansion_callback_ = nullptr;
+  }
+  return recommendation;
 };
 
 void Isochrone::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
   bucket_count = 20000;
-  edge_label_reservation = kInitialEdgeLabelCount;
+  edge_label_reservation = kInitialEdgeLabelCountDijkstras;
 }
 
 } // namespace thor

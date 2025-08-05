@@ -1,15 +1,12 @@
 #include "thor/dijkstras.h"
 #include "baldr/datetime.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
+
 #include <algorithm>
-#include <map>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
-
-constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 namespace {
 
@@ -43,24 +40,24 @@ namespace thor {
 
 // Default constructor
 Dijkstras::Dijkstras(const boost::property_tree::ptree& config)
-    : mode_(TravelMode::kDrive), access_mode_(kAutoAccess),
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
-      multipath_(false) {
+    : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess),
+      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_dijkstras",
+                                                      kInitialEdgeLabelCountDijkstras)),
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)), multipath_(false) {
 }
 
 // Clear the temporary information generated during path construction.
 void Dijkstras::Clear() {
   // Clear the edge labels, edge status flags, and adjacency list
   // TODO - clear only the edge label set that was used?
-  if (bdedgelabels_.size() > max_reserved_labels_count_) {
-    bdedgelabels_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (bdedgelabels_.size() > reservation) {
+    bdedgelabels_.resize(reservation);
     bdedgelabels_.shrink_to_fit();
   }
   bdedgelabels_.clear();
-
-  if (mmedgelabels_.size() > max_reserved_labels_count_) {
-    mmedgelabels_.resize(max_reserved_labels_count_);
+  if (mmedgelabels_.size() > reservation) {
+    mmedgelabels_.resize(reservation);
     mmedgelabels_.shrink_to_fit();
   }
   mmedgelabels_.clear();
@@ -80,7 +77,7 @@ void Dijkstras::Initialize(label_container_t& labels,
   uint32_t edge_label_reservation;
   uint32_t bucket_count;
   GetExpansionHints(bucket_count, edge_label_reservation);
-  labels.reserve(std::min(max_reserved_labels_count_, edge_label_reservation));
+  labels.reserve(max_reserved_labels_count_);
 
   // Set up lambda to get sort costs
   float range = bucket_count * bucket_size;
@@ -180,7 +177,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    uint8_t restriction_idx = -1;
+    uint8_t restriction_idx = kInvalidRestriction;
     // is_dest is false, because it is a traversal algorithm in this context, not a path search
     // algorithm. In other words, destination edges are not defined for this Dijkstra's algorithm.
     const bool is_dest = false;
@@ -210,20 +207,18 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // Compute the cost and path distance to the end of this edge
     Cost transition_cost, newcost;
     uint8_t flow_sources;
-
+    auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
     if (FORWARD) {
-      transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
-      newcost = pred.cost() +
-                costing_->EdgeCost(directededge, tile, offset_time.second_of_week, flow_sources) +
+      transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
+      newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time, flow_sources) +
                 transition_cost;
     } else {
       transition_cost =
           costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                          opp_pred_edge, pred.has_measured_speed(),
-                                          pred.internal_turn());
-      newcost = pred.cost() +
-                costing_->EdgeCost(opp_edge, t2, offset_time.second_of_week, flow_sources) +
-                transition_cost;
+                                          opp_pred_edge, t2, pred.edgeid(), reader_getter,
+                                          pred.has_measured_speed(), pred.internal_turn());
+      newcost =
+          pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources) + transition_cost;
     }
     uint32_t path_dist = pred.path_distance() + directededge->length();
 
@@ -242,7 +237,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 
     // Only needed if you want to connect with a reverse path - for reverse mode,
     // these were populated earlier
-    if (expansion_direction == ExpansionType::forward) {
+    if (FORWARD) {
       t2 = tile;
       oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
     }
@@ -250,15 +245,29 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
-                               transition_cost, path_dist, false,
-                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               (expansion_direction == ExpansionType::forward)
-                                   ? costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
-                                   : costing_->TurnType(directededge->localedgeidx(), nodeinfo,
-                                                        opp_edge, opp_pred_edge),
-                               restriction_idx, pred.path_id());
+    if (FORWARD) {
+      bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
+                                 transition_cost, path_dist, false,
+                                 (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
+                                 restriction_idx, pred.path_id(),
+                                 directededge->destonly() ||
+                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 directededge->forwardaccess() & kTruckAccess);
+
+    } else {
+      bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
+                                 transition_cost, path_dist, false,
+                                 (pred.closure_pruning() || !costing_->IsClosed(opp_edge, t2)),
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                    opp_pred_edge),
+                                 restriction_idx, pred.path_id(),
+                                 opp_edge->destonly() ||
+                                     (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                                 opp_edge->forwardaccess() & kTruckAccess);
+    }
     adjacencylist_.add(idx);
   }
 
@@ -297,7 +306,7 @@ void Dijkstras::Expand(const ExpansionType expansion_type,
                        valhalla::Api& api,
                        baldr::GraphReader& reader,
                        const sif::mode_costing_t& costings,
-                       const sif::TravelMode mode) {
+                       const sif::travel_mode_t mode) {
   // compute the expansion
   switch (expansion_type) {
     case ExpansionType::forward:
@@ -309,7 +318,8 @@ void Dijkstras::Expand(const ExpansionType expansion_type,
                                       mode);
       break;
     case ExpansionType::multimodal:
-      ComputeMultiModal(*api.mutable_options()->mutable_locations(), reader, costings, mode);
+      ComputeMultiModal(*api.mutable_options()->mutable_locations(), reader, costings, mode,
+                        api.options());
       break;
     default:
       throw std::runtime_error("Unknown expansion type");
@@ -320,7 +330,7 @@ template <const ExpansionType expansion_direction>
 void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                         baldr::GraphReader& graphreader,
                         const sif::mode_costing_t& mode_costing,
-                        const sif::TravelMode mode) {
+                        const sif::travel_mode_t mode) {
 
   // Set the mode and costing
   mode_ = mode;
@@ -357,7 +367,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
 
     const baldr::DirectedEdge* opp_pred_edge = nullptr;
     if (expansion_direction == ExpansionType::reverse) {
-      opp_pred_edge = graphreader.GetOpposingEdge(pred.opp_edgeid());
+      opp_pred_edge = graphreader.GetOpposingEdge(pred.edgeid());
       if (opp_pred_edge == nullptr) {
         continue;
       }
@@ -366,9 +376,19 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
     // Check if we should stop
     cb_decision = ShouldExpand(graphreader, pred, expansion_direction);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
-      // Expand from the end node in forward direction.
+      // Expand from the end node in expansion_direction.
       ExpandInner<expansion_direction>(graphreader, pred.endnode(), pred, predindex, opp_pred_edge,
                                        false, time_infos.front());
+    }
+
+    if (expansion_callback_) {
+      const auto prev_pred = pred.predecessor() == kInvalidLabel
+                                 ? GraphId{}
+                                 : bdedgelabels_[pred.predecessor()].edgeid();
+      expansion_callback_(graphreader, pred.edgeid(), prev_pred, "dijkstras",
+                          Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
+                          pred.cost().cost,
+                          static_cast<Expansion_ExpansionType>(expansion_direction));
     }
   }
 }
@@ -380,13 +400,13 @@ template void Dijkstras::Compute<ExpansionType::forward>(
     google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode);
+    const sif::travel_mode_t mode);
 
 template void Dijkstras::Compute<ExpansionType::reverse>(
     google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode);
+    const sif::travel_mode_t mode);
 
 // Expand from a node in forward direction using multimodal.
 void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
@@ -416,7 +436,20 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     ExpandingNode(graphreader, tile, nodeinfo, pred, prev_pred);
   }
 
-  // Bail if we cant expand from here
+  if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform ||
+      nodeinfo->type() == NodeType::kTransitStation) {
+
+    if (processed_tiles_.find(tile->id().tileid()) == processed_tiles_.end()) {
+      tc->AddToExcludeList(tile);
+      processed_tiles_.emplace(tile->id().tileid());
+    }
+
+    // check if excluded.
+    if (tc->IsExcluded(tile, nodeinfo)) {
+      return;
+    }
+  }
+
   if (!mode_costing[static_cast<uint8_t>(mode_)]->Allowed(nodeinfo)) {
     return;
   }
@@ -437,25 +470,17 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
   uint32_t operator_id = pred.transit_operator();
   if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
     // Get the transfer penalty when changing stations
-    if (mode_ == TravelMode::kPedestrian && prior_stop.Is_Valid() && has_transit) {
+    if (mode_ == travel_mode_t::kPedestrian && prior_stop.Is_Valid() && has_transit) {
       transfer_cost = tc->TransferCost();
-    }
-
-    if (processed_tiles_.find(tile->id().tileid()) == processed_tiles_.end()) {
-      tc->AddToExcludeList(tile);
-      processed_tiles_.emplace(tile->id().tileid());
-    }
-
-    // check if excluded.
-    if (tc->IsExcluded(tile, nodeinfo)) {
-      return;
     }
 
     // Add transfer time to the local time when entering a stop as a pedestrian. This
     // is a small added cost on top of any costs along paths and roads. We only do this
     // once so if its from a transition we don't need to do it again
-    if (mode_ == TravelMode::kPedestrian && !from_transition) {
-      offset_time.local_time += transfer_cost.secs;
+    if (mode_ == travel_mode_t::kPedestrian && !from_transition) {
+      // TODO(nils): What happens if this wraps the day past midnight?
+      // It might have to advance the day_ and dow_?
+      offset_time.forward(transfer_cost.secs, static_cast<int>(nodeinfo->timezone()));
     }
 
     // Update prior stop. TODO - parent/child stop info?
@@ -495,13 +520,14 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
     // Reset cost and walking distance
     Cost newcost = pred.cost();
-    uint32_t walking_distance = pred.path_distance();
+    uint32_t walking_distance = pred.walking_distance();
+    uint32_t path_distance = pred.path_distance();
 
     // If this is a transit edge - get the next departure. Do not check if allowed by
     // costing - assume if you get a transit edge you walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
-    uint8_t restriction_idx = -1;
+    uint8_t restriction_idx = kInvalidRestriction;
     const bool is_dest = false;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
@@ -516,11 +542,11 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
       // Look up the next departure along this edge
       const TransitDeparture* departure =
-          tile->GetNextDeparture(directededge->lineid(), offset_time.local_time, day_, dow_,
+          tile->GetNextDeparture(directededge->lineid(), offset_time.day_seconds(), day_, dow_,
                                  date_before_tile_, tc->wheelchair(), tc->bicycle());
       if (departure) {
         // Check if there has been a mode change
-        mode_change = (mode_ == TravelMode::kPedestrian);
+        mode_change = (mode_ == travel_mode_t::kPedestrian);
 
         // Update trip Id and block Id
         tripid = departure->tripid();
@@ -539,9 +565,9 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
             // call GetNextDeparture again if we cannot make the current
             // departure.
             // TODO - is there a better way?
-            if (offset_time.local_time + 30 > departure->departure_time()) {
+            if (offset_time.day_seconds() + 30 > departure->departure_time()) {
               departure =
-                  tile->GetNextDeparture(directededge->lineid(), offset_time.local_time + 30, day_,
+                  tile->GetNextDeparture(directededge->lineid(), offset_time.day_seconds() + 30, day_,
                                          dow_, date_before_tile_, tc->wheelchair(), tc->bicycle());
               if (!departure) {
                 continue;
@@ -550,7 +576,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
           }
 
           // Get the operator Id
-          operator_id = GetOperatorId(tile, departure->routeid(), operators_);
+          operator_id = GetOperatorId(tile, departure->routeindex(), operators_);
 
           // Add transfer penalty and operator change penalty
           if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {
@@ -562,8 +588,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
         }
 
         // Change mode and costing to transit. Add edge cost.
-        mode_ = TravelMode::kPublicTransit;
-        newcost += tc->EdgeCost(directededge, departure, offset_time.local_time);
+        mode_ = travel_mode_t::kPublicTransit;
+        newcost += tc->EdgeCost(directededge, departure, offset_time.day_seconds());
       } else {
         // No matching departures found for this edge
         continue;
@@ -572,37 +598,34 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     else {
       // If current mode is public transit we should only connect to
       // transit connection edges or transit edges
-      if (mode_ == TravelMode::kPublicTransit) {
+      if (mode_ == travel_mode_t::kPublicTransit) {
         // Disembark from transit and reset walking distance
-        mode_ = TravelMode::kPedestrian;
+        mode_ = travel_mode_t::kPedestrian;
         walking_distance = 0;
         mode_change = true;
+      } else {
+        walking_distance += directededge->length();
+
+        // Prevent going from one transit connection directly to another
+        // at a transit stop - this is like entering a station and exiting
+        // without getting on transit
+        if (nodeinfo->type() == NodeType::kTransitEgress && pred.use() == Use::kTransitConnection &&
+            directededge->use() == Use::kTransitConnection) {
+          continue;
+        }
       }
 
       // Regular edge - use the appropriate costing and check if access
       // is allowed. If mode is pedestrian this will validate walking
       // distance has not been exceeded.
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, false, pred, tile,
-                                                               edgeid, 0, 0, restriction_idx)) {
+      if (!pc->Allowed(directededge, false, pred, tile, edgeid, 0, 0, restriction_idx) ||
+          walking_distance > max_walking_dist_) {
         continue;
       }
 
-      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge, tile);
-      c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
+      Cost c = pc->EdgeCost(directededge, tile);
+      c.cost *= pc->GetModeFactor();
       newcost += c;
-
-      // Add to walking distance
-      if (mode_ == TravelMode::kPedestrian) {
-        walking_distance += directededge->length();
-
-        // Prevent going from one egress connection directly to another
-        // at a transit stop - this is like entering a station and exiting
-        // without getting on transit
-        if (nodeinfo->type() == NodeType::kTransitEgress && pred.use() == Use::kEgressConnection &&
-            directededge->use() == Use::kEgressConnection) {
-          continue;
-        }
-      }
     }
 
     // Add mode change cost or edge transition cost from the costing model
@@ -612,35 +635,25 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       // a transit line (assume the wait time is the cost)
       // transition_cost = { 10.0f, 10.0f };
     } else {
+      auto reader_getter = [&]() { return baldr::LimitedGraphReader(graphreader); };
       transition_cost =
-          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred);
+          mode_costing[static_cast<uint32_t>(mode_)]->TransitionCost(directededge, nodeinfo, pred,
+                                                                     tile, reader_getter);
     }
     newcost += transition_cost;
 
     // Prohibit entering the same station as the prior.
-    if (directededge->use() == Use::kTransitConnection &&
+    // TODO: if pred was a station, we wouldn't know about it; we only set
+    // prior_stopid for platforms so far; also pull this check much further up
+    if (directededge->use() == Use::kPlatformConnection &&
         directededge->endnode() == pred.prior_stopid()) {
       continue;
     }
 
     // Test if exceeding maximum transfer walking distance
-    if (directededge->use() == Use::kTransitConnection && pred.prior_stopid().Is_Valid() &&
+    // TODO: transfer distance != walking distance! (one more label member?)
+    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().Is_Valid() &&
         walking_distance > max_transfer_distance_) {
-      continue;
-    }
-
-    // Make the label in advance, we may not end up using it but we need it for the expansion decision
-    MMEdgeLabel edge_label{pred_idx,      edgeid,           directededge,
-                           newcost,       newcost.cost,     0.0f,
-                           mode_,         walking_distance, tripid,
-                           prior_stop,    blockid,          operator_id,
-                           has_transit,   transition_cost,  restriction_idx,
-                           pred.path_id()};
-
-    // See if this is even worth expanding
-    auto maybe_expand = ShouldExpand(graphreader, edge_label, ExpansionType::multimodal);
-    if (maybe_expand == ExpansionRecommendation::prune_expansion ||
-        maybe_expand == ExpansionRecommendation::stop_expansion) {
       continue;
     }
 
@@ -653,8 +666,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         mmadjacencylist_.decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid, transition_cost,
-                   restriction_idx);
+        lab.Update(pred_idx, newcost, newsortcost, path_distance, walking_distance, tripid, blockid,
+                   transition_cost, restriction_idx);
       }
       continue;
     }
@@ -662,7 +675,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = mmedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    mmedgelabels_.emplace_back(edge_label);
+    mmedgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
+                               path_distance, walking_distance, tripid, prior_stop, blockid,
+                               operator_id, has_transit, transition_cost, restriction_idx,
+                               pred.path_id());
     mmadjacencylist_.add(idx);
   }
 
@@ -681,40 +697,40 @@ void Dijkstras::ComputeMultiModal(
     google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode mode) {
-  // For pedestrian costing - set flag allowing use of transit connections
-  // Set pedestrian costing to use max distance. TODO - need for other modes
-  const auto& pc = mode_costing[static_cast<uint8_t>(TravelMode::kPedestrian)];
-  pc->SetAllowTransitConnections(true);
-  pc->UseMaxMultiModalDistance();
-
-  // Set the mode from the origin
-  mode_ = mode;
-  const auto& tc = mode_costing[static_cast<uint8_t>(TravelMode::kPublicTransit)];
-
-  // Get maximum transfer distance
-  // TODO - want to allow unlimited walking once you get off the transit stop...
-  max_transfer_distance_ = 99999.0f; // costing->GetMaxTransferDistanceMM();
+    const travel_mode_t mode,
+    const Options& options) {
 
   // For now the date_time must be set on the origin.
-  if (!origin_locations.Get(0).has_date_time()) {
+  if (origin_locations.Get(0).date_time().empty()) {
     LOG_ERROR("No date time set on the origin location");
     return;
   }
+
+  // For pedestrian costing - set flag allowing use of transit connections
+  // Set pedestrian costing to use max distance. TODO - need for other modes
+  const auto& pc = mode_costing[static_cast<uint8_t>(travel_mode_t::kPedestrian)];
+  pc->SetAllowTransitConnections(true);
+
+  // Set the mode from the origin
+  mode_ = mode;
+  const auto& tc = mode_costing[static_cast<uint8_t>(travel_mode_t::kPublicTransit)];
+
+  // Get maximum transfer and walking distance
+  max_transfer_distance_ = pc->GetMaxTransferDistanceMM();
+  max_walking_dist_ =
+      options.costings().find(Costing::pedestrian)->second.options().transit_start_end_max_distance();
 
   // Get the time information for all the origin locations
   auto time_infos = SetTime(origin_locations, graphreader);
 
   // Prepare for graph traversal
   Initialize(mmedgelabels_, mmadjacencylist_, mode_costing[static_cast<uint8_t>(mode_)]->UnitSize());
-  SetOriginLocationsMultiModal(graphreader, origin_locations,
-                               mode_costing[static_cast<uint8_t>(mode_)]);
+  SetOriginLocationsMultiModal(graphreader, origin_locations, pc);
 
   // Update start time
   date_set_ = false;
   date_before_tile_ = false;
   origin_date_time_ = origin_locations.Get(0).date_time();
-  start_time_ = DateTime::seconds_from_midnight(origin_locations.Get(0).date_time());
 
   // Clear operators and processed tiles
   operators_.clear();
@@ -725,7 +741,7 @@ void Dijkstras::ComputeMultiModal(
   while (cb_decision != ExpansionRecommendation::stop_expansion) {
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    const uint32_t predindex = adjacencylist_.pop();
+    const uint32_t predindex = mmadjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       break;
     }
@@ -737,6 +753,15 @@ void Dijkstras::ComputeMultiModal(
     // Check if we should stop
     cb_decision = ShouldExpand(graphreader, pred, ExpansionType::multimodal);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
+      if (expansion_callback_) {
+        GraphId pred_edge = pred.predecessor() == kInvalidLabel
+                                ? GraphId()
+                                : mmedgelabels_[pred.predecessor()].edgeid();
+        expansion_callback_(graphreader, pred.edgeid(), pred_edge, "multimodal",
+                            valhalla::Expansion_EdgeStatus_reached, pred.cost().secs,
+                            pred.path_distance(), pred.cost().cost,
+                            valhalla::Expansion_ExpansionType_forward);
+      }
       // Expand from the end node of the predecessor edge.
       ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,
                               mode_costing, time_infos.front());
@@ -759,13 +784,13 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(location.path_edges().begin(), location.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
+    std::for_each(location.correlation().edges().begin(), location.correlation().edges().end(),
+                  [&has_other_edges](const valhalla::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.end_node();
                   });
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (location.path_edges())) {
+    for (const auto& edge : (location.correlation().edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (has_other_edges && edge.end_node()) {
         continue;
@@ -790,11 +815,10 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       if (!opp_edge_id.Is_Valid()) {
         continue;
       }
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
 
       // Get cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                   (1.0f - edge.percent_along());
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
@@ -803,16 +827,18 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: high edge scores cause issues as there is code to limit cost so
       // that large penalties (e.g., ferries) are excluded.
-      cost.cost += edge.distance() * 0.005f;
+      cost.cost += edge.distance();
 
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
-      int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
+                                 InternalTurn::kNoTurn, kInvalidRestriction, multipath_ ? path_id : 0,
+                                 directededge->destonly() ||
+                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 directededge->forwardaccess() & kTruckAccess);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -839,13 +865,13 @@ void Dijkstras::SetDestinationLocations(
 
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(location.path_edges().begin(), location.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
+    std::for_each(location.correlation().edges().begin(), location.correlation().edges().end(),
+                  [&has_other_edges](const valhalla::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.begin_node();
                   });
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (location.path_edges())) {
+    for (const auto& edge : (location.correlation().edges())) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
       if (has_other_edges && edge.begin_node()) {
@@ -875,7 +901,7 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                   edge.percent_along();
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();
@@ -884,7 +910,7 @@ void Dijkstras::SetDestinationLocations(
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: high edge scores cause issues as there is code to limit cost so
       // that large penalties (e.g., ferries) are excluded.
-      cost.cost += edge.distance() * 0.005f;
+      cost.cost += edge.distance();
 
       // Add EdgeLabel to the adjacency list. Set the predecessor edge index
       // to invalid to indicate the origin of the path. Make sure the opposing
@@ -901,7 +927,10 @@ void Dijkstras::SetDestinationLocations(
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
+                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0,
+                                 directededge->destonly() ||
+                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 directededge->forwardaccess() & kTruckAccess);
       adjacencylist_.add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? path_id : 0);
     }
@@ -917,13 +946,15 @@ void Dijkstras::SetOriginLocationsMultiModal(
   for (auto& origin : origin_locations) {
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
-    std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
+    std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                  [&has_other_edges](const valhalla::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.end_node();
                   });
 
+    // keep the nodeinfo object to set timezone properly at the end
+    const NodeInfo* closest_ni = nullptr;
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : (origin.path_edges())) {
+    for (const auto& edge : (origin.correlation().edges())) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (has_other_edges && edge.end_node()) {
         continue;
@@ -931,7 +962,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
 
       // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
       GraphId edgeid(edge.graph_id());
-      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+      if (costing->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
         continue;
       }
 
@@ -948,34 +979,34 @@ void Dijkstras::SetOriginLocationsMultiModal(
       if (endtile == nullptr) {
         continue;
       }
+      if (closest_ni == nullptr) {
+        closest_ni = endtile->node(directededge->endnode());
+      }
 
       // Get cost
       Cost cost = costing->EdgeCost(directededge, endtile) * (1.0f - edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
-      // TODO: high edge scores cause issues as there is code to limit cost so
-      // that large penalties (e.g., ferries) are excluded.
-      cost.cost += edge.distance() * 0.005f;
+      cost.cost += edge.distance();
 
-      // Add EdgeLabel to the adjacency list (but do not set its status).
-      // Set the predecessor edge index to invalid to indicate the origin
-      // of the path.
-      uint32_t idx = mmedgelabels_.size();
       uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-      // TODO Do we care about time restrictions at origin edges?
-      int restriction_idx = -1;
-      // TODO How about transition cost?
-      auto transition_cost = Cost{};
-      MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
-                             GraphId(), 0, 0, false, transition_cost, restriction_idx);
-
+      MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, d,
+                             0, GraphId(), 0, 0, false, Cost{}, baldr::kInvalidRestriction);
       // Set the origin flag
       edge_label.set_origin();
 
       // Add EdgeLabel to the adjacency list
+      uint32_t idx = mmedgelabels_.size();
       mmedgelabels_.push_back(edge_label);
       mmadjacencylist_.add(idx);
+      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile, 0);
+    }
+
+    // Set the origin timezone
+    if (closest_ni != nullptr && !origin.date_time().empty() && origin.date_time() == "current") {
+      origin.set_date_time(
+          DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
     }
   }
 }

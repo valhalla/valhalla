@@ -1,13 +1,13 @@
 #ifndef VALHALLA_ODIN_SIGNS_H_
 #define VALHALLA_ODIN_SIGNS_H_
 
-#include <cstdint>
-#include <vector>
-
 #include <valhalla/baldr/verbal_text_formatter.h>
 #include <valhalla/baldr/verbal_text_formatter_us.h>
-
+#include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/sign.h>
+
+#include <cstdint>
+#include <vector>
 
 using namespace valhalla::baldr;
 
@@ -34,7 +34,8 @@ public:
   std::string GetExitNumberString(uint32_t max_count = 0,
                                   bool limit_by_consecutive_count = false,
                                   const std::string& delim = "/",
-                                  const VerbalTextFormatter* verbal_formatter = nullptr) const;
+                                  const VerbalTextFormatter* verbal_formatter = nullptr,
+                                  const MarkupFormatter* markup_formatter = nullptr) const;
 
   const std::vector<Sign>& exit_branch_list() const;
   std::vector<Sign>* mutable_exit_branch_list();
@@ -42,7 +43,8 @@ public:
   std::string GetExitBranchString(uint32_t max_count = 0,
                                   bool limit_by_consecutive_count = false,
                                   const std::string& delim = "/",
-                                  const VerbalTextFormatter* verbal_formatter = nullptr) const;
+                                  const VerbalTextFormatter* verbal_formatter = nullptr,
+                                  const MarkupFormatter* markup_formatter = nullptr) const;
 
   const std::vector<Sign>& exit_toward_list() const;
   std::vector<Sign>* mutable_exit_toward_list();
@@ -50,7 +52,8 @@ public:
   std::string GetExitTowardString(uint32_t max_count = 0,
                                   bool limit_by_consecutive_count = false,
                                   const std::string& delim = "/",
-                                  const VerbalTextFormatter* verbal_formatter = nullptr) const;
+                                  const VerbalTextFormatter* verbal_formatter = nullptr,
+                                  const MarkupFormatter* markup_formatter = nullptr) const;
 
   const std::vector<Sign>& exit_name_list() const;
   std::vector<Sign>* mutable_exit_name_list();
@@ -58,7 +61,8 @@ public:
   std::string GetExitNameString(uint32_t max_count = 0,
                                 bool limit_by_consecutive_count = false,
                                 const std::string& delim = "/",
-                                const VerbalTextFormatter* verbal_formatter = nullptr) const;
+                                const VerbalTextFormatter* verbal_formatter = nullptr,
+                                const MarkupFormatter* markup_formatter = nullptr) const;
 
   const std::vector<Sign>& guide_branch_list() const;
   std::vector<Sign>* mutable_guide_branch_list();
@@ -66,7 +70,8 @@ public:
   std::string GetGuideBranchString(uint32_t max_count = 0,
                                    bool limit_by_consecutive_count = false,
                                    const std::string& delim = "/",
-                                   const VerbalTextFormatter* verbal_formatter = nullptr) const;
+                                   const VerbalTextFormatter* verbal_formatter = nullptr,
+                                   const MarkupFormatter* markup_formatter = nullptr) const;
 
   const std::vector<Sign>& guide_toward_list() const;
   std::vector<Sign>* mutable_guide_toward_list();
@@ -74,12 +79,14 @@ public:
   std::string GetGuideTowardString(uint32_t max_count = 0,
                                    bool limit_by_consecutive_count = false,
                                    const std::string& delim = "/",
-                                   const VerbalTextFormatter* verbal_formatter = nullptr) const;
+                                   const VerbalTextFormatter* verbal_formatter = nullptr,
+                                   const MarkupFormatter* markup_formatter = nullptr) const;
 
   std::string GetGuideString(uint32_t max_count = 0,
                              bool limit_by_consecutive_count = false,
                              const std::string& delim = "/",
-                             const VerbalTextFormatter* verbal_formatter = nullptr) const;
+                             const VerbalTextFormatter* verbal_formatter = nullptr,
+                             const MarkupFormatter* markup_formatter = nullptr) const;
 
   std::vector<Sign> GetGuideSigns(uint32_t max_count = 0,
                                   bool limit_by_consecutive_count = false) const;
@@ -90,7 +97,8 @@ public:
   std::string GetJunctionNameString(uint32_t max_count = 0,
                                     bool limit_by_consecutive_count = false,
                                     const std::string& delim = "/",
-                                    const VerbalTextFormatter* verbal_formatter = nullptr) const;
+                                    const VerbalTextFormatter* verbal_formatter = nullptr,
+                                    const MarkupFormatter* markup_formatter = nullptr) const;
 
   bool HasExit() const;
   bool HasExitNumber() const;
@@ -117,7 +125,8 @@ protected:
                            uint32_t max_count = 0,
                            bool limit_by_consecutive_count = false,
                            const std::string& delim = "/",
-                           const VerbalTextFormatter* verbal_formatter = nullptr) const;
+                           const VerbalTextFormatter* verbal_formatter = nullptr,
+                           const MarkupFormatter* markup_formatter = nullptr) const;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ListToParameterString(const std::vector<Sign>& signs) const;

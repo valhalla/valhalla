@@ -1,16 +1,14 @@
-
 #ifndef VALHALLA_MIDGARD_TILES_H_
 #define VALHALLA_MIDGARD_TILES_H_
-
-#include <cstdint>
-#include <functional>
-#include <list>
-#include <unordered_map>
-#include <unordered_set>
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/ellipse.h>
+
+#include <cstdint>
+#include <functional>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace valhalla {
 namespace midgard {
@@ -123,7 +121,7 @@ public:
    * @param   y   y coordinate
    * @return  Returns the tile row. Returns -1 if outside the tile system bounds.
    */
-  int32_t Row(const float y) const {
+  int32_t Row(const typename coord_t::value_type y) const {
     // Return -1 if outside the tile system bounds
     if (y < tilebounds_.miny() || y > tilebounds_.maxy()) {
       return -1;
@@ -139,19 +137,18 @@ public:
    * @param   x   x coordinate
    * @return  Returns the tile column. Returns -1 if outside the tile system bounds.
    */
-  int32_t Col(const float x) const {
+  int32_t Col(const typename coord_t::value_type x) const {
     // Return -1 if outside the tile system bounds
     if (x < tilebounds_.minx() || x > tilebounds_.maxx()) {
       return -1;
     }
 
     // If equal to the max x return the largest column
-    if (x == tilebounds_.maxx()) {
+    const typename coord_t::value_type col = (x - tilebounds_.minx()) / tilesize_;
+    if (col >= ncolumns_) {
       return ncolumns_ - 1;
-    } else {
-      float col = (x - tilebounds_.minx()) / tilesize_;
-      return (col >= 0.0) ? static_cast<int32_t>(col) : static_cast<int32_t>(col - 1);
     }
+    return (col >= 0.0) ? static_cast<int32_t>(col) : static_cast<int32_t>(col - 1);
   }
 
   /**
@@ -169,7 +166,7 @@ public:
    * @param   y   y (or lat)
    * @param   x   x (or lng)
    * @return  Returns the tile Id. -1 (error is returned if the x,y is
-   *          outside the bounding box of the tiling sytem).
+   *          outside the bounding box of the tiling system).
    */
   int32_t TileId(const typename coord_t::first_type y, const typename coord_t::first_type x) const {
     // Return -1 if totally outside the extent.
@@ -230,8 +227,8 @@ public:
    * @return  The latitude, longitude extent of the specified tile.
    */
   AABB2<coord_t> TileBounds(const int32_t tileid) const {
-    Point2 base = Base(tileid);
-    return AABB2<coord_t>(base.x(), base.y(), base.x() + tilesize_, base.y() + tilesize_);
+    auto base = Base(tileid);
+    return {base.x(), base.y(), base.x() + tilesize_, base.y() + tilesize_};
   }
 
   /**
@@ -241,9 +238,9 @@ public:
    * @return  The latitude, longitude extent of the specified tile.
    */
   AABB2<coord_t> TileBounds(const int32_t col, const int32_t row) const {
-    float basex = tilebounds_.minx() + ((float)col * tilesize_);
-    float basey = tilebounds_.miny() + ((float)row * tilesize_);
-    return AABB2<coord_t>(basex, basey, basex + tilesize_, basey + tilesize_);
+    auto basex = tilebounds_.minx() + col * tilesize_;
+    auto basey = tilebounds_.miny() + row * tilesize_;
+    return {basex, basey, basex + tilesize_, basey + tilesize_};
   }
 
   /**
@@ -289,9 +286,9 @@ public:
    * @return  Returns the tile Id of the tile to the right/east.
    */
   int32_t RightNeighbor(const int32_t tileid) const {
-    return (tileid - ((tileid / ncolumns_) * ncolumns_) < ncolumns_ - 1)
-               ? tileid + 1
-               : wrapx_ ? tileid - ncolumns_ + 1 : tileid;
+    return (tileid - ((tileid / ncolumns_) * ncolumns_) < ncolumns_ - 1) ? tileid + 1
+           : wrapx_                                                      ? tileid - ncolumns_ + 1
+                                                                         : tileid;
   }
 
   /**
@@ -301,7 +298,8 @@ public:
    */
   int32_t LeftNeighbor(const int32_t tileid) const {
     return tileid - ((tileid / ncolumns_) * ncolumns_) > 0 ? tileid - 1
-                                                           : wrapx_ ? tileid + ncolumns_ - 1 : tileid;
+           : wrapx_                                        ? tileid + ncolumns_ - 1
+                                                           : tileid;
   }
 
   /**

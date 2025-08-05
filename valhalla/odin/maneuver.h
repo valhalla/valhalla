@@ -1,21 +1,19 @@
 #ifndef VALHALLA_ODIN_MANEUVER_H_
 #define VALHALLA_ODIN_MANEUVER_H_
 
+#include <valhalla/baldr/streetnames.h>
+#include <valhalla/baldr/verbal_text_formatter.h>
+#include <valhalla/odin/signs.h>
+#include <valhalla/odin/transitrouteinfo.h>
+#include <valhalla/proto/common.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
+
 #include <cstdint>
 #include <list>
 #include <memory>
 #include <string>
-#include <unordered_map>
-
-#include <valhalla/baldr/streetnames.h>
-#include <valhalla/baldr/verbal_text_formatter.h>
-
-#include <valhalla/odin/signs.h>
-#include <valhalla/odin/transitrouteinfo.h>
-#include <valhalla/proto/directions.pb.h>
-#include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripcommon.pb.h>
 
 using namespace valhalla::baldr;
 
@@ -58,6 +56,18 @@ public:
   bool IsMergeType() const;
   bool IsRightType() const;
   bool IsLeftType() const;
+
+  void set_node_type(TripLeg_Node_Type type);
+  TripLeg_Node_Type node_type() const;
+  bool has_node_type() const;
+  bool traffic_signal() const;
+  void set_traffic_signal(bool traffic_signal);
+  bool is_steps() const;
+  void set_steps(bool steps);
+  bool is_bridge() const;
+  void set_bridge(bool bridge);
+  bool is_tunnel() const;
+  void set_tunnel(bool tunnel);
 
   const StreetNames& street_names() const;
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
@@ -298,8 +308,8 @@ public:
   bool has_collapsed_merge_maneuver() const;
   void set_has_collapsed_merge_maneuver(bool has_collapsed_merge_maneuver);
 
-  TripLeg_TravelMode travel_mode() const;
-  void set_travel_mode(TripLeg_TravelMode travel_mode);
+  TravelMode travel_mode() const;
+  void set_travel_mode(TravelMode travel_mode);
 
   bool rail() const;
   void set_rail(bool rail);
@@ -307,17 +317,17 @@ public:
   bool bus() const;
   void set_bus(bool bus);
 
-  TripLeg_VehicleType vehicle_type() const;
-  void set_vehicle_type(TripLeg_VehicleType vehicle_type);
+  VehicleType vehicle_type() const;
+  void set_vehicle_type(VehicleType vehicle_type);
 
-  TripLeg_PedestrianType pedestrian_type() const;
-  void set_pedestrian_type(TripLeg_PedestrianType pedestrian_type);
+  PedestrianType pedestrian_type() const;
+  void set_pedestrian_type(PedestrianType pedestrian_type);
 
-  TripLeg_BicycleType bicycle_type() const;
-  void set_bicycle_type(TripLeg_BicycleType bicycle_type);
+  BicycleType bicycle_type() const;
+  void set_bicycle_type(BicycleType bicycle_type);
 
-  TripLeg_TransitType transit_type() const;
-  void set_transit_type(TripLeg_TransitType transit_type);
+  TransitType transit_type() const;
+  void set_transit_type(TransitType transit_type);
 
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
@@ -375,6 +385,30 @@ public:
   bool has_long_street_name() const;
   void set_long_street_name(bool has_long_street_name);
 
+  const BikeShareStationInfo& bss_info() const;
+  void set_bss_info(const BikeShareStationInfo& bss_info);
+
+  bool elevator() const;
+  void set_elevator(bool elevator);
+
+  bool indoor_steps() const;
+  void set_indoor_steps(bool indoor_steps);
+
+  bool escalator() const;
+  void set_escalator(bool escalator);
+
+  bool building_enter() const;
+  void set_building_enter(bool building_enter);
+
+  bool building_exit() const;
+  void set_building_exit(bool building_exit);
+
+  std::string end_level_ref() const;
+  void set_end_level_ref(const std::string& end_level_ref);
+
+  const std::vector<RouteLandmark>& landmarks() const;
+  void set_landmarks(const std::vector<RouteLandmark>& landmarks);
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -383,6 +417,12 @@ public:
 
 protected:
   DirectionsLeg_Maneuver_Type type_;
+  TripLeg_Node_Type node_type_;
+  bool has_node_type_;
+  bool traffic_signal_;
+  bool is_steps_;
+  bool is_bridge_;
+  bool is_tunnel_;
   std::unique_ptr<StreetNames> street_names_;
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;
@@ -447,6 +487,20 @@ protected:
   bool has_collapsed_merge_maneuver_;
   bool has_long_street_name_;
 
+  // Bss support
+  BikeShareStationInfo bss_info_;
+
+  // Indoor elements
+  bool elevator_;
+  bool indoor_steps_;
+  bool escalator_;
+  bool building_enter_;
+  bool building_exit_;
+  std::string end_level_ref_;
+
+  // Landmarks correlated to the maneuver
+  std::vector<RouteLandmark> landmarks_;
+
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
 
@@ -467,15 +521,15 @@ protected:
   ////////////////////////////////////////////////////////////////////////////
 
   // Travel mode
-  TripLeg_TravelMode travel_mode_;
+  TravelMode travel_mode_;
   bool rail_;
   bool bus_;
 
   // Travel types
-  TripLeg_VehicleType vehicle_type_;
-  TripLeg_PedestrianType pedestrian_type_;
-  TripLeg_BicycleType bicycle_type_;
-  TripLeg_TransitType transit_type_;
+  VehicleType vehicle_type_;
+  PedestrianType pedestrian_type_;
+  BicycleType bicycle_type_;
+  TransitType transit_type_;
 
   DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_;
 

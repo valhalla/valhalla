@@ -18,14 +18,16 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 ## Build Status
 
-| Linux/MacOs | Windows | MinGW64 | Code Coverage |
-| ----------- | ------- | ------------- | ------------- |
-| [![Circle CI](https://circleci.com/gh/valhalla/valhalla/tree/master.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla/tree/master) | [![Build Status](https://dev.azure.com/valhalla1/valhalla/_apis/build/status/valhalla.valhalla?branchName=master)](https://dev.azure.com/valhalla1/valhalla/_build/latest?definitionId=1&branchName=master) | ![Valhalla MinGW Build](https://github.com/valhalla/valhalla/workflows/Valhalla%20MinGW%20Build/badge.svg) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
+| Linux | macOS & Windows | Code Coverage |
+| ----- | --------------- | ------------- |
+| [![Circle CI](https://circleci.com/gh/valhalla/valhalla/tree/master.svg?style=svg)](https://circleci.com/gh/valhalla/valhalla/tree/master) | [![Windows & macOS CI](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/osx_win_python_builds.yml) | [![codecov](https://codecov.io/gh/valhalla/valhalla/branch/master/graph/badge.svg)](https://codecov.io/gh/valhalla/valhalla) |
 
 
 ## License
 
-Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.instagram.com/jaykaydraws/)
+Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.jaykaydraws.com/portfolio). 
+
+OpenStreetMap data in the `./test/data` is licensed under [ODbL](https://opendatacommons.org/licenses/odbl/) and [copyrighted](https://www.openstreetmap.org/copyright) by OSM contributors. Additional information on licenses and other requirements concerning the data sources most frequently used by Valhalla can be found in [the docs](https://valhalla.github.io/valhalla/mjolnir/data_sources/).
 
 ## Overview
 
@@ -38,21 +40,19 @@ There are several key features that we hope can differentiate the Valhalla proje
 - A plugin based narrative and manoeuvre generation architecture. Should allow for generation that is customized either to the administrative area or to the target locale.
 - Multi-modal and time-based routes. Should allow for mixing auto, pedestrian, bike and public transportation in the same route or setting a time by which one must arrive at a location.
 
+## Demo Server
+
+[FOSSGIS e.V.](https://fossgis.de) hosts a demo server which is open to the public and includes a full planet graph with an [open-source web app](https://github.com/gis-ops/valhalla-app) on <https://valhalla.openstreetmap.de>. The HTTP API is accessible on a slightly different subdomain, e.g. <https://valhalla1.openstreetmap.de/isochrone>. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
+
 ## Platform Compatibility
 
-Valhalla is fully functional on many Linux and Mac OS distributions.
+Valhalla is fully functional on many Linux and Mac OS distributions, and is also used on iOS and Android devices.
 
-In Windows all functionality is not yet fully supported. Building the Valhalla library works flawlessly, as well as the following application modules:
+For Windows, not all functionality is fully supported yet. Building the Valhalla library works flawlessly, as well as the following application modules:
 
 - `TOOLS`: utilities to query and benchmark various components
 - `DATA_TOOLS`: utilities to build input data and handle transit
 - `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full (i.e. development) Python distribution in the `PATH`)
-
-Also, be aware that building tiles on Windows works, however, you can't build tiles with support of admin & timezone DBs (see [#3010](https://github.com/valhalla/valhalla/issues/3010)). This mostly affects the following functionalities:
-- no/falsy time-dependent routing
-- no border-crossing penalties
-- driving side will be off in LHT countries
-- currently wrong navigation in roundabouts, see [#2320](https://github.com/valhalla/valhalla/issues/2320)
 
 ## Organization
 
@@ -73,210 +73,42 @@ The Valhalla organization is comprised of several library modules each responsib
 
 ## Documentation
 
-Documentation is stored in the `docs/` folder in this GitHub repository. It can be viewed at [valhalla.readthedocs.io](https://valhalla.readthedocs.io/).
+Documentation is stored in the `docs/` folder in this GitHub repository. It can be viewed at [valhalla.github.io/valhalla](https://valhalla.github.io/valhalla).
 
 ## Installation
 
-### [DEPRECATED] Get Valhalla from Personal Package Archive (PPA)
+For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](https://valhalla.github.io/valhalla).
 
-NOTICE: Since we moved to cmake build systems we haven't updated our debian packaging scripts. Because of that the packages in the PPA are very very old. Once we get time to correct this we'll remove this notice but until then we recommend building from source or using docker.
+### From source
 
-If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly and easily via PPA. Try the following:
+If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
 
-```bash
-# grab all of the valhalla software from ppa
-sudo add-apt-repository -y ppa:valhalla-core/valhalla
-sudo apt-get update
-sudo apt-get install -y valhalla-bin
-```
+### With docker
 
-### Building from Source - Linux
+[![Test & Publish Docker image](https://github.com/valhalla/valhalla/actions/workflows/docker-build.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/docker-build.yml)
 
-Valhalla uses CMake as build system. When compiling with gcc (GNU Compiler Collection), version 5 or newer is supported.
+To run Valhalla locally or your own server, we recommend using one of our [Docker images](https://github.com/orgs/valhalla/packages), see the [README](https://github.com/valhalla/valhalla/blob/master/docker/README.md).
 
-To install on a Debian or Ubuntu system you need to install its dependencies with:
+### Via Python bindings
 
-```bash
-sudo add-apt-repository -y ppa:valhalla-core/valhalla
-sudo apt-get update
-sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl unzip jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
-#if you plan to compile with data building support, see below for more info
-sudo apt-get install -y libgeos-dev libgeos++-dev libluajit-5.1-dev libspatialite-dev libsqlite3-dev wget sqlite3 spatialite-bin
-source /etc/lsb-release
-if [[ $(python -c "print(int($DISTRIB_RELEASE > 15))") > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
-#if you plan to compile with python bindings, see below for more info
-sudo apt-get install -y python-all-dev
-```
+| [![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)] | [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)] |
 
-### Building from Source - MacOS
+We publish our (very) high-level Python bindings to PyPI:
+- [`pyvalhalla`](https://pypi.org/project/pyvalhalla/): follows Github releases
+- [`pyvalhalla-weekly`](https://pypi.org/project/pyvalhalla-weekly/): follows Github master branch
 
-#### Configuring Rosetta for ARM64 MacBook
+> [!NOTE]
+> The below is only valid for `linux-x86_x64` so far.
 
-Check your architecture typing `arch` in the terminal. In case the result is `arm64` set up Rosetta terminal to emulate x86_64 behavior. Otherwise, skip this step.
+The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](https://valhalla.github.io/valhalla/README_python).
 
-1. Go to `Finder > Application > Utilities`.
-2. Select `Terminal` and right-click on it, then choose `Duplicate`.
-3. Rename the duplicated app `Rosetta Terminal`.
-4. Now select `Rosetta Terminal` application, right-click and choose `Get Info` .
-5. Check the box for `Open using Rosetta`, then close the `Get Info` window.
-6. Make shure you get `i386` after typing `arch` command in  `Rosetta Terminal`.
-7. Now it fully supports Homebrew and other x86_64 command line applications.
-
-Install [Homebrew](http://brew.sh) in the `Rosetta Terminal` app and update the aliases.
-
-```
-echo "alias ibrew='arch -x86_64 /usr/local/bin/brew'" >> ~/.zshrc
-echo "alias mbrew='arch -arm64e /opt/homebrew/bin/brew'" >> ~/.zshrc
-```
-
-You will use them to specify the platform when installing a library. Note: use `ibrew` in `Rosetta Terminal` to install all dependencies for `valhalla` and `prime_server` projects.
-
-#### Installing dependencies
-
-To install valhalla on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
-
-```bash
-# install dependencies (automake & czmq are required by prime_server)
-brew install automake cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit
-# following packages are needed for running Linux compatible scripts
-brew install bash coreutils binutils
-# Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
-```
-
-Now, clone the Valhalla repository
-
-```bash
-git clone --recurse-submodules https://github.com/valhalla/valhalla.git
-```
-
-Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
-
-After getting the dependencies install it with:
-
-```bash
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc) # for macos, use: make -j$(sysctl -n hw.physicalcpu)
-sudo make install
-```
-
-In `Rosetta Terminal` use these flags for cmake:
-
-```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64"
-```
-
-Important build options include:
-
-| Option | Behavior |
-|--------|----------|
-| `-DENABLE_DATA_TOOLS` (`On`/`Off`) | Build the data preprocessing tools|
-| `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings|
-| `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
-| `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
-| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings (defaults to off)|
-| `-DENABLE_WERROR` (`ON` / `OFF`) | Treat compiler warnings as errors  (defaults to off). Requires `-DENABLE_COMPILER_WARNINGS=ON` to take effect.|
-| `-DENABLE_BENCHMARKS` (`ON` / `OFF`) | Enable microbenchmarking  (defaults to on).|
-| `-DENABLE_SANITIZERS` (`ON` / `OFF`) | Build with all the integrated sanitizers (defaults to off).|
-| `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
-| `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
-
-For more build options run the interactive GUI:
-
-```bash
-cd build
-cmake ..
-ccmake ..
-```
-
-For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
-
-### Building from Source - Windows
-
-It's recommended to work with the following toolset:
-- Visual Studio with C++ support
-- Visual Studio Code (easier and lighter to handle)
-- [vcpkg](https://github.com/Microsoft/vcpkg) to install packages
-- [CMake](https://cmake.org/download/)
-
-1. Install the following packages with `vcpkg` and your platform triplet (e.g. `x64-windows`). Note, you can remove all packages after `zlib` in `.\.vcpkg_deps.txt` if you don't want to build `TOOLS` & `DATA_TOOLS`:
-```
-# Basic packages
-git -C C:\path\to\vcpkg checkout f4bd6423
-cd C:\path\to\project
-C:\path\to\vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
-```
-2. Let CMake configure the build with the required modules enabled. **Note**, you have to manually link LuaJIT for some reason, e.g. the final command for `x64` could look like
-```
-"C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_HTTP=ON -DENABLE_CCACHE=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DLUA_LIBRARIES=path\to\vcpkg\installed\x64-windows\lib\lua51.lib -DLUA_INCLUDE_DIR=path\to\vcpkg\installed\x64-windows\include\luajit -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/project -Bpath/to/project/build -G "Visual Studio 16 2019" -T host=x64 -A x64
-```
-3. Run the build for all targets.
-```
-cd C:\path\to\project
-cmake -B build .
-```
-
-## Running
-
-The following bash should be enough to make some routing data and start a server using it. (Note - if you would like to run an elevation lookup service with Valhalla follow the instructions [here](docs/elevation.md)).
-
-```bash
-#download some data and make tiles out of it
-#NOTE: you can feed multiple extracts into pbfgraphbuilder
-wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://download.geofabrik.de/europe/liechtenstein-latest.osm.pbf
-#get the config and setup
-mkdir -p valhalla_tiles
-valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
-#build routing tiles
-#TODO: run valhalla_build_admins?
-valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
-#tar it up for running the server
-find valhalla_tiles | sort -n | tar cf valhalla_tiles.tar --no-recursion -T -
-
-#grab the demos repo and open up the point and click routing sample
-git clone --depth=1 --recurse-submodules --single-branch --branch=gh-pages https://github.com/valhalla/demos.git
-firefox demos/routing/index-internal.html &
-#NOTE: set the environment pulldown to 'localhost' to point it at your own server
-
-#start up the server
-valhalla_service valhalla.json 1
-#curl it directly if you like:
-curl http://localhost:8002/route --data '{"locations":[{"lat":47.365109,"lon":8.546824,"type":"break","city":"Zürich","state":"Altstadt"},{"lat":47.108878,"lon":8.394801,"type":"break","city":"6037 Root","state":"Untere Waldstrasse"}],"costing":"auto","directions_options":{"units":"miles"}}' | jq '.'
-
-#HAVE FUN!
-```
+To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the desired wheel from [PyPI](https://pypi.org/project/pyvalhalla-weekly), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
 
 ## Contributing
 
-We welcome contributions to valhalla. If you would like to report an issue, or even better fix an existing one, please use the [valhalla issue tracker](https://github.com/valhalla/valhalla/issues) on GitHub.
+We :heart: contributions to Valhalla. They could be non-technical, e.g. translations into other languages via [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) or documentation improvements, or technical ones like bug fixes or feature implementations. It's important to open an issue before setting out to work on a PR.
 
-If you would like to make an improvement to the code, please be aware that all valhalla projects are written mostly in C++11.  We use `clang-format` v7.0 to format the code. We welcome contributions as pull requests to the [repository](https://github.com/valhalla/valhalla) and highly recommend that your pull request include a test to validate the addition/change of functionality.
-
-Note that our CI system checks that code formatting is consistent, and the build will fail if formatting rules aren't followed.  Please run `./scripts/format.sh` over your code before committing, to auto-format it in the projects preferred style. To spare yourself (and the CIs) pure `format` commits, you can register it as a pre-commit hook so it lints your changes in-place (and will fail if files were changed, so you'll need to stage and commit again):
-
-```
-cat ./scripts/format.sh > .git/hooks/pre-commit && tail -n +7 scripts/error_on_dirty.sh >> .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-```
-
-Also note that we run some `clang-tidy` linting over the code as well (see `.clang-tidy` for the list of rules enforced).  You can run `./scripts/clang-tidy-only-diff.sh` over the code before committing to ensure you haven't added any of the common problems we check for (Note: `./scripts/clang-tidy-only-diff.sh` requires the exitence of a `compile_commands.json` database.  You can generate this file by running `cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=On ... && make`.
-
-`scripts/clang-tidy-only-diff.sh` is run in CI and will fail the build if it detects any issues.
-
-Additionally, a check with [ASan](https://clang.llvm.org/docs/AddressSanitizer.html) is run in CI. We recommend testing with ASan  and debug symbols locally prior to commiting, with the `-DENABLE_ADDRESS_SANITIZER=ON -DCMAKE_BUILD_TYPE=Debug` flags during cmake configuration. As long as leak sanitizer (which is a part of address sanitizer) is not currently supported across different platforms it is disabled in the CI. You can disable it locally with the environment variable `ASAN_OPTIONS=detect_leaks=0`.
-
-### Tests
-
-We highly encourage running and updating the tests to make sure no regressions have been made. We use the Automake test suite to run our tests by simply making the `check` target:
-
-    make check
-
-To run an individual test, `make run-<test name>` from the build directory or `./test/<testname>`
-
-You may check some notes on [unit tests](docs/testing.md)
-
-Coverage reports are automatically generated using codecov for each pull request, but you can also build them locally by passing `-DENABLE_COVERAGE=On` and running `make coverage`.
+Ideally, get familiar with our [Contribution guidelines](https://github.com/valhalla/valhalla/blob/master/CONTRIBUTING.md) first.
 
 ## Benchmarks
 
@@ -290,12 +122,15 @@ Linux and MacOS.
 
 ## Command Line Tools
 
+> [!TIP]
+> Easily install various Valhalla command line tools like `valhalla_build_tiles` with the [Python bindings](https://valhalla.github.io/valhalla/README_python), e.g. via [PyPI](https://pypi.org/project/pyvalhalla/#files). This currently **only works for `linux-x64`**.
+
 ### `valhalla_service` aka one-shot mode
 
 If you can't (e.g. Windows Server) or don't want to have the full-fledged HTTP API running, you can have the (almost) exact same behavior with the 'valhalla_service' executable in so-called "one-shot" mode. It's simple, just pass the config file, the action (route, isochrone, matrix etc) and the stringified JSON request (or alternatively a file containing the request to circumvent shell command length issues):
 
 ```
-valhalla_service valhalla.json isochrone '{"locations":[{"lat":42.552448,"lon":1.564865}],"costing":"auto","contours":[{"time":10,"color":"ff0000"}], "show_locations":true}
+valhalla_service valhalla.json isochrone '{"locations":[{"lat":42.552448,"lon":1.564865}],"costing":"auto","contours":[{"time":10,"color":"ff0000"}], "show_locations":true}'
 # Alternatively you can pass a file with the same contents
 valhalla_service valhalla.json isochrone isochrone_request.txt
 ```
@@ -305,4 +140,18 @@ It's important to note that all Valhalla logs for one-shot mode are piped to `st
 
 ### Batch Script Tool
 
-- [Batch Run_Route](./run_route_scripts/README.md)
+- [Batch Run_Route](https://github.com/valhalla/valhalla/blob/master/run_route_scripts/README.md)
+
+## Related projects
+
+The following projects are open-source and built with the intention to make it easier to use Valhalla and its features:
+
+- [**OpenStreetMapSpeeds**](https://github.com/OpenStreetMapSpeeds/): A project conflating open GPS data to improve Valhalla's speed classification. The current JSON is from early 2022 and can be downloaded [here](https://raw.githubusercontent.com/OpenStreetMapSpeeds/schema/master/default_speeds.json) and used by setting the path in the `mjolnir.default_speeds_config` config option.
+- [**docker-valhalla**](https://github.com/gis-ops/docker-valhalla): An easy-to-use, relatively magical Docker image for Valhalla, which only requires setting a few environment variables in `docker-compose.yml` to get a full-featured Valhalla instance.
+- [**valhalla-operator**](https://github.com/itayankri/valhalla-operator): A k8s operator to deploy and manage Valhalla.
+- [**valhalla-app**](https://github.com/gis-ops/valhalla-app): A React based web app for Valhalla, powering <https://valhalla.openstreetmap.de/>.
+- [**valhalla-qgis-plugin**](https://github.com/gis-ops/valhalla-qgis-plugin): A QGIS plugin for Valhalla, also available in the [official QGIS plugin store](https://plugins.qgis.org/plugins/valhalla/). **Note**, it's almost deprecated and will be replaced with a much superior alternative.
+- [**routingpy**](https://github.com/gis-ops/routingpy): A Python client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available on [PyPI](https://pypi.org/project/routingpy/).
+- [**routingjs**](https://github.com/gis-ops/routingjs): A TypeScript client for most open-source routing engines, including Valhalla, with a common interface for all engines. Available as engine-specific packages on [npm](https://www.npmjs.com/package/@routingjs/valhalla).
+- [**Valhalla_jll.jl**](https://github.com/JuliaBinaryWrappers/Valhalla_jll.jl): Valhalla binaries shipped for Julia.
+- [**valhalla-go**](https://github.com/pufferffish/valhalla-go): Valhalla Golang bindings via cgo

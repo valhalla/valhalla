@@ -1,13 +1,13 @@
 #ifndef VALHALLA_ODIN_MANEUVERSBUILDER_H_
 #define VALHALLA_ODIN_MANEUVERSBUILDER_H_
 
-#include <cstdint>
-#include <list>
-
 #include <valhalla/odin/enhancedtrippath.h>
 #include <valhalla/odin/maneuver.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
+
+#include <cstdint>
+#include <list>
 
 namespace valhalla {
 namespace odin {
@@ -148,7 +148,7 @@ protected:
    *
    * @return the speed based on the specified travel mode.
    */
-  float GetSpeed(TripLeg_TravelMode travel_mode, float edge_speed) const;
+  float GetSpeed(TravelMode travel_mode, float edge_speed) const;
 
   /**
    * Returns true if the current turn channel maneuver is able to be combined
@@ -200,7 +200,7 @@ protected:
    *
    * @return true if roundabouts are processable based on the specified travel mode.
    */
-  bool AreRoundaboutsProcessable(const TripLeg_TravelMode travel_mode) const;
+  bool AreRoundaboutsProcessable(const TravelMode travel_mode) const;
 
   /**
    * Review each roundabout and if appropriate - set the roundabout name and roundabout exit name.
@@ -318,6 +318,14 @@ protected:
    * @param maneuvers The list of maneuvers to process.
    */
   void CollapseMergeManeuvers(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Add relevant landmarks to maneuvers as direction support.
+   * Each maneuver should get the landmarks accosiated with edges that make up the previous maneuver.
+   *
+   * @param maneuvers The list of maneuvers to add landmarks.
+   */
+  void AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& maneuvers);
 
   const Options& options_;
   EnhancedTripLeg* trip_path_;

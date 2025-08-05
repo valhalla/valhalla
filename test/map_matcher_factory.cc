@@ -1,15 +1,13 @@
 // -*- mode: c++ -*-
-#include <string>
-
+#include "meili/map_matcher_factory.h"
 #include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
-
-#include "meili/map_matcher_factory.h"
-
 #include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <string>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -21,10 +19,10 @@ using namespace valhalla;
 
 using ptree = boost::property_tree::ptree;
 
-void create_costing_options(Costing costing, Options& options) {
+void create_costing_options(Costing::Type costing, Options& options) {
   const rapidjson::Document doc;
-  sif::ParseCostingOptions(doc, "/costing_options", options);
-  options.set_costing(costing);
+  options.set_costing_type(costing);
+  sif::ParseCosting(doc, "/costing_options", options);
 }
 
 TEST(MapMatcherFactory, TestMapMatcherFactory) {
@@ -124,7 +122,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
 
       delete matcher;
 
-      options.set_costing(Costing::bicycle);
+      create_costing_options(Costing::bicycle, options);
       matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kBicycle)
           << "should read costing in options correctly again";
@@ -137,18 +135,20 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       Options options;
       create_costing_options(Costing::pedestrian, options);
       meili::MapMatcherFactory factory(root);
-      options.set_costing(Costing::pedestrian);
+      options.set_costing_type(Costing::pedestrian);
       auto matcher = factory.Create(options);
-      EXPECT_NE(matcher->costing()->travel_type(), (int)sif::PedestrianType::kSegway)
+      EXPECT_NE(matcher->costing()->travel_type(), (int)sif::PedestrianType::kWheelchair)
           << "should not have custom costing options when not set in preferences";
 
       delete matcher;
 
-      options.mutable_costing_options(static_cast<int>(Costing::pedestrian))
-          ->set_transport_type("segway");
+      options.mutable_costings()
+          ->find(Costing::pedestrian)
+          ->second.mutable_options()
+          ->set_transport_type("wheelchair");
       matcher = factory.Create(options);
 
-      EXPECT_EQ(matcher->costing()->travel_type(), (int)sif::PedestrianType::kSegway)
+      EXPECT_EQ(matcher->costing()->travel_type(), (int)sif::PedestrianType::kWheelchair)
           << "should read custom costing options in preferences correctly";
 
       delete matcher;
@@ -165,7 +165,7 @@ TEST(MapMatcherFactory, TestMapMatcher) {
   Options options;
   create_costing_options(Costing::auto_, options);
   auto auto_matcher = factory.Create(options);
-  options.set_costing(Costing::pedestrian);
+  create_costing_options(Costing::pedestrian, options);
   auto pedestrian_matcher = factory.Create(options);
 
   // Share the same pool

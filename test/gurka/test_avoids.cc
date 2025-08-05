@@ -1,22 +1,30 @@
-#include "gurka.h"
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <boost/geometry/multi/geometries/register/multi_polygon.hpp>
-#include <gtest/gtest.h>
-#include <valhalla/proto/options.pb.h>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "gurka.h"
 #include "loki/polygon_search.h"
 #include "midgard/pointll.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/costfactory.h"
 #include "worker.h"
 
+#include <valhalla/proto/options.pb.h>
+
+#include <boost/format.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/register/multi_polygon.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
+#include <gtest/gtest.h>
+
 using namespace valhalla;
 namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;
 namespace vl = valhalla::loki;
+
+class LokiWorkerTest : public vl::loki_worker_t {
+public:
+  using vl::loki_worker_t::loki_worker_t;
+  using vl::loki_worker_t::parse_costing;
+};
 
 namespace {
 // register a few boost.geometry types
@@ -104,7 +112,7 @@ protected:
                               {"BD", {{"highway", "tertiary"}, {"name", "2nd"}}},
                               {"DE", {{"highway", "tertiary"}, {"name", "2nd"}}},
                               {"EF", {{"highway", "tertiary"}, {"name", "2nd"}}}};
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {1.0, 1.0});
     // Add low length limit for exclude_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
                                   {{"service_limits.max_exclude_polygons_length", "1000"}});
@@ -182,11 +190,72 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   };
 }
 
+TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
+  // https://github.com/valhalla/valhalla/issues/3905
+  std::string req =
+      R"({
+          "locations": [
+            {"lat": %s, "lon": %s},
+            {"lat": %s, "lon": %s}
+          ],
+          "costing":"auto",
+        )";
+  std::string req_base =
+      (boost::format(req) % std::to_string(avoid_map.nodes.at("A").lat()) %
+       std::to_string(avoid_map.nodes.at("A").lng()) % std::to_string(avoid_map.nodes.at("D").lat()) %
+       std::to_string(avoid_map.nodes.at("D").lng()))
+          .str();
+  Api request;
+
+  // empty polygon
+  auto req_str = req_base + R"("avoid_polygons": [[]]})";
+  std::cerr << req_str << std::endl;
+  ParseApi(req_str, Options::route, request);
+  // loki would previously segfault on exclude_polygons=[[]]
+  gurka::do_action(Options::route, avoid_map, req_str);
+  EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
+
+  // an object!
+  req_str = req_base + R"("avoid_polygons": {}})";
+  std::cerr << req_str << std::endl;
+  ParseApi(req_str, Options::route, request);
+  auto res = gurka::do_action(Options::route, avoid_map, req_str);
+  EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
+  EXPECT_EQ(res.info().warnings().size(), 1);
+  EXPECT_EQ(res.info().warnings().Get(0).code(), 204);
+
+  // array of empty array and empty object
+  req_str = req_base + R"("avoid_polygons": [[]]})";
+  ParseApi(req_str, Options::route, request);
+  gurka::do_action(Options::route, avoid_map, req_str);
+  EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
+
+  // a valid polygon and an empty object!
+  req_str =
+      req_base +
+      R"("avoid_polygons": [[[1.0, 1.0], [1.00001, 1.00001], [1.00002, 1.00002], [1.0, 1.0]], {}]})";
+  ParseApi(req_str, Options::route, request);
+  res = gurka::do_action(Options::route, avoid_map, req_str);
+  EXPECT_TRUE(request.options().exclude_polygons_size() == 1);
+
+  // protect the public API too
+  baldr::GraphReader reader(avoid_map.config.get_child("mjolnir"));
+  LokiWorkerTest loki_worker(avoid_map.config);
+  valhalla::Api vanilla_request;
+  vanilla_request.mutable_options()->set_costing_type(valhalla::Costing_Type_auto_);
+  vanilla_request.mutable_options()->mutable_exclude_polygons()->Add();
+  (*vanilla_request.mutable_options()->mutable_costings())[valhalla::Costing::auto_];
+
+  // adding an empty polygon was previously causing a segfault
+  loki_worker.parse_costing(vanilla_request);
+  EXPECT_TRUE(vanilla_request.options().exclude_polygons_size() == 1);
+}
+
 TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   valhalla::Options options;
-  options.set_costing(valhalla::Costing::truck);
-  auto* co = options.add_costing_options();
-  co->set_costing(valhalla::Costing::truck);
+  options.set_costing_type(valhalla::Costing::truck);
+  auto& co = (*options.mutable_costings())[Costing::truck];
+  co.set_type(valhalla::Costing::truck);
 
   // create the polygon intersecting a shortcut
   auto* rings = options.mutable_exclude_polygons();
@@ -198,7 +267,7 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
     ll->set_lng(coord.lng());
   }
 
-  const auto costing = valhalla::sif::CostFactory{}.Create(*co);
+  const auto costing = valhalla::sif::CostFactory{}.Create(co);
   GraphReader reader(avoid_map.config.get_child("mjolnir"));
 
   // should return the shortcut edge ID as well
@@ -241,6 +310,5 @@ INSTANTIATE_TEST_SUITE_P(AvoidPolyProfilesTest,
                                            "pedestrian",
                                            "motorcycle",
                                            "motor_scooter",
-                                           "hov",
                                            "taxi",
                                            "bus"));

@@ -1,27 +1,19 @@
+#include "gurka.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
-#include "loki/worker.h"
 #include "midgard/constants.h"
-#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
 #include "mjolnir/util.h"
-#include "odin/worker.h"
 #include "proto/trip.pb.h"
-#include "thor/worker.h"
+#include "test.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
-#include "gurka.h"
-#include "test.h"
-
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-
+#include <gtest/gtest.h>
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/output_iterator.hpp>
@@ -29,12 +21,11 @@
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/osm/object_comparisons.hpp>
 
+#include <filesystem>
 #include <regex>
 #include <string>
 #include <tuple>
 #include <utility>
-
-#include <gtest/gtest.h>
 
 namespace valhalla {
 namespace gurka {
@@ -52,38 +43,33 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
   return lls;
 }
 
-/**
- * build a valhalla json request body
- *
- * @param location_type  locations or shape
- * @param waypoints      sequence of pointlls representing the locations
- * @param costing        which costing name to use, defaults to auto
- * @param options        overrides parts of the request, supports rapidjson pointer semantics
- * @param stop_type      break, through, via, break_through
- * @return json string
- */
-std::string build_valhalla_request(const std::string& location_type,
-                                   const std::vector<midgard::PointLL>& waypoints,
-                                   const std::string& costing = "auto",
-                                   const std::unordered_map<std::string, std::string>& options = {},
-                                   const std::string& stop_type = "break") {
+std::string build_valhalla_request(const std::vector<std::string>& location_types,
+                                   const std::vector<std::vector<midgard::PointLL>>& waypoints,
+                                   const std::string& costing,
+                                   const std::unordered_map<std::string, std::string>& options,
+                                   const std::string& stop_type) {
+  assert(location_types.size() == waypoints.size());
 
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
 
-  rapidjson::Value locations(rapidjson::kArrayType);
-  for (const auto& waypoint : waypoints) {
-    rapidjson::Value p(rapidjson::kObjectType);
-    p.AddMember("lon", waypoint.lng(), allocator);
-    p.AddMember("lat", waypoint.lat(), allocator);
-    if (!stop_type.empty()) {
-      p.AddMember("type", stop_type, allocator);
+  // add one location per locations object, will be usually size 1, other than matrix (so far)
+  for (uint32_t i = 0; i < waypoints.size(); i++) {
+    rapidjson::Value locations(rapidjson::kArrayType);
+
+    for (const auto& waypoint : waypoints[i]) {
+      rapidjson::Value p(rapidjson::kObjectType);
+      p.AddMember("lon", waypoint.lng(), allocator);
+      p.AddMember("lat", waypoint.lat(), allocator);
+      if (!stop_type.empty()) {
+        p.AddMember("type", stop_type, allocator);
+      }
+      locations.PushBack(p, allocator);
     }
-    locations.PushBack(p, allocator);
+    doc.AddMember(rapidjson::Value(location_types[i], allocator), locations, allocator);
   }
 
-  doc.AddMember(rapidjson::Value(location_type, allocator), locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
   // check if we are overriding speed types etc
@@ -97,7 +83,6 @@ std::string build_valhalla_request(const std::string& location_type,
 
   rapidjson::Value co(rapidjson::kObjectType);
   if (!custom_speed_types) {
-    rapidjson::Value dt(rapidjson::kObjectType);
     rapidjson::Value speed_types(rapidjson::kArrayType);
     speed_types.PushBack("freeflow", allocator);
     speed_types.PushBack("constrained", allocator);
@@ -240,7 +225,8 @@ inline void build_pbf(const nodelayout& node_locations,
                       const nodes& nodes,
                       const relations& relations,
                       const std::string& filename,
-                      const uint64_t initial_osm_id) {
+                      const uint64_t initial_osm_id,
+                      const bool strict) {
 
   const size_t initial_buffer_size = 10000;
   osmium::memory::Buffer buffer{initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
@@ -265,7 +251,7 @@ inline void build_pbf(const nodelayout& node_locations,
   }
 
   for (auto& used_node : used_nodes) {
-    if (node_locations.count(used_node) == 0) {
+    if (node_locations.count(used_node) == 0 && strict) {
       throw std::runtime_error("Node " + used_node + " was referred to but was not in the ASCII map");
     }
   }
@@ -340,7 +326,7 @@ inline void build_pbf(const nodelayout& node_locations,
         members.push_back({osmium::item_type::node, static_cast<int64_t>(node_osm_id_map[member.ref]),
                            member.role.c_str()});
       } else {
-        if (way_osm_id_map.count(member.ref) == 0) {
+        if (way_osm_id_map.count(member.ref) == 0 && strict) {
           throw std::runtime_error("Relation member refers to an undefined way " + member.ref);
         }
         members.push_back({osmium::item_type::way, static_cast<int64_t>(way_osm_id_map[member.ref]),
@@ -349,6 +335,7 @@ inline void build_pbf(const nodelayout& node_locations,
     }
 
     std::vector<std::pair<std::string, std::string>> tags;
+    tags.reserve(relation.tags.size());
     for (const auto& tag : relation.tags) {
       tags.push_back({tag.first, tag.second});
     }
@@ -431,17 +418,6 @@ std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result) {
 /**
  * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,
  * and builds a set of Valhalla tiles for it.
- *
- * @param layout the locations of all the nodes
- * @param ways the way definitions (which nodes are connected, and their properties
- * @param nodes properties on any of the defined nodes
- * @param relations OSM relations that related nodes and ways together
- * @param workdir where to build the PBF and the tiles
- * @param config_options optional key value pairs where the key is ptree style dom traversal and
- *        the value is the value to put into the config. You can do things like add timezones database
- *        path
- * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
- *         (for converting node names to coordinates)
  */
 map buildtiles(const nodelayout& layout,
                const ways& ways,
@@ -449,19 +425,27 @@ map buildtiles(const nodelayout& layout,
                const relations& relations,
                const std::string& workdir,
                const std::unordered_map<std::string, std::string>& config_options) {
+  auto config = test::make_config(workdir, config_options);
+  return buildtiles(layout, ways, nodes, relations, config);
+}
 
-  map result;
-  result.config = test::make_config(workdir, config_options);
-  result.nodes = layout;
+map buildtiles(const nodelayout& layout,
+               const ways& ways,
+               const nodes& nodes,
+               const relations& relations,
+               const boost::property_tree::ptree& config) {
+
+  map result{config, layout};
+  auto workdir = config.get<std::string>("mjolnir.tile_dir");
 
   // Sanity check so that we don't blow away / by mistake
   if (workdir == "/") {
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (filesystem::exists(workdir))
-    filesystem::remove_all(workdir);
-  filesystem::create_directories(workdir);
+  if (std::filesystem::exists(workdir))
+    std::filesystem::remove_all(workdir);
+  std::filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
   std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
@@ -471,7 +455,7 @@ map buildtiles(const nodelayout& layout,
   midgard::logging::Configure({{"type", ""}});
 
   mjolnir::build_tile_set(result.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate, false);
+                          mjolnir::BuildStage::kValidate);
 
   return result;
 }
@@ -485,6 +469,8 @@ map buildtiles(const nodelayout& layout,
  * @param way_name the way name you want a directed edge for
  * @param end_node the node that should be the target of the directed edge you want
  * @param tile_id optional tile_id to limit the search to
+ * @param way_id optional way_id to limit the search to
+ * @param is_shortcut whether we want a shortcut returned
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,
@@ -495,7 +481,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
          const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
-         const baldr::GraphId& tile_id) {
+         baldr::GraphId tile_id,
+         uint64_t way_id,
+         const bool is_shortcut) {
   // if the tile was specified use it otherwise scan everything
   auto tileset =
       tile_id.Is_Valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
@@ -507,22 +495,49 @@ findEdge(valhalla::baldr::GraphReader& reader,
     // Iterate over all directed edges to find one with the name we want
     for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
       const auto* forward_directed_edge = tile->directededge(i);
+      // if we requested a shortcut, but it's not, bail
+      if (forward_directed_edge->is_shortcut() != is_shortcut) {
+        continue;
+      }
       // Now, see if the endnode for this edge is our end_node
       auto de_endnode = forward_directed_edge->endnode();
-      auto de_endnode_coordinates = tile->get_node_ll(de_endnode);
+      graph_tile_ptr reverse_tile = tile;
+      auto de_endnode_coordinates =
+          reader.GetGraphTile(de_endnode, reverse_tile)->get_node_ll(de_endnode);
+
       const auto threshold = 0.00001; // Degrees.  About 1m at the equator
       if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
           std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
-        auto names = tile->GetNames(forward_directed_edge);
-        for (const auto& name : names) {
-          if (name == way_name) {
-            auto forward_edge_id = tile_id;
-            forward_edge_id.set_id(i);
-            graph_tile_ptr reverse_tile = nullptr;
-            GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
-            auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
-            return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
-                                   reverse_directed_edge);
+
+        if (way_name.empty()) {
+          if (way_id != 0) {
+            if (tile->edgeinfo(forward_directed_edge).wayid() == way_id) {
+
+              // Skip any edges that are not drivable inbound.
+              if (!(forward_directed_edge->forwardaccess() & kVehicularAccess))
+                continue;
+
+              auto forward_edge_id = tile_id;
+              forward_edge_id.set_id(i);
+              graph_tile_ptr reverse_tile = nullptr;
+              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
+              return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
+                                     reverse_directed_edge);
+            }
+          }
+        } else {
+          auto names = tile->GetNames(forward_directed_edge);
+          for (const auto& name : names) {
+            if (name == way_name) {
+              auto forward_edge_id = tile_id;
+              forward_edge_id.set_id(i);
+              graph_tile_ptr reverse_tile = nullptr;
+              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
+              return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
+                                     reverse_directed_edge);
+            }
           }
         }
       }
@@ -540,7 +555,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
  * @param end_node_name    name of the end node
  * @return the edge_id and its edge
  */
-std::tuple<const baldr::GraphId, const baldr::DirectedEdge*>
+std::tuple<baldr::GraphId, const baldr::DirectedEdge*>
 findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const nodelayout& nodes,
                 const std::string& begin_node_name,
@@ -572,11 +587,45 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                            end_node_name);
 }
 
+/**
+ * Finds a node in the graph based on its node name
+ *
+ * @param reader           graph reader to look up tiles and edges
+ * @param nodes            a lookup table from node names to coordinates
+ * @param node_name        name of the node
+ * @return the node_id
+ */
+baldr::GraphId findNode(valhalla::baldr::GraphReader& reader,
+                        const nodelayout& nodes,
+                        const std::string& node_name) {
+  // Iterate over all the tiles, there wont be many in unit tests..
+  for (auto tile_id : reader.GetTileSet()) {
+    auto tile = reader.GetGraphTile(tile_id);
+    // Iterate over all nodes to find one with the name we want
+    for (auto node_id = tile_id; node_id.id() < tile->header()->nodecount(); ++node_id) {
+      auto ll = tile->get_node_ll(node_id);
+      if (ll.ApproximatelyEqual(nodes.at(node_name))) {
+        return node_id;
+      }
+    }
+  }
+  throw std::runtime_error("Could not find node " + node_name);
+}
+
+std::string
+do_action(const map& map, valhalla::Api& api, std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+  std::cerr << "[          ] Valhalla request is pbf " << std::endl;
+  if (!reader)
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  return actor.act(api);
+}
+
 valhalla::Api do_action(const valhalla::Options::Action& action,
                         const map& map,
                         const std::string& request_json,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                        std::string* json) {
+                        std::string* response) {
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
@@ -601,18 +650,31 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
       break;
     case valhalla::Options::expansion:
       json_str = actor.expansion(request_json, nullptr, &api);
-      std::cout << json_str << std::endl;
       break;
     case valhalla::Options::isochrone:
       json_str = actor.isochrone(request_json, nullptr, &api);
-      std::cout << json_str << std::endl;
+      break;
+    case valhalla::Options::optimized_route:
+      json_str = actor.optimized_route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::sources_to_targets:
+      json_str = actor.matrix(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::height:
+      json_str = actor.height(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::status:
+      json_str = actor.status(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::transit_available:
+      json_str = actor.transit_available(request_json, nullptr, &api);
       break;
     default:
       throw std::logic_error("Unsupported action");
       break;
   }
-  if (json) {
-    *json = json_str;
+  if (response) {
+    *response = json_str;
   }
   return api;
 }
@@ -623,27 +685,73 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::string& costing,
                         const std::unordered_map<std::string, std::string>& options,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                        std::string* json,
-                        const std::string& stop_type) {
+                        std::string* response,
+                        const std::string& stop_type,
+                        std::string* request_json) {
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
   std::cerr << "[          ] " << Options_Action_Enum_Name(action)
             << " with mjolnir.tile_dir = " << map.config.get<std::string>("mjolnir.tile_dir")
             << " with locations ";
-  bool first = true;
   for (const auto& waypoint : waypoints) {
-    if (!first)
-      std::cerr << ",";
+    if (&waypoint != &waypoints.front())
+      std::cerr << ", ";
     std::cerr << waypoint;
-    first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
-  auto location_type =
-      action == Options::trace_route || action == Options::trace_attributes ? "shape" : "locations";
-  auto request_json = detail::build_valhalla_request(location_type, lls, costing, options, stop_type);
-  return do_action(action, map, request_json, reader, json);
+  auto location_type = action == Options::trace_route || action == Options::trace_attributes ||
+                               action == Options::height
+                           ? "shape"
+                           : "locations";
+  std::string dummy_request_json;
+  if (!request_json) {
+    request_json = &dummy_request_json;
+  }
+  *request_json = detail::build_valhalla_request({location_type}, {lls}, costing, options, stop_type);
+  return do_action(action, map, *request_json, reader, response);
+}
+
+// overload for /sources_to_targets
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& sources,
+                        const std::vector<std::string>& targets,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader,
+                        std::string* response,
+                        std::string* request_json) {
+  if (!reader)
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  std::cerr << "[          ] " << Options_Action_Enum_Name(action)
+            << " with mjolnir.tile_dir = " << map.config.get<std::string>("mjolnir.tile_dir")
+            << " with sources ";
+  std::map<std::string, std::vector<std::string>> loc_types = {{"sources", sources},
+                                                               {"targets", targets}};
+  for (const auto& loc_type : loc_types) {
+    if (loc_type.first != loc_types.begin()->first) {
+      std::cerr << " and " << loc_type.first << " ";
+    }
+    for (const auto& waypoint : loc_type.second) {
+      std::cerr << waypoint;
+      if (waypoint != loc_type.second.back())
+        std::cerr << ", ";
+    }
+  };
+  std::cerr << " with costing " << costing << std::endl;
+
+  auto sources_lls = detail::to_lls(map.nodes, sources);
+  auto targets_lls = detail::to_lls(map.nodes, targets);
+  std::string dummy_request_json;
+  if (!request_json) {
+    request_json = &dummy_request_json;
+  }
+  *request_json = detail::build_valhalla_request({"sources", "targets"}, {sources_lls, targets_lls},
+                                                 costing, options);
+  return do_action(action, map, *request_json, reader, response);
 }
 
 /* Returns the raw_result formatted as a JSON document in the given format.

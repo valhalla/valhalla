@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <limits>
+#include <utility>
 
 namespace valhalla {
 namespace meili {

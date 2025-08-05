@@ -1,25 +1,29 @@
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
+#include "route_serializer_osrm.h"
 #include "baldr/json.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
+#include "odin/narrative_builder_factory.h"
+#include "odin/narrativebuilder.h"
 #include "odin/util.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
+#include "proto_conversions.h"
 #include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
 #include "worker.h"
 
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
-#include "proto_conversions.h"
+#include <numeric>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <vector>
 #ifdef INLINE_TEST
 #include "test.h"
 #endif
@@ -93,6 +97,12 @@ const constexpr PointLL::first_type DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     5.3,      // z17
     2.6,      // z18
 };
+
+const constexpr double SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION = 35.0;
+const constexpr double SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION = 10.0;
+const constexpr double MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION = 40;
+const constexpr double APPROXIMATE_VERBAL_POSTRANSITION_LENGTH = 110;
+const constexpr double APPROXIMATE_VERBAL_PRERANSITION_SECONDS = 3.0;
 
 inline double clamp(const double lat) {
   return std::max(std::min(lat, double(EPSG3857_MAX_LATITUDE)), double(-EPSG3857_MAX_LATITUDE));
@@ -169,35 +179,7 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
     {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
 };
 
-namespace osrm_serializers {
-/*
-OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
-{
-    "code":"Ok"
-    "waypoints": [{ }, { }...],
-    "routes": [
-        {
-            "geometry":"....."
-            "distance":xxx.y
-            "duration":yyy.z
-            "legs":[
-                {
-                    "steps":[
-                        "intersections":[
-                        ]
-                        "geometry":" "
-                        "maneuver":{
-                        }
-                    ]
-                }
-            ]
-        },
-        ...
-    ]
-}
-*/
-
-std::string guide_destinations(const valhalla::TripSign& sign);
+std::string destinations(const valhalla::TripSign& sign);
 
 // Add OSRM route summary information: distance, duration
 void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
@@ -230,8 +212,9 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
   route->emplace("duration", json::fixed_t{duration, 3});
 
   route->emplace("weight", json::fixed_t{weight, 3});
-  assert(api.options().costing_options(api.options().costing()).has_name());
-  route->emplace("weight_name", api.options().costing_options(api.options().costing()).name());
+  assert(api.options().costings().find(api.options().costing_type())->second.has_name_case());
+  route->emplace("weight_name",
+                 api.options().costings().find(api.options().costing_type())->second.name());
 
   auto recosting_itr = api.options().recostings().begin();
   for (const auto& recost : recosts) {
@@ -244,20 +227,6 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
     }
     ++recosting_itr;
   }
-}
-
-// Generate leg shape in geojson format.
-json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
-  auto geojson = json::map({});
-  auto coords = json::array({});
-  coords->reserve(shape.size());
-  for (const auto& p : shape) {
-    coords->emplace_back(json::array(
-        {json::fixed_t{p.lng(), DIGITS_PRECISION}, json::fixed_t{p.lat(), DIGITS_PRECISION}}));
-  }
-  geojson->emplace("type", std::string("LineString"));
-  geojson->emplace("coordinates", std::move(coords));
-  return geojson;
 }
 
 // Generate full shape of the route.
@@ -315,10 +284,15 @@ std::vector<PointLL> simplified_shape(const valhalla::DirectionsRoute& direction
 void route_geometry(json::MapPtr& route,
                     const valhalla::DirectionsRoute& directions,
                     const valhalla::Options& options) {
+  if (options.shape_format() == no_shape) {
+    return;
+  }
+
   std::vector<PointLL> shape;
-  if (options.has_generalize() && options.generalize() == 0.0f) {
+  if (options.has_generalize_case() && options.generalize() == 0.0f) {
     shape = simplified_shape(directions);
-  } else if (!options.has_generalize() || (options.has_generalize() && options.generalize() > 0.0f)) {
+  } else if (!options.has_generalize_case() ||
+             (options.has_generalize_case() && options.generalize() > 0.0f)) {
     shape = full_shape(directions, options);
   }
   if (options.shape_format() == geojson) {
@@ -390,22 +364,19 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
 // the optimized sequence.
 json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
   // Create a vector of indexes.
-  uint32_t i = 0;
-  std::vector<uint32_t> indexes;
-  for (const auto& loc : locs) {
-    indexes.push_back(i++);
-  }
+  std::vector<uint32_t> indexes(locs.size());
+  std::iota(indexes.begin(), indexes.end(), 0);
 
   // Sort the the vector by the location's original index
   std::sort(indexes.begin(), indexes.end(), [&locs](const uint32_t a, const uint32_t b) -> bool {
-    return locs.Get(a).original_index() < locs.Get(b).original_index();
+    return locs.Get(a).correlation().original_index() < locs.Get(b).correlation().original_index();
   });
 
   // Output each location in its original index order along with its
   // waypoint index (which is the index in the optimized order).
   auto waypoints = json::array({});
   for (const auto& index : indexes) {
-    locs.Mutable(index)->set_waypoint_index(index);
+    locs.Mutable(index)->mutable_correlation()->set_waypoint_index(index);
     waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
   }
   return waypoints;
@@ -427,17 +398,62 @@ struct IntersectionEdges {
   }
 };
 
+// Process 'indications' array - add indications from left to right
+json::ArrayPtr lane_indications(const bool drive_on_right, const uint16_t mask) {
+  auto indications = json::array({});
+
+  // TODO make map for lane mask to osrm indication string
+
+  // reverse (left u-turn)
+  if (mask & kTurnLaneReverse && drive_on_right) {
+    indications->emplace_back(osrmconstants::kModifierUturn);
+  }
+  // sharp_left
+  if (mask & kTurnLaneSharpLeft) {
+    indications->emplace_back(osrmconstants::kModifierSharpLeft);
+  }
+  // left
+  if (mask & kTurnLaneLeft) {
+    indications->emplace_back(osrmconstants::kModifierLeft);
+  }
+  // slight_left
+  if (mask & kTurnLaneSlightLeft) {
+    indications->emplace_back(osrmconstants::kModifierSlightLeft);
+  }
+  // through
+  if (mask & kTurnLaneThrough) {
+    indications->emplace_back(osrmconstants::kModifierStraight);
+  }
+  // slight_right
+  if (mask & kTurnLaneSlightRight) {
+    indications->emplace_back(osrmconstants::kModifierSlightRight);
+  }
+  // right
+  if (mask & kTurnLaneRight) {
+    indications->emplace_back(osrmconstants::kModifierRight);
+  }
+  // sharp_right
+  if (mask & kTurnLaneSharpRight) {
+    indications->emplace_back(osrmconstants::kModifierSharpRight);
+  }
+  // reverse (right u-turn)
+  if (mask & kTurnLaneReverse && !drive_on_right) {
+    indications->emplace_back(osrmconstants::kModifierUturn);
+  }
+  return indications;
+}
+
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
                              const std::vector<PointLL>& shape,
                              uint32_t& count,
-                             const bool arrive_maneuver) {
+                             const bool arrive_maneuver,
+                             const baldr::AttributesController& controller) {
   // Iterate through the nodes/intersections of the path for this maneuver
   count = 0;
   auto intersections = json::array({});
   uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
-  EnhancedTripLeg_Node* prev_node = nullptr;
   for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
     auto intersection = json::map({});
 
@@ -458,14 +474,12 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
 
     // Add index into admin list
-    if (node->has_admin_index()) {
+    if (controller(kNodeAdminIndex)) {
       intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
     }
 
-    if (!arrive_maneuver) {
-      if (curr_edge->has_is_urban()) {
-        intersection->emplace("is_urban", curr_edge->is_urban());
-      }
+    if (!arrive_maneuver && controller(kEdgeIsUrban)) {
+      intersection->emplace("is_urban", curr_edge->is_urban());
     }
 
     auto toll_collection = json::map({});
@@ -497,25 +511,32 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add rest_stop when passing by a rest_area or service_area
     if (i > 0 && !arrive_maneuver) {
       auto rest_stop = json::map({});
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+      for (int m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
 
+        std::string sign_text;
+        if (intersecting_edge->has_sign()) {
+          const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
+          // I've looked at the results from guide_destinations(), destinations(), and
+          // exit_destinations(). exit_destinations() does not contain rest-area names.
+          // guide_destinations() and destinations() return the same string value for
+          // the rest area name. So I've decided to use guide_destinations().
+          sign_text = destinations(trip_leg_sign);
+        }
+
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
           rest_stop->emplace("type", std::string("rest_area"));
-          if (intersecting_edge->has_sign()) {
-            const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
-            // I've looked at the results from guide_destinations(), destinations(), and
-            // exit_destinations(). exit_destinations() doe not contain rest-area names.
-            // guide_destinations() and destinations() return the same string value for
-            // the rest area name. So I've decided to use guide_destinations().
-            std::string guide_destinations_str = guide_destinations(trip_leg_sign);
-            rest_stop->emplace("name", guide_destinations_str);
+          if (!sign_text.empty()) {
+            rest_stop->emplace("name", sign_text);
           }
           intersection->emplace("rest_stop", rest_stop);
           break;
         } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
           rest_stop->emplace("type", std::string("service_area"));
+          if (!sign_text.empty()) {
+            rest_stop->emplace("name", sign_text);
+          }
           intersection->emplace("rest_stop", rest_stop);
           break;
         }
@@ -524,16 +545,23 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
-    // the arrive step.
+    // the arrival step.
     std::vector<IntersectionEdges> edges;
 
     // Add the edge departing the node
     if (!arrive_maneuver) {
       edges.emplace_back(curr_edge->begin_heading(), true, false, true);
+      if (i > 0) {
+        for (int m = 0; m < node->intersecting_edge_size(); m++) {
+          auto intersecting_edge = node->GetIntersectingEdge(m);
+          bool routable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+          edges.emplace_back(intersecting_edge->begin_heading(), routable, false, false);
+        }
+      }
     }
 
     // Add the incoming edge except for the first depart intersection.
-    // Set routeable to false except for arrive.
+    // Set routable to false except for arrive.
     // TODO - what if a true U-turn - need to set it to routeable.
     if (i > 0) {
       bool entry = (arrive_maneuver) ? true : false;
@@ -547,7 +575,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Sort edges by increasing bearing and update the in/out edge indexes
     std::sort(edges.begin(), edges.end());
-    uint32_t incoming_index, outgoing_index;
+    uint32_t incoming_index = 0, outgoing_index = 0;
     for (uint32_t n = 0; n < edges.size(); ++n) {
       if (edges[n].in_edge) {
         incoming_index = n;
@@ -572,10 +600,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Add tunnel_name for tunnels
     if (!arrive_maneuver) {
-      if (curr_edge->tunnel() && !curr_edge->tagged_name().empty()) {
-        for (uint32_t t = 0; t < curr_edge->tagged_name().size(); ++t) {
-          if (curr_edge->tagged_name().Get(t).type() == TaggedName_Type_kTunnel) {
-            intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(t).value());
+      if (curr_edge->tunnel() && !curr_edge->tagged_value().empty()) {
+        for (const auto& e : curr_edge->tagged_value()) {
+          if (e.type() == TaggedValue_Type_kTunnel) {
+            intersection->emplace("tunnel_name", e.value());
           }
         }
       }
@@ -628,50 +656,8 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         if (turn_lane.state() != TurnLane::kInvalid) {
           lane->emplace("valid_indication", turn_lane_direction(turn_lane.active_direction()));
         }
-
-        // Process 'indications' array - add indications from left to right
-        auto indications = json::array({});
-        uint16_t mask = turn_lane.directions_mask();
-
-        // TODO make map for lane mask to osrm indication string
-
-        // reverse (left u-turn)
-        if (mask & kTurnLaneReverse && prev_edge->drive_on_right()) {
-          indications->emplace_back(osrmconstants::kModifierUturn);
-        }
-        // sharp_left
-        if (mask & kTurnLaneSharpLeft) {
-          indications->emplace_back(osrmconstants::kModifierSharpLeft);
-        }
-        // left
-        if (mask & kTurnLaneLeft) {
-          indications->emplace_back(osrmconstants::kModifierLeft);
-        }
-        // slight_left
-        if (mask & kTurnLaneSlightLeft) {
-          indications->emplace_back(osrmconstants::kModifierSlightLeft);
-        }
-        // through
-        if (mask & kTurnLaneThrough) {
-          indications->emplace_back(osrmconstants::kModifierStraight);
-        }
-        // slight_right
-        if (mask & kTurnLaneSlightRight) {
-          indications->emplace_back(osrmconstants::kModifierSlightRight);
-        }
-        // right
-        if (mask & kTurnLaneRight) {
-          indications->emplace_back(osrmconstants::kModifierRight);
-        }
-        // sharp_right
-        if (mask & kTurnLaneSharpRight) {
-          indications->emplace_back(osrmconstants::kModifierSharpRight);
-        }
-        // reverse (right u-turn)
-        if (mask & kTurnLaneReverse && !prev_edge->drive_on_right()) {
-          indications->emplace_back(osrmconstants::kModifierUturn);
-        }
-        lane->emplace("indications", std::move(indications));
+        lane->emplace("indications",
+                      lane_indications(prev_edge->drive_on_right(), turn_lane.directions_mask()));
         lanes->emplace_back(std::move(lane));
       }
       intersection->emplace("lanes", std::move(lanes));
@@ -698,16 +684,12 @@ std::string exits(const valhalla::TripSign& sign) {
 }
 
 valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incident) {
-  rapidjson::StringBuffer stringbuffer;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
-  writer.StartObject();
-  osrm::serializeIncidentProperties(writer, incident.metadata(),
-                                    incident.has_begin_shape_index() ? incident.begin_shape_index()
-                                                                     : -1,
-                                    incident.has_end_shape_index() ? incident.end_shape_index() : -1,
-                                    "", "");
-  writer.EndObject();
-  return {stringbuffer.GetString()};
+  rapidjson::writer_wrapper_t writer;
+  writer.start_object();
+  osrm::serializeIncidentProperties(writer, incident.metadata(), incident.begin_shape_index(),
+                                    incident.end_shape_index(), "", "");
+  writer.end_object();
+  return {writer.get_buffer()};
 }
 
 // Serializes incidents and adds to json-document
@@ -717,7 +699,7 @@ void serializeIncidents(const google::protobuf::RepeatedPtrField<TripLeg::Incide
     // No incidents, nothing to do
     return;
   }
-  json::ArrayPtr serialized_incidents = std::shared_ptr<json::Jarray>(new json::Jarray());
+  json::ArrayPtr serialized_incidents = std::make_shared<json::Jarray>();
   {
     // Bring up any already existing array
     auto existing = doc.find("incidents");
@@ -1040,46 +1022,17 @@ std::string ramp_type(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   return "";
 }
 
-// Populate the OSRM maneuver record within a step.
-json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                           valhalla::odin::EnhancedTripLeg* etp,
-                           const PointLL& man_ll,
-                           const bool depart_maneuver,
-                           const bool arrive_maneuver,
-                           const uint32_t prev_intersection_count,
-                           const std::string& mode,
-                           const std::string& prev_mode,
-                           const bool rotary,
-                           const bool prev_rotary,
-                           const valhalla::Options& options) {
-  auto osrm_man = json::map({});
-
-  // Set the location
-  auto loc = json::array({});
-  loc->emplace_back(json::fixed_t{man_ll.lng(), 6});
-  loc->emplace_back(json::fixed_t{man_ll.lat(), 6});
-  osrm_man->emplace("location", loc);
-
-  // Get incoming and outgoing bearing. For the incoming heading, use the
-  // prior edge from the TripLeg. Compute turn modifier. TODO - reconcile
-  // turn degrees between Valhalla and OSRM
-  uint32_t idx = maneuver.begin_path_index();
-  uint32_t in_brg = (idx > 0) ? etp->GetPrevEdge(idx)->end_heading() : 0;
-  uint32_t out_brg = maneuver.begin_heading();
-  osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
-  osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
-
-  std::string modifier;
-  if (!depart_maneuver) {
-    modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
-    if (!modifier.empty())
-      osrm_man->emplace("modifier", modifier);
-  }
-
-  if (options.directions_type() == DirectionsType::instructions) {
-    osrm_man->emplace("instruction", maneuver.text_instruction());
-  }
-
+// Determine the OSRM type of a maneuver in a step and in bannerInstructions
+std::string maneuver_type(const valhalla::DirectionsLeg::Maneuver& maneuver,
+                          valhalla::odin::EnhancedTripLeg* etp,
+                          const bool depart_maneuver,
+                          const bool arrive_maneuver,
+                          const std::string& modifier,
+                          const uint32_t prev_intersection_count,
+                          const std::string& mode,
+                          const std::string& prev_mode,
+                          const bool rotary,
+                          const bool prev_rotary) {
   // TODO - logic to convert maneuver types from Valhalla into OSRM maneuver types.
   std::string maneuver_type;
   if (depart_maneuver) {
@@ -1094,10 +1047,6 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
     } else {
       maneuver_type = "roundabout";
     }
-    // Roundabout count
-    if (maneuver.has_roundabout_exit_count()) {
-      osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
-    }
   } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
     if (prev_rotary) {
       maneuver_type = "exit rotary";
@@ -1106,6 +1055,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
     }
   } else {
     // Special cases
+    uint32_t idx = maneuver.begin_path_index();
     auto prev_edge = etp->GetPrevEdge(idx);
     auto curr_edge = etp->GetCurrEdge(idx);
     bool new_name = maneuver.type() == DirectionsLeg_Maneuver_Type_kContinue ||
@@ -1185,9 +1135,278 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
       }
     }
   }
+  return maneuver_type;
+}
+
+// Populate the OSRM maneuver record within a step.
+json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
+                           const std::string& maneuver_type,
+                           const std::string& modifier,
+                           const uint32_t in_brg,
+                           const uint32_t out_brg,
+                           const PointLL& man_ll,
+                           const bool emplace_instructions) {
+  auto osrm_man = json::map({});
+
+  // Set the location
+  auto loc = json::array({});
+  loc->emplace_back(json::fixed_t{man_ll.lng(), 6});
+  loc->emplace_back(json::fixed_t{man_ll.lat(), 6});
+  osrm_man->emplace("location", loc);
+
+  osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
+  osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
   osrm_man->emplace("type", maneuver_type);
 
+  if (emplace_instructions) {
+    osrm_man->emplace("instruction", maneuver.text_instruction());
+  }
+  if (!modifier.empty()) {
+    osrm_man->emplace("modifier", modifier);
+  }
+  // Roundabout count
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter &&
+      maneuver.roundabout_exit_count() > 0) {
+    osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+  }
+
   return osrm_man;
+}
+
+// Return a banner component
+json::MapPtr banner_component(const std::string& type, const std::string& text) {
+  json::MapPtr component = json::map({});
+  component->emplace("type", type);
+  component->emplace("text", text);
+  return component;
+}
+
+// Primary banners hold the most important information and supposed to be the large text in a
+// navigation app. Mostly they are used to show the primary_banner of the upcoming road.
+// TODO: Highway shield information could be added here as well.
+json::MapPtr primary_banner_instruction(const std::string& primary_text,
+                                        const std::string& ref,
+                                        const std::string& exit,
+                                        const bool arrive_maneuver,
+                                        const std::string& maneuver_type,
+                                        const std::string& modifier,
+                                        const bool roundabout,
+                                        const uint32_t roundabout_turn_degrees,
+                                        const std::string& drive_side) {
+  json::MapPtr instruction = json::map({});
+  json::ArrayPtr components = json::array({});
+
+  if (!exit.empty() && !arrive_maneuver) {
+    components->emplace_back(banner_component("exit", "Exit"));
+    components->emplace_back(banner_component("exit-number", exit));
+  }
+  components->emplace_back(banner_component("text", primary_text));
+  if (!ref.empty() && !arrive_maneuver) {
+    components->emplace_back(banner_component("delimiter", "/"));
+    components->emplace_back(banner_component("text", ref));
+  }
+  instruction->emplace("components", std::move(components));
+  instruction->emplace("text", primary_text);
+  if (!maneuver_type.empty()) {
+    instruction->emplace("type", maneuver_type);
+  }
+  if (!modifier.empty()) {
+    instruction->emplace("modifier", modifier);
+  }
+  if (roundabout) {
+    instruction->emplace("degrees", static_cast<uint64_t>(roundabout_turn_degrees));
+    instruction->emplace("driving_side", drive_side);
+  }
+  return instruction;
+}
+
+// Secondary banners hold additional information which is displayed slightly smaller than the
+// primary information. They are mostly used to show the destination names on street signs.
+json::MapPtr secondary_banner_instruction(const std::string& secondary_text) {
+  json::MapPtr instruction = json::map({});
+  json::ArrayPtr components = json::array({});
+  components->emplace_back(banner_component("text", secondary_text));
+  instruction->emplace("components", std::move(components));
+  instruction->emplace("text", secondary_text);
+  return instruction;
+}
+
+// Sub Banner Instructions are used to indicate which lane to use when multiple lanes are
+// available. The lane information can be retrieved much like in the maneuver's intersections.
+// The new bannerInstruction object's distanceAlongGeometry is determined by the first
+// intersection which carries the lane information.
+//
+// This is very similar to the lane indication of the last intersection(s).
+json::MapPtr sub_banner_instruction(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                                    valhalla::odin::EnhancedTripLeg* etp) {
+  json::MapPtr instruction = nullptr;
+  json::ArrayPtr lanes = nullptr;
+
+  // We only care about the lanes directly before the end of the maneuver
+  auto edge = etp->GetPrevEdge(prev_maneuver->end_path_index());
+
+  // Process turn lanes - which are stored on the previous edge to the node
+  // Check if there is an active turn lane
+  // Verify that turn lanes are not non-directional
+  if (edge && (edge->turn_lanes_size() > 0) && edge->HasActiveTurnLane() &&
+      !edge->HasNonDirectionalTurnLane()) {
+    lanes = json::array({});
+    for (const auto& turn_lane : edge->turn_lanes()) {
+      auto lane = banner_component("lane", "");
+      lane->emplace("active", turn_lane.state() == TurnLane::kActive);
+      // Add active_direction for a valid & active lanes
+      if (turn_lane.state() != TurnLane::kInvalid) {
+        lane->emplace("active_direction", turn_lane_direction(turn_lane.active_direction()));
+      }
+      lane->emplace("directions",
+                    lane_indications(edge->drive_on_right(), turn_lane.directions_mask()));
+      lanes->emplace_back(std::move(lane));
+    }
+  }
+
+  if (lanes != nullptr) {
+    instruction = json::map({});
+    instruction->emplace("components", std::move(lanes));
+    instruction->emplace("text", std::string(""));
+  }
+
+  return instruction;
+}
+
+// The roundabout_turn_degrees is approximated by comparing the heading of the last edge
+// before the roundabout with the heading of the first edge after the roundabout
+uint32_t calc_roundabout_turn_degrees(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                                      const valhalla::DirectionsLeg::Maneuver& maneuver,
+                                      valhalla::odin::EnhancedTripLeg* etp) {
+  uint32_t roundabout_turn_degrees = 0;
+  uint32_t bearing_before = 0;
+  uint32_t bearing_after = 0;
+
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) {
+    uint32_t begin_index = maneuver.begin_path_index();
+    if (begin_index > 0) {
+      // This is the normal case where a previous edge exists
+      bearing_before = etp->GetPrevEdge(begin_index)->end_heading();
+    } else {
+      bearing_before = etp->GetCurrEdge(begin_index)->begin_heading();
+    }
+
+    uint32_t end_index = maneuver.end_path_index();
+    if (etp->GetCurrEdge(end_index) != nullptr) {
+      bearing_after = etp->GetCurrEdge(end_index)->begin_heading();
+    }
+  }
+
+  if (prev_maneuver != nullptr && maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
+    uint32_t begin_index = prev_maneuver->begin_path_index();
+    if (begin_index > 0) {
+      // This is the normal case where a previous edge exists
+      bearing_before = etp->GetPrevEdge(begin_index)->end_heading();
+    } else {
+      bearing_before = etp->GetCurrEdge(begin_index)->begin_heading();
+    }
+    bearing_after = maneuver.begin_heading();
+  }
+
+  roundabout_turn_degrees = ((bearing_before - bearing_after - 180) + 720) % 360;
+
+  if (!etp->GetCurrEdge(maneuver.begin_path_index())->drive_on_right()) {
+    roundabout_turn_degrees = 360 - roundabout_turn_degrees;
+  }
+
+  return roundabout_turn_degrees;
+}
+
+// Populate the bannerInstructions within a step.
+// bannerInstructions are a unified object of maneuvers name, dest, ref and intersection.lanes
+json::ArrayPtr banner_instructions(const std::string& name,
+                                   const std::string& dest,
+                                   const std::string& ref,
+                                   const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                                   const valhalla::DirectionsLeg::Maneuver& maneuver,
+                                   const bool arrive_maneuver,
+                                   valhalla::odin::EnhancedTripLeg* etp,
+                                   const std::string& maneuver_type,
+                                   const std::string& modifier,
+                                   const std::string& exit,
+                                   const double distance,
+                                   const std::string& drive_side) {
+  // bannerInstructions is an array, because there may be multiple similar banner instruction
+  // objects. Mostly if the 'sub' attribute is to be added along the current step, a new
+  // instruction is created and the primary and secondary instructions are repeated with the
+  // additional 'sub' attribute and an updated 'distanceAlongGeometry', which is from where on
+  // this banner will be shown.
+  json::ArrayPtr banner_instructions_array = json::array({});
+  json::MapPtr banner_instruction_main = json::map({});
+
+  std::string primary_text = name;
+  std::string secondary_text = dest;
+  std::string ref_ = ref;
+
+  // Find a suitable primary_text and secondary_text
+  if (primary_text.empty() && !secondary_text.empty()) {
+    primary_text = secondary_text;
+    secondary_text = std::string("");
+  }
+  if (primary_text.empty() && !ref_.empty()) {
+    primary_text = ref_;
+    ref_ = std::string("");
+  }
+  if (arrive_maneuver || primary_text.empty()) {
+    primary_text = maneuver.text_instruction();
+  }
+
+  bool roundabout = maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter ||
+                    maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit;
+
+  // The roundabout_turn_degrees represents how far around the roundabout a circle the maneuver is.
+  // If it goes straight through, it's 180 degrees, if it's a quarter circle is 90 degrees, etc.
+  uint32_t roundabout_turn_degrees =
+      roundabout ? calc_roundabout_turn_degrees(prev_maneuver, maneuver, etp) : 0;
+
+  // distanceAlongGeometry is the distance along the current step from where on this
+  // banner should be visible. The first banner starts at the beginning.
+  banner_instruction_main->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
+  banner_instruction_main->emplace("primary",
+                                   primary_banner_instruction(primary_text, ref_, exit,
+                                                              arrive_maneuver, maneuver_type,
+                                                              modifier, roundabout,
+                                                              roundabout_turn_degrees, drive_side));
+
+  if (!secondary_text.empty()) {
+    banner_instruction_main->emplace("secondary", secondary_banner_instruction(secondary_text));
+  }
+
+  json::MapPtr sub_banner = sub_banner_instruction(prev_maneuver, etp);
+
+  json::MapPtr banner_instruction_with_sub = nullptr;
+  if (sub_banner != nullptr) {
+    if (distance > 400) {
+      banner_instruction_with_sub = json::map({});
+      banner_instruction_with_sub->emplace("sub", std::move(sub_banner));
+      if (!secondary_text.empty()) {
+        banner_instruction_with_sub->emplace("secondary",
+                                             secondary_banner_instruction(secondary_text));
+      }
+      banner_instruction_with_sub->emplace("primary",
+                                           primary_banner_instruction(primary_text, ref_, exit,
+                                                                      arrive_maneuver, maneuver_type,
+                                                                      modifier, roundabout,
+                                                                      roundabout_turn_degrees,
+                                                                      drive_side));
+      banner_instruction_with_sub->emplace("distanceAlongGeometry", json::fixed_t{400, 3});
+    } else {
+      banner_instruction_main->emplace("sub", std::move(sub_banner));
+    }
+  }
+
+  banner_instructions_array->emplace_back(std::move(banner_instruction_main));
+
+  if (banner_instruction_with_sub != nullptr) {
+    banner_instructions_array->emplace_back(std::move(banner_instruction_with_sub));
+  }
+
+  return banner_instructions_array;
 }
 
 // Method to get the geometry string for a maneuver.
@@ -1212,6 +1431,181 @@ void maneuver_geometry(json::MapPtr& step,
   }
 }
 
+// The idea is that the instructions come a fixed amount of seconds before the maneuver takes place.
+// For whatever reasons, a distance in meters from the end of the maneuver needs to be provided
+// though. When different speeds are used on the road, they all need to be taken into account. This
+// function calculates the distance before the end of the maneuver by checking the elapsed_cost
+// seconds of each edges and accumulates their distances until the seconds threshold is passed. The
+// speed of this last edge is then used to subtract the distance so that the the seconds until the end
+// are exactly the provided amount of seconds.
+float distance_along_geometry(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                              valhalla::odin::EnhancedTripLeg* etp,
+                              const double distance,
+                              const uint32_t target_seconds) {
+  uint32_t node_index = prev_maneuver->end_path_index();
+  double end_node_elapsed_seconds = etp->node(node_index).cost().elapsed_cost().seconds();
+  double begin_node_elapsed_seconds =
+      etp->node(prev_maneuver->begin_path_index()).cost().elapsed_cost().seconds();
+
+  // If the maneuver is too short, simply return its distance.
+  if (end_node_elapsed_seconds - begin_node_elapsed_seconds < target_seconds) {
+    return distance;
+  }
+
+  float accumulated_distance_km = 0;
+  float previous_accumulated_distance_km = 0;
+  double accumulated_seconds = 0;
+  double previous_accumulated_seconds = 0;
+  // Find the node after which the instructions should be heard:
+  while (accumulated_seconds < target_seconds && node_index >= prev_maneuver->begin_path_index()) {
+    node_index -= 1;
+    // not really accumulating seconds ourselves, but it happens elsewhere:
+    previous_accumulated_seconds = accumulated_seconds;
+    accumulated_seconds =
+        end_node_elapsed_seconds - etp->node(node_index).cost().elapsed_cost().seconds();
+    previous_accumulated_distance_km = accumulated_distance_km;
+    accumulated_distance_km += etp->GetCurrEdge(node_index)->length_km();
+  }
+  // The node_index now indicates the node AFTER which the target_seconds will be reached
+  // we now have to subtract the surplus distance (based on seconds) of this edge from the
+  // accumulated_distance_km
+  auto surplus_percentage =
+      (accumulated_seconds - target_seconds) / (accumulated_seconds - previous_accumulated_seconds);
+  accumulated_distance_km -=
+      (accumulated_distance_km - previous_accumulated_distance_km) * surplus_percentage;
+  if (accumulated_distance_km * 1000 > distance) {
+    return distance;
+  } else {
+    return accumulated_distance_km * 1000; // in meters
+  }
+}
+
+void addVoiceInstruction(const std::string& instruction,
+                         double distance_along_geometry,
+                         json::ArrayPtr& voice_instructions) {
+  json::MapPtr voice_instruction = json::map({});
+  voice_instruction->emplace("distanceAlongGeometry", json::fixed_t{distance_along_geometry, 1});
+  voice_instruction->emplace("announcement", instruction);
+  voice_instruction->emplace("ssmlAnnouncement", "<speak>" + instruction + "</speak>");
+  voice_instructions->emplace_back(std::move(voice_instruction));
+}
+
+// Populate the voiceInstructions within a step.
+json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                                  const valhalla::DirectionsLeg::Maneuver& maneuver,
+                                  const double distance,
+                                  const uint32_t maneuver_index,
+                                  valhalla::odin::EnhancedTripLeg* etp,
+                                  const valhalla::Options& options) {
+  // narrative builder for custom pre alert instructions
+  // TODO: actually we should build the alert instructions with enhanced distance information during
+  // building the maneuver. The would require enhancing the voice instructions of the maneuver
+  // providing distance information and therefore a larger refactor
+  MarkupFormatter nullFormatter;
+  std::unique_ptr<NarrativeBuilder> narrative_builder =
+      NarrativeBuilderFactory::Create(options, etp, nullFormatter);
+
+  // voiceInstructions is an array, because there may be similar voice instructions.
+  // When the step is long enough, there may be multiple voice instructions.
+  json::ArrayPtr voice_instructions = json::array({});
+
+  // distanceAlongGeometry is the distance along the current step from where on this
+  // voice instruction should be played. It is measured from the end of the maneuver.
+  // Using the maneuver length (distance) as the distanceAlongGeometry plays
+  // right at the beginning of the maneuver. A distanceAlongGeometry of 10 is
+  // shortly (10 meters at the given speed) after the maneuver has started.
+  // The voice_instruction_beginning starts shortly after the beginning of the step.
+  // The voice_instruction_end starts shortly before the end of the step.
+  float distance_before_verbal_transition_alert_instruction =
+      distance_along_geometry(prev_maneuver, etp, distance,
+                              SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION);
+  float distance_before_verbal_pre_transition_instruction =
+      distance_along_geometry(prev_maneuver, etp, distance,
+                              SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION);
+
+  // we want to at least have the pre transition instruction
+  // MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION meters before the maneuver. So even if we are
+  // driving really slow we want to have the instruction few meters before the actual maneuver.
+  if (distance_before_verbal_pre_transition_instruction <
+          MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION &&
+      distance > MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION) {
+    distance_before_verbal_pre_transition_instruction =
+        MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION;
+  }
+  // accordingly we will omit the alert instruction if it is closer than
+  // MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION meters to the maneuver.
+  if (distance_before_verbal_transition_alert_instruction <
+      MIN_DISTANCE_VERBAL_PRE_TRANSITION_INSTRUCTION) {
+    // using -1 here to state that they don't have to be played
+    distance_before_verbal_transition_alert_instruction = -1;
+  }
+
+  if (maneuver_index == 1 && !prev_maneuver->verbal_pre_transition_instruction().empty()) {
+    // For depart maneuver, we always want to hear the verbal_pre_transition_instruction
+    // right at the beginning of the navigation. This is something like:
+    // Drive West on XYZ Street.
+    // This voice_instruction_start is only created once. It is always played, even when
+    // the maneuver would otherwise be too short.
+    addVoiceInstruction(prev_maneuver->verbal_pre_transition_instruction(), double(distance),
+                        voice_instructions);
+  } else if (distance_before_verbal_transition_alert_instruction >= 0.0 &&
+             distance > distance_before_verbal_transition_alert_instruction +
+                            APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
+             !prev_maneuver->verbal_post_transition_instruction().empty()) {
+    // In all other cases we want to play the verbal_post_transition_instruction shortly
+    // after the maneuver has started but only if there is sufficient time to play. On
+    // the one hand distance_before_verbal_transition_alert_instruction has to be set,
+    // so there is enough time to play the transition instruction afterwards. On the other hand
+    // there has to be enough time to play the upcoming verbal_pre_transition_instruction and
+    // the verbal_post_transition_instruction itself.
+    // The approximation here is that the verbal_post_transition_instruction takes 100
+    // meters to play + the 10 meters after the maneuver start which is added so that the
+    // instruction is not played directly on the intersection where the maneuver starts.
+    addVoiceInstruction(prev_maneuver->verbal_post_transition_instruction(), double(distance - 10),
+                        voice_instructions);
+  }
+
+  // If there is an alert instruction and we have enough time to play it, we will play it
+  // TODO: We shouldn't add an alert instruction if there was already a pre/post transition alert
+  // which is close by
+  if (!maneuver.verbal_transition_alert_instruction().empty() &&
+      distance_before_verbal_transition_alert_instruction >= 0.0 &&
+      prev_maneuver->time() > SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION +
+                                  APPROXIMATE_VERBAL_PRERANSITION_SECONDS) {
+    if (maneuver_index == 1 && distance_before_verbal_transition_alert_instruction == distance) {
+      // For the depart maneuver we want to play both the verbal_post_transition_instruction and
+      // the verbal_transition_alert_instruction even if the maneuver is too short.
+      // In all other cases we use distance_before_verbal_transition_alert_instruction value
+      // as it is capped to the maneuver length.
+      distance_before_verbal_transition_alert_instruction = distance / 2;
+    }
+    // building voice instructions for the alert. We are enhancing it by the distance information here
+    // by using the narrative builder
+    float distance_km = (float)distance_before_verbal_transition_alert_instruction / 1000.0f;
+    std::string instruction =
+        narrative_builder
+            ->FormVerbalAlertApproachInstruction(distance_km,
+                                                 maneuver.verbal_transition_alert_instruction());
+    addVoiceInstruction(instruction, distance_before_verbal_transition_alert_instruction,
+                        voice_instructions);
+  }
+
+  // add pre transition instruction if available
+  if (!maneuver.verbal_pre_transition_instruction().empty()) {
+    if (maneuver_index == 1 && distance_before_verbal_pre_transition_instruction >= distance / 2) {
+      // For the depart maneuver we want to play the verbal_post_transition_instruction and
+      // the verbal_pre_transition_instruction even if the maneuver is too short.
+      // In all other cases we use distance_before_verbal_pre_transition_instruction value as is
+      // because it is capped to the maneuver length.
+      distance_before_verbal_pre_transition_instruction = distance / 4;
+    }
+    addVoiceInstruction(maneuver.verbal_pre_transition_instruction(),
+                        distance_before_verbal_pre_transition_instruction, voice_instructions);
+  }
+
+  return voice_instructions;
+}
+
 // Get the mode
 std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
                      const bool arrive_maneuver,
@@ -1224,22 +1618,35 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
   // Otherwise return based on the travel mode
   switch (maneuver.travel_mode()) {
-    case DirectionsLeg_TravelMode_kDrive: {
+    case TravelMode::kDrive: {
       return "driving";
     }
-    case DirectionsLeg_TravelMode_kPedestrian: {
+    case TravelMode::kPedestrian: {
       return "walking";
     }
-    case DirectionsLeg_TravelMode_kBicycle: {
+    case TravelMode::kBicycle: {
       return "cycling";
     }
-    case DirectionsLeg_TravelMode_kTransit: {
+    case TravelMode::kTransit: {
       return "transit";
     }
+    default:
+      return {};
   }
   auto num = static_cast<int>(maneuver.travel_mode());
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
                            " Unhandled travel_mode: " + std::to_string(num));
+}
+
+const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>&
+get_maneuver_street_names(const valhalla::DirectionsLeg::Maneuver& maneuver) {
+  // Roundabouts need to use the roundabout_exit_street_names
+  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
+  // TODO: in the future we may switch to use both
+  return ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
+              ? maneuver.roundabout_exit_street_names()
+          : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
+                                                    : maneuver.street_name());
 }
 
 // Get the names and ref names
@@ -1247,13 +1654,7 @@ std::pair<std::string, std::string>
 names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   std::string names, refs;
 
-  // Roundabouts need to use the roundabout_exit_street_names
-  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
-  // TODO: in the future we may switch to use both
-  auto& street_names = (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
-                           ? maneuver.roundabout_exit_street_names()
-                           : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
-                                                                     : maneuver.street_name();
+  const auto& street_names = get_maneuver_street_names(maneuver);
 
   for (const auto& name : street_names) {
     // Check if the name is a ref
@@ -1272,13 +1673,32 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
 
   return std::make_pair(names, refs);
 }
+// Get the pronunciations string
+std::string get_pronunciations(const valhalla::DirectionsLeg::Maneuver& maneuver) {
+  std::string pronunciations;
+
+  const auto& street_names = get_maneuver_street_names(maneuver);
+
+  for (const auto& name : street_names) {
+    // If name has a pronunciation and is not a route number then use it
+    if (name.has_pronunciation() && !name.is_route_number()) {
+      if (!pronunciations.empty()) {
+        pronunciations += "; ";
+      }
+      pronunciations += name.pronunciation().value();
+    }
+  }
+
+  return pronunciations;
+}
 
 // Serialize each leg
 json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
                               const std::vector<std::string>& leg_summaries,
                               google::protobuf::RepeatedPtrField<valhalla::TripLeg>& path_legs,
                               bool imperial,
-                              const valhalla::Options& options) {
+                              const valhalla::Options& options,
+                              const baldr::AttributesController& controller) {
   auto output_legs = json::array({});
   output_legs->reserve(path_legs.size());
 
@@ -1300,13 +1720,15 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     // encoded shape for each step (maneuver) in OSRM output.
     auto shape = midgard::decode<std::vector<PointLL>>(leg->shape());
 
-    //#########################################################################
-    // Iterate through maneuvers - convert to OSRM steps
-    uint32_t maneuver_index = 0;
+    // #########################################################################
+    //  Iterate through maneuvers - convert to OSRM steps
+    int maneuver_index = 0;
     uint32_t prev_intersection_count = 0;
+    double prev_distance = 0;
     std::string drive_side = "right";
     std::string name = "";
     std::string ref = "";
+    std::string pronunciation = "";
     std::string mode = "";
     std::string prev_mode = "";
     bool rotary = false;
@@ -1339,6 +1761,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         auto name_ref_pair = names_and_refs(maneuver);
         name = name_ref_pair.first;
         ref = name_ref_pair.second;
+        pronunciation = get_pronunciations(maneuver);
         mode = get_mode(maneuver, arrive_maneuver, &etp);
         if (prev_mode.empty())
           prev_mode = mode;
@@ -1376,6 +1799,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       if (!ref.empty()) {
         step->emplace("ref", ref);
       }
+      if (!pronunciation.empty()) {
+        step->emplace("pronunciation", pronunciation);
+      }
 
       // Check if speed limits were requested
       if (path_leg.shape_attributes().speed_limit_size() > 0) {
@@ -1399,11 +1825,27 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         step->emplace("rotary_name", maneuver.street_name(0).value());
       }
 
+      // Get incoming and outgoing bearing. For the incoming heading, use the
+      // prior edge from the TripLeg. Compute turn modifier. TODO - reconcile
+      // turn degrees between Valhalla and OSRM
+      uint32_t idx = maneuver.begin_path_index();
+      uint32_t in_brg = (idx > 0) ? etp.GetPrevEdge(idx)->end_heading() : 0;
+      uint32_t out_brg = maneuver.begin_heading();
+
+      std::string modifier;
+      if (!depart_maneuver) {
+        modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
+      }
+
+      std::string mnvr_type =
+          maneuver_type(maneuver, &etp, depart_maneuver, arrive_maneuver, modifier,
+                        prev_intersection_count, mode, prev_mode, rotary, prev_rotary);
+
       // Add OSRM maneuver
       step->emplace("maneuver",
-                    osrm_maneuver(maneuver, &etp, shape[maneuver.begin_shape_index()],
-                                  depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
-                                  prev_mode, rotary, prev_rotary, options));
+                    osrm_maneuver(maneuver, mnvr_type, modifier, in_brg, out_brg,
+                                  shape[maneuver.begin_shape_index()],
+                                  (options.directions_type() == DirectionsType::instructions)));
 
       // Add destinations
       const auto& sign = maneuver.sign();
@@ -1423,6 +1865,33 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       std::string ex = exits(sign);
       if (!ex.empty()) {
         step->emplace("exits", ex);
+      }
+
+      // Add banner instructions if the user requested them
+      if (options.banner_instructions()) {
+        if (prev_step && prev_maneuver) {
+          prev_step->emplace("bannerInstructions",
+                             banner_instructions(name, dest, ref, prev_maneuver, maneuver,
+                                                 arrive_maneuver, &etp, mnvr_type, modifier, ex,
+                                                 prev_distance, drive_side));
+        }
+        if (arrive_maneuver) {
+          // just add empty array for arrival maneuver
+          step->emplace("bannerInstructions", json::array({}));
+        }
+      }
+
+      // Add voice instructions if the user requested them
+      if (options.voice_instructions()) {
+        if (prev_step && prev_maneuver) {
+          prev_step->emplace("voiceInstructions",
+                             voice_instructions(prev_maneuver, maneuver, prev_distance,
+                                                maneuver_index, &etp, options));
+        }
+        if (arrive_maneuver) {
+          // just add empty array for arrival maneuver
+          step->emplace("voiceInstructions", json::array({}));
+        }
       }
 
       // Add junction_name if not the start maneuver
@@ -1458,18 +1927,19 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       }
 
       // Add intersections
-      step->emplace("intersections",
-                    intersections(maneuver, &etp, shape, prev_intersection_count, arrive_maneuver));
+      step->emplace("intersections", intersections(maneuver, &etp, shape, prev_intersection_count,
+                                                   arrive_maneuver, controller));
 
       // Add step
       prev_rotary = rotary;
       prev_mode = mode;
       prev_step = step;
       prev_maneuver = &maneuver;
+      prev_distance = distance;
       maneuver_index++;
       steps->emplace_back(std::move(step));
     } // end maneuver loop
-    //#########################################################################
+      // #########################################################################
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
@@ -1499,7 +1969,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     admins->reserve(path_leg.admin_size());
     for (const auto& admin : path_leg.admin()) {
       auto admin_map = json::map({});
-      if (admin.has_country_code()) {
+      if (!admin.country_code().empty()) {
         admin_map->emplace("iso_3166_1", admin.country_code());
         auto country_iso3 = valhalla::baldr::get_iso_3166_1_alpha3(admin.country_code());
         if (!country_iso3.empty()) {
@@ -1520,7 +1990,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     }
 
     // Add via waypoints to the leg
-    output_leg->emplace("via_waypoints", osrm::via_waypoints(options, shape));
+    output_leg->emplace("via_waypoints", osrm::intermediate_waypoints(path_leg));
 
     // Add incidents to the leg
     serializeIncidents(path_leg.incidents(), *output_leg);
@@ -1550,7 +2020,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   // Find the simplest summary for every leg of every route. Important note:
   // each route should have the same number of legs. Hence, we only need to make
   // unique the same leg (leg_idx) between all routes.
-  for (size_t route_i = 0; route_i < routes.size(); route_i++) {
+  for (int route_i = 0; route_i < routes.size(); route_i++) {
 
     size_t num_legs_i = routes.Get(route_i).legs_size();
     std::vector<std::string> leg_summaries;
@@ -1566,7 +2036,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
       // Compare every jth route/leg summary vs the current ith route/leg summary.
       // We desire to compute num_named_segs_needed, which is the number of named
       // segments needed to uniquely identify the ith's summary.
-      for (size_t route_j = 0; route_j < routes.size(); route_j++) {
+      for (int route_j = 0; route_j < routes.size(); route_j++) {
 
         // avoid self
         if (route_i == route_j)
@@ -1611,6 +2081,9 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   return all_summaries;
 }
 
+} // namespace
+
+namespace osrm_serializers {
 // Serialize route response in OSRM compatible format.
 // Inputs are:
 //     directions options
@@ -1618,6 +2091,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
 //     DirectionsLeg protocol buffer
 std::string serialize(valhalla::Api& api) {
   auto& options = *api.mutable_options();
+  AttributesController controller(options);
   auto json = json::map({});
 
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
@@ -1673,7 +2147,12 @@ std::string serialize(valhalla::Api& api) {
     // Serialize route legs
     route->emplace("legs", serialize_legs(api.directions().routes(i).legs(), route_leg_summaries[i],
                                           *api.mutable_trip()->mutable_routes(i)->mutable_legs(),
-                                          imperial, options));
+                                          imperial, options, controller));
+
+    // Add voice instructions if the user requested them
+    if (options.voice_instructions()) {
+      route->emplace("voiceLocale", options.language());
+    }
 
     routes->emplace_back(std::move(route));
   }
@@ -1681,6 +2160,11 @@ std::string serialize(valhalla::Api& api) {
   // Routes are called matchings in osrm map matching mode
   json->emplace(options.action() == valhalla::Options::trace_route ? "matchings" : "routes",
                 std::move(routes));
+
+  // get serialized warnings
+  if (api.info().warnings_size() >= 1) {
+    json->emplace("warnings", serializeWarnings(api));
+  }
 
   std::stringstream ss;
   ss << *json;
@@ -1693,9 +2177,10 @@ std::string serialize(valhalla::Api& api) {
 
 using namespace osrm_serializers;
 
+namespace {
 /// Assert equality of two json documents
 //
-// TODO Improve the diffed view of mis-matching documents
+// TODO Improve the diffed view of mismatching documents
 void assert_json_equality(const rapidjson::Document& doc1, const rapidjson::Document& doc2) {
   if (doc1 != doc2) {
     ASSERT_STREQ(rapidjson::serialize(doc1).c_str(), rapidjson::serialize(doc2).c_str());
@@ -1717,7 +2202,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
 
     valhalla::IncidentsTile::Metadata meta;
     meta.set_id(
-        // Set a large id that excercises the uint64 serialization
+        // Set a large id that exercises the uint64 serialization
         18446744073709551615u);
     uint64_t creation_time = 1597241829;
     meta.set_creation_time(creation_time);
@@ -1971,15 +2456,25 @@ TEST(RouteSerializerOsrm, testserializeAnnotationsSpeedLimits) {
   assert_json_equality(serialized_to_json, expected_json);
 }
 
+TEST(RouteSerializerOsrm, testlaneIndications) {
+  json::ArrayPtr indications_1 = lane_indications(true, kTurnLaneReverse | kTurnLaneSharpLeft);
+  json::ArrayPtr indications_2 =
+      lane_indications(true, kTurnLaneThrough | kTurnLaneRight | kTurnLaneSharpRight);
+
+  ASSERT_EQ(indications_1->size(), 2);
+  ASSERT_STREQ(boost::get<std::string>(indications_1->at(0)).c_str(), "uturn");
+  ASSERT_STREQ(boost::get<std::string>(indications_1->at(1)).c_str(), "sharp left");
+
+  ASSERT_EQ(indications_2->size(), 3);
+  ASSERT_STREQ(boost::get<std::string>(indications_2->at(0)).c_str(), "straight");
+  ASSERT_STREQ(boost::get<std::string>(indications_2->at(1)).c_str(), "right");
+  ASSERT_STREQ(boost::get<std::string>(indications_2->at(2)).c_str(), "sharp right");
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
-#else
-
-} // namespace
-
 #endif

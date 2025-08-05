@@ -4,11 +4,23 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
+#include <cctype>
 #include <chrono>
+#include <regex>
 #include <sstream>
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 #include <date/date.h>
 #include <date/tz.h>
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+#endif
 
 #include "baldr/turnlanes.h"
 #include "locales.h"
@@ -19,6 +31,11 @@
 using namespace valhalla::tyr;
 
 namespace {
+
+constexpr size_t kLanguageIndex = 1;
+constexpr size_t kScriptIndex = 2;
+constexpr size_t kRegionIndex = 3;
+constexpr size_t kPrivateuseIndex = 4;
 
 valhalla::odin::locales_singleton_t load_narrative_locals() {
   valhalla::odin::locales_singleton_t locales;
@@ -81,7 +98,7 @@ bool IsSimilarTurnDegree(uint32_t path_turn_degree,
   return (turn_degree_delta <= turn_degree_threshold);
 }
 
-// Get the time from the inputed date.
+// Get the time from the provided date.
 // date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_time(const std::string& date_time, const std::locale& locale) {
   if (date_time.find('T') == std::string::npos) {
@@ -115,7 +132,7 @@ std::string get_localized_time(const std::string& date_time, const std::locale& 
   return time;
 }
 
-// Get the date from the inputed date.
+// Get the date from the provided date.
 // date_time is in the format of 2015-05-06T08:00-05:00
 std::string get_localized_date(const std::string& date_time, const std::locale& locale) {
   if (date_time.find('T') == std::string::npos) {
@@ -136,6 +153,53 @@ const locales_singleton_t& get_locales() {
 
 const std::unordered_map<std::string, std::string>& get_locales_json() {
   return locales_json;
+}
+
+Bcp47Locale parse_string_into_locale(const std::string& locale_string) {
+  // Normalize
+  std::string source = boost::to_lower_copy(locale_string);
+  boost::replace_all(source, "_", "-");
+
+  Bcp47Locale locale;
+  std::smatch matches;
+  std::regex pattern{R"(^([a-z]{2,3})(?:-([a-z]{4}))?(?:-([a-z]{2}))?(?:-(x-[a-z0-9]{1,8}))?\b)"};
+  if (std::regex_search(source, matches, pattern)) {
+    // Process language
+    if (matches[kLanguageIndex].matched) {
+      locale.language = matches[kLanguageIndex].str();
+      locale.langtag = locale.language;
+    }
+
+    // Process script
+    if (matches[kScriptIndex].matched) {
+      locale.script = matches[kScriptIndex].str();
+      if (!locale.script.empty()) {
+        locale.script[0] = std::toupper(locale.script[0]);
+        locale.langtag += "-";
+        locale.langtag += locale.script;
+      }
+    }
+
+    // Process region
+    if (matches[kRegionIndex].matched) {
+      locale.region = matches[kRegionIndex].str();
+      if (!locale.region.empty()) {
+        boost::to_upper(locale.region);
+        locale.langtag += "-";
+        locale.langtag += locale.region;
+      }
+    }
+
+    // Process privateuse
+    if (matches[kPrivateuseIndex].matched) {
+      locale.privateuse = matches[kPrivateuseIndex].str();
+      if (!locale.privateuse.empty()) {
+        locale.langtag += "-";
+        locale.langtag += locale.privateuse;
+      }
+    }
+  }
+  return locale;
 }
 
 std::string turn_lane_direction(uint16_t turn_lane) {

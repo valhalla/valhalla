@@ -1,29 +1,38 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/meili/*.h)
 
 set(sources
-  viterbi_search.cc
   topk_search.cc
   routing.cc
-  candidate_search.cc
   geometry_helpers.cc
-  transition_cost_model.cc
-  map_matcher.cc
   map_matcher_factory.cc
-  match_route.cc
   config.cc)
+
+set(sources_with_warnings
+  candidate_search.cc
+  map_matcher.cc
+  match_route.cc
+  transition_cost_model.cc
+  viterbi_search.cc)
+
+set(system_includes 
+  ${date_include_dir}
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
 valhalla_module(NAME meili
   SOURCES ${sources}
+  SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      ${system_includes}
+    PRIVATE
+      ${rapidjson_include_dir}
   DEPENDS
     valhalla::sif
     ${valhalla_protobuf_targets}

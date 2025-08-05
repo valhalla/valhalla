@@ -1,16 +1,15 @@
-#include "mjolnir/ferry_connections.h"
-#include "mjolnir/node_expander.h"
-
-#include <list>
-#include <queue>
-#include <unordered_set>
-#include <vector>
-
 #include "baldr/graphid.h"
 #include "baldr/json.h"
 #include "midgard/util.h"
-
+#include "mjolnir/ferry_connections.h"
+#include "mjolnir/node_expander.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
+
+#include <optional>
+#include <queue>
+#include <unordered_set>
+#include <vector>
 
 using namespace valhalla::baldr;
 
@@ -18,7 +17,7 @@ namespace valhalla {
 namespace mjolnir {
 
 constexpr uint32_t kMaxClassification = 8;
-constexpr uint32_t kMaxLinkEdges = 16;
+constexpr uint32_t kMaxLinkEdges = 32;
 constexpr uint32_t kServiceClass = static_cast<uint32_t>(RoadClass::kServiceOther);
 using nodelist_t = std::vector<std::vector<sequence<Node>::iterator>>;
 
@@ -46,9 +45,9 @@ struct LinkGraphNode {
   }
 };
 
-inline bool IsDriveableNonLink(const Edge& edge) {
+inline bool IsdrivableNonLink(const Edge& edge) {
   return !edge.attributes.link &&
-         (edge.attributes.driveableforward || edge.attributes.driveablereverse) &&
+         ((edge.fwd_access & kAutoAccess) || (edge.rev_access & kAutoAccess)) &&
          edge.attributes.importance != kServiceClass;
 }
 
@@ -56,11 +55,11 @@ inline bool IsDriveForwardLink(const Edge& edge) {
   return edge.attributes.link && edge.attributes.driveforward;
 }
 
-// Get the best classification for any driveable non-link edges from a node.
+// Get the best classification for any drivable non-link edges from a node.
 uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
   for (const auto& edge : edges) {
-    if (IsDriveableNonLink(edge.first)) {
+    if (IsdrivableNonLink(edge.first)) {
       bestrc = std::min<uint32_t>(bestrc, edge.first.attributes.importance);
     }
   }
@@ -114,12 +113,12 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
     // If the node has a both links and non links at it
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.link_edge_ && bundle.node.non_link_edge_) {
-      // Check if this node has a link edge that is driveable from the node
+      // Check if this node has a link edge that is outgoing (i.e. driveforward) from the node
       for (const auto& edge : bundle.node_edges) {
-        if (edge.first.attributes.link && edge.first.attributes.driveforward) {
+        if (edge.first.attributes.link && (edge.first.attributes.driveforward)) {
           // Get the highest classification of non-link edges at this node.
           // Add to the exit node list if a valid classification...if no
-          // connecting edge is driveable the node will be skipped.
+          // connecting edge is drivable the node will be skipped.
           uint32_t rc = GetBestNonLinkClass(bundle.node_edges);
           if (rc < kMaxClassification) {
             exit_nodes[rc].push_back(node_itr);
@@ -151,6 +150,13 @@ struct WayTags {
     return refs.empty() && dest_refs.empty();
   }
 
+  /**
+   * Parses destination:ref & ref tags as separate vectors of names
+   *
+   * @param way     The way to parse the tags of
+   * @param omsdata The data parsed from the PBF
+   * @returns a WayTags object holding the vectors of names
+   */
   static WayTags Parse(const OSMWay& way, const OSMData& osmdata) {
     WayTags road_tags;
 
@@ -216,7 +222,7 @@ bool IsDestinationNode(const node_bundle& node, const WayTags& link, Data& data)
     return false;
 
   for (const auto& edge : node.node_edges) {
-    if (IsDriveableNonLink(edge.first)) {
+    if (IsdrivableNonLink(edge.first)) {
       const auto road = WayTags::Parse(*data.ways[edge.first.wayindex_], data.osmdata);
       if (IsTheSameRoad(road, link) || IsDestinationRoad(road, link))
         return true;
@@ -325,7 +331,7 @@ struct LinkGraphBuilder {
     // Expand link edges from the exit node
     for (const auto& startedge : exit_bundle.node_edges) {
       // Get the edge information. Skip non-link edges, link edges that are
-      // not driveable in the forward direction, and link edges already
+      // not drivable in the forward direction, and link edges already
       // tested for reclassification
       if (!IsDriveForwardLink(startedge.first) || startedge.first.attributes.reclass_link) {
         continue;
@@ -415,7 +421,9 @@ struct LinkGraphBuilder {
 
     // Make sure that number of children does not exceed the threshold
     if (graph_[from].children.size() >= kMaxLinkEdges) {
-      throw std::runtime_error("Exceeding kMaxLinkEdges in ReclassifyLinks");
+      auto ll = graph_[from].bundle.node.latlng();
+      throw std::runtime_error("Exceeding kMaxLinkEdges in ReclassifyLinks at location " +
+                               std::to_string(ll.lng()) + "," + std::to_string(ll.lat()));
     }
 
     graph_[to].parents.push_back(from);
@@ -518,14 +526,14 @@ private:
   }
 };
 
-bool IsEdgeDriveableInDirection(uint32_t from_node, const Edge& edge, bool forward) {
+bool IsEdgedrivableInDirection(uint32_t from_node, const Edge& edge, bool forward) {
   bool right_direction = true;
   if (forward) {
-    right_direction = (edge.sourcenode_ == from_node && edge.attributes.driveableforward) ||
-                      (edge.targetnode_ == from_node && edge.attributes.driveablereverse);
+    right_direction = (edge.sourcenode_ == from_node && (edge.fwd_access & kAutoAccess)) ||
+                      (edge.targetnode_ == from_node && (edge.rev_access & kAutoAccess));
   } else {
-    right_direction = (edge.sourcenode_ == from_node && edge.attributes.driveablereverse) ||
-                      (edge.targetnode_ == from_node && edge.attributes.driveableforward);
+    right_direction = (edge.sourcenode_ == from_node && (edge.rev_access & kAutoAccess)) ||
+                      (edge.targetnode_ == from_node && (edge.fwd_access & kAutoAccess));
   }
   return right_direction;
 }
@@ -542,17 +550,17 @@ std::vector<uint32_t> GoTowardsIntersection(uint32_t start_node,
                                             Data& data) {
   Edge start_edge = *data.edges[start_edge_idx];
   uint32_t node = EndNode(start_node, start_edge);
-  size_t prev_edge_idx = start_edge_idx;
   Edge prev_edge = start_edge;
   bool next_found = false;
   std::vector<uint32_t> nodes{start_node, node};
+  std::unordered_set<size_t> visited_nodes{start_node, node};
   double current_length = length(EdgeShape(data, start_edge));
 
   auto next = [&](const std::pair<Edge, size_t>& edge) {
     next_found = true;
     node = EndNode(node, edge.first);
+    visited_nodes.insert(node);
     prev_edge = edge.first;
-    prev_edge_idx = edge.second;
     nodes.push_back(node);
     current_length += length(EdgeShape(data, edge.first));
   };
@@ -566,8 +574,8 @@ std::vector<uint32_t> GoTowardsIntersection(uint32_t start_node,
     // looking for a non link edge with right direction
     for (const auto& node_edge : bundle.node_edges) {
       const Edge& edge = node_edge.first;
-      if (node_edge.second != prev_edge_idx && !edge.attributes.link &&
-          IsEdgeDriveableInDirection(node, edge, forward)) {
+      if (!edge.attributes.link && IsEdgedrivableInDirection(node, edge, forward) &&
+          visited_nodes.find(EndNode(node, node_edge.first)) == visited_nodes.end()) {
         candidates.push_back(node_edge);
       }
     }
@@ -641,7 +649,7 @@ bool IsSlipLane(Data& data, SlipLaneInput input, double traverse_threshold) {
       GoTowardsIntersection(input.last_node, input.merge_edge, false, traverse_threshold, data);
 
   // check if two directions intersect
-  boost::optional<uint32_t> intersection_node;
+  std::optional<uint32_t> intersection_node;
   for (auto node : reverse_nodes) {
     if (std::find(forward_nodes.begin(), forward_nodes.end(), node) != forward_nodes.end()) {
       intersection_node = node;
@@ -656,7 +664,7 @@ bool IsSlipLane(Data& data, SlipLaneInput input, double traverse_threshold) {
                                            *intersection_node));
   }
 
-  return intersection_node.is_initialized();
+  return intersection_node != std::nullopt;
 }
 
 SlipLaneInput GetSlipLaneInput(Data& data, const std::vector<uint32_t>& link_edges) {
@@ -674,7 +682,7 @@ SlipLaneInput GetSlipLaneInput(Data& data, const std::vector<uint32_t>& link_edg
     double origin_heading = edge_heading(node, edge);
     auto bundle = collect_node_edges(data.nodes[node], data.nodes, data.edges);
     for (auto to : bundle.node_edges) {
-      if (to.first.attributes.link || !IsEdgeDriveableInDirection(node, to.first, forward))
+      if (to.first.attributes.link || !IsEdgedrivableInDirection(node, to.first, forward))
         continue;
 
       double neighbour_heading = edge_heading(node, to.first);
@@ -692,13 +700,13 @@ SlipLaneInput GetSlipLaneInput(Data& data, const std::vector<uint32_t>& link_edg
   // link_edges store link sequence in reverse order
   // so first link edge is actually the last in the list
   Edge first_link_edge = *data.edges[link_edges.back()];
-  res.first_node = first_link_edge.attributes.driveableforward ? first_link_edge.sourcenode_
-                                                               : first_link_edge.targetnode_;
+  res.first_node = (first_link_edge.fwd_access & kAutoAccess) ? first_link_edge.sourcenode_
+                                                              : first_link_edge.targetnode_;
   res.fork_edge = find_closest_neighbour_edge(res.first_node, first_link_edge, true);
 
   Edge last_link_edge = *data.edges[link_edges.front()];
-  res.last_node = last_link_edge.attributes.driveableforward ? last_link_edge.targetnode_
-                                                             : last_link_edge.sourcenode_;
+  res.last_node = (last_link_edge.fwd_access & kAutoAccess) ? last_link_edge.targetnode_
+                                                            : last_link_edge.sourcenode_;
   res.merge_edge = find_closest_neighbour_edge(res.last_node, last_link_edge, false);
   return res;
 }
@@ -746,6 +754,7 @@ bool IsTurnChannel(Data& data, const std::vector<uint32_t>& link_edges) {
 std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& link_graph,
                                                   uint32_t exit_classification,
                                                   Data& data,
+                                                  bool reclassify_links,
                                                   bool infer_turn_channels) {
   // number of reclassified edges
   uint32_t reclass_count = 0;
@@ -849,7 +858,8 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
         sequence<Edge>::iterator element = data.edges[edge_idx];
         auto edge = *element;
 
-        if (rc > edge.attributes.importance) {
+        // Reclassify edge (if reclassify_links is true).
+        if (reclassify_links && rc > edge.attributes.importance) {
           if (rc < static_cast<uint32_t>(RoadClass::kUnclassified))
             edge.attributes.importance = rc;
           else
@@ -857,6 +867,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
 
           ++reclass_count;
         }
+
         if (turn_channel) {
           edge.attributes.turn_channel = true;
           ++tc_count;
@@ -885,18 +896,20 @@ void ReclassifyLinks(const std::string& ways_file,
                      const std::string& edges_file,
                      const std::string& way_nodes_file,
                      const OSMData& osmdata,
+                     bool reclassify_links,
                      bool infer_turn_channels) {
+  SCOPED_TIMER();
   LOG_INFO("Reclassifying_V2 link graph edges...");
 
   Data data(nodes_file, edges_file, ways_file, way_nodes_file, osmdata);
-  // Find list of exit nodes - nodes where driveable outbound links connect to
+  // Find list of exit nodes - nodes where drivable outbound links connect to
   // non-link edges. Group by best road class of the non-link connecting edges.
   nodelist_t exit_nodes = FormExitNodes(data.nodes, data.edges);
 
   // Iterate through the exit node list by classification so exits from major
   // roads are considered before exits from minor roads.
-  uint32_t reclass_count = 0;
-  uint32_t tc_count = 0;
+  [[maybe_unused]] uint32_t reclass_count = 0;
+  [[maybe_unused]] uint32_t tc_count = 0;
 
   for (uint32_t classification = 0; classification < kMaxClassification; classification++) {
     for (auto& node : exit_nodes[classification]) {
@@ -904,14 +917,15 @@ void ReclassifyLinks(const std::string& ways_file,
       // build link graph
       auto link_graph = build_graph(node, classification);
       // reclassify links and infer turn channels
-      auto counts = ReclassifyLinkGraph(link_graph, classification, data, infer_turn_channels);
+      auto counts = ReclassifyLinkGraph(link_graph, classification, data, reclassify_links,
+                                        infer_turn_channels);
       // update counters
       reclass_count += counts.first;
       tc_count += counts.second;
     }
   }
 
-  LOG_INFO("Finished with " + std::to_string(reclass_count) + " reclassified. " +
+  LOG_INFO("Finished with " + std::to_string(reclass_count) + " link edges reclassified. " +
            " Turn channel count = " + std::to_string(tc_count));
 }
 

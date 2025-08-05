@@ -1,5 +1,6 @@
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphtileheader.h"
+#include "midgard/vector2.h"
 
 using namespace valhalla::midgard;
 
@@ -109,10 +110,30 @@ std::vector<GraphId> TileHierarchy::GetGraphIds(const midgard::AABB2<midgard::Po
  * @return Returns a const reference to the tiling system for this level.
  */
 const midgard::Tiles<midgard::PointLL>& TileHierarchy::get_tiling(const uint8_t level) {
+  const auto& transit_level = GetTransitLevel();
   if (level < levels().size()) {
     return levels()[level].tiles;
+  } else if (level == transit_level.level) {
+    return transit_level.tiles;
   }
   throw std::runtime_error("Invalid level Id for TileHierarchy::get_tiling");
 }
+
+GraphId TileHierarchy::parent(const GraphId& child_tile_id) {
+  // bail if there is no parent
+  if (child_tile_id.level() == 0)
+    return GraphId(kInvalidGraphId);
+  // get the tilings so we can use coordinates to pick the parent for the child
+  auto parent_level = child_tile_id.level() - 1;
+  const auto& parent_tiling = get_tiling(parent_level);
+  const auto& child_tiling = get_tiling(child_tile_id.level());
+  // grab just off of the child's corner to avoid edge cases
+  auto corner = child_tiling.Base(child_tile_id.tileid()) +
+                midgard::VectorXY<double>{parent_tiling.TileSize() / 2, parent_tiling.TileSize() / 2};
+  // pick the parent from the child's coordinate
+  auto parent_tile_index = parent_tiling.TileId(corner);
+  return GraphId(parent_tile_index, parent_level, 0);
+}
+
 } // namespace baldr
 } // namespace valhalla

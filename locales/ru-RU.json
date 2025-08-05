@@ -37,7 +37,7 @@
         "0": "Поверните <RELATIVE_DIRECTION>.",
         "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Затем двигайтесь по <STREET_NAMES>.",
-        "3": "Поверните <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
+        "3": "Поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
         "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
         "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
       },
@@ -45,7 +45,10 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "налево",
@@ -77,7 +80,7 @@
         "0": "Поверните <RELATIVE_DIRECTION>.",
         "1": "Поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
-        "3": "Поверните <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
+        "3": "Поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
         "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
         "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
       },
@@ -85,7 +88,10 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "налево",
@@ -143,7 +149,10 @@
         "пешеходной дорожке",
         "велосипедной дорожке",
         "дорожке для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -175,21 +184,24 @@
         "пешеходной дорожке",
         "велосипедной дорожке",
         "дорожке для горных велосипедов",
-        "the crosswalk"
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> километров",
-        "1 километр",
+        "один километр",
         "<METERS> метров",
-        "менее 10 метров"
+        "менее десяти метров"
       ],
       "us_customary_lengths": [
         "<MILES> миль",
-        "1 миля",
-        "половина мили",
+        "одну милю",
+        "полмили",
         "четверть мили",
         "<FEET> футов",
-        "меньше 10 футов"
+        "менее десяти футов"
       ],
       "example_phrases": {
         "0": [
@@ -229,7 +241,10 @@
         "пешеходная дорожка",
         "велосипедная дорожка",
         "дорожка для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -278,8 +293,8 @@
       "phrases": {
         "0": "Вы прибыли в пункт назначения.",
         "1": "Вы прибыли в <DESTINATION>.",
-        "2": "Пункт вашего назначения находится <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> находится <RELATIVE_DIRECTION>."
+        "2": "Пункт назначения <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "слева",
@@ -305,8 +320,8 @@
       "phrases": {
         "0": "Вы прибыли в пункт назначения.",
         "1": "Вы прибыли в <DESTINATION>.",
-        "2": "Пункт вашего назначения находится <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> находится <RELATIVE_DIRECTION>."
+        "2": "Пункт назначения <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "слева",
@@ -332,8 +347,8 @@
       "phrases": {
         "0": "Вы прибудете в пункт назначения.",
         "1": "Вы прибудете в <DESTINATION>.",
-        "2": "Пункт вашего назначения будет находиться <RELATIVE_DIRECTION>.",
-        "3": "<DESTINATION> будет находиться <RELATIVE_DIRECTION>."
+        "2": "Пункт назначения будет <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> будет <RELATIVE_DIRECTION>."
       },
       "relative_directions": [
         "слева",
@@ -364,9 +379,12 @@
       },
       "empty_street_name_labels": [
         "пешеходной дорожке",
-        "велосипедной дорожки",
-        "дорожки для горных велосипедов",
-        "the crosswalk"
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "ferry_label": "Паром",
       "example_phrases": {
@@ -393,9 +411,12 @@
       },
       "empty_street_name_labels": [
         "пешеходной дорожке",
-        "велосипедной дорожки",
-        "дорожки для горных велосипедов",
-        "the crosswalk"
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "ferry_label": "Паром",
       "example_phrases": {
@@ -415,40 +436,43 @@
     },
     "enter_roundabout": {
       "phrases": {
-        "0": "Выезжайте на кольцевую развязку.<instructions.enter_roundabout.phrases.1>Выезжайте на кольцевую развязку и сверните на <ORDINAL_VALUE> съезде.",
-        "1": "Enter the roundabout and take the <ORDINAL_VALUE> exit.",
-        "2": "Выезжайте на кольцевую развязку и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Выезжайте на кольцевую развязку и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжайте движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "4": "Выезжайте на кольцевую развязку и сверните на <ORDINAL_VALUE> съезде в сторону <TOWARD_SIGN>.",
-        "5": "Выезжайте на кольцевую развязку и сверните на <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Выезжайте на кольцевую развязку и сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжайте движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "7": "Выезжайте на кольцевую развязку и сверните в сторону <TOWARD_SIGN>.",
+        "0": "Выезжайте на кольцевую развязку.",
+        "1": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде.",
+        "2": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжите движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде в направлении <TOWARD_SIGN>.",
+        "5": "На кольцевой развязке сверните на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "На кольцевой развязке сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжите движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "На кольцевой развязке сверните в направлении <TOWARD_SIGN>.",
         "8": "Сверните на <STREET_NAMES>",
         "9": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде.",
         "10": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "11": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжайте движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
         "12": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде в сторону <TOWARD_SIGN>.",
         "13": "Сверните на <STREET_NAMES> и сверните на <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "14": "Сверните на <STREET_NAMES> и сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжайте движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "15": "Сверните на <STREET_NAMES> и сверните в сторону <TOWARD_SIGN>."
+        "14": "Сверните на <STREET_NAMES> и сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Продолжите движение по <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Сверните на <STREET_NAMES> и сверните в направлении<TOWARD_SIGN>."
       },
       "ordinal_values": [
-        "1-м",
-        "2-м",
-        "3-м",
-        "4-м",
-        "5-м",
-        "6-м",
-        "7-м",
-        "8-м",
-        "9-м",
-        "10-м"
+        "первом",
+        "втором",
+        "третьем",
+        "четвёртом",
+        "пятом",
+        "шестом",
+        "седьмом",
+        "восьмом",
+        "девятом",
+        "десятом"
       ],
       "empty_street_name_labels": [
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -513,13 +537,13 @@
     "enter_roundabout_verbal": {
       "phrases": {
         "0": "Выезжайте на кольцевую развязку.",
-        "1": "Выезжайте на кольцевую развязку и сверните на <ORDINAL_VALUE> съезде.",
-        "2": "Выезжайте на кольцевую развязку и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "3": "Выезжайте на кольцевую развязку и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "4": "Выезжайте на кольцевую развязку и сверните на <ORDINAL_VALUE> съезде <TOWARD_SIGN>.",
-        "5": "Выезжайте на кольцевую развязку и сверните на <ROUNDABOUT_EXIT_STREET_NAMES>.",
-        "6": "Выезжайте на кольцевую развязку и сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
-        "7": "Выезжайте на кольцевую развязку и сверните <TOWARD_SIGN>.",
+        "1": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде.",
+        "2": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "На кольцевой развязке сверните на <ORDINAL_VALUE> съезде <TOWARD_SIGN>.",
+        "5": "На кольцевой развязке сверните на <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "На кольцевой развязке сверните на <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "На кольцевой развязке сверните <TOWARD_SIGN>.",
         "8": "Сверните на <STREET_NAMES>",
         "9": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде.",
         "10": "Сверните на <STREET_NAMES> и сверните на <ORDINAL_VALUE> съезде на <ROUNDABOUT_EXIT_STREET_NAMES>.",
@@ -530,22 +554,25 @@
         "15": "Сверните на <STREET_NAMES> и сверните <TOWARD_SIGN>."
       },
       "ordinal_values": [
-        "1-м",
-        "2-м",
-        "3-м",
-        "4-м",
-        "5-м",
-        "6-м",
-        "7-м",
-        "8-м",
-        "9-м",
-        "10-м"
+        "первом",
+        "втором",
+        "третьем",
+        "четвёртом",
+        "пятом",
+        "шестом",
+        "седьмом",
+        "восьмом",
+        "девятом",
+        "десятом"
       ],
       "empty_street_name_labels": [
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -718,14 +745,17 @@
       "phrases": {
         "0": "Сверните с кольцевой развязки.",
         "1": "Сверните с кольцевой развязки на <STREET_NAMES>.",
-        "2": "Сверните с кольцевой развязки на <BEGIN_STREET_NAMES>. Продолжайте движение по <STREET_NAMES>.",
+        "2": "Сверните с кольцевой развязки на <BEGIN_STREET_NAMES>. Продолжите движение по <STREET_NAMES>.",
         "3": "Сверните с кольцевой развязки к <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -751,9 +781,12 @@
       },
       "empty_street_name_labels": [
         "пешеходную дорожку",
-        "велосипедная дорожка",
+        "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -902,12 +935,15 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
+        "левее",
         "прямо",
-        "прямо",
-        "правой стороны"
+        "правее"
       ],
       "example_phrases": {
         "0": [
@@ -949,12 +985,15 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
-        "левой стороны",
+        "левее",
         "прямо",
-        "правой стороны"
+        "правее"
       ],
       "example_phrases": {
         "0": [
@@ -984,12 +1023,15 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
-        "левой стороны",
+        "левее",
         "прямо",
-        "правой стороны"
+        "правее"
       ],
       "example_phrases": {
         "0": [
@@ -1023,7 +1065,10 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "левой стороны",
@@ -1076,7 +1121,10 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1116,7 +1164,10 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1163,21 +1214,24 @@
         "пешеходной дорожке",
         "велосипедной дорожке",
         "дорожке для горных велосипедов",
-        "the crosswalk"
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> километров",
-        "1 километр",
+        "один километр",
         "<METERS> метров",
-        "менее 10 метров"
+        "менее десяти метров"
       ],
       "us_customary_lengths": [
         "<MILES> миль",
-        "1 миля",
-        "половина мили",
+        "одну милю",
+        "полмили",
         "четверть мили",
         "<FEET> футов",
-        "менее 10 футов"
+        "менее десяти футов"
       ],
       "example_phrases": {
         "0": [
@@ -1264,8 +1318,8 @@
     },
     "ramp_straight": {
       "phrases": {
-        "0": "Держитесь прямо, чтобы заехать на въезд.<instructions.ramp_straight.phrases.1>Держитесь прямо, чтобы заехать на въезд на <BRANCH_SIGN>.",
-        "1": "Stay straight to take the <BRANCH_SIGN> ramp.",
+        "0": "Держитесь прямо, чтобы заехать на въезд.",
+        "1": "Держитесь прямо, чтобы заехать на въезд на <BRANCH_SIGN>.",
         "2": "Держитесь прямо, чтобы заехать на въезд к <TOWARD_SIGN>.",
         "3": "Держитесь прямо, чтобы заехать на въезд на <BRANCH_SIGN> к <TOWARD_SIGN>.",
         "4": "Держитесь прямо, чтобы заехать на въезд на <NAME_SIGN>."
@@ -1388,18 +1442,21 @@
     },
     "sharp": {
       "phrases": {
-        "0": "Сделайте крутой поворот <RELATIVE_DIRECTION>.",
-        "1": "Сделайте крутой поворот <RELATIVE_DIRECTION> на <STREET_NAMES>.",
-        "2": "Сделайте крутой поворот <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Следуйте далее по <STREET_NAMES>.",
-        "3": "Сделайте крутой поворот <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "4": "Сделайте крутой поворот <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
-        "5": "Сделайте крутой поворот <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+        "0": "Круто поверните <RELATIVE_DIRECTION>.",
+        "1": "Круто поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Круто поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Следуйте далее по <STREET_NAMES>.",
+        "3": "Круто поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
+        "4": "Круто поверните <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
+        "5": "Круто поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
         "пешеходной дорожке",
         "велосипедной дорожке",
         "дорожке для горных велосипедов",
-        "the crosswalk"
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "налево",
@@ -1428,18 +1485,21 @@
     },
     "sharp_verbal": {
       "phrases": {
-        "0": "Сделайте крутой поворот <RELATIVE_DIRECTION>.",
-        "1": "Сделайте крутой поворот <RELATIVE_DIRECTION> на <STREET_NAMES>.",
-        "2": "Сделайте крутой поворот <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
-        "3": "Сделайте крутой поворот <RELATIVE_DIRECTION> to stay on <STREET_NAMES>.",
-        "4": "Сделайте крутой поворот <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
-        "5": "Сделайте крутой поворот <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+        "0": "Круто поверните <RELATIVE_DIRECTION>.",
+        "1": "Круто поверните <RELATIVE_DIRECTION> на <STREET_NAMES>.",
+        "2": "Круто поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
+        "3": "Круто поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
+        "4": "Круто поверните <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
+        "5": "Круто поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
       },
       "empty_street_name_labels": [
-        "пешеходной",
+        "пешеходной дорожке",
         "велосипедной дорожке",
         "дорожке для горных велосипедов",
-        "the crosswalk"
+        "пешеходному переходу",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "налево",
@@ -1495,7 +1555,10 @@
         "пешеходной дорожке",
         "велосипедной дорожке",
         "дорожке для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1583,21 +1646,24 @@
         "пешеходной дорожке",
         "велосипедной дорожке",
         "дорожке для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> километров",
-        "1 километр",
+        "один километр",
         "<METERS> метров",
-        "менее 10 метров"
+        "менее десяти метров"
       ],
       "us_customary_lengths": [
         "<MILES> миль",
-        "1 миля",
-        "половина мили",
+        "одну милю",
+        "полмили",
         "четверть мили",
         "<FEET> футов",
-        "менее 10 футов"
+        "менее десяти футов"
       ],
       "example_phrases": {
         "0": [
@@ -1681,8 +1747,8 @@
         "поезд",
         "автобус",
         "паром",
-        "канатная дорога",
-        "гондола",
+        "канатную дорогу",
+        "гондолу",
         "фуникулер"
       ],
       "transit_stop_count_labels": {
@@ -1703,9 +1769,9 @@
     },
     "transit_connection_destination": {
       "phrases": {
-        "0": "Выходите со станции.",
-        "1": "Выходите со станции <TRANSIT_STOP>.",
-        "2": "Выходите со станции <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Сойдите со станции.",
+        "1": "Сойдите со станции <TRANSIT_STOP>.",
+        "2": "Сойдите со станции <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Станция",
       "example_phrases": {
@@ -1722,9 +1788,9 @@
     },
     "transit_connection_destination_verbal": {
       "phrases": {
-        "0": "Выходите со станции.",
-        "1": "Выходите со станции <TRANSIT_STOP>.",
-        "2": "Выходите со станции <TRANSIT_STOP> <STATION_LABEL>."
+        "0": "Сойдите со станции.",
+        "1": "Сойдите со станции <TRANSIT_STOP>.",
+        "2": "Сойдите со станции <TRANSIT_STOP> <STATION_LABEL>."
       },
       "station_label": "Станция",
       "example_phrases": {
@@ -1821,14 +1887,14 @@
         "1": "Оставайтесь на <TRANSIT_NAME> по направлению к <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
       },
       "empty_transit_name_labels": [
-        "трамвай",
+        "трамвае",
         "метро",
-        "поезд",
-        "автобус",
-        "паром",
-        "канатная дорога",
-        "гондола",
-        "фуникулер"
+        "поезде",
+        "автобусе",
+        "пароме",
+        "канатной дороге",
+        "гондоле",
+        "фуникулере"
       ],
       "transit_stop_count_labels": {
         "one": "остановка",
@@ -1850,14 +1916,14 @@
         "1": "Оставайтесь на <TRANSIT_NAME> по направлению к <TRANSIT_HEADSIGN>."
       },
       "empty_transit_name_labels": [
-        "трамвай",
+        "трамвае",
         "метро",
-        "поезд",
-        "автобус",
-        "паром",
-        "канатная дорога",
-        "гондола",
-        "фуникулер"
+        "поезде",
+        "автобусе",
+        "пароме",
+        "канатной дороге",
+        "гондоле",
+        "фуникулере"
       ],
       "example_phrases": {
         "0": [
@@ -1879,8 +1945,8 @@
         "поезд",
         "автобус",
         "паром",
-        "канатная дорога",
-        "гондола",
+        "канатную дорогу",
+        "гондолу",
         "фуникулер"
       ],
       "transit_stop_count_labels": {
@@ -1908,8 +1974,8 @@
         "поезд",
         "автобус",
         "паром",
-        "канатная дорога",
-        "гондола",
+        "канатную дорогу",
+        "гондолу",
         "фуникулер"
       ],
       "example_phrases": {
@@ -1932,8 +1998,8 @@
         "поезд",
         "автобус",
         "паром",
-        "канатная дорога",
-        "гондола",
+        "канатную дорогу",
+        "гондолу",
         "фуникулер"
       ],
       "example_phrases": {
@@ -1958,7 +2024,10 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "налево",
@@ -1998,7 +2067,10 @@
         "пешеходную дорожку",
         "велосипедную дорожку",
         "дорожку для горных велосипедов",
-        "the crosswalk"
+        "пешеходный переход",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "налево",
@@ -2039,8 +2111,11 @@
       "empty_street_name_labels": [
         "пешеходной дорожке",
         "велосипедной дорожке",
+        "пешеходном переходе",
         "дорожке для горных велосипедов",
-        "the crosswalk"
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "налево",
@@ -2088,7 +2163,10 @@
         "пешеходной дорожке",
         "велосипедной дорожке",
         "дорожке для горных велосипедов",
-        "the crosswalk"
+        "пешеходном переходе",
+        "the stairs",
+        "the bridge",
+        "the tunnel"
       ],
       "relative_directions": [
         "налево",
@@ -2128,17 +2206,17 @@
       },
       "metric_lengths": [
         "<KILOMETERS> километров",
-        "1 километр",
+        "один километр",
         "<METERS> метров",
-        "менее 10 метров"
+        "менее десяти метров"
       ],
       "us_customary_lengths": [
         "<MILES> миль",
-        "1 миля",
-        "половина мили",
+        "одну милю",
+        "полмили",
         "четверть мили",
         "<FEET> футов",
-        "менее 10 футов"
+        "менее десяти футов"
       ],
       "example_phrases": {
         "0": [
@@ -2155,21 +2233,119 @@
       },
       "metric_lengths": [
         "<KILOMETERS> километров",
-        "1 километр",
+        "один километр",
         "<METERS> метров",
-        "менее 10 метров"
+        "менее десяти метров"
       ],
       "us_customary_lengths": [
         "<MILES> миль",
-        "1 миля",
-        "половина мили",
+        "одну милю",
+        "полмили",
         "четверть мили",
         "<FEET> футов",
-        "менее 10 футов"
+        "менее десяти футов"
       ],
       "example_phrases": {
         "0": [
           "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Pass <OBJECT_LABEL>.",
+        "1": "Pass traffic signals on <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "the gate",
+        "the bollards",
+        "ways intersection"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pass the gate."
+        ]
+      }
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Воспользуйтесь лифтом.",
+        "1": "Воспользуйтесь лифтом до <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the elevator."
+        ],
+        "1": [
+          "Take the elevator to Level 1."
+        ]
+      }
+    },
+    "steps": {
+      "phrases": {
+        "0": "Воспользуйтесь лестницей.",
+        "1": "Воспользуйтесь лестницей до <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the stairs."
+        ],
+        "1": [
+          "Take the stairs to Level 2."
+        ]
+      }
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Воспользуйтесь эскалатором.",
+        "1": "Воспользуйтесь эскалатором до <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the escalator."
+        ],
+        "1": [
+          "Take the escalator to Level 3."
+        ]
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Войдите в здание.",
+        "1": "Войдите в здание, и продолжайте движение до <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедную дорожку",
+        "дорожка для горных велосипедов",
+        "пешеходный переход"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the building."
+        ],
+        "1": [
+          "Enter the building, and continue on the walkway."
+        ]
+      }
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Выйдите из здания.",
+        "1": "Выйдите из здания и продолжайте по <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "пешеходной дорожке",
+        "велосипедной дорожке",
+        "дорожке для горных велосипедов",
+        "пешеходному переходу"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the building."
+        ],
+        "1": [
+          "Exit the building, and continue on the walkway."
         ]
       }
     }

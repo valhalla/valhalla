@@ -1,17 +1,13 @@
-#include <cstdint>
-#include <functional>
-#include <sstream>
-#include <vector>
-
 #include "midgard/encoded.h"
-#include "midgard/util.h"
-#include "route_serializer_osrm.cc"
+#include "proto/options.pb.h"
+#include "proto/trip.pb.h"
+#include "route_serializer_osrm.h"
 #include "route_serializer_valhalla.cc"
 #include "tyr/serializers.h"
 
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
+#include <cstdint>
+#include <sstream>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -84,6 +80,8 @@ std::string serializeDirections(Api& request) {
       return pathToGPX(request.trip().routes(0).legs());
     case Options_Format_json:
       return valhalla_serializers::serialize(request);
+    case Options_Format_pbf:
+      return serializePbf(request);
     default:
       throw;
   }

@@ -28,3 +28,4 @@
 -j '{"locations":[{"lat":33.80767911381059,"lon":-116.52923583984374,"type":"break"},{"lat":32.794201303793194,"lon":-115.5596923828125,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":34.007704269556235,"lon":-118.48617553710938,"type":"break"},{"lat":34.0822371521209,"lon":-118.32000732421875,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":33.83734207824605,"lon":-118.38523864746092,"type":"break"},{"lat":33.634630831341376,"lon":-117.68692016601564,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.80200795873563,"lon":-122.44196042953655,"type":"break"},{"lat":37.80200795873563,"lon":-122.44196042953655,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'

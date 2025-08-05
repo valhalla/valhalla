@@ -1,5 +1,4 @@
 #include "sif/nocost.h"
-#include "baldr/accessrestriction.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
@@ -10,7 +9,6 @@
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
-#include <random>
 #endif
 
 using namespace valhalla::midgard;
@@ -31,8 +29,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  NoCost(const CostingOptions& costing_options)
-      : DynamicCost(costing_options, TravelMode::kDrive, kAllAccess) {
+  NoCost(const Costing& costing) : DynamicCost(costing, TravelMode::kDrive, kAllAccess) {
   }
 
   virtual ~NoCost() {
@@ -134,14 +131,14 @@ public:
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge    Pointer to a directed edge.
-   * @param   tile    Graph tile.
-   * @param   seconds Time of week in seconds.
+   * @param   edge      Pointer to a directed edge.
+   * @param   tile      Graph tile.
+   * @param   time_info Time info about edge passing.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr&,
-                        const uint32_t,
+                        const baldr::TimeInfo&,
                         uint8_t&) const override {
     return {static_cast<float>(edge->length()), static_cast<float>(edge->length())};
   }
@@ -150,32 +147,43 @@ public:
    * Returns the cost to make the transition from the predecessor edge.
    * Defaults to 0. Costing models that wish to include edge transition
    * costs (i.e., intersection/turn costs) must override this method.
-   * @param  edge  Directed edge (the to edge)
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  Predecessor edge information.
-   * @return  Returns the cost and time (seconds)
+   * @param  edge          Directed edge (the to edge)
+   * @param  node          Node (intersection) where transition occurs.
+   * @param  pred          Predecessor edge information.
+   * @param  tile          Pointer to the graph tile containing the to edge.
+   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
+   * @return Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge*,
                               const baldr::NodeInfo*,
-                              const EdgeLabel&) const override {
+                              const EdgeLabel&,
+                              const baldr::graph_tile_ptr&,
+                              const std::function<baldr::LimitedGraphReader()>&) const override {
     return {};
   }
 
   /**
    * Returns the cost to make the transition from the predecessor edge
    * when using a reverse search (from destination towards the origin).
-   * @param  idx   Directed edge local index
-   * @param  node  Node (intersection) where transition occurs.
-   * @param  pred  the opposing current edge in the reverse tree.
-   * @param  edge  the opposing predecessor in the reverse tree
+   * @param  idx                Directed edge local index
+   * @param  node               Node (intersection) where transition occurs.
+   * @param  pred               the opposing current edge in the reverse tree.
+   * @param  edge               the opposing predecessor in the reverse tree
+   * @param  tile               Graphtile that contains the node and the opp_edge
+   * @param  edge_id            Graph ID of opp_pred_edge to get its tile if needed
+   * @param  reader_getter      Functor that facilitates access to a limited version of the graph
+   * reader
    * @param  has_measured_speed Do we have any of the measured speed types set?
-   * @param  internal_turn  Did we make an turn on a short internal edge.
+   * @param  internal_turn      Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost TransitionCostReverse(const uint32_t,
                                      const baldr::NodeInfo*,
                                      const baldr::DirectedEdge*,
                                      const baldr::DirectedEdge*,
+                                     const graph_tile_ptr&,
+                                     const GraphId&,
+                                     const std::function<baldr::LimitedGraphReader()>&,
                                      const bool,
                                      const InternalTurn) const override {
     return {};
@@ -205,15 +213,13 @@ public:
   }
 };
 
-void ParseNoCostOptions(const rapidjson::Document&,
-                        const std::string&,
-                        CostingOptions* pbf_costing_options) {
+void ParseNoCostOptions(const rapidjson::Document&, const std::string&, Costing* c) {
   // this is probably not needed but its part of the contract for costing..
-  pbf_costing_options->set_costing(Costing::none_);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
+  c->set_type(Costing::none_);
+  c->set_name(Costing_Enum_Name(c->type()));
 }
 
-cost_ptr_t CreateNoCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateNoCost(const Costing& costing_options) {
   return std::make_shared<NoCost>(costing_options);
 }
 

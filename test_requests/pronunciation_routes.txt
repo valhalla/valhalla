@@ -1,0 +1,8 @@
+-j '{"locations":[{"lat":40.057797,"lon":-82.517046,"street":"SR 16 West"},{"lat":40.060501,"lon":-82.520764,"street":"Lancaster Road"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.057797,"lon":-82.517046,"street":"SR 16 West"},{"lat":40.058391,"lon":-82.521000,"street":"Lancaster Road"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":39.943025,"lon":-82.551958,"street":"I 70"},{"lat":39.934822,"lon":-82.539345,"street":"Lancaster Road SW"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":39.942137,"lon":-82.520094,"street":"I 70"},{"lat":39.936856,"lon":-82.537775,"street":"Lancaster Road SW"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.727023,"lon":-74.001935,"street":"Sullivan Street"},{"lat":40.725950,"lon":-73.999626,"street":"Wooster Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.727848,"lon":-74.003063,"street":"6th Avenue"},{"lat":40.727775,"lon":-74.001719,"street":"West Houston Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.724937,"lon":-73.994538,"street":"East Houston Street"},{"lat":40.726596,"lon":-73.999007,"street":"West Houston Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":47.399340,"lon":8.505593,"street":"Ottenbergstrasse"},{"lat":47.399557,"lon":8.504730,"street":"Limmattalstrasse"}],"costing":"auto","units":"kilometers"}'

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <unordered_map>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
+
+#include <unordered_map>
 
 // handy macro for shifting the 7bit path index value so that it can be or'd with the tile/level id
 #define SHIFT_path_id(x) (static_cast<uint32_t>(x) << 25u)
@@ -16,9 +17,11 @@ enum class EdgeSet : uint8_t {
                          // reset due to encountering a complex restriction:
                          // https://github.com/valhalla/valhalla/issues/2103
   kPermanent = 1,        // Permanent - shortest path to this edge has been found
-  kTemporary = 2         // Temporary - edge has been encountered but there could
+  kTemporary = 2,        // Temporary - edge has been encountered but there could
                          //   still be a shorter path to this edge. This edge will
                          //   be "adjacent" to an edge that is permanently labeled.
+  kSkipped = 3           // Skipped - edge has been encountered but was thrown out
+                         // of consideration.
 };
 
 // Store the edge label status and its index in the EdgeLabels list

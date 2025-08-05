@@ -1,12 +1,12 @@
 #ifndef VALHALLA_ODIN_NARRATIVE_BUILDER_FACTORY_H_
 #define VALHALLA_ODIN_NARRATIVE_BUILDER_FACTORY_H_
 
-#include <memory>
-#include <string>
-
 #include <valhalla/odin/enhancedtrippath.h>
+#include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/narrativebuilder.h>
 #include <valhalla/proto/options.pb.h>
+
+#include <memory>
 
 namespace valhalla {
 namespace odin {
@@ -29,7 +29,8 @@ public:
    * @return NarrativeBuilder unique pointer.
    */
   static std::unique_ptr<NarrativeBuilder> Create(const Options& options,
-                                                  const EnhancedTripLeg* trip_path);
+                                                  const EnhancedTripLeg* trip_path,
+                                                  const MarkupFormatter& markup_formatter);
 };
 
 } // namespace odin

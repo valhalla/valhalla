@@ -1,0 +1,85 @@
+[build-system]
+requires = [
+    "setuptools>=45",
+    "wheel",
+    "setuptools_scm>=6.2",
+    "setuptools_scm_git_archive",
+    "pybind11>=2.10.4",
+    "auditwheel",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "src/bindings/python/valhalla/__version__.py"
+version_scheme = "no-guess-dev"
+# PyPI doesn't accept local hashed version strings, important for pyvalhalla-weekly
+local_scheme = "no-local-version"
+
+[tool.black]
+line-length = 105
+skip-string-normalization = true
+extend-exclude = '''
+/(
+    \\..*
+  | dist
+  | wheelhouse
+  | '*build'
+  | __pycache__
+  | '*.toml'
+  | '*.egg-info'
+)/
+'''
+
+[tool.cibuildwheel]
+# it's enough here to know it's importable, actual test is run on other CI
+# mostly to avoid building utrecht tiles within the bindings build
+test-command = "python -c \"from valhalla.utils.graph_utils import GraphId; g = GraphId(); assert g.Is_Valid() == False\""
+# find out current defaults: cibuildwheel --print-build-identifiers --platform linux
+build = "cp*"
+skip = "*musllinux*"
+archs = "native"
+manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
+
+[tool.cibuildwheel.windows]
+# installing from github for now, to get early support to patch executables
+# https://github.com/adang1345/delvewheel/issues/62
+before-all = "pip install https://github.com/adang1345/delvewheel/archive/8b90061.zip"
+repair-wheel-command = "delvewheel repair --analyze-existing-exes --add-path build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}"
+# this should be sync'd with the GHA cmake command
+environment = { VALHALLA_BUILD_BIN_DIR="build/Release" }
+
+[tool.cibuildwheel.linux]
+# we remove some system libraries to try and simulate a more pristine environment before testing
+# CI is testing the built wheel in a fresh Docker container
+test-command=[
+    'dnf remove -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel > /dev/null',
+    '{project}/src/bindings/python/test/test_pyvalhalla_package.sh',
+    'dnf install -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel > /dev/null'
+]
+# build & install libvalhalla before building the bindings
+before-all = """
+{project}/src/bindings/python/scripts/build_manylinux.sh build_manylinux
+"""
+# e.g. geos is both installed to the system and built from source, need to prioritize the latter
+# VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_manylinux.sh' above
+environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux" }
+
+[tool.cibuildwheel.macos]
+repair-wheel-command = [
+    'git status',
+    'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-listdeps {wheel}',
+    'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}'
+]
+
+# we prepend a few commands to patch the auditwheel source a bit
+# main challenge is to find the same python version auditwheel will use for repairing
+[[tool.cibuildwheel.overrides]]
+    select = "*-manylinux_*"
+    inherit.repair-wheel-command = "prepend"
+    repair-wheel-command = [
+        'link_target="$(readlink -f $(which "auditwheel"))"',
+        'python_bin="$(dirname "$link_target")/python"',
+        'echo "[INFO] Using $($python_bin -V) from $(which "$python_bin")"',
+        'export LD_LIBRARY_PATH=/usr/local/lib64',
+        '$python_bin src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1',
+    ]

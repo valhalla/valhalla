@@ -103,5 +103,15 @@ uint64_t OSMRestriction::time_domain() const {
   return time_domain_;
 }
 
+// Set the probability
+void OSMRestriction::set_probability(uint8_t probability) {
+  attributes_.probability_ = probability;
+}
+
+// Get the probability
+uint8_t OSMRestriction::probability() const {
+  return attributes_.probability_;
+}
+
 } // namespace mjolnir
 } // namespace valhalla

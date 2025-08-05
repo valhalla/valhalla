@@ -1,14 +1,13 @@
 #ifndef VALHALLA_MJOLNIR_NODE_EXPANDER_H_
 #define VALHALLA_MJOLNIR_NODE_EXPANDER_H_
 
-#include <map>
-#include <string>
-#include <vector>
-
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/sequence.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmway.h>
+
+#include <map>
 
 using namespace valhalla::midgard;
 
@@ -34,11 +33,16 @@ struct Edge {
   struct EdgeAttributes {
     uint64_t llcount : 16;
     uint64_t importance : 3;
-    uint64_t driveableforward : 1;
-    uint64_t driveablereverse : 1;
     uint64_t traffic_signal : 1;
     uint64_t forward_signal : 1;
     uint64_t backward_signal : 1;
+    uint64_t stop_sign : 1;
+    uint64_t forward_stop : 1;
+    uint64_t backward_stop : 1;
+    uint64_t yield_sign : 1;
+    uint64_t forward_yield : 1;
+    uint64_t backward_yield : 1;
+    uint64_t direction : 1;
     uint64_t link : 1;
     uint64_t reclass_link : 1;
     uint64_t has_names : 1;
@@ -47,21 +51,27 @@ struct Edge {
     uint64_t shortlink : 1;    // true if this is a link edge and is
                                //   short enough it may be internal to
                                //   an intersection
-    uint64_t driveable_ferry : 1;
-    uint64_t reclass_ferry : 1; // Has edge been reclassified due to
-                                // ferry connection
-    uint64_t turn_channel : 1;  // Link edge should be a turn channel
-    uint64_t way_begin : 1;     // True if first edge of way
-    uint64_t way_end : 1;       // True if last edge of way
-    uint64_t spare : 30;
+    uint64_t drivable_ferry : 1;
+    uint64_t reclass_ferry : 1;        // Has edge been reclassified due to
+                                       // ferry connection, will remove dest_only tag from DE
+    uint64_t turn_channel : 1;         // Link edge should be a turn channel
+    uint64_t way_begin : 1;            // True if first edge of way
+    uint64_t way_end : 1;              // True if last edge of way
+    uint64_t importance_hierarchy : 4; // will be set when edge needs to be moved in the hierarchy
+                                       // defaults to kInvalidRoadClass
+    uint64_t spare : 21;
   };
-  EdgeAttributes attributes;
+  EdgeAttributes attributes{};
 
   // index of the source (start) node of the edge
-  uint32_t sourcenode_;
+  uint32_t sourcenode_{};
 
   // index of the target (end) node of the edge
-  uint32_t targetnode_;
+  uint32_t targetnode_{};
+
+  // to record the access of an edge
+  uint16_t fwd_access{};
+  uint16_t rev_access{};
 
   /**
    * For now you cant be valid if you dont have any shape
@@ -82,25 +92,24 @@ struct Edge {
                         const uint32_t llindex,
                         const OSMWay& way,
                         const bool infer_turn_channels) {
+    // TODO(nils): include a "motorvehicle_fwd/rev" in lua/OSMWay?
+    bool drive_fwd = way.auto_forward() || way.truck_forward() || way.bus_forward() ||
+                     way.moped_forward() || way.motorcycle_forward() || way.hov_forward() ||
+                     way.taxi_forward();
+    bool drive_rev = way.auto_backward() || way.truck_backward() || way.bus_backward() ||
+                     way.moped_backward() || way.motorcycle_backward() || way.hov_backward() ||
+                     way.taxi_backward();
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
-    e.attributes.importance = static_cast<uint32_t>(way.road_class());
-    if (way.use() == baldr::Use::kEmergencyAccess) {
-      // Temporary until all access values are set
-      e.attributes.driveableforward = false;
-      e.attributes.driveablereverse = false;
-    } else {
-      e.attributes.driveableforward = way.auto_forward();
-      e.attributes.driveablereverse = way.auto_backward();
-    }
+    e.attributes.importance = static_cast<uint64_t>(way.road_class());
     e.attributes.link = way.link();
-    e.attributes.driveable_ferry =
-        (way.ferry() || way.rail()) && (way.auto_forward() || way.auto_backward());
+    e.attributes.drivable_ferry = (way.ferry() || way.rail()) && (drive_fwd || drive_rev);
     e.attributes.reclass_link = false;
     e.attributes.reclass_ferry = false;
+    e.attributes.importance_hierarchy = static_cast<uint64_t>(baldr::RoadClass::kInvalid);
     e.attributes.has_names =
-        (way.name_index_ != 0 || way.name_en_index_ != 0 || way.alt_name_index_ != 0 ||
-         way.official_name_index_ != 0 || way.ref_index_ != 0 || way.int_ref_index_ != 0);
+        (way.name_index_ != 0 || way.alt_name_index_ != 0 || way.official_name_index_ != 0 ||
+         way.ref_index_ != 0 || way.int_ref_index_ != 0);
 
     // If this data has turn_channels set and we are not inferring turn channels then we need to
     // use the flag. Otherwise the turn_channel is set in the reclassify links.  Also, an edge can't
@@ -109,6 +118,59 @@ struct Edge {
       e.attributes.turn_channel = true;
     else
       e.attributes.turn_channel = false;
+
+    // set the access masks
+    e.fwd_access = 0;
+    e.rev_access = 0;
+
+    // don't set access for emergency uses
+    if (way.use() == baldr::Use::kEmergencyAccess) {
+      return e;
+    }
+
+    if (way.auto_forward()) {
+      e.fwd_access |= baldr::kAutoAccess;
+    }
+    if (way.auto_backward()) {
+      e.rev_access |= baldr::kAutoAccess;
+    }
+    if (way.truck_forward()) {
+      e.fwd_access |= baldr::kTruckAccess;
+    }
+    if (way.truck_backward()) {
+      e.rev_access |= baldr::kTruckAccess;
+    }
+    if (way.bus_forward()) {
+      e.fwd_access |= baldr::kBusAccess;
+    }
+    if (way.bus_backward()) {
+      e.rev_access |= baldr::kBusAccess;
+    }
+    if (way.moped_forward()) {
+      e.fwd_access |= baldr::kMopedAccess;
+    }
+    if (way.moped_backward()) {
+      e.rev_access |= baldr::kMopedAccess;
+    }
+    if (way.motorcycle_forward()) {
+      e.fwd_access |= baldr::kMotorcycleAccess;
+    }
+    if (way.motorcycle_backward()) {
+      e.rev_access |= baldr::kMotorcycleAccess;
+    }
+    if (way.hov_forward()) {
+      e.fwd_access |= baldr::kHOVAccess;
+    }
+    if (way.hov_backward()) {
+      e.rev_access |= baldr::kHOVAccess;
+    }
+    if (way.taxi_forward()) {
+      e.fwd_access |= baldr::kTaxiAccess;
+    }
+    if (way.taxi_backward()) {
+      e.rev_access |= baldr::kTaxiAccess;
+    }
+
     return e;
   }
 
@@ -156,6 +218,8 @@ struct Node {
   uint32_t end_of;
   // the graphid of the node
   baldr::GraphId graph_id;
+  // grid Id within the tile (used for spatial node sorting)
+  uint32_t grid_id;
 
   bool is_start() const {
     return start_of != static_cast<uint32_t>(-1);

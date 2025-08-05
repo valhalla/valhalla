@@ -1,10 +1,10 @@
-#include "test.h"
-
+#include "mjolnir/graphtilebuilder.h"
 #include "baldr/graphid.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
+#include "test.h"
+
 #include <fstream>
 #include <streambuf>
 #include <string>
@@ -110,12 +110,12 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   // add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
-                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {"1xyz tunnel"}, 0, added);
+                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {"1xyz tunnel"}, {}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should be exactly two of these in here";
 
   // add edge info for node 1 to node 0
   test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, 555, 0, 120,
-                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {"1xyz tunnel"}, 0, added);
+                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {"1xyz tunnel"}, {}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should still be exactly two of these in here";
 
   test.StoreTileData();
@@ -124,7 +124,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
   EXPECT_EQ(ei.speed_limit(), 120);
 
-  auto n1 = ei.GetNames(false);
+  auto n1 = ei.GetNames();
   EXPECT_EQ(n1.size(), 1);
   EXPECT_EQ(n1.at(0), "einzelweg");
 
@@ -132,39 +132,70 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_EQ(n2.size(), 1);
   EXPECT_EQ(n2.at(0), "einzelweg");
 
-  auto n3 = ei.GetNames(true);
+  auto n3 = ei.GetTaggedValues();
   EXPECT_EQ(n3.size(), 1);
   EXPECT_EQ(n3.at(0), "1xyz tunnel"); // we always return the tag type in getnames
 
-  auto names_and_types = ei.GetNamesAndTypes(true);
-  EXPECT_EQ(names_and_types.size(), 2);
-
-  auto n4 = names_and_types.at(0);
-  EXPECT_EQ(n4.first, "einzelweg");
-  EXPECT_EQ(n4.second, false);
-
-  auto n5 = names_and_types.at(1);
-  EXPECT_EQ(n5.first, "xyz tunnel"); // no tag type in GetNamesAndTypes
-  EXPECT_EQ(n5.second, false);
-
-  names_and_types = ei.GetNamesAndTypes(false);
+  auto names_and_types = ei.GetNamesAndTypes(false);
   EXPECT_EQ(names_and_types.size(), 1);
 
+  auto n4 = names_and_types.at(0);
+  EXPECT_EQ(std::get<0>(n4), "einzelweg");
+  EXPECT_EQ(std::get<1>(n4), false);
+  EXPECT_EQ(std::get<2>(n4), false);
+
+  const auto& names_and_types_tagged = ei.GetTags();
+  EXPECT_EQ(names_and_types_tagged.size(), 1);
+
   n4 = names_and_types.at(0);
-  EXPECT_EQ(n4.first, "einzelweg");
-  EXPECT_EQ(n4.second, false);
+  EXPECT_EQ(std::get<0>(n4), "einzelweg");
+  EXPECT_EQ(std::get<1>(n4), false);
 
   names_and_types = ei.GetNamesAndTypes(); // defaults to false
   EXPECT_EQ(names_and_types.size(), 1);
 
   n4 = names_and_types.at(0);
-  EXPECT_EQ(n4.first, "einzelweg");
-  EXPECT_EQ(n4.second, false);
+  EXPECT_EQ(std::get<0>(n4), "einzelweg");
+  EXPECT_EQ(std::get<1>(n4), false);
 
-  auto tagged_names_and_types = ei.GetTaggedNamesAndTypes();
-  for (const auto& tagged_name_and_type : tagged_names_and_types) {
-    EXPECT_EQ(tagged_name_and_type.first, "xyz tunnel");
-    EXPECT_EQ(tagged_name_and_type.second, 1);
+  const auto& tags = ei.GetTags();
+  EXPECT_EQ(tags.size(), 1);
+  EXPECT_EQ(tags.find(TaggedValue::kTunnel)->second, "xyz tunnel");
+
+  /* Comparing similar results
+   * GetNamesAndTypes -> (name, is_tagged, type)
+   * GetNames(false) -> (name, is_tagged always false)
+   * GetNames() -> (names) when is not tagged
+   */
+  names_and_types = ei.GetNamesAndTypes(false);
+  auto names = ei.GetNames(false);
+  auto only_names = ei.GetNames();
+  /* sizes should be the same */
+  EXPECT_EQ(names_and_types.size(), 1);
+  EXPECT_EQ(names.size(), names_and_types.size());
+  EXPECT_EQ(only_names.size(), names_and_types.size());
+
+  for (size_t i = 0; i < names.size(); ++i) {
+    /* contents (name) should be the same */
+    EXPECT_EQ(std::get<0>(names_and_types[i]), names[i].first);
+    EXPECT_EQ(only_names[i], names[i].first);
+    /* contents (is_tagged) should be the same */
+    EXPECT_EQ(std::get<1>(names_and_types[i]), false);
+    EXPECT_EQ(std::get<1>(names_and_types[i]), names[i].second);
+  }
+
+  /* Comparing similar results
+   * GetNamesAndTypes -> (name, is_tagged, type)
+   * GetNames(false) -> (name, is_tagged)
+   */
+  names_and_types = ei.GetNamesAndTypes(true);
+  names = ei.GetNames(true);
+  EXPECT_EQ(names_and_types.size(), 2);
+  EXPECT_EQ(names.size(), names_and_types.size());
+
+  for (size_t i = 0; i < names.size(); ++i) {
+    EXPECT_EQ(std::get<0>(names_and_types[i]), names[i].first);
+    EXPECT_EQ(std::get<1>(names_and_types[i]), names[i].second);
   }
 }
 

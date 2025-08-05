@@ -1,19 +1,15 @@
 // -*- mode: c++ -*-
 #ifndef MMP_MAP_MATCHER_FACTORY_H_
 #define MMP_MAP_MATCHER_FACTORY_H_
-#include <cstdint>
-
-#include <string>
-
-#include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/sif/costconstants.h>
-#include <valhalla/sif/costfactory.h>
-
 #include <valhalla/meili/candidate_search.h>
 #include <valhalla/meili/config.h>
 #include <valhalla/meili/map_matcher.h>
+#include <valhalla/sif/costconstants.h>
+#include <valhalla/sif/costfactory.h>
+
+#include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
 namespace meili {
@@ -35,9 +31,9 @@ public:
 
   MapMatcher* Create(const Options& options);
 
-  MapMatcher* Create(const Costing costing) {
+  MapMatcher* Create(const Costing::Type costing_type) {
     Options options;
-    options.set_costing(costing);
+    options.set_costing_type(costing_type);
     return Create(options);
   }
 

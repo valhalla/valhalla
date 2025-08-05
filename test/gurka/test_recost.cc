@@ -7,6 +7,107 @@ using namespace valhalla;
 
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
 
+TEST(recosting, forward_vs_reverse) {
+  std::string tile_dir = "test/data/gurka_recost_forward_vs_reverse";
+
+  const std::string ascii_map = R"(
+    A---B----C
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "trunk"}}},
+  };
+  const gurka::nodes nodes = {{"B", {{"highway", "traffic_signals"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir, build_config);
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+    if (e.classification() == baldr::RoadClass::kResidential) {
+      e.set_constrained_flow_speed(40);
+    }
+    return std::nullopt;
+  });
+
+  // run a route and check that the costs are the same for the same options
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+
+  {
+    std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                            std::to_string(map.nodes["C"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["C"].lat()) + "}";
+    Api forward;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":1,"value":"2020-08-01T11:12"}})",
+                {}, &forward);
+    Api reverse;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":2,"value":"2020-08-01T11:12"}})",
+                {}, &reverse);
+    EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
+              reverse.trip().routes(0).legs(0).node_size());
+    auto rn = reverse.trip().routes(0).legs(0).node().begin();
+    for (const auto& n : forward.trip().routes(0).legs(0).node()) {
+      // if the assert is triggered - probably something is wrong with TransitionCostReverse arguments
+      // in the Unidir-A*
+      EXPECT_EQ(n.cost().transition_cost().seconds(), rn->cost().transition_cost().seconds());
+      EXPECT_EQ(n.cost().transition_cost().cost(), rn->cost().transition_cost().cost());
+      ++rn;
+    }
+  }
+}
+
+TEST(recosting, forward_vs_reverse_internal_turn) {
+  std::string tile_dir = "test/data/gurka_recost_forward_vs_reverse_internal_turn";
+
+  const std::string ascii_map = R"(
+           1
+           |
+    A------B-----C
+           |
+    2------E----F
+  )";
+  const gurka::ways ways = {
+      {"ABC", {{"highway", "tertiary"}, {"oneway", "yes"}}},
+      {"1B", {{"highway", "tertiary"}, {"oneway", "yes"}}},
+      // BE is supposed to be an internal edge
+      {"BE", {{"highway", "tertiary"}}},
+      {"FE2", {{"highway", "tertiary"}, {"oneway", "yes"}}},
+  };
+  const gurka::nodes nodes = {{"B", {{"highway", "traffic_signals"}}},
+                              {"E", {{"highway", "traffic_signals"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 4);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, tile_dir, build_config);
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  // run a route and check that the costs are the same for the same options
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  {
+    std::string locations = R"({"lon":)" + std::to_string(map.nodes["1"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["1"].lat()) + R"(},{"lon":)" +
+                            std::to_string(map.nodes["2"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["2"].lat()) + "}";
+    Api forward;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":1,"value":"2020-08-01T11:12"}})",
+                {}, &forward);
+    Api reverse;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":2,"value":"2020-08-01T11:12"}})",
+                {}, &reverse);
+    EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
+              reverse.trip().routes(0).legs(0).node_size());
+    int node_count = forward.trip().routes(0).legs(0).node_size();
+    auto forward_cost =
+        forward.trip().routes(0).legs(0).node().Get(node_count - 1).cost().elapsed_cost();
+    auto reverse_cost =
+        reverse.trip().routes(0).legs(0).node().Get(node_count - 1).cost().elapsed_cost();
+    // if assert is triggered - check if uturn on internal edges is detected correctly
+    EXPECT_NEAR(forward_cost.cost(), reverse_cost.cost(), 0.1);
+  }
+}
+
 TEST(recosting, same_historical) {
   const std::string ascii_map = R"(A--1--B-2-3-C-----G
                                          |     |     |
@@ -32,7 +133,7 @@ TEST(recosting, same_historical) {
     e.set_speed(55);
     e.set_constrained_flow_speed(10);
     // TODO: add historical 5 minutely buckets
-    return boost::none;
+    return std::nullopt;
   });
 
   // run a route and check that the costs are the same for the same options
@@ -95,7 +196,7 @@ TEST(recosting, same_historical) {
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
       EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
-      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_NEAR(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost(), 0.0001);
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
       if (n.has_edge()) {
@@ -131,9 +232,9 @@ TEST(recosting, same_historical) {
 
   // TODO: There's a difference in the way a route is costed in reverse vs forward this could be
   // a result of FormPath in timedep_reverse or it could be a result of the difference between
-  // TransitionCost and TransitionCostReverse. When that is resolved we can enable these tests
-  return;
-
+  // upd: the costs are pretty close but still different. Probably the order of float operations can
+  // cause this diff
+  const float kCostThreshold = 0.0001f;
   // set times but different types and make sure the costings are the same
   {
     std::string unambiguous = R"({"lon":)" + std::to_string(map.nodes["8"].lng()) + R"(,"lat":)" +
@@ -152,9 +253,11 @@ TEST(recosting, same_historical) {
     EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
               reverse.trip().routes(0).legs(0).node_size());
     auto rn = reverse.trip().routes(0).legs(0).node().begin();
+
     for (const auto& n : forward.trip().routes(0).legs(0).node()) {
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), rn->cost().elapsed_cost().seconds());
-      EXPECT_EQ(n.cost().elapsed_cost().cost(), rn->cost().elapsed_cost().cost());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), rn->cost().elapsed_cost().seconds(),
+                  kCostThreshold);
+      EXPECT_NEAR(n.cost().elapsed_cost().cost(), rn->cost().elapsed_cost().cost(), kCostThreshold);
       EXPECT_EQ(n.cost().transition_cost().seconds(), rn->cost().transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), rn->cost().transition_cost().cost());
       if (n.has_edge()) {
@@ -175,8 +278,9 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
-      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(),
+                  kCostThreshold);
+      EXPECT_NEAR(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost(), 0.0001);
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
       if (n.has_edge()) {
@@ -240,7 +344,7 @@ TEST(recosting, all_algorithms) {
         double length = 0;
         uint32_t pred = baldr::kInvalidLabel;
         sif::LabelCallback label_cb = [&elapsed_itr, &length, &pred,
-                                       reverse](const sif::EdgeLabel& label) -> void {
+                                       reverse](const sif::PathEdgeLabel& label) -> void {
           length += elapsed_itr->edge().length_km() * 1000.0;
           EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
           EXPECT_EQ(pred++, label.predecessor());
@@ -262,14 +366,14 @@ TEST(recosting, all_algorithms) {
 
         // find the percentage of the edges used
         float src_pct = 0;
-        for (const auto& edge : api.options().locations(0).path_edges()) {
+        for (const auto& edge : api.options().locations(0).correlation().edges()) {
           if (leg.node(0).edge().id() == edge.graph_id()) {
             src_pct = edge.percent_along();
             break;
           }
         }
         float tgt_pct = 1;
-        for (const auto& edge : api.options().locations(1).path_edges()) {
+        for (const auto& edge : api.options().locations(1).correlation().edges()) {
           if (std::next(leg.node().rbegin())->edge().id() == edge.graph_id()) {
             tgt_pct = edge.percent_along();
             break;
@@ -329,7 +433,9 @@ TEST(recosting, throwing) {
 
   // setup a callback for the recosting to tell us about the new label each made
   bool called = false;
-  sif::LabelCallback label_cb = [&called](const sif::EdgeLabel& label) -> void { called = true; };
+  sif::LabelCallback label_cb = [&called](const sif::PathEdgeLabel& /*label*/) -> void {
+    called = true;
+  };
 
   // build up the costing object
   auto costing = sif::CostFactory().Create(Costing::auto_);
@@ -338,12 +444,13 @@ TEST(recosting, throwing) {
   EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb, -90, 476), std::logic_error);
 
   // this edge id is valid but doesnt exist
-  EXPECT_THROW(sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{123456789}; },
-                                   label_cb),
+  EXPECT_THROW(sif::recost_forward(
+                   *reader, *costing, []() { return baldr::GraphId{123456789}; }, label_cb),
                std::runtime_error);
 
   // this edge id is not valid
-  sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
+  sif::recost_forward(
+      *reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
   EXPECT_EQ(called, false);
 
   // this path isnt possible with a car because the second edge doesnt have auto access
@@ -389,6 +496,18 @@ TEST(recosting, error_request) {
     actor.route(R"({"costing":"auto","locations":[],"recostings":[{"name":"foo"}]})");
     FAIL() << "No costing should have thrown";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
+
+  try {
+    actor.route(
+        R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto"},{"costing":"auto"}]})");
+    FAIL() << "Duplicate names should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 128); }
+
+  try {
+    actor.route(
+        R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto","name": "same"},{"costing":"auto","name": "same"}]})");
+    FAIL() << "Duplicate names should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 128); }
 }
 
 TEST(recosting, api) {
@@ -415,10 +534,11 @@ TEST(recosting, api) {
                           std::to_string(map.nodes["7"].lng()) + R"(,"lat":)" +
                           std::to_string(map.nodes["7"].lat()) + "}";
 
-  // lets also do a bunch of costings
+  // lets also do a bunch of costings, note that one recosting omits the optional "name" parameter
+  // in which case it'll take the costing name as "name" field
   Api api;
   auto json = actor.route(R"({"costing":"auto","locations":[)" + locations + R"(],"recostings":[
-      {"costing":"auto","name":"same"},
+      {"costing":"auto"},
       {"costing":"auto","name":"avoid_highways","use_highways":0.1},
       {"costing":"bicycle","name":"slower"},
       {"costing":"pedestrian","name":"slower_still"},
@@ -463,7 +583,7 @@ TEST(recosting, api) {
     const auto& trip = d["trip"].GetObject();
     const auto& trip_summary = trip["summary"].GetObject();
     EXPECT_TRUE(trip_summary["time"].IsNumber());
-    EXPECT_TRUE(trip_summary["time_same"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_auto"].IsNumber());
     EXPECT_TRUE(trip_summary["time_avoid_highways"].IsNumber());
     EXPECT_TRUE(trip_summary["time_slower"].IsNumber());
     EXPECT_TRUE(trip_summary["time_slower_still"].IsNumber());
@@ -471,14 +591,14 @@ TEST(recosting, api) {
     for (const auto& leg : trip["legs"].GetArray()) {
       const auto& leg_summary = leg["summary"].GetObject();
       EXPECT_TRUE(leg_summary["time"].IsNumber());
-      EXPECT_TRUE(leg_summary["time_same"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_auto"].IsNumber());
       EXPECT_TRUE(leg_summary["time_avoid_highways"].IsNumber());
       EXPECT_TRUE(leg_summary["time_slower"].IsNumber());
       EXPECT_TRUE(leg_summary["time_slower_still"].IsNumber());
       EXPECT_TRUE(leg_summary["time_slowest"].IsNumber());
       for (const auto& man : leg["maneuvers"].GetArray()) {
         EXPECT_TRUE(man["time"].IsNumber());
-        EXPECT_TRUE(man["time_same"].IsNumber());
+        EXPECT_TRUE(man["time_auto"].IsNumber());
         EXPECT_TRUE(man["time_avoid_highways"].IsNumber());
         EXPECT_TRUE(man["time_slower"].IsNumber());
         EXPECT_TRUE(man["time_slower_still"].IsNumber());

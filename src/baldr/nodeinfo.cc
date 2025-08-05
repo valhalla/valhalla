@@ -1,49 +1,38 @@
 #include "baldr/nodeinfo.h"
+#include "baldr/datetime.h"
+#include "baldr/graphtile.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
-#include <cmath>
-
-#include <baldr/datetime.h>
-#include <baldr/graphtile.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace {
 
-json::MapPtr access_json(uint16_t access) {
-  return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
-                    {"bus", static_cast<bool>(access & kBusAccess)},
-                    {"car", static_cast<bool>(access & kAutoAccess)},
-                    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
-                    {"HOV", static_cast<bool>(access & kHOVAccess)},
-                    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
-                    {"taxi", static_cast<bool>(access & kTaxiAccess)},
-                    {"truck", static_cast<bool>(access & kTruckAccess)},
-                    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)}});
+void access_json(uint16_t access, rapidjson::writer_wrapper_t& writer) {
+  writer("bicycle", static_cast<bool>(access & kBicycleAccess));
+  writer("bus", static_cast<bool>(access & kBusAccess));
+  writer("car", static_cast<bool>(access & kAutoAccess));
+  writer("emergency", static_cast<bool>(access & kEmergencyAccess));
+  writer("HOV", static_cast<bool>(access & kHOVAccess));
+  writer("pedestrian", static_cast<bool>(access & kPedestrianAccess));
+  writer("taxi", static_cast<bool>(access & kTaxiAccess));
+  writer("truck", static_cast<bool>(access & kTruckAccess));
+  writer("wheelchair", static_cast<bool>(access & kWheelchairAccess));
 }
 
-json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
+void admin_json(const AdminInfo& admin, uint16_t tz_index, rapidjson::writer_wrapper_t& writer) {
   // admin
-  auto m = json::map({
-      {"iso_3166-1", admin.country_iso()},
-      {"country", admin.country_text()},
-      {"iso_3166-2", admin.state_iso()},
-      {"state", admin.state_text()},
-  });
+  writer("iso_3166-1", admin.country_iso());
+  writer("country", admin.country_text());
+  writer("iso_3166-2", admin.state_iso());
+  writer("state", admin.state_text());
 
   // timezone
   auto tz = DateTime::get_tz_db().from_index(tz_index);
   if (tz) {
-    // TODO: so much to do but posix tz has pretty much all the info
-    // TODO: need to include ptz.h from HowardHinnant
-    // m->emplace("time_zone_posix", tz->to_posix_string());
-    m->emplace("time_zone_name", tz->name());
-    // TODO: need to include ptz.h from HowardHinnant
-    // if (tz->has_dst())
-    //  m->emplace("daylight_savings_time_zone_name", tz->dst_zone_name());
+    writer("time_zone_name", tz->name());
   }
-
-  return m;
 }
 
 /**
@@ -77,7 +66,8 @@ NodeInfo::NodeInfo(const PointLL& tile_corner,
                    const NodeType type,
                    const bool traffic_signal,
                    const bool tagged_access,
-                   const bool private_access) {
+                   const bool private_access,
+                   const bool cash_only_toll) {
   memset(this, 0, sizeof(NodeInfo));
   set_latlng(tile_corner, ll);
   set_access(access);
@@ -85,6 +75,7 @@ NodeInfo::NodeInfo(const PointLL& tile_corner,
   set_traffic_signal(traffic_signal);
   set_tagged_access(tagged_access);
   set_private_access(private_access);
+  set_cash_only_toll(cash_only_toll);
 }
 
 // Sets the latitude and longitude.
@@ -152,14 +143,15 @@ void NodeInfo::set_admin_index(const uint16_t admin_index) {
 }
 
 // Set the timezone index.
-void NodeInfo::set_timezone(const uint32_t timezone) {
-  if (timezone > kMaxTimeZonesPerTile) {
-    // Log an error and set count to max.
-    LOG_ERROR("NodeInfo: timezone index exceeds max: " + std::to_string(timezone));
-    timezone_ = kMaxTimeZonesPerTile;
-  } else {
-    timezone_ = timezone;
-  }
+void NodeInfo::set_timezone(const uint32_t tz_idx) {
+  if (tz_idx > kMaxTimeZoneIdExt1)
+    throw std::runtime_error("NodeInfo: timezone index exceeds max: " + std::to_string(tz_idx));
+  timezone_ = tz_idx & ((1 << 9) - 1); // first 9 bits for backwards compat
+  timezone_ext_1_ =
+      (tz_idx & (1 << 9)) >> 9; // 10th bit for new timezones carved out of old ones in 2023
+  // uncomment if a new timezone ever gets created from a previously new
+  // timezone (reference release is 2023c)
+  // timezone_ext_2_ = (tz_idx & (1 << 10)) >> 10;
 }
 
 // Set the driveability of the local directed edge given a local
@@ -187,7 +179,7 @@ void NodeInfo::set_type(const NodeType type) {
   type_ = static_cast<uint32_t>(type);
 }
 
-// Set the number of driveable edges on the local level. Subtract 1 so
+// Set the number of drivable edges on the local level. Subtract 1 so
 // a value up to kMaxLocalEdgeIndex+1 can be stored.
 void NodeInfo::set_local_edge_count(const uint32_t n) {
   if (n > kMaxLocalEdgeIndex + 1) {
@@ -204,6 +196,16 @@ void NodeInfo::set_local_edge_count(const uint32_t n) {
 // for outbound edges from this node.
 void NodeInfo::set_drive_on_right(const bool rsd) {
   drive_on_right_ = rsd;
+}
+
+// Set the elevation at this node.
+void NodeInfo::set_elevation(const float elevation) {
+  if (elevation < kNodeMinElevation) {
+    elevation_ = 0;
+  } else {
+    uint32_t elev = static_cast<uint32_t>((elevation - kNodeMinElevation) / kNodeElevationPrecision);
+    elevation_ = (elev > kNodeMaxStoredElevation) ? kNodeMaxStoredElevation : elev;
+  }
 }
 
 // Sets the flag indicating if access was originally tagged.
@@ -247,32 +249,53 @@ void NodeInfo::set_heading(uint32_t localidx, uint32_t heading) {
 
 // Set the connecting way id for a transit stop.
 void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
+  if (wayid >> 63)
+    throw std::logic_error("Way ids larger than 63 bits are not allowed for transit connections");
   headings_ = wayid;
 }
 
-json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
-  auto m = json::map({
-      {"lon", json::fixed_t{latlng(tile->header()->base_ll()).first, 6}},
-      {"lat", json::fixed_t{latlng(tile->header()->base_ll()).second, 6}},
-      {"edge_count", static_cast<uint64_t>(edge_count_)},
-      {"access", access_json(access_)},
-      {"tagged_access", static_cast<bool>(tagged_access_)},
-      {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
-      {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
-      {"density", static_cast<uint64_t>(density_)},
-      {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
-      {"drive_on_right", static_cast<bool>(drive_on_right_)},
-      {"mode_change", static_cast<bool>(mode_change_)},
-      {"private_access", static_cast<bool>(private_access_)},
-      {"traffic_signal", static_cast<bool>(traffic_signal_)},
-      {"type", to_string(static_cast<NodeType>(type_))},
-      {"transition count", static_cast<uint64_t>(transition_count_)},
-      {"named_intersection", static_cast<bool>(named_)},
-  });
+void NodeInfo::set_connecting_point(const midgard::PointLL& p) {
+  if (!p.InRange())
+    throw std::logic_error("Invalid coordinates are not allowed for transit connections");
+  headings_ = static_cast<uint64_t>(p) | (1ull << 63);
+}
+
+void NodeInfo::json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const {
+  auto ll = latlng(tile->header()->base_ll());
+
+  writer.set_precision(6);
+  writer("lon", ll.first);
+  writer("lat", ll.second);
+  writer.set_precision(2);
+  writer("elevation", elevation());
+  writer.set_precision(3);
+
+  writer("edge_count", static_cast<uint64_t>(edge_count_));
+
+  writer.start_object("access");
+  access_json(access_, writer);
+  writer.end_object();
+
+  writer("tagged_access", static_cast<bool>(tagged_access_));
+  writer("intersection_type", to_string(static_cast<IntersectionType>(intersection_)));
+
+  writer.start_object("administrative");
+  admin_json(tile->admininfo(admin_index_), timezone_, writer);
+  writer.end_object();
+
+  writer("density", static_cast<uint64_t>(density_));
+  writer("local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1));
+  writer("drive_on_right", static_cast<bool>(drive_on_right_));
+  writer("mode_change", static_cast<bool>(mode_change_));
+  writer("private_access", static_cast<bool>(private_access_));
+  writer("traffic_signal", static_cast<bool>(traffic_signal_));
+  writer("type", to_string(static_cast<NodeType>(type_)));
+  writer("transition_count", static_cast<uint64_t>(transition_count_));
+  writer("named_intersection", static_cast<bool>(named_));
+
   if (is_transit()) {
-    m->emplace("stop_index", static_cast<uint64_t>(stop_index()));
+    writer("stop_index", static_cast<uint64_t>(stop_index()));
   }
-  return m;
 }
 
 } // namespace baldr

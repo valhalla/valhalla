@@ -4,6 +4,7 @@ import multiprocessing
 import requests
 import json
 import os
+from pathlib import Path
 import shutil
 import datetime
 import time
@@ -21,7 +22,7 @@ def get_post_bodies(filename):
       yield post_body
 
 def initialize(args_,response_count_):
-  # for persistant connections
+  # for persistent connections
   global session
   session = requests.Session()
   # so each process knows the options provided
@@ -120,3 +121,17 @@ if __name__ == "__main__":
         progress = int(next_progress / increment)
     if progress != 100 / increment:
       print('100%')
+
+  # print total duration
+  if parsed_args.format == "json":
+    output_dir_path = Path(parsed_args.output_dir)
+    duration = 0
+    for out_f in output_dir_path.iterdir():
+      if out_f.is_file() and out_f.suffix == ".json":
+        with open(out_f) as f:
+          try:
+              duration += json.load(f)["performance"]["response_time"]
+          except json.decoder.JSONDecodeError:
+              continue
+
+    print(f"Requests took {duration} seconds")

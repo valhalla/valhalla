@@ -1,4 +1,5 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -12,7 +13,6 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
 
     // A--B-C-SIGNBOARD-D-E--F
     const std::string ascii_map = R"(

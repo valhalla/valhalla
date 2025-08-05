@@ -3,9 +3,7 @@
 
 #include <valhalla/baldr/verbal_text_formatter_us.h>
 
-#include <array>
 #include <string>
-#include <utility>
 
 namespace valhalla {
 namespace baldr {
@@ -32,6 +30,7 @@ public:
    * Returns a Texas, US text-to-speech formatted string based on the specified text.
    *
    * @param  text  the source string to transform.
+   *
    * @return a Texas, US text-to-speech formatted string based on the specified text.
    */
   std::string Format(const std::string& text) const override;

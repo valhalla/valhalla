@@ -1,5 +1,4 @@
 #include "midgard/encoded.h"
-
 #include "test.h"
 
 #include <string>
@@ -17,18 +16,6 @@ void assert_approx_equal(const container_t& a, const container_t& b, const float
     ASSERT_NEAR(a[i].first, b[i].first, epsilon) << "i: " + std::to_string(i);
     ASSERT_NEAR(a[i].second, b[i].second, epsilon) << "i: " + std::to_string(i);
   }
-}
-
-// need ostream operators for some of these types
-std::string to_string(const container_t& points) {
-  std::string out = "{";
-  for (const auto& p : points) {
-    out += "{" + std::to_string(p.first) + ", " + std::to_string(p.second) + "}";
-  }
-  out += "}";
-  if (out.length() > 2)
-    out.erase(out.end() - 3, out.end() - 1);
-  return out;
 }
 
 void do_polyline_pair(const container_t& points, const std::string& encoded) {

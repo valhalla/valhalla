@@ -3,7 +3,18 @@
 
 using namespace valhalla;
 
+const std::string empty_str;
+
 namespace valhalla {
+const std::string& MatrixAlgoToString(const valhalla::Matrix::Algorithm algo) {
+  static const std::unordered_map<valhalla::Matrix::Algorithm, const std::string> algos{
+      {valhalla::Matrix::CostMatrix, "costmatrix"},
+      {valhalla::Matrix::TimeDistanceMatrix, "timedistancematrix"},
+      {valhalla::Matrix::TimeDistanceBSSMatrix, "timedistancebssmatrix"},
+  };
+  auto i = algos.find(algo);
+  return i == algos.cend() ? empty_str : i->second;
+};
 
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type) {
   switch (incident_type) {
@@ -85,7 +96,6 @@ const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impa
 }
 
 const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_GuidanceView_Type type) {
-  static const std::string empty;
   static const std::unordered_map<int, std::string>
       types{{DirectionsLeg_GuidanceView_Type_kJunction, "jct"},
             {DirectionsLeg_GuidanceView_Type_kSapa, "sapa"},
@@ -97,7 +107,7 @@ const std::string& GuidanceViewTypeToString(const valhalla::DirectionsLeg_Guidan
             {DirectionsLeg_GuidanceView_Type_kDirectionboard, "directionboard"},
             {DirectionsLeg_GuidanceView_Type_kSignboard, "signboard"}};
   auto i = types.find(type);
-  return i == types.cend() ? empty : i->second;
+  return i == types.cend() ? empty_str : i->second;
 }
 
 bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
@@ -122,8 +132,19 @@ bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
   return true;
 }
 
+bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Action* a) {
+  static const std::unordered_map<std::string, Options::Action>
+      actions{{"route", Options::route},
+              {"isochrone", Options::isochrone},
+              {"sources_to_targets", Options::sources_to_targets}};
+  auto i = actions.find(action);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
+  return true;
+}
+
 const std::string& Options_Action_Enum_Name(const Options::Action action) {
-  static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
       {Options::route, "route"},
       {Options::locate, "locate"},
@@ -139,7 +160,7 @@ const std::string& Options_Action_Enum_Name(const Options::Action action) {
       {Options::status, "status"},
   };
   auto i = actions.find(action);
-  return i == actions.cend() ? empty : i->second;
+  return i == actions.cend() ? empty_str : i->second;
 }
 
 bool Location_Type_Enum_Parse(const std::string& type, Location::Type* t) {
@@ -156,7 +177,6 @@ bool Location_Type_Enum_Parse(const std::string& type, Location::Type* t) {
   return true;
 }
 const std::string& Location_Type_Enum_Name(const Location::Type type) {
-  static const std::string empty;
   static const std::unordered_map<int, std::string> types{
       {Location::kBreak, "break"},
       {Location::kThrough, "through"},
@@ -164,27 +184,25 @@ const std::string& Location_Type_Enum_Name(const Location::Type type) {
       {Location::kVia, "via"},
   };
   auto i = types.find(type);
-  return i == types.cend() ? empty : i->second;
+  return i == types.cend() ? empty_str : i->second;
 }
 
 const std::string& Location_SideOfStreet_Enum_Name(const Location::SideOfStreet side) {
-  static const std::string empty;
   static const std::unordered_map<int, std::string> sides{
       {Location::kLeft, "left"},
       {Location::kRight, "right"},
       {Location::kNone, "none"},
   };
   auto i = sides.find(side);
-  return i == sides.cend() ? empty : i->second;
+  return i == sides.cend() ? empty_str : i->second;
 }
 
-bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
-  static const std::unordered_map<std::string, Costing> costings{
+bool Costing_Enum_Parse(const std::string& costing, Costing::Type* c) {
+  static const std::unordered_map<std::string, Costing::Type> costings{
       {"auto", Costing::auto_},
       // auto_shorter is deprecated
       {"bicycle", Costing::bicycle},
       {"bus", Costing::bus},
-      {"hov", Costing::hov},
       {"taxi", Costing::taxi},
       {"motor_scooter", Costing::motor_scooter},
       {"multimodal", Costing::multimodal},
@@ -204,14 +222,12 @@ bool Costing_Enum_Parse(const std::string& costing, Costing* c) {
   return true;
 }
 
-const std::string& Costing_Enum_Name(const Costing costing) {
-  static const std::string empty;
+const std::string& Costing_Enum_Name(const Costing::Type costing) {
   static const std::unordered_map<int, std::string> costings{
       {Costing::auto_, "auto"},
       // auto_shorter is deprecated
       {Costing::bicycle, "bicycle"},
       {Costing::bus, "bus"},
-      {Costing::hov, "hov"},
       {Costing::taxi, "taxi"},
       {Costing::motor_scooter, "motor_scooter"},
       {Costing::multimodal, "multimodal"},
@@ -224,7 +240,7 @@ const std::string& Costing_Enum_Name(const Costing costing) {
       {Costing::bikeshare, "bikeshare"},
   };
   auto i = costings.find(costing);
-  return i == costings.cend() ? empty : i->second;
+  return i == costings.cend() ? empty_str : i->second;
 }
 
 bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s) {
@@ -241,21 +257,19 @@ bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s) {
 }
 
 const std::string& ShapeMatch_Enum_Name(const ShapeMatch match) {
-  static const std::string empty;
   static const std::unordered_map<int, std::string> matches{
       {ShapeMatch::edge_walk, "edge_walk"},
       {ShapeMatch::map_snap, "map_snap"},
       {ShapeMatch::walk_or_snap, "walk_or_snap"},
   };
   auto i = matches.find(match);
-  return i == matches.cend() ? empty : i->second;
+  return i == matches.cend() ? empty_str : i->second;
 }
 
 bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f) {
   static const std::unordered_map<std::string, Options::Format> formats{
-      {"json", Options::json},
-      {"gpx", Options::gpx},
-      {"osrm", Options::osrm},
+      {"json", Options::json}, {"gpx", Options::gpx},         {"osrm", Options::osrm},
+      {"pbf", Options::pbf},   {"geotiff", Options::geotiff},
   };
   auto i = formats.find(format);
   if (i == formats.cend())
@@ -265,24 +279,21 @@ bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f) {
 }
 
 const std::string& Options_Format_Enum_Name(const Options::Format match) {
-  static const std::string empty;
   static const std::unordered_map<int, std::string> formats{
-      {Options::json, "json"},
-      {Options::gpx, "gpx"},
-      {Options::osrm, "osrm"},
+      {Options::json, "json"}, {Options::gpx, "gpx"},         {Options::osrm, "osrm"},
+      {Options::pbf, "pbf"},   {Options::geotiff, "geotiff"},
   };
   auto i = formats.find(match);
-  return i == formats.cend() ? empty : i->second;
+  return i == formats.cend() ? empty_str : i->second;
 }
 
 const std::string& Options_Units_Enum_Name(const Options::Units unit) {
-  static const std::string empty;
   static const std::unordered_map<int, std::string> units{
       {Options::kilometers, "kilometers"},
       {Options::miles, "miles"},
   };
   auto i = units.find(unit);
-  return i == units.cend() ? empty : i->second;
+  return i == units.cend() ? empty_str : i->second;
 }
 
 bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a) {
@@ -298,13 +309,12 @@ bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a) {
 }
 
 const std::string& FilterAction_Enum_Name(const FilterAction action) {
-  static const std::string empty;
   static const std::unordered_map<int, std::string> actions{
       {FilterAction::exclude, "exclude"},
       {FilterAction::include, "include"},
   };
   auto i = actions.find(action);
-  return i == actions.cend() ? empty : i->second;
+  return i == actions.cend() ? empty_str : i->second;
 }
 
 bool DirectionsType_Enum_Parse(const std::string& dtype, DirectionsType* t) {
@@ -351,66 +361,90 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
   return true;
 }
 
+bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
+                                            Options::ExpansionProperties* a) {
+  static const std::unordered_map<std::string, Options::ExpansionProperties>
+      actions{{"cost", Options_ExpansionProperties_cost},
+              {"duration", Options_ExpansionProperties_duration},
+              {"distance", Options_ExpansionProperties_distance},
+              {"edge_status", Options_ExpansionProperties_edge_status},
+              {"edge_id", Options::ExpansionProperties::Options_ExpansionProperties_edge_id},
+              {"pred_edge_id", Options_ExpansionProperties_pred_edge_id},
+              {"expansion_type", Options_ExpansionProperties_expansion_type}};
+  auto i = actions.find(prop);
+  if (i == actions.cend())
+    return false;
+  *a = i->second;
+  return true;
+}
+
 const std::unordered_map<int, std::string> vehicle_to_string{
-    {static_cast<int>(DirectionsLeg_VehicleType_kCar), "car"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kMotorcycle), "motorcycle"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kAutoBus), "bus"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kTractorTrailer), "tractor_trailer"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kMotorScooter), "motor_scooter"},
+    {static_cast<int>(VehicleType::kCar), "car"},
+    {static_cast<int>(VehicleType::kMotorcycle), "motorcycle"},
+    {static_cast<int>(VehicleType::kAutoBus), "bus"},
+    {static_cast<int>(VehicleType::kTruck), "truck"},
+    {static_cast<int>(VehicleType::kMotorScooter), "motor_scooter"},
 };
 
 const std::unordered_map<int, std::string> pedestrian_to_string{
-    {static_cast<int>(DirectionsLeg_PedestrianType_kFoot), "foot"},
-    {static_cast<int>(DirectionsLeg_PedestrianType_kWheelchair), "wheelchair"},
-    {static_cast<int>(DirectionsLeg_PedestrianType_kSegway), "segway"},
+    {static_cast<int>(PedestrianType::kFoot), "foot"},
+    {static_cast<int>(PedestrianType::kWheelchair), "wheelchair"},
 };
 
 const std::unordered_map<int, std::string> bicycle_to_string{
-    {static_cast<int>(DirectionsLeg_BicycleType_kRoad), "road"},
-    {static_cast<int>(DirectionsLeg_BicycleType_kCross), "cross"},
-    {static_cast<int>(DirectionsLeg_BicycleType_kHybrid), "hybrid"},
-    {static_cast<int>(DirectionsLeg_BicycleType_kMountain), "mountain"},
+    {static_cast<int>(BicycleType::kRoad), "road"},
+    {static_cast<int>(BicycleType::kCross), "cross"},
+    {static_cast<int>(BicycleType::kHybrid), "hybrid"},
+    {static_cast<int>(BicycleType::kMountain), "mountain"},
 };
 
 const std::unordered_map<int, std::string> transit_to_string{
-    {static_cast<int>(DirectionsLeg_TransitType_kTram), "tram"},
-    {static_cast<int>(DirectionsLeg_TransitType_kMetro), "metro"},
-    {static_cast<int>(DirectionsLeg_TransitType_kRail), "rail"},
-    {static_cast<int>(DirectionsLeg_TransitType_kBus), "bus"},
-    {static_cast<int>(DirectionsLeg_TransitType_kFerry), "ferry"},
-    {static_cast<int>(DirectionsLeg_TransitType_kCableCar), "cable_car"},
-    {static_cast<int>(DirectionsLeg_TransitType_kGondola), "gondola"},
-    {static_cast<int>(DirectionsLeg_TransitType_kFunicular), "funicular"},
+    {static_cast<int>(TransitType::kTram), "tram"},
+    {static_cast<int>(TransitType::kMetro), "metro"},
+    {static_cast<int>(TransitType::kRail), "rail"},
+    {static_cast<int>(TransitType::kBus), "bus"},
+    {static_cast<int>(TransitType::kFerry), "ferry"},
+    {static_cast<int>(TransitType::kCableCar), "cable_car"},
+    {static_cast<int>(TransitType::kGondola), "gondola"},
+    {static_cast<int>(TransitType::kFunicular), "funicular"},
 };
 
 std::pair<std::string, std::string>
 travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
   switch (maneuver.travel_mode()) {
-    case DirectionsLeg_TravelMode_kDrive: {
-      auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type())
-                                           : vehicle_to_string.cend();
-      return i == vehicle_to_string.cend() ? std::make_pair("drive", "car")
-                                           : std::make_pair("drive", i->second);
+    case TravelMode::kDrive: {
+      auto i = vehicle_to_string.find(maneuver.vehicle_type());
+      return vehicle_to_string.find(maneuver.vehicle_type()) == vehicle_to_string.cend()
+                 ? std::make_pair("drive", "car")
+                 : std::make_pair("drive", i->second);
     }
-    case DirectionsLeg_TravelMode_kPedestrian: {
-      auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type())
-                                              : pedestrian_to_string.cend();
+    case TravelMode::kPedestrian: {
+      auto i = pedestrian_to_string.find(maneuver.pedestrian_type());
       return i == pedestrian_to_string.cend() ? std::make_pair("pedestrian", "foot")
                                               : std::make_pair("pedestrian", i->second);
     }
-    case DirectionsLeg_TravelMode_kBicycle: {
-      auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type())
-                                           : bicycle_to_string.cend();
+    case TravelMode::kBicycle: {
+      auto i = bicycle_to_string.find(maneuver.bicycle_type());
       return i == bicycle_to_string.cend() ? std::make_pair("bicycle", "road")
                                            : std::make_pair("bicycle", i->second);
     }
-    case DirectionsLeg_TravelMode_kTransit: {
-      auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type())
-                                           : transit_to_string.cend();
+    case TravelMode::kTransit: {
+      auto i = transit_to_string.find(maneuver.transit_type());
       return i == transit_to_string.cend() ? std::make_pair("transit", "rail")
                                            : std::make_pair("transit", i->second);
     }
+    default:
+      throw std::logic_error("Unknown travel mode");
   }
-  throw std::runtime_error("Unhandled case");
+}
+
+const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus status) {
+  static const std::unordered_map<int, std::string> statuses{
+      {Expansion_EdgeStatus_reached, "r"},
+      {Expansion_EdgeStatus_settled, "s"},
+      {Expansion_EdgeStatus_connected, "c"},
+  };
+  auto i = statuses.find(status);
+  return i == statuses.cend() ? empty_str : i->second;
 }
 } // namespace valhalla

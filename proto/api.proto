@@ -1,15 +1,30 @@
-syntax = "proto2";
+syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
-import public "options.proto"; // the request, filled out by loki
-import public "trip.proto"; // the paths, filled out by thor
+
+import public "options.proto";    // the request, filled out by loki
+import public "trip.proto";       // the paths, filled out by thor
 import public "directions.proto"; // the directions, filled out by odin
-import public "info.proto"; // statistics about the request, filled out by loki/thor/odin
+import public "info.proto";       // statistics about the request, filled out by loki/thor/odin
+import public "status.proto";     // info for status endpoint
+import public "matrix.proto";     // the matrix results
+import public "isochrone.proto";  // the isochrone results
+import public "expansion.proto";  // the expansion results
 
 message Api {
-  optional Options options = 1;
-  optional Trip trip = 2;
-  optional Directions directions = 3;
-  optional Info info = 4;
-  //TODO: other outputs locate, isochrone, matrix, height
+  // this is the request to the api
+  Options options = 1;
+
+  // these are different responses based on the type of request you make
+  Trip trip = 2;              // trace_attributes
+  Directions directions = 3;  // route, optimized_route, trace_route, centroid
+  Status status = 4;          // status
+  Matrix matrix = 5;          // sources_to_targets
+  Isochrone isochrone = 6;    // isochrone
+  Expansion expansion = 7;    // expansion
+  //TODO: locate;
+  //TODO: height;
+
+  // here we store a bit of info about what happened during request processing (stats/errors/warnings)
+  Info info = 20;
 }

@@ -1,13 +1,15 @@
 #ifndef VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H
 #define VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMWAY_H
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/mjolnir/osmlinguistic.h>
+#include <valhalla/mjolnir/uniquenames.h>
+
 #include <cstdint>
 #include <cstring>
+#include <map>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -122,6 +124,34 @@ struct OSMWay {
   }
 
   /**
+   * Sets the forward truck speed
+   * @param  truck_speed_forward Forward truck speed in KPH.
+   */
+  void set_truck_speed_forward(const float truck_speed_forward);
+
+  /**
+   * Gets the forward truck speed in KPH.
+   * @return  Returns forward truck speed.
+   */
+  uint8_t truck_speed_forward() const {
+    return truck_speed_forward_;
+  }
+
+  /**
+   * Sets the backward truck speed
+   * @param  truck_speed_backward Backward truck speed in KPH.
+   */
+  void set_truck_speed_backward(const float truck_speed_backward);
+
+  /**
+   * Gets the backward truck speed in KPH.
+   * @return  Returns backward truck speed.
+   */
+  uint8_t truck_speed_backward() const {
+    return truck_speed_backward_;
+  }
+
+  /**
    * Sets the index for the ref
    * @param  idx  Index for the reference.
    */
@@ -135,6 +165,86 @@ struct OSMWay {
    */
   uint32_t ref_index() const {
     return ref_index_;
+  }
+
+  /**
+   * Sets the index for ref:<lang>
+   * @param  idx  Index for the languages.
+   */
+  void set_ref_lang_index(const uint32_t idx) {
+    ref_lang_index_ = idx;
+  }
+
+  /**
+   * Get the ref:<lang> index.
+   * @return  Returns the index for the languages.
+   */
+  uint32_t ref_lang_index() const {
+    return ref_lang_index_;
+  }
+
+  /**
+   * Sets the index for left ref
+   * @param  idx  Index for the left ref.
+   */
+  void set_ref_left_index(const uint32_t idx) {
+    ref_left_index_ = idx;
+  }
+
+  /**
+   * Get the left ref index.
+   * @return  Returns the index for the left ref.
+   */
+  uint32_t ref_left_index() const {
+    return ref_left_index_;
+  }
+
+  /**
+   * Sets the index for ref:left:<lang>
+   * @param  idx  Index for the left languages.
+   */
+  void set_ref_left_lang_index(const uint32_t idx) {
+    ref_left_lang_index_ = idx;
+  }
+
+  /**
+   * Get the ref:left:<lang> index.
+   * @return  Returns the index for the left languages.
+   */
+  uint32_t ref_left_lang_index() const {
+    return ref_left_lang_index_;
+  }
+
+  /**
+   * Sets the index for right ref
+   * @param  idx  Index for the right ref.
+   */
+  void set_ref_right_index(const uint32_t idx) {
+    ref_right_index_ = idx;
+  }
+
+  /**
+   * Get the right ref index.
+   * @return  Returns the index for the right ref.
+   */
+  uint32_t ref_right_index() const {
+    return ref_right_index_;
+  }
+
+  /**
+   * Sets the index for ref:right:<lang>
+   * @param  idx  Index for the right languages.
+   */
+  void set_ref_right_lang_index(const uint32_t idx) {
+    ref_right_lang_index_ = idx;
+  }
+
+  /**
+   * Get the ref:right:<lang> index.
+   * @return  Returns the index for the right languages.
+   */
+  uint32_t ref_right_lang_index() const {
+    return ref_right_lang_index_;
   }
 
   /**
@@ -154,6 +264,86 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for int_ref:<lang>
+   * @param  idx  Index for the languages.
+   */
+  void set_int_ref_lang_index(const uint32_t idx) {
+    int_ref_lang_index_ = idx;
+  }
+
+  /**
+   * Get the int_ref:<lang> index.
+   * @return  Returns the index for the languages.
+   */
+  uint32_t int_ref_lang_index() const {
+    return int_ref_lang_index_;
+  }
+
+  /**
+   * Sets the index for left int_ref
+   * @param  idx  Index for the left int_ref.
+   */
+  void set_int_ref_left_index(const uint32_t idx) {
+    int_ref_left_index_ = idx;
+  }
+
+  /**
+   * Get the left int_ref index.
+   * @return  Returns the index for the left int_ref.
+   */
+  uint32_t int_ref_left_index() const {
+    return int_ref_left_index_;
+  }
+
+  /**
+   * Sets the index for int_ref:left:<lang>
+   * @param  idx  Index for the left languages.
+   */
+  void set_int_ref_left_lang_index(const uint32_t idx) {
+    int_ref_left_lang_index_ = idx;
+  }
+
+  /**
+   * Get the int_ref:left:<lang> index.
+   * @return  Returns the index for the left languages.
+   */
+  uint32_t int_ref_left_lang_index() const {
+    return int_ref_left_lang_index_;
+  }
+
+  /**
+   * Sets the index for right int_ref
+   * @param  idx  Index for the right int_ref.
+   */
+  void set_int_ref_right_index(const uint32_t idx) {
+    int_ref_right_index_ = idx;
+  }
+
+  /**
+   * Get the right int_ref index.
+   * @return  Returns the index for the right int_ref.
+   */
+  uint32_t int_ref_right_index() const {
+    return int_ref_right_index_;
+  }
+
+  /**
+   * Sets the index for int_ref:right:<lang>
+   * @param  idx  Index for the right languages.
+   */
+  void set_int_ref_right_lang_index(const uint32_t idx) {
+    int_ref_right_lang_index_ = idx;
+  }
+
+  /**
+   * Get the int_ref:right:<lang> index.
+   * @return  Returns the index for the right languages.
+   */
+  uint32_t int_ref_right_lang_index() const {
+    return int_ref_right_lang_index_;
+  }
+
+  /**
    * Sets the index for name
    * @param  idx  Index for the name.
    */
@@ -170,19 +360,147 @@ struct OSMWay {
   }
 
   /**
-   * Sets the index for name:en
-   * @param  idx  Index for the English name.
+   * Sets the index for name:<lang>
+   * @param  idx  Index for the languages.
    */
-  void set_name_en_index(const uint32_t idx) {
-    name_en_index_ = idx;
+  void set_name_lang_index(const uint32_t idx) {
+    name_lang_index_ = idx;
   }
 
   /**
-   * Get the name:en index.
-   * @return  Returns the index for the English name.
+   * Get the name:<lang> index.
+   * @return  Returns the index for the languages.
    */
-  uint32_t name_en_index() const {
-    return name_en_index_;
+  uint32_t name_lang_index() const {
+    return name_lang_index_;
+  }
+
+  /**
+   * Sets the index for left name
+   * @param  idx  Index for the left name.
+   */
+  void set_name_left_index(const uint32_t idx) {
+    name_left_index_ = idx;
+  }
+
+  /**
+   * Get the left name index.
+   * @return  Returns the index for the left name.
+   */
+  uint32_t name_left_index() const {
+    return name_left_index_;
+  }
+
+  /**
+   * Sets the index for name:left:<lang>
+   * @param  idx  Index for the left languages.
+   */
+  void set_name_left_lang_index(const uint32_t idx) {
+    name_left_lang_index_ = idx;
+  }
+
+  /**
+   * Get the name:left:<lang> index.
+   * @return  Returns the index for the left languages.
+   */
+  uint32_t name_left_lang_index() const {
+    return name_left_lang_index_;
+  }
+
+  /**
+   * Sets the index for right name
+   * @param  idx  Index for the right name.
+   */
+  void set_name_right_index(const uint32_t idx) {
+    name_right_index_ = idx;
+  }
+
+  /**
+   * Get the right name index.
+   * @return  Returns the index for the right name.
+   */
+  uint32_t name_right_index() const {
+    return name_right_index_;
+  }
+
+  /**
+   * Sets the index for name:right:<lang>
+   * @param  idx  Index for the right languages.
+   */
+  void set_name_right_lang_index(const uint32_t idx) {
+    name_right_lang_index_ = idx;
+  }
+
+  /**
+   * Get the name:right:<lang> index.
+   * @return  Returns the index for the right languages.
+   */
+  uint32_t name_right_lang_index() const {
+    return name_right_lang_index_;
+  }
+
+  /**
+   * Sets the index for name forward
+   * @param  idx  Index for name forward.
+   */
+  void set_name_forward_index(const uint32_t idx) {
+    name_forward_index_ = idx;
+  }
+
+  /**
+   * Get the name forward index.
+   * @return  Returns the index for name forward.
+   */
+  uint32_t name_forward_index() const {
+    return name_forward_index_;
+  }
+
+  /**
+   * Sets the index for name backward
+   * @param  idx  Index for name backward.
+   */
+  void set_name_backward_index(const uint32_t idx) {
+    name_backward_index_ = idx;
+  }
+
+  /**
+   * Get the name backward index.
+   * @return  Returns the index for name backward.
+   */
+  uint32_t name_backward_index() const {
+    return name_backward_index_;
+  }
+
+  /**
+   * Sets the index for name forward lang
+   * @param  idx  Index for name forward lang.
+   */
+  void set_name_forward_lang_index(const uint32_t idx) {
+    name_forward_lang_index_ = idx;
+  }
+
+  /**
+   * Get the name forward lang index.
+   * @return  Returns the index for name forward lang.
+   */
+  uint32_t name_forward_lang_index() const {
+    return name_forward_lang_index_;
+  }
+
+  /**
+   * Sets the index for name backward lang
+   * @param  idx  Index for name backward lang.
+   */
+  void set_name_backward_lang_index(const uint32_t idx) {
+    name_backward_lang_index_ = idx;
+  }
+
+  /**
+   * Get the name backward lang index.
+   * @return  Returns the index for name backward lang.
+   */
+  uint32_t name_backward_lang_index() const {
+    return name_backward_lang_index_;
   }
 
   /**
@@ -202,6 +520,86 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for alt_name:<lang>
+   * @param  idx  Index for the languages.
+   */
+  void set_alt_name_lang_index(const uint32_t idx) {
+    alt_name_lang_index_ = idx;
+  }
+
+  /**
+   * Get the alt_name:<lang> index.
+   * @return  Returns the index for the languages.
+   */
+  uint32_t alt_name_lang_index() const {
+    return alt_name_lang_index_;
+  }
+
+  /**
+   * Sets the index for left alt_name
+   * @param  idx  Index for the left alt_name.
+   */
+  void set_alt_name_left_index(const uint32_t idx) {
+    alt_name_left_index_ = idx;
+  }
+
+  /**
+   * Get the left alt_name index.
+   * @return  Returns the index for the left alt_name.
+   */
+  uint32_t alt_name_left_index() const {
+    return alt_name_left_index_;
+  }
+
+  /**
+   * Sets the index for alt_name:left:<lang>
+   * @param  idx  Index for the left languages.
+   */
+  void set_alt_name_left_lang_index(const uint32_t idx) {
+    alt_name_left_lang_index_ = idx;
+  }
+
+  /**
+   * Get the alt_name:left:<lang> index.
+   * @return  Returns the index for the left languages.
+   */
+  uint32_t alt_name_left_lang_index() const {
+    return alt_name_left_lang_index_;
+  }
+
+  /**
+   * Sets the index for right alt_name
+   * @param  idx  Index for the right alt_name.
+   */
+  void set_alt_name_right_index(const uint32_t idx) {
+    alt_name_right_index_ = idx;
+  }
+
+  /**
+   * Get the right alt_name index.
+   * @return  Returns the index for the right alt_name.
+   */
+  uint32_t alt_name_right_index() const {
+    return alt_name_right_index_;
+  }
+
+  /**
+   * Sets the index for alt_name:right:<lang>
+   * @param  idx  Index for the right languages.
+   */
+  void set_alt_name_right_lang_index(const uint32_t idx) {
+    alt_name_right_lang_index_ = idx;
+  }
+
+  /**
+   * Get the alt_name:right:<lang> index.
+   * @return  Returns the index for the right languages.
+   */
+  uint32_t alt_name_right_lang_index() const {
+    return alt_name_right_lang_index_;
+  }
+
+  /**
    * Sets the index for official name
    * @param  idx  Index for the official name.
    */
@@ -218,6 +616,86 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for official_name:<lang>
+   * @param  idx  Index for the languages.
+   */
+  void set_official_name_lang_index(const uint32_t idx) {
+    official_name_lang_index_ = idx;
+  }
+
+  /**
+   * Get the official_name:<lang> index.
+   * @return  Returns the index for the languages.
+   */
+  uint32_t official_name_lang_index() const {
+    return official_name_lang_index_;
+  }
+
+  /**
+   * Sets the index for left official_name
+   * @param  idx  Index for the left official_name.
+   */
+  void set_official_name_left_index(const uint32_t idx) {
+    official_name_left_index_ = idx;
+  }
+
+  /**
+   * Get the left official_name index.
+   * @return  Returns the index for the left official_name.
+   */
+  uint32_t official_name_left_index() const {
+    return official_name_left_index_;
+  }
+
+  /**
+   * Sets the index for official_name:left:<lang>
+   * @param  idx  Index for the left languages.
+   */
+  void set_official_name_left_lang_index(const uint32_t idx) {
+    official_name_left_lang_index_ = idx;
+  }
+
+  /**
+   * Get the official_name:left:<lang> index.
+   * @return  Returns the index for the left languages.
+   */
+  uint32_t official_name_left_lang_index() const {
+    return official_name_left_lang_index_;
+  }
+
+  /**
+   * Sets the index for right official_name
+   * @param  idx  Index for the right official_name.
+   */
+  void set_official_name_right_index(const uint32_t idx) {
+    official_name_right_index_ = idx;
+  }
+
+  /**
+   * Get the right official_name index.
+   * @return  Returns the index for the right official_name.
+   */
+  uint32_t official_name_right_index() const {
+    return official_name_right_index_;
+  }
+
+  /**
+   * Sets the index for official_name:right:<lang>
+   * @param  idx  Index for the right languages.
+   */
+  void set_official_name_right_lang_index(const uint32_t idx) {
+    official_name_right_lang_index_ = idx;
+  }
+
+  /**
+   * Get the official_name:right:<lang> index.
+   * @return  Returns the index for the right languages.
+   */
+  uint32_t official_name_right_lang_index() const {
+    return official_name_right_lang_index_;
+  }
+
+  /**
    * Sets the index for tunnel name
    * @param  idx  Index for the tunnel name.
    */
@@ -231,6 +709,86 @@ struct OSMWay {
    */
   uint32_t tunnel_name_index() const {
     return tunnel_name_index_;
+  }
+
+  /**
+   * Sets the index for tunnel_name:<lang>
+   * @param  idx  Index for the languages.
+   */
+  void set_tunnel_name_lang_index(const uint32_t idx) {
+    tunnel_name_lang_index_ = idx;
+  }
+
+  /**
+   * Get the tunnel_name:<lang> index.
+   * @return  Returns the index for the languages.
+   */
+  uint32_t tunnel_name_lang_index() const {
+    return tunnel_name_lang_index_;
+  }
+
+  /**
+   * Sets the index for left tunnel_name
+   * @param  idx  Index for the left tunnel_name.
+   */
+  void set_tunnel_name_left_index(const uint32_t idx) {
+    tunnel_name_left_index_ = idx;
+  }
+
+  /**
+   * Get the left tunnel_name index.
+   * @return  Returns the index for the left tunnel_name.
+   */
+  uint32_t tunnel_name_left_index() const {
+    return tunnel_name_left_index_;
+  }
+
+  /**
+   * Sets the index for tunnel_name:left:<lang>
+   * @param  idx  Index for the left languages.
+   */
+  void set_tunnel_name_left_lang_index(const uint32_t idx) {
+    tunnel_name_left_lang_index_ = idx;
+  }
+
+  /**
+   * Get the tunnel_name:left:<lang> index.
+   * @return  Returns the index for the left languages.
+   */
+  uint32_t tunnel_name_left_lang_index() const {
+    return tunnel_name_left_lang_index_;
+  }
+
+  /**
+   * Sets the index for right tunnel_name
+   * @param  idx  Index for the right tunnel_name.
+   */
+  void set_tunnel_name_right_index(const uint32_t idx) {
+    tunnel_name_right_index_ = idx;
+  }
+
+  /**
+   * Get the right tunnel_name index.
+   * @return  Returns the index for the right tunnel_name.
+   */
+  uint32_t tunnel_name_right_index() const {
+    return tunnel_name_right_index_;
+  }
+
+  /**
+   * Sets the index for tunnel_name:right:<lang>
+   * @param  idx  Index for the right languages.
+   */
+  void set_tunnel_name_right_lang_index(const uint32_t idx) {
+    tunnel_name_right_lang_index_ = idx;
+  }
+
+  /**
+   * Get the tunnel_name:right:<lang> index.
+   * @return  Returns the index for the right languages.
+   */
+  uint32_t tunnel_name_right_lang_index() const {
+    return tunnel_name_right_lang_index_;
   }
 
   /**
@@ -369,11 +927,27 @@ struct OSMWay {
   }
 
   /**
-   * Get the get_destination index.
+   * Get the destination index.
    * @return  Returns the index for the destination.
    */
   uint32_t destination_index() const {
     return destination_index_;
+  }
+
+  /**
+   * Sets the index for destination:<lang>
+   * @param  idx  Index for the destination with languages.
+   */
+  void set_destination_lang_index(const uint32_t idx) {
+    destination_lang_index_ = idx;
+  }
+
+  /**
+   * Get the destination:<lang>
+   * @return  Returns the destination with languages.
+   */
+  uint32_t destination_lang_index() const {
+    return destination_lang_index_;
   }
 
   /**
@@ -385,11 +959,27 @@ struct OSMWay {
   }
 
   /**
-   * Get the get_destination index.
-   * @return  Returns the index for the destination.
+   * Get the destination in forward direction index.
+   * @return  Returns the index for the destination in forward direction.
    */
   uint32_t destination_forward_index() const {
     return destination_forward_index_;
+  }
+
+  /**
+   * Sets the index for destination lang in forward direction.
+   * @param  idx  Index for the destination.
+   */
+  void set_destination_forward_lang_index(const uint32_t idx) {
+    destination_forward_lang_index_ = idx;
+  }
+
+  /**
+   * Get the destination lang in forward direction index.
+   * @return  Returns the index for the destination lang in forward direction.
+   */
+  uint32_t destination_forward_lang_index() const {
+    return destination_forward_lang_index_;
   }
 
   /**
@@ -401,11 +991,27 @@ struct OSMWay {
   }
 
   /**
-   * Get the get_destination index.
-   * @return  Returns the index for the destination.
+   * Get the destination in backward direction index.
+   * @return  Returns the index for the destination in backward direction.
    */
   uint32_t destination_backward_index() const {
     return destination_backward_index_;
+  }
+
+  /**
+   * Sets the index for destination lang in backward direction.
+   * @param  idx  Index for the destination.
+   */
+  void set_destination_backward_lang_index(const uint32_t idx) {
+    destination_backward_lang_index_ = idx;
+  }
+
+  /**
+   * Get the destination lang in backward direction index.
+   * @return  Returns the index for the destination lang in backward direction.
+   */
+  uint32_t destination_backward_lang_index() const {
+    return destination_backward_lang_index_;
   }
 
   /**
@@ -425,6 +1031,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for destination ref lang.
+   * @param  idx  Index for the destination:ref lang.
+   */
+  void set_destination_ref_lang_index(const uint32_t idx) {
+    destination_ref_lang_index_ = idx;
+  }
+
+  /**
+   * Get the destination_ref_lang index.
+   * @return  Returns the index for the destination:ref lang.
+   */
+  uint32_t destination_ref_lang_index() const {
+    return destination_ref_lang_index_;
+  }
+
+  /**
    * Sets the index for destination ref to.
    * @param  idx  Index for the destination ref to.
    */
@@ -438,6 +1060,54 @@ struct OSMWay {
    */
   uint32_t destination_ref_to_index() const {
     return destination_ref_to_index_;
+  }
+
+  /**
+   * Sets the index for destination:ref:to lang
+   * @param  idx  Index for the destination:ref:to lang
+   */
+  void set_destination_ref_to_lang_index(const uint32_t idx) {
+    destination_ref_to_lang_index_ = idx;
+  }
+
+  /**
+   * Get the destination:ref:to lang index.
+   * @return  Returns the index for destination:ref:to lang.
+   */
+  uint32_t destination_ref_to_lang_index() const {
+    return destination_ref_to_lang_index_;
+  }
+
+  /**
+   * Sets the index for destination international ref.
+   * @param  idx  Index for the destination international ref.
+   */
+  void set_destination_int_ref_index(const uint32_t idx) {
+    destination_int_ref_index_ = idx;
+  }
+
+  /**
+   * Get the destination international ref index.
+   * @return  Returns the index for the destination international ref.
+   */
+  uint32_t destination_int_ref_index() const {
+    return destination_int_ref_index_;
+  }
+
+  /**
+   * Sets the index for destination international ref to.
+   * @param  idx  Index for the destination international ref to.
+   */
+  void set_destination_int_ref_to_index(const uint32_t idx) {
+    destination_int_ref_to_index_ = idx;
+  }
+
+  /**
+   * Get the destination international ref to index.
+   * @return  Returns the index for the destination ref to.
+   */
+  uint32_t destination_int_ref_to_index() const {
+    return destination_int_ref_to_index_;
   }
 
   /**
@@ -457,6 +1127,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for destination:street lang
+   * @param  idx  Index for the destination:street lang
+   */
+  void set_destination_street_lang_index(const uint32_t idx) {
+    destination_street_lang_index_ = idx;
+  }
+
+  /**
+   * Get the destination:street lang index.
+   * @return  Returns the index for destination:street lang.
+   */
+  uint32_t destination_street_lang_index() const {
+    return destination_street_lang_index_;
+  }
+
+  /**
    * Sets the index for destination street to.
    * @param  idx  Index for the destination street to.
    */
@@ -473,19 +1159,83 @@ struct OSMWay {
   }
 
   /**
-   * Sets the index for junction ref.
-   * @param  idx  Index for the junction ref.
+   * Sets the index for destination:street:to lang
+   * @param  idx  Index for the destination:street:to lang
+   */
+  void set_destination_street_to_lang_index(const uint32_t idx) {
+    destination_street_to_lang_index_ = idx;
+  }
+
+  /**
+   * Get the destination:street:to lang index.
+   * @return  Returns the index for destination:street:to lang.
+   */
+  uint32_t destination_street_to_lang_index() const {
+    return destination_street_to_lang_index_;
+  }
+
+  /**
+   * Sets the index for junction name pronunciation.
+   * @param  idx  Index for the junction name pronunciation.
+   */
+  void set_junction_name_index(const uint32_t idx) {
+    junction_name_index_ = idx;
+  }
+
+  /**
+   * Get the junction name pronunciation index.
+   * @return  Returns the index for the junction name pronunciation.
+   */
+  uint32_t junction_name_index() const {
+    return junction_name_index_;
+  }
+
+  /**
+   * Sets the index for junction name lang.
+   * @param  idx  Index for the junction:name:lang.
+   */
+  void set_junction_name_lang_index(const uint32_t idx) {
+    junction_name_lang_index_ = idx;
+  }
+
+  /**
+   * Get the junction name pronunciation index.
+   * @return  Returns the index for the junction name pronunciation.
+   */
+  uint32_t junction_name_lang_index() const {
+    return junction_name_lang_index_;
+  }
+
+  /**
+   * Sets the index for junction ref pronunciation.
+   * @param  idx  Index for the junction ref pronunciation.
    */
   void set_junction_ref_index(const uint32_t idx) {
     junction_ref_index_ = idx;
   }
 
   /**
-   * Get the junction ref index.
-   * @return  Returns the index for the junction ref.
+   * Get the junction ref pronunciation index.
+   * @return  Returns the index for the junction ref pronunciation.
    */
   uint32_t junction_ref_index() const {
     return junction_ref_index_;
+  }
+
+  /**
+   * Sets the index for junction ref lang.
+   * @param  idx  Index for the junction:ref lang.
+   */
+  void set_junction_ref_lang_index(const uint32_t idx) {
+    junction_ref_lang_index_ = idx;
+  }
+
+  /**
+   * Get the junction_ref_lang index.
+   * @return  Returns the index for the junction:ref lang.
+   */
+  uint32_t junction_ref_lang_index() const {
+    return junction_ref_lang_index_;
   }
 
   /**
@@ -877,7 +1627,7 @@ struct OSMWay {
   }
 
   /**
-   * Sets the destination_only flag.
+   * Sets the destination_only flag for cars or motor vehicles.
    * @param  destination_only   Is private?
    */
   void set_destination_only(const bool destination_only) {
@@ -885,11 +1635,27 @@ struct OSMWay {
   }
 
   /**
-   * Get the destination only/private flag.
+   * Get the destination only/private flag for cars or motor vehicles.
    * @return  Returns private flag.
    */
   bool destination_only() const {
     return destination_only_;
+  }
+
+  /**
+   * Sets the destination_only flag specifically for HGV.
+   * @param  destination_only   Is private for HGV?
+   */
+  void set_destination_only_hgv(const bool destination_only) {
+    destination_only_hgv_ = destination_only;
+  }
+
+  /**
+   * Get the destination only/private flag for HGV.
+   * @return  Returns private hgv flag.
+   */
+  bool destination_only_hgv() const {
+    return destination_only_hgv_;
   }
 
   /**
@@ -906,6 +1672,22 @@ struct OSMWay {
    */
   bool has_user_tags() const {
     return has_user_tags_;
+  }
+
+  /**
+   * Sets the has_pronunciation_tags flag.
+   * @param  has_pronunciation_tags  Do pronunciation tags exist?
+   */
+  void set_has_pronunciation_tags(const bool has_pronunciation_tags) {
+    has_pronunciation_tags_ = has_pronunciation_tags;
+  }
+
+  /**
+   * Get the has_pronunciation_tags flag.
+   * @return  Returns has_pronunciation_tags flag.
+   */
+  bool has_pronunciation_tags() const {
+    return has_pronunciation_tags_;
   }
 
   /**
@@ -1176,7 +1958,7 @@ struct OSMWay {
   /*
    * Gets whether a pedestrian or cyclist should have preference to use a different
    * path to the side (A separate OSMWay completely)
-   * @return  Returns if using a sidepath is preffered
+   * @return  Returns if using a sidepath is preferred
    */
   bool use_sidepath() const {
     return use_sidepath_;
@@ -1273,19 +2055,35 @@ struct OSMWay {
   }
 
   /**
-   * Set seasonal flag.
-   * @param  seasonal   Is this seasonal?
+   * Sets the indoor flag.
+   * @param  indoor   True if the edge is indoor, false if not (outdoor).
    */
-  void set_seasonal(const bool seasonal) {
-    seasonal_ = seasonal;
+  void set_indoor(const bool indoor) {
+    indoor_ = indoor;
   }
 
   /**
-   * Get the seasonal flag.
-   * @return  Returns seasonal flag.
+   * Get the indoor flag.
+   * @return  Returns indoor flag.
    */
-  bool seasonal() const {
-    return seasonal_;
+  bool indoor() const {
+    return indoor_;
+  }
+
+  /**
+   * Sets the HOV Type.
+   * @param  hov_type
+   */
+  void set_hov_type(const baldr::HOVEdgeType hov_type) {
+    hov_type_ = static_cast<uint8_t>(hov_type);
+  }
+
+  /**
+   * Get the hov_type flag.
+   * @return  Returns hov_type flag.
+   */
+  baldr::HOVEdgeType hov_type() const {
+    return static_cast<baldr::HOVEdgeType>(hov_type_);
   }
 
   /**
@@ -1366,6 +2164,21 @@ struct OSMWay {
    */
   bool drive_on_right() const {
     return drive_on_right_;
+  }
+  /**
+   * Set multiple_levels flag.
+   * @param multiple_levels Is there a multiple levels?
+   */
+  void set_multiple_levels(const bool multiple_levels) {
+    multiple_levels_ = multiple_levels;
+  }
+
+  /**
+   * Get the multiple levels flag.
+   * @return Returns drive on right flag.
+   */
+  bool multiple_levels() const {
+    return multiple_levels_;
   }
 
   /**
@@ -1578,29 +2391,198 @@ struct OSMWay {
     return turn_channel_;
   }
 
+  void AddPronunciations(std::vector<std::string>& pronunciations,
+                         std::map<size_t, baldr::Language>& lang_map,
+                         const UniqueNames& name_offset_map,
+                         const std::vector<std::pair<std::string, bool>>& default_languages,
+                         const std::vector<baldr::Language>& token_langs,
+                         const uint32_t ipa_index,
+                         const uint32_t ipa_lang_index,
+                         const uint32_t nt_sampa_index,
+                         const uint32_t nt_sampa_lang_index,
+                         const uint32_t katakana_index,
+                         const uint32_t katakana_lang_index,
+                         const uint32_t jeita_index,
+                         const uint32_t jeita_lang_index,
+                         const size_t token_size,
+                         const size_t key,
+                         bool diff_names) const;
+
+  void AddPronunciationsWithLang(std::vector<std::string>& pronunciations,
+                                 std::map<size_t, baldr::Language>& lang_map,
+                                 const baldr::PronunciationAlphabet verbal_type,
+                                 const std::vector<std::string>& pronunciation_tokens,
+                                 const std::vector<baldr::Language>& pronunciation_langs,
+                                 const std::vector<baldr::Language>& token_langs,
+                                 const size_t token_size,
+                                 const size_t key) const;
+
+  void AddLanguage(std::vector<std::string>& linguistics,
+                   const size_t index,
+                   const baldr::Language& lang) const;
+
+  /**
+   * Sets layer index(Z-level) of the way.
+   * @param layer
+   */
+  void set_layer(int8_t layer);
+
+  /**
+   * Get layer(Z-level), can be negative.
+   * @return returns layer index of the way relatively to other ways.
+   */
+  int8_t layer() const {
+    return layer_;
+  }
+
+  /**
+   * Sets the index for level
+   * @param  idx  Index for the level.
+   */
+  void set_level_index(const uint32_t idx) {
+    level_index_ = idx;
+  }
+
+  /**
+   * Get the level index.
+   * @return  Returns the index for the level.
+   */
+  uint32_t level_index() const {
+    return level_index_;
+  }
+
+  /**
+   * Sets the index for level_ref
+   * @param  idx  Index for the level_ref
+   */
+  void set_level_ref_index(const uint32_t idx) {
+    level_ref_index_ = idx;
+  }
+
+  /**
+   * Get the level_ref index.
+   * @return  Returns the index for the level_ref.
+   */
+  uint32_t level_ref_index() const {
+    return level_ref_index_;
+  }
+
+  /**
+   * Sets the lit state
+   *
+   * @param lit whether the way is lit.
+   */
+  void set_lit(const bool lit) {
+    lit_ = lit;
+  }
+
+  /**
+   * Get the lit state.
+   *
+   * @return bool
+   */
+  bool lit() const {
+    return lit_;
+  }
+
+  static void
+  ProcessNamesPronunciations(const UniqueNames& name_offset_map,
+                             const std::vector<std::pair<std::string, bool>>& default_languages,
+                             const uint32_t name_index,
+                             const uint32_t name_lang_index,
+                             std::vector<std::string>& tokens,
+                             std::vector<baldr::Language>& token_langs,
+                             bool diff_names,
+                             bool allow_empty_tokens = false);
+
   /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  name_offset_map  map of unique names and refs from ways.
    * @return  Returns vector of strings
    */
-  std::vector<std::string>
-  GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const;
-  std::vector<std::string> GetTaggedNames(const UniqueNames& name_offset_map) const;
+  void GetNames(const std::string& ref,
+                const UniqueNames& name_offset_map,
+                const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& pronunciationMap,
+                const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
+                const std::vector<std::pair<std::string, bool>>& default_languages,
+                const uint32_t ref_index,
+                const uint32_t ref_lang_index,
+                const uint32_t name_index,
+                const uint32_t name_lang_index,
+                const uint32_t official_name_index,
+                const uint32_t official_name_lang_index,
+                const uint32_t alt_name_index,
+                const uint32_t alt_name_lang_index,
+                uint16_t& types,
+                std::vector<std::string>& names,
+                std::vector<std::string>& linguistics,
+                OSMLinguistic::DiffType type = OSMLinguistic::DiffType::kRight,
+                bool diff_names = false) const;
+
+  void GetTaggedValues(const UniqueNames& name_offset_map,
+                       const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& pronunciationMap,
+                       const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
+                       const std::vector<std::pair<std::string, bool>>& default_languages,
+                       const uint32_t tunnel_name_index,
+                       const uint32_t tunnel_name_lang_index,
+                       const size_t& names_size,
+                       std::vector<std::string>& names,
+                       std::vector<std::string>& linguistics,
+                       OSMLinguistic::DiffType type = OSMLinguistic::DiffType::kRight,
+                       bool diff_names = false) const;
 
   // OSM way Id
   uint64_t osmwayid_;
 
   // Reference name (highway numbers)
   uint32_t ref_index_;
+  uint32_t ref_lang_index_;
+  uint32_t ref_left_index_;
+  uint32_t ref_left_lang_index_;
+  uint32_t ref_right_index_;
+  uint32_t ref_right_lang_index_;
+
   uint32_t int_ref_index_;
+  uint32_t int_ref_lang_index_;
+  uint32_t int_ref_left_index_;
+  uint32_t int_ref_left_lang_index_;
+  uint32_t int_ref_right_index_;
+  uint32_t int_ref_right_lang_index_;
 
   // Names
   uint32_t name_index_;
-  uint32_t name_en_index_;
+  uint32_t name_lang_index_;
+  uint32_t name_left_index_;
+  uint32_t name_left_lang_index_;
+  uint32_t name_right_index_;
+  uint32_t name_right_lang_index_;
+
+  uint32_t name_forward_index_;
+  uint32_t name_forward_lang_index_;
+  uint32_t name_backward_index_;
+  uint32_t name_backward_lang_index_;
+
   uint32_t alt_name_index_;
+  uint32_t alt_name_lang_index_;
+  uint32_t alt_name_left_index_;
+  uint32_t alt_name_left_lang_index_;
+  uint32_t alt_name_right_index_;
+  uint32_t alt_name_right_lang_index_;
+
   uint32_t official_name_index_;
+  uint32_t official_name_lang_index_;
+  uint32_t official_name_left_index_;
+  uint32_t official_name_left_lang_index_;
+  uint32_t official_name_right_index_;
+  uint32_t official_name_right_lang_index_;
+
   uint32_t tunnel_name_index_;
+  uint32_t tunnel_name_lang_index_;
+  uint32_t tunnel_name_left_index_;
+  uint32_t tunnel_name_left_lang_index_;
+  uint32_t tunnel_name_right_index_;
+  uint32_t tunnel_name_right_lang_index_;
 
   // Turn lanes
   uint32_t fwd_turn_lanes_index_;
@@ -1618,13 +2600,29 @@ struct OSMWay {
 
   // Sign Destination information
   uint32_t destination_index_;
+  uint32_t destination_lang_index_;
   uint32_t destination_forward_index_;
   uint32_t destination_backward_index_;
+  uint32_t destination_forward_lang_index_;
+  uint32_t destination_backward_lang_index_;
   uint32_t destination_ref_index_;
+  uint32_t destination_ref_lang_index_;
   uint32_t destination_ref_to_index_;
+  uint32_t destination_ref_to_lang_index_;
+  uint32_t destination_int_ref_index_;
+  uint32_t destination_int_ref_to_index_;
   uint32_t destination_street_index_;
+  uint32_t destination_street_lang_index_;
   uint32_t destination_street_to_index_;
+  uint32_t destination_street_to_lang_index_;
+  uint32_t junction_name_index_;
+  uint32_t junction_name_lang_index_;
   uint32_t junction_ref_index_;
+  uint32_t junction_ref_lang_index_;
+
+  // level and level:ref of the way
+  uint32_t level_index_;
+  uint32_t level_ref_index_;
 
   // Bike network information. TODO - these are not yet used.
   //  uint32_t bike_national_ref_index_;
@@ -1646,7 +2644,7 @@ struct OSMWay {
   uint32_t tunnel_ : 1;
   uint32_t toll_ : 1;
   uint32_t bridge_ : 1;
-  uint32_t seasonal_ : 1;
+  uint32_t multiple_levels_ : 1;
   uint32_t drive_on_right_ : 1;
   uint32_t bike_network_ : 4;
   uint32_t exit_ : 1;
@@ -1671,10 +2669,11 @@ struct OSMWay {
   uint32_t turn_channel_ : 1; // *link tag - turn channel (no ramp)
   uint32_t wheelchair_ : 1;
   uint32_t wheelchair_tag_ : 1;
-  uint32_t spare0_ : 1;
   uint32_t has_user_tags_ : 1;
+  uint32_t has_pronunciation_tags_ : 1;
   uint32_t internal_ : 1;
-  uint32_t spare1_ : 2; // Spare
+  uint32_t hov_type_ : 1;
+  uint32_t indoor_ : 1;
   uint32_t pedestrian_forward_ : 1;
   uint32_t pedestrian_backward_ : 1;
 
@@ -1707,7 +2706,9 @@ struct OSMWay {
   uint16_t use_sidepath_ : 1;
   uint16_t bike_forward_ : 1;
   uint16_t bike_backward_ : 1;
-  uint16_t spare2_ : 4;
+  uint16_t lit_ : 1;
+  uint16_t destination_only_hgv_ : 1;
+  uint16_t spare2_ : 2;
 
   uint16_t nodecount_;
 
@@ -1726,8 +2727,11 @@ struct OSMWay {
 
   // Truck speed in kilometers per hour
   uint8_t truck_speed_;
+  uint8_t truck_speed_forward_;
+  uint8_t truck_speed_backward_;
 
-  uint8_t spare_;
+  // layer index(Z-level) of the way relatively to other levels
+  int8_t layer_;
 };
 
 } // namespace mjolnir

@@ -1,28 +1,28 @@
 #include "test.h"
-
 #include "baldr/graphmemory.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
+#include "microtar.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
-#include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sys/mman.h>
-#include <sys/stat.h>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#ifndef _MSC_VER
+#include <sys/mman.h>
+#endif
 
 #include <boost/algorithm/string.hpp>
-
-#include "filesystem.h"
-#include "microtar.h"
+#include <fcntl.h>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+#include <sys/stat.h>
 
 namespace {
 // TODO: this should support boost::property_tree::path
@@ -61,7 +61,11 @@ struct MMap {
   MMap(const char* filename) {
     fd = open(filename, O_RDWR);
     struct stat s;
+#ifdef _MSC_VER
+    _fstat64(fd, &s);
+#else
     fstat(fd, &s);
+#endif
     data = mmap(0, s.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     length = s.st_size;
   }
@@ -216,6 +220,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
       "mjolnir": {
         "concurrency": 1,
         "admin": "%%/admin.sqlite",
+        "landmarks": "%%/landmarks.sqlite",
         "data_processing": {
           "allow_alt_name": false,
           "apply_country_overrides": true,
@@ -232,6 +237,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "import_bike_share_stations": false,
         "include_bicycle": true,
         "include_driveways": true,
+        "include_construction": true,
         "include_driving": true,
         "include_pedestrian": true,
         "logging": {
@@ -244,10 +250,11 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "reclassify_links": true,
         "shortcuts": true,
         "tile_dir": "%%",
-        "tile_extract": "%%/tiles.tar",
+        "tile_extract": "",
         "timezone": "%%/tz_world.sqlite",
         "traffic_extract": "%%/traffic.tar",
         "transit_dir": "%%/transit",
+        "transit_feeds_dir": "%%/transit_feeds",
         "use_lru_mem_cache": false
       },
       "odin": {
@@ -264,41 +271,52 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
-        },
-        "auto_shorter": {
-          "max_distance": 5000000.0,
-          "max_locations": 20,
-          "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "bicycle": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "bikeshare": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "bus": {
           "max_distance": 5000000.0,
           "max_locations": 50,
           "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "centroid": {
           "max_distance": 200000.0,
           "max_locations": 5
         },
-        "hov": {
-          "max_distance": 5000000.0,
-          "max_locations": 20,
-          "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
+        "hierarchy_limits": {
+            "allow_modification": false,
+            "costmatrix": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                }
+            },
+            "unidirectional_astar": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
+            },
+            "bidirectional_astar": {
+                "max_allowed_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "max_expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000}
+            }
         },
         "isochrone": {
           "max_contours": 4,
@@ -313,29 +331,30 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "max_radius": 200,
         "max_reachability": 100,
         "max_timedep_distance": 500000,
+        "max_distance_disable_hierarchy_culling": 0,
         "motor_scooter": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "motorcycle": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "multimodal": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 0.0,
-          "max_matrix_locations": 0
+          "max_matrix_location_pairs": 0
         },
         "pedestrian": {
           "max_distance": 250000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50,
+          "max_matrix_location_pairs": 2500,
           "max_transit_walking_distance": 10000,
           "min_transit_walking_distance": 1
         },
@@ -343,15 +362,18 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_shape": 750000,
           "min_resample": 10.0
         },
+        "status": {
+          "allow_verbose": true
+        },
         "taxi": {
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "trace": {
-          "max_best_paths": 4,
-          "max_best_paths_shape": 100,
+          "max_alternates": 3,
+          "max_alternates_shape": 100,
           "max_distance": 200000.0,
           "max_gps_accuracy": 100.0,
           "max_search_radius": 100.0,
@@ -361,13 +383,13 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "truck": {
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         }
       },
       "thor": {
@@ -379,7 +401,36 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "service": {
           "proxy": "ipc://%%/thor"
         },
-        "source_to_target_algorithm": "select_optimal"
+        "source_to_target_algorithm": "select_optimal",
+        "costmatrix": {
+            "check_reverse_connection": true,
+            "allow_second_pass": false,
+            "max_reserved_locations": 25,
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                }
+            }
+        },
+        "bidirectional_astar": {
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "expand_within_distance": {"0": 1e8, "1": 20000, "2": 5000}
+            }
+        },
+        "unidirectional_astar": {
+            "hierarchy_limits": {
+                "max_up_transitions": {
+                    "1": 400,
+                    "2": 100
+                },
+                "expand_within_distance": {"0": 1e8, "1": 100000, "2": 5000}
+            }
+        }
       }
     }
   )";
@@ -409,7 +460,7 @@ make_clean_graphreader(const boost::property_tree::ptree& mjolnir_conf) {
   struct ResettingGraphReader : valhalla::baldr::GraphReader {
     ResettingGraphReader(const boost::property_tree::ptree& pt) : GraphReader(pt) {
       // Reset the statically initialized tile_extract_ member variable
-      tile_extract_.reset(new valhalla::baldr::GraphReader::tile_extract_t(pt));
+      tile_extract_ = std::make_shared<valhalla::baldr::GraphReader::tile_extract_t>(pt);
     }
   };
   return std::make_shared<ResettingGraphReader>(mjolnir_conf);
@@ -441,8 +492,8 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
   std::string traffic_extract = config.get<std::string>("mjolnir.traffic_extract");
 
-  filesystem::path parent_dir = filesystem::path(traffic_extract).parent_path();
-  if (!filesystem::exists(parent_dir)) {
+  std::filesystem::path parent_dir = std::filesystem::path(traffic_extract).parent_path();
+  if (!std::filesystem::exists(parent_dir)) {
     std::stringstream ss;
     ss << "Traffic extract directory " << parent_dir.string() << " does not exist";
     throw std::runtime_error(ss.str());
@@ -530,7 +581,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
       return MTAR_ESUCCESS;
     };
     tar.seek = [](mtar_t* /*tar*/, unsigned /*pos*/) -> int { return MTAR_ESUCCESS; };
-    tar.close = [](mtar_t * /*tar*/) -> int { return MTAR_ESUCCESS; };
+    tar.close = [](mtar_t* /*tar*/) -> int { return MTAR_ESUCCESS; };
 
     // Read every speed tile, and update it with fixed speed of `new_speed` km/h (original speeds are
     // 10km/h)

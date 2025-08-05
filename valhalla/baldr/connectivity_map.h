@@ -24,6 +24,14 @@ public:
                      const std::shared_ptr<GraphReader>& graph_reader = {});
 
   /**
+   * Alternative to GetTiles() to query whether a level even exists, e.g. transit.#
+   *
+   * @param level  the level to query
+   * @return boolean indicating whether a level even exists
+   */
+  bool level_color_exists(const uint32_t level) const;
+
+  /**
    * Returns the color for the given graphid
    *
    * @param id      the graphid
@@ -34,18 +42,19 @@ public:
   /**
    * Returns the colors for the given level,point,radius
    *
-   * @param hierarchy_level  the hierarchy level whos connectivity you are querying
+   * @param hierarchy_level  the hierarchy level whose connectivity you are querying
    * @param location           the center of the circle
    * @param radius           the radius of the circle
    * @return colors          the colors of the tiles that intersect this circle at this level
    */
-  std::unordered_set<size_t>
-  get_colors(uint32_t hierarchy_level, const baldr::PathLocation& location, float radius) const;
+  std::unordered_set<size_t> get_colors(const baldr::TileLevel& hierarchy_level,
+                                        const baldr::PathLocation& location,
+                                        float radius) const;
 
   /**
    * Returns the geojson representing the connectivity map
    *
-   * @param hierarchy_level the hierarchy level whos connectivity you want to see
+   * @param hierarchy_level the hierarchy level whose connectivity you want to see
    * @return string         the geojson
    */
   std::string to_geojson(const uint32_t hierarchy_level) const;
@@ -53,7 +62,7 @@ public:
   /**
    * Returns the vector of colors (one per tile) representing the connectivity map
    *
-   * @param hierarchy_level the hierarchy level whos connectivity you want to see
+   * @param hierarchy_level the hierarchy level whose connectivity you want to see
    * @return vector         the vector of colors per tile
    */
   std::vector<size_t> to_image(const uint32_t hierarchy_level) const;

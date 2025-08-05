@@ -51,7 +51,7 @@ do
       ((NUM_PASSES+=IN_NUM_PASSES))
       ((RUN_TIME+=IN_RUN_TIME))
       ((TRIP_TIME+=IN_TRIP_TIME))
-      TRIP_LENGTH=$(python -c "print (${TRIP_LENGTH} + ${IN_TRIP_LENGTH})")
+      TRIP_LENGTH=$(python3 -c "print(${TRIP_LENGTH} + ${IN_TRIP_LENGTH})")
       ((NUM_MANEUVERS+=IN_NUM_MANEUVERS))
       #echo "ROUTE_COUNT=${ROUTE_COUNT}"
       #echo "SUCCESS_COUNT=${SUCCESS_COUNT}"

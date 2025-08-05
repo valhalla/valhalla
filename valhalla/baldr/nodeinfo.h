@@ -1,21 +1,29 @@
 #ifndef VALHALLA_BALDR_NODEINFO_H_
 #define VALHALLA_BALDR_NODEINFO_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kMaxEdgesPerNode = 127;     // Maximum edges per node
-constexpr uint32_t kMaxAdminsPerTile = 4095;   // Maximum Admins per tile
-constexpr uint32_t kMaxTimeZonesPerTile = 511; // Maximum TimeZones index
-constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on local level
+constexpr uint32_t kMaxEdgesPerNode = 127;    // Maximum edges per node
+constexpr uint32_t kMaxAdminsPerTile = 4095;  // Maximum Admins per tile
+constexpr uint32_t kMaxTimeZoneIdExt1 = 1023; // Maximum TimeZones index for first extension level
+// constexpr uint32_t kMaxTimeZoneIdExt2 =
+//    2047; // Maximum TimeZones index for second extension level; not needed yet
+constexpr uint32_t kMaxLocalEdgeIndex = 7; // Max. index of edges on local level
+
+// Elevation precision. Elevation is clamped to a range of -500 meters to 7683 meters
+constexpr uint32_t kNodeMaxStoredElevation = 32767; // 15 bits
+constexpr float kNodeElevationPrecision = 0.25f;
+constexpr float kNodeMinElevation = -500.0f;
+constexpr float kNodeMaxElevation =
+    kNodeMinElevation + (kNodeElevationPrecision * kNodeMaxStoredElevation);
 
 // Heading shrink factor to reduce max heading of 359 to 255
 constexpr float kHeadingShrinkFactor = (255.0f / 359.0f);
@@ -49,7 +57,8 @@ public:
            const baldr::NodeType type,
            const bool traffic_signal,
            const bool tagged_access,
-           const bool private_access);
+           const bool private_access,
+           const bool cash_only_toll);
 
   /**
    * Get the latitude, longitude of the node.
@@ -148,7 +157,10 @@ public:
    * @return  Returns the timezone index.
    */
   uint32_t timezone() const {
-    return timezone_;
+    return timezone_ | (timezone_ext_1_ << 9);
+    // replace with this if a new timezone ever gets created from a previously new
+    // timezone (reference release is 2023c)
+    // return timezone_ | (timezone_ext_1_ << 9) | (time_zone_ext_2_ << 10);
   }
 
   /**
@@ -199,6 +211,16 @@ public:
   }
 
   /**
+   * Evaluates a basic set of conditions to determine if this node is eligible for contraction.
+   * @return true if the node has at least 2 edges and does not represent a fork, gate or toll booth.
+   */
+  bool can_contract() const {
+    return edge_count() >= 2 && intersection() != IntersectionType::kFork &&
+           type() != NodeType::kGate && type() != NodeType::kTollBooth &&
+           type() != NodeType::kTollGantry && type() != NodeType::kSumpBuster;
+  }
+
+  /**
    * Set the node type.
    * @param  type  node type.
    */
@@ -246,6 +268,20 @@ public:
   void set_drive_on_right(const bool rsd);
 
   /**
+   * Get the elevation at this node.
+   * @return Returns the elevation in meters.
+   */
+  float elevation() const {
+    return kNodeMinElevation + (elevation_ * kNodeElevationPrecision);
+  }
+
+  /**
+   * Set the elevation at this node.
+   * @param Elevation in meters.
+   */
+  void set_elevation(const float elevation);
+
+  /**
    * Was the access information originally set in the data?
    * True if any tags like "access", "auto", "truck", "foot", etc were specified.
    * @return  Returns true if access was specified.
@@ -275,6 +311,22 @@ public:
    */
   void set_private_access(const bool private_access) {
     private_access_ = private_access;
+  }
+
+  /**
+   * Is this node a cash only toll (booth/barrier)?
+   * @return  Returns true if node is a cash only toll (booth/barrier).
+   */
+  bool cash_only_toll() const {
+    return cash_only_toll_;
+  }
+
+  /**
+   * Sets cash_only_toll flag. It is true when the node is a cash only toll (booth/barrier).
+   * @param  cash_only_toll  True if node is a cash only toll (booth/barrier).
+   */
+  void set_cash_only_toll(const bool cash_only_toll) {
+    cash_only_toll_ = cash_only_toll;
   }
 
   /**
@@ -341,11 +393,13 @@ public:
 
   /**
    * Get the connecting way id for a transit stop (stored in headings_ while transit data
-   * is connected to the road network.
+   * is connected to the road network). Returns 0 if unset or if used for lon lat
    * @return Returns the connecting way id for a transit stop.
    */
   uint64_t connecting_wayid() const {
-    return headings_;
+    // if the last bit is unset this is a wayid (or unset or headings) for transit in/egress. we
+    // return 0 for the way id if a connection point (lon, lat) was encoded here instead
+    return headings_ >> 63 ? 0 : headings_;
   }
 
   /**
@@ -355,6 +409,23 @@ public:
   void set_connecting_wayid(const uint64_t wayid);
 
   /**
+   * Get the connection point location to be used for associating this transit station to the road
+   * network or an invalid point if it is unset
+   * @return the connection point or an invalid lon lat
+   */
+  midgard::PointLL connecting_point() const {
+    // if the last bit is set this is a connection point for transit in/egress
+    return headings_ >> 63 ? midgard::PointLL(headings_) : midgard::PointLL();
+  }
+
+  /**
+   * Sets the connection point location to be used for associating this transit in/egress to the road
+   * network
+   * @param p the location where the in/egress should connect to the road network
+   */
+  void set_connecting_point(const midgard::PointLL& p);
+
+  /**
    * Get the heading of the local edge given its local index. Supports
    * up to 8 local edges. Headings are stored rounded off to 2 degree
    * values.
@@ -362,6 +433,11 @@ public:
    * @return Returns heading relative to N (0-360 degrees).
    */
   inline uint32_t heading(const uint32_t localidx) const {
+    if (localidx > kMaxLocalEdgeIndex) {
+      LOG_DEBUG("Local index " + std::to_string(localidx) + " exceeds max value of " +
+                std::to_string(kMaxLocalEdgeIndex) + ", returning heading of 0");
+      return 0;
+    }
     // Make sure everything is 64 bit!
     uint64_t shift = localidx * 8; // 8 bits per index
     return static_cast<uint32_t>(std::round(
@@ -409,11 +485,11 @@ public:
   }
 
   /**
-   * Returns the json representation of the object
+   * the json representation of the object
    * @param tile the tile required to get admin information
-   * @return  json object
+   * @param writer The writer json object to represent the id
    */
-  json::MapPtr json(const graph_tile_ptr& tile) const;
+  void json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // Organized into 8-byte words so structure will align to 8 byte boundaries.
@@ -435,6 +511,7 @@ protected:
   uint64_t density_ : 4;        // Relative road density
   uint64_t traffic_signal_ : 1; // Traffic signal
   uint64_t mode_change_ : 1;    // Mode change allowed?
+                                // Also used for aggregation of edges at filter stage
   uint64_t named_ : 1;          // Is this a named intersection?
 
   uint64_t transition_index_ : 21;   // Index into the node transitions to the first transition
@@ -447,11 +524,21 @@ protected:
   uint64_t drive_on_right_ : 1;      // Driving side. Right if true (false=left)
   uint64_t tagged_access_ : 1;       // Was access initially tagged?
   uint64_t private_access_ : 1;      // Is the access private?
-  uint64_t spare2_ : 18;
+  uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
+  uint64_t elevation_ : 15;          // Encoded elevation (meters)
+  uint64_t timezone_ext_1_ : 1;      // To keep compatibility when new timezones are added
+  // uncomment a new timezone ever gets created from a previously new
+  // timezone (reference release is 2023c)
+  // uint64_t timezone_ext_2_ : 1;
 
-  // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
-  // for all other levels. Connecting way Id (for transit level) while data build occurs.
-  // Need to keep this in NodeInfo since it is used in map-matching.
+  uint64_t spare2_ : 1;
+
+  // For not transit levels its the headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to
+  // nearest 2 degrees)for all other levels.
+  // Sadly we need to keep this for now because its used in map matching, otherwise we could remove it
+  // Also for transit levels (while building data only) it can be used for either the connecting way
+  // id for matching the connection point of the station to the edge or an encoded lon lat pair for
+  // the exact connection point. If the highest bit is set its a lon lat otherwise its a way id
   uint64_t headings_;
 };
 

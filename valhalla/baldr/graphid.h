@@ -1,14 +1,13 @@
 #ifndef VALHALLA_BALDR_GRAPHID_H_
 #define VALHALLA_BALDR_GRAPHID_H_
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
+
 #include <cstdint>
-#include <functional>
-#include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/json.h>
 
 namespace valhalla {
 namespace baldr {
@@ -71,6 +70,15 @@ public:
    * @param value all the various bits rolled into one
    */
   explicit GraphId(const uint64_t value) : value(value) {
+    if (tileid() > kMaxGraphTileId) {
+      throw std::logic_error("Tile id out of valid range");
+    }
+    if (level() > kMaxGraphHierarchy) {
+      throw std::logic_error("Level out of valid range");
+    }
+    if (id() > kMaxGraphId) {
+      throw std::logic_error("Id out of valid range");
+    }
   }
 
   /**
@@ -94,7 +102,7 @@ public:
    * Gets the tile Id.
    * @return   Returns the tile Id.
    */
-  uint32_t tileid() const {
+  inline uint32_t tileid() const {
     return (value & 0x1fffff8) >> 3;
   }
 
@@ -102,7 +110,7 @@ public:
    * Gets the hierarchy level.
    * @return   Returns the level.
    */
-  uint32_t level() const {
+  inline uint32_t level() const {
     return (value & 0x7);
   }
 
@@ -110,7 +118,7 @@ public:
    * Gets the identifier within the hierarchy level.
    * @return   Returns the unique identifier within the level.
    */
-  uint32_t id() const {
+  inline uint32_t id() const {
     return (value & 0x3ffffe000000) >> 25;
   }
 
@@ -139,6 +147,7 @@ public:
    * @return boolean true if the id is valid
    */
   bool Is_Valid() const {
+    // TODO: make this strict it should check the tile hierarchy not bit field widths
     return value != kInvalidGraphId;
   }
 
@@ -155,15 +164,15 @@ public:
    * Returns a value indicating the tile (level and tile id) of the graph Id.
    * @return  Returns a 32 bit value.
    */
-  uint32_t tile_value() const {
+  inline uint32_t tile_value() const {
     return (value & 0x1ffffff);
   }
 
   /**
    * The json representation of the id
-   * @return  json
+   * @param writer The writer json object to represent the id
    */
-  json::Value json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
   /**
    * Post increments the id.
@@ -187,6 +196,14 @@ public:
    */
   GraphId operator+(uint64_t offset) const {
     return GraphId(tileid(), level(), id() + offset);
+  }
+
+  /**
+   * Advances the id
+   */
+  GraphId& operator+=(uint32_t offset) {
+    set_id(id() + offset);
+    return *this;
   }
 
   /**
@@ -224,7 +241,14 @@ public:
 namespace std {
 template <> struct hash<valhalla::baldr::GraphId> {
   inline std::size_t operator()(const valhalla::baldr::GraphId& k) const {
-    return static_cast<size_t>(k.value);
+    // simplified version of murmur3 hash for 64 bit
+    uint64_t v = k.value;
+    v ^= v >> 33;
+    v *= 0xff51afd7ed558ccdULL;
+    v ^= v >> 33;
+    v *= 0xc4ceb9fe1a85ec53ULL;
+    v ^= v >> 33;
+    return static_cast<size_t>(v);
   }
 };
 inline std::string to_string(const valhalla::baldr::GraphId& id) {

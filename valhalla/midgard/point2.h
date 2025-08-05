@@ -1,15 +1,13 @@
 #pragma once
 
+#include <valhalla/midgard/util_core.h>
+
 #include <cmath>
-#include <cstdint>
 #include <cstring>
-#include <functional>
-#include <limits>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#include <valhalla/midgard/util_core.h>
 
 namespace {
 constexpr float LL_EPSILON = .00002f;
@@ -37,8 +35,6 @@ public:
   using typename std::pair<PrecisionT, PrecisionT>::first_type;
   using typename std::pair<PrecisionT, PrecisionT>::second_type;
   using value_type = typename std::pair<PrecisionT, PrecisionT>::first_type;
-
-  virtual ~PointXY() = default;
 
   /**
    * Get the x component.
@@ -77,7 +73,7 @@ public:
    * @param   x   x coordinate position.
    * @param   y   y coordinate position.
    */
-  virtual void Set(const PrecisionT x, const PrecisionT y) {
+  void Set(const PrecisionT x, const PrecisionT y) {
     first = x;
     second = y;
   }
@@ -173,7 +169,7 @@ public:
    * @param  p2  End point of the segment.
    * @return  Returns true if this point is left of the segment.
    */
-  virtual PrecisionT IsLeft(const PointXY<PrecisionT>& p1, const PointXY<PrecisionT>& p2) const {
+  PrecisionT IsLeft(const PointXY<PrecisionT>& p1, const PointXY<PrecisionT>& p2) const {
     return (p2.x() - p1.x()) * (y() - p1.y()) - (x() - p1.x()) * (p2.y() - p1.y());
   }
 
@@ -194,6 +190,15 @@ public:
    */
   static bool IsSpherical() {
     return false;
+  }
+
+  /**
+   * Return a string in format "lon,lat"
+   *
+   * @return String in format "lon,lat"
+   */
+  inline const std::string to_string() const {
+    return std::to_string(this->first) + "," + std::to_string(this->second);
   }
 };
 

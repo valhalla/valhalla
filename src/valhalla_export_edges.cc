@@ -1,32 +1,25 @@
-#include "baldr/rapidjson_utils.h"
-#include <boost/program_options.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <cstdint>
-
+#include "argparse_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
 #include <algorithm>
+#include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <unordered_map>
-#include <utility>
-
-#include "config.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
-namespace bpo = boost::program_options;
-
 // global options instead of passing them around
-std::string column_separator{'\0'};
-std::string row_separator = "\n";
-std::string config;
-bool ferries;
-bool unnamed;
+std::string row_separator, column_separator;
+bool ferries, unnamed;
 
 namespace {
 
@@ -146,61 +139,48 @@ void extend(GraphReader& reader,
 
 // program entry point
 int main(int argc, char* argv[]) {
-  bpo::options_description options("valhalla_export_edges " VALHALLA_VERSION "\n"
-                                   "\n"
-                                   " Usage: valhalla_export_edges [options]\n"
-                                   "\n"
-                                   "valhalla_export_edges is a simple command line test tool which "
-                                   "dumps information about each graph edge. "
-                                   "\n"
-                                   "\n");
+  const auto program = std::filesystem::path(__FILE__).stem().string();
+  // args
+  std::string bbox;
+  boost::property_tree::ptree config;
 
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "column,c", bpo::value<std::string>(&column_separator),
-      "What separator to use between columns [default=\\0].")(
-      "row,r", bpo::value<std::string>(&column_separator),
-      "What separator to use between row [default=\\n].")("ferries,f",
-                                                          "Export ferries as well [default=false]")(
-      "unnamed,u", "Export unnamed edges as well [default=false]")
-      // positional arguments
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file [required]");
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("config", 1);
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
+    // clang-format off
+    cxxopts::Options options(
+      program,
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
+      "a simple command line test tool which\n"
+      "dumps information about each graph edge.\n\n");
+
+    using namespace std::string_literals;
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
+      ("x,column", "What separator to use between columns [default=\\0].", cxxopts::value<std::string>(column_separator)->default_value("\0"s))
+      ("r,row", "What separator to use between row [default=\\n].", cxxopts::value<std::string>(row_separator)->default_value("\n"))
+      ("f,ferries", "Export ferries as well [default=false]", cxxopts::value<bool>(ferries)->default_value("false"))
+      ("u,unnamed", "Export unnamed edges as well [default=false]", cxxopts::value<bool>(unnamed)->default_value("false"));
+    // clang-format on
+
+    auto result = options.parse(argc, argv);
+    if (!parse_common_args(program, options, result, &config, ""))
+      return EXIT_SUCCESS;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
-  if (vm.count("help") || !vm.count("config")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "valhalla_export_edges " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  bool ferries = vm.count("ferries");
-  bool unnamed = vm.count("unnamed");
-
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
+  // configure logging here, we want it to go to stderr
   valhalla::midgard::logging::Configure({{"type", "std_err"}, {"color", "true"}});
 
   // get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // keep the global number of edges encountered at the point we encounter each tile
   // this allows an edge to have a sequential global id and makes storing it very small

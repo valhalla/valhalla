@@ -6,12 +6,10 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <iterator>
-#include <list>
-#include <map>
 #include <memory>
 #include <queue>
 #include <stdexcept>
@@ -20,8 +18,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <valhalla/filesystem.h>
 
 #ifdef _WIN32
 #include <io.h>
@@ -154,7 +150,7 @@ public:
 
   // create a new file to map with a given size
   void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
-    auto target_size = new_count * sizeof(T);
+    decltype(stat::st_size) target_size = new_count * sizeof(T);
     struct stat s;
     if (stat(new_file_name.c_str(), &s) || s.st_size != target_size) {
       // open, create and truncate the file
@@ -344,18 +340,19 @@ public:
       return;
     }
 
-    auto tmp_path = filesystem::path(file_name).replace_filename(
-        filesystem::path(file_name).filename().string() + ".tmp");
+    auto tmp_path = std::filesystem::path(file_name).replace_filename(
+        std::filesystem::path(file_name).filename().string() + ".tmp");
     {
       // we need a temporary sequence to merge the sorted subsections into
       sequence<T> output_seq(tmp_path.string(), true);
 
       // Comparator needs to be inverted for pq to provide constant time *smallest* lookup
       // Pq keeps track of element and its index.
-      auto cmp = [&predicate](const std::pair<T, int>& a, std::pair<T, int>& b) {
+      auto cmp = [&predicate](const std::pair<T, size_t>& a, std::pair<T, size_t>& b) {
         return predicate(b.first, a.first);
       };
-      std::priority_queue<std::pair<T, int>, std::vector<std::pair<T, int>>, decltype(cmp)> pq(cmp);
+      std::priority_queue<std::pair<T, size_t>, std::vector<std::pair<T, size_t>>, decltype(cmp)> pq(
+          cmp);
 
       // Sort the subsections
       for (size_t i = 0; i < memmap.size(); i += buffer_size) {
@@ -382,8 +379,8 @@ public:
     memmap.unmap();
 
     // Move the sorted result back into place
-    filesystem::remove(file_name);
-    filesystem::rename(tmp_path, file_name);
+    std::filesystem::remove(file_name);
+    std::filesystem::rename(tmp_path, file_name);
 
     // Reload the sequence
     sequence<T> reloaded(file_name, false);
@@ -594,6 +591,7 @@ protected:
 
 struct tar {
   struct header_t {
+    // 512 byte "block" size
     char name[100];
     char mode[8];
     char uid[8];
@@ -657,7 +655,20 @@ struct tar {
     }
   };
 
-  tar(const std::string& tar_file, bool regular_files_only = true)
+  // all of the info about which tar is memory mapped and where each file within
+  // the tar is found in the map
+  std::string tar_file;
+  mem_map<char> mm;
+  using entry_name_t = std::string;
+  using entry_location_t = std::pair<const char*, size_t>;
+  std::unordered_map<entry_name_t, entry_location_t> contents;
+  size_t corrupt_blocks;
+
+  tar(const std::string& tar_file,
+      bool readonly = true,
+      bool regular_files_only = true,
+      const std::function<decltype(contents)(const std::string&, const char*, const char*, size_t)>&
+          from_index = nullptr)
       : tar_file(tar_file), corrupt_blocks(0) {
     // get the file size
     struct stat s;
@@ -667,18 +678,15 @@ struct tar {
       throw std::runtime_error(tar_file + "(stat): invalid archive size " +
                                std::to_string(s.st_size) + " with header size " +
                                std::to_string(sizeof(header_t)));
-      return;
     }
 
     // map the file
-    mm.map_readonly(tar_file, s.st_size);
-
-    // determine opposite of preferred path separator (needed to update OS-specific path separator)
-    const char opp_sep = filesystem::path::preferred_separator == '/' ? '\\' : '/';
+    mm.map(tar_file, s.st_size, POSIX_MADV_NORMAL, readonly);
 
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of
+    bool tried_index = false;
     const char* position = mm.get();
     while (position < mm.get() + mm.size()) {
       // get the header for this file
@@ -693,8 +701,19 @@ struct tar {
       // do we record entry file or not
       if (!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0')) {
         // tar doesn't automatically update path separators based on OS, so we need to do it...
-        std::string name{h->name};
-        std::replace(name.begin(), name.end(), opp_sep, filesystem::path::preferred_separator);
+        std::filesystem::path filepath{h->name};
+        filepath.make_preferred();
+        const std::string& name = filepath.string();
+        // the caller may be able to construct the contents via an index header let them try
+        if (!tried_index && from_index != nullptr) {
+          tried_index = true;
+          contents = from_index(name, position, mm.get(), size);
+          // if it was able to initialize from an index we bail
+          if (!contents.empty()) {
+            return;
+          }
+        }
+        // otherwise we just get each item at a time
         contents.emplace(std::piecewise_construct, std::forward_as_tuple(name),
                          std::forward_as_tuple(position, size));
       }
@@ -703,13 +722,6 @@ struct tar {
       position += blocks * sizeof(header_t);
     }
   }
-
-  std::string tar_file;
-  mem_map<char> mm;
-  using entry_name_t = std::string;
-  using entry_location_t = std::pair<const char*, size_t>;
-  std::unordered_map<entry_name_t, entry_location_t> contents;
-  size_t corrupt_blocks;
 };
 
 } // namespace midgard

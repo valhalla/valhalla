@@ -1,23 +1,27 @@
 ## Protobuf
-protobuf_generate_cpp(protobuff_srcs protobuff_hdrs
+set(protobuf_descriptors
   api.proto
+  common.proto
   directions.proto
   info.proto
   options.proto
   sign.proto
-  tripcommon.proto
   trip.proto
   transit.proto
   transit_fetch.proto
   incidents.proto
-  ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/fileformat.proto
-  ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/osmformat.proto)
+  status.proto
+  matrix.proto
+  isochrone.proto
+  expansion.proto)
+
+protobuf_generate_cpp(protobuf_srcs protobuf_hdrs ${protobuf_descriptors})
 
 valhalla_module(NAME proto
   SOURCES
-    ${protobuff_srcs}
+    ${protobuf_srcs}
   HEADERS
-    ${protobuff_hdrs}
+    ${protobuf_hdrs}
   INCLUDE_DIRECTORIES
     PUBLIC
       ${CMAKE_CURRENT_BINARY_DIR}

@@ -1,5 +1,7 @@
 #include "gurka.h"
+
 #include <gtest/gtest.h>
+
 #include <random>
 
 using namespace valhalla;
@@ -9,7 +11,6 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
 
     const std::string ascii_map = R"(
     A---1B----C
@@ -93,6 +94,11 @@ TEST_F(SimpleRestrictions, ForceDetourComplex) {
 TEST_F(SimpleRestrictions, IgnoreRestriction) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"C", "F"}, "auto",
                                  {{"/costing_options/auto/ignore_restrictions", "1"}});
+  gurka::assert::osrm::expect_steps(result, {"BC", "BE", "DEF"});
+  gurka::assert::raw::expect_path(result, {"BC", "BE", "DEF"});
+}
+TEST_F(SimpleRestrictions, IgnoreRestrictionPedestrian) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"C", "F"}, "pedestrian");
   gurka::assert::osrm::expect_steps(result, {"BC", "BE", "DEF"});
   gurka::assert::raw::expect_path(result, {"BC", "BE", "DEF"});
 }
