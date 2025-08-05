@@ -1,10 +1,6 @@
 #ifndef VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 #define VALHALLA_THOR_BIDIRECTIONAL_ASTAR_H_
 
-#include <cstdint>
-#include <memory>
-#include <vector>
-
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/proto/api.pb.h>
@@ -13,6 +9,10 @@
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
+
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 namespace valhalla {
 namespace thor {

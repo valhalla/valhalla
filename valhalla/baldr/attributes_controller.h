@@ -1,8 +1,8 @@
 #pragma once
+#include <valhalla/proto/options.pb.h>
+
 #include <string>
 #include <unordered_map>
-
-#include <valhalla/proto/options.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -11,6 +11,9 @@ namespace baldr {
 const std::string kEdgeNames = "edge.names";
 const std::string kEdgeLength = "edge.length";
 const std::string kEdgeSpeed = "edge.speed";
+const std::string kEdgeSpeedType = "edge.speed_type";
+const std::string kEdgeSpeedsFaded = "edge.speeds_faded";
+const std::string kEdgeSpeedsNonFaded = "edge.speeds_non_faded";
 const std::string kEdgeRoadClass = "edge.road_class";
 const std::string kEdgeBeginHeading = "edge.begin_heading";
 const std::string kEdgeEndHeading = "edge.end_heading";
@@ -82,6 +85,7 @@ const std::string kEdgeLandmarks = "edge.landmarks";
 const std::string kEdgeCountryCrossing = "edge.country_crossing";
 const std::string kEdgeForward = "edge.forward";
 const std::string kEdgeLevels = "edge.levels";
+const std::string kEdgeTrafficSignal = "edge.traffic_signal";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";

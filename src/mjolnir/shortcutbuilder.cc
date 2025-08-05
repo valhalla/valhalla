@@ -1,13 +1,4 @@
 #include "mjolnir/shortcutbuilder.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "scoped_timer.h"
-
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -16,8 +7,17 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 #include "sif/osrm_car_duration.h"
+
+#include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -380,7 +380,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
   }
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
-  auto last_edge = [&reader](graph_tile_ptr tile, const GraphId& endnode, EdgePairs& edgepairs) {
+  auto last_edge = [&reader](const graph_tile_ptr& tile, const GraphId& endnode,
+                             EdgePairs& edgepairs) {
     return !CanContract(reader, tile, endnode, edgepairs);
   };
 
@@ -509,7 +510,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         for (const auto& res : access_restrictions.all_restrictions) {
           tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                              res.second.type(), res.second.modes(),
-                                                             res.second.value()));
+                                                             res.second.value(),
+                                                             res.second.except_destination()));
         }
       }
 
@@ -670,7 +672,8 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
           auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 

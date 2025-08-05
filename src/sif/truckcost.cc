@@ -3,15 +3,16 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
-#include "midgard/constants.h"
-#include "midgard/util.h"
+#include "baldr/rapidjson_utils.h"
 #include "proto_conversions.h"
 #include "sif/osrm_car_duration.h"
+
 #include <cassert>
 
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
+
 #include <random>
 #endif
 
@@ -401,6 +402,10 @@ bool TruckCost::AllowMultiPass() const {
 }
 
 bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+
+  if (restriction.except_destination() && allow_destination_only_)
+    return true;
+
   switch (restriction.type()) {
     case AccessType::kHazmat:
       if (hazmat_ && !restriction.value()) {

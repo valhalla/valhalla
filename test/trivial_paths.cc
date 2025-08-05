@@ -1,11 +1,10 @@
-#include "test.h"
-
-#include <string>
-
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/autocost.h"
+#include "test.h"
 #include "thor/worker.h"
+
+#include <string>
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -82,7 +81,6 @@ void try_path(GraphReader& reader,
   request.mutable_options()->set_costing_type(Costing::auto_);
   sif::TravelMode mode;
   auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode);
-  cost_ptr_t costing = mode_costing[static_cast<size_t>(mode)];
 
   TimeDepForward astar;
   valhalla::Location origin = request.options().locations(0);

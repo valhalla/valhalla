@@ -2,9 +2,12 @@
 
 // we type alias the tile pointers as they are ubiquitous throughout the library
 
+#ifdef ENABLE_THREAD_SAFE_TILE_REF_COUNT
+#include <memory>
+#else
 #include <boost/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-#include <memory>
+#endif
 
 namespace valhalla {
 namespace baldr {

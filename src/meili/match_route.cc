@@ -1,9 +1,8 @@
-#include <cassert>
-#include <vector>
-
-#include "meili/geometry_helpers.h"
 #include "meili/map_matcher.h"
 #include "midgard/logging.h"
+
+#include <cassert>
+#include <vector>
 
 namespace {
 
@@ -60,7 +59,7 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
                          int the_restriction_idx)
     : edgeid(the_edgeid), source(the_source), target(the_target),
       first_match_idx(the_first_match_idx), last_match_idx(the_last_match_idx),
-      discontinuity(disconnect), restriction_idx(the_restriction_idx) {
+      restriction_idx(the_restriction_idx), discontinuity(disconnect) {
   if (!edgeid.Is_Valid()) {
     throw std::invalid_argument("Invalid edgeid");
   }
@@ -176,6 +175,11 @@ void cut_segments(const std::vector<MatchResult>& match_results,
     size_t old_size = new_segments.size();
     new_segments.insert(new_segments.cend(), first_segment, search_segment + 1);
     new_segments[old_size].first_match_idx = prev_idx;
+    if(prev_idx != (curr_idx - 1) && curr_idx == last_idx) {
+      // I think there is a choice here between putting the range here or in the next segment.
+      new_segments[old_size].last_match_idx = curr_idx - 1;
+    }
+
     // when the points got interpolated, we want to use the match results' distance along
     // otherwise, we use the segment's source or target because if it is a node snap, the
     // match result can only hold one candidate, we need either side of the node.
@@ -257,6 +261,10 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
           new_segments.front().last_match_idx = route.back().last_match_idx;
         route.pop_back();
       }
+
+      std::for_each(new_segments.begin(), new_segments.end(), [](auto &s) {
+        if((s.first_match_idx == -1) != (s.last_match_idx == -1))
+          s.first_match_idx = s.last_match_idx = std::max(s.first_match_idx, s.last_match_idx); });
 
       // debug builds check that the route is valid
       assert(ValidateRoute(mapmatcher.graphreader(), new_segments.begin(), new_segments.end(), tile));

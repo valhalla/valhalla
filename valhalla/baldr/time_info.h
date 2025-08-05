@@ -1,13 +1,12 @@
 #pragma once
 
-#include <chrono>
-
 #include <valhalla/baldr/datetime.h>
-#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/location.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/proto/api.pb.h>
+
+#include <chrono>
 
 namespace dt = valhalla::baldr::DateTime;
 namespace sc = std::chrono;

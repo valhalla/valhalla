@@ -1,10 +1,9 @@
 #ifndef VALHALLA_BALDR_DIRECTEDEDGE_H_
 #define VALHALLA_BALDR_DIRECTEDEDGE_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/turn.h>
 
 namespace valhalla {
@@ -1072,6 +1071,15 @@ public:
   }
 
   /**
+   * We hijack the shortcut mask to move   ferry edges to lower
+   * hierarchies. Will be set during the graph build and re-set during the
+   * hierarchy builder.
+   * @param rc    the road class which should determine the edge's hierarchy
+   * @param reset whether is_shortcut_ should be set false
+   */
+  void set_hierarchy_roadclass(const baldr::RoadClass rc, const bool reset = false);
+
+  /**
    * Set the mask for whether this edge represents a shortcut between 2 nodes.
    * Shortcuts bypass nodes that only connect to lower levels in the hierarchy
    * (other than the 1-2 higher level edges that superseded by the shortcut).
@@ -1179,9 +1187,9 @@ public:
 
   /**
    * Create a json object representing this edge
-   * @return  Returns the json object
+   *  @param writer The writer json object to represent the object
    */
-  json::MapPtr json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // 1st 8-byte word

@@ -1,11 +1,10 @@
-#include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/polyline2.h"
-#include "midgard/util.h"
 #include "thor/pathalgorithm.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
-#include <robin_hood.h>
+
+#include <ankerl/unordered_dense.h>
 
 using namespace rapidjson;
 using namespace valhalla::midgard;
@@ -48,9 +47,9 @@ void writeExpansionProgress(Expansion* expansion,
   if (exp_props.count(Options_ExpansionProperties_edge_status))
     expansion->add_edge_status(status);
   if (exp_props.count(Options_ExpansionProperties_edge_id))
-    expansion->add_edge_id(static_cast<uint32_t>(edgeid));
+    expansion->add_edge_id(static_cast<uint64_t>(edgeid));
   if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
-    expansion->add_pred_edge_id(static_cast<uint32_t>(prev_edgeid));
+    expansion->add_pred_edge_id(static_cast<uint64_t>(prev_edgeid));
   if (exp_props.count(Options_ExpansionProperties_expansion_type))
     expansion->add_expansion_type(expansion_type);
 }
@@ -73,8 +72,8 @@ struct expansion_properties_t {
                          std::vector<midgard::PointLL>&& shape,
                          float cost,
                          Expansion_ExpansionType expansion_type)
-      : prev_edgeid(prev_edgeid), status(status), duration(duration), distance(distance),
-        shape(std::move(shape)), cost(cost), expansion_type(expansion_type){};
+      : prev_edgeid(prev_edgeid), status(status), duration(duration), shape(std::move(shape)),
+        distance(distance), cost(cost), expansion_type(expansion_type){};
 
   // check if status is higher or same – as we will keep track of the latest one
   static bool is_latest_status(Expansion_EdgeStatus current, Expansion_EdgeStatus candidate) {
@@ -95,10 +94,9 @@ std::string thor_worker_t::expansion(Api& request) {
   auto exp_action = options.expansion_action();
   bool skip_opps = options.skip_opposites();
   bool dedupe = options.dedupe();
-  std::unordered_set<baldr::GraphId> opp_edges;
   std::unordered_set<Options::ExpansionProperties> exp_props;
-  typedef robin_hood::unordered_map<baldr::GraphId, expansion_properties_t> edge_state_t;
-  edge_state_t edge_state;
+  ankerl::unordered_dense::set<baldr::GraphId> opp_edges;
+  ankerl::unordered_dense::map<baldr::GraphId, expansion_properties_t> edge_state;
 
   // default generalization to ~ zoom level 15
   float gen_factor = options.has_generalize_case() ? options.generalize() : 10.f;
@@ -142,9 +140,9 @@ std::string thor_worker_t::expansion(Api& request) {
           std::reverse(shape.begin(), shape.end());
         Polyline2<PointLL>::Generalize(shape, gen_factor, {}, false);
         if (dedupe) {
-          if (edge_state.contains(edgeid)) {
+          if (auto it = edge_state.find(edgeid); it != edge_state.end()) {
             // Keep only properties of last/highest status of edge
-            if (!expansion_properties_t::is_latest_status(edge_state.at(edgeid).status, status)) {
+            if (!expansion_properties_t::is_latest_status(it->second.status, status)) {
               return;
             }
           }

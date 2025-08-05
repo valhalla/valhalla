@@ -1,15 +1,14 @@
-#include <algorithm>
-#include <sstream>
+#include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
+#include "baldr/timedomain.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
 
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/timedomain.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
+#include <algorithm>
+#include <sstream>
+#include <unordered_set>
 
 namespace {
 const valhalla::baldr::DateTime::dt_info_t INVALID_DT = {"", "", ""};
@@ -432,8 +431,7 @@ const std::string check_tz_map(const date::tzdb& db) {
   for (const auto& tz : db.zones) {
     // only add entirely new zones if we didn't see them as link target yet
     if (tz_name_to_id.find(tz.name()) == tz_name_to_id.end() &&
-        std::find(new_zones_names.begin(), new_zones_names.end(), tz.name()) ==
-            new_zones_names.end()) {
+        new_zones_names.find(tz.name()) == new_zones_names.end()) {
       new_zones_msg.emplace_back(tz.name());
     }
   }

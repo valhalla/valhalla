@@ -1,3 +1,24 @@
+#include "odin/maneuversbuilder.h"
+#include "baldr/graphconstants.h"
+#include "baldr/streetname.h"
+#include "baldr/streetnames.h"
+#include "baldr/streetnames_factory.h"
+#include "baldr/turn.h"
+#include "baldr/turnlanes.h"
+#include "baldr/verbal_text_formatter_factory.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
+#include "odin/sign.h"
+#include "odin/signs.h"
+#include "odin/util.h"
+#include "proto/directions.pb.h"
+#include "proto/options.pb.h"
+#include "worker.h"
+
+#include <boost/format.hpp>
+
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
@@ -5,32 +26,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <boost/format.hpp>
-
-#include "baldr/graphconstants.h"
-#include "baldr/streetname.h"
-#include "baldr/streetnames.h"
-#include "baldr/streetnames_factory.h"
-#include "baldr/streetnames_us.h"
-#include "baldr/turn.h"
-#include "baldr/turnlanes.h"
-#include "baldr/verbal_text_formatter.h"
-#include "baldr/verbal_text_formatter_factory.h"
-#include "baldr/verbal_text_formatter_us.h"
-#include "midgard/encoded.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/util.h"
-#include "worker.h"
-
-#include "odin/maneuversbuilder.h"
-#include "odin/sign.h"
-#include "odin/signs.h"
-#include "odin/util.h"
-
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

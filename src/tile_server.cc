@@ -1,7 +1,4 @@
 #include "valhalla/tile_server.h"
-
-#include "valhalla/filesystem.h"
-
 #include "baldr/compression_utils.h"
 
 #include <prime_server/http_protocol.hpp>
@@ -9,6 +6,7 @@
 #include <prime_server/prime_server.hpp>
 
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <stdexcept>
 #include <thread>
@@ -69,7 +67,8 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
 
     auto path = extract_file_path_from_request(request.path);
     // load the file and gzip it if we have to
-    std::string full_path = tile_source_dir + (filesystem::path::preferred_separator + path);
+    std::filesystem::path full_path{tile_source_dir};
+    full_path.append(path);
     std::fstream input(full_path, std::ios::in | std::ios::binary);
     if (input) {
       std::string buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());

@@ -1,12 +1,10 @@
 #include "midgard/polyline2.h"
-#include <cstdint>
+#include "midgard/point2.h"
+#include "test.h"
 
 #include <algorithm>
+#include <cstdint>
 #include <vector>
-
-#include "midgard/point2.h"
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla::midgard;

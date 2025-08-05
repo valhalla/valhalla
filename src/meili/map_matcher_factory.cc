@@ -1,15 +1,9 @@
+#include "meili/map_matcher_factory.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/costconstants.h"
-#include "sif/motorscootercost.h"
-#include "sif/pedestriancost.h"
-
 #include "meili/candidate_search.h"
 #include "meili/map_matcher.h"
-
-#include "meili/map_matcher_factory.h"
+#include "sif/costconstants.h"
 
 namespace {
 
@@ -27,10 +21,11 @@ MapMatcherFactory::MapMatcherFactory(const boost::property_tree::ptree& root,
                                      const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : config_(root.get_child("meili")), graphreader_(graph_reader) {
   if (!graphreader_)
-    graphreader_.reset(new baldr::GraphReader(root.get_child("mjolnir")));
-  candidatequery_.reset(
-      new CandidateGridQuery(*graphreader_, local_tile_size() / config_.candidate_search.grid_size,
-                             local_tile_size() / config_.candidate_search.grid_size));
+    graphreader_ = std::make_shared<baldr::GraphReader>(root.get_child("mjolnir"));
+  candidatequery_ =
+      std::make_shared<CandidateGridQuery>(*graphreader_,
+                                           local_tile_size() / config_.candidate_search.grid_size,
+                                           local_tile_size() / config_.candidate_search.grid_size);
 }
 
 MapMatcherFactory::~MapMatcherFactory() {

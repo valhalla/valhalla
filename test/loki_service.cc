@@ -1,22 +1,20 @@
-#include "test.h"
-
-#include <cstdint>
-#include <filesystem>
-
 #include "baldr/rapidjson_utils.h"
+#include "loki/worker.h"
 #include "midgard/logging.h"
+#include "odin/worker.h"
 #include "proto/api.pb.h"
 #include "proto_conversions.h"
+#include "test.h"
+#include "thor/worker.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
-#include <thread>
 #include <unistd.h>
 
-#include "loki/worker.h"
-#include "odin/worker.h"
-#include "thor/worker.h"
+#include <cstdint>
+#include <filesystem>
+#include <thread>
 
 using namespace valhalla;
 using namespace prime_server;
@@ -380,12 +378,12 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
                                             "centroid",
                                             "status",
                                         }) {
-  auto run_dir = VALHALLA_BUILD_DIR "test" +
-                 std::string(1, std::filesystem::path::preferred_separator) + "loki_service_tmp";
+  std::filesystem::path run_dir{VALHALLA_BUILD_DIR "test"};
+  run_dir.append("loki_service_tmp");
   if (!std::filesystem::is_directory(run_dir) && !std::filesystem::create_directories(run_dir))
     throw std::runtime_error("Couldnt make directory to run from");
 
-  auto config = test::make_config(run_dir,
+  auto config = test::make_config(run_dir.string(),
                                   {{"service_limits.skadi.max_shape", "100"},
                                    {"service_limits.max_exclude_locations", "0"}},
                                   {"loki.actions", "mjolnir.tile_extract", "mjolnir.tile_dir"});

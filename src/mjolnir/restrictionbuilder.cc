@@ -1,6 +1,13 @@
 #include "mjolnir/restrictionbuilder.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/tilehierarchy.h"
+#include "baldr/timedomain.h"
+#include "midgard/logging.h"
+#include "midgard/sequence.h"
 #include "mjolnir/complexrestrictionbuilder.h"
-#include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmrestriction.h"
 #include "scoped_timer.h"
@@ -10,16 +17,6 @@
 #include <random>
 #include <thread>
 #include <unordered_set>
-
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/tilehierarchy.h"
-#include "baldr/timedomain.h"
-#include "midgard/logging.h"
-#include "midgard/sequence.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -757,10 +754,10 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     // Start the threads
     LOG_INFO("Adding complex turn restrictions at level " + std::to_string(tl->level));
     for (size_t i = 0; i < threads.size(); ++i) {
-      threads[i].reset(new std::thread(build, std::cref(complex_from_restrictions_file),
-                                       std::cref(complex_to_restrictions_file),
-                                       std::cref(hierarchy_properties), std::ref(tilequeue),
-                                       std::ref(lock), std::ref(promises[i])));
+      threads[i] = std::make_shared<std::thread>(build, std::cref(complex_from_restrictions_file),
+                                                 std::cref(complex_to_restrictions_file),
+                                                 std::cref(hierarchy_properties), std::ref(tilequeue),
+                                                 std::ref(lock), std::ref(promises[i]));
     }
 
     // Wait for them to finish up their work
@@ -781,8 +778,8 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
 
     HandleOnlyRestrictionProperties(results, hierarchy_properties);
 
-    uint32_t forward_restrictions_count = 0;
-    uint32_t reverse_restrictions_count = 0;
+    [[maybe_unused]] uint32_t forward_restrictions_count = 0;
+    [[maybe_unused]] uint32_t reverse_restrictions_count = 0;
 
     for (const auto& stat : results) {
       forward_restrictions_count += stat.forward_restrictions_count + stat.restrictions.size();

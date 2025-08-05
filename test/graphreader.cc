@@ -1,13 +1,12 @@
-#include <cstdint>
-
-#include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
+#include "baldr/connectivity_map.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
+#include "test.h"
 
 #include <fcntl.h>
 
-#include "test.h"
+#include <cstdint>
+#include <filesystem>
 
 using namespace valhalla::baldr;
 
@@ -66,8 +65,9 @@ TEST(SimpleCache, CacheLimitsNoOvercommitAfterClear) {
 
 void touch_tile(const uint32_t tile_id, const std::string& tile_dir, uint8_t level) {
   auto suffix = GraphTile::FileSuffix({tile_id, level, 0});
-  auto fullpath = tile_dir + filesystem::path::preferred_separator + suffix;
-  filesystem::create_directories(filesystem::path(fullpath).parent_path());
+  std::filesystem::path fullpath{tile_dir};
+  fullpath.append(suffix);
+  std::filesystem::create_directories(fullpath.parent_path());
   int fd = open(fullpath.c_str(), O_CREAT | O_WRONLY, 0644);
   if (fd >= 0)
     close(fd);
@@ -79,7 +79,7 @@ TEST(ConnectivityMap, Basic) {
   pt.put("tile_dir", "test/gphrdr_test");
   std::string tile_dir = pt.get<std::string>("tile_dir");
   for (const auto& level : {TileHierarchy::levels()[2], TileHierarchy::GetTransitLevel()}) {
-    filesystem::remove_all(tile_dir);
+    std::filesystem::remove_all(tile_dir);
 
     // looks like this (XX) means no tile there:
     /*
@@ -130,7 +130,7 @@ TEST(ConnectivityMap, Basic) {
     EXPECT_NE(conn.get_color({a2, level.level, 0}), conn.get_color({d0, level.level, 0}))
         << "a is disjoint from d";
 
-    filesystem::remove_all(tile_dir);
+    std::filesystem::remove_all(tile_dir);
   }
 }
 

@@ -1,5 +1,5 @@
 #include "gurka.h"
-#include <boost/algorithm/string/join.hpp>
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -132,6 +132,9 @@ protected:
                          unsigned exp_feats,
                          const std::vector<std::string>& props) {
 
+    SCOPED_TRACE("Failed on " +
+                 std::string(::testing::UnitTest::GetInstance()->current_test_info()->name()));
+
     std::string res;
     auto api = do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, false);
     // get the MultiLineString feature
@@ -171,15 +174,15 @@ TEST_P(ExpansionTest, Routing) {
 
 TEST_P(ExpansionTest, RoutingNoOpposites) {
   // test AStar expansion and no opposite edges
-  check_results("route", {"E", "H"}, true, 16, GetParam());
+  check_results("route", {"E", "H"}, true, 15, GetParam());
 }
 
 TEST_P(ExpansionTest, Matrix) {
-  check_results("sources_to_targets", {"E", "H"}, false, 48, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, false, 54, GetParam());
 }
 
 TEST_P(ExpansionTest, MatrixNoOpposites) {
-  check_results("sources_to_targets", {"E", "H"}, true, 23, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, true, 24, GetParam());
 }
 
 TEST_P(ExpansionTest, IsochroneDedupe) {
@@ -194,7 +197,7 @@ TEST_P(ExpansionTest, IsochroneNoOppositesDedupe) {
 
 TEST_P(ExpansionTest, RoutingDedupe) {
   // test AStar expansion
-  check_results("route", {"E", "H"}, false, 7, GetParam(), true);
+  check_results("route", {"E", "H"}, false, 9, GetParam(), true);
 }
 
 TEST_P(ExpansionTest, RoutingNoOppositesDedupe) {

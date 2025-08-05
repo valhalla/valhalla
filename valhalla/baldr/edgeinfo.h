@@ -1,18 +1,17 @@
 #ifndef VALHALLA_BALDR_EDGEINFO_H_
 #define VALHALLA_BALDR_EDGEINFO_H_
 
+#include <valhalla/baldr/conditional_speed_limit.h>
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
+#include <valhalla/midgard/encoded.h>
+#include <valhalla/midgard/pointll.h>
+
 #include <cstdint>
 #include <map>
 #include <string>
 #include <tuple>
 #include <vector>
-
-#include <valhalla/baldr/conditional_speed_limit.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {
@@ -306,10 +305,10 @@ public:
   std::vector<std::string> level_ref() const;
 
   /**
-   * Returns json representing this object
-   * @return json object
+   * the json representation of the object
+   * @param writer The writer json object to represent the edge info
    */
-  json::MapPtr json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
   // Operator EqualTo based on nodea and nodeb.
   bool operator==(const EdgeInfo& rhs) const;

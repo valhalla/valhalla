@@ -1,23 +1,22 @@
 #include "mjolnir/graphfilter.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
-#include "scoped_timer.h"
-
-#include <boost/property_tree/ptree.hpp>
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/sequence.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
+#include "scoped_timer.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -316,7 +315,8 @@ void FilterTiles(GraphReader& reader,
           auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 
@@ -428,10 +428,11 @@ void FilterTiles(GraphReader& reader,
       tilebuilder.StoreTileData();
     } else {
       // Remove the tile - all nodes and edges were filtered
-      std::string file_location =
-          reader.tile_dir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-      remove(file_location.c_str());
-      LOG_INFO("Remove file: " + file_location + " all edges were filtered");
+      std::filesystem::path file_location{reader.tile_dir()};
+      file_location.append(GraphTile::FileSuffix(tile_id));
+      const auto& file_location_str = file_location.string();
+      ::remove(file_location_str.c_str());
+      LOG_INFO("Remove file: " + file_location_str + " all edges were filtered");
     }
 
     if (reader.OverCommitted()) {
@@ -683,7 +684,8 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
           auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 
@@ -772,10 +774,11 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       tilebuilder.StoreTileData();
     } else {
       // Remove the tile - all nodes and edges were filtered
-      std::string file_location =
-          reader.tile_dir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-      remove(file_location.c_str());
-      LOG_INFO("Remove file: " + file_location + " all edges were filtered");
+      std::filesystem::path file_location{reader.tile_dir()};
+      file_location.append(GraphTile::FileSuffix(tile_id));
+      const auto& file_location_str = file_location.string();
+      ::remove(file_location_str.c_str());
+      LOG_INFO("Remove file: " + file_location_str + " all edges were filtered");
     }
 
     if (reader.OverCommitted()) {

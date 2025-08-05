@@ -1,11 +1,9 @@
-#include <boost/optional.hpp>
-
+#include "sif/dynamiccost.h"
 #include "baldr/graphconstants.h"
-#include "midgard/util.h"
+#include "baldr/rapidjson_utils.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
-#include "sif/dynamiccost.h"
 #include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/nocost.h"
@@ -13,6 +11,8 @@
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
 #include "worker.h"
+
+#include <boost/optional.hpp>
 
 using namespace valhalla::baldr;
 

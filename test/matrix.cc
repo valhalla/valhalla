@@ -1,17 +1,16 @@
-#include "gurka/gurka.h"
-#include "test.h"
-
-#include <string>
-#include <vector>
-
 #include "baldr/rapidjson_utils.h"
+#include "gurka/gurka.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
+#include "test.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -277,11 +276,10 @@ TEST(Matrix, test_matrix) {
   matrix = request.matrix();
   for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal" +
-               " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s distance is not equal to expected value for TDMatrix";
 
     EXPECT_NEAR(matrix.times()[i], matrix_answers[i][0], kThreshold)
-        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s time is not equal to expected value for TDMatrix";
   }
 }
 
@@ -329,11 +327,10 @@ TEST(Matrix, test_timedistancematrix_forward) {
 
   for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal" +
-               " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s distance is not equal to expected value for TDMatrix";
 
     EXPECT_NEAR(matrix.times()[i], expected_results[i][0], kThreshold)
-        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s time is not equal to expected value for TDMatrix";
   }
 }
 
@@ -382,11 +379,10 @@ TEST(Matrix, test_timedistancematrix_reverse) {
 
   for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal" +
-               " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s distance is not equal to expected value for TDMatrix";
 
     EXPECT_NEAR(matrix.times()[i], expected_results[i][0], kThreshold)
-        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s time is not equal to expected value for TDMatrix";
   }
 }
 

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
-#include <utility>
-
 #include <valhalla/baldr/curler.h>
 #include <valhalla/baldr/tilegetter.h>
+
+#include <string>
+#include <utility>
 
 namespace valhalla {
 namespace baldr {

@@ -1,36 +1,32 @@
-#include <cmath>
-#include <cstdint>
-#include <future>
-#include <memory>
-#include <string>
-#include <thread>
-#include <unordered_set>
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/algorithm/string.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/tokenizer.hpp>
-
+#include "mjolnir/convert_transit.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
 #include "midgard/vector2.h"
-
 #include "mjolnir/admin.h"
-#include "mjolnir/convert_transit.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
-#include "mjolnir/util.h"
-
 #include "proto/transit.pb.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/tokenizer.hpp>
+
+#include <cmath>
+#include <cstdint>
+#include <filesystem>
+#include <future>
+#include <memory>
+#include <set>
+#include <string>
+#include <thread>
+#include <unordered_set>
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
@@ -103,7 +99,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
                  const uint32_t tile_date,
                  const Transit& tile_pbf,
                  std::unordered_map<GraphId, uint16_t>& stop_no_access,
-                 const std::string& pbf_fp,
+                 const std::filesystem::path& pbf_fp,
                  std::mutex& lock,
                  builder_stats& stats) {
   // Check if there are no schedule stop pairs in this tile
@@ -113,11 +109,8 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
   uint32_t schedule_index = 0;
   std::map<TransitSchedule, uint32_t> schedules;
 
-  std::size_t slash_found = pbf_fp.find_last_of("/\\");
-  std::string directory = pbf_fp.substr(0, slash_found);
-
-  filesystem::recursive_directory_iterator transit_file_itr(directory);
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::recursive_directory_iterator transit_file_itr(pbf_fp.parent_path());
+  std::filesystem::recursive_directory_iterator end_file_itr;
 
   // lambda to add a schedule
   auto add_schedule = [&schedule_index, &schedules,
@@ -138,7 +131,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (filesystem::is_regular_file(transit_file_itr->path())) {
+    if (std::filesystem::is_regular_file(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
       std::string ext = transit_file_itr->path().extension().string();
       std::string file_name = fname.substr(0, fname.size() - ext.size());
@@ -153,7 +146,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           if (ext == ".pbf") {
             curr_tile_pbf = tile_pbf;
           } else {
-            curr_tile_pbf = read_pbf(fname, lock);
+            curr_tile_pbf = read_pbf(transit_file_itr->path().string(), lock);
           }
         }
 
@@ -529,8 +522,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::unordered_map<uint32_t, Shape>& shape_data,
                 const std::vector<float>& distances,
                 const std::vector<uint32_t>& route_types,
-                bool tile_within_one_tz,
-                const std::multimap<uint32_t, multi_polygon_type>& tz_polys,
+                const std::multimap<uint32_t, Geometry>& tz_polys,
                 uint32_t& no_dir_edge_count) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -557,7 +549,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   // stations and platforms are connected by platformconnections
 
   // Iterate through the platform and their edges
-  uint32_t transitedges = 0;
+  [[maybe_unused]] uint32_t transitedges = 0;
   for (const auto& stop_edges : stop_edge_map) {
     // Get the platform information
     GraphId platform_graphid = stop_edges.second.origin_pbf_graphid;
@@ -604,7 +596,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       if (timezone == 0) {
         // fallback to tz database.
         timezone =
-            (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, station_ll);
+            (tz_polys.size() == 1) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, station_ll);
 
         if (timezone == 0) {
           LOG_WARN("Timezone not found for station " + station.name());
@@ -649,7 +641,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         if (timezone == 0) {
           // fallback to tz database.
           timezone =
-              (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, egress_ll);
+              (tz_polys.size() == 1) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, egress_ll);
           if (timezone == 0) {
             LOG_WARN("Timezone not found for egress " + egress.name());
           }
@@ -826,7 +818,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     if (timezone == 0) {
       // fallback to tz database.
       timezone =
-          (tile_within_one_tz) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, platform_ll);
+          (tz_polys.size() == 1) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, platform_ll);
       if (timezone == 0) {
         LOG_WARN("Timezone not found for platform " + platform.name());
       }
@@ -900,8 +892,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
             GraphId(end_platform_graphid.tileid(), end_platform_graphid.level(), 0));
         boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
         file_name += ".pbf";
-        const std::string file = transit_dir + filesystem::path::preferred_separator + file_name;
-        Transit endtransit = read_pbf(file, lock);
+        std::filesystem::path file_path{transit_dir};
+        file_path.append(file_name);
+        Transit endtransit = read_pbf(file_path.string(), lock);
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
@@ -998,12 +991,10 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
   GraphReader reader(pt);
   auto database = pt.get_optional<std::string>("timezone");
-  // Initialize the tz DB (if it exists)
-  sqlite3* tz_db_handle = GetDBHandle(*database);
-  if (!tz_db_handle) {
-    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
+  auto tz_db = AdminDB::open(*database);
+  if (!tz_db) {
+    LOG_WARN("Time zone db " + *database + " not found. Not saving time zone information from db.");
   }
-  auto tz_conn = make_spatialite_cache(tz_db_handle);
 
   const auto& tiles = TileHierarchy::levels().back().tiles;
   // Iterate through the tiles in the queue and find any that include stops
@@ -1019,15 +1010,16 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(), 0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
-    const std::string pbf_fp = transit_dir + filesystem::path::preferred_separator + file_name;
+    std::filesystem::path pbf_fp{transit_dir};
+    pbf_fp.append(file_name);
 
     // Make sure it exists
-    if (!filesystem::exists(pbf_fp)) {
-      LOG_ERROR("File not found.  " + pbf_fp);
+    if (!std::filesystem::exists(pbf_fp)) {
+      LOG_ERROR("File not found.  " + pbf_fp.string());
       return;
     }
 
-    Transit tile_pbf = read_pbf(pbf_fp, lock);
+    Transit tile_pbf = read_pbf(pbf_fp.string(), lock);
     // Get Valhalla tile - get a read only instance for reference and
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
@@ -1170,20 +1162,14 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
     // Add routes to the tile. Get vector of route types.
     std::vector<uint32_t> route_types = AddRoutes(tile_pbf, tilebuilder_transit);
-    auto tile_bounds = tiles.TileBounds(tile_id.tileid());
-    bool tile_within_one_tz = false;
-    std::multimap<uint32_t, multi_polygon_type> tz_polys;
-    if (tz_db_handle) {
-      tz_polys = GetTimeZones(tz_db_handle, tile_bounds);
-      if (tz_polys.size() < 2) {
-        tile_within_one_tz = true;
-      }
+    std::multimap<uint32_t, Geometry> tz_polys;
+    if (tz_db) {
+      tz_polys = GetTimeZones(*tz_db, tiles.TileBounds(tile_id.tileid()));
     }
 
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_transit, tile_id, tile_pbf, transit_dir, lock, stop_edge_map,
-               stop_no_access, shapes, distances, route_types, tile_within_one_tz, tz_polys,
-               stats.no_dir_edge_count);
+               stop_no_access, shapes, distances, route_types, tz_polys, stats.no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(tile_pbf.nodes_size()) + " stops, " +
@@ -1195,10 +1181,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
     lock.lock();
     tilebuilder_transit.StoreTileData();
     lock.unlock();
-  }
-
-  if (tz_db_handle) {
-    sqlite3_close(tz_db_handle);
   }
 
   // Send back the statistics
@@ -1213,14 +1195,14 @@ namespace mjolnir {
 std::unordered_set<GraphId> convert_transit(const ptree& pt) {
 
   // figure out which transit tiles even exist
-  filesystem::recursive_directory_iterator transit_file_itr(
-      pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::GetTransitLevel().level));
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::path transit_dir{pt.get<std::string>("mjolnir.transit_dir")};
+  transit_dir.append(std::to_string(TileHierarchy::GetTransitLevel().level));
+  std::filesystem::recursive_directory_iterator transit_file_itr(transit_dir);
+  std::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     auto tile_path = transit_file_itr->path();
-    if (filesystem::is_regular_file(transit_file_itr->path()) &&
+    if (std::filesystem::is_regular_file(transit_file_itr->path()) &&
         (tile_path.extension() == ".pbf" || std::isdigit(tile_path.string().back()))) {
       all_tiles.emplace(GraphTile::GetTileId(tile_path.string()));
     }
@@ -1268,8 +1250,9 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
-                                     tile_start, tile_end, std::ref(results.back())));
+    threads[i] =
+        std::make_shared<std::thread>(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
+                                      tile_start, tile_end, std::ref(results.back()));
   }
 
   // Wait for them to finish up their work
@@ -1309,7 +1292,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   }
 
   if (total_dep_count) {
-    float percent =
+    [[maybe_unused]] float percent =
         static_cast<float>(total_midnight_dep_count) / static_cast<float>(total_dep_count);
     percent *= 100;
 

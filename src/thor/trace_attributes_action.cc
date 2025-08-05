@@ -1,27 +1,15 @@
-#include <algorithm>
+#include "meili/match_result.h"
+#include "midgard/logging.h"
+#include "thor/worker.h"
+#include "tyr/serializers.h"
+
 #include <string>
 #include <tuple>
 #include <vector>
 
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
-#include "baldr/json.h"
-#include "meili/match_result.h"
-#include "midgard/constants.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
-#include "odin/enhancedtrippath.h"
-#include "odin/util.h"
-#include "thor/worker.h"
-#include "tyr/serializers.h"
-
-#include "proto/directions.pb.h"
-#include "proto/trip.pb.h"
-
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::odin;
 using namespace valhalla::thor;
 
 namespace {

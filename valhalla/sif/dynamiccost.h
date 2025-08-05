@@ -1,7 +1,6 @@
 #ifndef VALHALLA_SIF_DYNAMICCOST_H_
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
-#include <cstdint>
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
@@ -11,7 +10,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -22,8 +21,8 @@
 #include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/edgestatus.h>
 
+#include <cstdint>
 #include <memory>
-#include <rapidjson/document.h>
 #include <unordered_map>
 
 // macros aren't great but writing these out for every option is an abomination worse than this macro

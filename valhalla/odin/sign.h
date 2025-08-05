@@ -1,11 +1,12 @@
 #ifndef VALHALLA_ODIN_SIGN_H_
 #define VALHALLA_ODIN_SIGN_H_
 
+#include <valhalla/baldr/streetname.h>
+#include <valhalla/midgard/logging.h>
+
 #include <cstdint>
 #include <optional>
 #include <string>
-
-#include <valhalla/baldr/streetname.h>
 
 namespace valhalla {
 namespace odin {

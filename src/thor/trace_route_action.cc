@@ -1,3 +1,8 @@
+#include "baldr/attributes_controller.h"
+#include "meili/match_result.h"
+#include "thor/map_matcher.h"
+#include "thor/route_matcher.h"
+#include "thor/triplegbuilder.h"
 #include "thor/worker.h"
 
 #include <algorithm>
@@ -5,14 +10,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "baldr/attributes_controller.h"
-#include "meili/map_matcher.h"
-#include "meili/match_result.h"
-#include "midgard/util.h"
-#include "thor/map_matcher.h"
-#include "thor/route_matcher.h"
-#include "thor/triplegbuilder.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;

@@ -1,8 +1,10 @@
-#include <vector>
-
 #include "midgard/point_tile_index.h"
-
 #include "test.h"
+
+// If supporting C++20 it'd be better to use std::numbers::pi from <numbers>.
+constexpr double kPI = 3.14159265358979323846;
+
+#include <vector>
 
 using namespace std;
 using namespace valhalla::midgard;
@@ -118,7 +120,7 @@ TEST(PointTileIndex, Intermediate) {
     // add a bunch of points tightly circled around the origin
     int num_circle_pts = 100;
     for (int i = 0; i < num_circle_pts; i++) {
-      double radians = 2 * M_PI * ((double)i / (double)num_circle_pts);
+      double radians = 2 * kPI * ((double)i / (double)num_circle_pts);
       double x = std::cos(radians), y = std::sin(radians);
       constexpr double len = 1e-7;
       points_enhanced.emplace_back(PointLL{len * x, len * y});

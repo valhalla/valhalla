@@ -2,15 +2,15 @@
 #ifndef MMP_STATE_H_
 #define MMP_STATE_H_
 
-#include <algorithm>
-#include <unordered_map>
-#include <vector>
-
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/routing.h>
 #include <valhalla/meili/stateid.h>
 #include <valhalla/proto/common.pb.h>
+
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
 
 namespace valhalla {
 namespace meili {
@@ -35,7 +35,7 @@ public:
 
   void SetRoute(const std::vector<StateId>& stateids,
                 const std::unordered_map<uint16_t, uint32_t>& results,
-                labelset_ptr_t labelset) const {
+                const labelset_ptr_t& labelset) const {
     if (!labelset) {
       throw std::runtime_error("expect valid labelset but got nullptr");
     }
@@ -166,7 +166,7 @@ public:
     return time;
   }
 
-  template <typename candidate_t> StateId AppendCandidate(candidate_t candidate) {
+  template <typename candidate_t> StateId AppendCandidate(const candidate_t& candidate) {
     const auto& stateid = NewStateId();
     AppendState(State(stateid, candidate));
     return stateid;

@@ -1,16 +1,16 @@
+#include "midgard/tiles.h"
+#include "midgard/distanceapproximator.h"
+#include "midgard/ellipse.h"
+#include "midgard/polyline2.h"
+#include "midgard/util.h"
+
+#include <ankerl/unordered_dense.h>
+
 #include <array>
 #include <cmath>
 #include <queue>
 #include <unordered_set>
 #include <vector>
-
-#include "midgard/distanceapproximator.h"
-#include "midgard/ellipse.h"
-#include "midgard/polyline2.h"
-#include "midgard/tiles.h"
-#include "midgard/util.h"
-
-#include <robin_hood.h>
 
 namespace {
 
@@ -52,7 +52,7 @@ void bresenham_line(double x0,
 template <class coord_t> struct closest_first_generator_t {
   valhalla::midgard::Tiles<coord_t> tiles;
   coord_t seed;
-  robin_hood::unordered_set<int32_t> queued;
+  ankerl::unordered_dense::set<int32_t> queued;
   int32_t subcols, subrows;
   using best_t = std::pair<double, int32_t>;
   std::priority_queue<best_t, std::vector<best_t>, std::function<bool(const best_t&, const best_t&)>>
@@ -252,7 +252,7 @@ std::vector<int32_t> Tiles<coord_t>::TileList(const Ellipse<coord_t>& e) const {
   check_queue.push(tileid);
 
   // Record any tiles added to the check_queue
-  robin_hood::unordered_set<int32_t> checked_tiles;
+  ankerl::unordered_dense::set<int32_t> checked_tiles;
   checked_tiles.insert(tileid);
 
   // Successively check a tile from the queue - if tile bounds are not outside the ellipse then
@@ -310,7 +310,7 @@ void Tiles<coord_t>::ColorMap(std::unordered_map<uint32_t, size_t>& connectivity
     // Mark this tile Id with the current color and find all its
     // accessible neighbors
     tile.second = color;
-    robin_hood::unordered_set<uint32_t> checklist{tile.first};
+    ankerl::unordered_dense::set<uint32_t> checklist{tile.first};
     while (!checklist.empty()) {
       uint32_t next_tile = *checklist.begin();
       checklist.erase(checklist.begin());

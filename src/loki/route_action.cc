@@ -1,11 +1,6 @@
+#include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "loki/worker.h"
-
-#include "baldr/datetime.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;

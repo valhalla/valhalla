@@ -1,10 +1,11 @@
 #pragma once
-#include <chrono>
-#include <string>
-
 #include "config.h"
+
 #include <midgard/logging.h>
 #include <midgard/util.h>
+
+#include <chrono>
+#include <string>
 
 namespace valhalla {
 namespace mjolnir {

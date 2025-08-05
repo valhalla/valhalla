@@ -1,22 +1,4 @@
 #include "mjolnir/graphvalidator.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
-#include "scoped_timer.h"
-
-#include <algorithm>
-#include <boost/format.hpp>
-#include <future>
-#include <list>
-#include <mutex>
-#include <numeric>
-#include <random>
-#include <set>
-#include <string>
-#include <thread>
-#include <tuple>
-#include <utility>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -25,6 +7,24 @@
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
+#include "scoped_timer.h"
+
+#include <boost/format.hpp>
+
+#include <algorithm>
+#include <deque>
+#include <future>
+#include <list>
+#include <mutex>
+#include <random>
+#include <set>
+#include <string>
+#include <thread>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -592,8 +592,8 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   // Spawn the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(validate, std::cref(pt), std::ref(tilequeue), std::ref(lock),
-                                 std::ref(results.back())));
+    thread = std::make_shared<std::thread>(validate, std::cref(pt), std::ref(tilequeue),
+                                           std::ref(lock), std::ref(results.back()));
   }
 
   // Wait for threads to finish
@@ -623,8 +623,8 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   auto start = tweeners.begin();
   auto end = tweeners.end();
   for (auto& thread : threads) {
-    thread.reset(new std::thread(bin_tweeners, std::cref(tile_dir), std::ref(start), std::cref(end),
-                                 dataset_id, std::ref(lock)));
+    thread = std::make_shared<std::thread>(bin_tweeners, std::cref(tile_dir), std::ref(start),
+                                           std::cref(end), dataset_id, std::ref(lock));
   }
   for (auto& thread : threads) {
     thread->join();

@@ -1,9 +1,9 @@
-#include <cstdint>
-
-#include "baldr/json.h"
+#include "baldr/rapidjson_utils.h"
 #include "proto_conversions.h"
 #include "thor/matrixalgorithm.h"
 #include "tyr/serializers.h"
+
+#include <cstdint>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -217,6 +217,7 @@ void serialize_row(const valhalla::Matrix& matrix,
 
 std::string serialize(const Api& request, double distance_scale) {
   rapidjson::writer_wrapper_t writer(4096);
+  writer.set_precision(tyr::kDefaultPrecision);
   writer.start_object();
   const auto& options = request.options();
 

@@ -3,17 +3,19 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
-#include "midgard/constants.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/osrm_car_duration.h"
+
 #include <cassert>
 
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
+
 #include <random>
 #endif
 
@@ -458,6 +460,9 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+  if (restriction.except_destination() && allow_destination_only_)
+    return true;
+
   switch (restriction.type()) {
     case AccessType::kMaxHeight:
       return height_ <= static_cast<float>(restriction.value() * 0.01);
@@ -1050,8 +1055,9 @@ public:
 };
 
 template <class T>
-std::shared_ptr<TestAutoCost>
-make_autocost_from_json(const std::string& property, T testVal, const std::string& extra_json = "") {
+std::shared_ptr<TestAutoCost> make_autocost_from_json(const std::string& property,
+                                                      const T& testVal,
+                                                      const std::string& extra_json = "") {
   std::stringstream ss;
   ss << R"({"costing": "auto", "costing_options":{"auto":{")" << property << R"(":)" << testVal
      << "}}" << extra_json << "}";
