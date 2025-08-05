@@ -301,10 +301,11 @@ message TripLeg {
     PathCost cost = 12;             // how much cost did it take at this node in the path
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for recostings
     BikeShareStationInfo bss_info = 14;
-     bool traffic_signal = 21;
-      oneof has_osmid {
+    oneof has_osmid {
       uint64 osmid = 15;
     }
+    bool traffic_signal = 21;
+    
  }
 
   message Admin {
