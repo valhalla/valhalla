@@ -216,11 +216,11 @@ message TripLeg {
     repeated Level levels = 61;
     uint32 level_precision = 62;
     oneof has_osmid {
-      uint64 begin_node_osmid = 63;
+      uint64 begin_node_osmid = 67;
     }
 
     oneof has_end_osmid {
-        uint64 end_node_osmid = 64;
+        uint64 end_node_osmid = 68;
     }
   }
 
