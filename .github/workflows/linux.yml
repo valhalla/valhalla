@@ -90,11 +90,13 @@ jobs:
         run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
-            -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On -DENABLE_REMOVE_TESTS_AFTER_RUN=On \
+            -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
             -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On
           make -C build -j$(nproc)
           make -C build utrecht_tiles
-          make -C build -j8 tests
+          df -h
+          # check target removes the executables after they're run
+          make -C build -j8 check
       
       - name: Save cache
         uses: actions/cache/save@v4
