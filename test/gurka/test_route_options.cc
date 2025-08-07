@@ -21,50 +21,18 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
-TEST(TestRouteOptions, GetOptions) {
-  const std::string ascii_map = R"(
-                                C--------D
-                                |        |
-      A-------------------------B        E-----------------------------------------F
-                                |\      /|
-                                | I----J |
-                                |        |
-                                G--------H
-    )";
-
-  const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}, {"name", "RT 1"}}},
-      {"BIJE", {{"highway", "motorway"}, {"name", "RT 2"}}},
-      {"BCDE", {{"highway", "primary"}, {"name", "RT 3"}, {"foot", "yes"}, {"bicycle", "no"}}},
-      {"BGHE", {{"highway", "primary"}, {"name", "RT 4"}, {"foot", "no"}, {"bicycle", "yes"}}},
-      {"EF", {{"highway", "primary"}, {"name", "RT 5"}}},
-  };
-
-  const auto node_layout = gurka::detail::map_to_coordinates(ascii_map, 100, PointLL{5.108, 52.01});
-
-  std::unordered_map<std::string, std::string> config_map =
-      {{"mjolnir.data_processing.use_direction_on_ways", "true"},
-       {"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}};
-
-  std::string workdir = "test/data/gurka_test_route_options";
-  valhalla::gurka::map map = gurka::buildtiles(node_layout, ways, {}, {}, workdir, config_map);
-
-  map.nodes = node_layout;
-
-  // Bikes avoid motorways, so the shortest route is not an option.
-  // ABCDEF is the next shortest route, but BCDE is marked bicycle=no.
-  // The only remaining option is the southernmost route: ABGHEF
-  valhalla::Api result1 = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "bicycle");
-  EXPECT_EQ(result1.trip().routes_size(), 1);
-  EXPECT_EQ(result1.trip().routes(0).legs_size(), 1);
-  gurka::assert::osrm::expect_steps(result1, {"RT 1", "RT 4", "RT 5"});
-  gurka::assert::osrm::expect_summaries(result1, {"RT 1, RT 5"});
-
-  rapidjson::Document response_json = gurka::convert_to_json(result1, valhalla::Options_Format_json);
-
+void expected_options(valhalla::Api& result1){
+    rapidjson::Document response_json = gurka::convert_to_json(result1, valhalla::Options_Format_json);
+  if (response_json.HasParseError()) {
+    FAIL() << "Error converting route response to JSON";
+  }
   rapidjson::Value *options = (rapidjson::GetValueByPointer(response_json, "/options"));
-  if (options != nullptr && options->IsObject()) {
-      rapidjson::Value &optionsObj = options->GetObject();
+
+    if (!(options != nullptr && options->IsObject())) {
+      EXPECT_TRUE(false) << "options not found";
+  }
+
+   rapidjson::Value &optionsObj = options->GetObject();
 
       rapidjson::Value *unit_pointer = rapidjson::GetValueByPointer(optionsObj, "/units");
       if(unit_pointer != nullptr && unit_pointer->IsString()) {
@@ -123,7 +91,7 @@ TEST(TestRouteOptions, GetOptions) {
           if(name_pointer != nullptr && name_pointer->IsString()) {
             EXPECT_STREQ(name_pointer->GetString(), "bicycle");
           } else {
-              EXPECT_TRUE(false) << "options.costing_type not found";
+              EXPECT_TRUE(false) << "options.costings.bicycle.name not found";
           }
 
           rapidjson::Value *costing_options_pointer = rapidjson::GetValueByPointer(bicycle_costing_obj, "/options");
@@ -181,20 +149,56 @@ TEST(TestRouteOptions, GetOptions) {
             auto destination_only_penalty_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/destination_only_penalty");
             EXPECT_FLOAT_EQ(destination_only_penalty_ptr->GetFloat(), 600.0);
           } else {
-              EXPECT_TRUE(false) << "options.costing_type not found";
+              EXPECT_TRUE(false) << "options.costings.bicycle.options not found";
           }
-
-
         } else {
             EXPECT_TRUE(false) << "options.costings.bicycle not found";
         }
       } else {
           EXPECT_TRUE(false) << "options.costings not found";
       }
-  
-  }else {
-      EXPECT_TRUE(false) << "Options not found";
-  }
+
+}
+
+TEST(TestRouteOptions, GetOptions) {
+  const std::string ascii_map = R"(
+                                C--------D
+                                |        |
+      A-------------------------B        E-----------------------------------------F
+                                |\      /|
+                                | I----J |
+                                |        |
+                                G--------H
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}, {"name", "RT 1"}}},
+      {"BIJE", {{"highway", "motorway"}, {"name", "RT 2"}}},
+      {"BCDE", {{"highway", "primary"}, {"name", "RT 3"}, {"foot", "yes"}, {"bicycle", "no"}}},
+      {"BGHE", {{"highway", "primary"}, {"name", "RT 4"}, {"foot", "no"}, {"bicycle", "yes"}}},
+      {"EF", {{"highway", "primary"}, {"name", "RT 5"}}},
+  };
+
+  const auto node_layout = gurka::detail::map_to_coordinates(ascii_map, 100, PointLL{5.108, 52.01});
+
+  std::unordered_map<std::string, std::string> config_map =
+      {{"mjolnir.data_processing.use_direction_on_ways", "true"},
+       {"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}};
+
+  std::string workdir = "test/data/gurka_test_route_options";
+  valhalla::gurka::map map = gurka::buildtiles(node_layout, ways, {}, {}, workdir, config_map);
+
+  map.nodes = node_layout;
+
+  // Bikes avoid motorways, so the shortest route is not an option.
+  // ABCDEF is the next shortest route, but BCDE is marked bicycle=no.
+  // The only remaining option is the southernmost route: ABGHEF
+  valhalla::Api result1 = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "bicycle");
+  EXPECT_EQ(result1.trip().routes_size(), 1);
+  EXPECT_EQ(result1.trip().routes(0).legs_size(), 1);
+  gurka::assert::osrm::expect_steps(result1, {"RT 1", "RT 4", "RT 5"});
+  gurka::assert::osrm::expect_summaries(result1, {"RT 1, RT 5"});
+  expected_options(result1);
 
   std::filesystem::remove_all(workdir);
 }
