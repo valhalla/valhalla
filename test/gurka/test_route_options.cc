@@ -21,143 +21,157 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
-void expected_options(valhalla::Api& result1){
-    rapidjson::Document response_json = gurka::convert_to_json(result1, valhalla::Options_Format_json);
+void expected_options(valhalla::Api& result1) {
+  rapidjson::Document response_json = gurka::convert_to_json(result1, valhalla::Options_Format_json);
   if (response_json.HasParseError()) {
     FAIL() << "Error converting route response to JSON";
   }
-  rapidjson::Value *options = (rapidjson::GetValueByPointer(response_json, "/options"));
+  rapidjson::Value* options = (rapidjson::GetValueByPointer(response_json, "/options"));
 
-    if (!(options != nullptr && options->IsObject())) {
-      EXPECT_TRUE(false) << "options not found";
+  if (!(options != nullptr && options->IsObject())) {
+    EXPECT_TRUE(false) << "options not found";
   }
 
-   rapidjson::Value &optionsObj = options->GetObject();
+  rapidjson::Value& optionsObj = options->GetObject();
 
-      rapidjson::Value *unit_pointer = rapidjson::GetValueByPointer(optionsObj, "/units");
-      if(unit_pointer != nullptr && unit_pointer->IsString()) {
-        valhalla::Options::Units unit;
-        valhalla::Options_Units_Enum_Parse(unit_pointer->GetString(), &unit);
-        EXPECT_EQ(unit, valhalla::Options_Units_kilometers);
+  rapidjson::Value* unit_pointer = rapidjson::GetValueByPointer(optionsObj, "/units");
+  if (unit_pointer != nullptr && unit_pointer->IsString()) {
+    valhalla::Options::Units unit;
+    valhalla::Options_Units_Enum_Parse(unit_pointer->GetString(), &unit);
+    EXPECT_EQ(unit, valhalla::Options_Units_kilometers);
+  } else {
+    EXPECT_TRUE(false) << "options.units not found";
+  }
+
+  rapidjson::Value* direction_type_pointer =
+      rapidjson::GetValueByPointer(optionsObj, "/directions_type");
+  if (direction_type_pointer != nullptr && direction_type_pointer->IsString()) {
+    valhalla::DirectionsType direction_type;
+    valhalla::DirectionsType_Enum_Parse(direction_type_pointer->GetString(), &direction_type);
+    EXPECT_EQ(direction_type, valhalla::DirectionsType::instructions);
+  } else {
+    EXPECT_TRUE(false) << "options.directions_type not found";
+  }
+
+  rapidjson::Value* format_pointer = rapidjson::GetValueByPointer(optionsObj, "/format");
+  if (format_pointer != nullptr && format_pointer->IsString()) {
+    valhalla::Options::Format format;
+    valhalla::Options_Format_Enum_Parse(format_pointer->GetString(), &format);
+    EXPECT_EQ(format, valhalla::Options::Format::Options_Format_json);
+  } else {
+    EXPECT_TRUE(false) << "options.format not found";
+  }
+
+  rapidjson::Value* action_pointer = rapidjson::GetValueByPointer(optionsObj, "/action");
+  if (action_pointer != nullptr && action_pointer->IsString()) {
+    valhalla::Options::Action action;
+    valhalla::Options_Action_Enum_Parse(action_pointer->GetString(), &action);
+    EXPECT_EQ(action, valhalla::Options::Action::Options_Action_route);
+  } else {
+    EXPECT_TRUE(false) << "options.action not found";
+  }
+
+  rapidjson::Value* costing_type_pointer = rapidjson::GetValueByPointer(optionsObj, "/costing_type");
+  if (costing_type_pointer != nullptr && costing_type_pointer->IsString()) {
+    valhalla::Costing::Type costing_type;
+    valhalla::Costing_Enum_Parse(costing_type_pointer->GetString(), &costing_type);
+    EXPECT_EQ(costing_type, valhalla::Costing::bicycle);
+  } else {
+    EXPECT_TRUE(false) << "options.costing_type not found";
+  }
+
+  rapidjson::Value* costings_ponter = rapidjson::GetValueByPointer(optionsObj, "/costings");
+  if (costings_ponter != nullptr && costings_ponter->IsObject()) {
+    rapidjson::Value& costing_obj = costings_ponter->GetObject();
+    rapidjson::Value* bicycle_costing_pointer = rapidjson::GetValueByPointer(costing_obj, "/bicycle");
+
+    if (bicycle_costing_pointer != nullptr && bicycle_costing_pointer->IsObject()) {
+      rapidjson::Value& bicycle_costing_obj = bicycle_costing_pointer->GetObject();
+
+      rapidjson::Value* name_pointer = rapidjson::GetValueByPointer(bicycle_costing_obj, "/name");
+      if (name_pointer != nullptr && name_pointer->IsString()) {
+        EXPECT_STREQ(name_pointer->GetString(), "bicycle");
       } else {
-          EXPECT_TRUE(false) << "options.units not found";
+        EXPECT_TRUE(false) << "options.costings.bicycle.name not found";
       }
 
-      rapidjson::Value *direction_type_pointer = rapidjson::GetValueByPointer(optionsObj, "/directions_type");
-      if(direction_type_pointer != nullptr && direction_type_pointer->IsString()) {
-        valhalla::DirectionsType direction_type;
-        valhalla::DirectionsType_Enum_Parse(direction_type_pointer->GetString(), &direction_type);
-        EXPECT_EQ(direction_type, valhalla::DirectionsType::instructions);
+      rapidjson::Value* costing_options_pointer =
+          rapidjson::GetValueByPointer(bicycle_costing_obj, "/options");
+      if (costing_options_pointer != nullptr && costing_options_pointer->IsObject()) {
+        rapidjson::Value& costing_options_obj = costing_options_pointer->GetObject();
+
+        auto fixed_speed_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/fixed_speed");
+        EXPECT_EQ(fixed_speed_ptr->GetUint(), 0);
+
+        auto axle_count_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/axle_count");
+        EXPECT_EQ(axle_count_ptr->GetUint(), 0);
+
+        auto use_lit_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/use_lit");
+        EXPECT_FLOAT_EQ(use_lit_ptr->GetFloat(), 0);
+
+        auto ignore_non_vehicular_restrictions_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/ignore_non_vehicular_restrictions");
+        EXPECT_FALSE(ignore_non_vehicular_restrictions_ptr->GetBool());
+
+        auto use_truck_route_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/use_truck_route");
+        EXPECT_FLOAT_EQ(use_truck_route_ptr->GetFloat(), 0);
+
+        auto exclude_bridges_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/exclude_bridges");
+        EXPECT_FALSE(exclude_bridges_ptr->GetBool());
+
+        auto exclude_tunnels_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/exclude_tunnels");
+        EXPECT_FALSE(exclude_tunnels_ptr->GetBool());
+
+        auto exclude_highways_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/exclude_highways");
+        EXPECT_FALSE(exclude_highways_ptr->GetBool());
+
+        auto exclude_ferries_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/exclude_ferries");
+        EXPECT_FALSE(exclude_ferries_ptr->GetBool());
+
+        auto exclude_tolls_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/exclude_tolls");
+        EXPECT_FALSE(exclude_tolls_ptr->GetBool());
+
+        auto ignore_construction_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/ignore_construction");
+        EXPECT_FALSE(ignore_construction_ptr->GetBool());
+
+        auto disable_hierarchy_pruning_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/disable_hierarchy_pruning");
+        EXPECT_FALSE(disable_hierarchy_pruning_ptr->GetBool());
+
+        auto filter_stop_action_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/filter_stop_action");
+        EXPECT_STREQ(filter_stop_action_ptr->GetString(), "");
+
+        auto filter_operator_action_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/filter_operator_action");
+        EXPECT_STREQ(filter_operator_action_ptr->GetString(), "");
+
+        auto filter_route_action_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/filter_route_action");
+        EXPECT_STREQ(filter_route_action_ptr->GetString(), "");
+
+        auto maneuver_penalty_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/maneuver_penalty");
+        EXPECT_FLOAT_EQ(maneuver_penalty_ptr->GetFloat(), 5.0);
+
+        auto destination_only_penalty_ptr =
+            rapidjson::GetValueByPointer(costing_options_obj, "/destination_only_penalty");
+        EXPECT_FLOAT_EQ(destination_only_penalty_ptr->GetFloat(), 600.0);
       } else {
-          EXPECT_TRUE(false) << "options.directions_type not found";
+        EXPECT_TRUE(false) << "options.costings.bicycle.options not found";
       }
-
-      rapidjson::Value *format_pointer = rapidjson::GetValueByPointer(optionsObj, "/format");
-      if(format_pointer != nullptr && format_pointer->IsString()) {
-        valhalla::Options::Format format;
-        valhalla::Options_Format_Enum_Parse(format_pointer->GetString(), &format);
-        EXPECT_EQ(format, valhalla::Options::Format::Options_Format_json);
-      } else {
-          EXPECT_TRUE(false) << "options.format not found";
-      }
-
-      rapidjson::Value *action_pointer = rapidjson::GetValueByPointer(optionsObj, "/action");
-      if(action_pointer != nullptr && action_pointer->IsString()) {
-        valhalla::Options::Action action;
-        valhalla::Options_Action_Enum_Parse(action_pointer->GetString(), &action);
-        EXPECT_EQ(action, valhalla::Options::Action::Options_Action_route);
-      } else {
-          EXPECT_TRUE(false) << "options.action not found";
-      }
-
-      rapidjson::Value *costing_type_pointer = rapidjson::GetValueByPointer(optionsObj, "/costing_type");
-      if(costing_type_pointer != nullptr && costing_type_pointer->IsString()) {
-        valhalla::Costing::Type costing_type;
-        valhalla::Costing_Enum_Parse(costing_type_pointer->GetString(), &costing_type);
-        EXPECT_EQ(costing_type, valhalla::Costing::bicycle);
-      } else {
-          EXPECT_TRUE(false) << "options.costing_type not found";
-      }
-
-      rapidjson::Value *costings_ponter = rapidjson::GetValueByPointer(optionsObj, "/costings");
-      if(costings_ponter != nullptr && costings_ponter->IsObject()) {
-        rapidjson::Value &costing_obj = costings_ponter->GetObject();
-        rapidjson::Value *bicycle_costing_pointer = rapidjson::GetValueByPointer(costing_obj, "/bicycle");
-
-        if(bicycle_costing_pointer != nullptr && bicycle_costing_pointer->IsObject()) {
-          rapidjson::Value &bicycle_costing_obj = bicycle_costing_pointer->GetObject();
-          
-          rapidjson::Value *name_pointer = rapidjson::GetValueByPointer(bicycle_costing_obj, "/name");
-          if(name_pointer != nullptr && name_pointer->IsString()) {
-            EXPECT_STREQ(name_pointer->GetString(), "bicycle");
-          } else {
-              EXPECT_TRUE(false) << "options.costings.bicycle.name not found";
-          }
-
-          rapidjson::Value *costing_options_pointer = rapidjson::GetValueByPointer(bicycle_costing_obj, "/options");
-          if(costing_options_pointer != nullptr && costing_options_pointer->IsObject()) {
-            rapidjson::Value &costing_options_obj = costing_options_pointer->GetObject();
-
-            auto fixed_speed_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/fixed_speed");
-            EXPECT_EQ(fixed_speed_ptr->GetUint(), 0);
-            
-            auto axle_count_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/axle_count");
-            EXPECT_EQ(axle_count_ptr->GetUint(), 0);
-
-            auto use_lit_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/use_lit");
-            EXPECT_FLOAT_EQ(use_lit_ptr->GetFloat(), 0);
-  
-            auto ignore_non_vehicular_restrictions_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/ignore_non_vehicular_restrictions");
-            EXPECT_FALSE(ignore_non_vehicular_restrictions_ptr->GetBool());
-
-            auto use_truck_route_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/use_truck_route");
-            EXPECT_FLOAT_EQ(use_truck_route_ptr->GetFloat(), 0);
-
-            auto exclude_bridges_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/exclude_bridges");
-            EXPECT_FALSE(exclude_bridges_ptr->GetBool());
-
-            auto exclude_tunnels_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/exclude_tunnels");
-            EXPECT_FALSE(exclude_tunnels_ptr->GetBool());
-
-            auto exclude_highways_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/exclude_highways");
-            EXPECT_FALSE(exclude_highways_ptr->GetBool());
-
-            auto exclude_ferries_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/exclude_ferries");
-            EXPECT_FALSE(exclude_ferries_ptr->GetBool());
-
-            auto exclude_tolls_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/exclude_tolls");
-            EXPECT_FALSE(exclude_tolls_ptr->GetBool());
-
-            auto ignore_construction_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/ignore_construction");
-            EXPECT_FALSE(ignore_construction_ptr->GetBool());
-
-            auto disable_hierarchy_pruning_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/disable_hierarchy_pruning");
-            EXPECT_FALSE(disable_hierarchy_pruning_ptr->GetBool());
-          
-            auto filter_stop_action_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/filter_stop_action");
-            EXPECT_STREQ(filter_stop_action_ptr->GetString(), "");
-
-            auto filter_operator_action_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/filter_operator_action");
-            EXPECT_STREQ(filter_operator_action_ptr->GetString(), "");
-
-            auto filter_route_action_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/filter_route_action");
-            EXPECT_STREQ(filter_route_action_ptr->GetString(), "");
-
-            auto maneuver_penalty_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/maneuver_penalty");
-            EXPECT_FLOAT_EQ(maneuver_penalty_ptr->GetFloat(), 5.0);
-
-            auto destination_only_penalty_ptr = rapidjson::GetValueByPointer(costing_options_obj, "/destination_only_penalty");
-            EXPECT_FLOAT_EQ(destination_only_penalty_ptr->GetFloat(), 600.0);
-          } else {
-              EXPECT_TRUE(false) << "options.costings.bicycle.options not found";
-          }
-        } else {
-            EXPECT_TRUE(false) << "options.costings.bicycle not found";
-        }
-      } else {
-          EXPECT_TRUE(false) << "options.costings not found";
-      }
-
+    } else {
+      EXPECT_TRUE(false) << "options.costings.bicycle not found";
+    }
+  } else {
+    EXPECT_TRUE(false) << "options.costings not found";
+  }
 }
 
 TEST(TestRouteOptions, GetOptions) {
