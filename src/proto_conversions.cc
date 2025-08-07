@@ -296,6 +296,19 @@ const std::string& Options_Units_Enum_Name(const Options::Units unit) {
   return i == units.cend() ? empty_str : i->second;
 }
 
+bool Options_Units_Enum_Parse(const std::string& unit_str, Options::Units* unit) {
+  static const std::unordered_map<std::string, Options::Units> units{
+      {"kilometers", Options::kilometers},
+      {"miles", Options::miles},
+  };
+
+  auto i = units.find(unit_str);
+  if (i == units.cend())
+    return true;
+  *unit = i->second;
+  return false;
+}
+
 bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a) {
   static const std::unordered_map<std::string, FilterAction> actions{
       {"exclude", FilterAction::exclude},

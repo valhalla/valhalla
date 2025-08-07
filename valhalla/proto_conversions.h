@@ -541,6 +541,7 @@ bool ShapeMatch_Enum_Parse(const std::string& match, ShapeMatch* s);
 const std::string& ShapeMatch_Enum_Name(const ShapeMatch match);
 bool Options_Format_Enum_Parse(const std::string& format, Options::Format* f);
 const std::string& Options_Format_Enum_Name(const Options::Format match);
+bool Options_Units_Enum_Parse(const std::string& units, Options::Units* u);
 const std::string& Options_Units_Enum_Name(const Options::Units unit);
 bool FilterAction_Enum_Parse(const std::string& action, FilterAction* a);
 const std::string& FilterAction_Enum_Name(const FilterAction action);
