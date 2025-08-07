@@ -290,6 +290,14 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
                               const baldr::NodeInfo* node,
                               const sif::EdgeLabel& current,
                               const sif::EdgeLabel* previous) {
+  if (!tile) {
+    LOG_ERROR("ExpandingNode: tile is null");
+    return;
+  }
+  if (!node) {
+    LOG_ERROR("ExpandingNode: node is null");
+    return;
+  }
   // Update the isotile
   float secs0 = previous ? previous->cost().secs : 0.0f;
   float dist0 = previous ? static_cast<float>(previous->path_distance()) : 0.0f;
