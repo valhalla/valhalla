@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
   filesystem::path traffic_tile_dir;
   bool summary = false;
   boost::property_tree::ptree config;
+
   try {
     // clang-format off
     cxxopts::Options options(

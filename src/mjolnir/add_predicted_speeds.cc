@@ -3,6 +3,9 @@
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/admin.h"
+#include "baldr/tilehierarchy.h"
+
 
 #include <boost/tokenizer.hpp>
 
@@ -163,12 +166,33 @@ ParseTrafficFile(const std::vector<std::string>& filenames, TrafficStats& stat) 
 void UpdateTile(const std::string& tile_dir,
                 const GraphId& tile_id,
                 const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
-                TrafficStats& stat) {
+                TrafficStats& stat,
+                std::optional<AdminDB>& tz_db
+              ) {
   auto tile_path = tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
   if (!filesystem::exists(tile_path)) {
     LOG_ERROR("No tile at " + tile_path);
     return;
   }
+
+
+
+  vj::GraphTileBuilder timezone_traffic_tile(tile_dir, tile_id, true);
+
+  // Try to update the timezone
+  auto base_ll = timezone_traffic_tile.header()->base_ll();
+
+
+  std::multimap<uint32_t, Geometry> tz_polys;
+  const auto& tiling = TileHierarchy::levels().back().tiles;
+  uint32_t id = tile_id.tileid();
+
+  if (tz_db) {
+    tz_polys = GetTimeZones(*tz_db, tiling.TileBounds(id));
+  }
+
+  uint32_t tz_index =
+      (tz_polys.size() == 1) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, base_ll);
 
   // Get the tile
   vj::GraphTileBuilder tile_builder(tile_dir, tile_id, false);
@@ -193,8 +217,10 @@ void UpdateTile(const std::string& tile_dir,
         directededge.set_constrained_flow_speed(speed.constrained_flow_speed);
       }
       if (speed.free_flow_speed) {
-        directededge.set_free_flow_speed(speed.free_flow_speed);
+        // directededge.set_free_flow_speed(speed.free_flow_speed);
       }
+      directededge.set_free_flow_speed(20);
+
       if (speed.coefficients) {
         tile_builder.AddPredictedSpeed(j, *speed.coefficients, pred_count);
         directededge.set_has_predicted_speed(true);
@@ -207,7 +233,7 @@ void UpdateTile(const std::string& tile_dir,
   }
 
   // Write the new tile with updated directed edges and the predicted speeds
-  tile_builder.UpdatePredictedSpeeds(directededges);
+  tile_builder.UpdatePredictedSpeeds(directededges, tz_index);
 }
 /**
  * Read both the constrained and freeflow speed CSV files
@@ -217,7 +243,21 @@ void UpdateTile(const std::string& tile_dir,
 void UpdateTiles(const std::string& tile_dir,
                  std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_start,
                  std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_end,
-                 std::promise<TrafficStats>& result) {
+                 std::promise<TrafficStats>& result,
+                const boost::property_tree::ptree& config) {
+
+
+  // Add timezone during historic traffic tile creation. Normally this would be on tile creation but we get our tiles from Interline
+  auto database = config.get_optional<std::string>("mjolnir.timezone");
+  // Initialize the tz DB (if it exists)
+  auto tz_db = database ? AdminDB::open(*database) : std::optional<AdminDB>{};
+  if (!database) {
+    LOG_WARN("Time zone db not found.  Not saving time zone information.");
+  } else if (!tz_db) {
+    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
+  }
+
+
 
   std::stringstream thread_name;
   thread_name << std::this_thread::get_id();
@@ -230,7 +270,7 @@ void UpdateTiles(const std::string& tile_dir,
     LOG_INFO(thread_name.str() + " parsing traffic data for " + std::to_string(tile_start->first));
     auto traffic = ParseTrafficFile(tile_start->second, stat);
     LOG_INFO(thread_name.str() + " add traffic data to " + std::to_string(tile_start->first));
-    UpdateTile(tile_dir, tile_start->first, traffic, stat);
+    UpdateTile(tile_dir, tile_start->first, traffic, stat, tz_db);
     LOG_INFO(thread_name.str() + " finished " + std::to_string(tile_start->first) + "(" +
              std::to_string(++count / total * 100.0) + ")");
   }
@@ -376,7 +416,7 @@ void ProcessTrafficTiles(const std::string& tile_dir,
     tile_end += (i < at_ceiling ? floor + 1 : floor);
     results.emplace_back();
     threads[i] = std::make_shared<std::thread>(UpdateTiles, tile_dir, tile_start, tile_end,
-                                               std::ref(results.back()));
+                                               std::ref(results.back()), config);
   }
 
   // Wait for threads to complete
