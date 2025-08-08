@@ -497,9 +497,10 @@ public:
    * predicted traffic is written after turn lane data.
    * @param  directededges  Updated directed edge information.
    */
-  void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
+  void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges,
+                            const std::vector<NodeInfo>& modified_nodes);
 
-  void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges, uint32_t tz_index);
+  void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
 
 
   /**

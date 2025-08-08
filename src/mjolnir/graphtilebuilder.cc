@@ -1219,7 +1219,8 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
 // Updates a tile with predictive speed data. Also updates directed edges with
 // free flow and constrained flow speeds and the predicted traffic flag. The
 // predicted traffic is written after turn lane data.
-void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges, uint32_t tz_index) {
+void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges,
+                                           const std::vector<NodeInfo>& modified_nodes) {
 
   // Even if there are no predicted speeds there still may be updated directed edges
   // with free flow or constrained flow speeds - so don't return if no speed profiles
@@ -1245,11 +1246,9 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kCoefficientCount);
     file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
 
-    // Copy the nodes (they are unchanged when adding predicted speeds).
-    for (uint32_t i = 0; i < header_->nodecount(); i++) {
-      nodes_[i].set_timezone(tz_index);
-    }
-    file.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
+    // Write the modified nodes
+    file.write(reinterpret_cast<const char*>(modified_nodes.data()),
+               modified_nodes.size() * sizeof(NodeInfo));
 
     // Copy the node transitions (they are unchanged when adding predicted speeds).
     file.write(reinterpret_cast<const char*>(transitions_),

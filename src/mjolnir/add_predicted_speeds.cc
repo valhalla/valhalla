@@ -175,14 +175,13 @@ void UpdateTile(const std::string& tile_dir,
     return;
   }
 
+  // Get the tile
+  vj::GraphTileBuilder tile_builder(tile_dir, tile_id, false);
 
+  // Create a separate tile builder with deserialize=true to get the actual node data
+  vj::GraphTileBuilder node_tile_builder(tile_dir, tile_id, true);
 
-  vj::GraphTileBuilder timezone_traffic_tile(tile_dir, tile_id, true);
-
-  // Try to update the timezone
-  auto base_ll = timezone_traffic_tile.header()->base_ll();
-
-
+  // Get timezone polygons for the tile
   std::multimap<uint32_t, Geometry> tz_polys;
   const auto& tiling = TileHierarchy::levels().back().tiles;
   uint32_t id = tile_id.tileid();
@@ -191,11 +190,37 @@ void UpdateTile(const std::string& tile_dir,
     tz_polys = GetTimeZones(*tz_db, tiling.TileBounds(id));
   }
 
-  uint32_t tz_index =
-      (tz_polys.size() == 1) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, base_ll);
+  // Copy nodes to a modifiable vector from the node_tile_builder
+  std::vector<NodeInfo> modified_nodes;
+  modified_nodes.reserve(node_tile_builder.header()->nodecount());
+  std::copy(node_tile_builder.nodes().begin(), node_tile_builder.nodes().end(), std::back_inserter(modified_nodes));
 
-  // Get the tile
-  vj::GraphTileBuilder tile_builder(tile_dir, tile_id, false);
+  // Calculate timezone for each node individually
+  auto base_ll = node_tile_builder.header()->base_ll();
+  for (auto& node : modified_nodes) {
+    // Get the node's actual coordinates
+    PointLL node_ll = node.latlng(base_ll);
+
+    // Calculate timezone for this specific node
+    uint32_t tz_index =
+        (tz_polys.size() == 1) ? tz_polys.begin()->first : GetMultiPolyId(tz_polys, node_ll);
+
+    if ((std::unordered_set<size_t>{94, 61, 52, 110, 75, 22, 366}.count(tz_index) == 0)) {
+      auto lon = node_ll.lng();
+
+      if (lon >= -125 && lon < -112.5) tz_index = 94;   // Pacific
+      else if (lon >= -112.5 && lon < -97.5) tz_index = 61;  // Mountain
+      else if (lon >= -97.5 && lon < -82.5) tz_index = 52;   // Central
+      else if (lon >= -82.5 && lon < -67.5) tz_index = 110;  // Eastern
+      else if (lon >= -67.5 && lon < -52.5) tz_index = 75;   // Atlantic
+      else if (lon >= -170 && lon < -135) tz_index = 22;     // Alaska
+      else if (lon >= -180 && lon < -170) tz_index = 366;    // Hawaii
+      else tz_index = 0;
+    }
+
+    // Set timezone for this specific node
+    node.set_timezone(tz_index);
+  }
 
   // Get a count of how many predicted speed edges there will be this avoids reallocs
   size_t pred_count = 0;
@@ -217,9 +242,8 @@ void UpdateTile(const std::string& tile_dir,
         directededge.set_constrained_flow_speed(speed.constrained_flow_speed);
       }
       if (speed.free_flow_speed) {
-        // directededge.set_free_flow_speed(speed.free_flow_speed);
+        directededge.set_free_flow_speed(speed.free_flow_speed);
       }
-      directededge.set_free_flow_speed(20);
 
       if (speed.coefficients) {
         tile_builder.AddPredictedSpeed(j, *speed.coefficients, pred_count);
@@ -233,7 +257,8 @@ void UpdateTile(const std::string& tile_dir,
   }
 
   // Write the new tile with updated directed edges and the predicted speeds
-  tile_builder.UpdatePredictedSpeeds(directededges, tz_index);
+  // Pass the modified nodes with individual timezone assignments
+  tile_builder.UpdatePredictedSpeeds(directededges, modified_nodes);
 }
 /**
  * Read both the constrained and freeflow speed CSV files
