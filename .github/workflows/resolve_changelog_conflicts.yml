@@ -1,8 +1,10 @@
 name: Resolve Changelog Conflicts
 
 on:
-  pull_request_target:
-    types: [synchronize]
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 jobs:
   resolve_changelog_conflicts:
@@ -17,89 +19,41 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Check for conflicts
-        id: check_conflicts
+      - name: Create merge commit
+        id: merge
         run: |
-          if grep -q '<<<<<<<' CHANGELOG.md; then
-            echo "conflicts_detected=true" >> $GITHUB_OUTPUT
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git fetch origin master
+          git merge --no-commit --no-ff origin/master || true
+          
+          if git diff --name-only --diff-filter=U | grep -q CHANGELOG.md; then
+            echo "has_conflict=true" >> $GITHUB_OUTPUT
           else
-            echo "conflicts_detected=false" >> $GITHUB_OUTPUT
+            echo "has_conflict=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up Python
-        if: steps.check_conflicts.outputs.conflicts_detected == 'true'
+        if: steps.merge.outputs.has_conflict == 'true'
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
       - name: Resolve conflicts
-        if: steps.check_conflicts.outputs.conflicts_detected == 'true'
+        if: steps.merge.outputs.has_conflict == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
-          set -ex
-
-          # Install required package
-          python -m pip install --quiet PyGithub
-
-          python << 'EOF'
-          import re
-          import os
-          from github import Github
-
-          with open('CHANGELOG.md', 'r') as f:
-              content = f.read()
-
-          conflict = re.search(
-              r'^(.*?)<<<<<<<.*?\n(.*?)\n=======\n(.*?)\n>>>>>>>([\s\S]*)$',
-              content,
-              re.DOTALL
-          )
-          if not conflict:
-              print("No conflict markers found")
-              exit(0)
-
-          before = conflict.group(1).strip()
-          pr_entries = conflict.group(2).strip()
-          master_entries = conflict.group(3).strip()
-          after = conflict.group(4).strip()
-          after = re.sub(r'^\s*master\s*$', '', after, flags=re.MULTILINE)
-
-          combined = []
-          seen = set()
-
-          for entry in master_entries.split('\n'):
-              entry = entry.strip()
-              if entry and entry not in seen:
-                  combined.append(f"   {entry}")
-                  seen.add(entry)
-
-          for entry in pr_entries.split('\n'):
-              entry = entry.strip()
-              if entry and entry not in seen:
-                  combined.append(f"   {entry}")
-                  seen.add(entry)
-
-          resolved = f"{before}\n" + "\n".join(combined) + (f"\n{after}" if after else "")
-          with open('CHANGELOG.md', 'w') as f:
-              f.write(resolved)
-
-          os.system('git config user.name "github-actions[bot]"')
-          os.system('git config user.email "github-actions[bot]@users.noreply.github.com"')
+          # Install dependencies
+          pip install PyGithub
           
-          # commit and push
-          os.system('git add CHANGELOG.md')
-          os.system('git commit -m "bumped changelog: resolved merge conflict"')
-          os.system(f'git push origin "HEAD:$PR_BRANCH"')
-
-          # add PR comment
-          g = Github(os.environ['GITHUB_TOKEN'])
-          repo = g.get_repo('valhalla/valhalla')
-          pr = repo.get_pull(int(os.environ['PR_NUMBER']))
-          pr.create_issue_comment(
-              "Automatic Changelog Resolution\n\n"
-              "CI will now re-run with the resolved changelog."
-          )
-          EOF
+          # Run the resolver script
+          python scripts/resolve_changelog_conflicts.py
+          
+          git merge --abort
+          
+          # Commit and push the resolved changelog
+          git add CHANGELOG.md
+          git commit -m "Resolved changelog conflict automatically"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
