@@ -204,8 +204,8 @@ target_link_libraries(valhalla
   PUBLIC
     ${libvalhalla_link_libraries}
     $<$<BOOL:${WIN32}>:ws2_32>
-    $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
   PRIVATE
+    $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
     Threads::Threads)
 
 set_target_properties(valhalla PROPERTIES
