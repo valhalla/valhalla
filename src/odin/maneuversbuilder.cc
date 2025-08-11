@@ -1860,7 +1860,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kBuildingExit);
     LOG_TRACE("ManeuverType=BUILDING_EXIT");
   } else if (maneuver.has_level_changes() && !maneuver.end_level_ref().empty()) {
-    maneuver.set_type(DirectionsLeg_Maneuver_Type_kGenericLevelChange);
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kLevelChange);
   }
   // Process simple direction
   else {

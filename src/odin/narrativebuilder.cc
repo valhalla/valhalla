@@ -508,7 +508,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_instruction(FormExitBuildingInstruction(maneuver));
         break;
       }
-      case DirectionsLeg_Maneuver_Type_kGenericLevelChange:
+      case DirectionsLeg_Maneuver_Type_kLevelChange:
         maneuver.set_instruction(FormGenericLevelChangeInstruction(maneuver));
         break;
       case DirectionsLeg_Maneuver_Type_kContinue:

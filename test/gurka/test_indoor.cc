@@ -692,12 +692,12 @@ TEST(StandAlone, GenericLevelChange) {
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
-                                                DirectionsLeg_Maneuver_Type_kGenericLevelChange,
+                                                DirectionsLeg_Maneuver_Type_kLevelChange,
                                                 DirectionsLeg_Maneuver_Type_kContinue,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
 
   // Verify single maneuver prior to elevator
   // int maneuver_index = 0;
-  gurka::assert::raw::expect_instructions_at_maneuver_index(result, 1, "Change to Level 1.", "", "",
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, 1, "Continue to Level 1.", "", "",
                                                             "", "");
 }
