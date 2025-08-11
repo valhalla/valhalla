@@ -69,29 +69,10 @@ public:
    */
   void set_direction(AccessRestrictionDirection direction);
 
-<<<<<<< HEAD
   /**
    * Whether or not the restriction applies to local traffic
    */
   bool except_destination() const;
-
-  /**
-   * Set flag for whether or not the restriction applies to local traffic
-   */
-  void set_except_destination(const bool except_destination);
-
-protected:
-  uint64_t value_ = 0;
-||||||| d769e7a5f
-
-protected:
-  uint64_t value_ = 0;
-=======
-  /**
-   * Whether or not the restriction applies to local traffic
-   */
-  bool except_destination() const;
->>>>>>> master
 
   /**
    * Set flag for whether or not the restriction applies to local traffic
@@ -110,18 +91,8 @@ protected:
   uint16_t except_destination_ : 1;
   uint16_t spare_ : 15;
   AccessRestrictionDirection direction_ = AccessRestrictionDirection::kBoth;
-<<<<<<< HEAD
-  uint16_t except_destination_ : 1;
-  uint16_t spare_ : 15;
-  uint16_t spare1_ = 0;
-  uint8_t spare2_ = 0;
-||||||| d769e7a5f
-  uint16_t spare_[2] = {0, 0};
-  uint8_t spare2_ = 0;
-=======
   uint8_t spare1_ = 0;
   uint16_t spare2_ = 0;
->>>>>>> master
 };
 static_assert(sizeof(OSMAccessRestriction) == 16);
 
