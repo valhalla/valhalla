@@ -2,13 +2,13 @@
 #include "baldr/attributes_controller.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
+#include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/util.h"
 #include "proto_conversions.h"
-#include "sif/costfactory.h"
 #include "worker.h"
 
 #include <boost/optional.hpp>
@@ -16,7 +16,6 @@
 #include <cpp-statsd-client/StatsdClient.hpp>
 
 #include <sstream>
-#include <typeinfo>
 #include <unordered_map>
 
 using namespace valhalla;

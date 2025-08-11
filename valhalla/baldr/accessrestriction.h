@@ -4,8 +4,6 @@
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/rapidjson_fwd.h>
 
-#include <cstdint>
-
 namespace valhalla {
 namespace baldr {
 

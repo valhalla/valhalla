@@ -382,7 +382,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
       PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python
       ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
+      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log && exit 1)"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py

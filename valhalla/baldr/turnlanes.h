@@ -1,10 +1,6 @@
 #ifndef VALHALLA_BALDR_TURNLANES_H_
 #define VALHALLA_BALDR_TURNLANES_H_
 
-#include <valhalla/midgard/util.h>
-
-#include <stdint.h>
-
 #include <cstdint>
 #include <sstream>
 #include <string>

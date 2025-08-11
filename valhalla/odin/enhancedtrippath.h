@@ -2,6 +2,7 @@
 #define VALHALLA_ODIN_ENHANCEDTRIPPATH_H_
 
 #include <valhalla/baldr/turn.h>
+#include <valhalla/midgard/logging.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/sign.pb.h>

@@ -3,10 +3,6 @@
 
 #include <valhalla/baldr/graphid.h>
 
-#include <stdint.h>
-
-#include <cstdint>
-
 namespace valhalla {
 namespace baldr {
 

@@ -54,7 +54,7 @@ ENV traffic_name=""
 ENV default_speeds_config_url="https://raw.githubusercontent.com/OpenStreetMapSpeeds/schema/master/default_speeds.json"
 
 # Smoke tests
-RUN python -c "import valhalla,sys; print (sys.version, valhalla)" \
+RUN python -c "import valhalla, sys; print(sys.version, valhalla)" \
   && valhalla_build_config | jq type \
   && cat /usr/local/valhalla_version \
   && valhalla_build_tiles -v \
