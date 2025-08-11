@@ -124,6 +124,8 @@
    * CHANGED: updated translation files and added mn-MN lang [#5425](https://github.com/valhalla/valhalla/pull/5425)
    * CHANGED: Use rapidjson for height serializer [#5277](https://github.com/valhalla/valhalla/pull/5277)
    * CHANGED: Use rapidjson for transit_available serializer [#5430](https://github.com/valhalla/valhalla/pull/5430)
+   * ADDED: `trace_attributes` now also returns all the speed informations on edges when `edge.speeds_faded` or `edge.speeds_non_faded` is set in request. Also `edge.speed_type` returns how the edge speed was set [#5324](https://github.com/valhalla/valhalla/pull/5324)
+   * ADDED: support for destination exceptions for access restrictions [#5370](https://github.com/valhalla/valhalla/pull/5370)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
