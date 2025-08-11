@@ -33,6 +33,7 @@ CMakeLists.txt.user
 /.tidytmp
 vcpkg*/
 *.log
+custom_files/
 
 # python
 .venv

@@ -908,8 +908,8 @@ void ReclassifyLinks(const std::string& ways_file,
 
   // Iterate through the exit node list by classification so exits from major
   // roads are considered before exits from minor roads.
-  uint32_t reclass_count = 0;
-  uint32_t tc_count = 0;
+  [[maybe_unused]] uint32_t reclass_count = 0;
+  [[maybe_unused]] uint32_t tc_count = 0;
 
   for (uint32_t classification = 0; classification < kMaxClassification; classification++) {
     for (auto& node : exit_nodes[classification]) {

@@ -1,9 +1,6 @@
 #include "thor/worker.h"
-#include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
 #include "thor/isochrone.h"
-#include "tyr/actor.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -190,7 +187,7 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error(e, info, request);
   } catch (const std::exception& e) {
-    LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
+    LOG_ERROR("500::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error({499, std::string(e.what())}, info, request);
   }
 

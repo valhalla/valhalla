@@ -3,12 +3,16 @@ import platform
 from shutil import which
 import subprocess
 import sys
-import sysconfig
 
-from . import PYVALHALLA_DIR
+from . import PYVALHALLA_DIR, VALHALLA_PYTHON_PACKAGE
+
 
 PYVALHALLA_BIN_DIR = PYVALHALLA_DIR.joinpath("bin").resolve()
 IS_WIN = platform.system().lower() == "windows"
+
+# on the filesystem it's not pyvalhalla-weekly, but pyvalhalla_weekly
+mpath = VALHALLA_PYTHON_PACKAGE.replace("-", "_")
+VENDORED_LIB_DIR = Path(__file__).parent.parent.joinpath(mpath + ".libs").resolve()
 
 
 def run(from_main=False) -> None:
@@ -45,9 +49,7 @@ def run(from_main=False) -> None:
         stdout=subprocess.DEVNULL if is_quiet else sys.stdout,
         # on Win we need to add the path to vendored DLLs manually, see
         # https://github.com/adang1345/delvewheel/issues/62#issuecomment-2977988121
-        # the DLLs are installed to site-packages/ directly for some reason, see
-        # https://github.com/adang1345/delvewheel/issues/64
-        env=dict(PATH=f"{sysconfig.get_paths()["purelib"]}" if IS_WIN else None),
+        env=(dict(PATH=str(VENDORED_LIB_DIR)) if IS_WIN else None),
     )
 
     # raises CalledProcessError if not successful

@@ -1,5 +1,4 @@
 #include "mjolnir/restrictionbuilder.h"
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -9,7 +8,6 @@
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
 #include "mjolnir/complexrestrictionbuilder.h"
-#include "mjolnir/dataquality.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmrestriction.h"
 #include "scoped_timer.h"
@@ -780,8 +778,8 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
 
     HandleOnlyRestrictionProperties(results, hierarchy_properties);
 
-    uint32_t forward_restrictions_count = 0;
-    uint32_t reverse_restrictions_count = 0;
+    [[maybe_unused]] uint32_t forward_restrictions_count = 0;
+    [[maybe_unused]] uint32_t reverse_restrictions_count = 0;
 
     for (const auto& stat : results) {
       forward_restrictions_count += stat.forward_restrictions_count + stat.restrictions.size();

@@ -7,7 +7,6 @@
 #include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/sqlite3.h"
-#include "mjolnir/util.h"
 #include "sif/nocost.h"
 
 #include <osmium/io/pbf_input.hpp>
@@ -514,7 +513,7 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   }
 
   // collect and log the stats
-  size_t tiles = 0, edges = 0, landmarks = 0;
+  [[maybe_unused]] size_t tiles = 0, edges = 0, landmarks = 0;
   for (std::promise<std::tuple<size_t, size_t, size_t>>& s : stats_info) {
     std::tuple<size_t, size_t, size_t> data = s.get_future().get();
     tiles += std::get<0>(data);

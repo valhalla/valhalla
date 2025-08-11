@@ -183,13 +183,26 @@ TEST(CommonRestrictionsFail, Truck) {
   }
 }
 
-using params_t =
-    std::tuple<std::string, std::string, std::string, std::string, std::string, std::string>;
-class DestinationAccessRestrictionTest : public ::testing::TestWithParam<params_t> {};
-// class TestHierarchyLimits : public ::testing::TestWithParam<HierarchyLimitsTestParams> {};
-TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestriction) {
+struct params_t {
+
   std::string tag, value, conditional_value, costing, costing_key, costing_value;
-  std::tie(tag, value, conditional_value, costing, costing_key, costing_value) = GetParam();
+
+  params_t(const std::string& tag,
+           const std::string& value,
+           const std::string& conditional_value,
+           const std::string& costing,
+           const std::string& costing_key,
+           const std::string& costing_value)
+      : tag(tag), value(value), conditional_value(conditional_value), costing(costing),
+        costing_key(costing_key), costing_value(costing_value) {};
+};
+
+class DestinationAccessRestrictionTest : public ::testing::TestWithParam<params_t> {};
+
+TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestriction) {
+  // std::string tag, value, conditional_value, costing, costing_key, costing_value;
+  // std::tie(tag, value, conditional_value, costing, costing_key, costing_value) = GetParam();
+  params_t p = GetParam();
 
   const std::string ascii_map = R"(
       A----B-----C----D
@@ -200,25 +213,24 @@ TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestriction) {
                             {"BC",
                              {
                                  {"highway", "residential"},
-                                 {tag, value},
-                                 {tag + ":conditional", conditional_value},
+                                 {p.tag, p.value},
+                                 {p.tag + ":conditional", p.conditional_value},
                              }},
                             {"CD", {{"highway", "residential"}}}};
 
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {},
-                        VALHALLA_BUILD_DIR "test/data/destination_access_restrictions",
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/destination_access_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
                          {"thor.costmatrix.allow_second_pass", "1"}});
 
   // second pass
   valhalla::Api route =
       gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
-                       {{"/costing_options/" + costing + "/" + costing_key, costing_value}});
+                       {{"/costing_options/" + p.costing + "/" + p.costing_key, p.costing_value}});
 
   // better yet, call costmatrix which gives us a warning on second pass
   route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, "truck",
-                           {{"/costing_options/" + costing + "/" + costing_key, costing_value},
+                           {{"/costing_options/" + p.costing + "/" + p.costing_key, p.costing_value},
                             {"/prioritize_bidirectional", "1"}});
   ASSERT_TRUE(route.info().warnings().size() > 0);
   EXPECT_EQ(route.info().warnings(0).code(), 400);
@@ -254,110 +266,3 @@ INSTANTIATE_TEST_SUITE_P(
       res.emplace_back("hazmat", "true", "none @ destination", "truck", "hazmat", "1");
       return res;
     }()));
-
-TEST(StandAlone, TestDestinationAR) {
-  const std::string ascii_map = R"(
-      A-6--B--7--C-8--D--9--E
-      |    |     |    |     |
-     1|    |2    |3   |4    |5
-      |    |     |    |     |
-      F----G-----H----I-----J
-      |    |     |    |     |
-     a|    |b    |c   |d    |e
-      |    |     |    |     |
-      K--f-L-----M----N---g-O
-    )";
-
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  const gurka::ways ways = {
-      {"AB",
-       {
-           {"highway", "residential"},
-           {"maxweight", "3"},
-           {"maxweight:conditional", "none @ destination"},
-       }},
-      {"BC",
-       {
-           {"highway", "residential"},
-           {"maxweight", "3"},
-           {"maxweight:conditional", "none @ destination"},
-       }},
-      {"CD", {{"highway", "residential"}}},
-      {"DE", {{"highway", "residential"}}},
-      {"AF", {{"highway", "residential"}}},
-      {"FK",
-       {
-           {"highway", "residential"},
-           {"maxweight", "3"},
-           {"maxweight:conditional", "none @ destination"},
-       }},
-      {"KL",
-       {
-           {"highway", "residential"},
-           {"maxweight", "3"},
-           {"maxweight:conditional", "none @ destination"},
-           {"maxheight", "3"},
-           {"maxheight:conditional", "none @ destination"},
-       }},
-      {"LM", {{"highway", "residential"}}},
-      {"MN",
-       {
-           {"highway", "residential"},
-           {"maxweight", "3"},
-           {"maxweight:conditional", "none @ destination"},
-           {"maxheight", "3"},
-           {"maxheight:conditional", "no @ destination"},
-       }},
-      {"NO",
-       {
-           {"highway", "residential"},
-           {"maxheight", "3.1"},
-           {"maxheight:conditional", "none @ destination"},
-           {"maxwidth", "3.1"},
-           {"maxwidth:conditional", "none @ delivery"},
-       }},
-      {"JO", {{"highway", "residential"}}},
-  };
-
-  gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/destination_access_restrictions",
-                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
-                         {"thor.costmatrix.allow_second_pass", "1"},
-                         {"thor.costmatrix.check_reverse_connection", "1"}});
-
-  // second pass
-  // valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
-  //                                        {{"/costing_options/truck/weight", "6"}});
-
-  // better yet, call costmatrix which gives us a warning on second pass
-  auto route =
-      gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"D"}, "truck",
-                       {{"/costing_options/truck/weight", "6"}, {"/prioritize_bidirectional", "1"}});
-  ASSERT_TRUE(route.info().warnings_size() == 0);
-
-  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"M"}, "truck",
-                           {{"/costing_options/truck/weight", "6"},
-                            {"/costing_options/truck/height", "6"},
-                            {"/prioritize_bidirectional", "1"}});
-  ASSERT_TRUE(route.info().warnings_size() == 1);
-  EXPECT_EQ(route.info().warnings(0).code(), 400);
-
-  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"f"}, {"1"}, "truck",
-                           {{"/costing_options/truck/weight", "6"},
-                            {"/costing_options/truck/height", "6"},
-                            {"/prioritize_bidirectional", "1"}});
-  ASSERT_TRUE(route.info().warnings_size() == 0);
-
-  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"f"}, {"g"}, "auto",
-                           {{"/costing_options/auto/width", "6"},
-                            {"/costing_options/auto/height", "6"},
-                            {"/prioritize_bidirectional", "1"}});
-  ASSERT_TRUE(route.info().warnings_size() == 0);
-
-  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {"f"}, {"e"}, "auto",
-                           {{"/costing_options/auto/width", "6"},
-                            {"/costing_options/auto/height", "6"},
-                            {"/prioritize_bidirectional", "1"}});
-  ASSERT_TRUE(route.info().warnings_size() == 1);
-  EXPECT_EQ(route.info().warnings(0).code(), 400);
-}

@@ -278,11 +278,10 @@ TEST(Matrix, test_matrix) {
   matrix = request.matrix();
   for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal" +
-               " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s distance is not equal to expected value for TDMatrix";
 
     EXPECT_NEAR(matrix.times()[i], matrix_answers[i][0], kThreshold)
-        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s time is not equal to expected value for TDMatrix";
   }
 }
 
@@ -330,11 +329,10 @@ TEST(Matrix, test_timedistancematrix_forward) {
 
   for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal" +
-               " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s distance is not equal to expected value for TDMatrix";
 
     EXPECT_NEAR(matrix.times()[i], expected_results[i][0], kThreshold)
-        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s time is not equal to expected value for TDMatrix";
   }
 }
 
@@ -383,11 +381,10 @@ TEST(Matrix, test_timedistancematrix_reverse) {
 
   for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal" +
-               " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s distance is not equal to expected value for TDMatrix";
 
     EXPECT_NEAR(matrix.times()[i], expected_results[i][0], kThreshold)
-        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+        << "result " + std::to_string(i) + "'s time is not equal to expected value for TDMatrix";
   }
 }
 

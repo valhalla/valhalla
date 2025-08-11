@@ -747,8 +747,6 @@ public:
           }
         }
       }
-      // In case there are additional restriction checks for a particular  mode,
-      // check them now
 
       if (restriction.except_destination()) {
         auto mask = baldr::kAccessRestrictionMasks[static_cast<size_t>(restriction.type())];
@@ -757,6 +755,8 @@ public:
           continue;
       }
 
+      // In case there are additional restriction checks for a particular  mode,
+      // check them now
       if (!ModeSpecificAllowed(restriction)) {
         return false;
       }

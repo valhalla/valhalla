@@ -3,9 +3,6 @@
 #pragma once
 
 #include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
-#include "proto_conversions.h"
 
 namespace valhalla {
 namespace tyr {

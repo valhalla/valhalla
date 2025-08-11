@@ -1,5 +1,4 @@
 #include "mjolnir/graphtilebuilder.h"
-#include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"

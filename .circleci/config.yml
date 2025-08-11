@@ -61,7 +61,7 @@ jobs:
 
   build-release:
     docker:
-      - image: ubuntu:24.04
+      - image: ubuntu:22.04
     resource_class: xlarge
     steps:
       - checkout

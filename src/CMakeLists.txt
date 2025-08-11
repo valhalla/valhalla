@@ -32,7 +32,7 @@ function(valhalla_module)
             ${MODULE_SOURCES}
             PROPERTIES
             COMPILE_FLAGS
-            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers")
+            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp")
   endif()
   list(APPEND MODULE_SOURCES ${MODULE_SOURCES_WITH_WARNINGS})
 
@@ -54,6 +54,7 @@ function(valhalla_module)
     PUBLIC
       $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
       $<$<BOOL:${MSVC}>:NOMINMAX>
+      $<$<BOOL:${VALHALLA_VERSION_MODIFIER}>:VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}>
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
     PRIVATE

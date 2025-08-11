@@ -1,5 +1,4 @@
 #include "odin/directionsbuilder.h"
-#include "midgard/logging.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuversbuilder.h"
 #include "odin/markup_formatter.h"
