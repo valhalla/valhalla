@@ -258,8 +258,6 @@ namespace osrm {
  * Serialize a location into a osrm waypoint
  * http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
  */
-valhalla::baldr::json::MapPtr
-waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is_optimized = false);
 void waypoint(const valhalla::Location& location,
               rapidjson::writer_wrapper_t& writer,
               bool is_tracepoint = false,
@@ -268,13 +266,11 @@ void waypoint(const valhalla::Location& location,
 /*
  * Serialize locations into osrm waypoints
  */
-valhalla::baldr::json::ArrayPtr
-waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-          bool tracepoints = false);
 void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                rapidjson::writer_wrapper_t& writer,
                bool tracepoints = false);
-valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
+void waypoints(const valhalla::Trip& locations, rapidjson::writer_wrapper_t& writer);
+
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 
 void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
