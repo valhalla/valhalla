@@ -1847,45 +1847,6 @@ function filter_tags_generic(kv)
   kv["maxspeed:hgv:forward"] = normalize_speed(kv["maxspeed:hgv:forward"])
   kv["maxspeed:hgv:backward"] = normalize_speed(kv["maxspeed:hgv:backward"])
 
-<<<<<<< HEAD
-  local access_restriction_tags = {
-    "maxweight", "maxheight", "maxlength", "maxwidth", "hazmat", "maxaxles", "maxaxleload"
-  }
-
-  for _, restr_tag in pairs(access_restriction_tags) do 
-    -- find out if there are exemptions
-    local conditional_tag = string.format("%s:conditional", restr_tag)
-    local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
-    if except_destination == 1 then 
-      kv[restr_tag] = tostring(kv[restr_tag]) .. "~" -- parse this later in the graphparser
-    end
-  end
-
-  local directed_access_restriction_tags = {
-    "maxweight", "maxheight", "maxlength", "maxwidth", "hazmat"
-  }
-
-  local directions = {
-    "forward", "backward"
-  }
-
-  -- also look for local exemptions in uni-directional restrictions
-  for _, restr_key in pairs(directed_access_restriction_tags) do 
-    for _, direction in pairs(directions) do 
-      local key = restr_key .. "_" .. direction
-      local tag = restr_key .. ":" .. direction
-      local conditional_tag = string.format("%s:conditional", tag)
-      local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
-      if except_destination == 1 then 
-        kv[key] = tostring(kv[key]) .. "~" -- parse this later in the graphparser
-      end
-    end
-  end
-
-
-
-||||||| d769e7a5f
-=======
   local access_restriction_tags = {
     ["maxweight"]   = true,
     ["maxheight"]   = true,
@@ -1920,7 +1881,6 @@ function filter_tags_generic(kv)
     end
   end
 
->>>>>>> master
   if (kv["hgv:national_network"] or kv["hgv:state_network"] or kv["hgv"] == "local" or kv["hgv"] == "designated") then
     kv["truck_route"] = "true"
   end
