@@ -1057,6 +1057,15 @@ struct graph_parser {
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["maxwidth"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWidth);
+      restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["maxwidth_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWidth);
@@ -1101,6 +1110,15 @@ struct graph_parser {
       restriction.set_type(AccessType::kMaxLength);
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
+    tag_handlers_["maxweight"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxWeight);
+      restriction.set_modes(kTruckAccess);
       set_access_restriction_value(restriction, tag_.second,
                                    [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
@@ -4189,7 +4207,7 @@ struct graph_parser {
                   return; // should not make it here; has to be bad data.
                 }
               } // else
-            } // if (condition.empty())
+            }   // if (condition.empty())
 
             std::vector<std::string> conditions = GetTagTokens(condition, ';');
 
@@ -4216,7 +4234,7 @@ struct graph_parser {
             }
             return;
           } // if (isConditional)
-        } // end turning into complex restriction
+        }   // end turning into complex restriction
 
         restriction.set_modes(modes);
 
