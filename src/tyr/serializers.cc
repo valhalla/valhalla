@@ -130,22 +130,25 @@ std::string serializeStatus(Api& request) {
   return rapidjson::to_string(status_doc);
 }
 
-void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
+void route_references(rapidjson::writer_wrapper_t& writer,
+                      const TripRoute& route,
+                      const Options& options) {
   const bool linear_reference =
       options.linear_references() &&
       (options.action() == Options::trace_route || options.action() == Options::route);
   if (!linear_reference) {
     return;
   }
-  json::ArrayPtr references = json::array({});
+  writer.start_object();
+  writer.start_array("linear_references");
   for (const TripLeg& leg : route.legs()) {
     auto edge_references = openlr_edges(leg);
-    references->reserve(references->size() + edge_references.size());
     for (const std::string& openlr : edge_references) {
-      references->emplace_back(openlr);
+      writer(openlr);
     }
   }
-  route_json->emplace("linear_references", references);
+  writer.end_array();
+  writer.end_object();
 }
 
 void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
@@ -253,19 +256,6 @@ std::string serializePbf(Api& request) {
 }
 
 // Generate leg shape in geojson format.
-baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape) {
-  auto geojson = baldr::json::map({});
-  auto coords = baldr::json::array({});
-  coords->reserve(shape.size());
-  for (const auto& p : shape) {
-    coords->emplace_back(
-        baldr::json::array({baldr::json::fixed_t{p.lng(), 6}, baldr::json::fixed_t{p.lat(), 6}}));
-  }
-  geojson->emplace("type", std::string("LineString"));
-  geojson->emplace("coordinates", coords);
-  return geojson;
-}
-
 void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer) {
   writer("type", "LineString");
   writer.start_array("coordinates");

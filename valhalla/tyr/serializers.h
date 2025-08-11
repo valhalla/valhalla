@@ -107,7 +107,7 @@ std::string serializeStatus(Api& request);
 
 // Return a JSON array of OpenLR 1.5 line location references for each edge of a map matching
 // result. For the time being, result is only non-empty for auto costing requests.
-void route_references(baldr::json::MapPtr& route_json,
+void route_references(rapidjson::writer_wrapper_t& writer,
                       const TripRoute& route,
                       const Options& options);
 
@@ -134,7 +134,6 @@ baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
  * @param shape  The points making up the line.
  * @returns The GeoJSON geometry of the LineString
  */
-baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape);
 void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer);
 
 // Elevation serialization support

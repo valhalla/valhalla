@@ -182,7 +182,10 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
 std::string destinations(const valhalla::TripSign& sign);
 
 // Add OSRM route summary information: distance, duration
-void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
+void route_summary(rapidjson::writer_wrapper_t& writer,
+                   const valhalla::Api& api,
+                   bool imperial,
+                   int route_index) {
   // Compute total distance and duration
   double duration = 0;
   double distance = 0;
@@ -208,25 +211,27 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
 
   // Convert distance to meters. Output distance and duration.
   distance = units_to_meters(distance, !imperial);
-  route->emplace("distance", json::fixed_t{distance, 3});
-  route->emplace("duration", json::fixed_t{duration, 3});
+  writer.start_object();
+  writer.set_precision(kDefaultPrecision);
+  writer("distance", distance);
+  writer("duration", duration);
 
-  route->emplace("weight", json::fixed_t{weight, 3});
+  writer("weight", weight);
   assert(api.options().costings().find(api.options().costing_type())->second.has_name_case());
-  route->emplace("weight_name",
-                 api.options().costings().find(api.options().costing_type())->second.name());
+  writer("weight_name", api.options().costings().find(api.options().costing_type())->second.name());
 
   auto recosting_itr = api.options().recostings().begin();
   for (const auto& recost : recosts) {
     if (recost.first < 0) {
-      route->emplace("duration_" + recosting_itr->name(), nullptr_t());
-      route->emplace("weight_" + recosting_itr->name(), nullptr_t());
+      writer("duration_" + recosting_itr->name(), nullptr);
+      writer("weight_" + recosting_itr->name(), nullptr);
     } else {
-      route->emplace("duration_" + recosting_itr->name(), json::fixed_t{recost.first, 3});
-      route->emplace("weight_" + recosting_itr->name(), json::fixed_t{recost.second, 3});
+      writer("duration_" + recosting_itr->name(), recost.first);
+      writer("weight_" + recosting_itr->name(), recost.second);
     }
     ++recosting_itr;
   }
+  writer.end_object();
 }
 
 // Generate full shape of the route.
@@ -281,7 +286,7 @@ std::vector<PointLL> simplified_shape(const valhalla::DirectionsRoute& direction
   return simple_shape;
 }
 
-void route_geometry(json::MapPtr& route,
+void route_geometry(rapidjson::writer_wrapper_t& writer,
                     const valhalla::DirectionsRoute& directions,
                     const valhalla::Options& options) {
   if (options.shape_format() == no_shape) {
@@ -295,12 +300,16 @@ void route_geometry(json::MapPtr& route,
              (options.has_generalize_case() && options.generalize() > 0.0f)) {
     shape = full_shape(directions, options);
   }
+  writer.start_object();
   if (options.shape_format() == geojson) {
-    route->emplace("geometry", geojson_shape(shape));
+    writer.start_object("geometry");
+    geojson_shape(shape, writer);
+    writer.end_object();
   } else {
     int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
-    route->emplace("geometry", midgard::encode(shape, precision));
+    writer("geometry", midgard::encode(shape, precision));
   }
+  writer.end_object();
 }
 
 json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
@@ -362,7 +371,8 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
 // Serialize waypoints for optimized route. Note that OSRM retains the
 // original location order, and stores an index for the waypoint index in
 // the optimized sequence.
-json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
+void waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs,
+               rapidjson::writer_wrapper_t& writer) {
   // Create a vector of indexes.
   std::vector<uint32_t> indexes(locs.size());
   std::iota(indexes.begin(), indexes.end(), 0);
@@ -374,12 +384,10 @@ json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>&
 
   // Output each location in its original index order along with its
   // waypoint index (which is the index in the optimized order).
-  auto waypoints = json::array({});
   for (const auto& index : indexes) {
     locs.Mutable(index)->mutable_correlation()->set_waypoint_index(index);
-    waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
+    osrm::waypoint(locs.Get(index), writer, false, true);
   }
-  return waypoints;
 }
 
 // Simple structure for storing intersection data
@@ -2092,28 +2100,35 @@ namespace osrm_serializers {
 std::string serialize(valhalla::Api& api) {
   auto& options = *api.mutable_options();
   AttributesController controller(options);
-  auto json = json::map({});
+
+  rapidjson::writer_wrapper_t writer(4096);
+  writer.start_object();
 
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
   std::string status("Ok");
-  json->emplace("code", status);
+  writer("code", status);
   switch (options.action()) {
     case valhalla::Options::trace_route:
-      json->emplace("tracepoints", osrm::waypoints(options.shape(), true));
+      writer.start_array("tracepoints");
+      osrm::waypoints(options.shape(), writer, true);
+      writer.end_array();
       break;
     case valhalla::Options::route:
-      json->emplace("waypoints", osrm::waypoints(api.trip()));
+      writer.start_array("waypoints");
+      osrm::waypoints(api.trip(), writer);
+      writer.end_array();
       break;
     case valhalla::Options::optimized_route:
-      json->emplace("waypoints", waypoints(*options.mutable_locations()));
+      writer.start_array("waypoints");
+      waypoints(*options.mutable_locations(), writer);
+      writer.end_array();
       break;
     default:
       throw std::runtime_error("Unknown route serialization action");
   }
-
-  // Add each route
-  auto routes = json::array({});
-  routes->reserve(api.trip().routes_size());
+  // Routes are called matchings in osrm map matching mode
+  writer.start_array(options.action() == valhalla::Options::trace_route ? "matchings"
+                                                                        : "routes"); // routes
 
   // OSRM is always using metric for non narrative stuff
   bool imperial = options.units() == Options::miles;
@@ -2127,27 +2142,27 @@ std::string serialize(valhalla::Api& api) {
 
   // For each route...
   for (int i = 0; i < api.trip().routes_size(); ++i) {
-    // Create a route to add to the array
-    auto route = json::map({});
-    route->reserve(10); // some of the things are conditional so we take a swag here
+    writer.start_object(); // route
+    writer.set_precision(tyr::kDefaultPrecision);
 
     if (options.action() == Options::trace_route) {
       // NOTE(mookerji): confidence value here is a placeholder for future implementation.
-      route->emplace("confidence", json::fixed_t{1, 1});
+      writer("confidence", 1);
     }
     // Add linear references, if applicable
-    route_references(route, api.trip().routes(i), options);
+    route_references(writer, api.trip().routes(i), options);
 
     // Concatenated route geometry
-    route_geometry(route, api.directions().routes(i), options);
+    route_geometry(writer, api.directions().routes(i), options);
 
     // Other route summary information
-    route_summary(route, api, imperial, i);
+    route_summary(writer, api, imperial, i);
 
     // Serialize route legs
-    route->emplace("legs", serialize_legs(api.directions().routes(i).legs(), route_leg_summaries[i],
-                                          *api.mutable_trip()->mutable_routes(i)->mutable_legs(),
-                                          imperial, options, controller));
+    // "legs" remove this line
+    serialize_legs(api.directions().routes(i).legs(), route_leg_summaries[i],
+                   *api.mutable_trip()->mutable_routes(i)->mutable_legs(), imperial, options,
+                   controller);
 
     // Add voice instructions if the user requested them
     if (options.voice_instructions()) {
@@ -2156,19 +2171,15 @@ std::string serialize(valhalla::Api& api) {
 
     routes->emplace_back(std::move(route));
   }
-
-  // Routes are called matchings in osrm map matching mode
-  json->emplace(options.action() == valhalla::Options::trace_route ? "matchings" : "routes",
-                std::move(routes));
+  writer.end_array(); // routes
 
   // get serialized warnings
   if (api.info().warnings_size() >= 1) {
-    json->emplace("warnings", serializeWarnings(api));
+    serializeWarnings(api, writer);
   }
 
-  std::stringstream ss;
-  ss << *json;
-  return ss.str();
+  writer.end_object();
+  return writer.get_buffer();
 }
 
 } // namespace osrm_serializers
