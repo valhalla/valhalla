@@ -404,15 +404,6 @@ bool TruckCost::AllowMultiPass() const {
 }
 
 bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
-<<<<<<< HEAD
-
-||||||| d769e7a5f
-=======
-
-  if (restriction.except_destination() && allow_destination_only_)
-    return true;
-
->>>>>>> master
   switch (restriction.type()) {
     case AccessType::kHazmat:
       if (hazmat_ && !restriction.value()) {
@@ -782,7 +773,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options){};
+  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options) {};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
