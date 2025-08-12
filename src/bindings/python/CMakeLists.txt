@@ -17,11 +17,11 @@ endfunction()
 
 # add and install module(s)
 pybind11_add_module(_valhalla ${CMAKE_CURRENT_SOURCE_DIR}/src/_valhalla.cc)
-target_link_libraries(_valhalla PRIVATE valhalla)
+target_link_libraries(_valhalla PRIVATE valhalla gcov)
 pybind11_add_module(graph_utils 
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_utils.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_id.cc)
-target_link_libraries(graph_utils PRIVATE valhalla)
+target_link_libraries(graph_utils PRIVATE valhalla gcov)
 
 set_target_properties(_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla)
 set_target_properties(graph_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
