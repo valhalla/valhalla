@@ -83,7 +83,7 @@ jobs:
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
-          path: {{ env.CCACHE_DIR }}
+          path: ${{ env.CCACHE_DIR }}
           key: ccache-release-linux-x86_64-{{ env.BRANCH_NAME }}
           restore-keys: |
             ccache-release-linux-x86_64-master
@@ -102,7 +102,7 @@ jobs:
       - name: Save cache
         uses: actions/cache/save@v4
         with:
-          path: {{ env.CCACHE_DIR }}
+          path: ${{ env.CCACHE_DIR }}
           key: ccache-release-linux-x86_64-{{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
 
       - name: Run tests
@@ -141,7 +141,7 @@ jobs:
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
-          path: {{ env.CCACHE_DIR }}
+          path: ${{ env.CCACHE_DIR }}
           key: ccache-debug-linux-x86_64-{{ env.BRANCH_NAME }}
           restore-keys: |
             ccache-debug-linux-x86_64-master
@@ -161,7 +161,7 @@ jobs:
       - name: Save cache
         uses: actions/cache/save@v4
         with:
-          path: {{ env.CCACHE_DIR }}
+          path: ${{ env.CCACHE_DIR }}
           key: ccache-release-linux-aarch64-{{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
       
       - name: Run clang-tidy
@@ -209,7 +209,7 @@ jobs:
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
-          path: {{ env.CCACHE_DIR }}
+          path: ${{ env.CCACHE_DIR }}
           key: ccache-release-linux-aarch64-{{ env.BRANCH_NAME }}
           restore-keys: |
             ccache-release-linux-aarch64-master
@@ -227,7 +227,7 @@ jobs:
       - name: Save cache
         uses: actions/cache/save@v4
         with:
-          path: {{ env.CCACHE_DIR }}
+          path: ${{ env.CCACHE_DIR }}
           key: ccache-release-linux-aarch64-{{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
       
       - name: Run clang-tidy
