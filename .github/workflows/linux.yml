@@ -72,11 +72,18 @@ jobs:
       
       - name: Install deps
         run: ./scripts/install-linux-deps.sh
-
+      
       - name: Get timestamp & ccache dir
         run: |
           echo 'TIMESTAMP="$(date +"%s")"' >> GITHUB_ENV
           echo 'CCACHE_DIR="$(ccache --get-config cache_dir)"' >> GITHUB_ENV
+
+      - name: Test stuff
+        run: |
+          echo "$(ccache --get-config cache_dir)"
+          ls -lh "$(ccache --get-config cache_dir)"
+          echo "ccache dir is ${{ env.CCACHE_DIR }}"
+          ls -lh "$HOME/.cache/ccache"
 
       - name: Restore cache
         id: cache-ccache-restore
