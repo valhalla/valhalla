@@ -13,7 +13,6 @@ on:
       - ".git*"
     branches:
       - master
-      - nn-migrate-linux-ghs
   pull_request:
     paths-ignore:
       - "*.md"
