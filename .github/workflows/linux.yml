@@ -71,25 +71,18 @@ jobs:
           fetch-depth: 1
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh
+        run: ./scripts/install-linux-deps.sh >& /dev/null
       
       - name: Get timestamp & ccache dir
         run: |
           echo 'TIMESTAMP="$(date +"%s")"' >> GITHUB_ENV
           echo 'CCACHE_DIR="$(ccache --get-config cache_dir)"' >> GITHUB_ENV
 
-      - name: Test stuff
-        run: |
-          echo "$(ccache --get-config cache_dir)"
-          ls -lh "$(ccache --get-config cache_dir)"
-          echo "ccache dir is ${{ env.CCACHE_DIR }}"
-          ls -lh "$HOME/.cache/ccache"
-
       - name: Restore cache
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
-          path: ${{ env.CCACHE_DIR }}
+          path: /home/runner/.cache/ccache
           key: ccache-release-linux-x86_64-{{ env.BRANCH_NAME }}
           restore-keys: |
             ccache-release-linux-x86_64-master
@@ -108,7 +101,7 @@ jobs:
       - name: Save cache
         uses: actions/cache/save@v4
         with:
-          path: ${{ env.CCACHE_DIR }}
+          path: /home/runner/.cache/ccache
           key: ccache-release-linux-x86_64-{{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
 
       - name: Run tests
@@ -147,7 +140,7 @@ jobs:
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
-          path: ${{ env.CCACHE_DIR }}
+          path: /home/runner/.cache/ccache
           key: ccache-debug-linux-x86_64-{{ env.BRANCH_NAME }}
           restore-keys: |
             ccache-debug-linux-x86_64-master
@@ -167,7 +160,7 @@ jobs:
       - name: Save cache
         uses: actions/cache/save@v4
         with:
-          path: ${{ env.CCACHE_DIR }}
+          path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-{{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
       
       - name: Run clang-tidy
@@ -215,7 +208,7 @@ jobs:
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
-          path: ${{ env.CCACHE_DIR }}
+          path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-{{ env.BRANCH_NAME }}
           restore-keys: |
             ccache-release-linux-aarch64-master
@@ -233,7 +226,7 @@ jobs:
       - name: Save cache
         uses: actions/cache/save@v4
         with:
-          path: ${{ env.CCACHE_DIR }}
+          path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-{{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
       
       - name: Run clang-tidy
