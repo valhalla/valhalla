@@ -14,7 +14,7 @@ exit=$?
 
 if [[ $exit -eq 0 ]]; then
   echo [PASS] ${TEST_NAME}
-  rm ${TEST_PATH}*
+  rm ${TEST_PATH}* || true
 else
   echo [FAIL] ${TEST_NAME}
   cat ${TEST_LOG}
