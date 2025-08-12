@@ -407,48 +407,48 @@ struct IntersectionEdges {
 };
 
 // Process 'indications' array - add indications from left to right
-json::ArrayPtr lane_indications(const bool drive_on_right, const uint16_t mask) {
-  auto indications = json::array({});
+void lane_indications(rapidjson::writer_wrapper_t& writer,
+                      const bool drive_on_right,
+                      const uint16_t mask) {
 
   // TODO make map for lane mask to osrm indication string
 
   // reverse (left u-turn)
   if (mask & kTurnLaneReverse && drive_on_right) {
-    indications->emplace_back(osrmconstants::kModifierUturn);
+    writer(osrmconstants::kModifierUturn);
   }
   // sharp_left
   if (mask & kTurnLaneSharpLeft) {
-    indications->emplace_back(osrmconstants::kModifierSharpLeft);
+    writer(osrmconstants::kModifierSharpLeft);
   }
   // left
   if (mask & kTurnLaneLeft) {
-    indications->emplace_back(osrmconstants::kModifierLeft);
+    writer(osrmconstants::kModifierLeft);
   }
   // slight_left
   if (mask & kTurnLaneSlightLeft) {
-    indications->emplace_back(osrmconstants::kModifierSlightLeft);
+    writer(osrmconstants::kModifierSlightLeft);
   }
   // through
   if (mask & kTurnLaneThrough) {
-    indications->emplace_back(osrmconstants::kModifierStraight);
+    writer(osrmconstants::kModifierStraight);
   }
   // slight_right
   if (mask & kTurnLaneSlightRight) {
-    indications->emplace_back(osrmconstants::kModifierSlightRight);
+    writer(osrmconstants::kModifierSlightRight);
   }
   // right
   if (mask & kTurnLaneRight) {
-    indications->emplace_back(osrmconstants::kModifierRight);
+    writer(osrmconstants::kModifierRight);
   }
   // sharp_right
   if (mask & kTurnLaneSharpRight) {
-    indications->emplace_back(osrmconstants::kModifierSharpRight);
+    writer(osrmconstants::kModifierSharpRight);
   }
   // reverse (right u-turn)
   if (mask & kTurnLaneReverse && !drive_on_right) {
-    indications->emplace_back(osrmconstants::kModifierUturn);
+    writer(osrmconstants::kModifierUturn);
   }
-  return indications;
 }
 
 // Add intersections along a step/maneuver.
@@ -1147,96 +1147,104 @@ std::string maneuver_type(const valhalla::DirectionsLeg::Maneuver& maneuver,
 }
 
 // Populate the OSRM maneuver record within a step.
-json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                           const std::string& maneuver_type,
-                           const std::string& modifier,
-                           const uint32_t in_brg,
-                           const uint32_t out_brg,
-                           const PointLL& man_ll,
-                           const bool emplace_instructions) {
-  auto osrm_man = json::map({});
+void osrm_maneuver(rapidjson::writer_wrapper_t& writer,
+                   const valhalla::DirectionsLeg::Maneuver& maneuver,
+                   const std::string& maneuver_type,
+                   const std::string& modifier,
+                   const uint32_t in_brg,
+                   const uint32_t out_brg,
+                   const PointLL& man_ll,
+                   const bool emplace_instructions) {
 
   // Set the location
-  auto loc = json::array({});
-  loc->emplace_back(json::fixed_t{man_ll.lng(), 6});
-  loc->emplace_back(json::fixed_t{man_ll.lat(), 6});
-  osrm_man->emplace("location", loc);
+  writer.start_array("location");
+  writer.set_precision(kCoordinatePrecision);
+  writer(man_ll.lng(), 6);
+  writer(man_ll.lat(), 6);
+  writer.end_array();
 
-  osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
-  osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
-  osrm_man->emplace("type", maneuver_type);
+  writer("bearing_before", static_cast<uint64_t>(in_brg));
+  writer("bearing_after", static_cast<uint64_t>(out_brg));
+  writer("type", maneuver_type);
 
   if (emplace_instructions) {
-    osrm_man->emplace("instruction", maneuver.text_instruction());
+    writer("instruction", maneuver.text_instruction());
   }
   if (!modifier.empty()) {
-    osrm_man->emplace("modifier", modifier);
+    writer("modifier", modifier);
   }
   // Roundabout count
   if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter &&
       maneuver.roundabout_exit_count() > 0) {
-    osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+    writer("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
   }
-
-  return osrm_man;
 }
 
 // Return a banner component
-json::MapPtr banner_component(const std::string& type, const std::string& text) {
-  json::MapPtr component = json::map({});
-  component->emplace("type", type);
-  component->emplace("text", text);
-  return component;
+void banner_component(rapidjson::writer_wrapper_t& writer,
+                      const std::string& type,
+                      const std::string& text) {
+  writer("type", type);
+  writer("text", text);
 }
 
 // Primary banners hold the most important information and supposed to be the large text in a
 // navigation app. Mostly they are used to show the primary_banner of the upcoming road.
 // TODO: Highway shield information could be added here as well.
-json::MapPtr primary_banner_instruction(const std::string& primary_text,
-                                        const std::string& ref,
-                                        const std::string& exit,
-                                        const bool arrive_maneuver,
-                                        const std::string& maneuver_type,
-                                        const std::string& modifier,
-                                        const bool roundabout,
-                                        const uint32_t roundabout_turn_degrees,
-                                        const std::string& drive_side) {
-  json::MapPtr instruction = json::map({});
-  json::ArrayPtr components = json::array({});
+void primary_banner_instruction(rapidjson::writer_wrapper_t& writer,
+                                const std::string& primary_text,
+                                const std::string& ref,
+                                const std::string& exit,
+                                const bool arrive_maneuver,
+                                const std::string& maneuver_type,
+                                const std::string& modifier,
+                                const bool roundabout,
+                                const uint32_t roundabout_turn_degrees,
+                                const std::string& drive_side) {
+  writer.start_array("components");
 
   if (!exit.empty() && !arrive_maneuver) {
-    components->emplace_back(banner_component("exit", "Exit"));
-    components->emplace_back(banner_component("exit-number", exit));
+    writer.start_object();
+    banner_component(writer, "exit", "Exit");
+    writer.end_object();
+    writer.start_object();
+    banner_component(writer, "exit-number", exit);
+    writer.end_object();
   }
-  components->emplace_back(banner_component("text", primary_text));
+  banner_component(writer, "text", primary_text);
   if (!ref.empty() && !arrive_maneuver) {
-    components->emplace_back(banner_component("delimiter", "/"));
-    components->emplace_back(banner_component("text", ref));
+    writer.start_object();
+    banner_component(writer, "delimiter", "/");
+    writer.end_object();
+    writer.start_object();
+    banner_component(writer, "text", ref);
+    writer.end_object();
   }
-  instruction->emplace("components", std::move(components));
-  instruction->emplace("text", primary_text);
+  writer.end_array();
+
+  writer("text", primary_text);
   if (!maneuver_type.empty()) {
-    instruction->emplace("type", maneuver_type);
+    writer("type", maneuver_type);
   }
   if (!modifier.empty()) {
-    instruction->emplace("modifier", modifier);
+    writer("modifier", modifier);
   }
   if (roundabout) {
-    instruction->emplace("degrees", static_cast<uint64_t>(roundabout_turn_degrees));
-    instruction->emplace("driving_side", drive_side);
+    writer("degrees", static_cast<uint64_t>(roundabout_turn_degrees));
+    writer("driving_side", drive_side);
   }
-  return instruction;
 }
 
 // Secondary banners hold additional information which is displayed slightly smaller than the
 // primary information. They are mostly used to show the destination names on street signs.
-json::MapPtr secondary_banner_instruction(const std::string& secondary_text) {
-  json::MapPtr instruction = json::map({});
-  json::ArrayPtr components = json::array({});
-  components->emplace_back(banner_component("text", secondary_text));
-  instruction->emplace("components", std::move(components));
-  instruction->emplace("text", secondary_text);
-  return instruction;
+void secondary_banner_instruction(rapidjson::writer_wrapper_t& writer,
+                                  const std::string& secondary_text) {
+  writer.start_array("components");
+  writer.start_object();
+  banner_component(writer, "text", secondary_text);
+  writer.end_object();
+  writer.end_array();
+  writer("text", secondary_text);
 }
 
 // Sub Banner Instructions are used to indicate which lane to use when multiple lanes are
@@ -1245,40 +1253,31 @@ json::MapPtr secondary_banner_instruction(const std::string& secondary_text) {
 // intersection which carries the lane information.
 //
 // This is very similar to the lane indication of the last intersection(s).
-json::MapPtr sub_banner_instruction(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
-                                    valhalla::odin::EnhancedTripLeg* etp) {
-  json::MapPtr instruction = nullptr;
-  json::ArrayPtr lanes = nullptr;
+void sub_banner_instruction(rapidjson::writer_wrapper_t& writer,
+                            const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                            valhalla::odin::EnhancedTripLeg* etp) {
 
   // We only care about the lanes directly before the end of the maneuver
   auto edge = etp->GetPrevEdge(prev_maneuver->end_path_index());
 
-  // Process turn lanes - which are stored on the previous edge to the node
-  // Check if there is an active turn lane
-  // Verify that turn lanes are not non-directional
-  if (edge && (edge->turn_lanes_size() > 0) && edge->HasActiveTurnLane() &&
-      !edge->HasNonDirectionalTurnLane()) {
-    lanes = json::array({});
-    for (const auto& turn_lane : edge->turn_lanes()) {
-      auto lane = banner_component("lane", "");
-      lane->emplace("active", turn_lane.state() == TurnLane::kActive);
-      // Add active_direction for a valid & active lanes
-      if (turn_lane.state() != TurnLane::kInvalid) {
-        lane->emplace("active_direction", turn_lane_direction(turn_lane.active_direction()));
-      }
-      lane->emplace("directions",
-                    lane_indications(edge->drive_on_right(), turn_lane.directions_mask()));
-      lanes->emplace_back(std::move(lane));
+  writer.start_object("sub");
+  writer.start_array("components");
+  for (const auto& turn_lane : edge->turn_lanes()) {
+    writer.start_object();
+    banner_component(writer, "lane", "");
+    writer("active", turn_lane.state() == TurnLane::kActive);
+    // Add active_direction for a valid & active lanes
+    if (turn_lane.state() != TurnLane::kInvalid) {
+      writer("active_direction", turn_lane_direction(turn_lane.active_direction()));
     }
+    writer.start_array("directions");
+    lane_indications(writer, edge->drive_on_right(), turn_lane.directions_mask());
+    writer.end_array();
+    writer.end_object();
   }
-
-  if (lanes != nullptr) {
-    instruction = json::map({});
-    instruction->emplace("components", std::move(lanes));
-    instruction->emplace("text", std::string(""));
-  }
-
-  return instruction;
+  writer.end_array();
+  writer("text", std::string(""));
+  writer.end_object();
 }
 
 // The roundabout_turn_degrees is approximated by comparing the heading of the last edge
@@ -1327,25 +1326,25 @@ uint32_t calc_roundabout_turn_degrees(const valhalla::DirectionsLeg::Maneuver* p
 
 // Populate the bannerInstructions within a step.
 // bannerInstructions are a unified object of maneuvers name, dest, ref and intersection.lanes
-json::ArrayPtr banner_instructions(const std::string& name,
-                                   const std::string& dest,
-                                   const std::string& ref,
-                                   const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
-                                   const valhalla::DirectionsLeg::Maneuver& maneuver,
-                                   const bool arrive_maneuver,
-                                   valhalla::odin::EnhancedTripLeg* etp,
-                                   const std::string& maneuver_type,
-                                   const std::string& modifier,
-                                   const std::string& exit,
-                                   const double distance,
-                                   const std::string& drive_side) {
+void banner_instructions(rapidjson::writer_wrapper_t& writer,
+                         const std::string& name,
+                         const std::string& dest,
+                         const std::string& ref,
+                         const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                         const valhalla::DirectionsLeg::Maneuver& maneuver,
+                         const bool arrive_maneuver,
+                         valhalla::odin::EnhancedTripLeg* etp,
+                         const std::string& maneuver_type,
+                         const std::string& modifier,
+                         const std::string& exit,
+                         const double distance,
+                         const std::string& drive_side) {
   // bannerInstructions is an array, because there may be multiple similar banner instruction
   // objects. Mostly if the 'sub' attribute is to be added along the current step, a new
   // instruction is created and the primary and secondary instructions are repeated with the
   // additional 'sub' attribute and an updated 'distanceAlongGeometry', which is from where on
   // this banner will be shown.
-  json::ArrayPtr banner_instructions_array = json::array({});
-  json::MapPtr banner_instruction_main = json::map({});
+  writer.start_object();
 
   std::string primary_text = name;
   std::string secondary_text = dest;
@@ -1374,51 +1373,51 @@ json::ArrayPtr banner_instructions(const std::string& name,
 
   // distanceAlongGeometry is the distance along the current step from where on this
   // banner should be visible. The first banner starts at the beginning.
-  banner_instruction_main->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
-  banner_instruction_main->emplace("primary",
-                                   primary_banner_instruction(primary_text, ref_, exit,
-                                                              arrive_maneuver, maneuver_type,
-                                                              modifier, roundabout,
-                                                              roundabout_turn_degrees, drive_side));
+  writer.set_precision(kDefaultPrecision);
+  writer("distanceAlongGeometry", distance);
+  writer.start_object("primary");
+  primary_banner_instruction(writer, primary_text, ref_, exit, arrive_maneuver, maneuver_type,
+                             modifier, roundabout, roundabout_turn_degrees, drive_side);
+  writer.end_object();
 
   if (!secondary_text.empty()) {
-    banner_instruction_main->emplace("secondary", secondary_banner_instruction(secondary_text));
+    writer.start_object("secondary");
+    secondary_banner_instruction(writer, secondary_text);
+    writer.end_object();
   }
 
-  json::MapPtr sub_banner = sub_banner_instruction(prev_maneuver, etp);
+  auto edge = etp->GetPrevEdge(prev_maneuver->end_path_index());
 
-  json::MapPtr banner_instruction_with_sub = nullptr;
-  if (sub_banner != nullptr) {
+  // Process turn lanes - which are stored on the previous edge to the node
+  // Check if there is an active turn lane
+  // Verify that turn lanes are not non-directional
+  if (edge && (edge->turn_lanes_size() > 0) && edge->HasActiveTurnLane() &&
+      !edge->HasNonDirectionalTurnLane()) {
+
+    if (distance > 400)
+      writer.start_object();
+    sub_banner_instruction(writer, prev_maneuver, etp);
+
     if (distance > 400) {
-      banner_instruction_with_sub = json::map({});
-      banner_instruction_with_sub->emplace("sub", std::move(sub_banner));
       if (!secondary_text.empty()) {
-        banner_instruction_with_sub->emplace("secondary",
-                                             secondary_banner_instruction(secondary_text));
+        writer.start_object("secondary");
+        secondary_banner_instruction(writer, secondary_text);
+        writer.end_object();
       }
-      banner_instruction_with_sub->emplace("primary",
-                                           primary_banner_instruction(primary_text, ref_, exit,
-                                                                      arrive_maneuver, maneuver_type,
-                                                                      modifier, roundabout,
-                                                                      roundabout_turn_degrees,
-                                                                      drive_side));
-      banner_instruction_with_sub->emplace("distanceAlongGeometry", json::fixed_t{400, 3});
-    } else {
-      banner_instruction_main->emplace("sub", std::move(sub_banner));
+      writer.start_object("primary");
+      primary_banner_instruction(writer, primary_text, ref_, exit, arrive_maneuver, maneuver_type,
+                                 modifier, roundabout, roundabout_turn_degrees, drive_side);
+      writer.end_object();
+      writer.set_precision(kDefaultPrecision);
+      writer("distanceAlongGeometry", 400);
+      writer.end_object();
     }
   }
-
-  banner_instructions_array->emplace_back(std::move(banner_instruction_main));
-
-  if (banner_instruction_with_sub != nullptr) {
-    banner_instructions_array->emplace_back(std::move(banner_instruction_with_sub));
-  }
-
-  return banner_instructions_array;
+  writer.end_object();
 }
 
 // Method to get the geometry string for a maneuver.
-void maneuver_geometry(json::MapPtr& step,
+void maneuver_geometry(rapidjson::writer_wrapper_t& writer,
                        const uint32_t begin_idx,
                        const uint32_t end_idx,
                        const std::vector<PointLL>& shape,
@@ -1432,10 +1431,12 @@ void maneuver_geometry(json::MapPtr& step,
   }
 
   if (options.shape_format() == geojson) {
-    step->emplace("geometry", geojson_shape(maneuver_shape));
+    writer.start_object("geometry");
+    geojson_shape(maneuver_shape, writer);
+    writer.end_object();
   } else {
     int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
-    step->emplace("geometry", midgard::encode(maneuver_shape, precision));
+    writer("geometry", midgard::encode(maneuver_shape, precision));
   }
 }
 
@@ -1701,14 +1702,14 @@ std::string get_pronunciations(const valhalla::DirectionsLeg::Maneuver& maneuver
 }
 
 // Serialize each leg
-json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
-                              const std::vector<std::string>& leg_summaries,
-                              google::protobuf::RepeatedPtrField<valhalla::TripLeg>& path_legs,
-                              bool imperial,
-                              const valhalla::Options& options,
-                              const baldr::AttributesController& controller) {
-  auto output_legs = json::array({});
-  output_legs->reserve(path_legs.size());
+void serialize_legs(rapidjson::writer_wrapper_t& writer,
+                    const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
+                    const std::vector<std::string>& leg_summaries,
+                    google::protobuf::RepeatedPtrField<valhalla::TripLeg>& path_legs,
+                    bool imperial,
+                    const valhalla::Options& options,
+                    const baldr::AttributesController& controller) {
+  writer.start_array("legs"); // output_legs
 
   // Verify that the path_legs list is the same size as the legs list
   if (legs.size() != path_legs.size()) {
@@ -1721,8 +1722,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
   for (auto& path_leg : path_legs) {
     valhalla::odin::EnhancedTripLeg etp(path_leg);
-    auto output_leg = json::map({});
-    output_leg->reserve(10);
+    writer.start_object(); // output_leg
 
     // Get the full shape for the leg. We want to use this for serializing
     // encoded shape for each step (maneuver) in OSRM output.
@@ -1741,12 +1741,11 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     std::string prev_mode = "";
     bool rotary = false;
     bool prev_rotary = false;
-    auto steps = json::array({});
+    writer.start_array(); // steps
     const DirectionsLeg_Maneuver* prev_maneuver = nullptr;
-    json::MapPtr prev_step;
+    writer.start_object(); // prev_step
     for (const auto& maneuver : leg->maneuver()) {
-      auto step = json::map({});
-      step->reserve(15); // lots of conditional stuff here
+      writer.start_object(); // step
       bool depart_maneuver = (maneuver_index == 0);
       bool arrive_maneuver = (maneuver_index == leg->maneuver_size() - 1);
 
@@ -1755,7 +1754,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       // name change
 
       // Add geometry for this maneuver
-      maneuver_geometry(step, maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
+      maneuver_geometry(writer, maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
                         arrive_maneuver, options);
 
       // Add mode, driving side, weight, distance, duration, name
@@ -1775,40 +1774,37 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
           prev_mode = mode;
       }
 
-      step->emplace("mode", mode);
-      step->emplace("driving_side", drive_side);
-      step->emplace("distance", json::fixed_t{distance, 3});
-      step->emplace("duration", json::fixed_t{duration, 3});
+      writer("mode", mode);
+      writer("driving_side", drive_side);
+      writer.set_precision(kDefaultPrecision);
+      writer("distance", distance);
+      writer("duration", duration);
       const auto& end_node = path_leg.node(maneuver.end_path_index());
       const auto& begin_node = path_leg.node(maneuver.begin_path_index());
       auto weight = end_node.cost().elapsed_cost().cost() - begin_node.cost().elapsed_cost().cost();
-      step->emplace("weight", json::fixed_t{weight, 3});
+      writer("weight", weight);
       auto recost_itr = options.recostings().begin();
       auto begin_recost_itr = begin_node.recosts().begin();
       for (const auto& end_recost : end_node.recosts()) {
         if (end_recost.has_elapsed_cost()) {
-          step->emplace("duration_" + recost_itr->name(),
-                        json::fixed_t{end_recost.elapsed_cost().seconds() -
-                                          begin_recost_itr->elapsed_cost().seconds(),
-                                      3});
-          step->emplace("weight_" + recost_itr->name(),
-                        json::fixed_t{end_recost.elapsed_cost().cost() -
-                                          begin_recost_itr->elapsed_cost().cost(),
-                                      3});
+          writer("duration_" + recost_itr->name(),
+                 end_recost.elapsed_cost().seconds() - begin_recost_itr->elapsed_cost().seconds());
+          writer("weight_" + recost_itr->name(),
+                 end_recost.elapsed_cost().cost() - begin_recost_itr->elapsed_cost().cost());
         } else {
-          step->emplace("duration_" + recost_itr->name(), nullptr_t());
-          step->emplace("weight_" + recost_itr->name(), nullptr_t());
+          writer("duration_" + recost_itr->name(), nullptr);
+          writer("weight_" + recost_itr->name(), nullptr);
         }
         ++recost_itr;
         ++begin_recost_itr;
       }
 
-      step->emplace("name", name);
+      writer("name", name);
       if (!ref.empty()) {
-        step->emplace("ref", ref);
+        writer("ref", ref);
       }
       if (!pronunciation.empty()) {
-        step->emplace("pronunciation", pronunciation);
+        writer("pronunciation", pronunciation);
       }
 
       // Check if speed limits were requested
@@ -1818,19 +1814,19 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         auto country = speed_limit_info.find(country_code);
         if (country != speed_limit_info.end()) {
           // Some countries have different speed limit sign types and speed units
-          step->emplace("speedLimitSign", country->second.first);
-          step->emplace("speedLimitUnit", country->second.second);
+          writer("speedLimitSign", country->second.first);
+          writer("speedLimitUnit", country->second.second);
         } else {
           // Otherwise use the defaults (vienna convention style and km/h)
-          step->emplace("speedLimitSign", kSpeedLimitSignVienna);
-          step->emplace("speedLimitUnit", kSpeedLimitUnitsKph);
+          writer("speedLimitSign", kSpeedLimitSignVienna);
+          writer("speedLimitUnit", kSpeedLimitUnitsKph);
         }
       }
 
       rotary = ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
                 (maneuver.street_name_size() > 0));
       if (rotary) {
-        step->emplace("rotary_name", maneuver.street_name(0).value());
+        writer("rotary_name", maneuver.street_name(0).value());
       }
 
       // Get incoming and outgoing bearing. For the incoming heading, use the
@@ -1850,16 +1846,17 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                         prev_intersection_count, mode, prev_mode, rotary, prev_rotary);
 
       // Add OSRM maneuver
-      step->emplace("maneuver",
-                    osrm_maneuver(maneuver, mnvr_type, modifier, in_brg, out_brg,
-                                  shape[maneuver.begin_shape_index()],
-                                  (options.directions_type() == DirectionsType::instructions)));
+      writer.start_object("maneuver");
+      osrm_maneuver(writer, maneuver, mnvr_type, modifier, in_brg, out_brg,
+                    shape[maneuver.begin_shape_index()],
+                    (options.directions_type() == DirectionsType::instructions)));
+      writer.end_object();
 
       // Add destinations
       const auto& sign = maneuver.sign();
       std::string dest = destinations(sign);
       if (!dest.empty()) {
-        step->emplace("destinations", dest);
+        writer("destinations", dest);
         // If the maneuver is an exit roundabout
         // and the previous maneuver is an enter roundabout
         // then set the destinations on the previous step
@@ -1872,7 +1869,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       // Add exits
       std::string ex = exits(sign);
       if (!ex.empty()) {
-        step->emplace("exits", ex);
+        writer("exits", ex);
       }
 
       // Add banner instructions if the user requested them
@@ -1885,7 +1882,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         }
         if (arrive_maneuver) {
           // just add empty array for arrival maneuver
-          step->emplace("bannerInstructions", json::array({}));
+          writer.start_array("bannerInstructions");
+          writer.end_array();
         }
       }
 
@@ -1898,45 +1896,43 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         }
         if (arrive_maneuver) {
           // just add empty array for arrival maneuver
-          step->emplace("voiceInstructions", json::array({}));
+          writer.start_array("voiceInstructions");
+          writer.end_array();
         }
       }
 
       // Add junction_name if not the start maneuver
       std::string junction_name = get_sign_elements(sign.junction_names());
       if (!depart_maneuver && !junction_name.empty()) {
-        step->emplace("junction_name", junction_name);
+        writer("junction_name", junction_name);
       }
 
       // If the user requested guidance_views
       if (options.guidance_views()) {
         // Add guidance_views if not the start maneuver
         if (!depart_maneuver && (maneuver.guidance_views_size() > 0)) {
-          auto guidance_views = json::array({});
-          guidance_views->reserve(maneuver.guidance_views_size());
+          writer.start_array("guidance_views");
+          writer.set_precision(kDefaultPrecision);
           for (const auto& gv : maneuver.guidance_views()) {
-            auto guidance_view = json::map({});
-            guidance_view->emplace("data_id", gv.data_id());
-            guidance_view->emplace("type", GuidanceViewTypeToString(gv.type()));
-            guidance_view->emplace("base_id", gv.base_id());
-            auto overlay_ids = json::array({});
-            overlay_ids->reserve(gv.overlay_ids_size());
+            writer.start_object();
+            writer("data_id", gv.data_id());
+            writer("type", GuidanceViewTypeToString(gv.type()));
+            writer("base_id", gv.base_id());
+            writer.start_array("overlay_ids");
             for (const auto& overlay : gv.overlay_ids()) {
-              overlay_ids->emplace_back(overlay);
+              writer(overlay);
             }
-            guidance_view->emplace("overlay_ids", std::move(overlay_ids));
-
-            // Append to guidance view list
-            guidance_views->emplace_back(std::move(guidance_view));
+            writer.end_array();
+            writer.end_object();
           }
-          // Add guidance views to step
-          step->emplace("guidance_views", std::move(guidance_views));
+          writer.end_array();
         }
       }
 
       // Add intersections
-      step->emplace("intersections", intersections(maneuver, &etp, shape, prev_intersection_count,
-                                                   arrive_maneuver, controller));
+      writer.start_array("intersections");
+      intersections(maneuver, &etp, shape, prev_intersection_count, arrive_maneuver, controller);
+      writer.end_array();
 
       // Add step
       prev_rotary = rotary;
@@ -1945,7 +1941,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       prev_maneuver = &maneuver;
       prev_distance = distance;
       maneuver_index++;
-      steps->emplace_back(std::move(step));
+      writer.end_array();
     } // end maneuver loop
       // #########################################################################
 
@@ -2011,7 +2007,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     leg++;
     leg_index++;
   }
-  return output_legs;
+  writer.end_array();
 }
 
 std::vector<std::vector<std::string>>
@@ -2159,8 +2155,7 @@ std::string serialize(valhalla::Api& api) {
     route_summary(writer, api, imperial, i);
 
     // Serialize route legs
-    // "legs" remove this line
-    serialize_legs(api.directions().routes(i).legs(), route_leg_summaries[i],
+    serialize_legs(writer, api.directions().routes(i).legs(), route_leg_summaries[i],
                    *api.mutable_trip()->mutable_routes(i)->mutable_legs(), imperial, options,
                    controller);
 
@@ -2468,7 +2463,7 @@ TEST(RouteSerializerOsrm, testserializeAnnotationsSpeedLimits) {
 }
 
 TEST(RouteSerializerOsrm, testlaneIndications) {
-  json::ArrayPtr indications_1 = lane_indications(true, kTurnLaneReverse | kTurnLaneSharpLeft);
+  json::ArrayPtr indications_1 = true, kTurnLaneReverse | kTurnLaneSharpLeft);
   json::ArrayPtr indications_2 =
       lane_indications(true, kTurnLaneThrough | kTurnLaneRight | kTurnLaneSharpRight);
 
