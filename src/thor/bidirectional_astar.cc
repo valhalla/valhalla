@@ -238,7 +238,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   uint8_t restriction_idx = kInvalidRestriction;
-  uint8_t destonly_restriction_mask = 0;
+  uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   if (FORWARD) {
     // Why is is_dest false?
     // We have to consider next cases:
@@ -1142,7 +1142,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, kInvalidRestriction,
+                                     sif::InternalTurn::kNoTurn, kInvalidRestriction, 0,
                                      directededge->destonly() ||
                                          (costing_->is_hgv() && directededge->destonly_hgv()),
                                      directededge->forwardaccess() & kTruckAccess,

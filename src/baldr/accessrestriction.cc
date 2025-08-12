@@ -6,17 +6,9 @@
 namespace vb = valhalla::baldr;
 
 namespace {
-const std::unordered_map<vb::AccessType, std::string> type_to_string = {
-    {vb::AccessType::kHazmat, "hazmat"},
-    {vb::AccessType::kMaxHeight, "max_height"},
-    {vb::AccessType::kMaxWidth, "max_width"},
-    {vb::AccessType::kMaxLength, "max_length"},
-    {vb::AccessType::kMaxWeight, "max_weight"},
-    {vb::AccessType::kMaxAxleLoad, "max_axle_load"},
-    {vb::AccessType::kTimedAllowed, "timed_allowed"},
-    {vb::AccessType::kTimedDenied, "timed_denied"},
-    {vb::AccessType::kDestinationAllowed, "destination_allowed"},
-    {vb::AccessType::kMaxAxles, "max_axles"},
+constexpr std::array<const char*, 10> type_to_string = {
+    "hazmat",        "max_height",    "max_width",    "max_length",          "max_weight",
+    "max_axle_load", "timed_allowed", "timed_denied", "destination_allowed", "max_axles",
 };
 }
 
@@ -72,10 +64,9 @@ void AccessRestriction::set_value(const uint64_t v) {
 }
 
 void AccessRestriction::json(rapidjson::writer_wrapper_t& writer) const {
-  auto maybe_found = type_to_string.find(type());
   std::string restriction_type = "unsupported";
-  if (maybe_found != type_to_string.cend()) {
-    restriction_type = maybe_found->second;
+  if (static_cast<size_t>(type()) < 10) {
+    restriction_type = type_to_string[static_cast<size_t>(type())];
   }
 
   writer.start_object();
@@ -91,6 +82,7 @@ void AccessRestriction::json(rapidjson::writer_wrapper_t& writer) const {
   writer("wheelchair", static_cast<bool>(modes_ & kWheelchairAccess));
   writer("moped", static_cast<bool>(modes_ & kMopedAccess));
   writer("motorcycle", static_cast<bool>(modes_ & kMotorcycleAccess));
+  writer("except_destination", static_cast<bool>(except_destination_));
 
   switch (type()) {
     case AccessType::kTimedAllowed:
@@ -103,6 +95,9 @@ void AccessRestriction::json(rapidjson::writer_wrapper_t& writer) const {
       break;
     case AccessType::kMaxAxles:
       writer("value", value());
+      break;
+    case AccessType::kHazmat:
+      writer("value", static_cast<bool>(value()));
       break;
     default:
       writer.set_precision(2);

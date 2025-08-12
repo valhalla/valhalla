@@ -664,7 +664,7 @@ public:
                                                const graph_tile_ptr& tile,
                                                const baldr::GraphId& edgeid) {
 
-    uint8_t destonly_access_restr_mask;
+    uint8_t destonly_access_restr_mask = 0;
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_) ||
         allow_destination_only_)
       return 0;
@@ -674,7 +674,8 @@ public:
 
     for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restr = restrictions[i];
-      if (restr.except_destination()) {
+      if (restr.except_destination() &&
+          static_cast<size_t>(restr.type()) < baldr::kAccessRestrictionMasks.size()) {
         destonly_access_restr_mask |=
             baldr::kAccessRestrictionMasks[static_cast<size_t>(restr.type())];
       }
@@ -748,7 +749,8 @@ public:
         }
       }
 
-      if (restriction.except_destination()) {
+      if (restriction.except_destination() &&
+          static_cast<size_t>(restriction.type()) < baldr::kAccessRestrictionMasks.size()) {
         auto mask = baldr::kAccessRestrictionMasks[static_cast<size_t>(restriction.type())];
         tmp_mask |= mask;
         if ((destonly_access_restr_mask & mask) || allow_destination_only_)
