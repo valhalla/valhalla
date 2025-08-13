@@ -101,14 +101,14 @@ jobs:
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
-          path: /project/.cache/ccache
+          path: /home/runner/.cache/ccache
           key: ccache-manylinux_2_28_x86_64
 
       - uses: pypa/cibuildwheel@v2.23.3
         env:
           # the host system's "/" is mounted to "/host" in the manylinux container
           CIBW_ENVIRONMENT: >
-            CCACHE_DIR=/host/project/.cache/ccache
+            CCACHE_DIR=/host/home/runner/.cache/ccache
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
             VALHALLA_BUILD_BIN_DIR="build_manylinux"
@@ -126,7 +126,7 @@ jobs:
         if: always()
         uses: actions/cache/save@v4
         with:
-          path: /project/.cache/ccache
+          path: /home/runner/.cache/ccache
           key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
 
       - name: Upload wheels
