@@ -242,7 +242,6 @@ TEST_P(FerryTest, ReclassifyFerryConnectionPerMode) {
   }
 }
 
-
 TEST(Standalone, FerryItselfAccessCustomersNotDestOnly) {
   const std::string ascii_map = R"(
     A--B--C--D
@@ -251,19 +250,19 @@ TEST(Standalone, FerryItselfAccessCustomersNotDestOnly) {
   std::map<std::string, std::string> trunk = {{"highway", "trunk"}};
 
   const gurka::ways ways = {
-    {"AB", trunk},
-    {"BC",
-     {{"motor_vehicle", "yes"},
-      {"motorcar", "yes"},
-      {"bicycle", "yes"},
-      {"moped", "yes"},
-      {"bus", "yes"},
-      {"hov", "yes"},
-      {"taxi", "yes"},
-      {"motorcycle", "yes"},
-      {"route", "ferry"},
-      {"access", "customers"}}},
-    {"CD", trunk},
+      {"AB", trunk},
+      {"BC",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"},
+        {"access", "customers"}}},
+      {"CD", trunk},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
