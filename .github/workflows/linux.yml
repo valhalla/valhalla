@@ -83,7 +83,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: /home/runner/.cache/ccache
-          key: ccache-release-linux-x86_64-{{ env.BRANCH_NAME }}
+          key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
           restore-keys: |
             ccache-release-linux-x86_64-master
             ccache-release-linux-x86_64
@@ -102,7 +102,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: /home/runner/.cache/ccache
-          key: ccache-release-linux-x86_64-{{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
+          key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
 
       - name: Run tests
         run: ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
@@ -141,7 +141,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: /home/runner/.cache/ccache
-          key: ccache-debug-linux-x86_64-{{ env.BRANCH_NAME }}
+          key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
           restore-keys: |
             ccache-debug-linux-x86_64-master
             ccache-debug-linux-x86_64
@@ -161,7 +161,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: /home/runner/.cache/ccache
-          key: ccache-release-linux-aarch64-{{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
+          key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
       
       - name: Run clang-tidy
         run: scripts/clang-tidy-only-diff.sh $(nproc)
@@ -216,8 +216,7 @@ jobs:
       
       - name: Build Valhalla
         run: |
-          # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
             -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
