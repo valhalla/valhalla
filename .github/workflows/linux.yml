@@ -75,8 +75,8 @@ jobs:
       
       - name: Get timestamp & ccache dir
         run: |
-          echo 'TIMESTAMP="$(date +"%s")"' >> GITHUB_ENV
-          echo 'CCACHE_DIR="$(ccache --get-config cache_dir)"' >> GITHUB_ENV
+          echo "TIMESTAMP=$(date +"%s")" >> GITHUB_ENV
+          echo "CCACHE_DIR=$(ccache --get-config cache_dir)" >> GITHUB_ENV
 
       - name: Restore cache
         id: cache-ccache-restore
@@ -133,8 +133,8 @@ jobs:
 
       - name: Get timestamp & ccache dir
         run: |
-          echo 'TIMESTAMP="$(date +"%s")"' >> GITHUB_ENV
-          echo 'CCACHE_DIR="$(ccache --get-config cache_dir)"' >> GITHUB_ENV
+          echo "TIMESTAMP=$(date +"%s")" >> GITHUB_ENV
+          echo "CCACHE_DIR=$(ccache --get-config cache_dir)" >> GITHUB_ENV
 
       - name: Restore cache
         id: cache-ccache-restore
@@ -173,12 +173,17 @@ jobs:
         run: |
           sudo make -C build install
           make -C build package
+      
+      - name: Collect coverage files
+        run: |
+          find . -type f -name '*.gcno' -exec mv {} gcov_files \;
+          ls -lh gcov_files
 
       - name: Upload Codecov report
         uses: actions/upload-artifact@v4
         with:
           name: codecov-report
-          path: .gcov
+          path: gcov_files
       
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -201,15 +206,15 @@ jobs:
 
       - name: Get timestamp & ccache dir
         run: |
-          echo 'TIMESTAMP="$(date +"%s")"' >> GITHUB_ENV
-          echo 'CCACHE_DIR="$(ccache --get-config cache_dir)"' >> GITHUB_ENV
+          echo "TIMESTAMP=$(date +"%s")" >> GITHUB_ENV
+          echo "CCACHE_DIR=$(ccache --get-config cache_dir)" >> GITHUB_ENV
 
       - name: Restore cache
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
           path: /home/runner/.cache/ccache
-          key: ccache-release-linux-aarch64-{{ env.BRANCH_NAME }}
+          key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
           restore-keys: |
             ccache-release-linux-aarch64-master
             ccache-release-linux-aarch64
@@ -226,7 +231,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: /home/runner/.cache/ccache
-          key: ccache-release-linux-aarch64-{{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
+          key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
       
       - name: Run clang-tidy
         run: scripts/clang-tidy-only-diff.sh $(nproc)
@@ -252,11 +257,10 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          path: .gcov
+          path: gcove_files
 
       - uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
-          files: .gcov
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
