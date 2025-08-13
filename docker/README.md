@@ -34,7 +34,7 @@ Once built, you can easily change Valhalla's configuration: the underlying OSM g
 
 ## Build the image
 
-If you want to build the image yourself, be aware that you might need to adapt the base image in the `Dockerfile` to reflect the version of Valhalla you'd like to build. You can find the tags of the `ghcr.io/valhalla/valhalla` images here: https://github.com/valhalla/valhalla/pkgs/container/valhalla. 
+If you want to build the image yourself, be aware that you might need to adapt the base image in the `Dockerfile` to reflect the version of Valhalla you'd like to build. You can find the tags of the `ghcr.io/valhalla/valhalla` images here: https://github.com/valhalla/valhalla/pkgs/container/valhalla.
 
 Then it's a simple
 
@@ -65,9 +65,9 @@ Containers of this image have the following custom environment variables being p
 | `path_extension` | `''` | This path will be appended to the container-internal `/custom_files` (and by extension to the docker volume mapped to that path) and will be the directory where all files will be created. <br> Can be very useful in certain deployment scenarios. No leading/trailing path separator allowed. |
 | `serve_tiles` | `True` | `True` starts the valhalla service. |
 | `tileset_name` | `valhalla_tiles` | The name of the resulting graph on disk.<br>Very useful in case you want to build multiple datasets in the same directory. |
-| `traffic_name` | `traffic.tar` | The name of the `traffic.tar`.<br>Setting this to be empty (i.e. `""`) will cause no traffic archive to be built.<br>Again, useful for serving multiple traffic archives from the same directory. |
+| `traffic_name` | `""` | The name of the `traffic.tar`.<br>Setting this to be empty (i.e. `""`) will cause no traffic archive to be built.<br>Again, useful for serving multiple traffic archives from the same directory. |
 | `update_existing_config` | `True` | `True` updates missing keys in existing `valhalla.json`.<br>Useful for updating stale config files to include newly introduced config parameters. |
-| `use_default_speeds_config` | `False` | `True` loads a JSON file used to enhance default speeds (or falls back to an existing `custom_files/default_speeds.json`) and sets the respective config entry. Read more [here](https://github.com/OpenStreetMapSpeeds/schema). |
+| `use_default_speeds_config` | `True` | `True` loads a JSON file used to enhance default speeds (or falls back to an existing `custom_files/default_speeds.json`) and sets the respective config entry. Read more [here](https://github.com/OpenStreetMapSpeeds/schema). |
 | `default_speeds_config_url` | [this url](https://raw.githubusercontent.com/OpenStreetMapSpeeds/schema/master/default_speeds.json) | Remote location of the `default_speeds_config` JSON. |
 
 ## Container recipes
