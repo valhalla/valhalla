@@ -171,20 +171,16 @@ jobs:
       
       - name: Install & Package Valhalla
         run: |
+          df -h
           sudo make -C build install
           make -C build package
-      
-      - name: Collect coverage files
-        run: |
-          mkdir gcov_files
-          find . -type f -name '*.gcno' -exec mv {} gcov_files \;
-          ls -lh gcov_files
 
-      - name: Upload Codecov report
-        uses: actions/upload-artifact@v4
+      - uses: codecov/codecov-action@v5
+        name: Upload codecov report
         with:
-          name: codecov-report
-          path: gcov_files
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
       
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -249,20 +245,3 @@ jobs:
         if: ${{ env.SETUP_TMATE == 'true' || failure() }}
         with:
           detached: true
-
-  codecov_upload:
-    name: Upload codecov report
-    runs-on: ubuntu-latest
-    needs: [debug_build]
-    steps:
-      - uses: actions/checkout@main
-
-      - uses: actions/download-artifact@v4
-        with:
-          path: gcov_files
-
-      - uses: codecov/codecov-action@v5
-        with:
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-          verbose: true
