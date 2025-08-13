@@ -3,6 +3,8 @@
 #include <valhalla/loki/search.h>
 #include <valhalla/thor/dijkstras.h>
 
+#include <ankerl/unordered_dense.h>
+
 #include <cstdint>
 
 constexpr uint8_t kInbound = 1;
@@ -97,7 +99,7 @@ protected:
   virtual void Clear() override;
 
   google::protobuf::RepeatedPtrField<Location> locations_;
-  std::unordered_set<uint64_t> queue_, done_;
+  ankerl::unordered_dense::set<uint64_t> queue_, done_;
   uint32_t max_reach_{};
   size_t transitions_{};
 };

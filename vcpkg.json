@@ -27,7 +27,6 @@
     "pkgconf",
     "pybind11",
     "rapidjson",
-    "robin-hood-hashing",
     "spatialite-tools",
     "luajit",
     "lz4",

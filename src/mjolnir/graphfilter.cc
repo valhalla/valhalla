@@ -7,7 +7,6 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
@@ -316,7 +315,8 @@ void FilterTiles(GraphReader& reader,
           auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 
@@ -681,7 +681,8 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
           auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 

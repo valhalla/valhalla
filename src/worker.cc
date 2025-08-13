@@ -1,16 +1,14 @@
 #include "loki/worker.h"
+#include "baldr/attributes_controller.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
-#include "baldr/location.h"
+#include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "odin/util.h"
-#include "odin/worker.h"
 #include "proto_conversions.h"
-#include "sif/costfactory.h"
-#include "thor/worker.h"
 #include "worker.h"
 
 #include <boost/optional.hpp>
@@ -18,7 +16,6 @@
 #include <cpp-statsd-client/StatsdClient.hpp>
 
 #include <sstream>
-#include <typeinfo>
 #include <unordered_map>
 
 using namespace valhalla;
@@ -162,6 +159,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {208, R"(Hard exclusions are not allowed on this server, ignoring hard excludes)"},
   {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
   {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
+  {211, R"(This action doesn't support requested format, using json instead)"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
@@ -171,6 +169,37 @@ const std::unordered_map<int, std::string> warning_codes = {
   {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
 };
 // clang-format on
+
+bool is_format_supported(Options::Action action, Options::Format format) {
+  constexpr uint16_t kFormatActionSupport[] = {
+      // json
+      0xFFFF, // all actions support json
+      // gpx
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route),
+      // osrm
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
+          (1 << Options::trace_attributes) | (1 << Options::locate) | (1 << Options::status) |
+          (1 << Options::sources_to_targets) | (1 << Options::expansion),
+      // pbf
+      (1 << Options::route) | (1 << Options::optimized_route) | (1 << Options::trace_route) |
+          (1 << Options::centroid) | (1 << Options::trace_attributes) | (1 << Options::status) |
+          (1 << Options::sources_to_targets) | (1 << Options::isochrone) | (1 << Options::expansion),
+  // geotiff
+#ifdef ENABLE_GDAL
+      (1 << Options::isochrone),
+#else
+      0,
+#endif
+  };
+  static_assert(std::size(kFormatActionSupport) == Options::Format_ARRAYSIZE,
+                "Please update format_action array to match Options::Action_ARRAYSIZE");
+
+  if (Options::Action_IsValid(action) && Options::Format_IsValid(format)) {
+    return (kFormatActionSupport[format] & (1 << action)) != 0;
+  } else {
+    return false;
+  }
+}
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
   rapidjson::Document d;
@@ -694,30 +723,14 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_jsonp(*jsonp);
   }
 
-  // so that we serialize correctly at the end we fix up any request discrepancies
+  if (!is_format_supported(options.action(), options.format())) {
+    options.set_format(Options::json);
+    add_warning(api, 211);
+  }
   if (options.format() == Options::pbf) {
-    const std::unordered_set<Options::Action> pbf_actions{Options::route,
-                                                          Options::optimized_route,
-                                                          Options::trace_route,
-                                                          Options::centroid,
-                                                          Options::trace_attributes,
-                                                          Options::status,
-                                                          Options::sources_to_targets,
-                                                          Options::isochrone,
-                                                          Options::expansion};
-    // if its not a pbf supported action we reset to json
-    if (pbf_actions.count(options.action()) == 0) {
-      options.set_format(Options::json);
-    } // and if it is then jsonp wont work because javascript doesnt support byte arrays
-    else {
-      options.clear_jsonp();
-    }
+    // jsonp wont work because javascript doesnt support byte arrays
+    options.clear_jsonp();
   }
-#ifndef ENABLE_GDAL
-  else if (options.format() == Options::geotiff) {
-    throw valhalla_exception_t{504};
-  }
-#endif
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
   if (units && ((*units == "miles") || (*units == "mi"))) {
@@ -1117,7 +1130,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       throw valhalla_exception_t(144, *exp_action_str);
     }
     options.set_expansion_action(exp_action);
-  } else if (options.action() == Options_Action_expansion) {
+  }
+  if (options.action() == Options::expansion && options.expansion_action() == Options::no_action) {
     throw valhalla_exception_t(115, std::string("action"));
   }
 

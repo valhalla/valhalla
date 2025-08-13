@@ -1,6 +1,5 @@
 #include "baldr/curler.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
 
 #include <memory>
 #include <stdexcept>

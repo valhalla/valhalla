@@ -44,11 +44,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "links",
@@ -87,11 +87,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "links",
@@ -148,11 +148,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -183,11 +183,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
@@ -240,11 +240,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -380,11 +380,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "ferry_label": "Fähre",
       "example_phrases": {
@@ -412,11 +412,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "ferry_label": "Fähre",
       "example_phrases": {
@@ -468,11 +468,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -568,11 +568,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -751,11 +751,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -782,11 +782,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -934,11 +934,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "Links",
@@ -984,11 +984,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "links",
@@ -1022,11 +1022,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "links",
@@ -1064,11 +1064,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "Links",
@@ -1120,11 +1120,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1163,11 +1163,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1213,11 +1213,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
@@ -1452,11 +1452,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "links",
@@ -1495,11 +1495,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "links",
@@ -1554,11 +1554,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "example_phrases": {
         "0": [
@@ -1645,11 +1645,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
@@ -2023,11 +2023,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "Links",
@@ -2066,11 +2066,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "Links",
@@ -2111,11 +2111,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "links",
@@ -2162,11 +2162,11 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang",
-        "the stairs",
-        "the bridge",
-        "the tunnel"
+        "die Treppe",
+        "die Brücke",
+        "der Tunnel"
       ],
       "relative_directions": [
         "links",
@@ -2253,17 +2253,17 @@
     },
     "pass": {
       "phrases": {
-        "0": "Pass <OBJECT_LABEL>.",
-        "1": "Pass traffic signals on <OBJECT_LABEL>."
+        "0": "Passiere <OBJECT_LABEL>.",
+        "1": "Passiere die Verkehrszeichen auf <OBJECT_LABEL>."
       },
       "object_labels": [
-        "the gate",
-        "the bollards",
-        "ways intersection"
+        "das Tor",
+        "die Poller",
+        "Wegkreuzung"
       ],
       "example_phrases": {
         "0": [
-          "Pass the gate."
+          "Passiere das Tor."
         ]
       }
     },
@@ -2317,7 +2317,7 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang"
       ],
       "example_phrases": {
@@ -2337,7 +2337,7 @@
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
-        "Mountainbike Strecke",
+        "Mountainbike-Strecke",
         "Fußgängerübergang"
       ],
       "example_phrases": {

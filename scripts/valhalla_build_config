@@ -122,7 +122,7 @@ config = {
         'clear_reserved_memory': False,
         'extended_search': False,
         'costmatrix': {
-            'check_reverse_connection': False,
+            'check_reverse_connection': True,
             'allow_second_pass': False,
             'max_reserved_locations': 25,
             'max_iterations': 2800,
