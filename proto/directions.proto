@@ -83,6 +83,7 @@ message DirectionsLeg {
       kEscalatorEnter = 41;
       kBuildingEnter = 42;
       kBuildingExit = 43;
+      kLevelChange = 44;
     }
 
     enum BssManeuverType{

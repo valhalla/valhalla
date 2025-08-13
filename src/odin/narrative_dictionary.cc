@@ -336,6 +336,10 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   LOG_TRACE("Populate exit_building_subset");
   // Populate exit_building_subset
   Load(exit_building_subset, narrative_pt.get_child(kExitBuildingKey));
+
+  LOG_TRACE("Populate level_change_subset");
+  // Populate level_change_subset
+  Load(level_change_subset, narrative_pt.get_child(kLevelChangeKey));
 }
 
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,
