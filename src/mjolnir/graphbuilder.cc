@@ -33,10 +33,12 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+
+
+
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
  * we also need to then update the edges that pointed to them
- *
  */
 std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
   LOG_INFO("Sorting graph...");
@@ -448,13 +450,27 @@ void BuildTileSet(const std::string& ways_file,
 
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
-  const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
-    std::list<PointLL> shape;
+  auto keep_osm_node_ids = pt.get<bool>("keep_osm_node_ids", false);
+  std::vector<PointLL> shape;
+  std::vector<uint64_t> osm_node_ids;
+  const auto EdgeShape = [&way_nodes, &shape, &osm_node_ids, keep_osm_node_ids](size_t idx, const size_t count) {
+    shape.reserve(count);
+    shape.clear();
+    if (keep_osm_node_ids) {
+      osm_node_ids.reserve(count);
+      osm_node_ids.clear();
+    }
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
       shape.emplace_back(node.latlng());
+      if (keep_osm_node_ids) {
+        osm_node_ids.push_back(node.osmid_);
+      }
     }
-    return shape;
+    if (keep_osm_node_ids) {
+      auto encoded_ids = encode7int(osm_node_ids);
+      printf("BYTES %zu\n", encoded_ids.size());
+    }
   };
 
   // For each tile in the task
@@ -761,7 +777,7 @@ void BuildTileSet(const std::string& ways_file,
                                      (*nodes[target]).graph_id, edge_info_offset)) {
 
             // add the info
-            auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+            EdgeShape(edge.llindex_, edge.attributes.llcount);
 
             bool diff_names = false;
             OSMLinguistic::DiffType type = OSMLinguistic::DiffType::kRight;

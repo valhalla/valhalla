@@ -93,7 +93,7 @@ std::string remove_double_quotes(const std::string& s) {
  * @return value between 0 and 15 representing the average curviness of the input shape. lower
  *         values indicate less curvy shapes and higher values indicate curvier shapes
  */
-uint32_t compute_curvature(const std::list<PointLL>& shape) {
+uint32_t compute_curvature(const std::vector<PointLL>& shape) {
   // Edges with just 2 shape points have no curvature.
   // TODO - perhaps a post-process to "average" curvature along adjacent edges
   // and smooth curvature on connected edges may be desirable?
