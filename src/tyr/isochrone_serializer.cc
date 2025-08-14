@@ -127,16 +127,16 @@ std::string getIntervalColor(std::vector<contour_interval_t>& intervals, size_t 
 void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
   int idx = 0;
   for (const auto& location : request.options().locations()) {
-    writer.start_object();
+    writer.start_object(); // feature 1
     writer.start_object("geometry");
     writer.start_array("coordinates");
     // first add all snapped points as MultiPoint feature per origin point
     std::unordered_set<PointLL> snapped_points;
+    writer.set_precision(tyr::kCoordinatePrecision);
     for (const auto& path_edge : location.correlation().edges()) {
       const PointLL& snapped_current = PointLL(path_edge.ll().lng(), path_edge.ll().lat());
       // remove duplicates of path_edges in case the snapped object is a node
       if (snapped_points.insert(snapped_current).second) {
-        writer.set_precision(tyr::kCoordinatePrecision);
         writer.start_array();
         writer(snapped_current.lng());
         writer(snapped_current.lat());
@@ -151,9 +151,9 @@ void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
     writer("type", "snapped");
     writer.end_object(); // properties
     writer("type", "Feature");
-    writer.end_object();
+    writer.end_object(); // feature 1
 
-    writer.start_object();
+    writer.start_object(); // feature 2
     writer.start_object("geometry");
     // then each user input point as separate Point feature
     const valhalla::LatLng& input_latlng = location.ll();
@@ -168,7 +168,7 @@ void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
     writer("type", "input");
     writer.end_object(); // properties
     writer("type", "Feature");
-    writer.end_object();
+    writer.end_object(); // feature 2
     idx++;
   }
 }
@@ -278,7 +278,7 @@ std::string serializeIsochroneJson(Api& request,
 
     // for each feature on that interval
     for (const auto& feature : interval_contours) {
-      writer.start_object();
+      writer.start_object(); // feature
 
       writer.set_precision(2);
       writer.start_object("properties");
@@ -296,14 +296,14 @@ std::string serializeIsochroneJson(Api& request,
       writer.start_array("coordinates");
       grouped_contours_t groups = GroupContours(polygons, feature);
       // each group is a polygon consisting of an exterior ring and possibly inner rings
+      writer.set_precision(tyr::kCoordinatePrecision);
       for (const auto& group : groups) {
-        if (polygons && groups.size() > 1) // unwrap linestring, or polygon if there's only one
+        if (polygons && groups.size() > 1) // start a MultiPolygon?
           writer.start_array();            // poly
         for (const auto& ring : group) {
           if (polygons)
             writer.start_array(); // ring_coords
           for (const auto& pair : *ring) {
-            writer.set_precision(tyr::kCoordinatePrecision);
             writer.start_array();
             writer(pair.lng());
             writer(pair.lat());
@@ -321,7 +321,7 @@ std::string serializeIsochroneJson(Api& request,
       writer.end_object(); // geometry
 
       writer("type", "Feature");
-      writer.end_object();
+      writer.end_object(); // feature
     }
   }
 
