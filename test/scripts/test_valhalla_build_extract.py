@@ -173,7 +173,7 @@ class TestBuildExtract(unittest.TestCase):
         tile_edge_counts = tuple(graph_tile_edge_count(t) for t in tiles)
         tile_ids = (25568, 410441, 6549282)
 
-        offsets = [2560]
+        offsets = [512 * 5]
         offsets.append(pad(tile_sizes[0]) + 512 * 3 + offsets[0])
         offsets.append(pad(tile_sizes[1]) + 512 * 3 + offsets[1])
 
@@ -183,7 +183,7 @@ class TestBuildExtract(unittest.TestCase):
 
         traffic_tile_sizes = tuple(c * 8 + 32 for c in tile_edge_counts)
 
-        traffic_offsets = [1536]
+        traffic_offsets = [512 * 3]
         traffic_offsets.append(pad(traffic_tile_sizes[0]) + 512 + traffic_offsets[0])
         traffic_offsets.append(pad(traffic_tile_sizes[1]) + 512 + traffic_offsets[1])
 
