@@ -284,6 +284,34 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     }
   }
 
+  // Calculate distance between origin and destination
+  PointLL ll1(origin.ll().lng(), origin.ll().lat());
+  PointLL ll2(destination.ll().lng(), destination.ll().lat());
+  float distance = ll1.Distance(ll2);
+
+  // Remove current traffic from flow_mask for long routes
+  if (distance > max_timedep_distance) {
+    // Create a new costing with the same options but modified flow_mask
+    Options modified_options = options;
+    auto& costing_options = *modified_options.mutable_costings()->find(options.costing_type())->second.mutable_options();
+
+    // Get current flow_mask and remove current traffic bit
+    uint8_t current_flow_mask = costing_options.flow_mask();
+    uint8_t new_flow_mask = current_flow_mask & ~baldr::kCurrentFlowMask;
+    costing_options.set_flow_mask(new_flow_mask);
+
+    // Create new costing with modified options
+    CostFactory factory;
+    valhalla::sif::TravelMode new_mode;
+    auto new_mode_costing = factory.CreateModeCosting(modified_options, new_mode);
+
+    // Replace the costing in mode_costing
+    mode_costing[static_cast<uint32_t>(mode)] = new_mode_costing[static_cast<uint32_t>(new_mode)];
+
+    LOG_INFO("Removed current traffic from flow_mask for long route: " +
+             std::to_string(distance) + "m > " + std::to_string(max_timedep_distance) + "m");
+  }
+
   // No other special cases we land on bidirectional a*
   return &bidir_astar;
 }
