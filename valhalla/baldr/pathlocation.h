@@ -28,11 +28,11 @@ public:
              const double percent_along,
              const midgard::PointLL& projected,
              const double score,
-             const bool snapped = true,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
              const unsigned int inbound_reach = 0,
-             const float projected_heading = -1);
+             const float projected_heading = -1,
+             const bool snapped = true);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)

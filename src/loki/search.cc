@@ -326,15 +326,9 @@ struct bin_handler_t {
         if (costing->Allowed(edge, tile, kDisallowShortcut) &&
             !search_filter(edge, *costing, tile, location.search_filter_)) {
           auto reach = get_reach(id, edge);
-          PathLocation::PathEdge path_edge{id,
-                                           0,
-                                           node_ll,
-                                           distance,
-                                           true,
-                                           PathLocation::NONE,
-                                           reach.outbound,
-                                           reach.inbound,
-                                           angle};
+          PathLocation::PathEdge
+              path_edge{id,   0, node_ll, distance, PathLocation::NONE, reach.outbound, reach.inbound,
+                        angle};
           if (heading_filter(location, angle) || layer_filter(location, layer)) {
             filtered.emplace_back(std::move(path_edge));
           } else if (correlated_edges.insert(path_edge.id).second) {
@@ -353,10 +347,13 @@ struct bin_handler_t {
             !search_filter(other_edge, *costing, other_tile, location.search_filter_)) {
           auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
-          PathLocation::PathEdge path_edge{other_id,       1,
-                                           node_ll,        distance,
-                                           true,           PathLocation::NONE,
-                                           reach.outbound, reach.inbound,
+          PathLocation::PathEdge path_edge{other_id,
+                                           1,
+                                           node_ll,
+                                           distance,
+                                           PathLocation::NONE,
+                                           reach.outbound,
+                                           reach.inbound,
                                            opp_angle};
           // angle is 180 degrees opposite direction of the one above
           if (heading_filter(location, opp_angle) || layer_filter(location, layer)) {
@@ -422,9 +419,9 @@ struct bin_handler_t {
                                  : candidate.sq_distance,
                              sq_tolerance, sq_max_distance);
       auto reach = get_reach(candidate.edge_id, candidate.edge);
-      PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio,  candidate.point,
-                                       distance,          false,         side,
-                                       reach.outbound,    reach.inbound, angle};
+      PathLocation::PathEdge path_edge{candidate.edge_id, length_ratio, candidate.point,
+                                       distance,          side,         reach.outbound,
+                                       reach.inbound,     angle,        false};
       // correlate the edge we found if its not filtered out
       bool hard_filtered =
           search_filter(candidate.edge, *costing, candidate.tile, location.search_filter_);
@@ -443,9 +440,9 @@ struct bin_handler_t {
           !search_filter(other_edge, *costing, other_tile, location.search_filter_)) {
         auto opp_angle = std::fmod(angle + 180.f, 360.f);
         reach = get_reach(opposing_edge_id, other_edge);
-        PathLocation::PathEdge
-            other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point, distance, false,
-                            flip_side(side),  reach.outbound,   reach.inbound,   opp_angle};
+        PathLocation::PathEdge other_path_edge{opposing_edge_id, 1 - length_ratio, candidate.point,
+                                               distance,         flip_side(side),  reach.outbound,
+                                               reach.inbound,    opp_angle,        false};
         // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) || heading_filter(location, opp_angle) ||
             layer_filter(location, layer)) {
