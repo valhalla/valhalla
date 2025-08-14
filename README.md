@@ -85,17 +85,18 @@ If you want to build Valhalla from source, follow the [documentation](https://va
 
 ### With docker
 
-[![Test & Publish Docker image](https://github.com/valhalla/valhalla/actions/workflows/docker-build.yml/badge.svg)](https://github.com/valhalla/valhalla/actions/workflows/docker-build.yml)
+[![Test & Publish Docker image](https://github.com/valhalla/valhalla/actions/workflows/docker-build.yml/badge.svg)](https://github.com/orgs/valhalla/packages?repo_name=valhalla)
 
 To run Valhalla locally or your own server, we recommend using one of our [Docker images](https://github.com/orgs/valhalla/packages), see the [README](https://github.com/valhalla/valhalla/blob/master/docker/README.md).
 
 ### Via Python bindings
 
-| [![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)] | [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)] |
+[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/) [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)](https://pypi.org/project/pyvalhalla-weekly/)
 
 We publish our (very) high-level Python bindings to PyPI:
+
 - [`pyvalhalla`](https://pypi.org/project/pyvalhalla/): follows Github releases
-- [`pyvalhalla-weekly`](https://pypi.org/project/pyvalhalla-weekly/): follows Github master branch
+- [`pyvalhalla-weekly`](https://pypi.org/project/pyvalhalla-weekly/): follows Github master branch and is released on a weekly schedule
 
 > [!NOTE]
 > The below is only valid for `linux-x86_x64` so far.
@@ -110,20 +111,10 @@ We :heart: contributions to Valhalla. They could be non-technical, e.g. translat
 
 Ideally, get familiar with our [Contribution guidelines](https://github.com/valhalla/valhalla/blob/master/CONTRIBUTING.md) first.
 
-## Benchmarks
-
-Valhalla includes several microbenchmarks which you can build and run using:
-
-    make benchmarks
-    make run-benchmarks
-
-They are enabled by the `-DENABLE_BENCHMARKS=On` CMake flag and are currently only available for
-Linux and MacOS.
-
 ## Command Line Tools
 
 > [!TIP]
-> Easily install various Valhalla command line tools like `valhalla_build_tiles` with the [Python bindings](https://valhalla.github.io/valhalla/README_python), e.g. via [PyPI](https://pypi.org/project/pyvalhalla/#files). This currently **only works for `linux-x64`**.
+> Easily install various Valhalla command line tools like `valhalla_build_tiles` or `valhalla_service` with the [Python bindings](https://valhalla.github.io/valhalla/README_python).
 
 ### `valhalla_service` aka one-shot mode
 
@@ -136,7 +127,6 @@ valhalla_service valhalla.json isochrone isochrone_request.txt
 ```
 
 It's important to note that all Valhalla logs for one-shot mode are piped to `stderr` while the actual JSON response will be in `stdout`. To completely silence the logs, pass `type: ""` to `midgard.logging` in the config file.
-
 
 ### Batch Script Tool
 
