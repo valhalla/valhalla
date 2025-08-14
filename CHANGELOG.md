@@ -53,6 +53,7 @@
    * FIXED: uk-UA translation issue with issue with "approach_verbal_alert" [#5182](https://github.com/valhalla/valhalla/pull/5182)
    * FIXED: Missing argument in `BDEdgeLabel` constructor [#5444](https://github.com/valhalla/valhalla/pull/5444)
    * FIXED: ferries shouldn't be set to destination only [#5447](https://github.com/valhalla/valhalla/pull/5447)
+   * FIXED: around-the-block paths when node tolerance == 0 [#5451](https://github.com/valhalla/valhalla/pull/5451)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
