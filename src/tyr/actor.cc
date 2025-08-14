@@ -12,6 +12,17 @@ using namespace valhalla::odin;
 namespace valhalla {
 namespace tyr {
 
+struct CleanupGuard {
+  actor_t& actor_;
+  bool enabled_;
+  CleanupGuard(actor_t& actor, bool enabled) : actor_(actor), enabled_(enabled) {
+  }
+  ~CleanupGuard() {
+    if (enabled_)
+      actor_.cleanup();
+  }
+};
+
 struct actor_t::pimpl_t {
   pimpl_t(const boost::property_tree::ptree& config)
       : reader(new baldr::GraphReader(config.get_child("mjolnir"))), loki_worker(config, reader),
@@ -95,16 +106,14 @@ actor_t::route(const std::string& request_str, const std::function<void()>* inte
   }
   // parse the request
   ParseApi(request_str, Options::route, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.route(*api);
   // route between the locations in the graph to find the best path
   pimpl->thor_worker.route(*api);
   // get some directions back from them and serialize
   auto bytes = pimpl->odin_worker.narrate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
@@ -119,12 +128,10 @@ actor_t::locate(const std::string& request_str, const std::function<void()>* int
   }
   // parse the request
   ParseApi(request_str, Options::locate, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.locate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
@@ -139,14 +146,12 @@ actor_t::matrix(const std::string& request_str, const std::function<void()>* int
   }
   // parse the request
   ParseApi(request_str, Options::sources_to_targets, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.matrix(*api);
   // compute the matrix
   auto bytes = pimpl->thor_worker.matrix(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
@@ -162,16 +167,14 @@ std::string actor_t::optimized_route(const std::string& request_str,
   }
   // parse the request
   ParseApi(request_str, Options::optimized_route, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.matrix(*api);
   // compute compute all pairs and then the shortest path through them all
   pimpl->thor_worker.optimized_route(*api);
   // get some directions back from them and serialize
   auto bytes = pimpl->odin_worker.narrate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
@@ -186,14 +189,12 @@ actor_t::isochrone(const std::string& request_str, const std::function<void()>* 
   }
   // parse the request
   ParseApi(request_str, Options::isochrone, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.isochrones(*api);
   // compute the isochrones
   auto json = pimpl->thor_worker.isochrones(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
@@ -209,16 +210,14 @@ std::string actor_t::trace_route(const std::string& request_str,
   }
   // parse the request
   ParseApi(request_str, Options::trace_route, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.trace(*api);
   // route between the locations in the graph to find the best path
   pimpl->thor_worker.trace_route(*api);
   // get some directions back from them
   auto bytes = pimpl->odin_worker.narrate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
@@ -234,14 +233,12 @@ std::string actor_t::trace_attributes(const std::string& request_str,
   }
   // parse the request
   ParseApi(request_str, Options::trace_attributes, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.trace(*api);
   // get the path and turn it into attribution along it
   auto json = pimpl->thor_worker.trace_attributes(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
@@ -256,12 +253,10 @@ actor_t::height(const std::string& request_str, const std::function<void()>* int
   }
   // parse the request
   ParseApi(request_str, Options::height, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // get the height at each point
   auto json = pimpl->loki_worker.height(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
@@ -277,12 +272,10 @@ std::string actor_t::transit_available(const std::string& request_str,
   }
   // parse the request
   ParseApi(request_str, Options::transit_available, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.transit_available(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
@@ -297,6 +290,8 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
   }
   // parse the request
   ParseApi(request_str, Options::expansion, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   if (api->options().expansion_action() == Options::route) {
     pimpl->loki_worker.route(*api);
@@ -307,10 +302,6 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
   }
   // route between the locations in the graph to find the best path
   auto json = pimpl->thor_worker.expansion(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
@@ -325,16 +316,14 @@ actor_t::centroid(const std::string& request_str, const std::function<void()>* i
   }
   // parse the request
   ParseApi(request_str, Options::centroid, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check the request and locate the locations in the graph
   pimpl->loki_worker.route(*api);
   // route between the locations in the graph to find the best path
   pimpl->thor_worker.centroid(*api);
   // get some directions back from them and serialize
   auto bytes = pimpl->odin_worker.narrate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
@@ -349,6 +338,8 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   }
   // parse the request
   ParseApi(request_str, Options::status, *api);
+  // cleans up the workers after the call if auto_cleanup is true
+  CleanupGuard guard(*this, auto_cleanup);
   // check lokis status
   pimpl->loki_worker.status(*api);
   // check thors status
@@ -357,10 +348,6 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   pimpl->odin_worker.status(*api);
   // get the json
   auto json = tyr::serializeStatus(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
