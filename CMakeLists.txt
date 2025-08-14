@@ -129,11 +129,13 @@ set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
 set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
 if (PREFER_EXTERNAL_DEPS)
   # date
+  # check if tz_private.h exists, e.g. arch linux doesn't distribute that..
   find_package(date QUIET)
-  if (date_FOUND)
-    get_target_property(date_include_dir date::date INTERFACE_INCLUDE_DIRECTORIES)
+  get_target_property(temp_date_include_dir date::date INTERFACE_INCLUDE_DIRECTORIES)
+  if (date_FOUND AND EXISTS ${temp_date_include_dir}/date/tz_private.h)
+    set(date_include_dir ${temp_date_include_dir})
   else()
-    message(WARNING "No date found in system libraries, using vendored date...")
+    message(WARNING "No date found in ${temp_date_include_dir}, using vendored date...")
   endif()
   # rapidjson
   find_package(RapidJSON QUIET)
