@@ -4,12 +4,10 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
-#include <list>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -144,7 +142,7 @@ uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
  * @return Returns a curvature measure [0-15] where higher numbers indicate
  *         more curved and tighter turns.
  */
-uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
+uint32_t compute_curvature(const std::vector<midgard::PointLL>& shape);
 
 /**
  * Build an entire valhalla tileset give a config file and some input pbfs. The
