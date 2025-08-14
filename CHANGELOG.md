@@ -51,6 +51,8 @@
    * FIXED: fix: `std::terminate` on unsupported request format for some actions [#5387](https://github.com/valhalla/valhalla/pull/5387)
    * FIXED: python installation issue in docker image [#5424](https://github.com/valhalla/valhalla/pull/5424)
    * FIXED: uk-UA translation issue with issue with "approach_verbal_alert" [#5182](https://github.com/valhalla/valhalla/pull/5182)
+   * FIXED: Missing argument in `BDEdgeLabel` constructor [#5444](https://github.com/valhalla/valhalla/pull/5444)
+   * FIXED: ferries shouldn't be set to destination only [#5447](https://github.com/valhalla/valhalla/pull/5447)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
@@ -123,6 +125,7 @@
    * CHANGED: updated translation files and added mn-MN lang [#5425](https://github.com/valhalla/valhalla/pull/5425)
    * CHANGED: Use rapidjson for height serializer [#5277](https://github.com/valhalla/valhalla/pull/5277)
    * CHANGED: Use rapidjson for transit_available serializer [#5430](https://github.com/valhalla/valhalla/pull/5430)
+   * CHANGED: Switch from CircleCI to Github Actions [#5427](https://github.com/valhalla/valhalla/pull/5427)
    * ADDED: support for destination exceptions for access restrictions [#5370](https://github.com/valhalla/valhalla/pull/5370)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
