@@ -242,6 +242,37 @@ TEST_P(FerryTest, ReclassifyFerryConnectionPerMode) {
   }
 }
 
+TEST(Standalone, FerryItselfAccessCustomersNotDestOnly) {
+  const std::string ascii_map = R"(
+    A--B--C--D
+  )";
+
+  std::map<std::string, std::string> trunk = {{"highway", "trunk"}};
+
+  const gurka::ways ways = {
+      {"AB", trunk},
+      {"BC",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"},
+        {"access", "customers"}}},
+      {"CD", trunk},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ferry_access_customers");
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+
+  auto edge = gurka::findEdge(reader, layout, "BC", "C");
+  EXPECT_FALSE(std::get<1>(edge)->destonly()) << "Edge BC shouldn't be destonly";
+}
+
 TEST(Standalone, ReclassifyFerryUntagDestOnly) {
   // access=customers should be untagged if it's present on connecting edge(s)
   // see https://github.com/valhalla/valhalla/issues/3941#issuecomment-1407713742
