@@ -28,6 +28,7 @@ public:
              const double percent_along,
              const midgard::PointLL& projected,
              const double score,
+             const bool snapped = false,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
              const unsigned int inbound_reach = 0,
@@ -54,6 +55,8 @@ public:
     unsigned int inbound_reach;
     // the heading of the projected point
     float projected_heading;
+    // whether the location snapped to the beginning or end
+    bool snapped;
   };
 
   // list of edges this location appears on within the graph
@@ -146,6 +149,7 @@ public:
       edge->set_distance(e.distance);
       edge->set_outbound_reach(e.outbound_reach);
       edge->set_inbound_reach(e.inbound_reach);
+      edge->set_snapped(e.snapped);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }
