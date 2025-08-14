@@ -326,7 +326,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
     auto update_label = [&]() {
       uint8_t restriction_idx = kInvalidRestriction;
-      uint8_t destonly_restriction_mask = 0;
+      uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
       if (FORWARD) {
         if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
                                nodeinfo->timezone(), restriction_idx, destonly_restriction_mask) ||
