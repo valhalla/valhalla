@@ -173,6 +173,10 @@ class TestBuildExtract(unittest.TestCase):
         tile_edge_counts = tuple(graph_tile_edge_count(t) for t in tiles)
         tile_ids = (25568, 410441, 6549282)
 
+        # The Tarfile format has a 512 header byte block before every file in the tar for filename,
+        # permissions etc. We store a 512 byte index.bin file at the start of the Tarfileg. Then in
+        # addition, each GraphTile has a further 2*512 byte block before the recorded offset in the
+        # index.
         offsets = [512 * 5]
         offsets.append(pad(tile_sizes[0]) + 512 * 3 + offsets[0])
         offsets.append(pad(tile_sizes[1]) + 512 * 3 + offsets[1])
