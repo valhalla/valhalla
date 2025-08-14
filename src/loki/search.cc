@@ -330,7 +330,7 @@ struct bin_handler_t {
                                            0,
                                            node_ll,
                                            distance,
-                                           location.node_snap_tolerance_ != 0,
+                                           true,
                                            PathLocation::NONE,
                                            reach.outbound,
                                            reach.inbound,
@@ -353,14 +353,10 @@ struct bin_handler_t {
             !search_filter(other_edge, *costing, other_tile, location.search_filter_)) {
           auto opp_angle = std::fmod(angle + 180.f, 360.f);
           auto reach = get_reach(other_id, other_edge);
-          PathLocation::PathEdge path_edge{other_id,
-                                           1,
-                                           node_ll,
-                                           distance,
-                                           location.node_snap_tolerance_ != 0,
-                                           PathLocation::NONE,
-                                           reach.outbound,
-                                           reach.inbound,
+          PathLocation::PathEdge path_edge{other_id,       1,
+                                           node_ll,        distance,
+                                           true,           PathLocation::NONE,
+                                           reach.outbound, reach.inbound,
                                            opp_angle};
           // angle is 180 degrees opposite direction of the one above
           if (heading_filter(location, opp_angle) || layer_filter(location, layer)) {
