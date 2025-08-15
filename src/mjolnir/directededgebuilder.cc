@@ -59,12 +59,17 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
     set_hierarchy_roadclass(rc_hierarchy);
   }
 
-  // Set destination only to true if we didn't reclassify for ferry and either destination only
-  // or no thru traffic is set.
-  set_dest_only(!reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
-  if (reclass_ferry && (way.destination_only() || way.no_thru_traffic())) {
-    LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
+  // Ferries should never be set to destination only. For other paths, set destination only to true
+  // if we didn't reclassify for ferry and either destination only or no thru traffic is set.
+  if (way.ferry()) {
+    set_dest_only(false);
+  } else {
+    set_dest_only(!reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
+    if (reclass_ferry && (way.destination_only() || way.no_thru_traffic())) {
+      LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
+    }
   }
+
   set_dest_only_hgv(way.destination_only_hgv());
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());
