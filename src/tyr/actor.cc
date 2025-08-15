@@ -200,7 +200,6 @@ actor_t::isochrone(const std::string& request_str, const std::function<void()>* 
 std::string actor_t::trace_route(const std::string& request_str,
                                  const std::function<void()>* interrupt,
                                  Api* api) {
-
   auto scoped_cleaner = make_finally([this]() {
     if (auto_cleanup)
       cleanup();
@@ -248,6 +247,10 @@ std::string actor_t::trace_attributes(const std::string& request_str,
 
 std::string
 actor_t::height(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -257,10 +260,6 @@ actor_t::height(const std::string& request_str, const std::function<void()>* int
   }
   // parse the request
   ParseApi(request_str, Options::height, *api);
-  auto scoped_cleaner = make_finally([this]() {
-    if (auto_cleanup)
-      cleanup();
-  });
   // get the height at each point
   auto json = pimpl->loki_worker.height(*api);
   return json;
