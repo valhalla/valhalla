@@ -170,11 +170,10 @@ if (PREFER_EXTERNAL_DEPS)
     # protozero dependency
     find_path(Protozero_INCLUDE_DIR NAMES protozero/version.hpp)
     if (Protozero_INCLUDE_DIR)
-      set(protozero_include_dir ${PROTOZERO_INCLUDE_DIRS})
+      set(protozero_include_dir ${Protozero_INCLUDE_DIR})
     else()
       message(WARNING "No protozero found in system libraries, using vendored protozero...")
     endif()
-    set(protozero_include_dir ${PROTOZERO_INCLUDE_DIRS})
   else()
     message(WARNING "No libosmium found in system libraries, using vendored libosmium...")
   endif()
@@ -353,12 +352,12 @@ install(FILES COPYING CHANGELOG.md
   COMPONENT runtime)
 
 # install third_party
-install(DIRECTORY ${rapidjson_include_dir}/
+install(DIRECTORY ${rapidjson_include_dir}/rapidjson
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
-install(DIRECTORY ${date_include_dir}/
+install(DIRECTORY ${date_include_dir}/date
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 if (WIN32)
-  install(DIRECTORY ${dirent_include_dir}/
+  install(DIRECTORY ${dirent_include_dir}/dirent
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 endif()
 
