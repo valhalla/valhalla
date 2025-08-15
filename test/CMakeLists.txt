@@ -31,8 +31,8 @@ target_include_directories(valhalla_test PUBLIC
 target_include_directories(valhalla_test SYSTEM PUBLIC
   ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
-  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-  ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+  ${protozero_include_dir}
+  ${libosmium_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
 target_link_libraries(valhalla_test 
   valhalla gtest gtest_main gmock
