@@ -139,9 +139,11 @@ if (PREFER_EXTERNAL_DEPS)
     message(WARNING "No date found in ${temp_date_include_dir}, using vendored date...")
   endif()
   # rapidjson
-  find_package(RapidJSON QUIET)
+  find_package(RapidJSON)
   if (RapidJSON_FOUND)
-    set(rapidjson_include_dir ${RAPIDJSON_INCLUDEDIR})
+    # couldn't figure out how to get the includedir without this
+    find_path(RapidJSON_INCLUDE_DIR NAMES rapidjson/rapidjson.h)
+    set(rapidjson_include_dir ${RapidJSON_INCLUDE_DIR})
   else()
     message(WARNING "No RapidJSON found in system libraries, using vendored RapidJSON...")
   endif()

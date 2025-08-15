@@ -2,6 +2,8 @@
 #include "baldr/graphtileheader.h"
 #include "midgard/vector2.h"
 
+#include <cassert>
+
 using namespace valhalla::midgard;
 
 namespace valhalla {
