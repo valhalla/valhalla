@@ -12,17 +12,6 @@ using namespace valhalla::odin;
 namespace valhalla {
 namespace tyr {
 
-struct CleanupGuard {
-  actor_t& actor_;
-  bool enabled_;
-  CleanupGuard(actor_t& actor, bool enabled) : actor_(actor), enabled_(enabled) {
-  }
-  ~CleanupGuard() {
-    if (enabled_)
-      actor_.cleanup();
-  }
-};
-
 struct actor_t::pimpl_t {
   pimpl_t(const boost::property_tree::ptree& config)
       : reader(new baldr::GraphReader(config.get_child("mjolnir"))), loki_worker(config, reader),
@@ -107,7 +96,7 @@ actor_t::route(const std::string& request_str, const std::function<void()>* inte
   // parse the request
   ParseApi(request_str, Options::route, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   pimpl->loki_worker.route(*api);
   // route between the locations in the graph to find the best path
@@ -129,7 +118,7 @@ actor_t::locate(const std::string& request_str, const std::function<void()>* int
   // parse the request
   ParseApi(request_str, Options::locate, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.locate(*api);
   return json;
@@ -147,7 +136,7 @@ actor_t::matrix(const std::string& request_str, const std::function<void()>* int
   // parse the request
   ParseApi(request_str, Options::sources_to_targets, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   pimpl->loki_worker.matrix(*api);
   // compute the matrix
@@ -168,7 +157,7 @@ std::string actor_t::optimized_route(const std::string& request_str,
   // parse the request
   ParseApi(request_str, Options::optimized_route, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   pimpl->loki_worker.matrix(*api);
   // compute compute all pairs and then the shortest path through them all
@@ -190,7 +179,7 @@ actor_t::isochrone(const std::string& request_str, const std::function<void()>* 
   // parse the request
   ParseApi(request_str, Options::isochrone, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   pimpl->loki_worker.isochrones(*api);
   // compute the isochrones
@@ -211,7 +200,7 @@ std::string actor_t::trace_route(const std::string& request_str,
   // parse the request
   ParseApi(request_str, Options::trace_route, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   pimpl->loki_worker.trace(*api);
   // route between the locations in the graph to find the best path
@@ -234,7 +223,7 @@ std::string actor_t::trace_attributes(const std::string& request_str,
   // parse the request
   ParseApi(request_str, Options::trace_attributes, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   pimpl->loki_worker.trace(*api);
   // get the path and turn it into attribution along it
@@ -254,7 +243,7 @@ actor_t::height(const std::string& request_str, const std::function<void()>* int
   // parse the request
   ParseApi(request_str, Options::height, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // get the height at each point
   auto json = pimpl->loki_worker.height(*api);
   return json;
@@ -273,7 +262,7 @@ std::string actor_t::transit_available(const std::string& request_str,
   // parse the request
   ParseApi(request_str, Options::transit_available, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.transit_available(*api);
   return json;
@@ -291,7 +280,7 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
   // parse the request
   ParseApi(request_str, Options::expansion, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   if (api->options().expansion_action() == Options::route) {
     pimpl->loki_worker.route(*api);
@@ -317,7 +306,7 @@ actor_t::centroid(const std::string& request_str, const std::function<void()>* i
   // parse the request
   ParseApi(request_str, Options::centroid, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check the request and locate the locations in the graph
   pimpl->loki_worker.route(*api);
   // route between the locations in the graph to find the best path
@@ -339,7 +328,7 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   // parse the request
   ParseApi(request_str, Options::status, *api);
   // cleans up the workers after the call if auto_cleanup is true
-  CleanupGuard guard(*this, auto_cleanup);
+  auto scoped_cleaner = make_finally([this](){ if (auto_cleanup) cleanup(); });
   // check lokis status
   pimpl->loki_worker.status(*api);
   // check thors status
