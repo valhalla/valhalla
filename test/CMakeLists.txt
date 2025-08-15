@@ -7,6 +7,8 @@
 # this.
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
+# don't install googletest
+set(INSTALL_GTEST OFF)
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
 
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
