@@ -597,7 +597,7 @@ void intersections(rapidjson::writer_wrapper_t& writer,
 
     writer.start_array("entry"); // entries
     for (const auto& entry : entries)
-      writer(entry);
+      writer(static_cast<bool>(entry));
     writer.end_array(); // entries
 
     // Add the index of the input edge and output edge
@@ -1145,8 +1145,8 @@ void osrm_maneuver(rapidjson::writer_wrapper_t& writer,
   // Set the location
   writer.start_array("location");
   writer.set_precision(kCoordinatePrecision);
-  writer(man_ll.lng(), 6);
-  writer(man_ll.lat(), 6);
+  writer(man_ll.lng());
+  writer(man_ll.lat());
   writer.end_array();
 
   writer("bearing_before", static_cast<uint64_t>(in_brg));
