@@ -362,24 +362,20 @@ void waypoints(const valhalla::Trip& trip, rapidjson::writer_wrapper_t& writer) 
  * Then we serialize the via_waypoints object.
  *
  */
-json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
+void intermediate_waypoints(rapidjson::writer_wrapper_t& writer, const valhalla::TripLeg& leg) {
   // Create a vector of indexes based on the number of locations.
-  auto via_waypoints = json::array({});
   // only loop thru the locations that are not origin or destinations
+  writer.set_precision(kDefaultPrecision);
   for (const auto& loc : leg.location()) {
     // Only create via_waypoints object if the locations are via or through types
     if (loc.type() == valhalla::Location::kVia || loc.type() == valhalla::Location::kThrough) {
-      auto via_waypoint = json::map({});
-      via_waypoint->emplace("geometry_index",
-                            static_cast<uint64_t>(loc.correlation().leg_shape_index()));
-      via_waypoint->emplace("distance_from_start",
-                            json::fixed_t{loc.correlation().distance_from_leg_origin(), 3});
-      via_waypoint->emplace("waypoint_index",
-                            static_cast<uint64_t>(loc.correlation().original_index()));
-      via_waypoints->emplace_back(via_waypoint);
+      writer.start_object(); // via_waypoint
+      writer("geometry_index", static_cast<uint64_t>(loc.correlation().leg_shape_index()));
+      writer("distance_from_start", loc.correlation().distance_from_leg_origin());
+      writer("waypoint_index", static_cast<uint64_t>(loc.correlation().original_index()));
+      writer.end_object(); // via_waypoint
     }
   }
-  return via_waypoints;
 }
 
 void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,

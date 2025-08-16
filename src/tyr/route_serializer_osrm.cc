@@ -312,60 +312,54 @@ void route_geometry(rapidjson::writer_wrapper_t& writer,
   writer.end_object();
 }
 
-json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
-  auto attributes_map = json::map({});
-  attributes_map->reserve(4);
+void serialize_annotations(rapidjson::writer_wrapper_t& writer, const valhalla::TripLeg& trip_leg) {
 
   if (trip_leg.shape_attributes().time_size() > 0) {
-    auto duration_array = json::array({});
-    duration_array->reserve(trip_leg.shape_attributes().time_size());
+    writer.start_array("duration"); // duration_array
+    writer.set_precision(kDefaultPrecision);
     for (const auto& time : trip_leg.shape_attributes().time()) {
       // milliseconds (ms) to seconds (sec)
-      duration_array->push_back(json::fixed_t{time * kSecPerMillisecond, 3});
+      writer(time * kSecPerMillisecond);
     }
-    attributes_map->emplace("duration", duration_array);
+    writer.end_array(); // duration_array
   }
 
   if (trip_leg.shape_attributes().length_size() > 0) {
-    auto distance_array = json::array({});
-    distance_array->reserve(trip_leg.shape_attributes().length_size());
+    writer.start_array("distance"); // distance_array
+    writer.set_precision(1);
     for (const auto& length : trip_leg.shape_attributes().length()) {
       // decimeters (dm) to meters (m)
-      distance_array->push_back(json::fixed_t{length * kMeterPerDecimeter, 1});
+      writer(length * kMeterPerDecimeter);
     }
-    attributes_map->emplace("distance", distance_array);
+    writer.end_array();
   }
 
   if (trip_leg.shape_attributes().speed_size() > 0) {
-    auto speeds_array = json::array({});
-    speeds_array->reserve(trip_leg.shape_attributes().speed_size());
+    writer.start_array("speed"); // speeds_array
     for (const auto& speed : trip_leg.shape_attributes().speed()) {
       // dm/s to m/s
-      speeds_array->push_back(json::fixed_t{speed * kMeterPerDecimeter, 1});
+      writer(speed * kMeterPerDecimeter);
     }
-    attributes_map->emplace("speed", speeds_array);
+    writer.end_array();
   }
 
   if (trip_leg.shape_attributes().speed_limit_size() > 0) {
-    auto speed_limits_array = json::array({});
-    speed_limits_array->reserve(trip_leg.shape_attributes().speed_limit_size());
+    writer.start_array("maxspeed"); // speed_limits_array
     for (const auto& speed_limit : trip_leg.shape_attributes().speed_limit()) {
-      auto speed_limit_annotation = json::map({});
+      writer.start_object(); // speed_limit_annotation
       if (speed_limit == kUnlimitedSpeedLimit) {
-        speed_limit_annotation->emplace("none", true);
+        writer("none", true);
       } else if (speed_limit > 0) {
         // TODO support mph?
-        speed_limit_annotation->emplace("unit", kSpeedLimitUnitsKph);
-        speed_limit_annotation->emplace("speed", static_cast<uint64_t>(speed_limit));
+        writer("unit", kSpeedLimitUnitsKph);
+        writer("speed", static_cast<uint64_t>(speed_limit));
       } else {
-        speed_limit_annotation->emplace("unknown", true);
+        writer("unknown", true);
       }
-      speed_limits_array->push_back(speed_limit_annotation);
+      writer.end_object(); // speed_limit_annotation
     }
-    attributes_map->emplace("maxspeed", speed_limits_array);
+    writer.end_array(); // speed_limits_array
   }
-
-  return attributes_map;
 }
 
 // Serialize waypoints for optimized route. Note that OSRM retains the
@@ -452,18 +446,18 @@ void lane_indications(rapidjson::writer_wrapper_t& writer,
 }
 
 // Add intersections along a step/maneuver.
-json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                             valhalla::odin::EnhancedTripLeg* etp,
-                             const std::vector<PointLL>& shape,
-                             uint32_t& count,
-                             const bool arrive_maneuver,
-                             const baldr::AttributesController& controller) {
+void intersections(rapidjson::writer_wrapper_t& writer,
+                   const valhalla::DirectionsLeg::Maneuver& maneuver,
+                   valhalla::odin::EnhancedTripLeg* etp,
+                   const std::vector<PointLL>& shape,
+                   uint32_t& count,
+                   const bool arrive_maneuver,
+                   const baldr::AttributesController& controller) {
   // Iterate through the nodes/intersections of the path for this maneuver
   count = 0;
-  auto intersections = json::array({});
   uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
   for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
-    auto intersection = json::map({});
+    writer.start_object(); // intersection
 
     // Get the node and current edge from the enhanced trip path
     // NOTE: curr_edge does not exist for the arrive maneuver
@@ -473,52 +467,57 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Add the node location (lon, lat). Use the last shape point for
     // the arrive step
-    auto loc = json::array({});
+    writer.start_array("location"); // loc
+    writer.set_precision(kCoordinatePrecision);
     size_t shape_index = arrive_maneuver ? shape.size() - 1 : curr_edge->begin_shape_index();
     PointLL ll = shape[shape_index];
-    loc->emplace_back(json::fixed_t{ll.lng(), 6});
-    loc->emplace_back(json::fixed_t{ll.lat(), 6});
-    intersection->emplace("location", loc);
-    intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
+    writer(ll.lng());
+    writer(ll.lat());
+    writer.end_array(); // loc
+    writer("geometry_index", static_cast<uint64_t>(shape_index));
 
     // Add index into admin list
     if (controller(kNodeAdminIndex)) {
-      intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
+      writer("admin_index", static_cast<uint64_t>(node->admin_index()));
     }
 
     if (!arrive_maneuver && controller(kEdgeIsUrban)) {
-      intersection->emplace("is_urban", curr_edge->is_urban());
+      writer("is_urban", curr_edge->is_urban());
     }
 
-    auto toll_collection = json::map({});
+    bool is_toll_collection_empty = true;
     if (node->type() == TripLeg_Node::kTollBooth) {
-      toll_collection->emplace("type", std::string("toll_booth"));
+      writer.start_object("toll_collection"); // toll_collection
+      writer("type", "toll_booth");
+      is_toll_collection_empty = false;
     } else if (node->type() == TripLeg_Node::kTollGantry) {
-      toll_collection->emplace("type", std::string("toll_gantry"));
+      writer.start_object("toll_collection"); // toll_collection
+      writer("type", "toll_gantry");
+      is_toll_collection_empty = false;
     }
-    if (!toll_collection->empty())
-      intersection->emplace("toll_collection", toll_collection);
+    if (!is_toll_collection_empty)
+      writer.end_object(); // toll_collection
 
+    writer.set_precision(kDefaultPrecision);
     if (node->cost().transition_cost().seconds() > 0)
-      intersection->emplace("turn_duration",
-                            json::fixed_t{node->cost().transition_cost().seconds(), 3});
+      writer("turn_duration", node->cost().transition_cost().seconds());
     if (node->cost().transition_cost().cost() > 0)
-      intersection->emplace("turn_weight", json::fixed_t{node->cost().transition_cost().cost(), 3});
+      writer("turn_weight", node->cost().transition_cost().cost());
     auto next_node = i + 1 < n ? etp->GetEnhancedNode(i + 1) : nullptr;
     if (next_node) {
       auto secs = next_node->cost().elapsed_cost().seconds() - node->cost().elapsed_cost().seconds();
       auto cost = next_node->cost().elapsed_cost().cost() - node->cost().elapsed_cost().cost();
       if (secs > 0)
-        intersection->emplace("duration", json::fixed_t{secs, 3});
+        writer("duration", secs);
       if (cost > 0)
-        intersection->emplace("weight", json::fixed_t{cost, 3});
+        writer("weight", cost);
     }
 
     // TODO: add recosted durations to the intersection?
 
     // Add rest_stop when passing by a rest_area or service_area
     if (i > 0 && !arrive_maneuver) {
-      auto rest_stop = json::map({});
+      writer.start_object("rest_stop"); // rest_stop
       for (int m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
@@ -534,18 +533,18 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         }
 
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
-          rest_stop->emplace("type", std::string("rest_area"));
+          writer("type", "rest_area");
           if (!sign_text.empty()) {
-            rest_stop->emplace("name", sign_text);
+            writer("name", sign_text);
           }
-          intersection->emplace("rest_stop", rest_stop);
+          writer.end_object(); // rest_stop
           break;
         } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
-          rest_stop->emplace("type", std::string("service_area"));
+          writer("type", "service_area");
           if (!sign_text.empty()) {
-            rest_stop->emplace("name", sign_text);
+            writer("name", sign_text);
           }
-          intersection->emplace("rest_stop", rest_stop);
+          writer.end_object(); // rest_stop
           break;
         }
       }
@@ -578,12 +577,12 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     }
 
     // Create bearing and entry output
-    auto bearings = json::array({});
-    auto entries = json::array({});
+    writer.start_array("bearings"); // bearings
 
     // Sort edges by increasing bearing and update the in/out edge indexes
     std::sort(edges.begin(), edges.end());
     uint32_t incoming_index = 0, outgoing_index = 0;
+    std::vector<bool> entries;
     for (uint32_t n = 0; n < edges.size(); ++n) {
       if (edges[n].in_edge) {
         incoming_index = n;
@@ -591,27 +590,30 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
       if (edges[n].out_edge) {
         outgoing_index = n;
       }
-      bearings->emplace_back(static_cast<uint64_t>(edges[n].bearing));
-      entries->emplace_back(edges[n].routeable);
+      writer(static_cast<uint64_t>(edges[n].bearing));
+      entries.emplace_back(edges[n].routeable);
     }
+    writer.end_array(); // bearings
+
+    writer.start_array("entry"); // entries
+    for (const auto& entry : entries)
+      writer(entry);
+    writer.end_array(); // entries
 
     // Add the index of the input edge and output edge
     if (i > 0) {
-      intersection->emplace("in", static_cast<uint64_t>(incoming_index));
+      writer("in", static_cast<uint64_t>(incoming_index));
     }
     if (!arrive_maneuver) {
-      intersection->emplace("out", static_cast<uint64_t>(outgoing_index));
+      writer("out", static_cast<uint64_t>(outgoing_index));
     }
-
-    intersection->emplace("entry", entries);
-    intersection->emplace("bearings", bearings);
 
     // Add tunnel_name for tunnels
     if (!arrive_maneuver) {
       if (curr_edge->tunnel() && !curr_edge->tagged_value().empty()) {
         for (const auto& e : curr_edge->tagged_value()) {
           if (e.type() == TaggedValue_Type_kTunnel) {
-            intersection->emplace("tunnel_name", e.value());
+            writer("tunnel_name", e.value());
           }
         }
       }
@@ -638,11 +640,11 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         classes.push_back("restricted");
       }
       if (classes.size() > 0) {
-        auto class_list = json::array({});
+        writer.start_array("classes");
         for (const auto& cl : classes) {
-          class_list->emplace_back(cl);
+          writer(cl);
         }
-        intersection->emplace("classes", class_list);
+        writer.end_array();
       }
     }
 
@@ -651,31 +653,31 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Verify that turn lanes are not non-directional
     if (prev_edge && (prev_edge->turn_lanes_size() > 0) && prev_edge->HasActiveTurnLane() &&
         !prev_edge->HasNonDirectionalTurnLane()) {
-      auto lanes = json::array({});
+      writer.start_array("lanes"); // lanes
       for (const auto& turn_lane : prev_edge->turn_lanes()) {
-        auto lane = json::map({});
+        writer.start_object(); // lane
         // Process 'valid' & 'active' flags
         bool is_active = turn_lane.state() == TurnLane::kActive;
         // an active lane is also valid
         bool is_valid = is_active || turn_lane.state() == TurnLane::kValid;
-        lane->emplace("active", is_active);
-        lane->emplace("valid", is_valid);
+        writer("active", is_active);
+        writer("valid", is_valid);
         // Add valid_indication for a valid & active lanes
         if (turn_lane.state() != TurnLane::kInvalid) {
-          lane->emplace("valid_indication", turn_lane_direction(turn_lane.active_direction()));
+          writer("valid_indication", turn_lane_direction(turn_lane.active_direction()));
         }
-        lane->emplace("indications",
-                      lane_indications(prev_edge->drive_on_right(), turn_lane.directions_mask()));
-        lanes->emplace_back(std::move(lane));
+        writer.start_array("indications");
+        lane_indications(writer, prev_edge->drive_on_right(), turn_lane.directions_mask());
+        writer.end_array();
+        writer.end_object(); // lane
       }
-      intersection->emplace("lanes", std::move(lanes));
+      writer.end_array(); // lanes
     }
 
     // Add the intersection to the JSON array
-    intersections->emplace_back(intersection);
+    writer.end_object(); // intersection
     count++;
   }
-  return intersections;
 }
 
 // Add exits (exit numbers) along a step/maneuver.
@@ -691,54 +693,38 @@ std::string exits(const valhalla::TripSign& sign) {
   return exits;
 }
 
-valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incident) {
-  rapidjson::writer_wrapper_t writer;
+void serializeIncident(rapidjson::writer_wrapper_t& writer, const TripLeg::Incident& incident) {
   writer.start_object();
   osrm::serializeIncidentProperties(writer, incident.metadata(), incident.begin_shape_index(),
                                     incident.end_shape_index(), "", "");
   writer.end_object();
-  return {writer.get_buffer()};
 }
 
-// Serializes incidents and adds to json-document
-void serializeIncidents(const google::protobuf::RepeatedPtrField<TripLeg::Incident>& incidents,
-                        json::Jmap& doc) {
+void serializeIncidents(rapidjson::writer_wrapper_t& writer,
+                        const google::protobuf::RepeatedPtrField<TripLeg::Incident>& incidents) {
   if (incidents.size() == 0) {
     // No incidents, nothing to do
     return;
   }
-  json::ArrayPtr serialized_incidents = std::make_shared<json::Jarray>();
-  {
-    // Bring up any already existing array
-    auto existing = doc.find("incidents");
-    if (existing != doc.end()) {
-      if (auto* ptr = boost::get<std::shared_ptr<valhalla::baldr::json::Jarray>>(&existing->second)) {
-        serialized_incidents = *ptr;
-      } else {
-        throw std::logic_error("Invalid state: stored ptr should not be null");
-      }
-    }
-  }
+  writer.start_array("incidents");
   for (const auto& incident : incidents) {
-    auto json_incident = serializeIncident(incident);
-    serialized_incidents->emplace_back(json_incident);
+    serializeIncident(writer, incident);
   }
-  doc.emplace("incidents", serialized_incidents);
+  writer.end_array();
 }
 
-void serializeClosures(const valhalla::TripLeg& leg, json::Jmap& doc) {
+void serializeClosures(rapidjson::writer_wrapper_t& writer, const valhalla::TripLeg& leg) {
   if (!leg.closures_size()) {
     return;
   }
-  auto closures = json::array({});
-  closures->reserve(leg.closures_size());
+  writer.start_array("closures"); // closures
   for (const valhalla::TripLeg_Closure& closure : leg.closures()) {
-    auto closure_obj = json::map({});
-    closure_obj->emplace("geometry_index_start", static_cast<uint64_t>(closure.begin_shape_index()));
-    closure_obj->emplace("geometry_index_end", static_cast<uint64_t>(closure.end_shape_index()));
-    closures->emplace_back(std::move(closure_obj));
+    writer.start_object(); // closure_obj
+    writer("geometry_index_start", static_cast<uint64_t>(closure.begin_shape_index()));
+    writer("geometry_index_end", static_cast<uint64_t>(closure.end_shape_index()));
+    writer.end_object(); // closure_obj
   }
-  doc.emplace("closures", closures);
+  writer.end_array(); // closures
 }
 
 // Compile and return the refs of the specified list
@@ -1489,23 +1475,25 @@ float distance_along_geometry(const valhalla::DirectionsLeg::Maneuver* prev_mane
   }
 }
 
-void addVoiceInstruction(const std::string& instruction,
-                         double distance_along_geometry,
-                         json::ArrayPtr& voice_instructions) {
-  json::MapPtr voice_instruction = json::map({});
-  voice_instruction->emplace("distanceAlongGeometry", json::fixed_t{distance_along_geometry, 1});
-  voice_instruction->emplace("announcement", instruction);
-  voice_instruction->emplace("ssmlAnnouncement", "<speak>" + instruction + "</speak>");
-  voice_instructions->emplace_back(std::move(voice_instruction));
+void addVoiceInstruction(rapidjson::writer_wrapper_t& writer,
+                         const std::string& instruction,
+                         double distance_along_geometry) {
+  writer.start_object(); // voice_instruction
+  writer.set_precision(1);
+  writer("distanceAlongGeometry", distance_along_geometry);
+  writer("announcement", instruction);
+  writer("ssmlAnnouncement", "<speak>" + instruction + "</speak>");
+  writer.end_object(); // voice_instruction
 }
 
 // Populate the voiceInstructions within a step.
-json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
-                                  const valhalla::DirectionsLeg::Maneuver& maneuver,
-                                  const double distance,
-                                  const uint32_t maneuver_index,
-                                  valhalla::odin::EnhancedTripLeg* etp,
-                                  const valhalla::Options& options) {
+void voice_instructions(rapidjson::writer_wrapper_t& writer,
+                        const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                        const valhalla::DirectionsLeg::Maneuver& maneuver,
+                        const double distance,
+                        const uint32_t maneuver_index,
+                        valhalla::odin::EnhancedTripLeg* etp,
+                        const valhalla::Options& options) {
   // narrative builder for custom pre alert instructions
   // TODO: actually we should build the alert instructions with enhanced distance information during
   // building the maneuver. The would require enhancing the voice instructions of the maneuver
@@ -1513,10 +1501,6 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
   MarkupFormatter nullFormatter;
   std::unique_ptr<NarrativeBuilder> narrative_builder =
       NarrativeBuilderFactory::Create(options, etp, nullFormatter);
-
-  // voiceInstructions is an array, because there may be similar voice instructions.
-  // When the step is long enough, there may be multiple voice instructions.
-  json::ArrayPtr voice_instructions = json::array({});
 
   // distanceAlongGeometry is the distance along the current step from where on this
   // voice instruction should be played. It is measured from the end of the maneuver.
@@ -1555,8 +1539,7 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
     // Drive West on XYZ Street.
     // This voice_instruction_start is only created once. It is always played, even when
     // the maneuver would otherwise be too short.
-    addVoiceInstruction(prev_maneuver->verbal_pre_transition_instruction(), double(distance),
-                        voice_instructions);
+    addVoiceInstruction(writer, prev_maneuver->verbal_pre_transition_instruction(), double(distance));
   } else if (distance_before_verbal_transition_alert_instruction >= 0.0 &&
              distance > distance_before_verbal_transition_alert_instruction +
                             APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
@@ -1570,8 +1553,8 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
     // The approximation here is that the verbal_post_transition_instruction takes 100
     // meters to play + the 10 meters after the maneuver start which is added so that the
     // instruction is not played directly on the intersection where the maneuver starts.
-    addVoiceInstruction(prev_maneuver->verbal_post_transition_instruction(), double(distance - 10),
-                        voice_instructions);
+    addVoiceInstruction(writer, prev_maneuver->verbal_post_transition_instruction(),
+                        double(distance - 10));
   }
 
   // If there is an alert instruction and we have enough time to play it, we will play it
@@ -1595,8 +1578,7 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
         narrative_builder
             ->FormVerbalAlertApproachInstruction(distance_km,
                                                  maneuver.verbal_transition_alert_instruction());
-    addVoiceInstruction(instruction, distance_before_verbal_transition_alert_instruction,
-                        voice_instructions);
+    addVoiceInstruction(writer, instruction, distance_before_verbal_transition_alert_instruction);
   }
 
   // add pre transition instruction if available
@@ -1608,11 +1590,9 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
       // because it is capped to the maneuver length.
       distance_before_verbal_pre_transition_instruction = distance / 4;
     }
-    addVoiceInstruction(maneuver.verbal_pre_transition_instruction(),
-                        distance_before_verbal_pre_transition_instruction, voice_instructions);
+    addVoiceInstruction(writer, maneuver.verbal_pre_transition_instruction(),
+                        distance_before_verbal_pre_transition_instruction);
   }
-
-  return voice_instructions;
 }
 
 // Get the mode
@@ -1743,9 +1723,10 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
     bool prev_rotary = false;
     writer.start_array(); // steps
     const DirectionsLeg_Maneuver* prev_maneuver = nullptr;
-    writer.start_object(); // prev_step
+    std::string prev_step_json = ""; // prev_step
     for (const auto& maneuver : leg->maneuver()) {
-      writer.start_object(); // step
+      rapidjson::writer_wrapper_t step_writer;
+      step_writer.start_object(); // step
       bool depart_maneuver = (maneuver_index == 0);
       bool arrive_maneuver = (maneuver_index == leg->maneuver_size() - 1);
 
@@ -1754,7 +1735,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
       // name change
 
       // Add geometry for this maneuver
-      maneuver_geometry(writer, maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
+      maneuver_geometry(step_writer, maneuver.begin_shape_index(), maneuver.end_shape_index(), shape,
                         arrive_maneuver, options);
 
       // Add mode, driving side, weight, distance, duration, name
@@ -1774,37 +1755,38 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
           prev_mode = mode;
       }
 
-      writer("mode", mode);
-      writer("driving_side", drive_side);
-      writer.set_precision(kDefaultPrecision);
-      writer("distance", distance);
-      writer("duration", duration);
+      step_writer("mode", mode);
+      step_writer("driving_side", drive_side);
+      step_writer.set_precision(kDefaultPrecision);
+      step_writer("distance", distance);
+      step_writer("duration", duration);
       const auto& end_node = path_leg.node(maneuver.end_path_index());
       const auto& begin_node = path_leg.node(maneuver.begin_path_index());
       auto weight = end_node.cost().elapsed_cost().cost() - begin_node.cost().elapsed_cost().cost();
-      writer("weight", weight);
+      step_writer("weight", weight);
       auto recost_itr = options.recostings().begin();
       auto begin_recost_itr = begin_node.recosts().begin();
       for (const auto& end_recost : end_node.recosts()) {
         if (end_recost.has_elapsed_cost()) {
-          writer("duration_" + recost_itr->name(),
-                 end_recost.elapsed_cost().seconds() - begin_recost_itr->elapsed_cost().seconds());
-          writer("weight_" + recost_itr->name(),
-                 end_recost.elapsed_cost().cost() - begin_recost_itr->elapsed_cost().cost());
+          step_writer("duration_" + recost_itr->name(),
+                      end_recost.elapsed_cost().seconds() -
+                          begin_recost_itr->elapsed_cost().seconds());
+          step_writer("weight_" + recost_itr->name(),
+                      end_recost.elapsed_cost().cost() - begin_recost_itr->elapsed_cost().cost());
         } else {
-          writer("duration_" + recost_itr->name(), nullptr);
-          writer("weight_" + recost_itr->name(), nullptr);
+          step_writer("duration_" + recost_itr->name(), nullptr);
+          step_writer("weight_" + recost_itr->name(), nullptr);
         }
         ++recost_itr;
         ++begin_recost_itr;
       }
 
-      writer("name", name);
+      step_writer("name", name);
       if (!ref.empty()) {
-        writer("ref", ref);
+        step_writer("ref", ref);
       }
       if (!pronunciation.empty()) {
-        writer("pronunciation", pronunciation);
+        step_writer("pronunciation", pronunciation);
       }
 
       // Check if speed limits were requested
@@ -1814,19 +1796,19 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
         auto country = speed_limit_info.find(country_code);
         if (country != speed_limit_info.end()) {
           // Some countries have different speed limit sign types and speed units
-          writer("speedLimitSign", country->second.first);
-          writer("speedLimitUnit", country->second.second);
+          step_writer("speedLimitSign", country->second.first);
+          step_writer("speedLimitUnit", country->second.second);
         } else {
           // Otherwise use the defaults (vienna convention style and km/h)
-          writer("speedLimitSign", kSpeedLimitSignVienna);
-          writer("speedLimitUnit", kSpeedLimitUnitsKph);
+          step_writer("speedLimitSign", kSpeedLimitSignVienna);
+          step_writer("speedLimitUnit", kSpeedLimitUnitsKph);
         }
       }
 
       rotary = ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
                 (maneuver.street_name_size() > 0));
       if (rotary) {
-        writer("rotary_name", maneuver.street_name(0).value());
+        step_writer("rotary_name", maneuver.street_name(0).value());
       }
 
       // Get incoming and outgoing bearing. For the incoming heading, use the
@@ -1846,168 +1828,194 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
                         prev_intersection_count, mode, prev_mode, rotary, prev_rotary);
 
       // Add OSRM maneuver
-      writer.start_object("maneuver");
-      osrm_maneuver(writer, maneuver, mnvr_type, modifier, in_brg, out_brg,
+      step_writer.start_object("maneuver");
+      osrm_maneuver(step_writer, maneuver, mnvr_type, modifier, in_brg, out_brg,
                     shape[maneuver.begin_shape_index()],
-                    (options.directions_type() == DirectionsType::instructions)));
-      writer.end_object();
+                    (options.directions_type() == DirectionsType::instructions));
+      step_writer.end_object();
 
       // Add destinations
       const auto& sign = maneuver.sign();
       std::string dest = destinations(sign);
       if (!dest.empty()) {
-        writer("destinations", dest);
+        step_writer("destinations", dest);
         // If the maneuver is an exit roundabout
         // and the previous maneuver is an enter roundabout
         // then set the destinations on the previous step
         if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) && prev_maneuver &&
-            (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) && prev_step) {
-          prev_step->emplace("destinations", dest);
+            (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
+            !prev_step_json.empty()) {
+          rapidjson::writer_wrapper_t prev_step_writer;
+          if (!prev_step_json.empty())
+            prev_step_writer(prev_step_json);
+          prev_step_writer("destinations", dest);
+          prev_step_json = prev_step_writer.get_buffer();
         }
       }
 
       // Add exits
       std::string ex = exits(sign);
       if (!ex.empty()) {
-        writer("exits", ex);
+        step_writer("exits", ex);
       }
 
       // Add banner instructions if the user requested them
       if (options.banner_instructions()) {
-        if (prev_step && prev_maneuver) {
-          prev_step->emplace("bannerInstructions",
-                             banner_instructions(name, dest, ref, prev_maneuver, maneuver,
-                                                 arrive_maneuver, &etp, mnvr_type, modifier, ex,
-                                                 prev_distance, drive_side));
+        if (!prev_step_json.empty() && prev_maneuver) {
+          rapidjson::writer_wrapper_t prev_step_writer;
+          if (!prev_step_json.empty())
+            prev_step_writer(prev_step_json);
+          prev_step_writer.start_array("bannerInstructions");
+          banner_instructions(prev_step_writer, name, dest, ref, prev_maneuver, maneuver,
+                              arrive_maneuver, &etp, mnvr_type, modifier, ex, prev_distance,
+                              drive_side);
+          prev_step_writer.end_array();
+          prev_step_json = prev_step_writer.get_buffer();
         }
         if (arrive_maneuver) {
           // just add empty array for arrival maneuver
-          writer.start_array("bannerInstructions");
-          writer.end_array();
+          step_writer.start_array("bannerInstructions");
+          step_writer.end_array();
         }
       }
 
       // Add voice instructions if the user requested them
       if (options.voice_instructions()) {
-        if (prev_step && prev_maneuver) {
-          prev_step->emplace("voiceInstructions",
-                             voice_instructions(prev_maneuver, maneuver, prev_distance,
-                                                maneuver_index, &etp, options));
+        if (!prev_step_json.empty() && prev_maneuver) {
+          rapidjson::writer_wrapper_t prev_step_writer;
+          if (!prev_step_json.empty())
+            prev_step_writer(prev_step_json);
+          // voiceInstructions is an array, because there may be similar voice instructions.
+          // When the step is long enough, there may be multiple voice instructions.
+          prev_step_writer.start_array("voiceInstructions");
+          voice_instructions(prev_step_writer, prev_maneuver, maneuver, prev_distance, maneuver_index,
+                             &etp, options);
+          prev_step_writer.end_array();
+          prev_step_json = prev_step_writer.get_buffer();
         }
         if (arrive_maneuver) {
           // just add empty array for arrival maneuver
-          writer.start_array("voiceInstructions");
-          writer.end_array();
+          step_writer.start_array("voiceInstructions");
+          step_writer.end_array();
         }
       }
 
       // Add junction_name if not the start maneuver
       std::string junction_name = get_sign_elements(sign.junction_names());
       if (!depart_maneuver && !junction_name.empty()) {
-        writer("junction_name", junction_name);
+        step_writer("junction_name", junction_name);
       }
 
       // If the user requested guidance_views
       if (options.guidance_views()) {
         // Add guidance_views if not the start maneuver
         if (!depart_maneuver && (maneuver.guidance_views_size() > 0)) {
-          writer.start_array("guidance_views");
-          writer.set_precision(kDefaultPrecision);
+          step_writer.start_array("guidance_views");
+          step_writer.set_precision(kDefaultPrecision);
           for (const auto& gv : maneuver.guidance_views()) {
-            writer.start_object();
-            writer("data_id", gv.data_id());
-            writer("type", GuidanceViewTypeToString(gv.type()));
-            writer("base_id", gv.base_id());
-            writer.start_array("overlay_ids");
+            step_writer.start_object();
+            step_writer("data_id", gv.data_id());
+            step_writer("type", GuidanceViewTypeToString(gv.type()));
+            step_writer("base_id", gv.base_id());
+            step_writer.start_array("overlay_ids");
             for (const auto& overlay : gv.overlay_ids()) {
-              writer(overlay);
+              step_writer(overlay);
             }
-            writer.end_array();
-            writer.end_object();
+            step_writer.end_array();
+            step_writer.end_object();
           }
-          writer.end_array();
+          step_writer.end_array();
         }
       }
 
       // Add intersections
-      writer.start_array("intersections");
-      intersections(maneuver, &etp, shape, prev_intersection_count, arrive_maneuver, controller);
-      writer.end_array();
+      step_writer.start_array("intersections");
+      intersections(step_writer, maneuver, &etp, shape, prev_intersection_count, arrive_maneuver,
+                    controller);
+      step_writer.end_array();
+
+      step_writer.end_object(); // step
+      if (maneuver_index > 0)
+        writer(prev_step_json);
 
       // Add step
+      prev_step_json = step_writer.get_buffer();
+
       prev_rotary = rotary;
       prev_mode = mode;
-      prev_step = step;
       prev_maneuver = &maneuver;
       prev_distance = distance;
       maneuver_index++;
-      writer.end_array();
     } // end maneuver loop
-      // #########################################################################
+
+    if (!prev_step_json.empty())
+      writer(prev_step_json);
+
+    // Add steps to the leg
+    writer.end_array(); // steps
+                        // #########################################################################
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
     double duration = leg->summary().time();
     double distance = units_to_meters(leg->summary().length(), !imperial);
-    output_leg->emplace("summary", leg_summaries[leg_index]);
-    output_leg->emplace("distance", json::fixed_t{distance, 3});
-    output_leg->emplace("duration", json::fixed_t{duration, 3});
-    output_leg->emplace("weight",
-                        json::fixed_t{path_leg.node().rbegin()->cost().elapsed_cost().cost(), 3});
+    writer.set_precision(kDefaultPrecision);
+    writer("summary", leg_summaries[leg_index]);
+    writer("distance", distance);
+    writer("duration", duration);
+    writer("weight", path_leg.node().rbegin()->cost().elapsed_cost().cost());
     auto recost_itr = options.recostings().begin();
     for (const auto& recost : path_leg.node().rbegin()->recosts()) {
       if (recost.has_elapsed_cost()) {
-        output_leg->emplace("duration_" + recost_itr->name(),
-                            json::fixed_t{recost.elapsed_cost().seconds(), 3});
-        output_leg->emplace("weight_" + recost_itr->name(),
-                            json::fixed_t{recost.elapsed_cost().cost(), 3});
+        writer("duration_" + recost_itr->name(), recost.elapsed_cost().seconds());
+        writer("weight_" + recost_itr->name(), recost.elapsed_cost().cost());
       } else {
-        output_leg->emplace("duration_" + recost_itr->name(), nullptr_t());
-        output_leg->emplace("weight_" + recost_itr->name(), nullptr_t());
+        writer("duration_" + recost_itr->name(), nullptr);
+        writer("weight_" + recost_itr->name(), nullptr);
       }
       ++recost_itr;
     }
 
     // Add admin country codes to leg json
-    auto admins = json::array({});
-    admins->reserve(path_leg.admin_size());
+    writer.start_array("admins"); // admins
     for (const auto& admin : path_leg.admin()) {
-      auto admin_map = json::map({});
+      writer.start_object(); // admin_map
       if (!admin.country_code().empty()) {
-        admin_map->emplace("iso_3166_1", admin.country_code());
+        writer("iso_3166_1", admin.country_code());
         auto country_iso3 = valhalla::baldr::get_iso_3166_1_alpha3(admin.country_code());
         if (!country_iso3.empty()) {
-          admin_map->emplace("iso_3166_1_alpha3", country_iso3);
+          writer("iso_3166_1_alpha3", country_iso3);
         }
       }
       // TODO: iso_3166_2 state code
-      admins->push_back(admin_map);
+      writer.end_object(); // admin_map
     }
-    output_leg->emplace("admins", std::move(admins));
-
-    // Add steps to the leg
-    output_leg->emplace("steps", std::move(steps));
+    writer.end_array(); // admins
 
     // Add shape_attributes, if requested
     if (path_leg.has_shape_attributes()) {
-      output_leg->emplace("annotation", serialize_annotations(path_leg));
+      writer.start_object("annotation");
+      serialize_annotations(writer, path_leg);
+      writer.end_object();
     }
 
     // Add via waypoints to the leg
-    output_leg->emplace("via_waypoints", osrm::intermediate_waypoints(path_leg));
+    writer.start_array("via_waypoints");
+    osrm::intermediate_waypoints(writer, path_leg);
+    writer.end_array();
 
     // Add incidents to the leg
-    serializeIncidents(path_leg.incidents(), *output_leg);
+    serializeIncidents(writer, path_leg.incidents());
 
     // Add closures
-    serializeClosures(path_leg, *output_leg);
+    serializeClosures(writer, path_leg);
 
     // Keep the leg
-    output_legs->emplace_back(std::move(output_leg));
+    writer.end_object(); // output_leg
     leg++;
     leg_index++;
   }
-  writer.end_array();
+  writer.end_array(); // output_legs
 }
 
 std::vector<std::vector<std::string>>
@@ -2098,7 +2106,7 @@ std::string serialize(valhalla::Api& api) {
   AttributesController controller(options);
 
   rapidjson::writer_wrapper_t writer(4096);
-  writer.start_object();
+  writer.start_object(); // starter object
 
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
   std::string status("Ok");
@@ -2161,10 +2169,10 @@ std::string serialize(valhalla::Api& api) {
 
     // Add voice instructions if the user requested them
     if (options.voice_instructions()) {
-      route->emplace("voiceLocale", options.language());
+      writer("voiceLocale", options.language());
     }
 
-    routes->emplace_back(std::move(route));
+    writer.end_object(); // route
   }
   writer.end_array(); // routes
 
@@ -2173,7 +2181,7 @@ std::string serialize(valhalla::Api& api) {
     serializeWarnings(api, writer);
   }
 
-  writer.end_object();
+  writer.end_object(); // starter object
   return writer.get_buffer();
 }
 

@@ -270,7 +270,7 @@ void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
                bool tracepoints = false);
 void waypoints(const valhalla::Trip& locations, rapidjson::writer_wrapper_t& writer);
 
-valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
+void intermediate_waypoints(rapidjson::writer_wrapper_t& writer, const valhalla::TripLeg& leg);
 
 void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
