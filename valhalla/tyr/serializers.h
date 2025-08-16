@@ -107,9 +107,8 @@ std::string serializeStatus(Api& request);
 
 // Return a JSON array of OpenLR 1.5 line location references for each edge of a map matching
 // result. For the time being, result is only non-empty for auto costing requests.
-void route_references(rapidjson::writer_wrapper_t& writer,
-                      const TripRoute& route,
-                      const Options& options);
+std::vector<std::string>
+route_references(rapidjson::writer_wrapper_t& writer, const TripRoute& route, const Options& options);
 
 void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer);
 

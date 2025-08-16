@@ -130,25 +130,28 @@ std::string serializeStatus(Api& request) {
   return rapidjson::to_string(status_doc);
 }
 
-void route_references(rapidjson::writer_wrapper_t& writer,
-                      const TripRoute& route,
-                      const Options& options) {
+std::vector<std::string> route_references(rapidjson::writer_wrapper_t& writer,
+                                          const TripRoute& route,
+                                          const Options& options) {
   const bool linear_reference =
       options.linear_references() &&
       (options.action() == Options::trace_route || options.action() == Options::route);
   if (!linear_reference) {
-    return;
+    return {};
   }
   writer.start_object();
-  writer.start_array("linear_references");
+  writer.start_array("linear_references"); // linear_references
+  std::vector<std::string> linear_references;
   for (const TripLeg& leg : route.legs()) {
     auto edge_references = openlr_edges(leg);
     for (const std::string& openlr : edge_references) {
       writer(openlr);
+      linear_references.emplace_back(openlr);
     }
   }
-  writer.end_array();
+  writer.end_array(); // linear_references
   writer.end_object();
+  return linear_references;
 }
 
 void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
