@@ -32,6 +32,8 @@
     "lz4",
     "protobuf",
     "sqlite3",
-    "zlib"
+    "zlib",
+    "unordered-dense",
+    "libosmium"
   ]
 }
