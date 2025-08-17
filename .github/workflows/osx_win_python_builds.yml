@@ -358,7 +358,7 @@ jobs:
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache
-          key: ${{ steps.vcpkg-restore.outputs.cache-primary-key }}
+          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
           path: |
             vcpkg/*
             !vcpkg/downloads
