@@ -518,6 +518,19 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
       edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
+    // setting this edge as settled
+    if (expansion_callback_) {
+      auto expansion_type = FORWARD ? Expansion_ExpansionType_forward
+                                   : Expansion_ExpansionType_reverse;
+      const auto prev_pred = pred.predecessor() == kInvalidLabel
+                                  ? GraphId{}
+                                  : edgelabels_[pred.predecessor()].edgeid();
+      expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
+                          Expansion_EdgeStatus_settled, pred.cost().secs,
+                          pred.path_distance(), pred.cost().cost,
+                          expansion_type);
+    }
+
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations. NOTE: due to somewhat high
     // penalty for entering a destination only (private) road this value needs to
