@@ -29,5 +29,5 @@ jobs:
           done
 
           for entry in $filtered; do
-            mc rm hetzner/gha-cache/${entry} || echo "couldn't find $entry"
+            mc rm --recursive --force hetzner/gha-cache/${entry} || echo "couldn't find $entry"
           done
