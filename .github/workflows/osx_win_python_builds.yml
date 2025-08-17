@@ -292,10 +292,26 @@ jobs:
 
       # make sure we save vcpkg packages even if build fails
       # note, we don't use vcpkg "command line" mode, but "cmake manifest" mode
+      # - name: Restore vcpkg packages
+      #   id: vcpkg-restore
+      #   uses: actions/cache/restore@v3
+      #   with:
+      #     key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+      #     path: |
+      #       vcpkg/*
+      #       !vcpkg/downloads
+      #       !vcpkg/docs
+      #       !vcpkg/buildtrees
+      #       vcpkg/downloads/tools
+
       - name: Restore vcpkg packages
+        uses: tespkg/actions-cache/restore@v1
         id: vcpkg-restore
-        uses: actions/cache/restore@v3
         with:
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          # actions/cache compatible properties: https://github.com/actions/cache
           key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
           path: |
             vcpkg/*
@@ -337,8 +353,11 @@ jobs:
 
       - name: Save vcpkg packages (always, to avoid redundant rebuilds)
         if: always()
-        uses: actions/cache/save@v3
+        uses: tespkg/actions-cache/save@v3
         with:
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
           key: ${{ steps.vcpkg-restore.outputs.cache-primary-key }}
           path: |
             vcpkg/*
