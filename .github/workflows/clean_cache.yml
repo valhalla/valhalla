@@ -19,15 +19,15 @@ jobs:
       - name: Remove matching cache objects
         run: |
           # filter objects to ones matching this branch
-          all_objects=$(mc ls --quiet gha-cache/gha-cache | awk '{ print $6 }')
+          all_objects=$(mc ls --quiet hetzner/gha-cache | awk '{ print $6 }')
           filtered=()
           # -n $line: if there's no \newline at the end, read will miss the last line
           echo $all_objects | while read -r line || [ -n "$line" ]; do
-            if [[ "$line" == *"${{ github.head_ref }}" ]]; then
+            if [[ "$line" =~ "^.*{{ github.head_ref }}[-[0-9]*]?$" ]]; then
               filtered+=($line)
             fi
           done
 
           for entry in $filtered; do
-            mc rm gha-cache/gha-cache/${entry} || echo "couldn't find $entry"
+            mc rm hetzner/gha-cache/${entry} || echo "couldn't find $entry"
           done
