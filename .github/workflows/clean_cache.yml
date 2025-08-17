@@ -13,13 +13,13 @@ jobs:
         run: |
           wget https://dl.min.io/client/mc/release/linux-amd64/mc
           chmod +x mc
-          mc --help
-          mc alias set hetzner https://hel1.your-objectstorage.com {{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          ./mc --help
+          ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
       
       - name: Remove matching cache objects
         run: |
           # filter objects to ones matching this branch
-          all_objects=$(mc ls --quiet hetzner/gha-cache | awk '{ print $6 }')
+          all_objects=$(./mc ls --quiet hetzner/gha-cache | awk '{ print $6 }')
           filtered=()
           # -n $line: if there's no \newline at the end, read will miss the last line
           echo $all_objects | while read -r line || [ -n "$line" ]; do
@@ -29,5 +29,5 @@ jobs:
           done
 
           for entry in $filtered; do
-            mc rm --recursive --force hetzner/gha-cache/${entry} || echo "couldn't find $entry"
+            ./mc rm --recursive --force hetzner/gha-cache/${entry} || echo "couldn't find $entry"
           done
