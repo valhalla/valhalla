@@ -355,7 +355,7 @@ install(DIRECTORY ${rapidjson_include_dir}/rapidjson
 install(DIRECTORY ${date_include_dir}/date
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 if (WIN32)
-  install(DIRECTORY ${dirent_include_dir}/dirent
+  install(FILES ${dirent_include_dir}/dirent.h
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 endif()
 
