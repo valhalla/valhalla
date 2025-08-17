@@ -78,10 +78,14 @@ jobs:
           echo "TIMESTAMP=$(date +"%s")" >> $GITHUB_ENV
           echo "CCACHE_DIR=$(ccache --get-config cache_dir)" >> $GITHUB_ENV
 
-      - name: Restore cache
+      - name: Restore ccache
+        uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
-        uses: actions/cache/restore@v4
         with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
           restore-keys: |
@@ -97,10 +101,15 @@ jobs:
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
           make -C build -j$(nproc) tests gurka
-      
-      - name: Save cache
-        uses: actions/cache/save@v4
+
+      - name: Save ccache
+        if: always()
+        uses: tespkg/actions-cache/save@v1
         with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
 
@@ -136,10 +145,14 @@ jobs:
           echo "TIMESTAMP=$(date +"%s")" >> $GITHUB_ENV
           echo "CCACHE_DIR=$(ccache --get-config cache_dir)" >> $GITHUB_ENV
 
-      - name: Restore cache
+      - name: Restore ccache
+        uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
-        uses: actions/cache/restore@v4
         with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
           path: /home/runner/.cache/ccache
           key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
           restore-keys: |
@@ -156,10 +169,15 @@ jobs:
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
           make -C build -j$(nproc) tests gurka
-      
-      - name: Save cache
-        uses: actions/cache/save@v4
+
+      - name: Save ccache
+        if: always()
+        uses: tespkg/actions-cache/save@v1
         with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
           path: /home/runner/.cache/ccache
           key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
       
@@ -206,10 +224,14 @@ jobs:
           echo "TIMESTAMP=$(date +"%s")" >> $GITHUB_ENV
           echo "CCACHE_DIR=$(ccache --get-config cache_dir)" >> $GITHUB_ENV
 
-      - name: Restore cache
+      - name: Restore ccache
+        uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
-        uses: actions/cache/restore@v4
         with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
           restore-keys: |
@@ -223,10 +245,15 @@ jobs:
           make -C build -j$(nproc)
           # make -C build -j$(nproc) utrecht_tiles
           make -C build -j$(nproc) gurka
-      
-      - name: Save cache
-        uses: actions/cache/save@v4
+
+      - name: Save ccache
+        if: always()
+        uses: tespkg/actions-cache/save@v1
         with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
           path: /home/runner/.cache/ccache
           key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
       
