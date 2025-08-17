@@ -310,18 +310,16 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       *meta.edge_status = {EdgeSet::kTemporary, idx};
     }
 
-      // setting this edge as reached
+    // setting this edge as reached
     if (expansion_callback_) {
-      auto expansion_type = FORWARD ? Expansion_ExpansionType_forward
-                                    : Expansion_ExpansionType_reverse;
-      const auto& prev_pred =
-          pred.predecessor() == kInvalidLabel
-              ? GraphId{}
-              : (edgelabels_)[pred.predecessor()].edgeid();
+      auto expansion_type =
+          FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+      const auto& prev_pred = pred.predecessor() == kInvalidLabel
+                                  ? GraphId{}
+                                  : (edgelabels_)[pred.predecessor()].edgeid();
       expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
                           "unidirectional_astar", Expansion_EdgeStatus_reached, cost.secs,
-                          path_distance, cost.cost,
-                          expansion_type);
+                          path_distance, cost.cost, expansion_type);
     }
 
     return true;
@@ -361,18 +359,16 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
         lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
       }
 
-        // setting this edge as reached
+      // setting this edge as reached
       if (expansion_callback_) {
-        auto expansion_type = FORWARD ? Expansion_ExpansionType_forward
-                                      : Expansion_ExpansionType_reverse;
-        const auto& prev_pred =
-            pred.predecessor() == kInvalidLabel
-                ? GraphId{}
-                : (edgelabels_)[pred.predecessor()].edgeid();
+        auto expansion_type =
+            FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+        const auto& prev_pred = pred.predecessor() == kInvalidLabel
+                                    ? GraphId{}
+                                    : (edgelabels_)[pred.predecessor()].edgeid();
         expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
                             "unidirectional_astar", Expansion_EdgeStatus_reached, newcost.secs,
-                            lab.path_distance(), newcost.cost,
-                            expansion_type);
+                            lab.path_distance(), newcost.cost, expansion_type);
       }
       return true;
     };
@@ -538,15 +534,14 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
 
     if (pred.destination()) {
       if (expansion_callback_) {
-        auto expansion_type = FORWARD ? Expansion_ExpansionType_forward
-                              : Expansion_ExpansionType_reverse;
+        auto expansion_type =
+            FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
         const auto prev_pred = pred.predecessor() == kInvalidLabel
-                                  ? GraphId{}
-                                  : edgelabels_[pred.predecessor()].edgeid();
+                                   ? GraphId{}
+                                   : edgelabels_[pred.predecessor()].edgeid();
         expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
-                            Expansion_EdgeStatus_connected, pred.cost().secs,
-                            pred.path_distance(), pred.cost().cost,
-                            expansion_type);
+                            Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
+                            pred.cost().cost, expansion_type);
       }
       return {FormPath(predindex)};
     }
@@ -845,16 +840,15 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
         // Set the destination flag
         edge_label.set_destination();
       }
-      
-          // setting this edge as reached
-    if (expansion_callback_) {
-      auto expansion_type = FORWARD ? Expansion_ExpansionType_forward
-                                   : Expansion_ExpansionType_reverse;
-      expansion_callback_(graphreader, edgeid, GraphId{}, "unidirectional_astar",
-                          Expansion_EdgeStatus_reached, cost.secs,
-                          static_cast<uint32_t>(edge.distance() + 0.5), cost.cost,
-                          expansion_type);
-    }
+
+      // setting this edge as reached
+      if (expansion_callback_) {
+        auto expansion_type =
+            FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+        expansion_callback_(graphreader, edgeid, GraphId{}, "unidirectional_astar",
+                            Expansion_EdgeStatus_reached, cost.secs,
+                            static_cast<uint32_t>(edge.distance() + 0.5), cost.cost, expansion_type);
+      }
 
       adjacencylist_.add(idx);
     };
