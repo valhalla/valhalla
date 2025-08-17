@@ -353,7 +353,7 @@ jobs:
 
       - name: Save vcpkg packages (always, to avoid redundant rebuilds)
         if: always()
-        uses: tespkg/actions-cache/save@v3
+        uses: tespkg/actions-cache/save@v1
         with:
           accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
