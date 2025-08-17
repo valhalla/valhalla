@@ -111,7 +111,7 @@ jobs:
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache
           path: /home/runner/.cache/ccache
-          key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
+          key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
 
       - name: Run tests
         run: ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
@@ -179,7 +179,7 @@ jobs:
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache
           path: /home/runner/.cache/ccache
-          key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
+          key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
       
       - name: Run clang-tidy
         run: scripts/clang-tidy-only-diff.sh $(nproc)
@@ -255,7 +255,7 @@ jobs:
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache
           path: /home/runner/.cache/ccache
-          key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}-${{ env.TIMESTAMP }}
+          key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
       
       - name: Run clang-tidy
         run: scripts/clang-tidy-only-diff.sh $(nproc)
