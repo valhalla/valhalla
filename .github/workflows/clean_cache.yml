@@ -23,6 +23,7 @@ jobs:
           filtered=()
           # -n $line: if there's no \newline at the end, read will miss the last line
           echo $all_objects | while read -r line || [ -n "$line" ]; do
+            echo "S3: ${line}, github ref: ${{ github.head_ref }}"
             if [[ "$line" =~ "^.*{{ github.head_ref }}[-[0-9]*]?$" ]]; then
               filtered+=($line)
             fi
