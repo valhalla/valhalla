@@ -1,5 +1,7 @@
 #include "baldr/verbal_text_formatter_us.h"
 
+#include <array>
+
 namespace {
 
 const std::regex kUsNumberSplitRegex("(\\D*)(\\d+)(st|nd|rd|th)?(\\D*)", std::regex_constants::icase);
