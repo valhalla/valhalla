@@ -211,7 +211,6 @@ void route_summary(rapidjson::writer_wrapper_t& writer,
 
   // Convert distance to meters. Output distance and duration.
   distance = units_to_meters(distance, !imperial);
-  writer.start_object();
   writer.set_precision(kDefaultPrecision);
   writer("distance", distance);
   writer("duration", duration);
@@ -231,7 +230,6 @@ void route_summary(rapidjson::writer_wrapper_t& writer,
     }
     ++recosting_itr;
   }
-  writer.end_object();
 }
 
 // Generate full shape of the route.
@@ -300,7 +298,6 @@ void route_geometry(rapidjson::writer_wrapper_t& writer,
              (options.has_generalize_case() && options.generalize() > 0.0f)) {
     shape = full_shape(directions, options);
   }
-  writer.start_object();
   if (options.shape_format() == geojson) {
     writer.start_object("geometry");
     geojson_shape(shape, writer);
@@ -309,7 +306,6 @@ void route_geometry(rapidjson::writer_wrapper_t& writer,
     int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
     writer("geometry", midgard::encode(shape, precision));
   }
-  writer.end_object();
 }
 
 void serialize_annotations(rapidjson::writer_wrapper_t& writer, const valhalla::TripLeg& trip_leg) {
@@ -331,7 +327,7 @@ void serialize_annotations(rapidjson::writer_wrapper_t& writer, const valhalla::
       // decimeters (dm) to meters (m)
       writer(length * kMeterPerDecimeter);
     }
-    writer.end_array();
+    writer.end_array(); // distance_array
   }
 
   if (trip_leg.shape_attributes().speed_size() > 0) {
@@ -340,7 +336,7 @@ void serialize_annotations(rapidjson::writer_wrapper_t& writer, const valhalla::
       // dm/s to m/s
       writer(speed * kMeterPerDecimeter);
     }
-    writer.end_array();
+    writer.end_array(); // speeds_array
   }
 
   if (trip_leg.shape_attributes().speed_limit_size() > 0) {
@@ -517,6 +513,7 @@ void intersections(rapidjson::writer_wrapper_t& writer,
 
     // Add rest_stop when passing by a rest_area or service_area
     if (i > 0 && !arrive_maneuver) {
+      bool is_rest_stop_closed = false;
       writer.start_object("rest_stop"); // rest_stop
       for (int m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
@@ -538,6 +535,7 @@ void intersections(rapidjson::writer_wrapper_t& writer,
             writer("name", sign_text);
           }
           writer.end_object(); // rest_stop
+          is_rest_stop_closed = true;
           break;
         } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
           writer("type", "service_area");
@@ -545,9 +543,12 @@ void intersections(rapidjson::writer_wrapper_t& writer,
             writer("name", sign_text);
           }
           writer.end_object(); // rest_stop
+          is_rest_stop_closed = true;
           break;
         }
       }
+      if (!is_rest_stop_closed)
+        writer.end_object(); // rest_stop
     }
 
     // Get bearings and access to outgoing intersecting edges. Do not add
@@ -710,7 +711,7 @@ void serializeIncidents(rapidjson::writer_wrapper_t& writer,
   for (const auto& incident : incidents) {
     serializeIncident(writer, incident);
   }
-  writer.end_array();
+  writer.end_array(); // incidents
 }
 
 void serializeClosures(rapidjson::writer_wrapper_t& writer, const valhalla::TripLeg& leg) {
@@ -1187,7 +1188,7 @@ void primary_banner_instruction(rapidjson::writer_wrapper_t& writer,
                                 const bool roundabout,
                                 const uint32_t roundabout_turn_degrees,
                                 const std::string& drive_side) {
-  writer.start_array("components");
+  writer.start_array("components"); // components
 
   if (!exit.empty() && !arrive_maneuver) {
     writer.start_object();
@@ -1206,7 +1207,7 @@ void primary_banner_instruction(rapidjson::writer_wrapper_t& writer,
     banner_component(writer, "text", ref);
     writer.end_object();
   }
-  writer.end_array();
+  writer.end_array(); // components
 
   writer("text", primary_text);
   if (!maneuver_type.empty()) {
@@ -1246,10 +1247,10 @@ void sub_banner_instruction(rapidjson::writer_wrapper_t& writer,
   // We only care about the lanes directly before the end of the maneuver
   auto edge = etp->GetPrevEdge(prev_maneuver->end_path_index());
 
-  writer.start_object("sub");
-  writer.start_array("components");
+  writer.start_object("sub");       // sub
+  writer.start_array("components"); // lanes
   for (const auto& turn_lane : edge->turn_lanes()) {
-    writer.start_object();
+    writer.start_object(); // lane
     banner_component(writer, "lane", "");
     writer("active", turn_lane.state() == TurnLane::kActive);
     // Add active_direction for a valid & active lanes
@@ -1258,12 +1259,12 @@ void sub_banner_instruction(rapidjson::writer_wrapper_t& writer,
     }
     writer.start_array("directions");
     lane_indications(writer, edge->drive_on_right(), turn_lane.directions_mask());
-    writer.end_array();
-    writer.end_object();
+    writer.end_array();  // directions
+    writer.end_object(); // lane
   }
-  writer.end_array();
-  writer("text", std::string(""));
-  writer.end_object();
+  writer.end_array(); // lanes
+  writer("text", "");
+  writer.end_object(); // sub
 }
 
 // The roundabout_turn_degrees is approximated by comparing the heading of the last edge
@@ -1330,7 +1331,7 @@ void banner_instructions(rapidjson::writer_wrapper_t& writer,
   // instruction is created and the primary and secondary instructions are repeated with the
   // additional 'sub' attribute and an updated 'distanceAlongGeometry', which is from where on
   // this banner will be shown.
-  writer.start_object();
+  writer.start_object(); // banner_instruction_main
 
   std::string primary_text = name;
   std::string secondary_text = dest;
@@ -1380,26 +1381,32 @@ void banner_instructions(rapidjson::writer_wrapper_t& writer,
   if (edge && (edge->turn_lanes_size() > 0) && edge->HasActiveTurnLane() &&
       !edge->HasNonDirectionalTurnLane()) {
 
-    if (distance > 400)
-      writer.start_object();
-    sub_banner_instruction(writer, prev_maneuver, etp);
-
     if (distance > 400) {
+      writer.end_object();   // banner_instruction_main
+      writer.start_object(); // banner_instruction_with_sub
+      sub_banner_instruction(writer, prev_maneuver, etp);
+
+      writer.start_object("primary");
+      primary_banner_instruction(writer, primary_text, ref_, exit, arrive_maneuver, maneuver_type,
+                                 modifier, roundabout, roundabout_turn_degrees, drive_side);
+      writer.end_object();
+
       if (!secondary_text.empty()) {
         writer.start_object("secondary");
         secondary_banner_instruction(writer, secondary_text);
         writer.end_object();
       }
-      writer.start_object("primary");
-      primary_banner_instruction(writer, primary_text, ref_, exit, arrive_maneuver, maneuver_type,
-                                 modifier, roundabout, roundabout_turn_degrees, drive_side);
-      writer.end_object();
+
       writer.set_precision(kDefaultPrecision);
       writer("distanceAlongGeometry", 400);
-      writer.end_object();
+      writer.end_object(); // banner_instruction_with_sub
+    } else {
+      sub_banner_instruction(writer, prev_maneuver, etp);
+      writer.end_object(); // banner_instruction_main
     }
+  } else {
+    writer.end_object(); // banner_instruction_main
   }
-  writer.end_object();
 }
 
 // Method to get the geometry string for a maneuver.
@@ -1721,7 +1728,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
     std::string prev_mode = "";
     bool rotary = false;
     bool prev_rotary = false;
-    writer.start_array(); // steps
+    writer.start_array("steps"); // steps
     const DirectionsLeg_Maneuver* prev_maneuver = nullptr;
     std::string prev_step_json = ""; // prev_step
     for (const auto& maneuver : leg->maneuver()) {
@@ -1846,8 +1853,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
             (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
             !prev_step_json.empty()) {
           rapidjson::writer_wrapper_t prev_step_writer;
-          if (!prev_step_json.empty())
-            prev_step_writer(prev_step_json);
+          prev_step_writer(prev_step_json);
           prev_step_writer("destinations", dest);
           prev_step_json = prev_step_writer.get_buffer();
         }
@@ -1863,8 +1869,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
       if (options.banner_instructions()) {
         if (!prev_step_json.empty() && prev_maneuver) {
           rapidjson::writer_wrapper_t prev_step_writer;
-          if (!prev_step_json.empty())
-            prev_step_writer(prev_step_json);
+          prev_step_writer(prev_step_json);
           prev_step_writer.start_array("bannerInstructions");
           banner_instructions(prev_step_writer, name, dest, ref, prev_maneuver, maneuver,
                               arrive_maneuver, &etp, mnvr_type, modifier, ex, prev_distance,
@@ -1883,8 +1888,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
       if (options.voice_instructions()) {
         if (!prev_step_json.empty() && prev_maneuver) {
           rapidjson::writer_wrapper_t prev_step_writer;
-          if (!prev_step_json.empty())
-            prev_step_writer(prev_step_json);
+          prev_step_writer(prev_step_json);
           // voiceInstructions is an array, because there may be similar voice instructions.
           // When the step is long enough, there may be multiple voice instructions.
           prev_step_writer.start_array("voiceInstructions");
@@ -1910,21 +1914,21 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
       if (options.guidance_views()) {
         // Add guidance_views if not the start maneuver
         if (!depart_maneuver && (maneuver.guidance_views_size() > 0)) {
-          step_writer.start_array("guidance_views");
+          step_writer.start_array("guidance_views"); // guidance_views
           step_writer.set_precision(kDefaultPrecision);
           for (const auto& gv : maneuver.guidance_views()) {
-            step_writer.start_object();
+            step_writer.start_object(); // guidance_view
             step_writer("data_id", gv.data_id());
             step_writer("type", GuidanceViewTypeToString(gv.type()));
             step_writer("base_id", gv.base_id());
-            step_writer.start_array("overlay_ids");
+            step_writer.start_array("overlay_ids"); // overlay_ids
             for (const auto& overlay : gv.overlay_ids()) {
               step_writer(overlay);
             }
-            step_writer.end_array();
-            step_writer.end_object();
+            step_writer.end_array();  // overlay_ids
+            step_writer.end_object(); // guidance_view
           }
-          step_writer.end_array();
+          step_writer.end_array(); // guidance_views
         }
       }
 
@@ -1953,7 +1957,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
 
     // Add steps to the leg
     writer.end_array(); // steps
-                        // #########################################################################
+    // #########################################################################
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
@@ -2147,7 +2151,7 @@ std::string serialize(valhalla::Api& api) {
   // For each route...
   for (int i = 0; i < api.trip().routes_size(); ++i) {
     writer.start_object(); // route
-    writer.set_precision(tyr::kDefaultPrecision);
+    writer.set_precision(kDefaultPrecision);
 
     if (options.action() == Options::trace_route) {
       // NOTE(mookerji): confidence value here is a placeholder for future implementation.

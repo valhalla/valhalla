@@ -139,7 +139,6 @@ std::vector<std::string> route_references(rapidjson::writer_wrapper_t& writer,
   if (!linear_reference) {
     return {};
   }
-  writer.start_object();
   writer.start_array("linear_references"); // linear_references
   std::vector<std::string> linear_references;
   for (const TripLeg& leg : route.legs()) {
@@ -150,7 +149,6 @@ std::vector<std::string> route_references(rapidjson::writer_wrapper_t& writer,
     }
   }
   writer.end_array(); // linear_references
-  writer.end_object();
   return linear_references;
 }
 
@@ -285,12 +283,12 @@ void waypoint(const valhalla::Location& location,
               bool is_optimized) {
   // Output location as a lon,lat array. Note this is the projected
   // lon,lat on the nearest road.
-  writer.start_object();
-  writer.start_array("location");
+  writer.start_object();          // object
+  writer.start_array("location"); // location
   writer.set_precision(kCoordinatePrecision);
   writer(location.correlation().edges(0).ll().lng());
   writer(location.correlation().edges(0).ll().lat());
-  writer.end_array();
+  writer.end_array(); // location
   writer.set_precision(kDefaultPrecision);
 
   // Add street name.
@@ -326,7 +324,7 @@ void waypoint(const valhalla::Location& location,
     writer("trips_index", trips_index);
     writer("waypoint_index", location.correlation().waypoint_index());
   }
-  writer.end_object();
+  writer.end_object(); // object
 }
 
 // Serialize locations (called waypoints in OSRM). Waypoints are described here:
