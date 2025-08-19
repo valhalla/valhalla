@@ -1,10 +1,10 @@
-#include "gurka.h"
-#include <gtest/gtest.h>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "gurka.h"
 #include "midgard/pointll.h"
 #include "mjolnir/graphtilebuilder.h"
+
+#include <gtest/gtest.h>
 
 using namespace valhalla;
 

@@ -1,8 +1,12 @@
+#include "baldr/verbal_text_formatter.h"
+
 #include <optional>
 #include <string>
 
-#include "baldr/verbal_text_formatter.h"
-#include "midgard/util.h"
+namespace {
+// Regular expression to find numbers
+const std::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
+} // namespace
 
 namespace valhalla {
 namespace baldr {

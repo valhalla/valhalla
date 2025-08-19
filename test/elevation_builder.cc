@@ -1,20 +1,19 @@
-#include "test.h"
-
-#include <algorithm>
-#include <fstream>
-#include <iterator>
-#include <string>
-#include <unordered_set>
-
-#include <prime_server/prime_server.hpp>
-
 #include "baldr/curl_tilegetter.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "test.h"
+
+#include <prime_server/prime_server.hpp>
+
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <iterator>
+#include <string>
+#include <unordered_set>
 #include "mjolnir/util.h
 #include "pixels.h"
 #include "skadi/sample.h"
@@ -60,7 +59,7 @@ std::vector<std::string> full_to_relative_path(const std::string& root_dir,
   return res;
 }
 
-TEST(Filesystem, full_to_relative_path_valid_input) {
+TEST(std::filesystem, full_to_relative_path_valid_input) {
   struct test_desc {
     std::string path;
     std::string remove_pattern;
@@ -90,7 +89,7 @@ TEST(Filesystem, full_to_relative_path_valid_input) {
     EXPECT_EQ(full_to_relative_path(test.remove_pattern, {test.path}).front(), test.res);
 }
 
-TEST(Filesystem, full_to_relative_path_invalid_input) {
+TEST(std::filesystem, full_to_relative_path_invalid_input) {
   struct test_desc {
     std::string path;
     std::string remove_pattern;
@@ -113,37 +112,37 @@ TEST(Filesystem, full_to_relative_path_invalid_input) {
  * @brief Removes all the content of the directory.
  * */
 inline bool clear(const std::string& dir) {
-  if (!filesystem::exists(dir))
+  if (!std::filesystem::exists(dir))
     return false;
 
-  if (!filesystem::is_directory(dir))
-    return filesystem::remove(dir);
+  if (!std::filesystem::is_directory(dir))
+    return std::filesystem::remove(dir);
 
-  for (filesystem::recursive_directory_iterator i(dir), end; i != end; ++i) {
-    if (filesystem::exists(i->path()))
-      filesystem::remove_all(i->path());
+  for (std::filesystem::recursive_directory_iterator i(dir), end; i != end; ++i) {
+    if (std::filesystem::exists(i->path()))
+      std::filesystem::remove_all(i->path());
   }
 
   return true;
 }
 
-TEST(Filesystem, clear_valid_input) {
+TEST(std::filesystem, clear_valid_input) {
   std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gph",
                                  "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
                                  "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
 
   for (const auto& test : tests)
-    (void)filesystem::save<std::string>(test);
+    (void)std::filesystem::save<std::string>(test);
 
-  EXPECT_FALSE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
+  EXPECT_FALSE(std::filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
 
   EXPECT_TRUE(clear("/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"));
   EXPECT_TRUE(clear("/tmp/save_file_input/"));
 
-  EXPECT_TRUE(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
+  EXPECT_TRUE(std::filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
 }
 
-TEST(Filesystem, clear_invalid_input) {
+TEST(std::filesystem, clear_invalid_input) {
   EXPECT_FALSE(clear(".foobar"));
 }
 
@@ -153,7 +152,7 @@ struct ElevationDownloadTestData {
   }
 
   void load_tiles() {
-    for (auto&& ftile : full_to_relative_path(m_dir_dst, filesystem::get_files(m_dir_dst))) {
+    for (auto&& ftile : full_to_relative_path(m_dir_dst, std::filesystem::get_files(m_dir_dst))) {
       if (ftile.find("gph") != std::string::npos && !m_test_tile_names.count(ftile))
         m_test_tile_names.insert(std::move(ftile));
     }
@@ -273,7 +272,7 @@ TEST(ElevationBuilder, test_loaded_elevations) {
   ASSERT_FALSE(src_elevations.empty()) << "Fail to create any source elevations";
 
   for (const auto& elev : src_elevations)
-    EXPECT_TRUE(filesystem::save<std::string>(src_path + elev));
+    EXPECT_TRUE(std::filesystem::save<std::string>(src_path + elev));
 
   const auto& dst_dir = config.get<std::string>("additional_data.elevation");
   valhalla::mjolnir::ElevationBuilder::Build(config,
@@ -281,9 +280,9 @@ TEST(ElevationBuilder, test_loaded_elevations) {
                                                                              params
                                                                                  .m_test_tile_names));
 
-  ASSERT_TRUE(filesystem::exists(dst_dir));
+  ASSERT_TRUE(std::filesystem::exists(dst_dir));
 
-  const auto& elev_paths = filesystem::get_files(dst_dir);
+  const auto& elev_paths = std::filesystem::get_files(dst_dir);
   ASSERT_FALSE(elev_paths.empty());
 
   std::unordered_set<std::string> dst_elevations;
@@ -336,7 +335,7 @@ std::string download(const std::string& url, const std::string& path) {
     return {};
 
   auto full_path = path + filename(url);
-  if (!filesystem::save(full_path, result.bytes_))
+  if (!std::filesystem::save(full_path, result.bytes_))
     return {};
 
   return full_path;
@@ -346,7 +345,7 @@ void generate_tiles(const std::string& dst_dir) {
   const std::string pbf_url{"https://download.geofabrik.de/europe/cyprus-latest.osm.pbf"};
   auto full_path = download(pbf_url, pbf_dir);
 
-  ASSERT_TRUE(filesystem::is_regular_file(full_path));
+  ASSERT_TRUE(std::filesystem::is_regular_file(full_path));
 
   const valhalla::mjolnir::BuildStage start_stage{valhalla::mjolnir::BuildStage::kInitialize};
   const valhalla::mjolnir::BuildStage end_stage{valhalla::mjolnir::BuildStage::kCleanup};
@@ -354,12 +353,12 @@ void generate_tiles(const std::string& dst_dir) {
 
   ASSERT_TRUE(valhalla::mjolnir::build_tile_set(config, {full_path}, start_stage, end_stage));
 
-  ASSERT_TRUE(filesystem::exists(dst_dir));
-  ASSERT_FALSE(filesystem::is_empty(dst_dir));
+  ASSERT_TRUE(std::filesystem::exists(dst_dir));
+  ASSERT_FALSE(std::filesystem::is_empty(dst_dir));
 }
 
 bool are_files_equal(const std::string& file1, const std::string& file2) {
-  if (!filesystem::exists(file1) || !filesystem::exists(file2))
+  if (!std::filesystem::exists(file1) || !std::filesystem::exists(file2))
     return false;
 
   std::ifstream f1(file1, std::ifstream::binary | std::ifstream::ate);
@@ -380,7 +379,7 @@ bool are_files_equal(const std::string& file1, const std::string& file2) {
 }
 
 bool are_dirs_equal(const std::string& dir1, const std::string& dir2) {
-  for (const auto& file : full_to_relative_path(dir1, filesystem::get_files(dir1))) {
+  for (const auto& file : full_to_relative_path(dir1, std::filesystem::get_files(dir1))) {
     if (!are_files_equal(dir1 + file, dir2 + file))
       return false;
   }
@@ -397,33 +396,33 @@ std::string read_file(const std::string& file) {
 bool copy_files(const std::string& src,
                 const std::string& dst,
                 const std::vector<std::string>& files = {}) {
-  if (files.empty() || !filesystem::exists(src) || !filesystem::exists(dst))
+  if (files.empty() || !std::filesystem::exists(src) || !std::filesystem::exists(dst))
     return false;
 
   for (const auto& file : files) {
-    if (!filesystem::is_regular_file(file))
+    if (!std::filesystem::is_regular_file(file))
       continue;
 
-    (void)filesystem::save(dst + full_to_relative_path(src, {file}).front(), read_file(file));
+    (void)std::filesystem::save(dst + full_to_relative_path(src, {file}).front(), read_file(file));
   }
 
-  return !filesystem::is_empty(dst);
+  return !std::filesystem::is_empty(dst);
 }
 
 /**
  * @brief Copy contents of src dir into dst dir.
  * */
 bool copy(const std::string& src, const std::string& dst) {
-  if (!filesystem::exists(src) || !filesystem::exists(dst))
+  if (!std::filesystem::exists(src) || !std::filesystem::exists(dst))
     return false;
 
-  if (filesystem::is_directory(src) && filesystem::is_empty(src))
+  if (std::filesystem::is_directory(src) && std::filesystem::is_empty(src))
     return false;
-  return copy_files(src, dst, filesystem::get_files(src));
+  return copy_files(src, dst, std::filesystem::get_files(src));
 }
 
 void store_elevation(const std::string& elev) {
-  filesystem::save<std::string>(elev);
+  std::filesystem::save<std::string>(elev);
   valhalla::midgard::sequence<int16_t> s(elev, true);
   for (size_t i = 0; i < 3601 * 2; ++i)
     s.push_back(((i / 3601 + 1) & 0xFF) << 8);
@@ -475,43 +474,44 @@ void apply_elevations(const std::string& tile_dir,
 
 TEST(ElevationBuilder, compare_applied_elevations) {
   const std::string tile_dst{test_tile_dir + "/tiles_from_pbf"};
-  ASSERT_TRUE(filesystem::create_directories(tile_dst));
+  ASSERT_TRUE(std::filesystem::create_directories(tile_dst));
   generate_tiles(tile_dst);
 
-  for (const auto& tile_path : filesystem::get_files(tile_dst))
-    ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
+  for (const auto& tile_path : std::filesystem::get_files(tile_dst))
+    ASSERT_TRUE(std::filesystem::exists(tile_path) && std::filesystem::is_regular_file(tile_path));
 
   const std::string offline_dir{test_tile_dir + "/offline_test_dir"};
-  ASSERT_TRUE(filesystem::create_directories(offline_dir)) << "Failed to create " << offline_dir;
+  ASSERT_TRUE(std::filesystem::create_directories(offline_dir)) << "Failed to create " << offline_dir;
 
   const std::string online_dir{test_tile_dir + "/online_test_dir"};
-  ASSERT_TRUE(filesystem::create_directories(online_dir)) << "Failed to create " << online_dir;
+  ASSERT_TRUE(std::filesystem::create_directories(online_dir)) << "Failed to create " << online_dir;
 
   ASSERT_TRUE(copy(tile_dst, offline_dir)) << "Failed to copy files to " << offline_dir;
 
-  for (const auto& tile_path : filesystem::get_files(offline_dir))
-    ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
+  for (const auto& tile_path : std::filesystem::get_files(offline_dir))
+    ASSERT_TRUE(std::filesystem::exists(tile_path) && std::filesystem::is_regular_file(tile_path));
 
   ASSERT_TRUE(are_dirs_equal(tile_dst, offline_dir));
 
   ASSERT_TRUE(copy(tile_dst, online_dir)) << "Failed to copy files to " << online_dir;
-  for (const auto& tile_path : filesystem::get_files(online_dir))
-    ASSERT_TRUE(filesystem::exists(tile_path) && filesystem::is_regular_file(tile_path));
+  for (const auto& tile_path : std::filesystem::get_files(online_dir))
+    ASSERT_TRUE(std::filesystem::exists(tile_path) && std::filesystem::is_regular_file(tile_path));
 
   ASSERT_TRUE(are_dirs_equal(tile_dst, online_dir));
 
-  ASSERT_TRUE(filesystem::create_directories(src_path)) << "Failed to create " << src_path;
+  ASSERT_TRUE(std::filesystem::create_directories(src_path)) << "Failed to create " << src_path;
 
   build_elevations(offline_dir, src_path);
-  for (const auto& elev_path : filesystem::get_files(src_path))
-    ASSERT_TRUE(filesystem::exists(elev_path) && filesystem::is_regular_file(elev_path));
+  for (const auto& elev_path : std::filesystem::get_files(src_path))
+    ASSERT_TRUE(std::filesystem::exists(elev_path) && std::filesystem::is_regular_file(elev_path));
 
   apply_elevations(offline_dir, src_path);
   ASSERT_FALSE(are_dirs_equal(tile_dst, offline_dir));
 
   auto url{"127.0.0.1:38004/route-tile/v1/{tilePath}?version=%version&access_token=%token"};
   auto elev_storage_dir{"test/data/elevation_dst/"};
-  ASSERT_TRUE(filesystem::create_directories(elev_storage_dir)) << "Failed to create " << src_path;
+  ASSERT_TRUE(std::filesystem::create_directories(elev_storage_dir))
+      << "Failed to create " << src_path;
 
   apply_elevations(online_dir, elev_storage_dir, url, elevation_local_src);
   ASSERT_FALSE(are_dirs_equal(tile_dst, online_dir));

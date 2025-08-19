@@ -1,9 +1,10 @@
 #ifndef VALHALLA_MJOLNIR_OSMACCESSRESTRICTION_H
 #define VALHALLA_MJOLNIR_OSMACCESSRESTRICTION_H
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
+
+#include <cstdint>
 
 namespace valhalla {
 namespace mjolnir {
@@ -20,12 +21,12 @@ public:
   /**
    * Constructor
    */
-  OSMAccessRestriction();
+  OSMAccessRestriction() : except_destination_(0){};
 
   /**
    * Destructor.
    */
-  ~OSMAccessRestriction();
+  ~OSMAccessRestriction() = default;
 
   /**
    * Set the restriction type
@@ -68,18 +69,32 @@ public:
    */
   void set_direction(AccessRestrictionDirection direction);
 
-protected:
-  uint64_t value_;
+  /**
+   * Whether or not the restriction applies to local traffic
+   */
+  bool except_destination() const;
 
+  /**
+   * Set flag for whether or not the restriction applies to local traffic
+   */
+  void set_except_destination(const bool except_destination);
+
+protected:
   struct Attributes {
     uint16_t type_ : 4;
     uint16_t modes_ : 12;
   };
-  Attributes attributes_;
-  AccessRestrictionDirection direction_;
-  uint16_t spare_[2];
-  uint8_t spare2_;
+
+  uint64_t value_ = 0;
+
+  Attributes attributes_ = {0, 0};
+  uint16_t except_destination_ : 1;
+  uint16_t spare_ : 15;
+  AccessRestrictionDirection direction_ = AccessRestrictionDirection::kBoth;
+  uint8_t spare1_ = 0;
+  uint16_t spare2_ = 0;
 };
+static_assert(sizeof(OSMAccessRestriction) == 16);
 
 } // namespace mjolnir
 } // namespace valhalla

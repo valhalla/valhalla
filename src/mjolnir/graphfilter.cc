@@ -1,22 +1,22 @@
 #include "mjolnir/graphfilter.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
-
-#include <boost/property_tree/ptree.hpp>
-#include <iostream>
-#include <unordered_map>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/sequence.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
+#include "scoped_timer.h"
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -231,7 +231,7 @@ void FilterTiles(GraphReader& reader,
                  const bool include_driving,
                  const bool include_bicycle,
                  const bool include_pedestrian) {
-
+  SCOPED_TIMER();
   // lambda to check if an edge should be included
   auto include_edge = [&include_driving, &include_bicycle,
                        &include_pedestrian](const DirectedEdge* edge) {
@@ -315,7 +315,8 @@ void FilterTiles(GraphReader& reader,
           auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 
@@ -424,10 +425,11 @@ void FilterTiles(GraphReader& reader,
       tilebuilder.StoreTileData();
     } else {
       // Remove the tile - all nodes and edges were filtered
-      std::string file_location =
-          reader.tile_dir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-      remove(file_location.c_str());
-      LOG_INFO("Remove file: " + file_location + " all edges were filtered");
+      std::filesystem::path file_location{reader.tile_dir()};
+      file_location.append(GraphTile::FileSuffix(tile_id));
+      const auto& file_location_str = file_location.string();
+      ::remove(file_location_str.c_str());
+      LOG_INFO("Remove file: " + file_location_str + " all edges were filtered");
     }
 
     if (reader.OverCommitted()) {
@@ -539,6 +541,7 @@ void ValidateData(GraphReader& reader,
 
 void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
 
+  SCOPED_TIMER();
   LOG_INFO("Validating edges for aggregation");
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
@@ -678,7 +681,8 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
           auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 
@@ -767,10 +771,11 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       tilebuilder.StoreTileData();
     } else {
       // Remove the tile - all nodes and edges were filtered
-      std::string file_location =
-          reader.tile_dir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-      remove(file_location.c_str());
-      LOG_INFO("Remove file: " + file_location + " all edges were filtered");
+      std::filesystem::path file_location{reader.tile_dir()};
+      file_location.append(GraphTile::FileSuffix(tile_id));
+      const auto& file_location_str = file_location.string();
+      ::remove(file_location_str.c_str());
+      LOG_INFO("Remove file: " + file_location_str + " all edges were filtered");
     }
 
     if (reader.OverCommitted()) {
@@ -788,6 +793,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
  * @param  old_to_new  Map of original node Ids to new nodes Ids (after filtering).
  */
 void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
+  SCOPED_TIMER();
   LOG_INFO("Update end nodes of directed edges");
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
@@ -843,6 +849,7 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
  * @param  reader  Graph reader.
  */
 void UpdateOpposingEdgeIndex(GraphReader& reader) {
+  SCOPED_TIMER();
   LOG_INFO("Update Opposing Edge Index of directed edges");
 
   // Iterate through all tiles in the local level
@@ -908,6 +915,7 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
 
   // TODO: thread this. Could be difficult due to sequence creates to associate nodes
 
+  SCOPED_TIMER();
   // Edge filtering (optionally exclude edges)
   bool include_driving = pt.get_child("mjolnir").get<bool>("include_driving", true);
   if (!include_driving) {

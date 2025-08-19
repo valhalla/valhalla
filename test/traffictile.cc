@@ -1,6 +1,6 @@
-#include <gtest/gtest.h>
-
 #include "baldr/traffictile.h"
+
+#include <gtest/gtest.h>
 
 namespace {
 class UnmanagedGraphMemory : public valhalla::baldr::GraphMemory {

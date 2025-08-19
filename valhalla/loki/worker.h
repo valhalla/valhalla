@@ -1,21 +1,19 @@
 #ifndef __VALHALLA_LOKI_SERVICE_H__
 #define __VALHALLA_LOKI_SERVICE_H__
 
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
-
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/skadi/sample.h>
 #include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <vector>
 
 namespace valhalla {
 namespace loki {

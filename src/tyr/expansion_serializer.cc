@@ -1,5 +1,5 @@
-
 #include "baldr/rapidjson_utils.h"
+#include "proto_conversions.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
@@ -16,7 +16,7 @@ std::string serializeExpansion(Api& request, const std::string& algo) {
   writer.start_object();
   writer("type", "FeatureCollection");
   writer.start_array("features");
-  writer.set_precision(6);
+  writer.set_precision(kCoordinatePrecision);
 
   std::unordered_set<Options::ExpansionProperties> exp_props;
   for (const auto& prop : request.options().expansion_properties()) {
@@ -54,20 +54,20 @@ std::string serializeExpansion(Api& request, const std::string& algo) {
 
     // make the properties
     if (exp_props.count(Options_ExpansionProperties_duration)) {
-      writer("duration", static_cast<uint64_t>(expansion.durations(i)));
+      writer("duration", expansion.durations(i));
     }
     if (exp_props.count(Options_ExpansionProperties_distance)) {
-      writer("distance", static_cast<uint64_t>(expansion.distances(i)));
+      writer("distance", expansion.distances(i));
     }
     if (exp_props.count(Options_ExpansionProperties_cost)) {
-      writer("cost", static_cast<uint64_t>(expansion.costs(i)));
+      writer("cost", expansion.costs(i));
     }
     if (exp_props.count(Options_ExpansionProperties_edge_status))
       writer("edge_status", Expansion_EdgeStatus_Enum_Name(expansion.edge_status(i)));
     if (exp_props.count(Options_ExpansionProperties_edge_id))
-      writer("edge_id", static_cast<uint64_t>(expansion.edge_id(i)));
+      writer("edge_id", expansion.edge_id(i));
     if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
-      writer("pred_edge_id", static_cast<uint64_t>(expansion.pred_edge_id(i)));
+      writer("pred_edge_id", expansion.pred_edge_id(i));
     if (exp_props.count(Options_ExpansionProperties_expansion_type))
       writer("expansion_type", static_cast<uint64_t>(expansion.expansion_type(i)));
 

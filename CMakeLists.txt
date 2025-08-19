@@ -1,12 +1,3 @@
-# Minimal CMake configuration for Valhalla
-#
-# Builds libvalhalla and minimal collection of programs.
-#
-# This is NOT equivalent to the official Valhalla build configuration based on GNU Autotools.
-# This is NOT suitable for building complete Valhalla suite.
-# This is secondary build configuration provided for convenient development
-# on Windows and using CMake-enabled IDEs.
-#
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
@@ -60,25 +51,30 @@ endif()
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.
-if(NOT MSVC_IDE) # TODO: May need to be extended for Xcode, CLion, etc.
+get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
+if(isMultiConfig)
+    message(STATUS "Multi-config generator detected (${CMAKE_GENERATOR}) — skipping CMAKE_BUILD_TYPE checks.")
+else()
+  # CMAKE_BUILD_TYPE is only relevant for single-configuration generators.
   if(NOT CMAKE_BUILD_TYPE)
     message(STATUS "No build type specified, defaulting to Release")
     set(CMAKE_BUILD_TYPE Release)
   endif()
-endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  message(STATUS "Configuring in debug mode")
-elseif(CMAKE_BUILD_TYPE STREQUAL Release)
-  message(STATUS "Configuring in release mode")
-elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
-  message(STATUS "Configuring in release mode with debug symbols")
-elseif(CMAKE_BUILD_TYPE STREQUAL MinRelSize)
-  message(STATUS "Configuring in release mode with minimized size")
-elseif(CMAKE_BUILD_TYPE STREQUAL None)
-  message(STATUS "Configuring without a mode, no optimization flags will be set")
-else()
-  message(FATAL_ERROR "Unrecognized build type. Use one of Debug, Release, RelWithDebInfo, MinRelSize, None")
+  if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    message(STATUS "Configuring in debug mode")
+  elseif(CMAKE_BUILD_TYPE STREQUAL Release)
+    message(STATUS "Configuring in release mode")
+  elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
+    message(STATUS "Configuring in release mode with debug symbols")
+  elseif(CMAKE_BUILD_TYPE STREQUAL MinRelSize)
+    message(STATUS "Configuring in release mode with minimized size")
+  elseif(CMAKE_BUILD_TYPE STREQUAL None)
+    message(STATUS "Configuring without a mode, no optimization flags will be set")
+  else()
+    message(FATAL_ERROR "Unrecognized build type. Use one of Debug, Release, RelWithDebInfo, MinRelSize, None")
+  endif()
 endif()
 
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
@@ -128,7 +124,7 @@ find_package(Threads REQUIRED)
 # resolve vendored libraries
 set(date_include_dir ${VALHALLA_SOURCE_DIR}/third_party/date/include)
 set(rapidjson_include_dir ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)
-set(robinhoodhashing_include_dir ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include)
+set(unordered_dense_include_dir ${VALHALLA_SOURCE_DIR}/third_party/unordered_dense/include)
 set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
 set(dirent_include_dir ${VALHALLA_SOURCE_DIR}/third_party/dirent/include)
 if (PREFER_EXTERNAL_DEPS)
@@ -146,12 +142,12 @@ if (PREFER_EXTERNAL_DEPS)
   else()
     message(WARNING "No RapidJSON found in system libraries, using vendored RapidJSON...")
   endif()
-  # robin-hood-hashing
-  find_package(robin_hood QUIET)
-  if (robin_hood_FOUND)
-    get_target_property(robinhoodhashing_include_dir robin_hood::robin_hood INTERFACE_INCLUDE_DIRECTORIES)
+  # ankerl/unordered_dense
+  find_package(unordered_dense QUIET)
+  if (unordered_dense_FOUND)
+    get_target_property(unordered_dense_include_dir unordered_dense::unordered_dense INTERFACE_INCLUDE_DIRECTORIES)
   else()
-    message(WARNING "No robin_hood found in system libraries, using vendored robin_hood...")
+    message(WARNING "No ankerl/unordered_dense found in system libraries, using vendored ankerl/unordered_dense...")
   endif()
   # cxxopts
   if (ENABLE_DATA_TOOLS OR ENABLE_TOOLS)
@@ -230,6 +226,7 @@ if(ENABLE_DATA_TOOLS)
   find_package(SQLite3 REQUIRED)
   pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
+  pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
@@ -276,7 +273,7 @@ if(ENABLE_TOOLS)
     add_executable(${program} ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
-    target_link_libraries(${program} valhalla)
+    target_link_libraries(${program} valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
     target_include_directories(${program} PRIVATE ${cxxopts_include_dir})
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
@@ -289,7 +286,7 @@ if(ENABLE_DATA_TOOLS)
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
     target_include_directories(${program} PRIVATE ${cxxopts_include_dir})
-    target_link_libraries(${program} valhalla)
+    target_link_libraries(${program} valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
     if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
@@ -298,8 +295,6 @@ if(ENABLE_DATA_TOOLS)
   endforeach()
 
   # Target-specific dependencies
-  pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
-  target_link_libraries(valhalla_build_admins PkgConfig::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
       ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc
@@ -311,7 +306,7 @@ if(ENABLE_SERVICES)
     add_executable(${program} src/${program}.cc)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
-    target_link_libraries(${program} valhalla)
+    target_link_libraries(${program} valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -320,7 +315,7 @@ endif()
 foreach(script valhalla_build_config valhalla_build_elevation
   valhalla_build_extract valhalla_build_timezones)
   configure_file(${VALHALLA_SOURCE_DIR}/scripts/${script} ${CMAKE_BINARY_DIR}/${script} COPYONLY)
-  
+
   install(
     FILES
       scripts/${script}

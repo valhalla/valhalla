@@ -1,5 +1,12 @@
 #pragma once
 
+#include <valhalla/midgard/aabb2.h>
+#include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/distanceapproximator.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/tiles.h>
+#include <valhalla/midgard/util_core.h>
+
 #include <cstdint>
 #include <cstring>
 #include <limits>
@@ -12,13 +19,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-#include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/util_core.h>
 
 #define UNUSED(x) (void)(x)
 
@@ -681,7 +681,7 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
 
 template <typename T> struct Finally {
   T t;
-  explicit Finally(T t) : t(t){};
+  explicit Finally(T t) : t(std::move(t)){};
   Finally() = delete;
   Finally(Finally&& f) = default;
   Finally(const Finally&) = delete;

@@ -1,14 +1,14 @@
 #pragma once
 
-#include <algorithm>
-#include <list>
-#include <string>
-
-#include <boost/property_tree/ptree.hpp>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/filesystem.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/transit.pb.h>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include <algorithm>
+#include <filesystem>
+#include <list>
 
 namespace valhalla {
 namespace mjolnir {
@@ -40,8 +40,8 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<baldr::Grap
  * @param lock (optional) lock for threading
  * @return Transit tile that is read from the protobuf data
  */
-Transit read_pbf(const std::string& file_name, std::mutex& lock);
-Transit read_pbf(const std::string& file_name);
+Transit read_pbf(const std::filesystem::path& file_name, std::mutex& lock);
+Transit read_pbf(const std::filesystem::path& file_name);
 
 /**
  * @brief writes transit information inside the tile to a protobuf
@@ -49,7 +49,7 @@ Transit read_pbf(const std::string& file_name);
  * @param tile contains transit data
  * @param transit_tile destination where the protobuf is written
  */
-void write_pbf(const Transit& tile, const filesystem::path& transit_tile);
+void write_pbf(const Transit& tile, const std::filesystem::path& transit_tile);
 
 } // namespace mjolnir
 } // namespace valhalla

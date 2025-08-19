@@ -1,24 +1,22 @@
 #include "mjolnir/validatetransit.h"
-#include "mjolnir/dataquality.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/osmrestriction.h"
-#include "mjolnir/servicedays.h"
-
-#include <future>
-#include <thread>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/tokenizer.hpp>
-
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
-#include "midgard/sequence.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/servicedays.h"
+#include "mjolnir/util.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
+
+#include <filesystem>
+#include <future>
+#include <iostream>
+#include <thread>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -462,32 +460,29 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
   if (!tiles.size()) {
     // Bail if nothing
     auto hierarchy_properties = pt.get_child("mjolnir");
-    auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-    if (!transit_dir || !filesystem::exists(*transit_dir) ||
-        !filesystem::is_directory(*transit_dir)) {
+    auto transit_config = hierarchy_properties.get_optional<std::string>("transit_dir");
+    std::filesystem::path transit_dir{*transit_config};
+    if (!transit_config || !std::filesystem::exists(transit_dir) ||
+        !std::filesystem::is_directory(transit_dir)) {
       LOG_INFO("Transit directory not found. Transit will not be added.");
       return false;
     }
     // Also bail if nothing inside
-    transit_dir->push_back(filesystem::path::preferred_separator);
     GraphReader reader(hierarchy_properties);
-    auto transit_level = TileHierarchy::GetTransitLevel().level;
-    if (filesystem::is_directory(*transit_dir + std::to_string(transit_level) +
-                                 filesystem::path::preferred_separator)) {
-      filesystem::recursive_directory_iterator transit_file_itr(
-          *transit_dir + std::to_string(transit_level) + filesystem::path::preferred_separator),
-          end_file_itr;
-      for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-        if (filesystem::is_regular_file(transit_file_itr->path()) &&
-            transit_file_itr->path().extension() == ".gph") {
-          auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
+    const auto transit_level = std::to_string(TileHierarchy::GetTransitLevel().level);
+    transit_dir.append(transit_level);
+    if (std::filesystem::is_directory(transit_dir)) {
+      for (const auto& dir_entry : std::filesystem::recursive_directory_iterator(transit_dir)) {
+        if (std::filesystem::is_regular_file(dir_entry.path()) &&
+            dir_entry.path().extension() == ".gph") {
+          auto graph_id = GraphTile::GetTileId(dir_entry.path().string());
           GraphId transit_tile_id = GraphId(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
           all_tiles.emplace(transit_tile_id);
         }
       }
     }
     local_pt.get_child("mjolnir").erase("tile_dir");
-    local_pt.add("mjolnir.tile_dir", std::string(*transit_dir));
+    local_pt.add("mjolnir.tile_dir", *transit_config);
 
   } else {
     all_tiles = tiles; // we called validate from valhalla_build_transit and tiles is not empty.
@@ -528,9 +523,9 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(validate, std::cref(local_pt.get_child("mjolnir")),
-                                     std::ref(lock), tile_start, tile_end, std::cref(onestoptests),
-                                     std::ref(results.back())));
+    threads[i] = std::make_shared<std::thread>(validate, std::cref(local_pt.get_child("mjolnir")),
+                                               std::ref(lock), tile_start, tile_end,
+                                               std::cref(onestoptests), std::ref(results.back()));
   }
 
   // Wait for them to finish up their work

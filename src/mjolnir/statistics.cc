@@ -1,22 +1,17 @@
-#include <cstdint>
-
-#include "filesystem.h"
-#include "mjolnir/graphvalidator.h"
 #include "statistics.h"
+#include "baldr/json.h"
+#include "midgard/aabb2.h"
+#include "midgard/logging.h"
 
 #include <boost/property_tree/ptree.hpp>
+
+#include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/json.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/aabb2.h"
-#include "midgard/logging.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -438,7 +433,7 @@ void statistics::add(const statistics& stats) {
   roulette_data.Add(stats.roulette_data);
 }
 
-statistics::RouletteData::RouletteData() : shape_bb(), way_IDs(), way_shapes(), unroutable_nodes() {
+statistics::RouletteData::RouletteData() : shape_bb(), way_shapes(), way_IDs(), unroutable_nodes() {
 }
 
 void statistics::RouletteData::AddTask(const AABB2<PointLL>& bb,
@@ -511,8 +506,8 @@ void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& 
                     std::string("This node is either unreachable or unleavable. Edit the surrounding "
                                 "roads so that the node can be accessed properly")}})}})}});
   // write out to a file
-  if (filesystem::exists("maproulette_tasks.geojson")) {
-    filesystem::remove("maproulette_tasks.geojson");
+  if (std::filesystem::exists("maproulette_tasks.geojson")) {
+    std::filesystem::remove("maproulette_tasks.geojson");
   }
   std::ofstream file;
   file.open("maproulette_tasks.geojson");

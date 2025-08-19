@@ -1,8 +1,10 @@
 #include "mjolnir/luatagtransform.h"
-
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
+
 #include <boost/format.hpp>
+#include <osmium/osm/tag.hpp>
+
 #include <stdexcept>
 
 using namespace valhalla::mjolnir;
@@ -54,7 +56,7 @@ LuaTagTransform::~LuaTagTransform() {
   }
 }
 
-Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const Tags& maptags) {
+Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const osmium::TagList& maptags) {
 
   // grab the proper function out of the lua code
   Tags result;
@@ -69,8 +71,8 @@ Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const Tags& maptag
     int count = 0;
     lua_newtable(state_);
     for (const auto& tag : maptags) {
-      lua_pushstring(state_, tag.first.c_str());
-      lua_pushstring(state_, tag.second.c_str());
+      lua_pushstring(state_, tag.key());
+      lua_pushstring(state_, tag.value());
       lua_rawset(state_, -3);
       count++;
     }

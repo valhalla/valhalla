@@ -3,12 +3,6 @@
 
 #include <unordered_map>
 
-#include "baldr/datetime.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/logging.h"
-#include "tyr/actor.h"
-
 using namespace valhalla;
 using namespace valhalla::tyr;
 using namespace valhalla::baldr;

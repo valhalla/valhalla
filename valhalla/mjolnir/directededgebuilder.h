@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 #define VALHALLA_MJOLNIR_DIRECTEDEDGEBUILDER_H_
 
-#include <cstdint>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/mjolnir/osmway.h>
+#include <valhalla/mjolnir/node_expander.h>
+
+#include <cstdint>
 
 using namespace valhalla::baldr;
 
@@ -34,7 +34,8 @@ public:
    * @param  restrictions    Mask of simple turn restrictions at the end node
    *                         of this directed edge.
    * @param  bike_network    Mask of bike_networks from relations.
-   * @param  remove_destonly Drop dest_only attribution for reclassified ferry paths
+   * @param  reclass_ferry   Whether this edge was in a ferry path
+   * @param  rc_hierarchy    The road class for hierarchies
    */
   DirectedEdgeBuilder(const OSMWay& way,
                       const baldr::GraphId& endnode,
@@ -51,7 +52,8 @@ public:
                       const bool minor,
                       const uint32_t restrictions,
                       const uint32_t bike_network,
-                      const bool remove_destonly);
+                      const bool reclass_ferry,
+                      const baldr::RoadClass rc_hierarchy);
 };
 
 } // namespace mjolnir

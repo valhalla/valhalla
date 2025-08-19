@@ -1,11 +1,10 @@
 #ifndef VALHALLA_BALDR_NODEINFO_H_
 #define VALHALLA_BALDR_NODEINFO_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
@@ -486,11 +485,11 @@ public:
   }
 
   /**
-   * Returns the json representation of the object
+   * the json representation of the object
    * @param tile the tile required to get admin information
-   * @return  json object
+   * @param writer The writer json object to represent the id
    */
-  json::MapPtr json(const graph_tile_ptr& tile) const;
+  void json(const graph_tile_ptr& tile, rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // Organized into 8-byte words so structure will align to 8 byte boundaries.

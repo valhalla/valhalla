@@ -1,12 +1,13 @@
-#include <cctype>
-#include <cstdint>
-#include <fstream>
+#include "mjolnir/osmdata.h"
+#include "midgard/logging.h"
+#include "scoped_timer.h"
 
 #include <boost/algorithm/string.hpp>
 
-#include "filesystem.h"
-#include "midgard/logging.h"
-#include "mjolnir/osmdata.h"
+#include <cctype>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
 
 using namespace valhalla::mjolnir;
 using valhalla::baldr::ConditionalSpeedLimit;
@@ -582,6 +583,7 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
     LOG_ERROR("Failed to open output file: " + countfile);
     return false;
   }
+  SCOPED_TIMER();
   file.write(reinterpret_cast<const char*>(&max_changeset_id_), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&osm_node_count), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&osm_way_count), sizeof(uint64_t));
@@ -617,8 +619,8 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
   LOG_INFO("Read OSMData from temp files");
 
   std::string tile_directory = tile_dir;
-  if (tile_directory.back() != filesystem::path::preferred_separator) {
-    tile_directory.push_back(filesystem::path::preferred_separator);
+  if (tile_directory.back() != std::filesystem::path::preferred_separator) {
+    tile_directory.push_back(std::filesystem::path::preferred_separator);
   }
 
   // Open the count file
@@ -628,6 +630,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
     LOG_ERROR("Failed to open input file: " + countfile);
     return false;
   }
+  SCOPED_TIMER();
   file.read(reinterpret_cast<char*>(&max_changeset_id_), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&osm_node_count), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&osm_way_count), sizeof(uint64_t));
@@ -661,6 +664,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
 
 // Read OSMData from temporary files
 bool OSMData::read_from_unique_names_file(const std::string& tile_dir) {
+  SCOPED_TIMER();
   LOG_INFO("Read OSMData unique_names from temp file");
 
   // Read the other data
@@ -705,9 +709,10 @@ void OSMData::add_to_name_map(const uint64_t member_id,
 }
 
 void OSMData::cleanup_temp_files(const std::string& tile_dir) {
+  SCOPED_TIMER();
   auto remove_temp_file = [](const std::string& fname) {
-    if (filesystem::exists(fname)) {
-      filesystem::remove(fname);
+    if (std::filesystem::exists(fname)) {
+      std::filesystem::remove(fname);
     }
   };
 

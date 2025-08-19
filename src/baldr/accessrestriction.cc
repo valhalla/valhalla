@@ -1,6 +1,7 @@
 #include "baldr/accessrestriction.h"
-#include "baldr/timedomain.h"
-#include <string.h>
+#include "baldr/rapidjson_utils.h"
+
+#include <cstring>
 
 namespace vb = valhalla::baldr;
 
@@ -26,9 +27,10 @@ namespace baldr {
 AccessRestriction::AccessRestriction(const uint32_t edgeindex,
                                      const AccessType type,
                                      const uint32_t modes,
-                                     const uint64_t value)
-    : edgeindex_(edgeindex), type_(static_cast<uint32_t>(type)), modes_(modes), spare_(0),
-      value_(value) {
+                                     const uint64_t value,
+                                     const bool except_destination)
+    : edgeindex_(edgeindex), type_(static_cast<uint32_t>(type)), modes_(modes),
+      except_destination_(except_destination), spare_(0), value_(value) {
 }
 
 // Get the internal edge Id.
@@ -51,6 +53,14 @@ uint32_t AccessRestriction::modes() const {
   return modes_;
 }
 
+bool AccessRestriction::except_destination() const {
+  return static_cast<bool>(except_destination_);
+}
+
+void AccessRestriction::set_except_destination(const bool except_destination) {
+  except_destination_ = static_cast<uint64_t>(except_destination);
+}
+
 // Get the value
 uint64_t AccessRestriction::value() const {
   return value_;
@@ -61,40 +71,45 @@ void AccessRestriction::set_value(const uint64_t v) {
   value_ = v;
 }
 
-const json::MapPtr AccessRestriction::json() const {
+void AccessRestriction::json(rapidjson::writer_wrapper_t& writer) const {
   auto maybe_found = type_to_string.find(type());
   std::string restriction_type = "unsupported";
   if (maybe_found != type_to_string.cend()) {
     restriction_type = maybe_found->second;
   }
-  auto map = json::map({{"type", restriction_type},
-                        {"edge_index", static_cast<uint64_t>(edgeindex())},
-                        {"bus", static_cast<bool>(modes_ & kBusAccess)},
-                        {"car", static_cast<bool>(modes_ & kAutoAccess)},
-                        {"emergency", static_cast<bool>(modes_ & kEmergencyAccess)},
-                        {"HOV", static_cast<bool>(modes_ & kHOVAccess)},
-                        {"pedestrian", static_cast<bool>(modes_ & kPedestrianAccess)},
-                        {"taxi", static_cast<bool>(modes_ & kTaxiAccess)},
-                        {"truck", static_cast<bool>(modes_ & kTruckAccess)},
-                        {"wheelchair", static_cast<bool>(modes_ & kWheelchairAccess)},
-                        {"moped", static_cast<bool>(modes_ & kMopedAccess)},
-                        {"motorcycle", static_cast<bool>(modes_ & kMotorcycleAccess)}});
+
+  writer.start_object();
+  writer("type", restriction_type);
+  writer("edge_index", static_cast<uint64_t>(edgeindex()));
+  writer("bus", static_cast<bool>(modes_ & kBusAccess));
+  writer("car", static_cast<bool>(modes_ & kAutoAccess));
+  writer("emergency", static_cast<bool>(modes_ & kEmergencyAccess));
+  writer("HOV", static_cast<bool>(modes_ & kHOVAccess));
+  writer("pedestrian", static_cast<bool>(modes_ & kPedestrianAccess));
+  writer("taxi", static_cast<bool>(modes_ & kTaxiAccess));
+  writer("truck", static_cast<bool>(modes_ & kTruckAccess));
+  writer("wheelchair", static_cast<bool>(modes_ & kWheelchairAccess));
+  writer("moped", static_cast<bool>(modes_ & kMopedAccess));
+  writer("motorcycle", static_cast<bool>(modes_ & kMotorcycleAccess));
 
   switch (type()) {
     case AccessType::kTimedAllowed:
     case AccessType::kTimedDenied:
     case AccessType::kDestinationAllowed:
       // TODO(nils): turn the time domain into a proper map
-      map->emplace("value", json::map({{std::string("time_domain"), value()}}));
+      writer.start_object("value");
+      writer("time_domain", value());
+      writer.end_object();
       break;
     case AccessType::kMaxAxles:
-      map->emplace("value", value());
+      writer("value", value());
       break;
     default:
-      map->emplace("value", json::fixed_t{static_cast<double>(value()) * 0.01, 2});
+      writer.set_precision(2);
+      writer("value", static_cast<double>(value()) * 0.01);
+      writer.set_precision(3);
   }
-
-  return map;
+  writer.end_object();
 }
 
 // operator < - for sorting. Sort by route Id.

@@ -1,11 +1,6 @@
 #include "loki/search.h"
 #include "loki/worker.h"
-
-#include "baldr/rapidjson_utils.h"
-#include "midgard/encoded.h"
-#include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "tyr/actor.h"
 
 #include <cmath>
 

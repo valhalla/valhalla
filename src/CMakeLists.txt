@@ -32,7 +32,7 @@ function(valhalla_module)
             ${MODULE_SOURCES}
             PROPERTIES
             COMPILE_FLAGS
-            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers")
+            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp")
   endif()
   list(APPEND MODULE_SOURCES ${MODULE_SOURCES_WITH_WARNINGS})
 
@@ -54,10 +54,13 @@ function(valhalla_module)
     PUBLIC
       $<$<BOOL:${WIN32}>:NOGDI;WIN32_LEAN_AND_MEAN>
       $<$<BOOL:${MSVC}>:NOMINMAX>
+      $<$<BOOL:${VALHALLA_VERSION_MODIFIER}>:VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}>
       HAS_REMOTE_API=0
       AUTO_DOWNLOAD=0
     PRIVATE
-      $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>)
+      $<$<BOOL:${LOGGING_LEVEL}>:LOGGING_LEVEL_${LOGGING_LEVEL}>
+      VALHALLA_SOURCE_DIR=${VALHALLA_SOURCE_DIR}
+      VALHALLA_BUILD_DIR=${VALHALLA_BUILD_DIR})
   target_include_directories(${library} ${MODULE_INCLUDE_DIRECTORIES}
      PRIVATE
        ${VALHALLA_BINARY_DIR}
@@ -136,7 +139,7 @@ set(valhalla_hdrs
     ${VALHALLA_SOURCE_DIR}/valhalla/valhalla.h
     ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/filesystem_utils.h
     ${VALHALLA_SOURCE_DIR}/valhalla/proto_conversions.h
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     )
@@ -144,7 +147,6 @@ set(valhalla_hdrs
 set(valhalla_src
     config.cc
     worker.cc
-    filesystem.cc
     proto_conversions.cc
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
@@ -170,8 +172,10 @@ target_compile_definitions(valhalla
     $<$<BOOL:${MSVC}>:NOMINMAX>
     HAS_REMOTE_API=0
     AUTO_DOWNLOAD=0
+    $<$<BOOL:${VALHALLA_VERSION_MODIFIER}>:VALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER}>
   PRIVATE
-    ${libvalhalla_compile_definitions})
+    ${libvalhalla_compile_definitions}
+  )
 
 target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 
@@ -186,12 +190,15 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
+  PRIVATE
+    ${libvalhalla_include_directories}
+)
+target_include_directories(valhalla SYSTEM PUBLIC
     ${rapidjson_include_dir}
     ${date_include_dir}
     ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
     $<$<BOOL:${WIN32}>:${dirent_include_dir}>
-  PRIVATE
-    ${libvalhalla_include_directories})
+)
 
 target_link_libraries(valhalla
   PUBLIC
@@ -208,7 +215,7 @@ set_target_properties(valhalla PROPERTIES
 # pkg-config installation
 if(PKG_CONFIG_FOUND)
   include(ValhallaPkgConfig)
-  
+
   configure_valhalla_pc()
 
   install(FILES

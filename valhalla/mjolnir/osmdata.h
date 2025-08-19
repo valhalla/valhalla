@@ -1,10 +1,6 @@
 #ifndef VALHALLA_MJOLNIR_OSMDATA_H
 #define VALHALLA_MJOLNIR_OSMDATA_H
 
-#include <cstdint>
-#include <string>
-#include <unordered_set>
-
 #include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/mjolnir/osmaccessrestriction.h>
 #include <valhalla/mjolnir/osmlinguistic.h>
@@ -13,6 +9,10 @@
 #include <valhalla/mjolnir/osmrestriction.h>
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/uniquenames.h>
+
+#include <cstdint>
+#include <string>
+#include <unordered_set>
 
 namespace valhalla {
 namespace mjolnir {
@@ -25,6 +25,13 @@ struct OSMWayNode {
   OSMNode node;
   uint32_t way_index = 0;
   uint32_t way_shape_node_index = 0;
+};
+
+// Structure to store OSM node information for BSS
+struct OSMBSSNode {
+  OSMNode node;
+  // Index with serialized `BikeShareStationInfo` within the node_names list
+  uint32_t bss_info_index;
 };
 
 // OSM bicycle data (stored within OSMData)

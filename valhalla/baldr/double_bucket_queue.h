@@ -1,10 +1,11 @@
 #pragma once
 
+#include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/util.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/util.h>
 #include <vector>
 
 namespace valhalla {
@@ -106,7 +107,7 @@ public:
     overflowbucket_.clear();
     while (currentbucket_ != buckets_.end()) {
       currentbucket_->clear();
-      currentbucket_++;
+      ++currentbucket_;
     }
 
     // Reset current bucket and cost

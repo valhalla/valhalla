@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MIDGARD_VECTOR2_H_
 #define VALHALLA_MIDGARD_VECTOR2_H_
 
-#include <cmath>
-#include <cstdarg>
-
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/point2.h>
+
+#include <cmath>
+#include <cstdarg>
 
 namespace valhalla {
 namespace midgard {
@@ -19,7 +19,7 @@ public:
   /**
    * Default constructor
    */
-  VectorXY<PrecisionT>() : x_(0.0), y_(0.0) {
+  VectorXY() : x_(0.0), y_(0.0) {
   }
 
   /**
@@ -27,7 +27,7 @@ public:
    * origin to the point.
    * @param   p  Point.
    */
-  VectorXY<PrecisionT>(const PointXY<PrecisionT>& p) : x_(p.x()), y_(p.y()) {
+  VectorXY(const PointXY<PrecisionT>& p) : x_(p.x()), y_(p.y()) {
   }
 
   /**
@@ -35,7 +35,7 @@ public:
    * @param   x   x component of the vector.
    * @param   y   y component of the vector.
    */
-  VectorXY<PrecisionT>(const PrecisionT x, const PrecisionT y) : x_(x), y_(y) {
+  VectorXY(const PrecisionT x, const PrecisionT y) : x_(x), y_(y) {
   }
 
   /**
@@ -43,7 +43,7 @@ public:
    * @param   from  Point at origin of the vector.
    * @param   to    Point at end of vector
    */
-  VectorXY<PrecisionT>(const PointXY<PrecisionT>& from, const PointXY<PrecisionT>& to)
+  VectorXY(const PointXY<PrecisionT>& from, const PointXY<PrecisionT>& to)
       : x_(to.x() - from.x()), y_(to.y() - from.y()) {
   }
 
@@ -51,7 +51,7 @@ public:
    * Copy constructor.
    * @param   w  Vector to copy to the new vector.
    */
-  VectorXY<PrecisionT>(const VectorXY<PrecisionT>& w) : x_(w.x()), y_(w.y()) {
+  VectorXY(const VectorXY<PrecisionT>& w) : x_(w.x()), y_(w.y()) {
   }
 
   /**

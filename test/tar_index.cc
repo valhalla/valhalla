@@ -1,6 +1,5 @@
-#include "test.h"
-
 #include "baldr/graphreader.h"
+#include "test.h"
 
 namespace vb = valhalla::baldr;
 

@@ -2,9 +2,9 @@
 
 Valhalla's locate service, is an open-source service that provides detailed information about streets and intersections close to an input point with some added matching criteria. This allows for tight integration in routing and navigation applications on web or mobile.
 
-[View an interactive demo](http://valhalla.github.io/demos/locate)
+[View an interactive demo](https://valhalla.github.io/demos/locate)
 
-The default logic for the OpenStreetMap tags, keys, and values used when routing are documented on an [OSM wiki page](http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Valhalla).
+The default logic for the OpenStreetMap tags, keys, and values used when routing are documented on an [OSM wiki page](https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Valhalla).
 
 ## Inputs of a locate request
 
@@ -31,7 +31,7 @@ Because the locate service is designed to work in tandem with the route service 
 
 If a request has been named using the optional `id` key, then this `id` key and value will be echoed in the JSON response object.
 
-The locate results are returned as a JSON array, with one JSON object per input location in the order specified. In `verbose` mode details about the streets and intersections including mode of travel access, names, way ids, shape, side of street as well as the closest point to the input along these features will be returned. If `verbose` was not enabled only the closest point, way id and side of street will be returned. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
+The locate results are returned as a JSON array, with one JSON object per input location in the order specified. In `verbose` mode details about the streets and intersections including mode of travel access, names, way ids, shape, side of street as well as the closest point to the input along these features will be returned. If `verbose` was not enabled only the closest point, way id and side of street will be returned. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. |
 
 Here are some sample results with `verbose` set to `false`:
 
@@ -335,7 +335,7 @@ Here are some sample results with `verbose` set to `true`:
 
 ### Attribute Descriptions for Responses
 #### Edge
-##### Verbose 
+##### Verbose
 
 | Key | Description |
 | :------------------ | :----------- |
@@ -344,6 +344,7 @@ Here are some sample results with `verbose` set to `true`:
 | `edge_info.conditional_speed_limits` | The key describes the time window during which the speed limit applies, the value is the limit |
 | `edge_info.speed_limit` | The edge's speed limit |
 | `edge_info.levels` | An array containing the edge's levels as derived from the `level=*` tag. Values are either numeric, or another array containing two elements, which denote the start and end of a range (inclusive) |
+| `shoulder` | A boolean value indicating whether the edge has shoulder (`true` or `false`). If `true` then the data has been tagged to indicate a shoulder is present. `false`, however, could mean either that the data is tagged as having no shoulder present OR the data is untagged and we assume no shoulder (which may be an incorrect assumption) |
 
 ### HTTP status codes and error messages
 

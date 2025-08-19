@@ -1,18 +1,19 @@
-#include "gurka.h"
-#include <boost/format.hpp>
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <boost/geometry/multi/geometries/register/multi_polygon.hpp>
-#include <gtest/gtest.h>
-#include <valhalla/proto/options.pb.h>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "gurka.h"
 #include "loki/polygon_search.h"
 #include "midgard/pointll.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/costfactory.h"
 #include "worker.h"
+
+#include <valhalla/proto/options.pb.h>
+
+#include <boost/format.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/register/multi_polygon.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
+#include <gtest/gtest.h>
 
 using namespace valhalla;
 namespace bg = boost::geometry;

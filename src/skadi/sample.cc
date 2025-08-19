@@ -1,23 +1,23 @@
 #include "skadi/sample.h"
+#include "baldr/compression_utils.h"
+#include "filesystem_utils.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "valhalla/baldr/curl_tilegetter.h"
+
+#include <lz4frame.h>
+#include <sys/stat.h>
 
 #include <cmath>
 #include <cstddef>
+#include <filesystem>
 #include <future>
 #include <list>
 #include <optional>
 #include <regex>
 #include <unordered_map>
 #include <unordered_set>
-
-#include <lz4frame.h>
-#include <sys/stat.h>
-
-#include "baldr/compression_utils.h"
-#include "filesystem.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/sequence.h"
-#include "valhalla/baldr/curl_tilegetter.h"
 
 namespace {
 // srtmgl1 holds 1x1 degree tiles but oversamples the edge of the tile
@@ -203,7 +203,7 @@ public:
   ~tile_data();
   tile_data& operator=(const tile_data& other);
 
-  tile_data& operator=(tile_data&& other) {
+  tile_data& operator=(tile_data&& other) noexcept {
     std::swap(c, other.c);
     std::swap(data, other.data);
     std::swap(index, other.index);
@@ -486,8 +486,9 @@ template <class coords_t> std::vector<double> sample::get_all(const coords_t& co
 
 bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
   // data_source never changes so we do not lock it. it is set only in sample constructor
-  auto fpath = cache_->data_source + elev;
-  if (filesystem::exists(fpath))
+
+  std::filesystem::path fpath{cache_->data_source + elev};
+  if (std::filesystem::exists(fpath))
     return true;
 
   auto data = cache_item_t::parse_hgt_name(elev);
@@ -499,11 +500,11 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
     return false;
 
   // thread-safe by implementation
-  if (!filesystem::save(fpath, raw_data))
+  if (!filesystem_utils::save(fpath, raw_data))
     return false;
 
   std::lock_guard<std::mutex> _(cache_lck);
-  return cache_->insert(data->first, fpath, data->second);
+  return cache_->insert(data->first, fpath.string(), data->second);
 }
 
 bool sample::fetch(uint16_t index) {
@@ -605,25 +606,30 @@ void sample::cache_initialisation(const std::string& data_source) {
 
   // messy but needed
   while (cache_->data_source.size() &&
-         cache_->data_source.back() == filesystem::path::preferred_separator) {
+         cache_->data_source.back() == std::filesystem::path::preferred_separator) {
     cache_->data_source.pop_back();
-  }
-
-  // If data_source is empty, do not allocate/resize mapped cache.
-  if (cache_->data_source.empty()) {
-    LOG_DEBUG("No elevation data_source was provided");
-    return;
   }
   cache_->cache.resize(TILE_COUNT);
 
+  const auto data_path = std::filesystem::path{cache_->data_source};
+
+  // If data_source is empty, do not allocate/resize mapped cache.
+  if (cache_->data_source.empty() || !std::filesystem::is_directory(data_path)) {
+    LOG_DEBUG("No elevation data_source was provided");
+    return;
+  }
+
   // check the directory for files that look like what we need
-  auto files = filesystem::get_files(cache_->data_source);
-  for (const auto& f : files) {
+  for (const auto& f : std::filesystem::recursive_directory_iterator(cache_->data_source)) {
+    if (!f.is_regular_file())
+      continue;
     // make sure its a valid index
-    auto data = cache_item_t::parse_hgt_name(f);
+    // TODO(nils): make this all based on filesystem::path instead of string
+    const auto fp_str = f.path().string();
+    auto data = cache_item_t::parse_hgt_name(fp_str);
     if (data && data->second != format_t::UNKNOWN) {
-      if (!cache_->insert(data->first, f, data->second)) {
-        LOG_WARN("Corrupt elevation data: " + f);
+      if (!cache_->insert(data->first, fp_str, data->second)) {
+        LOG_WARN("Corrupt elevation data: " + fp_str);
       }
     }
   }

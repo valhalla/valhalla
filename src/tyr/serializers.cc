@@ -1,26 +1,22 @@
-#include <boost/algorithm/string/replace.hpp>
-#include <cstdint>
-#include <stdexcept>
-#include <string>
-#include <vector>
-
+#include "tyr/serializers.h"
 #include "baldr/datetime.h"
 #include "baldr/json.h"
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
-#include "baldr/turn.h"
-#include "midgard/aabb2.h"
 #include "midgard/encoded.h"
-#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "odin/util.h"
-#include "proto_conversions.h"
-#include "tyr/serializers.h"
-
 #include "proto/incidents.pb.h"
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
+#include "proto_conversions.h"
+
+#include <boost/algorithm/string/replace.hpp>
+
+#include <cstdint>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -257,7 +253,7 @@ std::string serializePbf(Api& request) {
 }
 
 // Generate leg shape in geojson format.
-baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape) {
+baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape) {
   auto geojson = baldr::json::map({});
   auto coords = baldr::json::array({});
   coords->reserve(shape.size());
@@ -268,6 +264,20 @@ baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape) {
   geojson->emplace("type", std::string("LineString"));
   geojson->emplace("coordinates", coords);
   return geojson;
+}
+
+void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer) {
+  writer("type", "LineString");
+  writer.start_array("coordinates");
+  writer.set_precision(tyr::kCoordinatePrecision);
+  for (const auto& p : shape) {
+    writer.start_array();
+    writer(p.lng());
+    writer(p.lat());
+    writer.end_array();
+  }
+  writer.set_precision(kDefaultPrecision);
+  writer.end_array();
 }
 } // namespace tyr
 } // namespace valhalla
@@ -330,6 +340,55 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
 
   return waypoint;
 }
+void waypoint(const valhalla::Location& location,
+              rapidjson::writer_wrapper_t& writer,
+              bool is_tracepoint,
+              bool is_optimized) {
+  // Output location as a lon,lat array. Note this is the projected
+  // lon,lat on the nearest road.
+  writer.start_object();
+  writer.start_array("location");
+  writer.set_precision(kCoordinatePrecision);
+  writer(location.correlation().edges(0).ll().lng());
+  writer(location.correlation().edges(0).ll().lat());
+  writer.end_array();
+  writer.set_precision(kDefaultPrecision);
+
+  // Add street name.
+  std::string name =
+      location.correlation().edges_size() && location.correlation().edges(0).names_size()
+          ? location.correlation().edges(0).names(0)
+          : "";
+  writer("name", name);
+
+  // Add distance in meters from the input location to the nearest
+  // point on the road used in the route
+  // TODO: since distance was normalized in thor - need to recalculate here
+  //       in the future we shall have store separately from score
+  writer("distance", to_ll(location.ll()).Distance(to_ll(location.correlation().edges(0).ll())));
+
+  // If the location was used for a tracepoint we trigger extra serialization
+  if (is_tracepoint) {
+    writer("alternatives_count", location.correlation().edges_size() - 1);
+    if (location.correlation().waypoint_index() == numeric_limits<uint32_t>::max()) {
+      // when tracepoint is neither a break nor leg's starting/ending
+      // point (shape_index is uint32_t max), we assign null to its waypoint_index
+      writer("waypoint_index", nullptr);
+    } else {
+      writer("waypoint_index", location.correlation().waypoint_index());
+    }
+    writer("matchings_index", location.correlation().route_index());
+  }
+
+  // If the location was used for optimized route we add trips_index and waypoint
+  // index (index of the waypoint in the trip)
+  if (is_optimized) {
+    int trips_index = 0; // TODO
+    writer("trips_index", trips_index);
+    writer("waypoint_index", location.correlation().waypoint_index());
+  }
+  writer.end_object();
+}
 
 // Serialize locations (called waypoints in OSRM). Waypoints are described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
@@ -344,6 +403,18 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
     }
   }
   return waypoints;
+}
+
+void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+               rapidjson::writer_wrapper_t& writer,
+               bool is_tracepoint) {
+  for (const auto& location : locations) {
+    if (location.correlation().edges().size() == 0) {
+      writer(nullptr);
+    } else {
+      waypoint(location, writer, is_tracepoint, false);
+    }
+  }
 }
 
 json::ArrayPtr waypoints(const valhalla::Trip& trip) {
@@ -388,113 +459,95 @@ json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
   return via_waypoints;
 }
 
-void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
                                  const int begin_shape_index,
                                  const int end_shape_index,
                                  const std::string& road_class,
                                  const std::string& key_prefix) {
-  writer.Key(key_prefix + "id");
-  writer.String(std::to_string(incident_metadata.id()));
-  {
-    // Type is mandatory
-    writer.Key(key_prefix + "type");
-    writer.String(std::string(valhalla::incidentTypeToString(incident_metadata.type())));
-  }
+  writer(key_prefix + "id", std::to_string(incident_metadata.id()));
+  // Type is mandatory
+  writer(key_prefix + "type", valhalla::incidentTypeToString(incident_metadata.type()));
   if (!incident_metadata.iso_3166_1_alpha2().empty()) {
-    writer.Key(key_prefix + "iso_3166_1_alpha2");
-    writer.String(incident_metadata.iso_3166_1_alpha2());
+    writer(key_prefix + "iso_3166_1_alpha2", incident_metadata.iso_3166_1_alpha2());
   }
   if (!incident_metadata.iso_3166_1_alpha3().empty()) {
-    writer.Key(key_prefix + "iso_3166_1_alpha3");
-    writer.String(incident_metadata.iso_3166_1_alpha3());
+    writer(key_prefix + "iso_3166_1_alpha3", incident_metadata.iso_3166_1_alpha3());
   }
   if (!incident_metadata.description().empty()) {
-    writer.Key(key_prefix + "description");
-    writer.String(incident_metadata.description());
+    writer(key_prefix + "description", incident_metadata.description());
   }
   if (!incident_metadata.long_description().empty()) {
-    writer.Key(key_prefix + "long_description");
-    writer.String(incident_metadata.long_description());
+    writer(key_prefix + "long_description", incident_metadata.long_description());
   }
   if (incident_metadata.creation_time()) {
-    writer.Key(key_prefix + "creation_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
+    writer(key_prefix + "creation_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.creation_time()));
   }
   if (incident_metadata.start_time() > 0) {
-    writer.Key(key_prefix + "start_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
+    writer(key_prefix + "start_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.start_time()));
   }
   if (incident_metadata.end_time()) {
-    writer.Key(key_prefix + "end_time");
-    writer.String(baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
+    writer(key_prefix + "end_time",
+           baldr::DateTime::seconds_to_date_utc(incident_metadata.end_time()));
   }
   if (incident_metadata.impact()) {
-    writer.Key(key_prefix + "impact");
-    writer.String(std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
+    writer(key_prefix + "impact",
+           std::string(valhalla::incidentImpactToString(incident_metadata.impact())));
   }
   if (!incident_metadata.sub_type().empty()) {
-    writer.Key(key_prefix + "sub_type");
-    writer.String(incident_metadata.sub_type());
+    writer(key_prefix + "sub_type", incident_metadata.sub_type());
   }
   if (!incident_metadata.sub_type_description().empty()) {
-    writer.Key(key_prefix + "sub_type_description");
-    writer.String(incident_metadata.sub_type_description());
+    writer(key_prefix + "sub_type_description", incident_metadata.sub_type_description());
   }
   if (incident_metadata.alertc_codes_size() > 0) {
-    writer.Key(key_prefix + "alertc_codes");
-    writer.StartArray();
+    writer(key_prefix + "alertc_codes");
+    writer.start_array();
     for (const auto& alertc_code : incident_metadata.alertc_codes()) {
-      writer.Uint64(static_cast<uint64_t>(alertc_code));
+      writer(static_cast<uint64_t>(alertc_code));
     }
-    writer.EndArray();
+    writer.end_array();
   }
   {
-    writer.Key(key_prefix + "lanes_blocked");
-    writer.StartArray();
+    writer(key_prefix + "lanes_blocked");
+    writer.start_array();
     for (const auto& blocked_lane : incident_metadata.lanes_blocked()) {
-      writer.String(blocked_lane);
+      writer(blocked_lane);
     }
-    writer.EndArray();
+    writer.end_array();
   }
   if (incident_metadata.num_lanes_blocked()) {
-    writer.Key(key_prefix + "num_lanes_blocked");
-    writer.Int(incident_metadata.num_lanes_blocked());
+    writer(key_prefix + "num_lanes_blocked", incident_metadata.num_lanes_blocked());
   }
   if (!incident_metadata.clear_lanes().empty()) {
-    writer.Key(key_prefix + "clear_lanes");
-    writer.String(incident_metadata.clear_lanes());
+    writer(key_prefix + "clear_lanes", incident_metadata.clear_lanes());
   }
 
   if (incident_metadata.length() > 0) {
-    writer.Key(key_prefix + "length");
-    writer.Int(incident_metadata.length());
+    writer(key_prefix + "length", incident_metadata.length());
   }
 
   if (incident_metadata.road_closed()) {
-    writer.Key(key_prefix + "closed");
-    writer.Bool(incident_metadata.road_closed());
+    writer(key_prefix + "closed", incident_metadata.road_closed());
   }
   if (!road_class.empty()) {
-    writer.Key(key_prefix + "class");
-    writer.String(road_class);
+    writer(key_prefix + "class", road_class);
   }
 
   if (incident_metadata.has_congestion()) {
-    writer.Key(key_prefix + "congestion");
-    writer.StartObject();
-    writer.Key("value");
-    writer.Int(incident_metadata.congestion().value());
-    writer.EndObject();
+    writer(key_prefix + "congestion");
+    writer.start_object();
+    writer("value", incident_metadata.congestion().value());
+    writer.end_object();
   }
 
   if (begin_shape_index >= 0) {
-    writer.Key(key_prefix + "geometry_index_start");
-    writer.Int(begin_shape_index);
+    writer(key_prefix + "geometry_index_start", begin_shape_index);
   }
   if (end_shape_index >= 0) {
-    writer.Key(key_prefix + "geometry_index_end");
-    writer.Int(end_shape_index);
+    writer(key_prefix + "geometry_index_end", end_shape_index);
   }
   // TODO Add test of lanes blocked and add missing properties
 }

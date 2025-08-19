@@ -1,6 +1,6 @@
 #include "sif/pedestriancost.h"
-#include "baldr/accessrestriction.h"
 #include "baldr/graphconstants.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
 #include "proto/options.pb.h"
@@ -10,6 +10,7 @@
 #ifdef INLINE_TEST
 #include "test.h"
 #include "worker.h"
+
 #include <random>
 #endif
 
@@ -867,6 +868,9 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
 
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_DEFAULT(co, kDefaultPedestrianType, json, "/type", transport_type);
+  std::transform(co->mutable_transport_type()->begin(), co->mutable_transport_type()->end(),
+                 co->mutable_transport_type()->begin(),
+                 [](const unsigned char ch) { return std::tolower(ch); });
 
   // Set type specific defaults, override with json
   if (co->transport_type() == "wheelchair") {

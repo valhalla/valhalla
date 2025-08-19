@@ -1,19 +1,18 @@
-#include <cassert>
-#include <cstdint>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string>
-#include <vector>
+#include "argparse_utils.h"
+#include "baldr/connectivity_map.h"
+#include "baldr/tilehierarchy.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
-#include "baldr/connectivity_map.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/tilehierarchy.h"
-#include "filesystem.h"
-
-#include "argparse_utils.h"
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <string>
+#include <vector>
 
 using namespace valhalla::baldr;
 
@@ -43,7 +42,7 @@ struct RGB {
 
 // Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 
@@ -51,7 +50,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "valhalla_build_connectivity is a program that creates a PPM image file representing\n"
       "the connectivity between tiles.\n\n");
 
@@ -63,7 +62,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;

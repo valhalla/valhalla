@@ -1,4 +1,5 @@
 #include "baldr/turn.h"
+
 #include <stdexcept>
 #include <string>
 #include <unordered_map>

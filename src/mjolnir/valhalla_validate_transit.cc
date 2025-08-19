@@ -1,25 +1,18 @@
-#include <string>
-#include <vector>
+#include "argparse_utils.h"
+#include "baldr/graphid.h"
+#include "mjolnir/validatetransit.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
-#include "baldr/graphid.h"
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
-#include "midgard/aabb2.h"
-#include "midgard/logging.h"
-#include "midgard/point2.h"
-#include "midgard/polyline2.h"
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/validatetransit.h"
-
-#include "argparse_utils.h"
+#include <filesystem>
+#include <string>
+#include <vector>
 
 using namespace valhalla::mjolnir;
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 
@@ -27,7 +20,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
         program,
-        program + " " + VALHALLA_VERSION + "\n\n"
+        program + " " + VALHALLA_PRINT_VERSION + "\n\n"
         "a program that validates the transit graph and \n"
         "schedule at a particular time.  It will not use the route tiles at all. It \n"
         "will only use the transit tiles.\n\n");
@@ -41,7 +34,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
   } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;

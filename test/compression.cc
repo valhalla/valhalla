@@ -1,8 +1,7 @@
 #include "baldr/compression_utils.h"
+#include "test.h"
 
 #include <string>
-
-#include "test.h"
 
 namespace {
 

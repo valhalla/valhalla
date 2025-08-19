@@ -1,18 +1,17 @@
 #include "mjolnir/graphtilebuilder.h"
-
-#include "baldr/datetime.h"
+#include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"
+#include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
-#include <algorithm>
+
 #include <boost/format.hpp>
+
+#include <algorithm>
+#include <filesystem>
 #include <list>
 #include <set>
 #include <stdexcept>
-
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
 
 using namespace valhalla::baldr;
 
@@ -245,12 +244,12 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 // Output the tile to file. Stores as binary data.
 void GraphTileBuilder::StoreTileData() {
   // Get the name of the file
-  filesystem::path filename(tile_dir_ + filesystem::path::preferred_separator +
-                            GraphTile::FileSuffix(header_builder_.graphid()));
+  std::filesystem::path filename{tile_dir_};
+  filename.append(GraphTile::FileSuffix(header_builder_.graphid()));
 
   // Make sure the directory exists on the system
-  if (!filesystem::exists(filename.parent_path())) {
-    filesystem::create_directories(filename.parent_path());
+  if (!std::filesystem::exists(filename.parent_path())) {
+    std::filesystem::create_directories(filename.parent_path());
   }
 
   // Open file and truncate
@@ -427,12 +426,12 @@ void GraphTileBuilder::StoreTileData() {
 void GraphTileBuilder::Update(const std::vector<NodeInfo>& nodes,
                               const std::vector<DirectedEdge>& directededges) {
   // Get the name of the file
-  filesystem::path filename =
-      tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(header_->graphid());
+  std::filesystem::path filename{tile_dir_};
+  filename.append(GraphTile::FileSuffix(header_->graphid()));
 
   // Make sure the directory exists on the system
-  if (!filesystem::exists(filename.parent_path())) {
-    filesystem::create_directories(filename.parent_path());
+  if (!std::filesystem::exists(filename.parent_path())) {
+    std::filesystem::create_directories(filename.parent_path());
   }
 
   // Open file. Truncate so we replace the contents.
@@ -1166,10 +1165,10 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
-  filesystem::path filename =
-      tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(header.graphid());
-  if (!filesystem::exists(filename.parent_path())) {
-    filesystem::create_directories(filename.parent_path());
+  std::filesystem::path filename{tile_dir};
+  filename.append(GraphTile::FileSuffix(header.graphid()));
+  if (!std::filesystem::exists(filename.parent_path())) {
+    std::filesystem::create_directories(filename.parent_path());
   }
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
   // open it
@@ -1225,12 +1224,12 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   // with free flow or constrained flow speeds - so don't return if no speed profiles
 
   // Get the name of the file
-  filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
-                              GraphTile::FileSuffix(header_builder_.graphid());
+  std::filesystem::path filename{tile_dir_};
+  filename.append(GraphTile::FileSuffix(header_builder_.graphid()));
 
   // Make sure the directory exists on the system
-  if (!filesystem::exists(filename.parent_path()))
-    filesystem::create_directories(filename.parent_path());
+  if (!std::filesystem::exists(filename.parent_path()))
+    std::filesystem::create_directories(filename.parent_path());
 
   // Open file and truncate
   std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);

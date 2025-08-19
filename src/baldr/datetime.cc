@@ -1,30 +1,31 @@
-#include <algorithm>
-#include <sstream>
+#include "baldr/datetime.h"
+#include "baldr/graphconstants.h"
+#include "baldr/timedomain.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
 
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/timedomain.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
+#include <algorithm>
+#include <sstream>
+#include <unordered_set>
 
-namespace { // NOTE, the below timezone maps are indexed for compatibility reasons. We put the value
-            // (index)
+namespace {
 const valhalla::baldr::DateTime::dt_info_t INVALID_DT = {"", "", ""};
-// into the tiles, so it needs to be stable. We have 2 timezone maps here:
-//  - tz_name_to_id:
-//    - before 2023c: currently and past official timezone names
-//    - after 2023c: we point to the old timezone using a bit shift which is resolved in NodeInfo
-//      to keep forward-compatibility
-//  - tz_new_to_old_id:
-//    - before 2023c: deprecated timezone names to their current names
-//    - after 2023c: new name of renamed/merged timezone(s) to their previous/deprecated name to keep
-//      forward-compatibility
-// When updating the timezone release and new timezones were added, add them to the end and keep
-// incrementing the index. NEVER remove any entry in either map.
+// NOTE, the below timezone map is indexed for compatibility reasons. We put the index value
+// into the tiles, so it needs to be stable. When updating the timezone submodule to a newer
+// release, there are a couple of scenarios:
+// - new time zone: always cut out of an existing timezone, pretty much always due to DST changes.
+//   Add a new entry to the below map, bit shifting the old index by 9 or 10
+// - renamed time zone: for a pure renaming (e.g. Kiev -> Kiyv), add a new entry to the below map
+//   with the same old index
+// - deleted time zone: happens when e.g. when DST is harmonized with the enclosing time zone.
+//   Nothing else to do.
+//
+// To keep old code/new tile compatibility, the "old" index must be shifted by 9 or 10 bits when
+// adding new time zones. To keep new code/old tile compatibility, no entries may be removed.
+// "New" time zones are referring to the reference release 2018d. If "new" entries are broken up
+// even further, we'll have to use a 10 bit shift.
 const std::unordered_map<std::string, size_t> tz_name_to_id = {
     {"Africa/Abidjan", 1}, // start timezones release 2018d;
     {"Africa/Accra", 2},
@@ -413,261 +414,29 @@ const std::unordered_map<std::string, size_t> tz_name_to_id = {
     {"Pacific/Wake", 385},
     {"Pacific/Wallis", 386},
     {"WET", 387},                              // end timezones release 2018d;
-    {"America/Ciudad_Juarez", 117 | (1 << 9)}, // start timezones release 2023c; was America/Ojinaga
-    {"Asia/Qostanay", 214 | (1 << 9)},         // end timezones release 2023c; was Asia/Qyzylorda
-};
-
-// this holds:
-//   - before 2023c: deprecated timezone names to their current names
-//   - after  2023c: new name of renamed/merged timezone(s) to their previous/deprecated name to keep
-//      forward-compatibility
-const std::unordered_map<std::string, size_t> tz_new_to_old_id = {
-    {"Africa/Addis_Ababa", 15}, // start deprecated timezones 2018d
-    {"Africa/Asmara", 15},
-    {"Africa/Asmera", 15},
-    {"Africa/Bamako", 1},
-    {"Africa/Bangui", 12},
-    {"Africa/Banjul", 1},
-    {"Africa/Blantyre", 13},
-    {"Africa/Brazzaville", 12},
-    {"Africa/Bujumbura", 13},
-    {"Africa/Conakry", 1},
-    {"Africa/Dakar", 1},
-    {"Africa/Dar_es_Salaam", 15},
-    {"Africa/Djibouti", 15},
-    {"Africa/Douala", 12},
-    {"Africa/Freetown", 1},
-    {"Africa/Gaborone", 13},
-    {"Africa/Harare", 13},
-    {"Africa/Kampala", 15},
-    {"Africa/Kigali", 13},
-    {"Africa/Kinshasa", 12},
-    {"Africa/Libreville", 12},
-    {"Africa/Lome", 1},
-    {"Africa/Luanda", 12},
-    {"Africa/Lubumbashi", 13},
-    {"Africa/Lusaka", 13},
-    {"Africa/Malabo", 12},
-    {"Africa/Maseru", 9},
-    {"Africa/Mbabane", 9},
-    {"Africa/Mogadishu", 15},
-    {"Africa/Niamey", 12},
-    {"Africa/Nouakchott", 1},
-    {"Africa/Ouagadougou", 1},
-    {"Africa/Porto-Novo", 12},
-    {"Africa/Timbuktu", 1},
-    {"America/Anguilla", 123},
-    {"America/Antigua", 123},
-    {"America/Argentina/ComodRivadavia", 25},
-    {"America/Aruba", 57},
-    {"America/Atka", 21},
-    {"America/Buenos_Aires", 24},
-    {"America/Catamarca", 25},
-    {"America/Cayman", 118},
-    {"America/Coral_Harbour", 37},
-    {"America/Cordoba", 26},
-    {"America/Dominica", 123},
-    {"America/Ensenada", 144},
-    {"America/Fort_Wayne", 78},
-    {"America/Grenada", 123},
-    {"America/Guadeloupe", 123},
-    {"America/Indianapolis", 78},
-    {"America/Jujuy", 27},
-    {"America/Knox_IN", 79},
-    {"America/Kralendijk", 57},
-    {"America/Louisville", 90},
-    {"America/Lower_Princes", 57},
-    {"America/Marigot", 123},
-    {"America/Mendoza", 29},
-    {"America/Montreal", 145},
-    {"America/Montserrat", 123},
-    {"America/Porto_Acre", 132},
-    {"America/Rosario", 26},
-    {"America/Santa_Isabel", 144},
-    {"America/Shiprock", 61},
-    {"America/St_Barthelemy", 123},
-    {"America/St_Kitts", 123},
-    {"America/St_Lucia", 123},
-    {"America/St_Thomas", 123},
-    {"America/St_Vincent", 123},
-    {"America/Tortola", 123},
-    {"America/Virgin", 123},
-    {"Antarctica/McMurdo", 352},
-    {"Antarctica/South_Pole", 352},
-    {"Arctic/Longyearbyen", 318},
-    {"Asia/Aden", 215},
-    {"Asia/Ashkhabad", 166},
-    {"Asia/Bahrain", 213},
-    {"Asia/Calcutta", 198},
-    {"Asia/Chongqing", 219},
-    {"Asia/Chungking", 219},
-    {"Asia/Dacca", 179},
-    {"Asia/Harbin", 219},
-    {"Asia/Istanbul", 306},
-    {"Asia/Kashgar", 230},
-    {"Asia/Katmandu", 196},
-    {"Asia/Kuwait", 215},
-    {"Asia/Macao", 202},
-    {"Asia/Muscat", 181},
-    {"Asia/Phnom_Penh", 170},
-    {"Asia/Rangoon", 234},
-    {"Asia/Saigon", 186},
-    {"Asia/Tel_Aviv", 192},
-    {"Asia/Thimbu", 226},
-    {"Asia/Ujung_Pandang", 204},
-    {"Asia/Ulan_Bator", 229},
-    {"Asia/Vientiane", 170},
-    {"Atlantic/Faeroe", 241},
-    {"Atlantic/Jan_Mayen", 318},
-    {"Atlantic/St_Helena", 1},
-    {"Australia/ACT", 257},
-    {"Australia/Canberra", 257},
-    {"Australia/LHI", 254},
-    {"Australia/NSW", 257},
-    {"Australia/North", 250},
-    {"Australia/Queensland", 247},
-    {"Australia/South", 246},
-    {"Australia/Tasmania", 252},
-    {"Australia/Victoria", 255},
-    {"Australia/West", 256},
-    {"Australia/Yancowinna", 248},
-    {"Brazil/Acre", 132},
-    {"Brazil/DeNoronha", 113},
-    {"Brazil/East", 136},
-    {"Brazil/West", 97},
-    {"Canada/Atlantic", 75},
-    {"Canada/Central", 148},
-    {"Canada/Eastern", 145},
-    {"Canada/Mountain", 63},
-    {"Canada/Newfoundland", 139},
-    {"Canada/Pacific", 146},
-    {"Canada/Saskatchewan", 130},
-    {"Canada/Yukon", 147},
-    {"Chile/Continental", 134},
-    {"Chile/EasterIsland", 356},
-    {"Cuba", 76},
-    {"Egypt", 5},
-    {"Eire", 303},
-    {"Etc/GMT+0", 263},
-    {"Etc/GMT-0", 263},
-    {"Etc/GMT0", 263},
-    {"Etc/Greenwich", 263},
-    {"Etc/Universal", 291},
-    {"Etc/Zulu", 291},
-    {"Europe/Belfast", 311},
-    {"Europe/Bratislava", 320},
-    {"Europe/Busingen", 337},
-    {"Europe/Guernsey", 311},
-    {"Europe/Isle_of_Man", 311},
-    {"Europe/Jersey", 311},
-    {"Europe/Ljubljana", 296},
-    {"Europe/Mariehamn", 305},
-    {"Europe/Nicosia", 206},
-    {"Europe/Podgorica", 296},
-    {"Europe/San_Marino", 322},
-    {"Europe/Sarajevo", 296},
-    {"Europe/Skopje", 296},
-    {"Europe/Tiraspol", 301},
-    {"Europe/Vaduz", 337},
-    {"Europe/Vatican", 322},
-    {"Europe/Zagreb", 296},
-    {"GB", 311},
-    {"GB-Eire", 311},
-    {"GMT", 263},
-    {"GMT+0", 263},
-    {"GMT-0", 263},
-    {"GMT0", 263},
-    {"Greenwich", 263},
-    {"Hongkong", 187},
-    {"Iceland", 243},
-    {"Indian/Antananarivo", 15},
-    {"Indian/Comoro", 15},
-    {"Indian/Mayotte", 15},
-    {"Iran", 225},
-    {"Israel", 192},
-    {"Jamaica", 88},
-    {"Japan", 227},
-    {"Kwajalein", 369},
-    {"Libya", 18},
-    {"Mexico/BajaNorte", 144},
-    {"Mexico/BajaSur", 100},
-    {"Mexico/General", 104},
-    {"NZ", 352},
-    {"NZ-CHAT", 354},
-    {"Navajo", 61},
-    {"PRC", 219},
-    {"Pacific/Johnston", 366},
-    {"Pacific/Midway", 376},
-    {"Pacific/Ponape", 379},
-    {"Pacific/Saipan", 365},
-    {"Pacific/Samoa", 376},
-    {"Pacific/Truk", 355},
-    {"Pacific/Yap", 355},
-    {"Poland", 335},
-    {"Portugal", 310},
-    {"ROC", 222},
-    {"ROK", 218},
-    {"Singapore", 220},
-    {"Turkey", 306},
-    {"UCT", 290},
-    {"US/Alaska", 22},
-    {"US/Aleutian", 21},
-    {"US/Arizona", 121},
-    {"US/Central", 52},
-    {"US/East-Indiana", 78},
-    {"US/Eastern", 110},
-    {"US/Hawaii", 366},
-    {"US/Indiana-Starke", 79},
-    {"US/Michigan", 62},
-    {"US/Mountain", 61},
-    {"US/Pacific", 94},
-    {"US/Pacific-New", 94},
-    {"US/Samoa", 376},
-    {"UTC", 291},
-    {"Universal", 291},
-    {"W-SU", 317},
-    {"Zulu", 291},        // end deprecated timezones 2018d
-    {"America/Nuuk", 69}, // start renamed timezones 2023c
-    {"Europe/Kyiv", 308},
-    {"Pacific/Kanton", 358}, // end renamed timezones 2023c
+    {"America/Ciudad_Juarez", 117 | (1 << 9)}, // new time zone due to DST
+    {"Asia/Qostanay", 214 | (1 << 9)},         // new time zone due to DST
+    {"America/Nuuk", 69},                      // renamed from America/Godthab
+    {"Europe/Kyiv", 308},                      // renamed from Europe/Kiev
+    {"Pacific/Kanton", 358},                   // renamed from Pacific/Enderbury
+    {"America/Coyhaique", 134 | (1 << 9)}      // new time zone due to DST
 };
 
 // checks the integrity of the static tz maps, which will fail in case of
 // tzdb updates. this function pretty-prints missing tzs for convenience
 const std::string check_tz_map(const date::tzdb& db) {
-  std::vector<std::string> new_zones_msg, new_links_msg;
+  std::vector<std::string> new_zones_msg;
   std::unordered_set<std::string> new_zones_names;
-
-  // first find the link's targets, then the new timezones, to not get dups
-  for (const auto& link : db.links) {
-    // if we already know both link & target tz, we can skip; most likely
-    // means that existing timezones were merged which is fine for us
-    if (tz_name_to_id.find(link.target()) != tz_name_to_id.end() ||
-        tz_new_to_old_id.find(link.target()) != tz_new_to_old_id.end() ||
-        !new_zones_names.insert(link.target()).second) {
-      continue;
-    }
-
-    // correlate the new timezone with the old tz ID for compat
-    auto old_tz = tz_name_to_id.find(link.name());
-    new_links_msg.emplace_back("{\"" + link.target() + "\", " + std::to_string(old_tz->second) +
-                               "},");
-  }
 
   for (const auto& tz : db.zones) {
     // only add entirely new zones if we didn't see them as link target yet
     if (tz_name_to_id.find(tz.name()) == tz_name_to_id.end() &&
-        tz_new_to_old_id.find(tz.name()) == tz_new_to_old_id.end() &&
-        std::find(new_zones_names.begin(), new_zones_names.end(), tz.name()) ==
-            new_zones_names.end()) {
+        new_zones_names.find(tz.name()) == new_zones_names.end()) {
       new_zones_msg.emplace_back(tz.name());
     }
   }
 
   std::string result;
-  if (new_links_msg.size()) {
-    result += "\nNew links: \n" + boost::algorithm::join(new_links_msg, "\n");
-  }
   if (new_zones_msg.size()) {
     result +=
         "\nNew timezones to be manually resolved: \n" + boost::algorithm::join(new_zones_msg, "\n");
@@ -719,7 +488,8 @@ tz_db_t::tz_db_t() {
 
   zones.reserve(tz_name_to_id.size());
   for (const auto& tz_pair : tz_name_to_id) {
-    // we find either the official timezone or we get the target timezone of a link
+    // we find either the official timezone or we get the target timezone of a link (i.e. deprecated
+    // time zone)
     auto* tz = db.locate_zone(tz_pair.first);
     zones[tz_pair.second] = &*tz;
   }
@@ -727,10 +497,10 @@ tz_db_t::tz_db_t() {
 
 size_t tz_db_t::to_index(const std::string& zone) const {
   auto it = tz_name_to_id.find(zone);
-  if (it != tz_name_to_id.cend() || (it = tz_new_to_old_id.find(zone)) != tz_new_to_old_id.end()) {
+  if (it != tz_name_to_id.cend()) {
     return it->second;
   }
-  return 0;
+  throw std::runtime_error(zone + " can't be resolved to a non-deprecated time zone.");
 }
 
 const date::time_zone* tz_db_t::from_index(size_t index) const {

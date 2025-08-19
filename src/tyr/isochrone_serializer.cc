@@ -1,12 +1,11 @@
-
 #include "baldr/json.h"
-#include "midgard/point2.h"
 #include "midgard/pointll.h"
-#include "thor/worker.h"
 #include "tyr/serializers.h"
+#include "worker.h"
 
 #include <cmath>
 #include <sstream>
+#include <thread>
 #include <utility>
 
 #ifdef ENABLE_GDAL

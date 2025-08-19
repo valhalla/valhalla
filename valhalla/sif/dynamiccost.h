@@ -1,7 +1,6 @@
 #ifndef VALHALLA_SIF_DYNAMICCOST_H_
 #define VALHALLA_SIF_DYNAMICCOST_H_
 
-#include <cstdint>
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
@@ -11,7 +10,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/nodeinfo.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
@@ -22,8 +21,8 @@
 #include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/edgestatus.h>
 
+#include <cstdint>
 #include <memory>
-#include <rapidjson/document.h>
 #include <unordered_map>
 
 // macros aren't great but writing these out for every option is an abomination worse than this macro
@@ -159,6 +158,32 @@ constexpr uint16_t kDisallowEndRestriction = 0x2;
 constexpr uint16_t kDisallowSimpleRestriction = 0x4;
 constexpr uint16_t kDisallowClosure = 0x8;
 constexpr uint16_t kDisallowShortcut = 0x10;
+
+constexpr std::array<float, 253> populate_speedfactor() {
+  std::array<float, 253> speedfactor{};
+  speedfactor[0] = midgard::kSecPerHour; // TODO - what to make speed=0?
+  for (uint32_t s = 1; s <= baldr::kMaxSpeedKph; s++) {
+    speedfactor[s] = (midgard::kSecPerHour * 0.001f) / static_cast<float>(s);
+  }
+
+  return speedfactor;
+}
+constexpr std::array<float, 253> kSpeedFactor = populate_speedfactor();
+
+constexpr std::array<float, 16> populate_densityfactor() {
+  std::array<float, 16> densityfactor{};
+  // Set density factors - used to penalize edges in dense, urban areas
+  for (uint32_t d = 0; d < 16; d++) {
+    densityfactor[d] = 0.85f + (d * 0.025f);
+  }
+
+  return densityfactor;
+}
+constexpr std::array<float, 16> kDensityFactor = populate_densityfactor(); // Density factor
+
+constexpr std::array<float, 16> kTransDensityFactor = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f,
+                                                       1.2f, 1.3f, 1.4f, 1.6f, 1.9f, 2.2f,
+                                                       2.5f, 2.8f, 3.1f, 3.5f};
 
 /**
  * Base class for dynamic edge costing. This class defines the interface for

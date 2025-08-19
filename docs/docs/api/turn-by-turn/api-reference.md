@@ -2,9 +2,9 @@
 
 Valhalla's routing service (a.k.a. turn-by-turn), is an open-source routing service that lets you integrate routing and navigation into a web or mobile application.
 
-[View an interactive demo](http://valhalla.github.io/demos/routing)
+[View an interactive demo](https://valhalla.github.io/demos/routing)
 
-The default logic for the OpenStreetMap tags, keys, and values used when routing are documented on an [OSM wiki page](http://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Valhalla).
+The default logic for the OpenStreetMap tags, keys, and values used when routing are documented on an [OSM wiki page](https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Valhalla).
 
 ## Inputs of a route
 
@@ -34,7 +34,7 @@ To build a route, you need to specify two `break` locations. In addition, you ca
 | `heading` | (optional) Preferred direction of travel for the start from the location. This can be useful for mobile routing where a vehicle is traveling in a specific direction along a road, and the route should start in that direction. The `heading` is indicated in degrees from north in a clockwise direction, where north is 0°, east is 90°, south is 180°, and west is 270°. |
 | `heading_tolerance` | (optional) How close in degrees a given street's angle must be in order for it to be considered as in the same direction of the `heading` parameter. The default value is 60 degrees. |
 | `street` | (optional) Street name. The street name may be used to assist finding the correct routing location at the specified latitude, longitude. This is not currently implemented. |
-| `way_id` | (optional) OpenStreetMap identification number for a polyline [way](http://wiki.openstreetmap.org/wiki/Way). The way ID may be used to assist finding the correct routing location at the specified latitude, longitude. This is not currently implemented. |
+| `way_id` | (optional) OpenStreetMap identification number for a polyline [way](https://wiki.openstreetmap.org/wiki/Way). The way ID may be used to assist finding the correct routing location at the specified latitude, longitude. This is not currently implemented. |
 | `minimum_reachability` | Minimum number of nodes (intersections) reachable for a given edge (road between intersections) to consider that edge as belonging to a connected region. When correlating this location to the route network, try to find candidates who are reachable from this many or more nodes (intersections). If a given candidate edge reaches less than this number of nodes its considered to be a disconnected island and we'll search for more candidates until we find at least one that isn't considered a disconnected island. If this value is larger than the configured service limit it will be clamped to that limit. The default is a minimum of 50 reachable nodes. |
 | `radius` | The number of meters about this input location within which edges (roads between intersections) will be considered as candidates for said location. When correlating this location to the route network, try to only return results within this distance (meters) from this location. If there are no candidates within this distance it will return the closest candidate within reason. If this value is larger than the configured service limit it will be clamped to that limit. The default is 0 meters. |
 | `rank_candidates` | Whether or not to rank the edge candidates for this location. The ranking is used as a penalty within the routing algorithm so that some edges will be penalized more heavily than others. If `true` candidates will be ranked according to their distance from the input and various other attributes. If `false` the candidates will all be treated as equal which should lead to routes that are just the most optimal path with emphasis about which edges were selected. |
@@ -71,7 +71,7 @@ Valhalla's routing service uses dynamic, run-time costing to generate the route 
 | Costing model | Description |
 | :----------------- | :----------- |
 | `auto` | Standard costing for driving routes by car, motorcycle, truck, and so on that obeys automobile driving rules, such as access and turn restrictions. `Auto` provides a short time path (though not guaranteed to be shortest time) and uses intersection costing to minimize turns and maneuvers or road name changes. Routes also tend to favor highways and higher classification roads, such as motorways and trunks. |
-| `bicycle` | Standard costing for travel by bicycle, with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes follow regular roads when needed, but avoid roads without bicycle access. |
+| `bicycle` | Standard costing for travel by bicycle, with a slight preference for using [cycleways](https://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes follow regular roads when needed, but avoid roads without bicycle access. |
 | `bus` | Standard costing for bus routes. Bus costing inherits the auto costing behaviors, but checks for bus access on the roads. |
 |**BETA** `bikeshare` | A combination of pedestrian and bicycle. Use bike share station(`amenity:bicycle_rental`) to change the travel mode |
 | `truck` | Standard costing for trucks. Truck costing inherits the auto costing behaviors, but checks for truck access, width and height restrictions, and weight limits on the roads. |
@@ -110,15 +110,15 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | Automobile options | Description |
 | :-------------------------- | :----------- |
 | `maneuver_penalty` | A penalty applied when transitioning between roads that do not have consistent naming–in other words, no road names in common. This penalty can be used to create simpler routes that tend to have fewer maneuvers or narrative guidance instructions. The default maneuver penalty is five seconds. |
-| `gate_cost` | A cost applied when a [gate](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with undefined or private access is encountered. This cost is added to the estimated time / elapsed time. The default gate cost is 30 seconds. |
+| `gate_cost` | A cost applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with undefined or private access is encountered. This cost is added to the estimated time / elapsed time. The default gate cost is 30 seconds. |
 | `gate_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with no access information is on the road. The default gate penalty is 300 seconds. |
 | `private_access_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) or [bollard](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dbollard) with `access=private` is encountered. The default private access penalty is 450 seconds. |
 | `destination_only_penalty` | A penalty applied when entering an road which is only allowed to enter if necessary to reach the [destination](https://wiki.openstreetmap.org/wiki/Tag:vehicle%3Ddestination). |
-| `toll_booth_cost` | A cost applied when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This cost is added to the estimated and elapsed times. The default cost is 15 seconds. |
-| `toll_booth_penalty` | A penalty applied to the cost when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This penalty can be used to create paths that avoid toll roads. The default toll booth penalty is 0. |
+| `toll_booth_cost` | A cost applied when a [toll booth](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This cost is added to the estimated and elapsed times. The default cost is 15 seconds. |
+| `toll_booth_penalty` | A penalty applied to the cost when a [toll booth](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This penalty can be used to create paths that avoid toll roads. The default toll booth penalty is 0. |
 | `ferry_cost` | A cost applied when entering a ferry. This cost is added to the estimated and elapsed times. The default cost is 300 seconds (5 minutes). |
 | `use_ferry` | This value indicates the willingness to take ferries. This is a range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. The default value is 0.5. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. |
-| `use_highways` | This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will favor highways. The default value is 1.0. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely. |
+| `use_highways` | This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will favor highways. The default value is 0.5. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely. |
 | `use_tolls` | This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values near 0 attempt to avoid tolls and values near 1 will not attempt to avoid them. The default value is 0.5. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely. |
 | `use_living_streets` | This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0 for trucks, 0.1 for cars, buses, motor scooters and motorcycles. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely. |
 | `use_tracks` | This value indicates the willingness to take track roads. This is a range of values between 0 and 1. Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit. The default value is 0 for autos, 0.5 for motor scooters and motorcycles. Note that sometimes tracks are required to complete a route so values of 0 are not guaranteed to avoid tracks entirely. |
@@ -165,11 +165,11 @@ The following options are available for `truck` costing.
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
 | `hgv_no_access_penalty` | A penalty applied to roads with no HGV/truck access. If set to a value less than 43200 seconds, HGV will be allowed on these roads and the penalty applies. Default 43200, i.e. trucks are not allowed. |
 | `low_class_penalty` | A penalty (in seconds) which is applied when going to residential or service roads. Default is 30 seconds. |
-| `use_truck_route` | This value is a range of values from 0 to 1, where 0 indicates a light preference for streets marked as truck routes, and 1 indicates that streets not marked as truck routes should be avoided. This information is derived from the `hgv=designated` tag. Note that even with values near 1, there is no guarantee the returned route will include streets marked as truck routes. The default value is 0. | 
+| `use_truck_route` | This value is a range of values from 0 to 1, where 0 indicates a light preference for streets marked as truck routes, and 1 indicates that streets not marked as truck routes should be avoided. This information is derived from the `hgv=designated` tag. Note that even with values near 1, there is no guarantee the returned route will include streets marked as truck routes. The default value is 0. |
 
 
 ##### Bicycle costing options
-The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.
+The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](https://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.
 
 * The types of roads suitable for bicycling depend on the type of bicycle. Road bicycles (skinny or narrow tires) generally are suited to paved roads or perhaps very short sections of compacted gravel. They are not designed for riding on coarse gravel or most paths and tracks through wooded areas or farmland. Mountain bikes, on the other hand, are able to traverse a wider set of surfaces.
 * Average travel speed can be highly variable and can depend on bicycle type, fitness and experience of the cyclist, road surface, and hills. The costing model assumes a default speed on smooth, flat roads for each supported bicycle type. This speed can be overridden by an input option. The base speed is modulated by surface type (in conjunction with the bicycle type). In addition, speed is modified based on the hilliness of a road section.
@@ -182,8 +182,8 @@ These additional options are available for bicycle costing methods.
 
 | Bicycle options | Description |
 | :-------------------------- | :----------- |
-| `bicycle_type` | The type of bicycle. The default type is `Hybrid`. <ul><li>`Road`: a road-style bicycle with narrow tires that is generally lightweight and designed for speed on paved surfaces. </li><li>`Hybrid` or `City`: a bicycle made mostly for city riding or casual riding on roads and paths with good surfaces.</li><li>`Cross`: a cyclo-cross bicycle, which is similar to a road bicycle but with wider tires suitable to rougher surfaces.</li><li>`Mountain`: a mountain bicycle suitable for most surfaces but generally heavier and slower on paved surfaces.</li><ul> |
-| `cycling_speed` | Cycling speed is the average travel speed along smooth, flat roads. This is meant to be the speed a rider can comfortably maintain over the desired distance of the route. It can be modified (in the costing method) by surface type in conjunction with bicycle type and (coming soon) by hilliness of the road section. When no speed is specifically provided, the default speed is determined by the bicycle type and are as follows: Road = 25 KPH (15.5 MPH), Cross = 20 KPH (13 MPH), Hybrid/City = 18 KPH (11.5 MPH), and Mountain = 16 KPH (10 MPH). |
+| `bicycle_type` | The type of bicycle. The default type is `hybrid`. <ul><li>`road`: a road-style bicycle with narrow tires that is generally lightweight and designed for speed on paved surfaces. </li><li>`hybrid` or `city`: a bicycle made mostly for city riding or casual riding on roads and paths with good surfaces.</li><li>`cross`: a cyclo-cross bicycle, which is similar to a road bicycle but with wider tires suitable to rougher surfaces.</li><li>`mountain`: a mountain bicycle suitable for most surfaces but generally heavier and slower on paved surfaces.</li><ul> |
+| `cycling_speed` | Cycling speed is the average travel speed along smooth, flat roads. This is meant to be the speed a rider can comfortably maintain over the desired distance of the route. It can be modified (in the costing method) by surface type in conjunction with bicycle type and (coming soon) by hilliness of the road section. When no speed is specifically provided, the default speed is determined by the bicycle type and are as follows:<ul><li>`road` = 25 KPH (15.5 MPH),</li><li>`cross` = 20 KPH (13 MPH),<li></li>`hybrid`/`city` = 18 KPH (11.5 MPH),<li></li>and `mountain` = 16 KPH (10 MPH).</li></ul> |
 | `use_roads` | A cyclist's propensity to use roads alongside other vehicles. This is a range of values from 0 to 1, where 0 attempts to avoid roads and stay on cycleways and paths, and 1 indicates the rider is more comfortable riding on roads. Based on the `use_roads` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path. The default value is 0.5. |
 | `use_hills` | A cyclist's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
 | `use_ferry` | This value indicates the willingness to take ferries. This is a range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. The default value is 0.5. |
@@ -214,7 +214,7 @@ The following options are available for motorcycle costing:
 
 | Motorcycle options | Description |
 | :-------------------------- | :----------- |
-| `use_highways` | A riders's propensity to prefer the use of highways. This is a range of values from 0 to 1, where 0 attempts to avoid highways, and values toward 1 indicates the rider prefers highways. The default value is 1.0. |
+| `use_highways` | A riders's propensity to prefer the use of highways. This is a range of values from 0 to 1, where 0 attempts to avoid highways, and values toward 1 indicates the rider prefers highways. The default value is 0.5. |
 | `use_trails` | A riders's desire for adventure in their routes.  This is a range of values from 0 to 1, where 0 will avoid trails, tracks, unclassified or bad surfaces and values towards 1 will tend to avoid major roads and route on secondary roads.  The default value is 0.0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
@@ -228,9 +228,9 @@ These options are available for pedestrian costing methods.
 | `walking_speed` | Walking speed in kilometers per hour. Must be between 0.5 and 25 km/hr. Defaults to 5.1 km/hr (3.1 miles/hour). |
 | `walkway_factor` | A factor that modifies the cost when encountering roads classified as `footway` (no motorized vehicles allowed), which may be designated footpaths or designated sidewalks along residential roads. Pedestrian routes generally attempt to favor using these [walkways and sidewalks](https://wiki.openstreetmap.org/wiki/Sidewalks). The default walkway_factor is 1.0. |
 | `sidewalk_factor` | A factor that modifies the cost when encountering roads with dedicated sidewalks. Pedestrian routes generally attempt to favor using [sidewalks](https://wiki.openstreetmap.org/wiki/Key:sidewalk). The default sidewalk_factor is 1.0. |
-| `alley_factor` | A factor that modifies (multiplies) the cost when [alleys](http://wiki.openstreetmap.org/wiki/Tag:service%3Dalley) are encountered. Pedestrian routes generally want to avoid alleys or narrow service roads between buildings. The default alley_factor is 2.0. |
-| `driveway_factor` | A factor that modifies (multiplies) the cost when encountering a [driveway](http://wiki.openstreetmap.org/wiki/Tag:service%3Ddriveway), which is often a private, service road. Pedestrian routes generally want to avoid driveways (private). The default driveway factor is 5.0. |
-| `step_penalty` | A penalty in seconds added to each transition onto a path with [steps or stairs](http://wiki.openstreetmap.org/wiki/Tag:highway%3Dsteps). Higher values apply larger cost penalties to avoid paths that contain flights of steps. |
+| `alley_factor` | A factor that modifies (multiplies) the cost when [alleys](https://wiki.openstreetmap.org/wiki/Tag:service%3Dalley) are encountered. Pedestrian routes generally want to avoid alleys or narrow service roads between buildings. The default alley_factor is 2.0. |
+| `driveway_factor` | A factor that modifies (multiplies) the cost when encountering a [driveway](https://wiki.openstreetmap.org/wiki/Tag:service%3Ddriveway), which is often a private, service road. Pedestrian routes generally want to avoid driveways (private). The default driveway factor is 5.0. |
+| `step_penalty` | A penalty in seconds added to each transition onto a path with [steps or stairs](https://wiki.openstreetmap.org/wiki/Tag:highway%3Dsteps). Higher values apply larger cost penalties to avoid paths that contain flights of steps. |
 | `elevator_penalty` | A penalty in seconds added to each transition via an elevator node or onto an elevator edge. Higher values apply larger cost penalties to avoid elevators. |
 | `use_ferry` | This value indicates the willingness to take ferries. This is range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. The default value is 0.5. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. |
 | `use_living_streets` | This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0.6. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely. |
@@ -367,6 +367,7 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 | `prioritize_bidirectional` | Prioritize `bidirectional a*` when `date_time.type = depart_at/current`. By default `time_dependent_forward a*` is used in these cases, but `bidirectional a*` is much faster. Currently it does not update the time (and speeds) when searching for the route path, but the ETA on that route is recalculated based on the time-dependent speeds |
 | `roundabout_exits` | A boolean indicating whether exit instructions at roundabouts should be added to the output or not. Default is true. |
 | `admin_crossings` | When present and `true`, the successful route summary will include the two keys `admins` and `admin_crossings`. `admins` is an array of administrative regions the route lies within. `admin_crossings` is an array of objects that contain `from_admin_index` and `to_admin_index`, which are indices into the `admins` array. They also contain `from_shape_index` and `to_shape_index`, which are start and end indices of the edge along which an administrative boundary is crossed. |
+| `turn_lanes` | When present and `true`, each maneuver in the route response can include a `lanes` array describing lane-level guidance. The lanes array details possible `directions`, as well as which lanes are `valid` or `active` for following the maneuver.
 
 [openlr]: https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 
@@ -408,7 +409,7 @@ A `trip` contains one or more `legs`. For *n* number of `break` locations, there
 
 Each leg of the trip includes a summary, which is comprised of the same information as a trip summary but applied to the single leg of the trip. It also includes a `shape`, which is an [encoded polyline](https://developers.google.com/maps/documentation/utilities/polylinealgorithm) of the route path (with 6 digits decimal precision), and a list of `maneuvers` as a JSON array. For more about decoding route shapes, see these [code examples](../../decoding.md).
 
-If `elevation_interval` is specified, each leg of the trip will return `elevation` along the route as a JSON array. The `elevation_interval` is also returned. Units for both `elevation` and `elevation_interval` are either meters or feet based on the input units specified. 
+If `elevation_interval` is specified, each leg of the trip will return `elevation` along the route as a JSON array. The `elevation_interval` is also returned. Units for both `elevation` and `elevation_interval` are either meters or feet based on the input units specified.
 
 Each maneuver includes:
 
@@ -443,6 +444,7 @@ Each maneuver includes:
 | `bss_maneuver_type` | Used when `travel_mode` is `bikeshare`. Describes bike share maneuver. The default value is "NoneAction <ul><li>"NoneAction"</li><li>"RentBikeAtBikeShare"</li><li>"ReturnBikeAtBikeShare"</li></ul> |
 | `bearing_before` | The clockwise angle from true north to the direction of travel immediately before the maneuver. |
 | `bearing_after` | The clockwise angle from true north to the direction of travel immediately after the maneuver. |
+| `lanes` | An array describing lane-level guidance. Used when `turn_lanes` is enabled. See below for details. |
 
 For the maneuver `type`, the following are available:
 
@@ -520,7 +522,7 @@ A maneuver `transit_info` includes:
 | `description` | The description of the transit route. For example "Trains operate from Ditmars Boulevard, Queens, to Stillwell Avenue, Brooklyn, at all times. N trains in Manhattan operate along Broadway and across the Manhattan Bridge to and from Brooklyn. Trains in Brooklyn operate along 4th Avenue, then through Borough Park to Gravesend. Trains typically operate local in Queens, and either express or local in Manhattan and Brooklyn, depending on the time. Late night trains operate via Whitehall Street, Manhattan. Late night service is local". |
 | `operator_onestop_id` | Global operator/agency identifier. |
 | `operator_name` | Operator/agency name. For example, "BART", "King County Marine Division", and so on.  Short name is used over long name. |
-| `operator_url` | Operator/agency URL. For example, "http://web.mta.info/". |
+| `operator_url` | Operator/agency URL. For example, "https://web.mta.info/". |
 | `transit_stops` | A list of the stops/stations associated with a specific transit route. See below for details. |
 
 A `transit_stop` includes:
@@ -537,6 +539,48 @@ A `transit_stop` includes:
 | `lon` | Longitude of the transit stop in degrees. |
 
 Continuing with the earlier routing example from the Detroit, Michigan area, a maneuver such as this one may be returned with that request: `{"begin_shape_index":0,"length":0.109,"end_shape_index":1,"instruction":"Go south on Appleton.","street_names":["Appleton"],"type":1,"time":0}`
+
+A `lanes` includes:
+
+When `turn_lanes` is enabled, each maneuver may include a `lanes` array describing lane-level guidance. Each lane object can include the following fields:
+
+| Field | Description |
+| --- | --- |
+| `directions` | A bitmask indicating all possible turn directions for that lane. |
+| `valid` (Optional) | A bitmask indicating valid turn directions for following the route initially. A lane is marked valid if it can be used at the start of the maneuver but might require further lane changes. |
+| `active` (Optional) | A bitmask indicating active turn directions for continuing along the route without needing additional lane changes. A lane is marked active if it is the best lane for following the maneuver as intended.|
+
+The directions, valid, and active fields use the following bitmask values:
+
+| Decimal Value | Name | Description |
+| --- | --- | --- |
+| 0 | Empty | No turn lane or undefined |
+| 1 | None | No specific direction |
+| 2 | Through | Goes straight |
+| 4 | SharpLeft | Turns sharply to the left |
+| 8 | Left | Turns left |
+| 16 | SlightLeft | Turns slightly to the left |
+| 32 | SlightRight | Turns slightly to the right |
+| 64 | Right | Turns right |
+| 128 | SharpRight | Turns sharply to the right |
+| 256 | Reverse | U-turn |
+| 512 | MergeToLeft | Lane merges to the left |
+| 1024 | MergeToRight | Lane merges to the right |
+
+Example of a lanes array with two lanes: the first lane can only turn left and is marked as the preferred (active) lane for left turns. The second lane allows going left or straight, but it is marked as valid only for left turns in this maneuver context:
+
+```
+"lanes": [
+  {
+    "directions": 8,   // bitmask for Left (8)
+    "active": 8        // indicates this lane should be preferred for a left turn
+  },
+  {
+    "directions": 10,  // bitmask for Left (8) + Straight (2)
+    "valid": 8         // indicates this lane can be used for a left turn
+  }
+]
+```
 
 In the future, look for additional maneuver information to enhance navigation applications, including landmark usage.
 
