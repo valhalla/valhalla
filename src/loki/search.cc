@@ -3,7 +3,6 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/reach.h"
 #include "midgard/distanceapproximator.h"
-#include "midgard/linesegment2.h"
 #include "midgard/util.h"
 
 #include <algorithm>

@@ -1,0 +1,274 @@
+name: Build Linux
+
+on:
+  push:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - "**vcpkg**"
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+      - "**vcpkg**"
+      - ".tx"
+      - ".git*"
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: "Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)"
+        required: false
+        default: false
+        
+# Cancel CI runs on a branch when new commits were pushed
+# See https://stackoverflow.com/a/72408109/2582935
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # only run tmate if manually invoked and debug_enabled == true or a previous step failed
+  SETUP_TMATE: ${{ ((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) && (github.repository_owner == 'valhalla') }}
+  # on PRs head_ref is defined, on pushes it's ref_name
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
+
+jobs:
+  lint_format:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Formatter & Linter
+        run: |
+          sudo apt-get update --assume-yes
+          env DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes --quiet sudo python3-pip python3-requests git curl file
+          ./scripts/format.sh && ./scripts/error_on_dirty.sh
+
+  release_build:
+    name: Release build
+    runs-on: ubuntu-22.04
+    needs: [lint_format]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+      
+      - name: Install deps
+        run: ./scripts/install-linux-deps.sh >& /dev/null
+      
+      - name: Get timestamp & ccache dir
+        run: |
+          echo "TIMESTAMP=$(date +"%s")" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$(ccache --get-config cache_dir)" >> $GITHUB_ENV
+
+      - name: Restore ccache
+        uses: tespkg/actions-cache/restore@v1
+        id: cache-ccache-restore
+        with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          path: /home/runner/.cache/ccache
+          key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
+          restore-keys: |
+            ccache-release-linux-x86_64-master
+            ccache-release-linux-x86_64
+      
+      - name: Build Valhalla
+        run: |
+          # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE \
+            -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON \
+            -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
+          make -C build -j$(nproc)
+          make -C build -j$(nproc) utrecht_tiles
+          make -C build -j$(nproc) tests gurka
+
+      - name: Save ccache
+        if: always()
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          path: /home/runner/.cache/ccache
+          key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
+
+      - name: Run tests
+        run: ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
+      
+      - name: Install Valhalla
+        run: |
+          sudo make -C build install
+          make -C build package
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
+        with:
+          detached: true
+
+  debug_build:
+    name: Debug build
+    runs-on: ubuntu-latest
+    needs: [lint_format]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+      
+      - name: Install deps
+        run: ./scripts/install-linux-deps.sh
+
+      - name: Get timestamp & ccache dir
+        run: |
+          echo "TIMESTAMP=$(date +"%s")" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$(ccache --get-config cache_dir)" >> $GITHUB_ENV
+
+      - name: Restore ccache
+        uses: tespkg/actions-cache/restore@v1
+        id: cache-ccache-restore
+        with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          path: /home/runner/.cache/ccache
+          key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
+          restore-keys: |
+            ccache-debug-linux-x86_64-master
+            ccache-debug-linux-x86_64
+      
+      - name: Build Valhalla
+        run: |
+          # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
+          cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
+            -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On \
+            -DBUILD_SHARED_LIBS=On
+          make -C build -j$(nproc)
+          make -C build -j$(nproc) utrecht_tiles
+          make -C build -j$(nproc) tests gurka
+
+      - name: Save ccache
+        if: always()
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          path: /home/runner/.cache/ccache
+          key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
+      
+      - name: Run clang-tidy
+        run: scripts/clang-tidy-only-diff.sh $(nproc)
+
+      - name: Run tests
+        run: make -C build -j$(nproc) check
+      
+      - name: Install & Package Valhalla
+        run: |
+          df -h
+          sudo make -C build install
+          make -C build package
+
+      - uses: codecov/codecov-action@v5
+        name: Upload codecov report
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
+        with:
+          detached: true
+
+  arm_build:
+    name: ARM build
+    runs-on: ubuntu-22.04-arm
+    needs: [lint_format]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+      
+      - name: Install deps
+        run: ./scripts/install-linux-deps.sh
+
+      - name: Get timestamp & ccache dir
+        run: |
+          echo "TIMESTAMP=$(date +"%s")" >> $GITHUB_ENV
+          echo "CCACHE_DIR=$(ccache --get-config cache_dir)" >> $GITHUB_ENV
+
+      - name: Restore ccache
+        uses: tespkg/actions-cache/restore@v1
+        id: cache-ccache-restore
+        with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          path: /home/runner/.cache/ccache
+          key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
+          restore-keys: |
+            ccache-release-linux-aarch64-master
+            ccache-release-linux-aarch64
+      
+      - name: Build Valhalla
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
+            -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
+          make -C build -j$(nproc)
+          # make -C build -j$(nproc) utrecht_tiles
+          make -C build -j$(nproc) gurka
+
+      - name: Save ccache
+        if: always()
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          path: /home/runner/.cache/ccache
+          key: ccache-release-linux-aarch64-${{ env.BRANCH_NAME }}
+      
+      - name: Run clang-tidy
+        run: scripts/clang-tidy-only-diff.sh $(nproc)
+
+      # TODO: utrecht_tiles fails compilation with "illegal instruction"
+      - name: Run gurka tests
+        run: make -C build -j$(nproc) run-gurka
+      
+      - name: Install Valhalla
+        run: sudo make -C build install
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ env.SETUP_TMATE == 'true' || failure() }}
+        with:
+          detached: true

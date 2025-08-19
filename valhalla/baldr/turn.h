@@ -1,8 +1,6 @@
 #ifndef VALHALLA_BALDR_TURN_H_
 #define VALHALLA_BALDR_TURN_H_
 
-#include <stdint.h>
-
 #include <cstdint>
 #include <string>
 

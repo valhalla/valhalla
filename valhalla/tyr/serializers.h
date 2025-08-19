@@ -2,10 +2,8 @@
 #define __VALHALLA_TYR_SERVICE_H__
 
 #include <valhalla/baldr/attributes_controller.h>
-#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
@@ -17,6 +15,11 @@
 #include <vector>
 
 namespace valhalla {
+namespace baldr {
+class GraphReader;
+struct PathLocation;
+} // namespace baldr
+
 namespace tyr {
 
 constexpr unsigned int kDefaultPrecision = 3;

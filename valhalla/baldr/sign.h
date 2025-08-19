@@ -1,10 +1,6 @@
 #ifndef VALHALLA_BALDR_SIGN_H_
 #define VALHALLA_BALDR_SIGN_H_
 
-#include <valhalla/midgard/util.h>
-
-#include <stdint.h>
-
 #include <cstdint>
 
 namespace valhalla {

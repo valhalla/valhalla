@@ -97,34 +97,41 @@ jobs:
           fi
           echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
 
-      - name: Restore cache
+      - name: Restore ccache
+        uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
-        uses: actions/cache/restore@v4
         with:
-          path: /project/.cache/ccache
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          # actions/cache compatible properties: https://github.com/actions/cache
+          path: /home/runner/.cache/ccache
           key: ccache-manylinux_2_28_x86_64
 
       - uses: pypa/cibuildwheel@v2.23.3
         env:
           # the host system's "/" is mounted to "/host" in the manylinux container
           CIBW_ENVIRONMENT: >
-            CCACHE_DIR=/host/project/.cache/ccache
+            CCACHE_DIR=/host/home/runner/.cache/ccache
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
             VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
+            VALHALLA_BUILD_BIN_DIR="build_manylinux"
+          # uncomment when testing
+          # CIBW_BUILD: cp313-*
+      
+      # TODO: probably need to delete the key first, since it's just a single key
 
-      - name: Delete cache to save the latest
-        run: |
-          KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
-          gh cache delete ${KEY} || true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Save cache
+      - name: Save ccache
         if: always()
-        uses: actions/cache/save@v4
+        uses: tespkg/actions-cache/save@v1
         with:
-          path: /project/.cache/ccache
-          key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          path: /home/runner/.cache/ccache
+          key: ccache-manylinux_2_28_x86_64
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
@@ -171,14 +178,19 @@ jobs:
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Restore ccache
+        uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
-        uses: actions/cache/restore@v4
         with:
-          path: ~/Library/Caches/ccache
-          key: ccache-osx-${{ env.VALHALLA_BRANCH }}-v2
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          # actions/cache compatible properties: https://github.com/actions/cache
+          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
           restore-keys: |
             ccache-osx-master
             ccache-osx-
+          path: ~/Library/Caches/ccache
 
       - name: Configure CMake
         run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ steps.vars.outputs.version_modifier || '' }}
@@ -197,10 +209,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Save ccache
-        uses: actions/cache/save@v4
+        uses: tespkg/actions-cache/save@v1
         with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
           path: ~/Library/Caches/ccache
-          key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
 
       - name: Run Tests
         run: make -C build -j$(sysctl -n hw.logicalcpu) check
@@ -222,8 +238,11 @@ jobs:
           CIBW_ENVIRONMENT: >
             VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
             VALHALLA_BUILD_BIN_DIR="build"
+            VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
           MACOSX_DEPLOYMENT_TARGET: 14
+          # uncomment when testing
+          # CIBW_BUILD: cp313-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -284,12 +303,15 @@ jobs:
           echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$TRIPLET_FILE"
           cmd.exe /c bootstrap-vcpkg.bat
 
-      # make sure we save vcpkg packages even if build fails
-      # note, we don't use vcpkg "command line" mode, but "cmake manifest" mode
       - name: Restore vcpkg packages
+        uses: tespkg/actions-cache/restore@v1
         id: vcpkg-restore
-        uses: actions/cache/restore@v3
         with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          # actions/cache compatible properties: https://github.com/actions/cache
           key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
           path: |
             vcpkg/*
@@ -331,9 +353,13 @@ jobs:
 
       - name: Save vcpkg packages (always, to avoid redundant rebuilds)
         if: always()
-        uses: actions/cache/save@v3
+        uses: tespkg/actions-cache/save@v1
         with:
-          key: ${{ steps.vcpkg-restore.outputs.cache-primary-key }}
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
           path: |
             vcpkg/*
             !vcpkg/downloads
@@ -379,6 +405,9 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
             VALHALLA_BUILD_BIN_DIR=build/Release
+            VALHALLA_VERSION_MODIFIER=${{ steps.vars.outputs.version_modifier || '' }}
+          # uncomment when testing
+          # CIBW_BUILD: cp313-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -395,7 +424,7 @@ jobs:
           detached: true
 
   verify_wheels_linux:
-    needs: [publish_pypi, build_python_wheels_linux]
+    needs: [build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -415,7 +444,7 @@ jobs:
           ./src/bindings/python/test/test_pyvalhalla_package.sh
 
   verify_wheels_osx:
-    needs: [publish_pypi, build_osx]
+    needs: [build_osx]
     runs-on: macos-14
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
@@ -438,8 +467,7 @@ jobs:
           python -m valhalla valhalla_build_tiles -h
   
   verify_wheels_win:
-    name: Verify wheels with executables in a fresh environment
-    needs: [publish_pypi, build_win]
+    needs: [build_win]
     runs-on: windows-2022
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
     steps:
@@ -459,11 +487,11 @@ jobs:
         run: |
           python -m pip install dist/*cp313-win_amd64.whl
           python -m valhalla valhalla_service -h
-          python -m valhalla valhalla_build_tiles -h 
+          python -m valhalla valhalla_build_tiles -h
 
   upload_all:
     name: Upload if release
-    needs: [publish_pypi, verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
+    needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
