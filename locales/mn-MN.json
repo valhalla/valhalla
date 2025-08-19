@@ -2309,6 +2309,16 @@
         ]
       }
     },
+    "level_change": {
+      "phrases": {
+        "0": "Continue to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Continue to Level 2."
+        ]
+      }
+    },
     "enter_building": {
       "phrases": {
         "0": "Барилга руу ор.",
