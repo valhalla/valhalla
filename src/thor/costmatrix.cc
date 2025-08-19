@@ -827,9 +827,21 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
         continue;
       }
 
-      // initial labels' transition cost is the full edge cost
-      Cost partial_cost = fwd_pred.cost() + rev_label.cost() -
-                          ((fwd_pred.transition_cost() + rev_label.transition_cost()) * 0.5);
+      // how much of the edge is traversed from source to target
+      float traversed_fraction = target_edge.percent_along() - source_edge.percent_along();
+      // remember that transition cost represents the distance penalty on initial labels
+      Cost partial_reverse_cost = rev_label.cost() - rev_label.transition_cost();
+      Cost partial_forward_cost = fwd_pred.cost() - fwd_pred.transition_cost();
+
+      // the forward and reverse label costs include 1) the partial cost to/from the end/start of
+      // the edge and 2) the distance penalty. We use the distance penalty stored in transition_cost
+      // to scale the costs to the traversed fraction and set the route cost to the average of both
+      // the fractional cost and the distance penalties
+      Cost partial_cost =
+          ((partial_reverse_cost * (1 / target_edge.percent_along()) * traversed_fraction) +
+           (partial_forward_cost * (1 / source_edge.percent_along()) * traversed_fraction) +
+           fwd_pred.transition_cost() + rev_label.transition_cost()) *
+          0.5;
 
       // Update best connection and set found = true.
       // distance computation only works with the casts.
@@ -957,10 +969,21 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
         if (source_edge.percent_along() > target_edge.percent_along()) {
           continue;
         }
+        // how much of the edge is traversed from source to target
+        float traversed_fraction = target_edge.percent_along() - source_edge.percent_along();
+        // remember that transition cost represents the distance penalty on initial labels
+        Cost partial_reverse_cost = rev_pred.cost() - rev_pred.transition_cost();
+        Cost partial_forward_cost = fwd_label.cost() - fwd_label.transition_cost();
 
-        // initial labels' transition cost is the full edge cost
-        Cost partial_cost = rev_pred.cost() + fwd_label.cost() -
-                            ((fwd_label.transition_cost() + rev_pred.transition_cost()) * 0.5);
+        // the forward and reverse label costs include 1) the partial cost to/from the end/start of
+        // the edge and 2) the distance penalty. We use the distance penalty stored in transition_cost
+        // to scale the costs to the traversed fraction and set the route cost to the average of both
+        // the fractional cost and the distance penalties
+        Cost partial_cost =
+            ((partial_reverse_cost * (1 / target_edge.percent_along()) * traversed_fraction) +
+             (partial_forward_cost * (1 / source_edge.percent_along()) * traversed_fraction) +
+             fwd_label.transition_cost() + rev_pred.transition_cost()) *
+            0.5;
 
         // Update best connection and set found = true.
         // distance computation only works with the casts.
@@ -1111,10 +1134,11 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       cost.cost += edge.distance();
 
       // 2 adjustments related only to properly handle trivial routes:
-      //   - "transition_cost" is used to store the total edge cost
+      //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_, edgecost, d,
-                             !directededge->not_thru(), !(costing_->IsClosed(directededge, tile)),
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_,
+                             Cost(edge.distance(), 0), d, !directededge->not_thru(),
+                             !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
@@ -1200,10 +1224,11 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       cost.cost += edge.distance();
 
       // 2 adjustments related only to properly handle trivial routes:
-      //   - "transition_cost" is used to store the total edge cost
+      //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the opp edge is even allowed (e.g. no oneway)
-      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, edgecost,
-                             d, !opp_dir_edge->not_thru(), !(costing_->IsClosed(directededge, tile)),
+      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
+                             Cost(edge.distance(), 0), d, !opp_dir_edge->not_thru(),
+                             !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
