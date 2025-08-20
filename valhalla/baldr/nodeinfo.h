@@ -2,11 +2,9 @@
 #define VALHALLA_BALDR_NODEINFO_H_
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {
