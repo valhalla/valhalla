@@ -27,12 +27,16 @@ struct curler_t {
    * @param  http_code          the code we got back when fetching
    * @param  gzipped            whether to request for gzip compressed data
    * @param  interrupt          throws if request should be interrupted
+   * @param  range_offset       the HTTP Range start offset
+   * @param  range_size       the HTTP Range size
    * @return the bytes we fetched
    */
   std::vector<char> operator()(const std::string& url,
                                long& http_code,
                                bool gzipped,
-                               const interrupt_t* interrupt) const;
+                               const interrupt_t* interrupt,
+                               const uint64_t range_offset,
+                               const uint64_t range_size) const;
 
   /**
    * Allow only moves and forbid copies. We don't want

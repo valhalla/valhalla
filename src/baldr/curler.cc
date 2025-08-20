@@ -83,7 +83,9 @@ struct curler_t::pimpl_t {
   std::vector<char> fetch(const std::string& url,
                           long& http_code,
                           bool gzipped,
-                          const curler_t::interrupt_t* interrupt) const {
+                          const curler_t::interrupt_t* interrupt,
+                          const uint64_t range_offset,
+                          const uint64_t range_size) const {
     if (interrupt) {
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_XFERINFOFUNCTION, progress_callback),
                   "Failed to set custom progress callback ");
@@ -91,6 +93,14 @@ struct curler_t::pimpl_t {
                   "Failed to set custom progress data");
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_NOPROGRESS, 0L),
                   "Failed to turn the progress callback on ");
+    }
+
+    // are we doing a range request to load tiles from a tar?
+    if (range_size) {
+      const std::string range =
+          std::to_string(range_offset) + "-" + std::to_string(range_offset + range_size - 1);
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_RANGE, "0-99"),
+                  "Failed to set HTTP Range");
     }
 
     // use gzip compression in any case
@@ -139,8 +149,10 @@ curler_t::curler_t(const std::string& user_agent) : pimpl(new pimpl_t(user_agent
 std::vector<char> curler_t::operator()(const std::string& url,
                                        long& http_code,
                                        bool gzipped,
-                                       const curler_t::interrupt_t* interrupt) const {
-  return pimpl->fetch(url, http_code, gzipped, interrupt);
+                                       const curler_t::interrupt_t* interrupt,
+                                       uint64_t range_offset,
+                                       uint64_t range_size) const {
+  return pimpl->fetch(url, http_code, gzipped, interrupt, range_offset, range_size);
 }
 
 // curler_pool_t

@@ -34,7 +34,7 @@ public:
   /**
    * Makes a synchronous request to the corresponding url and returns response_t object.
    * */
-  virtual response_t get(const std::string& url) = 0;
+  virtual response_t get(const std::string& url, const size_t offset = 0, const size_t size = 0) = 0;
 
   /**
    * Whether tiles are with .gz extension.

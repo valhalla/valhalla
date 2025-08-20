@@ -25,10 +25,12 @@ public:
 
   using response_t = tile_getter_t::response_t;
 
-  response_t get(const std::string& url) override {
+  response_t get(const std::string& url,
+                 const uint64_t range_offset = 0,
+                 const uint64_t range_size = 0) override {
     scoped_curler_t curler(curlers_);
     long http_code = 0;
-    auto tile_data = curler.get()(url, http_code, gzipped_, interrupt_);
+    auto tile_data = curler.get()(url, http_code, gzipped_, interrupt_, range_offset, range_size);
     response_t result;
     // TODO: Check other codes.
     if (http_code == 200) {
