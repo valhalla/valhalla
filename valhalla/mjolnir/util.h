@@ -4,6 +4,7 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
+#include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 
@@ -91,6 +92,32 @@ inline std::string to_string(BuildStage stg) {
   return (i == BuildStageStrings.cend()) ? "null" : i->second;
 }
 
+// A little struct to hold stats information during each threads work
+struct enhancer_stats {
+  float max_density; //(km/km2)
+  uint32_t not_thru;
+  uint32_t no_country_found;
+  uint32_t internalcount;
+  uint32_t turnchannelcount;
+  uint32_t rampcount;
+  uint32_t pencilucount;
+  uint32_t density_counts[16];
+  void operator()(const enhancer_stats& other) {
+    if (max_density < other.max_density) {
+      max_density = other.max_density;
+    }
+    not_thru += other.not_thru;
+    no_country_found += other.no_country_found;
+    internalcount += other.internalcount;
+    turnchannelcount += other.turnchannelcount;
+    rampcount += other.rampcount;
+    pencilucount += other.pencilucount;
+    for (uint32_t i = 0; i < 16; i++) {
+      density_counts[i] += other.density_counts[i];
+    }
+  }
+};
+
 /**
  * Splits a tag into a vector of strings.
  * @param  tag_value  tag to split
@@ -138,6 +165,100 @@ uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
                               const graph_tile_ptr& tile,
                               const baldr::DirectedEdge& edge);
 
+/**
+ * Returns true if edge transition is a pencil point u-turn, false otherwise.
+ * A pencil point intersection happens when a doubly-digitized road transitions
+ * to a singly-digitized road - which looks like a pencil point - for example:
+ *        -----\____
+ *        -----/
+ *
+ * @param  from_index  Index of the 'from' directed edge.
+ * @param  to_index  Index of the 'to' directed edge.
+ * @param  directededge  Directed edge builder.
+ * @param  edges  Directed edges outbound from a node.
+ * @param  node_info  Node info builder used for name consistency.
+ * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
+ *
+ * @return true if edge transition is a pencil point u-turn, false otherwise.
+ */
+bool IsPencilPointUturn(uint32_t from_index,
+                        uint32_t to_index,
+                        const baldr::DirectedEdge& directededge,
+                        const baldr::DirectedEdge* edges,
+                        const baldr::NodeInfo& node_info,
+                        uint32_t turn_degree);
+/**
+ * Returns true if edge transition is a cycleway u-turn, false otherwise.
+ *
+ * @param  from_index  Index of the 'from' directed edge.
+ * @param  to_index  Index of the 'to' directed edge.
+ * @param  directededge  Directed edge builder.
+ * @param  edges  Directed edges outbound from a node.
+ * @param  node_info  Node info builder used for name consistency.
+ * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
+ *
+ * @return true if edge transition is a cycleway u-turn, false otherwise.
+ */
+bool IsCyclewayUturn(uint32_t from_index,
+                     uint32_t to_index,
+                     const baldr::DirectedEdge& directededge,
+                     const baldr::DirectedEdge* edges,
+                     const baldr::NodeInfo& node_info,
+                     uint32_t turn_degree);
+
+/**
+ * Gets the stop likelihoood / impact at an intersection when transitioning
+ * from one edge to another. This depends on the difference between the
+ * classifications/importance of the from and to edge and the highest
+ * classification of the remaining edges at the intersection. Low impact
+ * values occur when the from and to roads are higher class roads than other
+ * roads. There is less likelihood of having to stop in these cases (or stops
+ * will usually be shorter duration). Where traffic lights are (or might be)
+ * present it is more likely that a favorable "green" is present in the
+ * direction of the higher classification. If classifications are all equal
+ * the stop impact will depend on the classification. All directions are
+ * likely to stop and duration is likely longer with higher classification
+ * roads (e.g. a 4 way stop of tertiary roads is likely to be shorter than
+ * a 4 way stop (with traffic light) at an intersection of 4 primary roads.
+ * Higher stop impacts occur when the from and to edges are lower class
+ * than the others. There is almost certainly a stop (stop sign, traffic
+ * light) and longer waits are likely when a low class road crosses
+ * a higher class road. Special cases occur for links (ramps/turn channels)
+ * and parking aisles.
+ * @param  from  Index of the from directed edge.
+ * @param  to    Index of the to directed edge.
+ * @param  directededge   Directed edge builder - set values.
+ * @param  edges Directed edges outbound from a node.
+ * @param  count Number of outbound directed edges to consider.
+ * @param  node_info  Node info builder used for name consistency.
+ * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
+ *
+ * @return  Returns stop impact ranging from 0 (no likely impact) to
+ *          7 - large impact.
+ */
+uint32_t GetStopImpact(uint32_t from,
+                       uint32_t to,
+                       const baldr::DirectedEdge& directededge,
+                       const baldr::DirectedEdge* edges,
+                       const uint32_t count,
+                       const baldr::NodeInfo& nodeinfo,
+                       uint32_t turn_degree,
+                       enhancer_stats& stats);
+/**
+ * Process edge transitions from all other incoming edges onto the
+ * specified outbound directed edge.
+ * @param  idx            Index of the directed edge - the to edge.
+ * @param  directededge   Directed edge builder - set values.
+ * @param  edges          Other directed edges at the node.
+ * @param  ntrans         Number of transitions (either number of edges or max)
+ * @param  headings       Headings of directed edges.
+ */
+void ProcessEdgeTransitions(const uint32_t idx,
+                            baldr::DirectedEdge& directededge,
+                            const baldr::DirectedEdge* edges,
+                            const uint32_t ntrans,
+                            const baldr::NodeInfo& nodeinfo,
+                            enhancer_stats& stats);
 /**
  * Compute a curvature metric given an edge shape.
  * @param  shape  Shape of an edge (list of lat,lon vertices).

@@ -191,6 +191,341 @@ uint32_t GetOpposingEdgeIndex(const graph_tile_ptr& endnodetile,
   return baldr::kMaxEdgesPerNode;
 }
 
+/**
+ * Returns true if edge transition is a pencil point u-turn, false otherwise.
+ * A pencil point intersection happens when a doubly-digitized road transitions
+ * to a singly-digitized road - which looks like a pencil point - for example:
+ *        -----\____
+ *        -----/
+ */
+bool IsPencilPointUturn(uint32_t from_index,
+                        uint32_t to_index,
+                        const baldr::DirectedEdge& directededge,
+                        const baldr::DirectedEdge* edges,
+                        const baldr::NodeInfo& node_info,
+                        uint32_t turn_degree) {
+  // Logic for drive on right
+  if (node_info.drive_on_right()) {
+    // If the turn is a sharp left (179 < turn < 211)
+    //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
+    // and oneway edgesb
+    // and an intersecting right road exists
+    // and no intersecting left road exists
+    // and the from and to edges have a common base name
+    // then it is a left pencil point u-turn
+    if ((((turn_degree > 179) && (turn_degree < 211)) ||
+         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
+          (turn_degree > 179) && (turn_degree < 226))) &&
+        (!(edges[from_index].forwardaccess() & baldr::kAutoAccess) &&
+         (edges[from_index].reverseaccess() & baldr::kAutoAccess)) &&
+        ((directededge.forwardaccess() & baldr::kAutoAccess) &&
+         !(directededge.reverseaccess() & baldr::kAutoAccess)) &&
+        directededge.edge_to_right(from_index) && !directededge.edge_to_left(from_index) &&
+        edges[to_index].name_consistency(from_index)) {
+      return true;
+    }
+
+  }
+  // Logic for drive on left
+  else {
+    // If the turn is a sharp right (149 < turn < 181)
+    //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
+    // and oneway edges
+    // and no intersecting right road exists
+    // and an intersecting left road exists
+    // and the from and to edges have a common base name
+    // then it is a right pencil point u-turn
+    if ((((turn_degree > 149) && (turn_degree < 181)) ||
+         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
+          (turn_degree > 134) && (turn_degree < 181))) &&
+        (!(edges[from_index].forwardaccess() & baldr::kAutoAccess) &&
+         (edges[from_index].reverseaccess() & baldr::kAutoAccess)) &&
+        ((directededge.forwardaccess() & baldr::kAutoAccess) &&
+         !(directededge.reverseaccess() & baldr::kAutoAccess)) &&
+        !directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index) &&
+        edges[to_index].name_consistency(from_index)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Returns true if edge transition is a cycleway u-turn, false otherwise.
+ */
+bool IsCyclewayUturn(uint32_t from_index,
+                     uint32_t to_index,
+                     const baldr::DirectedEdge& directededge,
+                     const baldr::DirectedEdge* edges,
+                     const baldr::NodeInfo& node_info,
+                     uint32_t turn_degree) {
+
+  // we only deal with Cycleways
+  if (edges[from_index].use() != baldr::Use::kCycleway || edges[to_index].use() != baldr::Use::kCycleway) {
+    return false;
+  }
+
+  // Logic for drive on right
+  if (node_info.drive_on_right()) {
+    // If the turn is a sharp left (179 < turn < 211)
+    //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
+    // and an intersecting right road exists
+    // and an intersecting left road exists
+    // then it is a cycleway u-turn
+    if ((((turn_degree > 179) && (turn_degree < 211)) ||
+         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
+          (turn_degree > 179) && (turn_degree < 226))) &&
+        directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index)) {
+      return true;
+    }
+  }
+  // Logic for drive on left
+  else {
+    // If the turn is a sharp right (149 < turn < 181)
+    //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
+    // and an intersecting right road exists
+    // and an intersecting left road exists
+    // then it is a right cyclewayt u-turn
+    if ((((turn_degree > 149) && (turn_degree < 181)) ||
+         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
+          (turn_degree > 134) && (turn_degree < 181))) &&
+        directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Gets the stop likelihoood / impact at an intersection when transitioning
+ * from one edge to another. This depends on the difference between the
+ * classifications/importance of the from and to edge and the highest
+ * classification of the remaining edges at the intersection. Low impact
+ * values occur when the from and to roads are higher class roads than other
+ * roads. There is less likelihood of having to stop in these cases (or stops
+ * will usually be shorter duration). Where traffic lights are (or might be)
+ * present it is more likely that a favorable "green" is present in the
+ * direction of the higher classification. If classifications are all equal
+ * the stop impact will depend on the classification. All directions are
+ * likely to stop and duration is likely longer with higher classification
+ * roads (e.g. a 4 way stop of tertiary roads is likely to be shorter than
+ * a 4 way stop (with traffic light) at an intersection of 4 primary roads.
+ * Higher stop impacts occur when the from and to edges are lower class
+ * than the others. There is almost certainly a stop (stop sign, traffic
+ * light) and longer waits are likely when a low class road crosses
+ * a higher class road. Special cases occur for links (ramps/turn channels)
+ * and parking aisles.
+ */
+uint32_t GetStopImpact(uint32_t from,
+                       uint32_t to,
+                       const baldr::DirectedEdge& directededge,
+                       const baldr::DirectedEdge* edges,
+                       const uint32_t count,
+                       const baldr::NodeInfo& nodeinfo,
+                       uint32_t turn_degree,
+                       enhancer_stats& stats) {
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Special cases.
+
+  // Handle Roundabouts
+  if (edges[from].roundabout() && edges[to].roundabout()) {
+    return 0;
+  }
+
+  // Handle Pencil point u-turn
+  if (IsPencilPointUturn(from, to, directededge, edges, nodeinfo, turn_degree)) {
+    stats.pencilucount++;
+    return 7;
+  }
+
+  // Handle Cycleway u-turn
+  if (IsCyclewayUturn(from, to, directededge, edges, nodeinfo, turn_degree)) {
+    return 7;
+  }
+
+  ///////////////////////////////////////////////////////////////////////////
+
+  // Get the highest classification of other roads at the intersection
+  bool all_ramps = true;
+  const baldr::DirectedEdge* edge = &edges[0];
+  // kUnclassified,  kResidential, and kServiceOther are grouped
+  // together for the stop_impact logic.
+  baldr::RoadClass bestrc = baldr::RoadClass::kUnclassified;
+  for (uint32_t i = 0; i < count; i++, edge++) {
+    // Check the road if it is drivable TO the intersection and is neither
+    // the "to" nor "from" edge. Treat roundabout edges as two levels lower
+    // classification (higher value) to reduce the stop impact.
+    if (i != to && i != from && (edge->reverseaccess() & baldr::kAutoAccess)) {
+      if (edge->roundabout()) {
+        uint32_t c = static_cast<uint32_t>(edge->classification()) + 2;
+        if (c < static_cast<uint32_t>(bestrc)) {
+          bestrc = static_cast<baldr::RoadClass>(c);
+        }
+      } else if (edge->classification() < bestrc) {
+        bestrc = edge->classification();
+      }
+    }
+
+    // Check if not a ramp or turn channel
+    if (!edge->link()) {
+      all_ramps = false;
+    }
+  }
+
+  // kUnclassified,  kResidential, and kServiceOther are grouped
+  // together for the stop_impact logic.
+  baldr::RoadClass from_rc = edges[from].classification();
+  if (from_rc > baldr::RoadClass::kUnclassified) {
+    from_rc = baldr::RoadClass::kUnclassified;
+  }
+
+  // High stop impact from a turn channel onto a turn channel unless
+  // the other edge a low class road (walkways often intersect
+  // turn channels)
+  if (edges[from].use() == baldr::Use::kTurnChannel && edges[to].use() == baldr::Use::kTurnChannel &&
+      bestrc < baldr::RoadClass::kUnclassified) {
+    return 7;
+  }
+
+  // Set stop impact to the difference in road class (make it non-negative)
+  int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
+  uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
+
+  // TODO: possibly increase stop impact at large intersections (more edges)
+  // or if several are high class
+  // Reduce stop impact from a turn channel or when only links
+  // (ramps and turn channels) are involved. Exception - sharp turns.
+  baldr::Turn::Type turn_type = baldr::Turn::GetType(turn_degree);
+  bool is_sharp = (turn_type == baldr::Turn::Type::kSharpLeft || turn_type == baldr::Turn::Type::kSharpRight ||
+                   turn_type == baldr::Turn::Type::kReverse);
+  bool is_slight = (turn_type == baldr::Turn::Type::kStraight || turn_type == baldr::Turn::Type::kSlightRight ||
+                    turn_type == baldr::Turn::Type::kSlightLeft);
+  if (all_ramps) {
+    if (is_sharp) {
+      stop_impact += 2;
+    } else if (is_slight) {
+      stop_impact /= 2;
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
+      stop_impact -= 1;
+    }
+  } else if (edges[from].use() == baldr::Use::kRamp && edges[to].use() == baldr::Use::kRamp &&
+             bestrc < baldr::RoadClass::kUnclassified) {
+    // Ramp may be crossing a road (not a path or service road)
+    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
+      stop_impact = 4;
+    } else if (count > 3) {
+      stop_impact += 2;
+    }
+  } else if (edges[from].use() == baldr::Use::kRamp && edges[to].use() != baldr::Use::kRamp &&
+             !edges[from].internal() && !edges[to].internal()) {
+    // Increase stop impact on merge
+    if (is_sharp) {
+      stop_impact += 3;
+    } else if (is_slight) {
+      stop_impact += 1;
+    } else {
+      stop_impact += 2;
+    }
+
+  } else if (edges[from].use() == baldr::Use::kTurnChannel) {
+    // Penalize sharp turns
+    if (is_sharp) {
+      stop_impact += 2;
+    } else if (edges[to].use() == baldr::Use::kRamp) {
+      stop_impact += 1;
+    } else if (is_slight) {
+      stop_impact /= 2;
+    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
+      stop_impact -= 1;
+    }
+  } else if (edges[from].use() == baldr::Use::kParkingAisle && edges[to].use() == baldr::Use::kParkingAisle) {
+    // decrease stop impact inside parking lots
+    if (stop_impact != 0)
+      stop_impact -= 1;
+  }
+  // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
+  // or ramp penalize lefts when driving on the right.
+  else if (nodeinfo.drive_on_right() &&
+           (turn_type == baldr::Turn::Type::kSharpLeft || turn_type == baldr::Turn::Type::kLeft) &&
+           from_rc != edges[to].classification() && edges[to].use() != baldr::Use::kRamp &&
+           edges[to].use() != baldr::Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
+    // penalize rights when driving on the left.
+  } else if (!nodeinfo.drive_on_right() &&
+             (turn_type == baldr::Turn::Type::kSharpRight || turn_type == baldr::Turn::Type::kRight) &&
+             from_rc != edges[to].classification() && edges[to].use() != baldr::Use::kRamp &&
+             edges[to].use() != baldr::Use::kTurnChannel) {
+    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
+      stop_impact += 2;
+    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
+      stop_impact++;
+  }
+  // Clamp to kMaxStopImpact
+  return (stop_impact <= baldr::kMaxStopImpact) ? stop_impact : baldr::kMaxStopImpact;
+}
+
+/**
+ * Process edge transitions from all other incoming edges onto the
+ * specified outbound directed edge.
+ */
+void ProcessEdgeTransitions(const uint32_t idx,
+                            baldr::DirectedEdge& directededge,
+                            const baldr::DirectedEdge* edges,
+                            const uint32_t ntrans,
+                            const baldr::NodeInfo& nodeinfo,
+                            enhancer_stats& stats) {
+  for (uint32_t i = 0; i < ntrans; i++) {
+    // Get the turn type (reverse the heading of the from directed edge since
+    // it is incoming
+    uint32_t from_heading = ((nodeinfo.heading(i) + 180) % 360);
+    uint32_t turn_degree = GetTurnDegree(from_heading, nodeinfo.heading(idx));
+    directededge.set_turntype(i, baldr::Turn::GetType(turn_degree));
+
+    // Set the edge_to_left and edge_to_right flags
+    uint32_t right_count = 0;
+    uint32_t left_count = 0;
+    if (ntrans > 2) {
+      for (uint32_t j = 0; j < ntrans; ++j) {
+        // Skip the from and to edges; also skip roads under construction
+        if (j == i || j == idx || edges[j].use() == baldr::Use::kConstruction) {
+          continue;
+        }
+
+        // Get the turn degree from incoming edge i to j and check if right
+        // or left of the turn degree from incoming edge i onto idx
+        uint32_t degree = GetTurnDegree(from_heading, nodeinfo.heading(j));
+        if (turn_degree > 180) {
+          if (degree > turn_degree || degree < 180) {
+            ++right_count;
+          } else if (degree < turn_degree && degree > 180) {
+            ++left_count;
+          }
+        } else {
+          if (degree > turn_degree && degree < 180) {
+            ++right_count;
+          } else if (degree < turn_degree || degree > 180) {
+            ++left_count;
+          }
+        }
+      }
+    }
+    directededge.set_edge_to_left(i, (left_count > 0));
+    directededge.set_edge_to_right(i, (right_count > 0));
+
+    // Get stop impact
+    // NOTE: stop impact uses the right and left edges so this logic must
+    // come after the right/left edge logic
+    uint32_t stopimpact =
+        GetStopImpact(i, idx, directededge, edges, ntrans, nodeinfo, turn_degree, stats);
+    directededge.set_stopimpact(i, stopimpact);
+  }
+}
+
 bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
