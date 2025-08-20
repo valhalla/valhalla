@@ -14,7 +14,6 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-#include <cstdarg>
 
 BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
                                  double,
