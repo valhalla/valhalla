@@ -52,7 +52,7 @@ install(TARGETS _valhalla
 install(TARGETS graph_utils
   DESTINATION "${Python_SITEARCH}/valhalla/utils"
   COMPONENT runtime)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla
   DESTINATION "${Python_SITEARCH}"
   COMPONENT runtime
   FILES_MATCHING PATTERN "*.py*")
