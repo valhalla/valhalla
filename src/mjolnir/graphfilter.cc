@@ -34,7 +34,7 @@ uint32_t aggregated = 0;
 // Group wheelchair and pedestrian access together
 constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess);
 
-uint8_t get_new_mask(uint8_t old_mask, std::vector<uint8_t> new_local_indexes) {
+uint8_t get_new_mask(uint8_t old_mask, const std::vector<uint8_t>& new_local_indexes) {
 
   // For each bit set in old_mask, update a bit in the new mask using new_local_indexes
   uint8_t new_mask = 0;
