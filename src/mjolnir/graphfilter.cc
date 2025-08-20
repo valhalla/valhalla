@@ -998,8 +998,8 @@ void UpdateOpposingIndexAndTransitions(GraphReader& reader) {
         new_edge.set_opp_local_idx(GetOpposingEdgeIndex(endnodetile, nodeid, tile, *edge));
 
         // Set edge transitions.
-        uint32_t ntrans = nodeinfo->local_edge_count();
         if (j < kNumberOfEdgeTransitions) {
+          uint32_t ntrans = nodeinfo->local_edge_count();
           ProcessEdgeTransitions(j, new_edge, edges, ntrans, *nodeinfo, stats);
         }
       }
