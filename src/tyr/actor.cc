@@ -86,6 +86,10 @@ std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
 
 std::string
 actor_t::route(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -101,15 +105,15 @@ actor_t::route(const std::string& request_str, const std::function<void()>* inte
   pimpl->thor_worker.route(*api);
   // get some directions back from them and serialize
   auto bytes = pimpl->odin_worker.narrate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
 std::string
 actor_t::locate(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -121,15 +125,15 @@ actor_t::locate(const std::string& request_str, const std::function<void()>* int
   ParseApi(request_str, Options::locate, *api);
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.locate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
 std::string
 actor_t::matrix(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -143,16 +147,16 @@ actor_t::matrix(const std::string& request_str, const std::function<void()>* int
   pimpl->loki_worker.matrix(*api);
   // compute the matrix
   auto bytes = pimpl->thor_worker.matrix(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
 std::string actor_t::optimized_route(const std::string& request_str,
                                      const std::function<void()>* interrupt,
                                      Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -168,15 +172,15 @@ std::string actor_t::optimized_route(const std::string& request_str,
   pimpl->thor_worker.optimized_route(*api);
   // get some directions back from them and serialize
   auto bytes = pimpl->odin_worker.narrate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
 std::string
 actor_t::isochrone(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -190,16 +194,16 @@ actor_t::isochrone(const std::string& request_str, const std::function<void()>* 
   pimpl->loki_worker.isochrones(*api);
   // compute the isochrones
   auto json = pimpl->thor_worker.isochrones(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
 std::string actor_t::trace_route(const std::string& request_str,
                                  const std::function<void()>* interrupt,
                                  Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -215,16 +219,16 @@ std::string actor_t::trace_route(const std::string& request_str,
   pimpl->thor_worker.trace_route(*api);
   // get some directions back from them
   auto bytes = pimpl->odin_worker.narrate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
 std::string actor_t::trace_attributes(const std::string& request_str,
                                       const std::function<void()>* interrupt,
                                       Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -238,15 +242,15 @@ std::string actor_t::trace_attributes(const std::string& request_str,
   pimpl->loki_worker.trace(*api);
   // get the path and turn it into attribution along it
   auto json = pimpl->thor_worker.trace_attributes(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
 std::string
 actor_t::height(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -258,16 +262,16 @@ actor_t::height(const std::string& request_str, const std::function<void()>* int
   ParseApi(request_str, Options::height, *api);
   // get the height at each point
   auto json = pimpl->loki_worker.height(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
 std::string actor_t::transit_available(const std::string& request_str,
                                        const std::function<void()>* interrupt,
                                        Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -279,15 +283,15 @@ std::string actor_t::transit_available(const std::string& request_str,
   ParseApi(request_str, Options::transit_available, *api);
   // check the request and locate the locations in the graph
   auto json = pimpl->loki_worker.transit_available(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
 std::string
 actor_t::expansion(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -307,15 +311,15 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
   }
   // route between the locations in the graph to find the best path
   auto json = pimpl->thor_worker.expansion(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
 std::string
 actor_t::centroid(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -331,15 +335,15 @@ actor_t::centroid(const std::string& request_str, const std::function<void()>* i
   pimpl->thor_worker.centroid(*api);
   // get some directions back from them and serialize
   auto bytes = pimpl->odin_worker.narrate(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return bytes;
 }
 
 std::string
 actor_t::status(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  auto scoped_cleaner = make_finally([this]() {
+    if (auto_cleanup)
+      cleanup();
+  });
   // set the interrupts
   pimpl->set_interrupts(interrupt);
   // if the caller doesn't want a copy we'll use this dummy
@@ -357,10 +361,6 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   pimpl->odin_worker.status(*api);
   // get the json
   auto json = tyr::serializeStatus(*api);
-  // if they want you do to do the cleanup automatically
-  if (auto_cleanup) {
-    cleanup();
-  }
   return json;
 }
 
