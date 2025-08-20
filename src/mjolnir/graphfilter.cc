@@ -458,7 +458,7 @@ void FilterTiles(GraphReader& reader,
         old_to_new[nodeid] = new_node;
 
         // If any edges from this node have been filtered, add new_local_indexes to the
-        // upated_local_indexes map
+        // updated_local_indexes map
         if (edge_filtered > 0) {
           updated_local_indexes[nodeid] = new_local_indexes;
         }
