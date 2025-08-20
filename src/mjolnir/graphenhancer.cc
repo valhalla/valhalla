@@ -1,5 +1,4 @@
 #include "mjolnir/graphenhancer.h"
-#include "mjolnir/util.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -967,7 +966,6 @@ DensityIndex BuildDensityIndex(GraphReader& reader,
 
   return density_index;
 }
-
 
 bool ConsistentNames(const std::string& country_code,
                      const std::vector<std::pair<std::string, bool>>& names1,

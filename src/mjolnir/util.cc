@@ -262,7 +262,8 @@ bool IsCyclewayUturn(uint32_t from_index,
                      uint32_t turn_degree) {
 
   // we only deal with Cycleways
-  if (edges[from_index].use() != baldr::Use::kCycleway || edges[to_index].use() != baldr::Use::kCycleway) {
+  if (edges[from_index].use() != baldr::Use::kCycleway ||
+      edges[to_index].use() != baldr::Use::kCycleway) {
     return false;
   }
 
@@ -398,10 +399,12 @@ uint32_t GetStopImpact(uint32_t from,
   // Reduce stop impact from a turn channel or when only links
   // (ramps and turn channels) are involved. Exception - sharp turns.
   baldr::Turn::Type turn_type = baldr::Turn::GetType(turn_degree);
-  bool is_sharp = (turn_type == baldr::Turn::Type::kSharpLeft || turn_type == baldr::Turn::Type::kSharpRight ||
-                   turn_type == baldr::Turn::Type::kReverse);
-  bool is_slight = (turn_type == baldr::Turn::Type::kStraight || turn_type == baldr::Turn::Type::kSlightRight ||
-                    turn_type == baldr::Turn::Type::kSlightLeft);
+  bool is_sharp =
+      (turn_type == baldr::Turn::Type::kSharpLeft || turn_type == baldr::Turn::Type::kSharpRight ||
+       turn_type == baldr::Turn::Type::kReverse);
+  bool is_slight =
+      (turn_type == baldr::Turn::Type::kStraight || turn_type == baldr::Turn::Type::kSlightRight ||
+       turn_type == baldr::Turn::Type::kSlightLeft);
   if (all_ramps) {
     if (is_sharp) {
       stop_impact += 2;
@@ -440,7 +443,8 @@ uint32_t GetStopImpact(uint32_t from,
     } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
       stop_impact -= 1;
     }
-  } else if (edges[from].use() == baldr::Use::kParkingAisle && edges[to].use() == baldr::Use::kParkingAisle) {
+  } else if (edges[from].use() == baldr::Use::kParkingAisle &&
+             edges[to].use() == baldr::Use::kParkingAisle) {
     // decrease stop impact inside parking lots
     if (stop_impact != 0)
       stop_impact -= 1;
@@ -457,7 +461,8 @@ uint32_t GetStopImpact(uint32_t from,
       stop_impact++;
     // penalize rights when driving on the left.
   } else if (!nodeinfo.drive_on_right() &&
-             (turn_type == baldr::Turn::Type::kSharpRight || turn_type == baldr::Turn::Type::kRight) &&
+             (turn_type == baldr::Turn::Type::kSharpRight ||
+              turn_type == baldr::Turn::Type::kRight) &&
              from_rc != edges[to].classification() && edges[to].use() != baldr::Use::kRamp &&
              edges[to].use() != baldr::Use::kTurnChannel) {
     if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
