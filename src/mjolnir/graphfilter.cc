@@ -38,7 +38,7 @@ uint8_t get_new_mask(uint8_t old_mask, const std::vector<uint8_t>& new_local_ind
 
   // For each bit set in old_mask, update a bit in the new mask using new_local_indexes
   uint8_t new_mask = 0;
-  for (uint8_t i = 0; i < 8; ++i) {
+  for (uint8_t i = 0; i < new_local_indexes.size(); i++) {
     if ((old_mask & 1 << i) != 0 && (new_local_indexes[i] != 255)) {
       // Replace bit set in the old mask with one from new_local_indexes
       uint8_t index = new_local_indexes[i];
