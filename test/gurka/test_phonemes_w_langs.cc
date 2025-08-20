@@ -1,7 +1,6 @@
 #include "baldr/graphreader.h"
 #include "gurka.h"
 #include "mjolnir/util.h"
-#include "test/test.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

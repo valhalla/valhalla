@@ -1,11 +1,5 @@
-#include "baldr/graphconstants.h"
-#include "baldr/graphreader.h"
 #include "gurka.h"
-#include "loki/polygon_search.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "sif/costfactory.h"
-#include "worker.h"
 
 #include <valhalla/proto/options.pb.h>
 

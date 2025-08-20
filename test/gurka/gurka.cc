@@ -2,6 +2,7 @@
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -10,6 +11,7 @@
 #include "test.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
+#include "valhalla/proto_conversions.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>

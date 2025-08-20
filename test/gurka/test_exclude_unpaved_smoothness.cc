@@ -3,8 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include <filesystem>
-
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif

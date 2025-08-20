@@ -1,7 +1,6 @@
 #include "gurka.h"
 #include "loki/reach.h"
 #include "sif/costfactory.h"
-#include "sif/dynamiccost.h"
 #include "test.h"
 
 #include <valhalla/proto/options.pb.h>

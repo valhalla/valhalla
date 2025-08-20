@@ -1,9 +1,9 @@
-#include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "loki/polygon_search.h"
+#include "loki/worker.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
 #include "sif/costfactory.h"
 #include "worker.h"
 
@@ -17,6 +17,7 @@
 
 using namespace valhalla;
 namespace bg = boost::geometry;
+namespace vb = valhalla::baldr;
 namespace vm = valhalla::midgard;
 namespace vl = valhalla::loki;
 
@@ -268,7 +269,7 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   }
 
   const auto costing = valhalla::sif::CostFactory{}.Create(co);
-  GraphReader reader(avoid_map.config.get_child("mjolnir"));
+  vb::GraphReader reader(avoid_map.config.get_child("mjolnir"));
 
   // should return the shortcut edge ID as well
   size_t found_shortcuts = 0;

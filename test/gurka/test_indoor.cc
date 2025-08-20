@@ -1,5 +1,5 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include "mjolnir/osmway.h"
 #include "test.h"
 
 #include <gmock/gmock.h>
