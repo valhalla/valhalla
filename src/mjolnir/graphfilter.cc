@@ -904,7 +904,6 @@ void UpdateEndNodes(GraphReader& reader,
       uint8_t new_name_consistency = edge->name_consistency();
       auto indexes = updated_local_indexes.find(edge->endnode());
       if (indexes != updated_local_indexes.end()) {
-        LOG_INFO("update restriction and name consistency masks");
         uint8_t old_mask = edge->restrictions();
         if (old_mask != 0) {
           new_restrictions = get_new_mask(old_mask, indexes->second);
