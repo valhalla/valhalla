@@ -2,7 +2,6 @@
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/sqlite3.h"
-#include "mjolnir/util.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
@@ -15,15 +14,16 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include <cstdarg>
 
 BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
                                  double,
                                  boost::geometry::cs::geographic<boost::geometry::degree>,
                                  first,
                                  second);
-using ring_template = boost::geometry::model::ring<valhalla::midgard::PointLL>;
-using polygon_template = boost::geometry::model::polygon<valhalla::midgard::PointLL>;
-using multipolygon_template = boost::geometry::model::multi_polygon<polygon_template>;
+using ring_t = boost::geometry::model::ring<valhalla::midgard::PointLL>;
+using polygon_t = boost::geometry::model::polygon<valhalla::midgard::PointLL>;
+using multipolygon_t = boost::geometry::model::multi_polygon<polygon_t>;
 
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
@@ -87,16 +87,13 @@ protected:
  * @param rings  any resulting rings are output here
  * @param inners if some kind of self intersection should cause inners to be created we push them here
  */
-void buffer_ring(const ring_template& ring,
-                 std::vector<ring_template>& rings,
-                 std::vector<ring_template>& inners) {
+void buffer_ring(const ring_t& ring, std::vector<ring_t>& rings, std::vector<ring_t>& inners) {
   // for collecting polygons
   auto add = [&](auto* geos_poly) {
-    rings.emplace_back(
-        geos_helper_t::to_striped_container<ring_template>(GEOSGetExteriorRing(geos_poly)));
+    rings.emplace_back(geos_helper_t::to_striped_container<ring_t>(GEOSGetExteriorRing(geos_poly)));
     for (int i = 0; i < GEOSGetNumInteriorRings(geos_poly); ++i) {
       auto* inner = GEOSGetInteriorRingN(geos_poly, i);
-      inners.push_back(geos_helper_t::to_striped_container<ring_template>(inner));
+      inners.push_back(geos_helper_t::to_striped_container<ring_t>(inner));
     }
   };
 
@@ -130,14 +127,14 @@ void buffer_ring(const ring_template& ring,
  * @param polygon       to buffer to fix self intersections
  * @param multipolygon  any resulting polygons are output here
  */
-void buffer_polygon(const polygon_template& polygon, multipolygon_template& multipolygon) {
+void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
   // for collecting polygons
   auto add = [&](auto* geos_poly) {
     auto& poly = *multipolygon.emplace(multipolygon.end());
-    poly.outer() = geos_helper_t::to_striped_container<ring_template>(GEOSGetExteriorRing(geos_poly));
+    poly.outer() = geos_helper_t::to_striped_container<ring_t>(GEOSGetExteriorRing(geos_poly));
     for (int i = 0; i < GEOSGetNumInteriorRings(geos_poly); ++i) {
       auto* inner = GEOSGetInteriorRingN(geos_poly, i);
-      poly.inners().push_back(geos_helper_t::to_striped_container<ring_template>(inner));
+      poly.inners().push_back(geos_helper_t::to_striped_container<ring_t>(inner));
     }
   };
 
@@ -194,7 +191,7 @@ bool to_segments(const OSMAdminData& admin_data,
                  const OSMAdmin& admin,
                  const std::string& name,
                  bool outer,
-                 std::vector<ring_template>& lines,
+                 std::vector<ring_t>& lines,
                  std::unordered_multimap<valhalla::midgard::PointLL, size_t>& line_lookup) {
   // get all the individual members of the admin relation merged into one ring
   auto role_itr = admin.roles.begin();
@@ -213,7 +210,7 @@ bool to_segments(const OSMAdminData& admin_data,
     }
 
     // build the line geom
-    ring_template coords;
+    ring_t coords;
     for (const auto node_id : w_itr->second) {
       // although unlikely, we could have the way but not all the nodes
       auto n_itr = admin_data.shape_map.find(node_id);
@@ -246,15 +243,15 @@ bool to_segments(const OSMAdminData& admin_data,
  * @return zero or more rings
  */
 void to_rings(const std::pair<std::string, uint64_t>& admin_info,
-              std::vector<ring_template>& lines,
+              std::vector<ring_t>& lines,
               std::unordered_multimap<valhalla::midgard::PointLL, size_t>& line_lookup,
-              std::vector<ring_template>& rings,
-              std::vector<ring_template>& inners) {
+              std::vector<ring_t>& rings,
+              std::vector<ring_t>& inners) {
 
   // keep going while we have threads to pull
   while (!line_lookup.empty()) {
     // start connecting the first line we have to adjacent ones
-    ring_template ring;
+    ring_t ring;
     for (auto line_itr = line_lookup.begin(); line_itr != line_lookup.end();
          line_itr = line_lookup.find(ring.back())) {
       // grab the line segment to add
@@ -289,14 +286,14 @@ void to_rings(const std::pair<std::string, uint64_t>& admin_info,
     }
 
     // otherwise we try to make sure the ring is not self intersecting etc and correct it if it is
-    multipolygon_template buffered;
+    multipolygon_t buffered;
     buffer_ring(ring, rings, inners);
   }
 }
 
 struct polygon_data {
-  polygon_template polygon;
-  polygon_template::inner_container_type postponed_inners;
+  polygon_t polygon;
+  polygon_t::inner_container_type postponed_inners;
   double area;
   bool operator<(const polygon_data& p) const {
     return area < p.area;
@@ -310,9 +307,9 @@ struct polygon_data {
  * @param inners      inner rings of polygons
  * @return the multipolygon of the combined outer and inner rings
  */
-multipolygon_template to_multipolygon(const std::pair<std::string, uint64_t>& admin_info,
-                                      std::vector<ring_template>& outers,
-                                      std::vector<ring_template>& inners) {
+multipolygon_t to_multipolygon(const std::pair<std::string, uint64_t>& admin_info,
+                               std::vector<ring_t>& outers,
+                               std::vector<ring_t>& inners) {
   // Associate an area with each outer so we can
   std::vector<polygon_data> polys;
   for (auto& outer : outers) {
@@ -350,10 +347,10 @@ multipolygon_template to_multipolygon(const std::pair<std::string, uint64_t>& ad
   }
 
   // Make a simple container of multiple polygons
-  multipolygon_template multipolygon;
+  multipolygon_t multipolygon;
   multipolygon.reserve(polys.size());
   for (auto& poly : polys) {
-    multipolygon_template buffered;
+    multipolygon_t buffered;
     poly.polygon.inners().swap(poly.postponed_inners);
     buffer_polygon(poly.polygon, multipolygon);
   }
@@ -515,10 +512,10 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
     // do inners and outers separately
     bool complete = true;
-    std::array<std::vector<ring_template>, 2> outers_inners;
+    std::array<std::vector<ring_t>, 2> outers_inners;
     for (bool outer : {true, false}) {
       // grab the ring segments and a lookup to find them when connecting them
-      std::vector<ring_template> lines;
+      std::vector<ring_t> lines;
       std::unordered_multimap<valhalla::midgard::PointLL, size_t> line_lookup;
       if (!to_segments(admin_data, admin, admin_info.first, outer, lines, line_lookup)) {
         complete = false;
