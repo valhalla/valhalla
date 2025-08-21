@@ -213,8 +213,7 @@ container_t decode7(const std::string& encoded, const double precision = DECODE_
  * @param encoded  the encoded points in string form
  * @return integer values in the templated container type
  */
-template <class container_t>
-container_t decode7int(const std::string& encoded) {
+template <class container_t> container_t decode7int(const std::string& encoded) {
   return decode7int<container_t>(encoded.c_str(), encoded.length());
 }
 
@@ -314,8 +313,7 @@ std::string encode7(const container_t& points, const int precision = ENCODE_PREC
   return output;
 }
 
-template <class container_t>
-std::string encode7int(const container_t& values) {
+template <class container_t> std::string encode7int(const container_t& values) {
   // a place to keep the output
   using value_t = typename container_t::value_type;
   using uvalue_t = typename std::make_unsigned<value_t>::type;

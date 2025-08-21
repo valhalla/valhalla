@@ -33,9 +33,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-
-
-
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
  * we also need to then update the edges that pointed to them
@@ -455,7 +452,8 @@ void BuildTileSet(const std::string& ways_file,
   std::vector<PointLL> shape;
   std::vector<uint64_t> osm_node_ids;
   std::string encoded_node_ids(1, static_cast<std::string::value_type>(TaggedValue::kOSMNodeIds));
-  const auto edge_shape = [&way_nodes, &shape, &osm_node_ids, &encoded_node_ids, keep_all_nodes, graph_nodes_only](size_t idx, const size_t count) {
+  const auto edge_shape = [&way_nodes, &shape, &osm_node_ids, &encoded_node_ids, keep_all_nodes,
+                           graph_nodes_only](size_t idx, const size_t count) {
     shape.reserve(count);
     shape.clear();
     osm_node_ids.reserve(graph_nodes_only ? 2 : count);
@@ -463,14 +461,15 @@ void BuildTileSet(const std::string& ways_file,
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
       shape.emplace_back(node.latlng());
-      if (keep_all_nodes || (graph_nodes_only && (i ==0 || i == count - 1))) {
-          osm_node_ids.push_back(node.osmid_);
+      if (keep_all_nodes || (graph_nodes_only && (i == 0 || i == count - 1))) {
+        osm_node_ids.push_back(node.osmid_);
       }
     }
     if (!osm_node_ids.empty()) {
       encoded_node_ids.resize(1);
       encoded_node_ids += encode7int(osm_node_ids); // first have to know how many bytes
-      encoded_node_ids.insert(1, encode7int(std::vector{encoded_node_ids.size() - 1})); // keep that too
+      encoded_node_ids.insert(1,
+                              encode7int(std::vector{encoded_node_ids.size() - 1})); // keep that too
     }
   };
 
