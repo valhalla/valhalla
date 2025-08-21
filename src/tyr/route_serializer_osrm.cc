@@ -1194,7 +1194,9 @@ void primary_banner_instruction(rapidjson::writer_wrapper_t& writer,
     banner_component(writer, "exit-number", exit);
     writer.end_object();
   }
+  writer.start_object();
   banner_component(writer, "text", primary_text);
+  writer.end_object();
   if (!ref.empty() && !arrive_maneuver) {
     writer.start_object();
     banner_component(writer, "delimiter", "/");
@@ -1848,9 +1850,15 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
         if ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) && prev_maneuver &&
             (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
             !prev_step_json.empty()) {
+          std::string inner_json = prev_step_json;
+          if (inner_json.front() == '{' && inner_json.back() == '}') {
+            inner_json = inner_json.substr(1, inner_json.size() - 2);
+          }
           rapidjson::writer_wrapper_t prev_step_writer;
-          prev_step_writer.raw_json(prev_step_json);
+          prev_step_writer.start_object();
+          prev_step_writer.raw_json(inner_json + ",");
           prev_step_writer("destinations", dest);
+          prev_step_writer.end_object();
           prev_step_json = prev_step_writer.get_buffer();
         }
       }
@@ -1864,13 +1872,19 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
       // Add banner instructions if the user requested them
       if (options.banner_instructions()) {
         if (!prev_step_json.empty() && prev_maneuver) {
+          std::string inner_json = prev_step_json;
+          if (inner_json.front() == '{' && inner_json.back() == '}') {
+            inner_json = inner_json.substr(1, inner_json.size() - 2);
+          }
           rapidjson::writer_wrapper_t prev_step_writer;
-          prev_step_writer.raw_json(prev_step_json);
+          prev_step_writer.start_object();
+          prev_step_writer.raw_json(inner_json + ",");
           prev_step_writer.start_array("bannerInstructions");
           banner_instructions(prev_step_writer, name, dest, ref, prev_maneuver, maneuver,
                               arrive_maneuver, &etp, mnvr_type, modifier, ex, prev_distance,
                               drive_side);
           prev_step_writer.end_array();
+          prev_step_writer.end_object();
           prev_step_json = prev_step_writer.get_buffer();
         }
         if (arrive_maneuver) {
@@ -1883,14 +1897,20 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
       // Add voice instructions if the user requested them
       if (options.voice_instructions()) {
         if (!prev_step_json.empty() && prev_maneuver) {
+          std::string inner_json = prev_step_json;
+          if (inner_json.front() == '{' && inner_json.back() == '}') {
+            inner_json = inner_json.substr(1, inner_json.size() - 2);
+          }
           rapidjson::writer_wrapper_t prev_step_writer;
-          prev_step_writer.raw_json(prev_step_json);
+          prev_step_writer.start_object();
+          prev_step_writer.raw_json(inner_json + ",");
           // voiceInstructions is an array, because there may be similar voice instructions.
           // When the step is long enough, there may be multiple voice instructions.
           prev_step_writer.start_array("voiceInstructions");
           voice_instructions(prev_step_writer, prev_maneuver, maneuver, prev_distance, maneuver_index,
                              &etp, options);
           prev_step_writer.end_array();
+          prev_step_writer.end_object();
           prev_step_json = prev_step_writer.get_buffer();
         }
         if (arrive_maneuver) {
@@ -1935,7 +1955,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
       step_writer.end_array();
 
       step_writer.end_object(); // step
-      if (maneuver_index > 0)
+      if (!depart_maneuver)
         writer.raw_json(prev_step_json + ",");
 
       // Add step
