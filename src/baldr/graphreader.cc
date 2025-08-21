@@ -210,7 +210,7 @@ void GraphReader::load_remote_tar_offsets() {
   // verify the first file is indeed the index.bin
   if (!first_header->verify()) {
     throw std::runtime_error("The first file's tar header is not valid at " + tile_url_);
-  } else if (first_header->name != "index.bin") {
+  } else if (std::string_view(first_header->name) == "index.bin") {
     throw std::runtime_error("The first file in the remote tar needs to be 'index.bin' at " +
                              tile_url_);
   }
