@@ -1,0 +1,34 @@
+on:
+  pull_request:
+    branches: 
+      - master
+    types:
+      - closed
+
+jobs:
+  clear_cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install and setup mc client
+        run: |
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          ./mc --help
+          ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+      
+      - name: Remove matching cache objects
+        shell: bash
+        run: |
+          # CAREFUL: only bash, not zsh compatible
+          all_objects=$(./mc ls --quiet --recursive hetzner/gha-cache | awk '{ print $6 }')
+          filtered=""
+          for line in $all_objects; do
+            # will match (any_char)<branch_name>(-<any_number>)/cache.tzst, anything inside () being optional
+            if [[ "$line" =~ ^.*${{ github.head_ref }}-?[0-9]*?\/cache\.tzst$ ]]; then
+              filtered="$line $filtered"
+            fi
+          done
+
+          for entry in $filtered; do
+            ./mc rm --recursive --force hetzner/gha-cache/${entry} || echo "couldn't find $entry"
+          done

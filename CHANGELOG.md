@@ -52,6 +52,8 @@
    * FIXED: python installation issue in docker image [#5424](https://github.com/valhalla/valhalla/pull/5424)
    * FIXED: uk-UA translation issue with issue with "approach_verbal_alert" [#5182](https://github.com/valhalla/valhalla/pull/5182)
    * FIXED: Missing argument in `BDEdgeLabel` constructor [#5444](https://github.com/valhalla/valhalla/pull/5444)
+   * FIXED: ferries shouldn't be set to destination only [#5447](https://github.com/valhalla/valhalla/pull/5447)
+   * FIXED: `actor_t` cleans up workers even in the case of exceptions when `auto_cleanup` is true [#5452](https://github.com/valhalla/valhalla/pull/5452)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
