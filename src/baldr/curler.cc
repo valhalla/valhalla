@@ -99,7 +99,7 @@ struct curler_t::pimpl_t {
     if (range_size) {
       const std::string range =
           std::to_string(range_offset) + "-" + std::to_string(range_offset + range_size - 1);
-      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_RANGE, "0-99"),
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_RANGE, range.c_str()),
                   "Failed to set HTTP Range");
     }
 
