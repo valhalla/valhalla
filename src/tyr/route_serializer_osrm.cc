@@ -1852,7 +1852,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
             (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) &&
             !prev_step_json.empty()) {
           rapidjson::writer_wrapper_t prev_step_writer;
-          prev_step_writer(prev_step_json);
+          prev_step_writer.raw_json(prev_step_json);
           prev_step_writer("destinations", dest);
           prev_step_json = prev_step_writer.get_buffer();
         }
@@ -1868,7 +1868,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
       if (options.banner_instructions()) {
         if (!prev_step_json.empty() && prev_maneuver) {
           rapidjson::writer_wrapper_t prev_step_writer;
-          prev_step_writer(prev_step_json);
+          prev_step_writer.raw_json(prev_step_json);
           prev_step_writer.start_array("bannerInstructions");
           banner_instructions(prev_step_writer, name, dest, ref, prev_maneuver, maneuver,
                               arrive_maneuver, &etp, mnvr_type, modifier, ex, prev_distance,
@@ -1887,7 +1887,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
       if (options.voice_instructions()) {
         if (!prev_step_json.empty() && prev_maneuver) {
           rapidjson::writer_wrapper_t prev_step_writer;
-          prev_step_writer(prev_step_json);
+          prev_step_writer.raw_json(prev_step_json);
           // voiceInstructions is an array, because there may be similar voice instructions.
           // When the step is long enough, there may be multiple voice instructions.
           prev_step_writer.start_array("voiceInstructions");
@@ -1939,7 +1939,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
 
       step_writer.end_object(); // step
       if (maneuver_index > 0)
-        writer(prev_step_json);
+        writer.raw_json(prev_step_json + ",");
 
       // Add step
       prev_step_json = step_writer.get_buffer();
@@ -1952,7 +1952,7 @@ void serialize_legs(rapidjson::writer_wrapper_t& writer,
     } // end maneuver loop
 
     if (!prev_step_json.empty())
-      writer(prev_step_json);
+      writer.raw_json(prev_step_json);
 
     // Add steps to the leg
     writer.end_array(); // steps
