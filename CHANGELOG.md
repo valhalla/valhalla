@@ -127,6 +127,7 @@
    * CHANGED: Use rapidjson for height serializer [#5277](https://github.com/valhalla/valhalla/pull/5277)
    * CHANGED: Use rapidjson for transit_available serializer [#5430](https://github.com/valhalla/valhalla/pull/5430)
    * CHANGED: Switch from CircleCI to Github Actions [#5427](https://github.com/valhalla/valhalla/pull/5427)
+   * ADDED: Support for storing osm node ids either just for graph nodes or also for all nodes (non-topological) [#5450](https://github.com/valhalla/valhalla/pull/5450)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
