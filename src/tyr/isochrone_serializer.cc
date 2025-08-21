@@ -1,9 +1,7 @@
-
-#include "baldr/json.h"
-#include "midgard/point2.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/pointll.h"
-#include "thor/worker.h"
 #include "tyr/serializers.h"
+#include "worker.h"
 
 #include <cmath>
 #include <sstream>
@@ -126,34 +124,51 @@ std::string getIntervalColor(std::vector<contour_interval_t>& intervals, size_t 
   return hex.str();
 }
 
-void addLocations(Api& request, valhalla::baldr::json::ArrayPtr& features) {
+void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
   int idx = 0;
   for (const auto& location : request.options().locations()) {
+    writer.start_object(); // feature 1
+    writer.start_object("geometry");
+    writer.start_array("coordinates");
     // first add all snapped points as MultiPoint feature per origin point
-    auto snapped_points_array = array({});
     std::unordered_set<PointLL> snapped_points;
+    writer.set_precision(tyr::kCoordinatePrecision);
     for (const auto& path_edge : location.correlation().edges()) {
       const PointLL& snapped_current = PointLL(path_edge.ll().lng(), path_edge.ll().lat());
       // remove duplicates of path_edges in case the snapped object is a node
       if (snapped_points.insert(snapped_current).second) {
-        snapped_points_array->push_back(
-            array({fixed_t{snapped_current.lng(), 6}, fixed_t{snapped_current.lat(), 6}}));
+        writer.start_array();
+        writer(snapped_current.lng());
+        writer(snapped_current.lat());
+        writer.end_array();
       }
     };
-    features->emplace_back(map({{"type", std::string("Feature")},
-                                {"properties", map({{"type", std::string("snapped")},
-                                                    {"location_index", static_cast<uint64_t>(idx)}})},
-                                {"geometry", map({{"type", std::string("MultiPoint")},
-                                                  {"coordinates", snapped_points_array}})}}));
+    writer.end_array(); // coordinates
+    writer("type", "MultiPoint");
+    writer.end_object(); // geometry
+    writer.start_object("properties");
+    writer("location_index", static_cast<uint64_t>(idx));
+    writer("type", "snapped");
+    writer.end_object(); // properties
+    writer("type", "Feature");
+    writer.end_object(); // feature 1
 
+    writer.start_object(); // feature 2
+    writer.start_object("geometry");
     // then each user input point as separate Point feature
     const valhalla::LatLng& input_latlng = location.ll();
-    const auto input_array = array({fixed_t{input_latlng.lng(), 6}, fixed_t{input_latlng.lat(), 6}});
-    features->emplace_back(
-        map({{"type", std::string("Feature")},
-             {"properties",
-              map({{"type", std::string("input")}, {"location_index", static_cast<uint64_t>(idx)}})},
-             {"geometry", map({{"type", std::string("Point")}, {"coordinates", input_array}})}}));
+    writer.start_array("coordinates");
+    writer(input_latlng.lng());
+    writer(input_latlng.lat());
+    writer.end_array(); // coordinates
+    writer("type", "Point");
+    writer.end_object(); // geometry
+    writer.start_object("properties");
+    writer("location_index", static_cast<uint64_t>(idx));
+    writer("type", "input");
+    writer.end_object(); // properties
+    writer("type", "Feature");
+    writer.end_object(); // feature 2
     idx++;
   }
 }
@@ -248,9 +263,11 @@ std::string serializeIsochroneJson(Api& request,
                                    contours_t& contours,
                                    bool show_locations,
                                    bool polygons) {
+  rapidjson::writer_wrapper_t writer(4096);
+  writer.start_object(); // feature_collection
+  writer.start_array("features");
   // for each contour interval
   int i = 0;
-  auto features = array({});
   assert(intervals.size() == contours.size());
   for (size_t contour_index = 0; contour_index < intervals.size(); ++contour_index) {
     const auto& interval = intervals[contour_index];
@@ -261,71 +278,70 @@ std::string serializeIsochroneJson(Api& request,
 
     // for each feature on that interval
     for (const auto& feature : interval_contours) {
+      writer.start_object(); // feature
+
+      writer.set_precision(2);
+      writer.start_object("properties");
+      writer("fill-opacity", .33f); // geojson.io polys
+      writer("fillColor", hex);     // leaflet polys
+      writer("opacity", .33f);      // lines
+      writer("fill", hex);          // geojson.io polys
+      writer("fillOpacity", .33f);  // leaflet polys
+      writer("color", hex);         // lines
+      writer("contour", std::get<1>(interval));
+      writer("metric", std::get<2>(interval));
+      writer.end_object(); // properties
+
+      writer.start_object("geometry");
+      writer.start_array("coordinates");
       grouped_contours_t groups = GroupContours(polygons, feature);
-      auto geom = array({});
       // each group is a polygon consisting of an exterior ring and possibly inner rings
+      writer.set_precision(tyr::kCoordinatePrecision);
       for (const auto& group : groups) {
-        auto poly = array({});
+        if (polygons && groups.size() > 1) // start a MultiPolygon?
+          writer.start_array();            // poly
         for (const auto& ring : group) {
-          auto ring_coords = array({});
+          if (polygons)
+            writer.start_array(); // ring_coords
           for (const auto& pair : *ring) {
-            ring_coords->push_back(array({fixed_t{pair.lng(), 6}, fixed_t{pair.lat(), 6}}));
+            writer.start_array();
+            writer(pair.lng());
+            writer(pair.lat());
+            writer.end_array();
           }
-          if (polygons) {
-            poly->emplace_back(ring_coords);
-          } else {
-            poly = ring_coords;
-          }
+          if (polygons)
+            writer.end_array(); // ring_coords
         }
-        geom->emplace_back(poly);
+        if (polygons && groups.size() > 1)
+          writer.end_array(); // poly
       }
 
-      // add a feature
-      features->emplace_back(map({
-          {"type", std::string("Feature")},
-          {"geometry",
-           map({
-               {"type", std::string(polygons ? groups.size() > 1 ? "MultiPolygon" : "Polygon"
-                                             : "LineString")},
-               {"coordinates",
-                polygons && geom->size() > 1 ? geom : geom->at(0)}, // unwrap linestring, or polygon
-                                                                    // if there's only one
-           })},
-          {"properties", map({
-                             {"metric", std::get<2>(interval)},
-                             {"contour", baldr::json::float_t{std::get<1>(interval)}},
-                             {"color", hex},                     // lines
-                             {"fill", hex},                      // geojson.io polys
-                             {"fillColor", hex},                 // leaflet polys
-                             {"opacity", fixed_t{.33f, 2}},      // lines
-                             {"fill-opacity", fixed_t{.33f, 2}}, // geojson.io polys
-                             {"fillOpacity", fixed_t{.33f, 2}},  // leaflet polys
-                         })},
-      }));
+      writer.end_array(); // coordinates
+      writer("type", polygons ? groups.size() > 1 ? "MultiPolygon" : "Polygon" : "LineString");
+      writer.end_object(); // geometry
+
+      writer("type", "Feature");
+      writer.end_object(); // feature
     }
   }
 
   if (show_locations)
-    addLocations(request, features);
+    addLocations(request, writer);
+  writer.end_array(); // features
 
-  auto feature_collection = map({
-      {"type", std::string("FeatureCollection")},
-      {"features", features},
-  });
+  writer("type", "FeatureCollection");
 
   if (request.options().has_id_case()) {
-    feature_collection->emplace("id", request.options().id());
+    writer("id", request.options().id());
   }
 
   // add warnings to json response
   if (request.info().warnings_size() >= 1) {
-    feature_collection->emplace("warnings", serializeWarnings(request));
+    serializeWarnings(request, writer);
   }
 
-  std::stringstream ss;
-  ss << *feature_collection;
-
-  return ss.str();
+  writer.end_object(); // feature_collection
+  return writer.get_buffer();
 }
 
 std::string serializeIsochronePbf(Api& request,

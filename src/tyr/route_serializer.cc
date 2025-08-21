@@ -1,6 +1,4 @@
 #include "midgard/encoded.h"
-#include "midgard/util.h"
-#include "proto/directions.pb.h"
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 #include "route_serializer_osrm.h"

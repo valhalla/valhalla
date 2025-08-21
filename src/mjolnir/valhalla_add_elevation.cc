@@ -2,7 +2,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
-#include "baldr/rapidjson_utils.h"
 #include "mjolnir/elevationbuilder.h"
 
 #include <boost/property_tree/ptree.hpp>

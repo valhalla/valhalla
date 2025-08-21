@@ -1,7 +1,6 @@
 #include "argparse_utils.h"
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"

@@ -190,13 +190,13 @@
         "the tunnel"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilométerek",
+        "<KILOMETERS> kilométer",
         "1 kilométer",
-        "<METERS> méterek",
-        "lkevesebb, mint 10 méter"
+        "<METERS> méter",
+        "kevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
-        "<MILES> mérföldek",
+        "<MILES> mérföld",
         "1 mérföld",
         "egy fél mérföld",
         "egy negyed mérföld",
@@ -1220,9 +1220,9 @@
         "the tunnel"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilométerek",
+        "<KILOMETERS> kilométer",
         "1 kilométer",
-        "<METERS> méterek",
+        "<METERS> méter",
         "kevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
@@ -1652,13 +1652,13 @@
         "the tunnel"
       ],
       "metric_lengths": [
-        "<KILOMETERS> kilométerek",
+        "<KILOMETERS> kilométer",
         "1 kilométer",
-        "<METERS> méterek",
+        "<METERS> méter",
         "kevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
-        "<MILES> mérföldek",
+        "<MILES> mérföld",
         "1 mérföld",
         "fél mérföld",
         "negyed mérföld",
@@ -1747,7 +1747,7 @@
         "vonat",
         "busz",
         "komp",
-        "Felvonó",
+        "felvonó",
         "gondola",
         "sikló"
       ],
@@ -2205,13 +2205,13 @@
         "1": "<CURRENT_VERBAL_CUE> Aztán, <LENGTH> hosszban, <NEXT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilométerek",
+        "<KILOMETERS> kilométer",
         "1 kilométer",
-        "<METERS> méterek",
+        "<METERS> méter",
         "kevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
-        "<MILES> mérföldek",
+        "<MILES> mérföld",
         "1 mérföld",
         "fél mérföld",
         "negyed mérföld",
@@ -2232,13 +2232,13 @@
         "0": "<LENGTH> távon belül, <CURRENT_VERBAL_CUE>"
       },
       "metric_lengths": [
-        "<KILOMETERS> kilométerek",
+        "<KILOMETERS> kilométer",
         "1 kilométer",
-        "<METERS> méterek",
+        "<METERS> méter",
         "kevesebb, mint 10 méter"
       ],
       "us_customary_lengths": [
-        "<MILES> mérföldek",
+        "<MILES> mérföld",
         "1 mérföld",
         "fél mérföld",
         "negyed mérföld",

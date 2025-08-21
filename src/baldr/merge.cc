@@ -1,6 +1,5 @@
 #include "baldr/merge.h"
 #include "baldr/graphreader.h"
-#include "baldr/tilehierarchy.h"
 
 #include <boost/range/adaptor/map.hpp>
 

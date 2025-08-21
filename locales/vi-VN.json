@@ -1,0 +1,2353 @@
+{
+  "posix_locale": "vi_VN.UTF-8",
+  "aliases": [
+    "vi"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "Đến nơi: <TIME>.",
+        "1": "Đến nơi: <TIME> tại <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive: 8:02 AM."
+        ],
+        "1": [
+          "Arrive: 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "Đến nơi lúc <TIME>.",
+        "1": "Đi đến <TIME> lúc <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Arrive at 8:02 AM."
+        ],
+        "1": [
+          "Arrive at 8:02 AM at 8 St - NYU."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION>.",
+        "1": "Giữ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Giữ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để đi trên <STREET_NAMES>.",
+        "4": "Giữ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Giữ <RELATIVE_DIRECTION> về phía <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "bên trái",
+        "bên phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road/US 1 Business. Continue on US 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on US 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION>.",
+        "1": "Giữ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Giữ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để đi trên <STREET_NAMES>.",
+        "4": "Giữ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Giữ <RELATIVE_DIRECTION> về phía <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "bên trái",
+        "bên phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right."
+        ],
+        "1": [
+          "Bear left onto Arlen Road."
+        ],
+        "2": [
+          "Bear right onto Belair Road, U.S. 1 Business."
+        ],
+        "3": [
+          "Bear left to stay on U.S. 15 South."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> đổi tên thành <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> đổi tên thành <STREET_NAMES>."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street becomes Middletown Road."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "Đi tiếp.",
+        "1": "Tiếp tục đi trên <STREET_NAMES>.",
+        "2": "Tiếp tục đi tại <JUNCTION_NAME>.",
+        "3": "Tiếp tục đi về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "Đi tiếp.",
+        "1": "Tiếp tục đi thêm <LENGTH>.",
+        "2": "Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Tiếp tục đi trên <STREET_NAMES> <LENGTH> nữa.",
+        "4": "Tiếp tục đi tại <JUNCTION_NAME>.",
+        "5": "Tiếp tục đi tại <JUNCTION_NAME> <LENGTH> nữa.",
+        "6": "Tiếp tục đi về hướng <TOWARD_SIGN>.",
+        "7": "Tiếp tục đi về hướng <TOWARD_SIGN> <LENGTH> nữa ."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "Đi tiếp.",
+        "1": "Tiếp tục đi trên <STREET_NAMES>.",
+        "2": "Tiếp tục đi tại <JUNCTION_NAME>.",
+        "3": "Tiếp tục đi về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue on 10th Avenue."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "Khởi hành: <TIME>.",
+        "1": "Khởi hành: <TIME> từ <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart: 8:02 AM."
+        ],
+        "1": [
+          "Depart: 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "Khởi hành lúc <TIME>.",
+        "1": "Khởi hành lúc <TIME> từ <TRANSIT_STOP>."
+      },
+      "example_phrases": {
+        "0": [
+          "Depart at 8:02 AM."
+        ],
+        "1": [
+          "Depart at 8:02 AM from 8 St - NYU."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "Bạn đã tới nơi.",
+        "1": "Bạn đã tới <DESTINATION>.",
+        "2": "Điểm đến của bạn nằm ở <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> nằm ở <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 3206 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "Bạn đã tới nơi.",
+        "1": "Bạn đã tới <DESTINATION>.",
+        "2": "Điểm đến của bạn nằm ở <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> nằm ở <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "You have arrived at your destination."
+        ],
+        "1": [
+          "You have arrived at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination is on the left.",
+          "Your destination is on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company is on the left."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "Bạn sẽ tới nơi.",
+        "1": "Bạn sẽ tới <DESTINATION>.",
+        "2": "Địa điểm của bạn sẽ nằm ở <RELATIVE_DIRECTION>.",
+        "3": "<DESTINATION> sẽ nằm ở <RELATIVE_DIRECTION>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "You will arrive at your destination."
+        ],
+        "1": [
+          "You will arrive at 32 o6 Powelton Avenue."
+        ],
+        "2": [
+          "Your destination will be on the left.",
+          "Your destination will be on the right."
+        ],
+        "3": [
+          "Lancaster Brewing Company will be on the left."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "Đi lên Phà.",
+        "1": "Đi lên <STREET_NAMES>.",
+        "2": "Đi lên <STREET_NAMES> chuyến <FERRY_LABEL>.",
+        "3": "Đi chuyến phà về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "ferry_label": "Phà",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "Đi lên Phà.",
+        "1": "Đi vào <STREET_NAMES>.",
+        "2": "Đi lên <STREET_NAMES> chuyến <FERRY_LABEL>.",
+        "3": "Đi chuyến phà về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "ferry_label": "Phà",
+      "example_phrases": {
+        "0": [
+          "Take the Ferry."
+        ],
+        "1": [
+          "Take the Millersburg Ferry."
+        ],
+        "2": [
+          "Take the Bridgeport - Port Jefferson Ferry."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "Đi vào vòng xuyến.",
+        "1": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE>.",
+        "2": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Tiếp tục đi trên <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> về hướng <TOWARD_SIGN>.",
+        "5": "Đi vào vòng xuyến và rẽ ra ngoài vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Đi vào vòng xuyến và rẽ ra ngoài vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Tiếp tục đi trên <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Đi vào vòng xuyến và rẽ ra ngoài về hướng <TOWARD_SIGN>.",
+        "8": "Đi vào <STREET_NAMES>",
+        "9": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE>.",
+        "10": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Tiếp tục đi trên <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> về hướng <TOWARD_SIGN>.",
+        "13": "Đi vào <STREET_NAMES> và rẽ ra ngoài vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Đi vào <STREET_NAMES> và rẽ ra ngoài vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Tiếp tục đi trên <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Đi vào <STREET_NAMES> và rẽ ra ngoài về hướng <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "thứ 1",
+        "thứ 2",
+        "thứ 3",
+        "thứ 4",
+        "thứ 5",
+        "thứ 6",
+        "thứ 7",
+        "thứ 8",
+        "thứ 9",
+        "thứ 10"
+      ],
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "Đi vào vòng xuyến.",
+        "1": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE>.",
+        "2": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Đi vào vòng xuyến và rẽ ra tại lối rẽ <ORDINAL_VALUE> về hướng <TOWARD_SIGN>.",
+        "5": "Đi vào vòng xuyến và rẽ ra ngoài vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Đi vào vòng xuyến và rẽ ra ngoài vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Đi vào vòng xuyến và rẽ ra ngoài về hướng <TOWARD_SIGN>.",
+        "8": "Đi vào <STREET_NAMES>",
+        "9": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE>.",
+        "10": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại lối rẽ <ORDINAL_VALUE> vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Đi vào <STREET_NAMES> và rẽ ra ngoài tại đoạn rẽ <ORDINAL_VALUE> về hướng <TOWARD_SIGN>.",
+        "13": "Đi vào <STREET_NAMES> và rẽ ra ngoài vào <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Đi vào <STREET_NAMES> và rẽ ra ngoài vào <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Đi vào <STREET_NAMES> và rẽ ra ngoài về hướng <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "thứ 1",
+        "thứ 2",
+        "thứ 3",
+        "thứ 4",
+        "thứ 5",
+        "thứ 6",
+        "thứ 7",
+        "thứ 8",
+        "thứ 9",
+        "thứ 10"
+      ],
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the roundabout."
+        ],
+        "1": [
+          "Enter the roundabout and take the 1st exit.",
+          "Enter the roundabout and take the 2nd exit.",
+          "Enter the roundabout and take the 3rd exit.",
+          "Enter the roundabout and take the 4th exit.",
+          "Enter the roundabout and take the 5th exit.",
+          "Enter the roundabout and take the 6th exit.",
+          "Enter the roundabout and take the 7th exit.",
+          "Enter the roundabout and take the 8th exit.",
+          "Enter the roundabout and take the 9th exit.",
+          "Enter the roundabout and take the 10th exit."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "Rẽ ra ngoài tại đoạn rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION>.",
+        "2": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> phía <RELATIVE_DIRECTION>.",
+        "3": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN>.",
+        "4": "Rẽ ra ngoài vào đoạn rẽ phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "5": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "6": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "7": "Rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "8": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION>.",
+        "10": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN>.",
+        "12": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "14": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "15": "Rẽ ra ngoài.",
+        "16": "Rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN>.",
+        "17": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN>.",
+        "18": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <BRANCH_SIGN>.",
+        "19": "Rẽ ra ngoài về hướng <TOWARD_SIGN>.",
+        "20": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> về hướng <TOWARD_SIGN>.",
+        "21": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "22": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "23": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN>.",
+        "25": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> vào <BRANCH_SIGN>.",
+        "27": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> về hướng <TOWARD_SIGN>.",
+        "29": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the US 322 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto US 322 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the US 322 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto US 322 West toward Lewistown/State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto MD 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "Rẽ ra khỏi vòng xuyến.",
+        "1": "Rẽ ra khỏi vòng xuyến vào <STREET_NAMES>.",
+        "2": "Rẽ ra khỏi vòng xuyến vào <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ ra khỏi vòng xuyến về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road/MD 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway/US 15. Continue on US 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "Rẽ ra khỏi vòng xuyến.",
+        "1": "Rẽ ra khỏi vòng xuyến vào <STREET_NAMES>.",
+        "2": "Rẽ ra khỏi vòng xuyến vào <BEGIN_STREET_NAMES>.",
+        "3": "Rẽ ra khỏi vòng xuyến về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the roundabout."
+        ],
+        "1": [
+          "Exit the roundabout onto Philadelphia Road, Maryland 7."
+        ],
+        "2": [
+          "Exit the roundabout onto Catoctin Mountain Highway, U.S. 15."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "Rẽ ra ngoài tại đoạn rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ vào đoạn rẽ <NUMBER_SIGN> ở <RELATIVE_DIRECTION>.",
+        "2": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> phía <RELATIVE_DIRECTION>.",
+        "3": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN>.",
+        "4": "Rẽ ra ngoài vào đoạn rẽ phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "5": "Rẽ vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "6": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "7": "Rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "8": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION>.",
+        "10": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN>.",
+        "12": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "14": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> phía <RELATIVE_DIRECTION> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "15": "Rẽ ra ngoài.",
+        "16": "Rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN>.",
+        "17": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN>.",
+        "18": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <BRANCH_SIGN>.",
+        "19": "Rẽ ra ngoài về hướng <TOWARD_SIGN>.",
+        "20": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> về hướng <TOWARD_SIGN>.",
+        "21": "Rẽ ra ngoài tại đoạn rẽ <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "22": "Rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "23": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN>.",
+        "25": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> vào <BRANCH_SIGN>.",
+        "27": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> về hướng <TOWARD_SIGN>.",
+        "29": "Rẽ ra ngoài tại đoạn rẽ <NAME_SIGN> vào <BRANCH_SIGN> về hướng <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the exit on the left.",
+          "Take the exit on the right."
+        ],
+        "1": [
+          "Take exit 67 B-A on the right."
+        ],
+        "2": [
+          "Take the U.S. 3 22 West exit on the right."
+        ],
+        "3": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West."
+        ],
+        "4": [
+          "Take the exit on the right toward Lewistown."
+        ],
+        "5": [
+          "Take exit 67 B-A on the right toward Lewistown."
+        ],
+        "6": [
+          "Take the U.S. 3 22 West exit on the right toward Lewistown."
+        ],
+        "7": [
+          "Take exit 67 B-A on the right onto U.S. 3 22 West toward Lewistown, State College."
+        ],
+        "8": [
+          "Take the White Marsh Boulevard exit on the left."
+        ],
+        "10": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East."
+        ],
+        "12": [
+          "Take the White Marsh Boulevard exit on the left toward White Marsh."
+        ],
+        "14": [
+          "Take the White Marsh Boulevard exit on the left onto Maryland 43 East toward White Marsh."
+        ],
+        "15": [
+          "Take the exit."
+        ],
+        "16": [
+          "Take exit 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "Take exit 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "Take exit 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "Take exit 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "Rẽ ra khỏi <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "Exit 1A"
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION> tại điểm giao.",
+        "1": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN>.",
+        "2": "Giữ <RELATIVE_DIRECTION> để đi vào <STREET_NAMES>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <STREET_NAMES>.",
+        "4": "Giữ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "5": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN> về hướng <TOWARD_SIGN>.",
+        "6": "Giữ <RELATIVE_DIRECTION> để đi vào <STREET_NAMES> về hướng <TOWARD_SIGN>.",
+        "7": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <STREET_NAMES> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "thẳng",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take I 895 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto I 895 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take I 895 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto I 895 South toward Annapolis."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "1": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> để tiếp tục đi trên <STREET_NAMES>.",
+        "2": "Giữ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES> về hướng <TOWARD_SIGN>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> để tiếp tục đi trên <STREET_NAMES> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "thẳng",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on I 95 South.",
+          "Keep straight to stay on I 95 South.",
+          "Keep right to stay on I 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on I 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on I 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "1": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> để tiếp tục đi trên <STREET_NAMES>.",
+        "2": "Giữ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES> về hướng <TOWARD_SIGN>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> để tiếp tục đi trên <STREET_NAMES> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "thẳng",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left to stay on Interstate 95 South.",
+          "Keep straight to stay on Interstate 95 South.",
+          "Keep right to stay on Interstate 95 South."
+        ],
+        "1": [
+          "Keep left to take exit 62 to stay on Interstate 95 South."
+        ],
+        "2": [
+          "Keep left to stay on I 95 South toward Baltimore."
+        ],
+        "3": [
+          "Keep left to take exit 62 to stay on Interstate 95 South toward Baltimore."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "Giữ <RELATIVE_DIRECTION> tại điểm giao.",
+        "1": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN>.",
+        "2": "Giữ <RELATIVE_DIRECTION> để đi vào <STREET_NAMES>.",
+        "3": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <STREET_NAMES>.",
+        "4": "Giữ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "5": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài vào đoạn rẽ <NUMBER_SIGN> về hướng <TOWARD_SIGN>.",
+        "6": "Giữ <RELATIVE_DIRECTION> để đi vào <STREET_NAMES> về hướng <TOWARD_SIGN>.",
+        "7": "Giữ <RELATIVE_DIRECTION> để rẽ ra ngoài tại đoạn rẽ <NUMBER_SIGN> vào <STREET_NAMES> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "thẳng",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Keep left at the fork.",
+          "Keep straight at the fork.",
+          "Keep right at the fork."
+        ],
+        "1": [
+          "Keep right to take exit 62."
+        ],
+        "2": [
+          "Keep right to take Interstate 8 95 South."
+        ],
+        "3": [
+          "Keep right to take exit 62 onto Interstate 8 95 South."
+        ],
+        "4": [
+          "Keep right toward Annapolis."
+        ],
+        "5": [
+          "Keep right to take exit 62 toward Annapolis."
+        ],
+        "6": [
+          "Keep right to take Interstate 8 95 South toward Annapolis."
+        ],
+        "7": [
+          "Keep right to take exit 62 onto Interstate 8 95 South toward Annapolis."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "Sáp nhập.",
+        "1": "Sáp nhập <RELATIVE_DIRECTION>.",
+        "2": "Sáp nhập vào <STREET_NAMES>.",
+        "3": "Sáp nhập <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "4": "Sáp nhập về hướng <TOWARD_SIGN>.",
+        "5": "Sáp nhập <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "Sáp nhập.",
+        "1": "Sáp nhập <RELATIVE_DIRECTION>.",
+        "2": "Sáp nhập vào <STREET_NAMES>.",
+        "3": "Sáp nhập <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "4": "Sáp nhập về hướng <TOWARD_SIGN>.",
+        "5": "Sáp nhập <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "example_phrases": {
+        "0": [
+          "Merge."
+        ],
+        "1": [
+          "Merge left."
+        ],
+        "2": [
+          "Merge onto I 76 West/Pennsylvania Turnpike."
+        ],
+        "3": [
+          "Merge right onto I 83 South."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "Di chuyển qua <TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>."
+      },
+      "transit_stop_count_labels": {
+        "one": "bến",
+        "other": "bến"
+      },
+      "example_phrases": {
+        "0": [
+          "Travel 1 stop.",
+          "Travel 3 stops."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "Tiếp tục đi thêm <LENGTH>.",
+        "1": "Tiếp tục đi trên <STREET_NAMES> <LENGTH> nữa."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue for 300 feet.",
+          "Continue for 9 miles."
+        ],
+        "1": [
+          "Continue on Pennsylvania 7 43 for 6.2 miles.",
+          "Continue on Main Street, Vermont 30 for 1 tenth of a mile."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "Đi vào đoạn đường nối phía <RELATIVE_DIRECTION>.",
+        "1": "Đi vào đoạn đường nối <BRANCH_SIGN> phía <RELATIVE_DIRECTION>.",
+        "2": "Đi vào đoạn đường nối phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "3": "Đi vào đoạn đường nối <BRANCH_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "4": "Đi vào đoạn đường nối <NAME_SIGN> phía <RELATIVE_DIRECTION>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối.",
+        "6": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <BRANCH_SIGN>.",
+        "7": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "8": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "9": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <NAME_SIGN>.",
+        "10": "Đi vào đoạn đường nối.",
+        "11": "Đi vào đoạn đường nối <BRANCH_SIGN>.",
+        "12": "Đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "13": "Đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "14": "Đi vào đoạn đường nối <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the I 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the PA 283 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the PA 283 West ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the I 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the Soutch Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg ramp."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "Đi thẳng để đi vào đoạn đường nối.",
+        "1": "Đi thẳng để rẽ vào đoạn đường nối <BRANCH_SIGN>.",
+        "2": "Đi thẳng để đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "3": "Đi thẳng để đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "4": "Đi thẳng để đi vào đoạn đường nối <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the US 322 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the US 322 East/US 422 East/US 522 East/US 622 East ramp toward Hershey/Palmdale/Palmyra/Campbelltown."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "Đi thẳng để đi vào đoạn đường nối.",
+        "1": "Đi thẳng để rẽ vào đoạn đường nối <BRANCH_SIGN>.",
+        "2": "Đi thẳng để đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "3": "Đi thẳng để đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "4": "Đi thẳng để đi vào đoạn đường nối <NAME_SIGN>."
+      },
+      "example_phrases": {
+        "0": [
+          "Stay straight to take the ramp."
+        ],
+        "1": [
+          "Stay straight to take the U.S. 3 22 East ramp."
+        ],
+        "2": [
+          "Stay straight to take the ramp toward Hershey."
+        ],
+        "3": [
+          "Stay straight to take the U.S. 3 22 East, U.S. 4 22 East ramp toward Hershey, Palmdale."
+        ],
+        "4": [
+          "Stay straight to take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "Đi vào đoạn đường nối phía <RELATIVE_DIRECTION>.",
+        "1": "Đi vào đoạn đường nối <BRANCH_SIGN> phía <RELATIVE_DIRECTION>.",
+        "2": "Đi vào đoạn đường nối phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "3": "Đi vào đoạn đường nối <BRANCH_SIGN> phía <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>.",
+        "4": "Đi vào đoạn đường nối <NAME_SIGN> phía <RELATIVE_DIRECTION>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối.",
+        "6": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <BRANCH_SIGN>.",
+        "7": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "8": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "9": "Rẽ <RELATIVE_DIRECTION> để đi vào đoạn đường nối <NAME_SIGN>.",
+        "10": "Đi vào đoạn đường nối.",
+        "11": "Đi vào đoạn đường nối <BRANCH_SIGN>.",
+        "12": "Đi vào đoạn đường nối về hướng <TOWARD_SIGN>.",
+        "13": "Đi vào đoạn đường nối <BRANCH_SIGN> về hướng <TOWARD_SIGN>.",
+        "14": "Đi vào đoạn đường nối <NAME_SIGN>."
+      },
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the ramp on the left.",
+          "Take the ramp on the right."
+        ],
+        "1": [
+          "Take the Interstate 95 ramp on the right."
+        ],
+        "2": [
+          "Take the ramp on the left toward JFK."
+        ],
+        "3": [
+          "Take the South Conduit Avenue ramp on the left toward JFK."
+        ],
+        "4": [
+          "Take the Gettysburg Pike ramp on the right."
+        ],
+        "5": [
+          "Turn left to take the ramp.",
+          "Turn right to take the ramp."
+        ],
+        "6": [
+          "Turn left to take the Pennsylvania 2 83 West ramp."
+        ],
+        "7": [
+          "Turn left to take the ramp toward Harrisburg/Harrisburg International Airport."
+        ],
+        "8": [
+          "Turn left to take the Pennsylvania 2 83 West ramp toward Harrisburg, Harrisburg International Airport."
+        ],
+        "9": [
+          "Turn right to take the Gettysburg Pike ramp."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the Interstate 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the South Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a sharp left."
+        ],
+        "1": [
+          "Make a sharp right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Make a sharp left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Make a sharp right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "Đi về phía <CARDINAL_DIRECTION>.",
+        "1": "Đi về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "2": "Đi về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Lái về phía <CARDINAL_DIRECTION>.",
+        "5": "Lái về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "6": "Lái về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "8": "Đi bộ về phía <CARDINAL_DIRECTION>.",
+        "9": "Đi bộ về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "10": "Đi bộ về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "16": "Đạp xe về phía <CARDINAL_DIRECTION>.",
+        "17": "Đạp xe về phía<CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "18": "Đạp xe về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "bắc",
+        "đông bắc",
+        "đông",
+        "đông nam",
+        "nam",
+        "tây nam",
+        "tây",
+        "tây bắc"
+      ],
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head southwest on 5th Avenue.",
+          "Head west on the walkway",
+          "Head east on the cycleway",
+          "Head north on the mountain bike trail"
+        ],
+        "2": [
+          "Head south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "4": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "5": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "6": [
+          "Drive south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "8": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "9": [
+          "Walk southwest on 5th Avenue.",
+          "Walk west on the walkway"
+        ],
+        "10": [
+          "Walk south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ],
+        "16": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue.",
+          "Bike east on the cycleway",
+          "Bike north on the mountain bike trail"
+        ],
+        "18": [
+          "Bike south on North Prince Street/US 222/PA 272. Continue on US 222/PA 272."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "Đi về phía <CARDINAL_DIRECTION>.",
+        "1": "Đi về phía <CARDINAL_DIRECTION> <LENGTH> nữa.",
+        "2": "Đi về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "3": "Đi về phía <CARDINAL_DIRECTION> trên <STREET_NAMES> <LENGTH> nữa.",
+        "4": "Đi về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>.",
+        "5": "Lái về phía <CARDINAL_DIRECTION>.",
+        "6": "Lái về phía <CARDINAL_DIRECTION> <LENGTH> nữa.",
+        "7": "Lái về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "8": "Lái về phía <CARDINAL_DIRECTION> trên <STREET_NAMES> <LENGTH> nữa.",
+        "9": "Lái về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>.",
+        "10": "Đi bộ về phía <CARDINAL_DIRECTION>.",
+        "11": "Đi bộ vê phía <CARDINAL_DIRECTION> <LENGTH> nữa.",
+        "12": "Đi bộ về phía <CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "13": "Đi bộ về phía <CARDINAL_DIRECTION> trên <STREET_NAMES> <LENGTH> nữa.",
+        "14": "Đi bộ về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>.",
+        "15": "Đạp xe về phía <CARDINAL_DIRECTION>.",
+        "16": "Đạp xe về phía <CARDINAL_DIRECTION> <LENGTH> nữa.",
+        "17": "Đạp xe về phía<CARDINAL_DIRECTION> trên <STREET_NAMES>.",
+        "18": "Đạp xe về phía <CARDINAL_DIRECTION> trên <STREET_NAMES> <LENGTH> nữa.",
+        "19": "Đạp xe về phía <CARDINAL_DIRECTION> trên <BEGIN_STREET_NAMES>."
+      },
+      "cardinal_directions": [
+        "bắc",
+        "đông bắc",
+        "đông",
+        "đông nam",
+        "nam",
+        "tây nam",
+        "tây",
+        "tây bắc"
+      ],
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
+        ],
+        "2": [
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "4": [
+          "Head south on North Prince Street, U.S. 2 22."
+        ],
+        "5": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "6": [
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "8": [
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "9": [
+          "Drive south on North Prince Street, U.S. 2 22."
+        ],
+        "10": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "16": [
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue."
+        ],
+        "18": [
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "Đi chuyến <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Đi chuyến <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bến",
+        "other": "bến"
+      },
+      "example_phrases": {
+        "0": [
+          "Take the New Haven. (1 stop)",
+          "Take the metro. (2 stops)",
+          "Take the bus. (12 stops)"
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST. (10 stops)",
+          "Take the ferry toward Staten Island. (1 stop)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "Ra khỏi nhà ga.",
+        "1": "Ra khỏi <TRANSIT_STOP>.",
+        "2": "Ra khỏi <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "Ra khỏi nhà ga.",
+        "1": "Ra khỏi <TRANSIT_STOP>.",
+        "2": "Ra khỏi <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga",
+      "example_phrases": {
+        "0": [
+          "Exit the station."
+        ],
+        "1": [
+          "Exit the Embarcadero Station."
+        ],
+        "2": [
+          "Exit the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "Đi vào nhà ga.",
+        "1": "Đi vào<TRANSIT_STOP>.",
+        "2": "Đi vào <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "Đi vào nhà ga.",
+        "1": "Đi vào<TRANSIT_STOP>.",
+        "2": "Đi vào <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga",
+      "example_phrases": {
+        "0": [
+          "Enter the station."
+        ],
+        "1": [
+          "Enter the Embarcadero Station."
+        ],
+        "2": [
+          "Enter the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "Đổi chuyến tại nhà ga.",
+        "1": "Đổi chuyến tại <TRANSIT_STOP>.",
+        "2": "Đổi chuyến tại <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "Đổi chuyến tại nhà ga.",
+        "1": "Đổi chuyến tại <TRANSIT_STOP>.",
+        "2": "Đổi chuyến tại <TRANSIT_STOP> <STATION_LABEL>."
+      },
+      "station_label": "Nhà ga",
+      "example_phrases": {
+        "0": [
+          "Transfer at the station."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station."
+        ],
+        "2": [
+          "Transfer at the 8 St - NYU Station."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "Ở lại trên <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Ở lại trên <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bến",
+        "other": "bến"
+      },
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven. (1 stop)",
+          "Remain on the train. (3 stops)"
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "Tiếp tục trên <TRANSIT_NAME>.",
+        "1": "Tiếp tục trên <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ],
+      "example_phrases": {
+        "0": [
+          "Remain on the New Haven."
+        ],
+        "1": [
+          "Remain on the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "Đổi chuyến sang <TRANSIT_NAME>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "Đổi chuyến sang <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ],
+      "transit_stop_count_labels": {
+        "one": "bến",
+        "other": "bến"
+      },
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven. (1 stop)",
+          "Transfer to take the tram. (4 stops)"
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST. (10 stops)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "Đổi chuyến sang <TRANSIT_NAME>.",
+        "1": "Đổi chuyến sang <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ],
+      "example_phrases": {
+        "0": [
+          "Transfer to take the New Haven."
+        ],
+        "1": [
+          "Transfer to take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "Đi chuyến <TRANSIT_NAME>.",
+        "1": "Đi chuyến <TRANSIT_NAME> về hướng <TRANSIT_HEADSIGN>."
+      },
+      "empty_transit_name_labels": [
+        "xe điện",
+        "tàu điện",
+        "tàu hoả",
+        "xe buýt",
+        "phà",
+        "cáp treo",
+        "thuyền đáy bằng",
+        "đường sắt leo núi"
+      ],
+      "example_phrases": {
+        "0": [
+          "Take the New Haven."
+        ],
+        "1": [
+          "Take the F toward JAMAICA - 179 ST."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>. Tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street/US 1 Business/MD 924. Continue on MD 924."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION>.",
+        "1": "Rẽ <RELATIVE_DIRECTION> vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> vào <BEGIN_STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> để tiếp tục đi trên <STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> tại <JUNCTION_NAME>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Turn left."
+        ],
+        "1": [
+          "Turn right onto Flatbush Avenue."
+        ],
+        "2": [
+          "Turn left onto North Bond Street, U.S. 1 Business."
+        ],
+        "3": [
+          "Turn right to stay on Sunstone Drive."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION> hình chữ U.",
+        "1": "Rẽ <RELATIVE_DIRECTION> hình chữ U vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> hình chữ U để tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES> vào <STREET_NAMES>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES> để đi tiếp trên <STREET_NAMES>.",
+        "6": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <JUNCTION_NAME>.",
+        "7": "Rẽ <RELATIVE_DIRECTION> hình chữ U về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road/US 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road/US 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "Rẽ <RELATIVE_DIRECTION> hình chữ U.",
+        "1": "Rẽ <RELATIVE_DIRECTION> hình chữ U vào <STREET_NAMES>.",
+        "2": "Rẽ <RELATIVE_DIRECTION> hình chữ U để tiếp tục đi trên <STREET_NAMES>.",
+        "3": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES>.",
+        "4": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES> vào <STREET_NAMES>.",
+        "5": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <CROSS_STREET_NAMES> để đi tiếp trên <STREET_NAMES>.",
+        "6": "Rẽ <RELATIVE_DIRECTION> hình chữ U tại <JUNCTION_NAME>.",
+        "7": "Rẽ <RELATIVE_DIRECTION> hình chữ U về hướng <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường",
+        "cầu thang",
+        "cầu",
+        "hầm"
+      ],
+      "relative_directions": [
+        "trái",
+        "phải"
+      ],
+      "example_phrases": {
+        "0": [
+          "Make a left U-turn."
+        ],
+        "1": [
+          "Make a right U-turn onto Bunker Hill Road."
+        ],
+        "2": [
+          "Make a left U-turn to stay on Bunker Hill Road."
+        ],
+        "3": [
+          "Make a left U-turn at Devonshire Road."
+        ],
+        "4": [
+          "Make a left U-turn at Devonshire Road onto Jonestown Road, U.S. 22."
+        ],
+        "5": [
+          "Make a left U-turn at Devonshire Road to stay on Jonestown Road, U.S. 22."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> Rồi <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Rồi, trong <LENGTH> nữa, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ],
+      "example_phrases": {
+        "0": [
+          "Bear right onto East Fayette Street. Then Turn right onto North Gay Street."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "Trong <LENGTH> nữa, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> ki-lô-mét",
+        "1 ki-lô-mét",
+        "<METERS> mét",
+        "ngắn hơn 10 mét"
+      ],
+      "us_customary_lengths": [
+        "<MILES> dặm",
+        "1 dặm",
+        "nửa dặm",
+        "1/4 dặm",
+        "<FEET> bước chân",
+        "ngắn hơn 10 bước chân"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "pass": {
+      "phrases": {
+        "0": "Đi qua <OBJECT_LABEL>.",
+        "1": "Đi qua đèn giao thông trên <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "cổng",
+        "cột trụ",
+        "đường giao nhau"
+      ],
+      "example_phrases": {
+        "0": [
+          "Đi qua cổng."
+        ]
+      }
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Đi thang máy.",
+        "1": "Đi thang máy đến tầng <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the elevator."
+        ],
+        "1": [
+          "Take the elevator to Level 1."
+        ]
+      }
+    },
+    "steps": {
+      "phrases": {
+        "0": "Đi cầu thang.",
+        "1": "Đi cầu thang đến tầng <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the stairs."
+        ],
+        "1": [
+          "Take the stairs to Level 2."
+        ]
+      }
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Đi thang cuốn.",
+        "1": "Đi thang cuốn đến tầng <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the escalator."
+        ],
+        "1": [
+          "Take the escalator to Level 3."
+        ]
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Đi vào toà nhà.",
+        "1": "Đi vào toà nhà, và tiếp tục đi trên <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the building."
+        ],
+        "1": [
+          "Enter the building, and continue on the walkway."
+        ]
+      }
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Ra khỏi toà nhà.",
+        "1": "Ra khỏi toà nhà, và tiếp tục đi trên <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "lối đi bộ",
+        "lối đạp xe",
+        "đường mòn đạp xe quanh núi",
+        "lối băng qua đường"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the building."
+        ],
+        "1": [
+          "Exit the building, and continue on the walkway."
+        ]
+      }
+    }
+  }
+}
