@@ -1,6 +1,5 @@
 #include "tyr/serializers.h"
 #include "baldr/datetime.h"
-#include "baldr/json.h"
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
@@ -176,14 +175,6 @@ void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& wr
     writer.end_object();
   }
   writer.end_array();
-}
-
-json::ArrayPtr serializeWarnings(const valhalla::Api& api) {
-  auto warnings = json::array({});
-  for (const auto& warning : api.info().warnings()) {
-    warnings->emplace_back(json::map({{"code", warning.code()}, {"text", warning.description()}}));
-  }
-  return warnings;
 }
 
 std::string serializePbf(Api& request) {

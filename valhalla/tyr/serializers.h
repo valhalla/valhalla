@@ -2,7 +2,6 @@
 #define __VALHALLA_TYR_SERVICE_H__
 
 #include <valhalla/baldr/attributes_controller.h>
-#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/meili/match_result.h>
@@ -125,7 +124,6 @@ std::string serializePbf(Api& request);
  * @return json string
  */
 void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
-baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
 
 /**
  * Turns a line into a GeoJSON LineString geometry.
