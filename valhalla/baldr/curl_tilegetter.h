@@ -18,9 +18,13 @@ public:
    * @param pool_size  the number of curler instances in the pool
    * @param user_agent  user agent to use by curlers for HTTP requests
    * @param gzipped  whether to request for gzip compressed data
+   * @param user_pw  the "user:pwd" for HTTP basic auth
    */
-  curl_tile_getter_t(const size_t pool_size, const std::string& user_agent, bool gzipped)
-      : curlers_(pool_size, user_agent), gzipped_(gzipped) {
+  curl_tile_getter_t(const size_t pool_size,
+                     const std::string& user_agent,
+                     bool gzipped,
+                     const std::string& user_pw)
+      : curlers_(pool_size, user_agent, user_pw), gzipped_(gzipped) {
   }
 
   using response_t = tile_getter_t::response_t;

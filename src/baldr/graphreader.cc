@@ -554,7 +554,8 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
   if (!tile_getter_ && !tile_url_.empty()) {
     tile_getter_ = std::make_unique<curl_tile_getter_t>(max_concurrent_users_,
                                                         pt.get<std::string>("user_agent", ""),
-                                                        pt.get<bool>("tile_url_gz", false));
+                                                        pt.get<bool>("tile_url_gz", false),
+                                                        pt.get<std::string>("tile_url_user_pw", ""));
   }
 
   const bool is_tar_url =

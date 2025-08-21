@@ -988,6 +988,9 @@ protected:
   std::unique_ptr<tile_getter_t> tile_getter_;
   const size_t max_concurrent_users_;
   const std::string tile_url_;
+  // basic HTTP auth info
+  const std::string tile_url_user_;
+  const std::string tile_url_pw_;
 
   // for remote tar's we grab the index.bin when loading the remote_tar_offsets
   // so we know all tiles' offset & size

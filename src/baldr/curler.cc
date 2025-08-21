@@ -61,7 +61,8 @@ namespace valhalla {
 namespace baldr {
 
 struct curler_t::pimpl_t {
-  pimpl_t(const std::string& user_agent) : connection(init_curl()), user_agent(user_agent) {
+  pimpl_t(const std::string& user_agent, const std::string& user_pw)
+      : connection(init_curl()), user_agent(user_agent), user_pw(user_pw) {
     if (connection.get() == nullptr) {
       LOG_ERROR("Failed to created CURL connection");
       throw std::runtime_error("Failed to created CURL connection");
@@ -99,8 +100,14 @@ struct curler_t::pimpl_t {
     if (range_size) {
       const std::string range =
           std::to_string(range_offset) + "-" + std::to_string(range_offset + range_size - 1);
-      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_RANGE, "0-99"),
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_RANGE, range.c_str()),
                   "Failed to set HTTP Range");
+    }
+
+    // add basic auth if it's supplied
+    if (!user_pw.empty()) {
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_USERPWD, user_pw.c_str()),
+                  "Failed to set HTTP basic auth user and/or password");
     }
 
     // use gzip compression in any case
@@ -141,9 +148,11 @@ struct curler_t::pimpl_t {
   std::shared_ptr<CURL> connection;
   char error[CURL_ERROR_SIZE]{};
   std::string user_agent;
+  std::string user_pw;
 };
 
-curler_t::curler_t(const std::string& user_agent) : pimpl(new pimpl_t(user_agent)) {
+curler_t::curler_t(const std::string& user_agent, const std::string& user_pw)
+    : pimpl(new pimpl_t(user_agent, user_pw)) {
 }
 
 std::vector<char> curler_t::operator()(const std::string& url,
@@ -157,10 +166,12 @@ std::vector<char> curler_t::operator()(const std::string& url,
 
 // curler_pool_t
 
-curler_pool_t::curler_pool_t(const size_t pool_size, const std::string& user_agent)
+curler_pool_t::curler_pool_t(const size_t pool_size,
+                             const std::string& user_agent,
+                             const std::string& user_pw)
     : size_(pool_size) {
   for (size_t i = 0; i < pool_size; ++i) {
-    curlers_.emplace_back(user_agent);
+    curlers_.emplace_back(user_agent, user_pw);
   }
 }
 

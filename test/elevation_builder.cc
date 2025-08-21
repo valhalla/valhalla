@@ -325,7 +325,7 @@ std::string filename(const std::string& url) {
  * @return - full path to the downloaded file.
  * */
 std::string download(const std::string& url, const std::string& path) {
-  curl_tile_getter_t tile_getter(3, "", false);
+  curl_tile_getter_t tile_getter(3, "", false, "");
   std::int8_t repeat{3};
   auto result = tile_getter.get(url);
   while (--repeat > 0 && result.status_ != tile_getter_t::status_code_t::SUCCESS)

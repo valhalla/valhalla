@@ -119,7 +119,7 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
 
   const auto non_existent_tile_id = params.get_nonexistent_tile_id();
 
-  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile);
+  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile, "");
   EXPECT_EQ(tile_getter.gzipped(), params.is_gzipped_tile);
 
   std::vector<std::thread> threads;
@@ -166,7 +166,7 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
 
   const auto non_existent_tile_id = params.get_nonexistent_tile_id();
 
-  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile);
+  curl_tile_getter_t tile_getter(curler_count, "", params.is_gzipped_tile, "");
   EXPECT_EQ(tile_getter.gzipped(), params.is_gzipped_tile);
 
   std::vector<std::thread> threads;
@@ -235,7 +235,7 @@ TEST(HttpTiles, test_interrupt) {
   const auto non_existent_tile_id = params.get_nonexistent_tile_id();
   std::unordered_set<std::string> canceled_uris{url_builder(0), url_builder(2)};
 
-  curl_tile_getter_t tile_getter(2, "", params.is_gzipped_tile);
+  curl_tile_getter_t tile_getter(2, "", params.is_gzipped_tile, "");
   std::string tile_uri;
   const curl_tile_getter_t::interrupt_t interrupt = [&tile_uri, &canceled_uris] {
     if (canceled_uris.find(tile_uri) != canceled_uris.end()) {
