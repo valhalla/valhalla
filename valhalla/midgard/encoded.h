@@ -180,9 +180,19 @@ container_t decode7(const char* encoded, size_t length, const double precision =
                                                                               precision);
 }
 
-template <class container_t>
-container_t decode7int(const char* encoded, size_t length) {
-  return decode<container_t, Int7Decoder<typename container_t::value_type>>(encoded, length);
+// specialized implementation for std::vector with reserve
+template <class container_t, class IntDecoder = Int7Decoder<typename container_t::value_type>>
+typename std::enable_if<
+    std::is_same<std::vector<typename container_t::value_type>, container_t>::value,
+    container_t>::type
+decode7int(const char* encoded, size_t length) {
+  IntDecoder decoder(encoded, length);
+  container_t c;
+  c.reserve(length / 8);
+  while (!decoder.empty()) {
+    c.emplace_back(decoder.pop());
+  }
+  return c;
 }
 
 /**

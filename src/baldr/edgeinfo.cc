@@ -71,6 +71,11 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
     case TaggedValue::kConditionalSpeedLimits: {
       return {std::string(ptr, 1 + sizeof(ConditionalSpeedLimit))};
     }
+    case TaggedValue::kOSMNodeIds: {
+      auto start = ptr + 1;
+      int size = static_cast<int>(parse_varint(start));
+      return {std::string(ptr, (start + size) - ptr)};
+    }
     case TaggedValue::kLinguistic:
     default:
       return {};
@@ -577,6 +582,17 @@ void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {
             writer(range.second);
             writer.end_array();
           }
+        }
+        writer.end_array();
+        break;
+      }
+      case TaggedValue::kOSMNodeIds: {
+        const auto* ptr = value.data();
+        int size = static_cast<int>(parse_varint(ptr));
+        auto ids = midgard::decode7int<std::vector<uint64_t>>(ptr, size);
+        writer.start_array("osm_node_ids");
+        for (const auto& id : ids) {
+          writer(id);
         }
         writer.end_array();
         break;
