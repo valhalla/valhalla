@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <string>
 #include <vector>
@@ -34,7 +35,8 @@ public:
   /**
    * Makes a synchronous request to the corresponding url and returns response_t object.
    * */
-  virtual response_t get(const std::string& url, const size_t offset = 0, const size_t size = 0) = 0;
+  virtual response_t
+  get(const std::string& url, const uint64_t offset = 0, const uint64_t size = 0) = 0;
 
   /**
    * Whether tiles are with .gz extension.
