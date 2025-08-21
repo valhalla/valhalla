@@ -513,7 +513,6 @@ void intersections(rapidjson::writer_wrapper_t& writer,
     // Add rest_stop when passing by a rest_area or service_area
     if (i > 0 && !arrive_maneuver) {
       bool is_rest_stop_closed = false;
-      writer.start_object("rest_stop"); // rest_stop
       for (int m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
@@ -529,25 +528,23 @@ void intersections(rapidjson::writer_wrapper_t& writer,
         }
 
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
+          writer.start_object("rest_stop"); // rest_stop
           writer("type", "rest_area");
           if (!sign_text.empty()) {
             writer("name", sign_text);
           }
           writer.end_object(); // rest_stop
-          is_rest_stop_closed = true;
           break;
         } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
+          writer.start_object("rest_stop"); // rest_stop
           writer("type", "service_area");
           if (!sign_text.empty()) {
             writer("name", sign_text);
           }
           writer.end_object(); // rest_stop
-          is_rest_stop_closed = true;
           break;
         }
       }
-      if (!is_rest_stop_closed)
-        writer.end_object(); // rest_stop
     }
 
     // Get bearings and access to outgoing intersecting edges. Do not add
