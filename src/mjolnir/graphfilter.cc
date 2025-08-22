@@ -435,7 +435,6 @@ void FilterTiles(GraphReader& reader,
                                                   admin.country_iso(), admin.state_iso()));
 
         // Update headings to account for removed edges
-
         if (headings.size() != traversabilities.size()) {
           LOG_ERROR("Headings and traversabilities should be the same size");
         }
