@@ -237,7 +237,7 @@ bool Aggregate(GraphId& start_node,
  * Filter edges to optionally remove edges by access.
  * @param  reader  Graph reader.
  * @param  old_to_new  Map of original node Ids to new nodes Ids (after filtering).
- * updated_local_indexes Map of nodes with updated local edge indexes (after filtering).
+ * @param  updated_local_indexes Map of nodes with updated local edge indexes (after filtering).
  * @param  include_driving  Include edge if driving (any vehicular) access in either direction.
  * @param  include_bicycle  Include edge if bicycle access in either direction.
  * @param  include_pedestrian  Include edge if pedestrian or wheelchair access in either direction.
