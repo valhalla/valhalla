@@ -79,11 +79,31 @@ struct curler_t::pimpl_t {
                 "Failed to disable host verification ");
   }
 
+  HEAD_response_t head(const std::string& url, header_mask_t header_mask) {
+    const bool wants_last_modified = header_mask & tile_getter_t::kHeaderLastModified;
+
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL for HEAD");
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_NOBODY, 1L), "Failed to set HEAD");  // HEAD request
+    if (wants_last_modified)
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FILETIME, 1L), "Failed to enable last-modified header");
+    
+
+    HEAD_response_t result;
+    assert_curl(curl_easy_perform(connection.get()), "Failed to get URL");
+    // grab the return code & last-modified time
+    curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &result.http_code_);
+    if (wants_last_modified)
+      curl_easy_getinfo(connection.get(), CURLINFO_FILETIME_T, &result.last_modified_time_);
+
+    return result;
+  }
+
   // TODO: retries?
-  std::vector<char> fetch(const std::string& url,
-                          long& http_code,
+  GET_response_t get(const std::string& url,
                           bool gzipped,
-                          const curler_t::interrupt_t* interrupt) const {
+                          const interrupt_t* interrupt,
+                          const uint64_t range_offset,
+                          const uint64_t range_size) const {
     if (interrupt) {
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_XFERINFOFUNCTION, progress_callback),
                   "Failed to set custom progress callback ");
@@ -91,6 +111,14 @@ struct curler_t::pimpl_t {
                   "Failed to set custom progress data");
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_NOPROGRESS, 0L),
                   "Failed to turn the progress callback on ");
+    }
+
+    // are we doing a range request to load tiles from a tar?
+    if (range_size) {
+      const std::string range =
+          std::to_string(range_offset) + "-" + std::to_string(range_offset + range_size - 1);
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_RANGE, range.c_str()),
+                  "Failed to set HTTP Range");
     }
 
     // use gzip compression in any case
@@ -109,13 +137,14 @@ struct curler_t::pimpl_t {
     // set the url
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     // set the location of the result
-    std::vector<char> result;
-    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &result),
+    GET_response_t result;
+    std::vector<char> temp;
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &temp),
                 "Failed to set write data ");
     // get the url
     assert_curl(curl_easy_perform(connection.get()), "Failed to get URL ");
     // grab the return code
-    curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &http_code);
+    curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &result.http_code_);
     // hand over the results
     return result;
   }
@@ -136,11 +165,16 @@ struct curler_t::pimpl_t {
 curler_t::curler_t(const std::string& user_agent) : pimpl(new pimpl_t(user_agent)) {
 }
 
-std::vector<char> curler_t::operator()(const std::string& url,
-                                       long& http_code,
+curler_t::GET_response_t curler_t::get(const std::string& url,
                                        bool gzipped,
-                                       const curler_t::interrupt_t* interrupt) const {
-  return pimpl->fetch(url, http_code, gzipped, interrupt);
+                                       const curler_t::interrupt_t* interrupt,
+                                       uint64_t range_offset,
+                                       uint64_t range_size) const {
+  return pimpl->get(url, gzipped, interrupt, range_offset, range_size);
+}
+
+curler_t::HEAD_response_t curler_t::head(const std::string& url, header_mask_t header_mask) {
+  return pimpl->head(url, header_mask);
 }
 
 // curler_pool_t
