@@ -42,9 +42,9 @@ public:
   };
 
   struct HEAD_response_t {
-    uint64_t last_modified_time_;
+    uint64_t last_modified_time_ = 0;
     status_code_t status_ = status_code_t::FAILURE;
-    long http_code_;
+    long http_code_ = 0;
   };
 
   /**

@@ -86,6 +86,9 @@ struct curler_t::pimpl_t {
                 "Failed to set URL for HEAD");
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_NOBODY, 1L),
                 "Failed to set HEAD"); // HEAD request
+    if (!user_agent.empty())
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_USERAGENT, user_agent.c_str()),
+                  "Failed to set User-Agent ");
     if (wants_last_modified)
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FILETIME, 1L),
                   "Failed to enable last-modified header");
