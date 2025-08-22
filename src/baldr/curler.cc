@@ -140,8 +140,7 @@ struct curler_t::pimpl_t {
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     // set the location of the result
     GET_response_t result;
-    std::vector<char> temp;
-    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &temp),
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &result.bytes_),
                 "Failed to set write data ");
     // get the url
     assert_curl(curl_easy_perform(connection.get()), "Failed to get URL ");
