@@ -710,20 +710,6 @@ TEST(Standalone, FilterTestConsistencyTTHeadingsDriveability) {
     EXPECT_NE(FC_edge, nullptr);
 
     const auto* node = graph_reader.nodeinfo(AC_edge->endnode());
-    /*auto tile1 = graph_reader.GetGraphTile(AC_edge->endnode());
-    auto tile2 = tile1;
-
-    if (tile1->id() != CF_edge->endnode().Tile_Base()) {
-      tile2 =  graph_reader.GetGraphTile(CF_edge->endnode());
-    }
-          std::cout << tile1->edgeinfo(AC_edge).wayid() << " " << tile2->edgeinfo(CF_edge).wayid() <<
-                " " << (int)CF_edge->name_consistency() << " " <<
-                        (int)CF_edge->name_consistency(AC_edge->localedgeidx()) << " " <<
-                        (int)node->local_driveability(CF_edge->localedgeidx()) << " " <<
-                        (int)node->heading(CF_edge->localedgeidx()) <<  " " <<
-                        (int)CF_edge->turntype(AC_edge->localedgeidx()) << std::endl;
-    */
-
     EXPECT_EQ((int)CF_edge->name_consistency(), 4);                       // consistency exists
     EXPECT_EQ((int)node->local_driveability(CF_edge->localedgeidx()), 1); // kForward
     EXPECT_EQ((int)node->heading(CF_edge->localedgeidx()), 180);
