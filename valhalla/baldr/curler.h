@@ -35,13 +35,13 @@ struct curler_t {
    * @return the bytes we fetched
    */
   GET_response_t get(const std::string& url,
-                               bool gzipped,
-                               const interrupt_t* interrupt,
-                               const uint64_t range_offset,
-                               const uint64_t range_size) const;
+                     bool gzipped,
+                     const interrupt_t* interrupt,
+                     const uint64_t range_offset,
+                     const uint64_t range_size) const;
   /**
    * Performs a HEAD request.
-   * 
+   *
    * @param url         The URL to query
    * @param http_code   What we got back from the server
    * @param header_mask Which response headers should be recorded

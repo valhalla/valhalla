@@ -82,11 +82,13 @@ struct curler_t::pimpl_t {
   HEAD_response_t head(const std::string& url, header_mask_t header_mask) {
     const bool wants_last_modified = header_mask & tile_getter_t::kHeaderLastModified;
 
-    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL for HEAD");
-    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_NOBODY, 1L), "Failed to set HEAD");  // HEAD request
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()),
+                "Failed to set URL for HEAD");
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_NOBODY, 1L),
+                "Failed to set HEAD"); // HEAD request
     if (wants_last_modified)
-      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FILETIME, 1L), "Failed to enable last-modified header");
-    
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FILETIME, 1L),
+                  "Failed to enable last-modified header");
 
     HEAD_response_t result;
     assert_curl(curl_easy_perform(connection.get()), "Failed to get URL");
@@ -100,10 +102,10 @@ struct curler_t::pimpl_t {
 
   // TODO: retries?
   GET_response_t get(const std::string& url,
-                          bool gzipped,
-                          const interrupt_t* interrupt,
-                          const uint64_t range_offset,
-                          const uint64_t range_size) const {
+                     bool gzipped,
+                     const interrupt_t* interrupt,
+                     const uint64_t range_offset,
+                     const uint64_t range_size) const {
     if (interrupt) {
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_XFERINFOFUNCTION, progress_callback),
                   "Failed to set custom progress callback ");

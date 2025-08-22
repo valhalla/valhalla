@@ -24,8 +24,8 @@ public:
   }
 
   GET_response_t get(const std::string& url,
-                 const uint64_t range_offset = 0,
-                 const uint64_t range_size = 0) override {
+                     const uint64_t range_offset = 0,
+                     const uint64_t range_size = 0) override {
     scoped_curler_t curler(curlers_);
     auto result = curler.get().get(url, gzipped_, interrupt_, range_offset, range_size);
     // TODO: Check other codes.
@@ -42,7 +42,7 @@ public:
     if (result.http_code_ == 200 || result.http_code_ == 206) {
       result.status_ = tile_getter_t::status_code_t::SUCCESS;
     }
-    
+
     return result;
   }
 
