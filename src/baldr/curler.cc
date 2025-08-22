@@ -80,13 +80,36 @@ struct curler_t::pimpl_t {
                 "Failed to disable host verification ");
   }
 
+  HEAD_response_t head(const std::string& url, header_mask_t header_mask) {
+    const bool wants_last_modified = header_mask & tile_getter_t::kHeaderLastModified;
+
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()),
+                "Failed to set URL for HEAD");
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_NOBODY, 1L),
+                "Failed to set HEAD"); // HEAD request
+    if (!user_agent.empty())
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_USERAGENT, user_agent.c_str()),
+                  "Failed to set User-Agent ");
+    if (wants_last_modified)
+      assert_curl(curl_easy_setopt(connection.get(), CURLOPT_FILETIME, 1L),
+                  "Failed to enable last-modified header");
+
+    HEAD_response_t result;
+    assert_curl(curl_easy_perform(connection.get()), "Failed to get URL");
+    // grab the return code & last-modified time
+    curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &result.http_code_);
+    if (wants_last_modified)
+      curl_easy_getinfo(connection.get(), CURLINFO_FILETIME_T, &result.last_modified_time_);
+
+    return result;
+  }
+
   // TODO: retries?
-  std::vector<char> fetch(const std::string& url,
-                          long& http_code,
-                          bool gzipped,
-                          const curler_t::interrupt_t* interrupt,
-                          const uint64_t range_offset,
-                          const uint64_t range_size) const {
+  GET_response_t get(const std::string& url,
+                     bool gzipped,
+                     const interrupt_t* interrupt,
+                     const uint64_t range_offset,
+                     const uint64_t range_size) const {
     if (interrupt) {
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_XFERINFOFUNCTION, progress_callback),
                   "Failed to set custom progress callback ");
@@ -126,13 +149,13 @@ struct curler_t::pimpl_t {
     // set the url
     assert_curl(curl_easy_setopt(connection.get(), CURLOPT_URL, url.c_str()), "Failed to set URL ");
     // set the location of the result
-    std::vector<char> result;
-    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &result),
+    GET_response_t result;
+    assert_curl(curl_easy_setopt(connection.get(), CURLOPT_WRITEDATA, &result.bytes_),
                 "Failed to set write data ");
     // get the url
     assert_curl(curl_easy_perform(connection.get()), "Failed to get URL ");
     // grab the return code
-    curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &http_code);
+    curl_easy_getinfo(connection.get(), CURLINFO_RESPONSE_CODE, &result.http_code_);
     // hand over the results
     return result;
   }
@@ -155,13 +178,16 @@ curler_t::curler_t(const std::string& user_agent, const std::string& user_pw)
     : pimpl(new pimpl_t(user_agent, user_pw)) {
 }
 
-std::vector<char> curler_t::operator()(const std::string& url,
-                                       long& http_code,
+curler_t::GET_response_t curler_t::get(const std::string& url,
                                        bool gzipped,
                                        const curler_t::interrupt_t* interrupt,
                                        uint64_t range_offset,
                                        uint64_t range_size) const {
-  return pimpl->fetch(url, http_code, gzipped, interrupt, range_offset, range_size);
+  return pimpl->get(url, gzipped, interrupt, range_offset, range_size);
+}
+
+curler_t::HEAD_response_t curler_t::head(const std::string& url, header_mask_t header_mask) {
+  return pimpl->head(url, header_mask);
 }
 
 // curler_pool_t

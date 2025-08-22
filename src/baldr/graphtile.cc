@@ -236,7 +236,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     return nullptr;
   }
 
-  tile_getter_t::response_t result;
+  tile_getter_t::GET_response_t result;
   if (range_size == 0) {
     // requesting plain tiles
     auto fname =

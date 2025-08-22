@@ -32,13 +32,13 @@ struct tile_index_entry {
  *
  * @param tile_url       the config's "tile_url" value
  * @param tile_dir       the config's "tile_dir" value
- * @param tile_changeset the OSM changeset (or max node OSM ID) of the first tile
+ * @param last_modified  last modified header of the remote file
  * @returns false if there's a tile_dir/id.txt whose contents does not match tile_url
  *          and OSM changeset, true otherwise
  */
 bool check_tar_tile_dir(const std::string& tile_url,
                         const std::string& tile_dir,
-                        uint64_t tile_changeset) {
+                        uint64_t last_modified) {
   if (tile_url.empty() || tile_dir.empty()) {
     return false;
   }
@@ -47,27 +47,29 @@ bool check_tar_tile_dir(const std::string& tile_url,
   static std::mutex mutex;
   std::lock_guard lock{mutex};
 
-  const std::string tile_url_txt_path = tile_dir + "id.txt";
+  const std::string tile_url_txt_path =
+      tile_dir + std::filesystem::path::preferred_separator + "id.txt";
   std::ifstream in_url_file(tile_url_txt_path);
 
   // if there's a url.txt in the tile_dir, it must match the tile_url & osm_changeset
   if (in_url_file) {
-    std::string file_url, file_changeset;
+    std::string file_url, file_last_modified;
     if (!std::getline(in_url_file, file_url) || file_url.rfind("http", 0) != 0) {
       throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
                                tile_url_txt_path);
     }
-    if (!std::getline(in_url_file, file_changeset)) {
+    if (!std::getline(in_url_file, file_last_modified)) {
       throw std::runtime_error("Couldn't find a OSM changeset on the second line in " +
                                tile_url_txt_path);
     }
-    return file_url == tile_url && file_changeset == std::to_string(tile_changeset);
+    return file_url == tile_url && file_last_modified == std::to_string(last_modified);
   }
 
-  // no url.txt, then create it in the current tile_dir
+  // no id.txt, then create it in the current tile_dir
   std::filesystem::create_directories(tile_dir);
   std::ofstream out_url_file(tile_url_txt_path);
-  out_url_file << tile_url;
+  out_url_file << tile_url << std::endl;
+  out_url_file << last_modified;
 
   return true;
 }
@@ -218,20 +220,30 @@ void GraphReader::load_remote_tar_offsets() {
   auto first_file_header = reinterpret_cast<tar::header_t*>(first_file_resp.bytes_.data());
 
   // verify the first file is indeed the index.bin
+  // header->name is 100 bytes long and padded with \0, need to find the first \0 and trim
+  auto first_file_name = std::string_view(first_file_header->name);
+  auto first_nullpos = first_file_name.find_first_of('\0');
+  if (first_nullpos != std::string::npos) {
+    first_file_name = std::string_view(first_file_header->name, first_nullpos);
+  }
   if (!first_file_header->verify()) {
     throw std::runtime_error("The first file's tar header is not valid at " + tile_url_);
-  } else if (std::string_view(first_file_header->name) == "index.bin") {
+  } else if (first_file_name != "index.bin") {
     throw std::runtime_error("The first file in the remote tar needs to be 'index.bin' at " +
                              tile_url_);
   }
 
-  // load the first tile header and grab the osm_changeset for verification
-  auto first_tile_header_res =
-      tile_getter_->get(tile_url_, 2 * sizeof(tar::header_t) + first_file_header->get_file_size(),
-                        sizeof(GraphTileHeader));
-  auto osm_changeset =
-      reinterpret_cast<GraphTileHeader*>(first_tile_header_res.bytes_.data())->dataset_id();
-  if (!check_tar_tile_dir(tile_url_, tile_dir_, osm_changeset)) {
+  // do a HEAD request to get the last-modified header
+  auto filetime =
+      tile_getter_->head(tile_url_, tile_getter_t::kHeaderLastModified).last_modified_time_;
+
+  // // load the first tile header and grab the osm_changeset for verification
+  // auto first_tile_header_res =
+  //     tile_getter_->get(tile_url_, 2 * sizeof(tar::header_t) + first_file_header->get_file_size(),
+  //                       sizeof(GraphTileHeader));
+  // auto osm_changeset =
+  //     reinterpret_cast<GraphTileHeader*>(first_tile_header_res.bytes_.data())->dataset_id();
+  if (!check_tar_tile_dir(tile_url_, tile_dir_, filetime)) {
     throw std::runtime_error(
         "Tar source specified, but %tile_dir%/id.txt doesn't match 'tile_url' config or has a different max OSM changeset");
   }

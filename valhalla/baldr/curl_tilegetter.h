@@ -27,18 +27,23 @@ public:
       : curlers_(pool_size, user_agent, user_pw), gzipped_(gzipped) {
   }
 
-  using response_t = tile_getter_t::response_t;
-
-  response_t get(const std::string& url,
-                 const uint64_t range_offset = 0,
-                 const uint64_t range_size = 0) override {
+  GET_response_t get(const std::string& url,
+                     const uint64_t range_offset = 0,
+                     const uint64_t range_size = 0) override {
     scoped_curler_t curler(curlers_);
-    long http_code = 0;
-    auto tile_data = curler.get()(url, http_code, gzipped_, interrupt_, range_offset, range_size);
-    response_t result;
+    auto result = curler.get().get(url, gzipped_, interrupt_, range_offset, range_size);
     // TODO: Check other codes.
-    if (http_code == 200) {
-      result.bytes_ = std::move(tile_data);
+    if (result.http_code_ == 200 || result.http_code_ == 206) {
+      result.status_ = tile_getter_t::status_code_t::SUCCESS;
+    }
+
+    return result;
+  }
+
+  HEAD_response_t head(const std::string& url, header_mask_t header_mask) {
+    scoped_curler_t curler(curlers_);
+    auto result = curler.get().head(url, header_mask);
+    if (result.http_code_ == 200 || result.http_code_ == 206) {
       result.status_ = tile_getter_t::status_code_t::SUCCESS;
     }
 
@@ -48,8 +53,6 @@ public:
   bool gzipped() const override {
     return gzipped_;
   }
-
-  using interrupt_t = tile_getter_t::interrupt_t;
 
   void set_interrupt(const interrupt_t* interrupt) override {
     interrupt_ = interrupt;
