@@ -3,8 +3,10 @@
 #include "baldr/graphconstants.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "midgard/pointll.h"
 
 #include <algorithm>
+#include <list>
 #include <ostream>
 
 namespace valhalla {

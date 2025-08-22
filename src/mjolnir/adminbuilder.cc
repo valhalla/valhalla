@@ -1,4 +1,5 @@
 #include "mjolnir/adminbuilder.h"
+#include "midgard/logging.h"
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/sqlite3.h"

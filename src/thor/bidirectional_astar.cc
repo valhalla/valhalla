@@ -4,6 +4,7 @@
 #include "baldr/graphid.h"
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
+#include "sif/hierarchylimits.h"
 #include "sif/recost.h"
 #include "thor/alternates.h"
 

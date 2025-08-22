@@ -1,4 +1,5 @@
 #include "mjolnir/dataquality.h"
+#include "midgard/logging.h"
 
 #include <fstream>
 #include <vector>

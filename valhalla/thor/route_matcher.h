@@ -1,14 +1,8 @@
 #ifndef VALHALLA_THOR_ROUTE_MATCHER_H_
 #define VALHALLA_THOR_ROUTE_MATCHER_H_
 
-#include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/meili/measurement.h>
-#include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
-#include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathinfo.h>
 
 #include <vector>

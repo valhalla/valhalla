@@ -8,7 +8,6 @@
 #include <valhalla/odin/narrative_dictionary.h>
 #include <valhalla/odin/util.h>
 #include <valhalla/proto/options.pb.h>
-#include <valhalla/proto/trip.pb.h>
 
 #include <cstdint>
 #include <vector>

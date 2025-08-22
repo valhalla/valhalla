@@ -39,7 +39,6 @@ using namespace valhalla::loki;
 using namespace valhalla::odin;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
-using namespace valhalla::meili;
 
 namespace {
 

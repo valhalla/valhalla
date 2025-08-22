@@ -3,7 +3,6 @@
 
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
-#include <valhalla/proto/trip.pb.h>
 
 #include <assert.h>
 

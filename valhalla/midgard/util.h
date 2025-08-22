@@ -5,7 +5,6 @@
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/util_core.h>
 
 #include <cstdint>
 #include <cstring>

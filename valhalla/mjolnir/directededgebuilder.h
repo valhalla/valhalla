@@ -3,7 +3,7 @@
 
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/mjolnir/node_expander.h>
+#include <valhalla/mjolnir/osmway.h>
 
 #include <cstdint>
 

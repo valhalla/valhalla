@@ -5,7 +5,6 @@
 #include <cmath>
 
 using namespace valhalla;
-using namespace valhalla::tyr;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::loki;

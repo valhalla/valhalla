@@ -1,6 +1,7 @@
 #include "mjolnir/graphbuilder.h"
 #include "baldr/datetime.h"
 #include "baldr/graphreader.h"
+#include "midgard/logging.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/osmdata.h"

@@ -3,6 +3,7 @@
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
+#include "sif/hierarchylimits.h"
 #include "test.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"

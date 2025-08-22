@@ -5,6 +5,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/graphtileheader.h>
+#include <valhalla/baldr/landmark.h>
 #include <valhalla/baldr/nodetransition.h>
 #include <valhalla/baldr/sign.h>
 #include <valhalla/baldr/signinfo.h>
@@ -14,19 +15,14 @@
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/turnlanes.h>
 #include <valhalla/mjolnir/complexrestrictionbuilder.h>
-#include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
-#include <valhalla/mjolnir/landmarks.h>
 
 #include <boost/functional/hash.hpp>
 
-#include <algorithm>
 #include <cstdint>
 #include <list>
-#include <memory>
 #include <string>
 #include <unordered_map>
-#include <utility>
 
 namespace valhalla {
 namespace mjolnir {

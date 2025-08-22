@@ -6,8 +6,6 @@
 #include <valhalla/baldr/location.h>
 #include <valhalla/midgard/pointll.h>
 
-#include <cinttypes>
-
 namespace valhalla {
 
 namespace meili {

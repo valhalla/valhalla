@@ -1,9 +1,7 @@
 #ifndef VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_
 #define VALHALLA_MJOLNIR_FERRY_CONNECTIONS_H_
 
-#include <valhalla/mjolnir/dataquality.h>
-#include <valhalla/mjolnir/node_expander.h>
-#include <valhalla/mjolnir/osmdata.h>
+#include <valhalla/baldr/graphconstants.h>
 
 #include <cstdint>
 #include <string>

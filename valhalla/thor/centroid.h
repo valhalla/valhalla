@@ -1,6 +1,5 @@
 #pragma once
 
-#include <valhalla/midgard/util.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/thor/dijkstras.h>

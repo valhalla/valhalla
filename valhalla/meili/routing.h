@@ -11,7 +11,6 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 
-#include <algorithm>
 #include <cstdint>
 #include <stdexcept>
 #include <unordered_map>

@@ -2,6 +2,7 @@
 #include "baldr/datetime.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "sif/hierarchylimits.h"
 #include "sif/recost.h"
 #include "worker.h"
 

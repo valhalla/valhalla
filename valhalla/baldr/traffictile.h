@@ -11,7 +11,6 @@
 #include <valhalla/baldr/graphmemory.h>
 #include <valhalla/valhalla.h>
 
-#include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -22,10 +21,6 @@
 #ifndef C_ONLY_INTERFACE
 namespace valhalla {
 namespace baldr {
-
-using std::uint16_t;
-using std::uint32_t;
-using std::uint64_t;
 #endif
 
 // The version of traffic tile format

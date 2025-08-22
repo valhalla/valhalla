@@ -3,7 +3,6 @@
 
 #include <valhalla/midgard/logging.h>
 #include <valhalla/proto/common.pb.h>
-#include <valhalla/proto/trip.pb.h>
 
 #include <list>
 #include <string>

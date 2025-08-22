@@ -1,7 +1,5 @@
-#include "baldr/directededge.h"
-#include "baldr/graphconstants.h"
 #include "midgard/sequence.h"
-#include "mjolnir/osmnode.h"
+#include "mjolnir/osmway.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "test.h"
 

@@ -9,6 +9,7 @@
 #include "midgard/util.h"
 #include "odin/util.h"
 #include "proto_conversions.h"
+#include "sif/hierarchylimits.h"
 #include "worker.h"
 
 #include <boost/optional.hpp>

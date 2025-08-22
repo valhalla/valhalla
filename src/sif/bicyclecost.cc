@@ -5,6 +5,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
+#include "sif/hierarchylimits.h"
 
 #include <cassert>
 

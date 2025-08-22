@@ -4,9 +4,9 @@
 #include <boost/variant.hpp>
 
 #include <cctype>
-#include <cinttypes>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <iomanip>
 #include <memory>
 #include <ostream>

@@ -1,3 +1,4 @@
+#include "baldr/graphconstants.h"
 #include "baldr/transitdeparture.h"
 #include "midgard/logging.h"
 

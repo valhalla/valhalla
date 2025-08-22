@@ -2,9 +2,6 @@
 #define VALHALLA_MJOLNIR_EDGEINFOBUILDER_H_
 
 #include <valhalla/baldr/edgeinfo.h>
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
 
 #include <cstdint>
 #include <string>

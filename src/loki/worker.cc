@@ -12,7 +12,6 @@
 #include <unordered_set>
 
 using namespace valhalla;
-using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

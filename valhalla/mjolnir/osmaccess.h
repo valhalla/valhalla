@@ -4,6 +4,7 @@
 #include <valhalla/baldr/graphconstants.h>
 
 #include <cstdint>
+#include <cstring>
 
 namespace valhalla {
 namespace mjolnir {

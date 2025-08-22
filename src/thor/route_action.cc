@@ -1,6 +1,7 @@
 #include "baldr/attributes_controller.h"
 #include "midgard/logging.h"
 #include "proto/common.pb.h"
+#include "thor/triplegbuilder.h"
 #include "thor/worker.h"
 
 #include <cstdint>
