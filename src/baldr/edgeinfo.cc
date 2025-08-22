@@ -63,18 +63,14 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
       size_t landmark_size = landmark_name.size() + 10;
       return {std::string(ptr, landmark_size)};
     }
-    case TaggedValue::kLevels: {
+    case TaggedValue::kLevels:
+    case TaggedValue::kOSMNodeIds: {
       auto start = ptr + 1;
       int size = static_cast<int>(parse_varint(start));
       return {std::string(ptr, (start + size) - ptr)};
     }
     case TaggedValue::kConditionalSpeedLimits: {
       return {std::string(ptr, 1 + sizeof(ConditionalSpeedLimit))};
-    }
-    case TaggedValue::kOSMNodeIds: {
-      auto start = ptr + 1;
-      int size = static_cast<int>(parse_varint(start));
-      return {std::string(ptr, (start + size) - ptr)};
     }
     case TaggedValue::kLinguistic:
     default:
@@ -518,6 +514,22 @@ std::vector<std::string> EdgeInfo::level_ref() const {
     values.emplace_back(itr->second);
   }
   return values;
+}
+
+std::vector<uint64_t> EdgeInfo::osm_node_ids() const {
+  const auto &tags = GetTags();
+  auto itr = tags.find(TaggedValue::kOSMNodeIds);
+  if (itr == tags.end()) {
+    return {};
+  }
+  try {
+    // TODO: can GetTags avoid parsing if we just have to redo it here?
+    const auto *ptr = itr->second.data();
+    auto _ = parse_varint(ptr);
+    auto length = itr->second.size() - (ptr - itr->second.data());
+    auto ids = midgard::decode7int<std::vector<uint64_t> >(ptr, length);
+    return ids;
+  } catch (...) { throw std::runtime_error("failed to decode osm node ids"); };
 }
 
 void EdgeInfo::json(rapidjson::writer_wrapper_t& writer) const {

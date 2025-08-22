@@ -305,6 +305,12 @@ public:
   std::vector<std::string> level_ref() const;
 
   /**
+   * Get the OSM node Ids along this edge if any were included in the data
+   * @return vector of osm node ids
+   */
+  std::vector<uint64_t> osm_node_ids() const;
+
+  /**
    * the json representation of the object
    * @param writer The writer json object to represent the edge info
    */
