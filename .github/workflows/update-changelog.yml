@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   update-changelog:
-    if: github.event.pull_request.merged == true && github.repository_owner == 'MohamedM216'
+    if: github.event.pull_request.merged == true && github.repository_owner == 'valhalla'
     runs-on: ubuntu-latest
     
     steps:
