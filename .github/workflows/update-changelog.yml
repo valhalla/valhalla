@@ -1,0 +1,73 @@
+name: Update Changelog on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  contents: write    
+
+jobs:
+  update-changelog:
+    if: github.event.pull_request.merged == true && github.repository_owner == 'MohamedM216'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Extract and update changelog
+        id: update_changelog
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          # Install any required dependencies
+          pip install --upgrade pip
+          
+          # Debug: show what we're passing to the script
+          echo "PR_BODY content:"
+          echo "$PR_BODY"
+          echo -e "\n--- End of PR_BODY ---"
+          
+          # Run the changelog update script, properly escaping the PR body
+          python scripts/update_changelog.py "$PR_BODY" "$PR_NUMBER" "$PR_URL" > output.txt
+          
+          # Capture the output
+          cat output.txt
+          
+          # Check if changelog was updated using new GitHub Actions output method
+          if grep -q "Successfully updated changelog" output.txt; then
+            subsection=$(grep 'Added to subsection:' output.txt | cut -d':' -f2 | tr -d ' ')
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "subsection=$subsection" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+          rm -f output.txt
+
+      - name: Commit and push changes
+        if: steps.update_changelog.outputs.has_changes == 'true'
+        run: |
+          # Commit only if there are actual changes to the changelog file
+          if git diff --quiet CHANGELOG.md; then
+            echo "No changes to CHANGELOG.md, skipping commit"
+            exit 0
+          fi
+
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add CHANGELOG.md
+          git commit -m "docs(changelog): add PR #${{ github.event.pull_request.number }} to ${{ steps.update_changelog.outputs.subsection }} section"
+          git push
