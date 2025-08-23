@@ -989,6 +989,16 @@ protected:
   const size_t max_concurrent_users_;
   const std::string tile_url_;
 
+  // for remote tar's we grab the index.bin when loading the remote_tar_offsets
+  // so we know all tiles' offset & size
+  struct remote_tile_position_t {
+    uint64_t offset;
+    uint64_t size;
+  };
+  using remote_tar_offsets_t = std::unordered_map<GraphId, remote_tile_position_t>;
+  remote_tar_offsets_t remote_tar_offsets_;
+  void load_remote_tar_offsets();
+
   std::mutex _404s_lock;
   std::unordered_set<GraphId> _404s;
 
