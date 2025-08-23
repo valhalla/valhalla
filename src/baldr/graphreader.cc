@@ -59,8 +59,7 @@ bool check_tar_tile_dir(const std::string& tile_url,
                                tile_url_txt_path);
     }
     if (!std::getline(in_url_file, file_last_modified)) {
-      throw std::runtime_error("Couldn't find a OSM changeset on the second line in " +
-                               tile_url_txt_path);
+      throw std::runtime_error("Couldn't find timestamp on the second line in " + tile_url_txt_path);
     }
     return file_url == tile_url && file_last_modified == std::to_string(last_modified);
   }
@@ -237,15 +236,10 @@ void GraphReader::load_remote_tar_offsets() {
   auto filetime =
       tile_getter_->head(tile_url_, tile_getter_t::kHeaderLastModified).last_modified_time_;
 
-  // // load the first tile header and grab the osm_changeset for verification
-  // auto first_tile_header_res =
-  //     tile_getter_->get(tile_url_, 2 * sizeof(tar::header_t) + first_file_header->get_file_size(),
-  //                       sizeof(GraphTileHeader));
-  // auto osm_changeset =
-  //     reinterpret_cast<GraphTileHeader*>(first_tile_header_res.bytes_.data())->dataset_id();
   if (!check_tar_tile_dir(tile_url_, tile_dir_, filetime)) {
     throw std::runtime_error(
-        "Tar source specified, but %tile_dir%/id.txt doesn't match 'tile_url' config or has a different max OSM changeset");
+        "Tar source specified, but %tile_dir%/id.txt doesn't match 'tile_url' config or "
+        "has a different 'Last-Modified' timestamp");
   }
 
   // fetch the index.bin and read its content into remote_tar_offsets
@@ -727,12 +721,10 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
       } else if (!tile_url_.empty() && !remote_tar_offsets_.empty()) {
         // tiles from remote tar
         auto pos = remote_tar_offsets_.find(base);
-        if (pos != remote_tar_offsets_.end()) {
-          tile = nullptr;
-        } else {
-          tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_,
-                                         pos->second.offset, pos->second.size);
-        }
+        tile = (pos == remote_tar_offsets_.end())
+                   ? nullptr
+                   : GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_,
+                                             pos->second.offset, pos->second.size);
       }
 
       if (!tile) {
