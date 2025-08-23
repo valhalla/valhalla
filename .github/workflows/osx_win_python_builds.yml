@@ -13,7 +13,7 @@ on:
     - cron: "0 0 * * 0"
   push:
     paths-ignore:
-      - "*.md"
+      - "**.md"
       - .circleci/
       - docs/
       - run_route_scripts/
