@@ -50,14 +50,7 @@ if(ENABLE_DATA_TOOLS)
 
     ## Test run targets
     add_custom_command(OUTPUT ${TESTNAME}.log
-      COMMAND
-        LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-        /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME} >& ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}.log \
-        && echo [PASS] ${TESTNAME} \
-        || ( exit=$? ; \
-             echo [FAIL] ${TESTNAME} ; \
-             cat ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}.log ; \
-             exit $exit )"
+      COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       DEPENDS ${TESTNAME}
       VERBATIM)
