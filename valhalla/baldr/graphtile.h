@@ -85,13 +85,17 @@ public:
    * @param  tile_url URL of tile
    * @param  graphid Tile Id
    * @param  tile_getter object that will handle tile downloading
-   * @return whether or not the tile could be cached to disk
+   * @param  range_offset HTTP range offsete in case of a tar URL
+   * @param  range_size HTTP range offsete in case of a tar URL
+   * @return the graph tile or nullptr
    */
 
   static graph_tile_ptr CacheTileURL(const std::string& tile_url,
                                      const GraphId& graphid,
                                      tile_getter_t* tile_getter,
-                                     const std::string& cache_location);
+                                     const std::string& cache_location,
+                                     uint64_t range_offset = 0,
+                                     uint64_t range_size = 0);
 
   /**
    * Construct a tile given a url for the tile using curl
