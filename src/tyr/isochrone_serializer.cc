@@ -12,8 +12,6 @@
 #include <gdal_priv.h>
 #endif
 
-using namespace valhalla::baldr::json;
-
 namespace {
 
 // allows us to only ever register the driver once per process without having to put it

@@ -2,7 +2,6 @@
 #define __VALHALLA_TYR_SERVICE_H__
 
 #include <valhalla/baldr/attributes_controller.h>
-#include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/meili/match_result.h>
@@ -107,9 +106,8 @@ std::string serializeStatus(Api& request);
 
 // Return a JSON array of OpenLR 1.5 line location references for each edge of a map matching
 // result. For the time being, result is only non-empty for auto costing requests.
-void route_references(baldr::json::MapPtr& route_json,
-                      const TripRoute& route,
-                      const Options& options);
+std::vector<std::string>
+route_references(rapidjson::writer_wrapper_t& writer, const TripRoute& route, const Options& options);
 
 void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer);
 
@@ -126,7 +124,6 @@ std::string serializePbf(Api& request);
  * @return json string
  */
 void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
-baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
 
 /**
  * Turns a line into a GeoJSON LineString geometry.
@@ -134,7 +131,6 @@ baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
  * @param shape  The points making up the line.
  * @returns The GeoJSON geometry of the LineString
  */
-baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape);
 void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer);
 
 // Elevation serialization support
@@ -258,8 +254,6 @@ namespace osrm {
  * Serialize a location into a osrm waypoint
  * http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
  */
-valhalla::baldr::json::MapPtr
-waypoint(const valhalla::Location& location, bool is_tracepoint = false, bool is_optimized = false);
 void waypoint(const valhalla::Location& location,
               rapidjson::writer_wrapper_t& writer,
               bool is_tracepoint = false,
@@ -268,14 +262,12 @@ void waypoint(const valhalla::Location& location,
 /*
  * Serialize locations into osrm waypoints
  */
-valhalla::baldr::json::ArrayPtr
-waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-          bool tracepoints = false);
 void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                rapidjson::writer_wrapper_t& writer,
                bool tracepoints = false);
-valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
-valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
+void waypoints(const valhalla::Trip& locations, rapidjson::writer_wrapper_t& writer);
+
+void intermediate_waypoints(rapidjson::writer_wrapper_t& writer, const valhalla::TripLeg& leg);
 
 void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
