@@ -212,10 +212,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
 
 void GraphReader::load_remote_tar_offsets() {
   // get the tar header of the first file so we know with which range to download index.bin
-  auto first_file_resp = tile_getter_->get(tile_url_, 0, sizeof(tar::header_t));
-  if (first_file_resp.status_ == tile_getter_t::status_code_t::FAILURE) {
-    throw std::runtime_error("Couldn't read from remote tar at " + tile_url_);
-  }
+  auto first_file_resp =
+      CURL_OR_THROW(tile_getter_->get(tile_url_, 0, sizeof(tar::header_t)), tile_url_);
   auto first_file_header = reinterpret_cast<tar::header_t*>(first_file_resp.bytes_.data());
 
   // verify the first file is indeed the index.bin
@@ -234,7 +232,8 @@ void GraphReader::load_remote_tar_offsets() {
 
   // do a HEAD request to get the last-modified header
   auto filetime =
-      tile_getter_->head(tile_url_, tile_getter_t::kHeaderLastModified).last_modified_time_;
+      CURL_OR_THROW(tile_getter_->head(tile_url_, tile_getter_t::kHeaderLastModified), tile_url_)
+          .last_modified_time_;
 
   if (!check_tar_tile_dir(tile_url_, tile_dir_, filetime)) {
     throw std::runtime_error(
@@ -243,8 +242,9 @@ void GraphReader::load_remote_tar_offsets() {
   }
 
   // fetch the index.bin and read its content into remote_tar_offsets
-  auto index_bin_response =
-      tile_getter_->get(tile_url_, sizeof(tar::header_t), first_file_header->get_file_size());
+  auto index_bin_response = CURL_OR_THROW(tile_getter_->get(tile_url_, sizeof(tar::header_t),
+                                                            first_file_header->get_file_size()),
+                                          tile_url_);
   const auto index_bin_size = index_bin_response.bytes_.size() / sizeof(tile_index_entry);
 
   remote_tar_offsets_.reserve(index_bin_size);

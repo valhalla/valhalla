@@ -5,6 +5,18 @@
 #include <string>
 #include <vector>
 
+// resp: a tilegetter_t::response_t
+// tile_url: string-like URL
+#define CURL_OR_THROW(resp, tile_url)                                                                \
+  ([&]() {                                                                                           \
+    if (resp.status_ == tile_getter_t::status_code_t::FAILURE) {                                     \
+      auto __http_code = std::to_string(resp.http_code_);                                            \
+      throw std::runtime_error("Couldn't read from " + std::string(tile_url) +                       \
+                               " with HTTP status " + __http_code);                                  \
+    }                                                                                                \
+    return resp;                                                                                     \
+  }())
+
 namespace valhalla {
 namespace baldr {
 
@@ -33,18 +45,20 @@ public:
   using bytes_t = std::vector<char>;
 
   /**
-   * The result of synchronous operation. Contains raw data and operations result code.
+   * The result of synchronous operation(s).
    */
-  struct GET_response_t {
-    bytes_t bytes_;
+
+  struct response_t {
     status_code_t status_ = status_code_t::FAILURE;
     long http_code_;
   };
 
-  struct HEAD_response_t {
+  struct GET_response_t : response_t {
+    bytes_t bytes_;
+  };
+
+  struct HEAD_response_t : response_t {
     uint64_t last_modified_time_ = 0;
-    status_code_t status_ = status_code_t::FAILURE;
-    long http_code_ = 0;
   };
 
   /**
