@@ -110,6 +110,10 @@ struct curler_t::pimpl_t {
                      const interrupt_t* interrupt,
                      const uint64_t range_offset,
                      const uint64_t range_size) const {
+    // curl options are sticky: if a HEAD was called, we need to tell it again this is a GET
+    curl_easy_setopt(connection.get(), CURLOPT_HTTPGET, 1L);
+    curl_easy_setopt(connection.get(), CURLOPT_NOBODY, 0L);
+
     if (interrupt) {
       assert_curl(curl_easy_setopt(connection.get(), CURLOPT_XFERINFOFUNCTION, progress_callback),
                   "Failed to set custom progress callback ");

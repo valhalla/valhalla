@@ -38,7 +38,7 @@ public:
   struct GET_response_t {
     bytes_t bytes_;
     status_code_t status_ = status_code_t::FAILURE;
-    long http_code_;
+    long http_code_ = 0;
   };
 
   struct HEAD_response_t {
