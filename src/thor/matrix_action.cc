@@ -88,6 +88,7 @@ std::string thor_worker_t::matrix(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
+  controller = AttributesController(options);
   adjust_scores(options);
   auto costing = parse_costing(request);
 
@@ -119,7 +120,7 @@ std::string thor_worker_t::matrix(Api& request) {
   if (algo->name() != "costmatrix") {
     algo->SourceToTarget(request, *reader, mode_costing, mode,
                          max_matrix_distance.find(costing)->second);
-    return tyr::serializeMatrix(request);
+    return tyr::serializeMatrix(request, controller);
   }
 
   // for costmatrix try a second pass if the first didn't work out
@@ -146,7 +147,7 @@ std::string thor_worker_t::matrix(Api& request) {
     add_warning(request, 400, get_unfound_indices(request.matrix().second_pass()));
   };
 
-  return tyr::serializeMatrix(request);
+  return tyr::serializeMatrix(request, controller);
 }
 } // namespace thor
 } // namespace valhalla

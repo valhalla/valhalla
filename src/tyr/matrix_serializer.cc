@@ -130,6 +130,7 @@ void locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
 
 void serialize_row(const valhalla::Matrix& matrix,
                    rapidjson::writer_wrapper_t& writer,
+                   const AttributesController& controller,
                    size_t start_td,
                    const size_t td_count,
                    const size_t source_index,
@@ -215,7 +216,8 @@ void serialize_row(const valhalla::Matrix& matrix,
   writer.end_array();
 }
 
-std::string serialize(const Api& request, double distance_scale) {
+std::string
+serialize(const Api& request, const AttributesController& controller, double distance_scale) {
   rapidjson::writer_wrapper_t writer(4096);
   writer.set_precision(tyr::kDefaultPrecision);
   writer.start_object();
@@ -292,7 +294,7 @@ std::string serialize(const Api& request, double distance_scale) {
 namespace valhalla {
 namespace tyr {
 
-std::string serializeMatrix(Api& request) {
+std::string serializeMatrix(Api& request, const AttributesController& controller) {
   double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
 
   // error if we failed finding any connection
@@ -308,7 +310,7 @@ std::string serializeMatrix(Api& request) {
     case Options_Format_osrm:
       return osrm_serializers::serialize(request);
     case Options_Format_json:
-      return valhalla_serializers::serialize(request, distance_scale);
+      return valhalla_serializers::serialize(request, controller, distance_scale);
     case Options_Format_pbf:
       return serializePbf(request);
     default:
