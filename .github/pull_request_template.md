@@ -14,3 +14,9 @@ What issue is this PR targeting? If there is no issue that addresses the problem
 ## Requirements / Relations
 
  Link any requirements here. Other pull requests this PR is based on?
+
+## Changelog
+
+Please add a changelog entry following this format:
+
+Added/Fixed/Changed/Removed: description of what was added/fixed/changed/removed
