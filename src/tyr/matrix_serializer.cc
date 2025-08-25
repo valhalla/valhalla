@@ -152,46 +152,59 @@ void serialize_row(const valhalla::Matrix& matrix,
     const auto& begin_heading = matrix.begin_heading()[i];
     const auto& end_heading = matrix.end_heading()[i];
     writer.start_object();
+
     if (time != kMaxCost) {
       writer("from_index", source_index);
       writer("to_index", target_index + (i - start_td));
-      writer("time", static_cast<uint64_t>(time));
-      writer("distance", static_cast<double>(matrix.distances()[i] * distance_scale));
-      if (!date_time.empty()) {
+
+      if (controller(kMatrixConnectionTime)) {
+        writer("time", static_cast<uint64_t>(time));
+      }
+
+      if (controller(kMatrixConnectionDistance)) {
+        writer("distance", static_cast<double>(matrix.distances()[i] * distance_scale));
+      }
+
+      if (controller(kMatrixConnectionDateTime) && !date_time.empty()) {
         writer("date_time", date_time);
       }
 
-      if (!time_zone_offset.empty()) {
+      if (controller(kMatrixConnectionTimeZoneOffset) && !time_zone_offset.empty()) {
         writer("time_zone_offset", time_zone_offset);
       }
 
-      if (!time_zone_name.empty()) {
+      if (controller(kMatrixConnectionTimeZoneName) && !time_zone_name.empty()) {
         writer("time_zone_name", time_zone_name);
       }
 
       writer.set_precision(1);
-      if (begin_heading != kInvalidHeading) {
+      if (controller(kMatrixConnectionBeginHeading) && begin_heading != kInvalidHeading) {
         writer("begin_heading", begin_heading);
       }
 
-      if (end_heading != kInvalidHeading) {
+      if (controller(kMatrixConnectionEndHeading) && end_heading != kInvalidHeading) {
         writer("end_heading", end_heading);
       }
+
       writer.set_precision(tyr::kCoordinatePrecision);
-      if (begin_lat != INVALID_LL) {
+      if (controller(kMatrixConnectionBeginLat) && begin_lat != INVALID_LL) {
         writer("begin_lat", begin_lat);
       }
-      if (begin_lon != INVALID_LL) {
+
+      if (controller(kMatrixConnectionBeginLon) && begin_lon != INVALID_LL) {
         writer("begin_lon", begin_lon);
       }
-      if (end_lat != INVALID_LL) {
+
+      if (controller(kMatrixConnectionEndLat) && end_lat != INVALID_LL) {
         writer("end_lat", end_lat);
       }
-      if (end_lon != INVALID_LL) {
+
+      if (controller(kMatrixConnectionEndLon) && end_lon != INVALID_LL) {
         writer("end_lon", end_lon);
       }
+
       writer.set_precision(tyr::kDefaultPrecision);
-      if (matrix.shapes().size() && shape_format != no_shape) {
+      if (controller(kMatrixConnectionShape) && matrix.shapes().size() && shape_format != no_shape) {
         // TODO(nils): tdmatrices don't have "shape" support yet
         if (!matrix.shapes()[i].empty()) {
           switch (shape_format) {
@@ -208,8 +221,12 @@ void serialize_row(const valhalla::Matrix& matrix,
     } else {
       writer("from_index", source_index);
       writer("to_index", target_index + (i - start_td));
-      writer("time", nullptr);
-      writer("distance", nullptr);
+      if (controller(kMatrixConnectionTime)) {
+        writer("time", nullptr);
+      }
+      if (controller(kMatrixConnectionDistance)) {
+        writer("distance", nullptr);
+      }
     }
     writer.end_object();
   }
@@ -226,7 +243,7 @@ serialize(const Api& request, const AttributesController& controller, double dis
   if (options.verbose()) {
     writer.start_array("sources_to_targets");
     for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
-      serialize_row(request.matrix(), writer, source_index * options.targets_size(),
+      serialize_row(request.matrix(), writer, controller, source_index * options.targets_size(),
                     options.targets_size(), source_index, 0, distance_scale, options.shape_format());
     }
     writer.end_array(); // sources_to_targets
@@ -240,26 +257,31 @@ serialize(const Api& request, const AttributesController& controller, double dis
   } // slim it down
   else {
     writer.start_object("sources_to_targets");
-
-    writer.start_array("durations");
-    for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
-      const auto first_td = source_index * options.targets_size();
-      writer.start_array();
-      serialize_duration(request.matrix(), writer, first_td, options.targets_size());
+    if (controller(kMatrixConnectionTime)) {
+      writer.start_array("durations");
+      for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
+        const auto first_td = source_index * options.targets_size();
+        writer.start_array();
+        serialize_duration(request.matrix(), writer, first_td, options.targets_size());
+        writer.end_array();
+      }
       writer.end_array();
     }
-    writer.end_array();
 
-    writer.start_array("distances");
-    for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
-      const auto first_td = source_index * options.targets_size();
-      writer.start_array();
-      serialize_distance(request.matrix(), writer, first_td, options.targets_size(), distance_scale);
+    if (controller(kMatrixConnectionDistance)) {
+      writer.start_array("distances");
+      for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
+        const auto first_td = source_index * options.targets_size();
+        writer.start_array();
+        serialize_distance(request.matrix(), writer, first_td, options.targets_size(),
+                           distance_scale);
+        writer.end_array();
+      }
       writer.end_array();
     }
-    writer.end_array();
 
-    if (!(options.shape_format() == no_shape ||
+    if (controller(kMatrixConnectionShape) &&
+        !(options.shape_format() == no_shape ||
           (request.matrix().algorithm() != Matrix::CostMatrix))) {
       writer.start_array("shapes");
       for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
