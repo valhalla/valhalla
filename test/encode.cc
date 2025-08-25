@@ -607,6 +607,18 @@ TEST(Encode, VarInt) {
                   {58.26482, -169.02219}});
 }
 
+TEST(Encode, Int7) {
+    for (const auto &test_case: std::vector<std::vector<uint64_t> >{
+             {0, 1, 2, 3, 4, 42, 4, 3, 2, 1,},
+             {1ull << 63, 0, 1ull << 63, 567, 65496849841, 8949846546349684, 123, 3, 234123412},
+             {0},
+             {1ull << 7, 1ull << 6, 1ull << 5, 1ull << 4},
+         }) {
+        auto encoded = encode7int(test_case);
+        auto decoded = decode7int<std::vector<uint64_t> >(encoded);
+        ASSERT_EQ(test_case, decoded);
+    }
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
