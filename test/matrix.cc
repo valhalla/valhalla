@@ -403,14 +403,15 @@ TEST(Matrix, test_matrix_osrm) {
   set_hierarchy_limits(mode_costing[0]);
 
   CostMatrix cost_matrix;
+  AttributesController controller;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  auto json_res = tyr::serializeMatrix(request);
+  auto json_res = tyr::serializeMatrix(request, controller);
   std::string algo = "costmatrix";
   check_osrm_response(json_res, algo);
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  json_res = tyr::serializeMatrix(request);
+  json_res = tyr::serializeMatrix(request, controller);
   algo = "timedistancematrix";
   check_osrm_response(json_res, algo);
 }
