@@ -154,11 +154,26 @@ const std::string kShapeAttributesSpeed = "shape_attributes.speed";
 const std::string kShapeAttributesSpeedLimit = "shape_attributes.speed_limit";
 const std::string kShapeAttributesClosure = "shape_attributes.closure";
 
+// Matrix connection keys
+const std::string kMatrixConnectionDistance = "matrix_connection.distance";
+const std::string kMatrixConnectionTime = "matrix_connection.time";
+const std::string kMatrixConnectionBeginHeading = "matrix_connection.begin_heading";
+const std::string kMatrixConnectionEndHeading = "matrix_connection.end_heading";
+const std::string kMatrixConnectionBeginLat = "matrix_connection.begin_lat";
+const std::string kMatrixConnectionBeginLon = "matrix_connection.begin_lon";
+const std::string kMatrixConnectionEndLat = "matrix_connection.end_lat";
+const std::string kMatrixConnectionEndLon = "matrix_connection.end_lon";
+const std::string kMatrixConnectionDateTime = "matrix_connection.date_time";
+const std::string kMatrixConnectionTimeZoneOffset = "matrix_connection.time_zone_offset";
+const std::string kMatrixConnectionTimeZoneName = "matrix_connection.time_zone_name";
+const std::string kMatrixConnectionShape = "matrix_connection.shape";
+
 // Categories
 const std::string kNodeCategory = "node.";
 const std::string kAdminCategory = "admin.";
 const std::string kMatchedCategory = "matched.";
 const std::string kShapeAttributesCategory = "shape_attributes.";
+const std::string kMatrixConnectionCategory = "matrix_connection.";
 
 /**
  * Trip path controller for attributes
