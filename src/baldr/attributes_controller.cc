@@ -153,16 +153,16 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     // Matrix connection keys
     {kMatrixConnectionDistance, true},
     {kMatrixConnectionTime, true},
-    {kMatrixConnectionBeginHeading, false},
-    {kMatrixConnectionEndHeading, false},
-    {kMatrixConnectionBeginLat, false},
-    {kMatrixConnectionBeginLon, false},
-    {kMatrixConnectionEndLat, false},
-    {kMatrixConnectionEndLon, false},
-    {kMatrixConnectionDateTime, false},
-    {kMatrixConnectionTimeZoneOffset, false},
-    {kMatrixConnectionTimeZoneName, false},
-    {kMatrixConnectionShape, false},
+    {kMatrixConnectionBeginHeading, true},
+    {kMatrixConnectionEndHeading, true},
+    {kMatrixConnectionBeginLat, true},
+    {kMatrixConnectionBeginLon, true},
+    {kMatrixConnectionEndLat, true},
+    {kMatrixConnectionEndLon, true},
+    {kMatrixConnectionDateTime, true},
+    {kMatrixConnectionTimeZoneOffset, true},
+    {kMatrixConnectionTimeZoneName, true},
+    {kMatrixConnectionShape, true},
 };
 
 AttributesController::AttributesController() {
