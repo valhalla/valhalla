@@ -71,6 +71,30 @@ However, there are important limitations of the `/sources_to_targets` service's 
 - `date_time.type = 0/1` or `date_time` on any source, when there's more sources than targets
 - `date_time.type = 2` or `date_time` on any target, when there's more or equal amount of targets than/as sources
 
+### Attribute filters
+
+The `matrix` action allows you to apply filters to `include` or `exclude` specific attribute filter keys in your response. These filters are optional and can be added to the action string inside of the `filters` object.
+
+If no filters are used, all attributes are enabled and returned in the `matrix` response.
+
+These are the available filter keys. Review their [descriptions](#verbose-mode-verbose-true) and see [how to use them](#example-matrix-requests-with-attribute-filters) inside the request for more information.
+
+```
+// Matrix connection keys
+matrix_connection.distance
+matrix_connection.time
+matrix_connection.begin_heading
+matrix_connection.end_heading
+matrix_connection.begin_lat
+matrix_connection.begin_lon
+matrix_connection.end_lat
+matrix_connection.end_lon
+matrix_connection.date_time
+matrix_connection.time_zone_offset
+matrix_connection.time_zone_name
+matrix_connection.shape
+```
+
 ## Outputs of the matrix service
 
 Depending on the `verbose` (default: `true`) request parameter, the result of the Time-Distance Matrix service is different.
@@ -84,6 +108,7 @@ In both (`"verbose": true` and `"verbose": false`) cases, these parameters are p
 | `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. |
 
 See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
+
 
 ### Verbose mode (`"verbose": true`)
 
@@ -100,6 +125,27 @@ The following parameters are only present in `"verbose": true` mode:
 | Item | Description |
 | :---- | :----------- |
 | `sources_to_targets` | Returns an object with <code>durations</code> and <code>distances</code> as <b>row-ordered</b> contents of the values above. |
+
+### Example `matrix` requests with attribute filters
+
+*Include only distance and time*
+
+```json
+{"sources":[{"lat":40.744014,"lon":-73.990508}],"targets":[{"lat":40.744014,"lon":-73.990508},{"lat":40.739735,"lon":-73.979713}],"costing":"pedestrian","filters":{"action":"include","attributes":["matrix_connection.distance","matrix_connection.time"]}}
+```
+
+*Include only distance, time, begin heading and end heading*
+
+```json
+{"sources":[{"lat":40.744014,"lon":-73.990508}],"targets":[{"lat":40.744014,"lon":-73.990508},{"lat":40.739735,"lon":-73.979713}],"costing":"pedestrian","filters":{"action":"include","attributes":["matrix_connection.distance","matrix_connection.time","matrix_connection.begin_heading","matrix_connection.end_heading"]}}
+```
+
+*Exclude shape data and time zone name*
+
+```json
+{"sources":[{"lat":40.744014,"lon":-73.990508}],"targets":[{"lat":40.744014,"lon":-73.990508},{"lat":40.739735,"lon":-73.979713}],"costing":"pedestrian","filters":{"action":"exclude","attributes":["matrix_connection.shape","matrix_connection.time_zone_name"]}}
+```
+If no filters are specified, all available attributes are included in the response.
 
 ## Demonstration
 
