@@ -609,6 +609,7 @@ TEST(Encode, VarInt) {
 
 TEST(Encode, Int7) {
     for (const auto &test_case: std::vector<std::vector<uint64_t> >{
+             {42, 4,},
              {0, 1, 2, 3, 4, 42, 4, 3, 2, 1,},
              {1ull << 63, 0, 1ull << 63, 567, 65496849841, 8949846546349684, 123, 3, 234123412},
              {0},

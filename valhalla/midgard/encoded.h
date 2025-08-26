@@ -75,16 +75,16 @@ public:
 private:
   const char* begin;
   const char* end;
-  value_type value = 0;
+  int64_t value = 0;
 
-  value_type next(const value_type previous) noexcept(false) {
-    value_type byte, shift = 0, result = 0;
+  value_type next(const int64_t previous) noexcept(false) {
+    int64_t byte, shift = 0, result = 0;
     do {
       if (empty()) {
         throw std::runtime_error("Bad varint offset encoding");
       }
       // take the least significant 7 bits shifted into place
-      byte = value_type(*begin++);
+      byte = int64_t(*begin++);
       result |= (byte & 0x7f) << shift;
       shift += 7;
       // if the most significant bit is set there is more to this number
@@ -321,18 +321,18 @@ template <class container_t> std::string encode7int(const container_t& values) {
   output.reserve(values.size() * 8);
 
   // handy lambda to turn an integer into an encoded string
-  auto serialize = [&output](value_t number) {
+  auto serialize = [&output](int64_t number) {
     number = number < 0 ? ~(*reinterpret_cast<uvalue_t*>(&number) << 1) : number << 1;
     while (number > 0x7f) {
-      int nextValue = (0x80 | (number & 0x7f));
-      output.push_back(static_cast<char>(nextValue));
+      auto nextValue = static_cast<std::string::value_type>(0x80 | (number & 0x7f));
+      output.push_back(nextValue);
       number >>= 7;
     }
-    output.push_back(static_cast<char>(number & 0x7f));
+    output.push_back(static_cast<std::string::value_type>(number & 0x7f));
   };
 
   // this is an offset encoding so we remember the last value we saw
-  value_t last_value = 0;
+  int64_t last_value = 0;
   for (const auto& value : values) {
     serialize(value - last_value);
     last_value = value;
