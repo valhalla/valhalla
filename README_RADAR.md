@@ -129,7 +129,7 @@ This downloads traffic data from Inrix and packages it up to a traffic.tar and u
 
 **Valhalla Traffic Worker**
 
-See TODO: linkto README
+See [Valhalla Traffic Worker](./valhalla-traffic-builder/README.md)
 
 **Compiling NAPI**
 If you want to modify and test the NAPI code you will also need node js and NAPI. This N-API code is used by Valhalla Traffic worker to add traffic data to the traffic.tar
@@ -146,8 +146,7 @@ make -C build -j$(sysctl -n hw.physicalcpu)
 sudo make -C build install
 ```
 
-TODO: link to README.md
-This will build  `node_bindings.node` to `/build`. See https://github.com/radarlabs/valhalla-traffic-builder for details on how to use.
+This will build  `node_bindings.node` to `/build`. See [Valhalla Traffic Worker](./valhalla-traffic-builder/README.md#usage) for how to use
 
 
 

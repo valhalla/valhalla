@@ -52,7 +52,7 @@ Running the traffic builder will update the traffic.tar with Inrix Traffic with 
 npm run build-inrix-traffic -- --processes=12 --valhallaPath='./node_bindings.node' --trafficPath='../valhalla-server/traffic.tar' --inputPath='./input'
 ```
 
-Valhalla Traffic Builder uses NAPI to call Valhalla code to update the traffic.tar. The repo already contains a `node_bindings.node` file checked into to it. If you wanted to make updates to the `node_bindings.node` you can rebuild following these [steps](https://github.com/radarlabs/valhalla-source/blob/traffic/README_RADAR.md#compiling-napi) and modify the path
+Valhalla Traffic Builder uses NAPI to call Valhalla code to update the traffic.tar. The repo already contains a `node_bindings.node` file checked into to it. If you wanted to make updates to the `node_bindings.node` you can rebuild following these [steps](../README_RADAR.md#2-valhalla-traffic-worker) and modify the path
 
 
 If you want to test the traffic.tar, the fastest turn around to have "live traffic", is to run Valhalla locally, with Valhalla Traffic Builder actually updating the traffic.tar file. Then you can point your local dev server to Valhalla, and use the Superuser Route Compare and Superuser Inspect tool to inspect the edges. Note that the update is in place, ie once the edges are updated you **do not** need to restart Valhalla, the edges will be updated automatically.
