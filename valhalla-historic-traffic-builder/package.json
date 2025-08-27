@@ -1,0 +1,20 @@
+{
+  "name": "historical",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "node-addon-api": "^8.3.1",
+    "osm-pbf-parser-node": "^1.1.4",
+    "pbf2json": "^6.10.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}
