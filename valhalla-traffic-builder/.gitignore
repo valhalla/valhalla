@@ -1,0 +1,7 @@
+node_modules/
+input/
+output/
+responses/
+cert/
+.env
+.DS_Store

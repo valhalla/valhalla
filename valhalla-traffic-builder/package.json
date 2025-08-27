@@ -1,0 +1,22 @@
+{
+  "name": "valhalla-traffic-builder",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "build-inrix-traffic": "node --max-old-space-size=8192 build-inrix-traffic.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@sentry/node": "^9.37.0",
+    "axios": "^1.9.0",
+    "dotenv": "^16.5.0",
+    "node-addon-api": "^8.3.1",
+    "protobufjs": "^7.5.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "undici": "^7.8.0"
+  }
+}
