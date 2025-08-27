@@ -1,7 +1,7 @@
 #ifndef __VALHALLA_SAMPLE_H__
 #define __VALHALLA_SAMPLE_H__
 
-#include "valhalla/baldr/tilegetter.h"
+#include <valhalla/baldr/tilegetter.h>
 
 #include <boost/property_tree/ptree.hpp>
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
+#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
 
 #include <cstdint>
 #include <unordered_map>
