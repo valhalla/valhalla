@@ -134,7 +134,7 @@ TEST(Logging, FileLoggerRollingTest) {
   }
 }
 
-Test invalid configurations throw exceptions TEST(Logging, FileLoggerInvalidConfigTest1) {
+TEST(Logging, FileLoggerInvalidConfigTest1) {
   EXPECT_THROW(logging::Configure(
                    {{"type", "file"}, {"file_name", "test.log"}, {"max_file_size", "0"}}),
                std::runtime_error);
