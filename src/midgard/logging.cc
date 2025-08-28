@@ -226,7 +226,7 @@ public:
                                    size_config->second);
         }
         max_file_size = std::stoull(size_config->second);
-        if (max_file_size <= 0) {
+        if (max_file_size == 0) {
           throw std::runtime_error("max_file_size must be greater than 0");
         }
       } catch (...) { throw std::runtime_error(size_config->second + " is not a valid file size"); }
@@ -236,8 +236,12 @@ public:
     auto archive_config = config.find("max_archived_files");
     if (archive_config != config.end()) {
       try {
+        if (!archive_config->second.empty() && archive_config->second[0] == '-') {
+          throw std::runtime_error("max_archived_files must be greater than 0, got: " +
+                                   archive_config->second);
+        }
         max_archived_files = std::stoul(archive_config->second);
-        if (max_archived_files <= 0) {
+        if (max_archived_files == 0) {
           throw std::runtime_error("max_archived_files must be greater than 0");
         }
       } catch (...) {
