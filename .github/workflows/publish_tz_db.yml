@@ -7,9 +7,8 @@ on:
   push:
     branches:
       - master
-      - nn-tz-gha
-    # paths:
-    #   - scripts/valhalla_build_timezones
+    paths:
+      - scripts/valhalla_build_timezones
   workflow_dispatch:
 
 jobs:
