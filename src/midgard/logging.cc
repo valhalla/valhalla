@@ -92,11 +92,13 @@ Logger* LoggerFactory::Produce(const LoggingConfig& config) const {
   if (type == config.end()) {
     throw std::runtime_error("Logging factory configuration requires a type of logger");
   }
+
   // grab the logger
   auto found = find(type->second);
   if (found != end()) {
     return found->second(config);
   }
+
   // couldn't get a logger
   throw std::runtime_error("Couldn't produce logger for type: " + type->second);
 }
@@ -191,8 +193,7 @@ bool std_err_logger_registered = RegisterLogger("std_err", [](const LoggingConfi
   return l;
 });
 
-// TODO: add log rolling
-// logger that writes to file
+// File logger with log rolling support
 class FileLogger : public Logger {
 public:
   FileLogger() = delete;
@@ -215,6 +216,35 @@ public:
       }
     }
 
+    // Configure log rolling
+    max_file_size = 50 * 1024 * 1024; // 50 MB
+    auto size_config = config.find("max_file_size");
+    if (size_config != config.end()) {
+      try {
+        if (!size_config->second.empty() && size_config->second[0] == '-') {
+          throw std::runtime_error("max_file_size must be greater than 0, got: " +
+                                   size_config->second);
+        }
+        max_file_size = std::stoull(size_config->second);
+        if (max_file_size <= 0) {
+          throw std::runtime_error("max_file_size must be greater than 0");
+        }
+      } catch (...) { throw std::runtime_error(size_config->second + " is not a valid file size"); }
+    }
+
+    max_archived_files = 10;
+    auto archive_config = config.find("max_archived_files");
+    if (archive_config != config.end()) {
+      try {
+        max_archived_files = std::stoul(archive_config->second);
+        if (max_archived_files <= 0) {
+          throw std::runtime_error("max_archived_files must be greater than 0");
+        }
+      } catch (...) {
+        throw std::runtime_error(archive_config->second + " is not a valid number of archived files");
+      }
+    }
+
     // crack the file open
     ReOpen();
   }
@@ -222,6 +252,8 @@ public:
     Log(message, uncolored.find(level)->second);
   }
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
+    CheckRollLog();
+
     std::string output;
     output.reserve(message.length() + 64);
     output.append(TimeStamp());
@@ -236,6 +268,53 @@ public:
   }
 
 protected:
+  void CheckRollLog() {
+    lock.lock();
+    if (file.is_open()) {
+      std::streampos current_size = file.tellp();
+      if (current_size > static_cast<std::streampos>(max_file_size)) {
+        lock.unlock();
+        RollLog();
+        return;
+      }
+    }
+    lock.unlock();
+  }
+
+  void RollLog() {
+    std::lock_guard<std::mutex> lock_guard(lock);
+
+    if (file.is_open()) {
+      file.close();
+    }
+
+    // Roll existing files (archive.2 -> archive.3, archive.1 -> archive.2, etc.)
+    for (int i = max_archived_files - 1; i > 0; --i) {
+      std::string old_file = file_name + "." + std::to_string(i);
+      std::string new_file = file_name + "." + std::to_string(i + 1);
+
+      if (std::filesystem::exists(old_file)) {
+        if (std::filesystem::exists(new_file)) {
+          std::filesystem::remove(new_file);
+        }
+        std::filesystem::rename(old_file, new_file);
+      }
+    }
+
+    // Rename current to .1 if it exists
+    if (std::filesystem::exists(file_name)) {
+      std::filesystem::rename(file_name, file_name + ".1");
+    }
+
+    // Reopen the log file
+    EnsureDirectoryExists();
+    file.open(file_name, std::ofstream::out | std::ofstream::app);
+    if (file.fail()) {
+      throw std::runtime_error("Cannot create log file: " + file_name);
+    }
+    last_reopen = std::chrono::system_clock::now();
+  }
+
   void ReOpen() {
     // TODO: use CLOCK_MONOTONIC_COARSE
     // check if it should be closed and reopened
@@ -269,10 +348,22 @@ protected:
     }
     lock.unlock();
   }
+
+  void EnsureDirectoryExists() {
+    const auto parent_dir = std::filesystem::path(file_name).parent_path();
+    if (!parent_dir.empty() && !std::filesystem::is_directory(parent_dir)) {
+      if (!std::filesystem::create_directories(parent_dir)) {
+        throw std::runtime_error("Cannot create directory for log file: " + parent_dir.string());
+      }
+    }
+  }
+
   std::string file_name;
   std::ofstream file;
   std::chrono::seconds reopen_interval;
   std::chrono::system_clock::time_point last_reopen;
+  std::size_t max_file_size;
+  unsigned int max_archived_files;
 };
 bool file_logger_registered = RegisterLogger("file", [](const LoggingConfig& config) {
   Logger* l = new FileLogger(config);
