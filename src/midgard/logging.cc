@@ -283,17 +283,26 @@ protected:
       file.close();
     }
 
+    // Find the highest existing archive file
+    int highest = 0;
+    for (int i = 1; i <= static_cast<int>(max_archived_files); ++i) {
+      std::string f = file_name + "." + std::to_string(i);
+      if (std::filesystem::exists(f)) {
+        highest = i;
+      } else {
+        break; // stop at first gap
+      }
+    }
+
     // Roll existing files (archive.2 -> archive.3, archive.1 -> archive.2, etc.)
-    for (int i = max_archived_files - 1; i > 0; --i) {
+    for (int i = highest; i > 0; --i) {
       std::string old_file = file_name + "." + std::to_string(i);
       std::string new_file = file_name + "." + std::to_string(i + 1);
 
-      if (std::filesystem::exists(old_file)) {
-        if (std::filesystem::exists(new_file)) {
-          std::filesystem::remove(new_file);
-        }
-        std::filesystem::rename(old_file, new_file);
+      if (std::filesystem::exists(new_file)) {
+        std::filesystem::remove(new_file);
       }
+      std::filesystem::rename(old_file, new_file);
     }
 
     // Rename current to .1 if it exists
