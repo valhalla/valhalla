@@ -218,8 +218,6 @@ public:
 
     // Configure log rolling - default to disabled
     log_rolling_enabled = false;
-    max_file_size = 0;
-    max_archived_files = 0;
 
     auto size_config = config.find("max_file_size");
     auto archive_config = config.find("max_archived_files");
@@ -246,7 +244,6 @@ public:
         throw std::runtime_error(
             "Both max_file_size and max_archived_files must be specified for log rolling");
       }
-
       log_rolling_enabled = true;
     }
 
@@ -276,21 +273,17 @@ public:
 
 protected:
   void CheckRollLog() {
-    lock.lock();
+    std::lock_guard<std::mutex> lock_guard(lock);
     if (file.is_open()) {
       std::streampos current_size = file.tellp();
       if (current_size > static_cast<std::streampos>(max_file_size)) {
-        lock.unlock();
         RollLog();
         return;
       }
     }
-    lock.unlock();
   }
 
   void RollLog() {
-    std::lock_guard<std::mutex> lock_guard(lock);
-
     if (file.is_open()) {
       file.close();
     }
@@ -370,8 +363,8 @@ protected:
   std::chrono::seconds reopen_interval;
   std::chrono::system_clock::time_point last_reopen;
   bool log_rolling_enabled;
-  std::size_t max_file_size;
-  unsigned int max_archived_files;
+  std::size_t max_file_size = 50 * 1024 * 1024; // 50 MB default
+  unsigned int max_archived_files = 10;         // 10 files default
 };
 bool file_logger_registered = RegisterLogger("file", [](const LoggingConfig& config) {
   Logger* l = new FileLogger(config);
