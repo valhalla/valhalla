@@ -792,14 +792,6 @@ def override_config(args_: dict, leaves_: list, config_: dict):
         if isinstance(v[keys[-1]], type(Optional())):
             del v[keys[-1]]
 
-        # Handle `Optional` types - only set if value was provided
-        if isinstance(v[keys[-1]], type(Optional())):
-            provided_value = args_.get(leaf.replace('\0', '_'))
-            if provided_value is not None:
-                v[keys[-1]] = provided_value
-        else:
-            v[keys[-1]] = args_.get(leaf.replace('\0', '_'))
-
 
 # set up available program options
 leaves = []
