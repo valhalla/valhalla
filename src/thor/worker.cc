@@ -10,7 +10,6 @@
 #include <unordered_map>
 
 using namespace valhalla;
-using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::meili;

@@ -1,18 +1,14 @@
 #ifndef VALHALLA_MJOLNIR_LUA_H
 #define VALHALLA_MJOLNIR_LUA_H
 
-extern "C" {
-#include <lauxlib.h>
-#include <lua.h>
-#include <lualib.h>
-}
-
 #include <valhalla/mjolnir/osmdata.h>
 
 #include <ankerl/unordered_dense.h>
 #include <osmium/osm/tag.hpp>
 
 #include <string>
+
+struct lua_State;
 
 namespace valhalla {
 namespace mjolnir {

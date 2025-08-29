@@ -1,5 +1,5 @@
 #pragma once
-#include "valhalla.h"
+#include <valhalla/valhalla.h>
 
 #include <boost/property_tree/ptree.hpp>
 
