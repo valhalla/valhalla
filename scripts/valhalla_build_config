@@ -408,11 +408,15 @@ help_text = {
             'scan_tar': 'bool indicating whether or not to pre-scan the tar ball(s) when loading an extract with an index file, to warm up the OS page cache.',
         },
         'logging': {
+            '__note__': (
+                'The file logger is not suitable for multi-processing mode. '
+                'Log rolling in particular may cause race conditions and crashes.'
+            ),
             'type': 'Type of logger either std_out or file',
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
-            'max_file_size': 'Maximum file size in bytes before rolling to a new file (' ' = disabled)',
-            'max_archived_files': 'Maximum number of archived log files to keep (' ' = disabled)',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file ("" = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep ("" = disabled)',
         },
     },
     'additional_data': {
@@ -432,23 +436,31 @@ help_text = {
             'heading_tolerance': 'When a heading is supplied, this is the tolerance around that heading with which we determine whether an edges heading is similar enough to match the supplied heading',
         },
         'logging': {
+            '__note__': (
+                'The file logger is not suitable for multi-processing mode. '
+                'Log rolling in particular may cause race conditions and crashes.'
+            ),
             'type': 'Type of logger either std_out or file',
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
             'long_request': 'Value used in processing to determine whether it took too long',
-            'max_file_size': 'Maximum file size in bytes before rolling to a new file (' ' = disabled)',
-            'max_archived_files': 'Maximum number of archived log files to keep (' ' = disabled)',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file ("" = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep ("" = disabled)',
         },
         'service': {'proxy': 'IPC linux domain socket file location'},
     },
     'thor': {
         'logging': {
+            '__note__': (
+                'The file logger is not suitable for multi-processing mode. '
+                'Log rolling in particular may cause race conditions and crashes.'
+            ),
             'type': 'Type of logger either std_out or file',
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
             'long_request': 'Value used in processing to determine whether it took too long',
-            'max_file_size': 'Maximum file size in bytes before rolling to a new file (' ' = disabled)',
-            'max_archived_files': 'Maximum number of archived log files to keep (' ' = disabled)',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file ("" = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep ("" = disabled)',
         },
         'source_to_target_algorithm': 'Which matrix algorithm should be used, one of "timedistancematrix" or "costmatrix". If blank, the optimal will be selected.',
         'service': {'proxy': 'IPC linux domain socket file location'},
@@ -500,11 +512,15 @@ help_text = {
     },
     'odin': {
         'logging': {
+            '__note__': (
+                'The file logger is not suitable for multi-processing mode. '
+                'Log rolling in particular may cause race conditions and crashes.'
+            ),
             'type': 'Type of logger either std_out or file',
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
-            'max_file_size': 'Maximum file size in bytes before rolling to a new file (' ' = disabled)',
-            'max_archived_files': 'Maximum number of archived log files to keep (' ' = disabled)',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file ("" = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep ("" = disabled)',
         },
         'service': {'proxy': 'IPC linux domain socket file location'},
         'markup_formatter': {
@@ -545,11 +561,15 @@ help_text = {
             'turn_penalty_factor': 'A non-negative value to penalize turns from one road segment to next'
         },
         'logging': {
+            '__note__': (
+                'The file logger is not suitable for multi-processing mode. '
+                'Log rolling in particular may cause race conditions and crashes.'
+            ),
             'type': 'Type of logger either std_out or file',
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
-            'max_file_size': 'Maximum file size in bytes before rolling to a new file (' ' = disabled)',
-            'max_archived_files': 'Maximum number of archived log files to keep (' ' = disabled)',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file ("" = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep ("" = disabled)',
         },
         'service': {'proxy': 'IPC linux domain socket file location'},
         'grid': {
