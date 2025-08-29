@@ -217,33 +217,28 @@ public:
     }
 
     // Configure log rolling - default to disabled
-    log_rolling_enabled = false;
-
     auto size_config = config.find("max_file_size");
     auto archive_config = config.find("max_archived_files");
 
     if (size_config != config.end() && !size_config->second.empty()) {
-      max_file_size = std::stoll(size_config->second);
-      if (max_file_size <= 0) {
+      auto parsed_size = std::stoll(size_config->second);
+      if (parsed_size <= 0) {
         throw std::runtime_error("max_file_size must be greater than 0");
       }
+      max_file_size = parsed_size;
     }
 
     if (archive_config != config.end() && !archive_config->second.empty()) {
-      max_archived_files = std::stoll(archive_config->second);
-      if (max_archived_files <= 0) {
+      auto parsed_archive = std::stoll(archive_config->second);
+      if (parsed_archive <= 0) {
         throw std::runtime_error("max_archived_files must be greater than 0");
       }
+      max_archived_files = parsed_archive;
     }
 
     // Enable log rolling only if both values are provided and valid
-    if ((size_config != config.end() && !size_config->second.empty()) ||
+    if ((size_config != config.end() && !size_config->second.empty()) &&
         (archive_config != config.end() && !archive_config->second.empty())) {
-
-      if (max_file_size == 0 || max_archived_files == 0) {
-        throw std::runtime_error(
-            "Both max_file_size and max_archived_files must be specified for log rolling");
-      }
       log_rolling_enabled = true;
     }
 
@@ -362,7 +357,7 @@ protected:
   std::ofstream file;
   std::chrono::seconds reopen_interval;
   std::chrono::system_clock::time_point last_reopen;
-  bool log_rolling_enabled;
+  bool log_rolling_enabled = false;
   std::size_t max_file_size = 50 * 1024 * 1024; // 50 MB default
   unsigned int max_archived_files = 10;         // 10 files default
 };
