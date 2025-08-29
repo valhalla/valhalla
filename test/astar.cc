@@ -22,6 +22,7 @@
 #include "proto/trip.pb.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
+#include "sif/hierarchylimits.h"
 #include "sif/pedestriancost.h"
 #include "test.h"
 #include "thor/bidirectional_astar.h"

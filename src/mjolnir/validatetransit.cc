@@ -14,6 +14,7 @@
 #include <boost/tokenizer.hpp>
 
 #include <filesystem>
+#include <fstream>
 #include <future>
 #include <iostream>
 #include <thread>
