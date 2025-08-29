@@ -664,4 +664,3 @@ TEST(Standalone, ViaFerrata) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
   gurka::assert::raw::expect_path(result, {"AB", "BC"});
 }
-

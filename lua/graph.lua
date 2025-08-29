@@ -1647,7 +1647,6 @@ function filter_tags_generic(kv)
   kv["cycle_lane_right_opposite"] = cycle_lane_right_opposite
   kv["cycle_lane_left_opposite"] = cycle_lane_left_opposite
 
-  
   local highway_type = kv["highway"]
   if kv["highway"] == "construction" then
     highway_type = kv["construction"]
