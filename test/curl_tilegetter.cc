@@ -1,6 +1,6 @@
-#include "valhalla/baldr/curl_tilegetter.h"
+#include "baldr/curl_tilegetter.h"
+#include "skadi/sample.h"
 #include "test.h"
-#include "valhalla/skadi/sample.h"
 
 namespace {
 

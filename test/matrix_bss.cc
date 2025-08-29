@@ -1,3 +1,4 @@
+#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/worker.h"
@@ -9,8 +10,6 @@
 #include "thor/matrixalgorithm.h"
 #include "thor/timedistancebssmatrix.h"
 #include "thor/worker.h"
-
-#include <valhalla/baldr/rapidjson_utils.h>
 
 #include <iostream>
 #include <string>

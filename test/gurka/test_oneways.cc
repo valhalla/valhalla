@@ -1,7 +1,6 @@
 #include "gurka.h"
 #include "midgard/pointll.h"
-
-#include <valhalla/proto/options.pb.h>
+#include "proto/options.pb.h"
 
 #include <gtest/gtest.h>
 

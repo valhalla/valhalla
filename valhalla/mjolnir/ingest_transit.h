@@ -1,7 +1,7 @@
 #pragma once
 
-#include <valhalla/baldr/graphid.h>
-#include <valhalla/proto/transit.pb.h>
+#include "valhalla/baldr/graphid.h"
+#include "valhalla/proto/transit.pb.h"
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
