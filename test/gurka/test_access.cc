@@ -652,3 +652,16 @@ TEST(Standalone, AccessForwardBackward) {
     gurka::assert::raw::expect_path(result, {"CFH", "ABCDE", "EG"});
   }
 }
+
+TEST(Standalone, ViaFerrata) {
+  const std::string ascii_map = R"(A----B----C)";
+  const gurka::ways ways = {{"AB", {{"highway", "via_ferrata"}, {"sac_scale", "hiking"}}},
+                            {"BC", {{"highway", "via_ferrata"}, {"sac_scale", "hiking"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/example");
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
+}
+
