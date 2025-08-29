@@ -224,33 +224,30 @@ public:
     auto size_config = config.find("max_file_size");
     auto archive_config = config.find("max_archived_files");
 
-    if (size_config != config.end() || archive_config != config.end()) {
-      if (size_config == config.end() || archive_config == config.end()) {
+    if (size_config != config.end() && !size_config->second.empty()) {
+      max_file_size = std::stoll(size_config->second);
+      if (max_file_size <= 0) {
+        throw std::runtime_error("max_file_size must be greater than 0");
+      }
+    }
+
+    if (archive_config != config.end() && !archive_config->second.empty()) {
+      max_archived_files = std::stoll(archive_config->second);
+      if (max_archived_files <= 0) {
+        throw std::runtime_error("max_archived_files must be greater than 0");
+      }
+    }
+
+    // Enable log rolling only if both values are provided and valid
+    if ((size_config != config.end() && !size_config->second.empty()) ||
+        (archive_config != config.end() && !archive_config->second.empty())) {
+
+      if (max_file_size == 0 || max_archived_files == 0) {
         throw std::runtime_error(
             "Both max_file_size and max_archived_files must be specified for log rolling");
       }
 
-      try {
-        if (!size_config->second.empty() && size_config->second[0] == '-') {
-          throw std::runtime_error("max_file_size must be greater than 0, got: " +
-                                   size_config->second);
-        }
-        max_file_size = std::stoull(size_config->second);
-        if (max_file_size == 0) {
-          throw std::runtime_error("max_file_size must be greater than 0");
-        }
-
-        if (!archive_config->second.empty() && archive_config->second[0] == '-') {
-          throw std::runtime_error("max_archived_files must be greater than 0, got: " +
-                                   archive_config->second);
-        }
-        max_archived_files = std::stoul(archive_config->second);
-        if (max_archived_files == 0) {
-          throw std::runtime_error("max_archived_files must be greater than 0");
-        }
-
-        log_rolling_enabled = true;
-      } catch (...) { throw std::runtime_error("Invalid log rolling configuration"); }
+      log_rolling_enabled = true;
     }
 
     // crack the file open
