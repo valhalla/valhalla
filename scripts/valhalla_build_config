@@ -70,7 +70,13 @@ config = {
             'use_rest_area': False,
             'scan_tar': False,
         },
-        'logging': {'type': 'std_out', 'color': True, 'file_name': 'path_to_some_file.log'},
+        'logging': {
+            'type': 'std_out',
+            'color': True,
+            'file_name': 'path_to_some_file.log',
+            'max_file_size': Optional(int),
+            'max_archived_files': Optional(int),
+        },
     },
     'additional_data': {'elevation': '/data/valhalla/elevation/', 'elevation_url': Optional(str)},
     'loki': {
@@ -103,6 +109,8 @@ config = {
             'color': True,
             'file_name': 'path_to_some_file.log',
             'long_request': 100.0,
+            'max_file_size': Optional(int),
+            'max_archived_files': Optional(int),
         },
         'service': {'proxy': 'ipc:///tmp/loki'},
     },
@@ -112,6 +120,8 @@ config = {
             'color': True,
             'file_name': 'path_to_some_file.log',
             'long_request': 110.0,
+            'max_file_size': Optional(int),
+            'max_archived_files': Optional(int),
         },
         'source_to_target_algorithm': 'select_optimal',
         'service': {'proxy': 'ipc:///tmp/thor'},
@@ -153,7 +163,13 @@ config = {
         },
     },
     'odin': {
-        'logging': {'type': 'std_out', 'color': True, 'file_name': 'path_to_some_file.log'},
+        'logging': {
+            'type': 'std_out',
+            'color': True,
+            'file_name': 'path_to_some_file.log',
+            'max_file_size': Optional(int),
+            'max_archived_files': Optional(int),
+        },
         'service': {'proxy': 'ipc:///tmp/odin'},
         'markup_formatter': {
             'markup_enabled': False,
@@ -192,7 +208,13 @@ config = {
         'pedestrian': {'turn_penalty_factor': 100, 'search_radius': 50},
         'bicycle': {'turn_penalty_factor': 140},
         'multimodal': {'turn_penalty_factor': 70},
-        'logging': {'type': 'std_out', 'color': True, 'file_name': 'path_to_some_file.log'},
+        'logging': {
+            'type': 'std_out',
+            'color': True,
+            'file_name': 'path_to_some_file.log',
+            'max_file_size': Optional(int),
+            'max_archived_files': Optional(int),
+        },
         'service': {'proxy': 'ipc:///tmp/meili'},
         'grid': {'size': 500, 'cache_size': 100240},
     },
@@ -389,6 +411,8 @@ help_text = {
             'type': 'Type of logger either std_out or file',
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file (0 = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep (0 = disabled)',
         },
     },
     'additional_data': {
@@ -412,6 +436,8 @@ help_text = {
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
             'long_request': 'Value used in processing to determine whether it took too long',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file (0 = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep (0 = disabled)',
         },
         'service': {'proxy': 'IPC linux domain socket file location'},
     },
@@ -421,6 +447,8 @@ help_text = {
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
             'long_request': 'Value used in processing to determine whether it took too long',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file (0 = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep (0 = disabled)',
         },
         'source_to_target_algorithm': 'Which matrix algorithm should be used, one of "timedistancematrix" or "costmatrix". If blank, the optimal will be selected.',
         'service': {'proxy': 'IPC linux domain socket file location'},
@@ -475,6 +503,8 @@ help_text = {
             'type': 'Type of logger either std_out or file',
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file (0 = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep (0 = disabled)',
         },
         'service': {'proxy': 'IPC linux domain socket file location'},
         'markup_formatter': {
@@ -518,6 +548,8 @@ help_text = {
             'type': 'Type of logger either std_out or file',
             'color': 'User colored log level in std_out logger',
             'file_name': 'Output log file for the file logger',
+            'max_file_size': 'Maximum file size in bytes before rolling to a new file (0 = disabled)',
+            'max_archived_files': 'Maximum number of archived log files to keep (0 = disabled)',
         },
         'service': {'proxy': 'IPC linux domain socket file location'},
         'grid': {
@@ -739,6 +771,14 @@ def override_config(args_: dict, leaves_: list, config_: dict):
         v[keys[-1]] = args_.get(leaf.replace('\0', '_'))
         if isinstance(v[keys[-1]], type(Optional())):
             del v[keys[-1]]
+
+        # Handle `Optional` types - only set if value was provided
+        if isinstance(v[keys[-1]], type(Optional())):
+            provided_value = args_.get(leaf.replace('\0', '_'))
+            if provided_value is not None:
+                v[keys[-1]] = provided_value
+        else:
+            v[keys[-1]] = args_.get(leaf.replace('\0', '_'))
 
 
 # set up available program options
