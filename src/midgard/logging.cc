@@ -216,10 +216,20 @@ public:
       }
     }
 
-    // Configure log rolling
-    max_file_size = 50 * 1024 * 1024; // 50 MB
+    // Configure log rolling - default to disabled
+    log_rolling_enabled = false;
+    max_file_size = 0;
+    max_archived_files = 0;
+
     auto size_config = config.find("max_file_size");
-    if (size_config != config.end()) {
+    auto archive_config = config.find("max_archived_files");
+
+    if (size_config != config.end() || archive_config != config.end()) {
+      if (size_config == config.end() || archive_config == config.end()) {
+        throw std::runtime_error(
+            "Both max_file_size and max_archived_files must be specified for log rolling");
+      }
+
       try {
         if (!size_config->second.empty() && size_config->second[0] == '-') {
           throw std::runtime_error("max_file_size must be greater than 0, got: " +
@@ -229,13 +239,7 @@ public:
         if (max_file_size == 0) {
           throw std::runtime_error("max_file_size must be greater than 0");
         }
-      } catch (...) { throw std::runtime_error(size_config->second + " is not a valid file size"); }
-    }
 
-    max_archived_files = 10;
-    auto archive_config = config.find("max_archived_files");
-    if (archive_config != config.end()) {
-      try {
         if (!archive_config->second.empty() && archive_config->second[0] == '-') {
           throw std::runtime_error("max_archived_files must be greater than 0, got: " +
                                    archive_config->second);
@@ -244,9 +248,9 @@ public:
         if (max_archived_files == 0) {
           throw std::runtime_error("max_archived_files must be greater than 0");
         }
-      } catch (...) {
-        throw std::runtime_error(archive_config->second + " is not a valid number of archived files");
-      }
+
+        log_rolling_enabled = true;
+      } catch (...) { throw std::runtime_error("Invalid log rolling configuration"); }
     }
 
     // crack the file open
@@ -256,7 +260,9 @@ public:
     Log(message, uncolored.find(level)->second);
   }
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
-    CheckRollLog();
+    if (log_rolling_enabled) {
+      CheckRollLog();
+    }
 
     std::string output;
     output.reserve(message.length() + 64);
@@ -366,6 +372,7 @@ protected:
   std::ofstream file;
   std::chrono::seconds reopen_interval;
   std::chrono::system_clock::time_point last_reopen;
+  bool log_rolling_enabled;
   std::size_t max_file_size;
   unsigned int max_archived_files;
 };
