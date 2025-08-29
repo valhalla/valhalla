@@ -323,12 +323,7 @@ protected:
       try {
         // Ensure directory for log file exists. Otherwise, log file creation is silently skipped.
         // e.g. if "mjolnir.logging.file_name" points to location inside "mjolnir.tile_dir"
-        const auto parent_dir = std::filesystem::path(file_name).parent_path();
-        if (!std::filesystem::is_directory(parent_dir)) {
-          if (!std::filesystem::create_directories(parent_dir)) {
-            throw std::runtime_error("Cannot create directory for log file: " + parent_dir.string());
-          }
-        }
+        EnsureDirectoryExists();
         file.open(file_name, std::ofstream::out | std::ofstream::app);
         if (file.fail()) {
           throw std::runtime_error("Cannot create log file: " + file_name);
