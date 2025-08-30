@@ -5,7 +5,7 @@
 #include "valhalla/tile_server.h"
 
 #include <boost/property_tree/ptree.hpp>
-#include <prime_server/prime_server.hpp>
+#include <prime_server/zmq_helpers.hpp>
 
 #include <filesystem>
 #include <stdexcept>
