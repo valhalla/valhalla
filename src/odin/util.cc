@@ -1,14 +1,14 @@
 #include "baldr/rapidjson_utils.h"
+#include "baldr/turnlanes.h"
+#include "locales.h"
+#include "midgard/logging.h"
+#include "odin/util.h"
+#include "tyr/serializer_constants.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
-
-#include <cctype>
-#include <chrono>
-#include <regex>
-#include <sstream>
 
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
@@ -17,17 +17,15 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 #include <date/date.h>
-#include <date/tz.h>
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #pragma GCC diagnostic pop
 #endif
 
-#include "baldr/turnlanes.h"
-#include "locales.h"
-#include "midgard/logging.h"
-#include "odin/util.h"
-#include "tyr/serializer_constants.h"
+#include <cctype>
+#include <chrono>
+#include <regex>
+#include <sstream>
 
 using namespace valhalla::tyr;
 
