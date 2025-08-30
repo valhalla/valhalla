@@ -2,16 +2,15 @@
 #define __VALHALLA_SERVICE_H__
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
-#include <valhalla/valhalla.h>
 
-#include <string>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #ifdef ENABLE_SERVICES
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 #endif
 
-#include <boost/property_tree/ptree_fwd.hpp>
+#include <string>
 
 namespace valhalla {
 

@@ -1,5 +1,4 @@
 #include "baldr/sign.h"
-#include "baldr/signinfo.h"
 #include "odin/sign.h"
 
 #include <gtest/gtest.h>

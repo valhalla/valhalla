@@ -1,15 +1,10 @@
-#include "baldr/attributes_controller.h"
-#include "baldr/rapidjson_utils.h"
-#include "midgard/logging.h"
 #include "test.h"
-#include "thor/worker.h"
 #include "tyr/actor.h"
 
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
-using namespace valhalla::thor;
 using namespace std::string_literals;
 
 namespace {

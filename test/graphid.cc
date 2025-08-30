@@ -1,6 +1,4 @@
-
 #include "baldr/graphid.h"
-#include "midgard/point2.h"
 
 #include <gtest/gtest.h>
 

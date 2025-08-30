@@ -12,7 +12,7 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "midgard/pointll.h"
-#include "tyr/serializers.h"
+#include "proto/api.pb.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <gtest/gtest.h>

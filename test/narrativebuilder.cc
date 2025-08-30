@@ -5,7 +5,6 @@
 #include "odin/markup_formatter.h"
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrative_dictionary.h"
-#include "odin/sign.h"
 #include "odin/signs.h"
 #include "odin/util.h"
 #include "proto/common.pb.h"

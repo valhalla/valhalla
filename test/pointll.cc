@@ -1,6 +1,5 @@
 #include "midgard/pointll.h"
 #include "midgard/constants.h"
-#include "midgard/util.h"
 
 #include <gtest/gtest.h>
 

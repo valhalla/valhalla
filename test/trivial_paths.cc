@@ -1,8 +1,6 @@
 #include "loki/worker.h"
-#include "midgard/logging.h"
-#include "sif/autocost.h"
 #include "test.h"
-#include "thor/worker.h"
+#include "thor/unidirectional_astar.h"
 
 #include <string>
 

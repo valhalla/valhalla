@@ -9,7 +9,7 @@
 #endif
 
 using namespace valhalla;
-using namespace mjolnir;
+
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {

@@ -4,11 +4,9 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
-#include "midgard/sequence.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/graphenhancer.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
 
 #include <boost/property_tree/ptree.hpp>

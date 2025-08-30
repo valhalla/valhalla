@@ -10,7 +10,6 @@
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::gurka;
-using namespace valhalla::mjolnir;
 
 namespace {
 const std::vector<std::string> kSupportedCostingModels = {

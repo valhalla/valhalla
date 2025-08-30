@@ -4,7 +4,6 @@
 #include "odin/markup_formatter.h"
 #include "proto/api.pb.h"
 #include "proto/directions.pb.h"
-#include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 #include "test.h"
 

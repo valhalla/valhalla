@@ -1,4 +1,3 @@
-#include "baldr/signinfo.h"
 #include "mjolnir/graphbuilder.h"
 
 #include <gtest/gtest.h>

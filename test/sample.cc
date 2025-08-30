@@ -2,7 +2,6 @@
 #include "baldr/compression_utils.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
-#include "midgard/util.h"
 #include "pixels.h"
 
 #include <gtest/gtest.h>

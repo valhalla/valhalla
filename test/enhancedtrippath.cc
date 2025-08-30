@@ -1,6 +1,5 @@
 #include "odin/enhancedtrippath.h"
 #include "baldr/turnlanes.h"
-#include "midgard/util.h"
 
 #include <gtest/gtest.h>
 

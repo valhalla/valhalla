@@ -1,10 +1,10 @@
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "midgard/encoded.h"
+#include "proto/api.pb.h"
 #include "test.h"
 #include "valhalla/proto_conversions.h"
-
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/thor/matrixalgorithm.h>
+#include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
 

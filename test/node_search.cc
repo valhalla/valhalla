@@ -1,11 +1,9 @@
 #include "loki/node_search.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/location.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
-#include "midgard/vector2.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <gtest/gtest.h>

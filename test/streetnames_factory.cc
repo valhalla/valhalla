@@ -1,6 +1,5 @@
 #include "baldr/streetnames_factory.h"
 #include "baldr/streetnames.h"
-#include "baldr/streetnames_us.h"
 
 #include <gtest/gtest.h>
 

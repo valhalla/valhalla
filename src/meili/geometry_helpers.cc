@@ -1,5 +1,4 @@
 #include "meili/geometry_helpers.h"
-#include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"

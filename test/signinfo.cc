@@ -1,5 +1,4 @@
 #include "baldr/signinfo.h"
-#include "baldr/graphid.h"
 #include "midgard/sequence.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/osmnodelinguistic.h"

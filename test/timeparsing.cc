@@ -1,6 +1,4 @@
 #include "mjolnir/timeparsing.h"
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 
 #include <boost/algorithm/string/split.hpp>

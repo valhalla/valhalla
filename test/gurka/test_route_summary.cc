@@ -2,9 +2,6 @@
 #include "gurka.h"
 #include "midgard/pointll.h"
 
-#include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/traffictile.h>
-
 #ifndef _WIN32
 #include <sys/mman.h>
 #endif

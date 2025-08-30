@@ -7,7 +7,6 @@
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
 #include "test.h"
-#include "thor/matrixalgorithm.h"
 #include "thor/timedistancebssmatrix.h"
 #include "thor/worker.h"
 

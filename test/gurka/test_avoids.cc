@@ -4,10 +4,9 @@
 #include "loki/polygon_search.h"
 #include "loki/worker.h"
 #include "midgard/pointll.h"
+#include "proto/options.pb.h"
 #include "sif/costfactory.h"
 #include "worker.h"
-
-#include <valhalla/proto/options.pb.h>
 
 #include <boost/format.hpp>
 #include <gtest/gtest.h>
