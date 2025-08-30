@@ -4,7 +4,8 @@
 #include "sif/bicyclecost.h"
 #include "sif/costfactory.h"
 #include "sif/pedestriancost.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla;

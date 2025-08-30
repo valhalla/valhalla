@@ -3,7 +3,8 @@
 #include "midgard/util.h"
 #include "odin/maneuver.h"
 #include "proto/options.pb.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <string>

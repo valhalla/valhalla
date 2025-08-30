@@ -11,7 +11,8 @@
 #include "proto/common.pb.h"
 #include "proto/directions.pb.h"
 #include "proto/trip.pb.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 

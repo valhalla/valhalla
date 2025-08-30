@@ -1,10 +1,11 @@
 #include "skadi/sample.h"
 #include "baldr/compression_utils.h"
+#include "midgard/pointll.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 #include "pixels.h"
-#include "test.h"
 
+#include <gtest/gtest.h>
 #include <lz4frame.h>
 
 #include <cmath>
@@ -13,6 +14,7 @@
 #include <list>
 
 using namespace valhalla;
+using namespace valhalla::midgard;
 
 namespace {
 

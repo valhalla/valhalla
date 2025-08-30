@@ -1,11 +1,15 @@
 #include "baldr/signinfo.h"
 #include "baldr/graphid.h"
+#include "midgard/sequence.h"
 #include "mjolnir/graphbuilder.h"
+#include "mjolnir/osmnodelinguistic.h"
 #include "mjolnir/uniquenames.h"
-#include "test.h"
 
-using namespace valhalla::mjolnir;
+#include <gtest/gtest.h>
+
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
+using namespace valhalla::mjolnir;
 using valhalla::mjolnir::GraphBuilder;
 
 namespace {

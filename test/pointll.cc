@@ -1,7 +1,8 @@
 #include "midgard/pointll.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <cmath>

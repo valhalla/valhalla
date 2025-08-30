@@ -1,5 +1,6 @@
 #include "midgard/logging.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdio>
 #include <fstream>

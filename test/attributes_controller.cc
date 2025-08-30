@@ -1,7 +1,7 @@
-
 #include "baldr/attributes_controller.h"
 #include "config.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::baldr;

@@ -2,9 +2,9 @@
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
-#include "test.h"
 
 #include <boost/algorithm/string/split.hpp>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <string>

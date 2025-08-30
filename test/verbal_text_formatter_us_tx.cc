@@ -1,7 +1,8 @@
 #include "baldr/verbal_text_formatter_us_tx.h"
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::baldr;

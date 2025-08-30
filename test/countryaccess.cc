@@ -10,9 +10,9 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
-#include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <filesystem>

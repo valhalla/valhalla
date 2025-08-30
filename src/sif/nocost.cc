@@ -6,11 +6,6 @@
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 
-#ifdef INLINE_TEST
-#include "test.h"
-#include "worker.h"
-#endif
-
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 

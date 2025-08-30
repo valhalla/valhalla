@@ -3,10 +3,10 @@
 #include "midgard/pointll.h"
 #include "proto/common.pb.h"
 #include "proto/trip.pb.h"
-#include "test.h"
 #include "tyr/serializers.h"
 
 #include <boost/variant/get.hpp>
+#include <gtest/gtest.h>
 
 #include <iomanip>
 #include <sstream>

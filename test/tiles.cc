@@ -3,9 +3,11 @@
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <array>
+#include <list>
 #include <random>
 
 using namespace valhalla::midgard;

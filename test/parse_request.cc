@@ -4,8 +4,9 @@
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
 #include "sif/hierarchylimits.h"
-#include "test.h"
 #include "worker.h"
+
+#include <gtest/gtest.h>
 
 #include <string>
 #include <vector>

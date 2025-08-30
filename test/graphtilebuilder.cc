@@ -3,7 +3,8 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <fstream>
 #include <string>

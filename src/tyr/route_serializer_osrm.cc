@@ -20,15 +20,16 @@
 
 #include <boost/variant/get.hpp>
 
+#ifdef INLINE_TEST
+#include <gtest/gtest.h>
+#endif
+
 #include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#ifdef INLINE_TEST
-#include "test.h"
-#endif
 
 using namespace valhalla;
 using namespace valhalla::midgard;
