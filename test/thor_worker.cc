@@ -7,8 +7,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <algorithm>
-
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::thor;

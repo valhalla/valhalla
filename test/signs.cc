@@ -2,7 +2,6 @@
 #include "odin/sign.h"
 #include "test.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <vector>
 

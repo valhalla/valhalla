@@ -10,7 +10,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
-#include <unistd.h>
 
 #include <cstdint>
 #include <filesystem>

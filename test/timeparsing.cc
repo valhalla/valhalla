@@ -6,7 +6,6 @@
 
 #include <boost/algorithm/string/split.hpp>
 
-#include <algorithm>
 #include <cstdint>
 #include <string>
 

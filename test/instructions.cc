@@ -8,7 +8,6 @@
 #include "test.h"
 #include "tyr/serializers.h"
 
-#include <fstream>
 #include <string>
 
 #if !defined(VALHALLA_SOURCE_DIR)

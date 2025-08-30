@@ -7,7 +7,6 @@
 #include "test.h"
 #include "worker.h"
 
-#include <cctype>
 #include <string>
 #include <vector>
 
