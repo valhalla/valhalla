@@ -11,7 +11,7 @@
 #include <prime_server/prime_server.hpp>
 #endif
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
 

@@ -3,6 +3,8 @@
 
 #include <valhalla/worker.h>
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <string>
 
 namespace {

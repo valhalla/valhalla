@@ -3,7 +3,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/proto/transit.pb.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <filesystem>
 #include <list>

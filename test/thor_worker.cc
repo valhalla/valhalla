@@ -5,6 +5,8 @@
 #include "thor/worker.h"
 #include "tyr/actor.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <algorithm>
 
 using namespace valhalla;

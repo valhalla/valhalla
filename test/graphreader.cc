@@ -3,6 +3,7 @@
 #include "baldr/tilehierarchy.h"
 #include "test.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <fcntl.h>
 
 #include <cstdint>

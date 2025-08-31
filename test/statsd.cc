@@ -2,6 +2,8 @@
 #include "test.h"
 #include "worker.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <thread>
 
 using namespace valhalla;

@@ -14,7 +14,7 @@
 #include <sys/mman.h>
 #endif
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sys/stat.h>

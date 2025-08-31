@@ -4,6 +4,7 @@
 #include "tyr/actor.h"
 #include "valhalla/tile_server.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <prime_server/prime_server.hpp>
 
 #include <filesystem>

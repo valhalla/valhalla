@@ -6,6 +6,8 @@
 #include "test.h"
 #include "tyr/actor.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif

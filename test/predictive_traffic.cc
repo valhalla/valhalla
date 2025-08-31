@@ -6,6 +6,8 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "test.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <string>
 #include <vector>
 

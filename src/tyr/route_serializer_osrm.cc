@@ -18,6 +18,8 @@
 #include "tyr/serializers.h"
 #include "worker.h"
 
+#include <boost/variant/get.hpp>
+
 #include <numeric>
 #include <sstream>
 #include <stdexcept>

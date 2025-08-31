@@ -3,6 +3,8 @@
 #include "odin/util.h"
 #include "test.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <locale>
 #include <regex>
 #include <set>

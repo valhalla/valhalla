@@ -6,6 +6,8 @@
 #include "test.h"
 #include "tyr/serializers.h"
 
+#include <boost/variant/get.hpp>
+
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
