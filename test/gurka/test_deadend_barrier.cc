@@ -1,5 +1,7 @@
 #include "gurka.h"
 
+#include <gtest/gtest.h>
+
 using namespace valhalla;
 
 class DeadendBarrier : public testing::TestWithParam<std::string> {

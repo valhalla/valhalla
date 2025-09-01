@@ -2,6 +2,8 @@
 #include "gurka.h"
 #include "midgard/pointll.h"
 
+#include <gtest/gtest.h>
+
 #ifndef _WIN32
 #include <sys/mman.h>
 #endif

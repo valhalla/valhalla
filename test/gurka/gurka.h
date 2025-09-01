@@ -15,7 +15,6 @@
 #include "proto/api.pb.h"
 
 #include <boost/property_tree/ptree.hpp>
-#include <gtest/gtest.h>
 
 #include <string>
 #include <tuple>

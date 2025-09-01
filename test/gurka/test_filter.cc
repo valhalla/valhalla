@@ -1,6 +1,8 @@
 #include "baldr/graphreader.h"
 #include "gurka.h"
 
+#include <gtest/gtest.h>
+
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::gurka;
