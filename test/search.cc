@@ -4,6 +4,7 @@
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
 #include "baldr/tilehierarchy.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/vector2.h"
 #include "sif/nocost.h"

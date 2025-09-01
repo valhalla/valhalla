@@ -1,7 +1,6 @@
 #ifndef VALHALLA_MJOLNIR_UNIQUENAMES_H
 #define VALHALLA_MJOLNIR_UNIQUENAMES_H
 
-#include <algorithm>
 #include <cstdint>
 #include <string>
 #include <unordered_map>

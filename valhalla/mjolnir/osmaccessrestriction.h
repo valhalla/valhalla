@@ -2,7 +2,6 @@
 #define VALHALLA_MJOLNIR_OSMACCESSRESTRICTION_H
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/baldr/graphid.h>
 
 #include <cstdint>
 
