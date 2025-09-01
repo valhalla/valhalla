@@ -11,8 +11,8 @@
 #include "midgard/polyline2.h"
 
 #include <boost/property_tree/ptree_fwd.hpp>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <gmock/gmock-matchers.h>
+#include <gtest/gtest-assertion-result.h>
 
 #include <cmath>
 #include <functional>

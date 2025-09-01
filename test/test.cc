@@ -5,13 +5,10 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
 #include "microtar.h"
-#include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 #include <cmath>
 #include <filesystem>
