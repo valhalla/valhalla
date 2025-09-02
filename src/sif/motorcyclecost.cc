@@ -3,10 +3,10 @@
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/rapidjson_utils.h"
+#include "mjolnir/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/osrm_car_duration.h"
-#include "mjolnir/util.h"
 
 #include <cassert>
 
@@ -14,8 +14,8 @@
 #include "test.h"
 #include "worker.h"
 
-#include <random>
 #include <cmath>
+#include <random>
 #endif
 
 using namespace valhalla::midgard;

@@ -139,10 +139,9 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
-      use_curvature_{0.f, kDefaultUseCurvature, kMaxPenalty},
-      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_bridges_(false),
-      exclude_tunnels_(false), exclude_tolls_(false), exclude_highways_(false),
-      exclude_ferries_(false), has_excludes_(false),
+      use_curvature_{0.f, kDefaultUseCurvature, kMaxPenalty}, closure_factor_{kClosureFactorRange},
+      exclude_unpaved_(false), exclude_bridges_(false), exclude_tunnels_(false),
+      exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
                                                                                       false} {
 }

@@ -49,12 +49,15 @@ protected:
         C-D       I-J
     )";
 
-    const gurka::ways ways_with_dead_end = {{"AG", {{"highway", "primary"}, {"name", "Straight Road"}}},
-                                            {"ABCDEFG", {{"highway", "primary"}, {"name", "Twisty Road"}}},
-                                            {"FHIJK", {{"highway", "primary"}, {"name", "Dead End Road"}}}};
+    const gurka::ways ways_with_dead_end =
+        {{"AG", {{"highway", "primary"}, {"name", "Straight Road"}}},
+         {"ABCDEFG", {{"highway", "primary"}, {"name", "Twisty Road"}}},
+         {"FHIJK", {{"highway", "primary"}, {"name", "Dead End Road"}}}};
 
-    const auto layout_with_dead_end = gurka::detail::map_to_coordinates(ascii_map_with_dead_end, gridsize);
-    map_with_dead_end = gurka::buildtiles(layout_with_dead_end, ways_with_dead_end, {}, {}, "test/data/usecurvature_with_dead_end");
+    const auto layout_with_dead_end =
+        gurka::detail::map_to_coordinates(ascii_map_with_dead_end, gridsize);
+    map_with_dead_end = gurka::buildtiles(layout_with_dead_end, ways_with_dead_end, {}, {},
+                                          "test/data/usecurvature_with_dead_end");
   }
 
   inline float getDuration(const valhalla::Api& route) {
@@ -67,8 +70,8 @@ gurka::map UseCurvatureTest::map_with_dead_end = {};
 
 TEST_F(UseCurvatureTest, TestCurvyRoadWithValue0) {
 
-  std::unordered_map<std::string, std::string> options = 
-      {{"/costing_options/motorcycle/use_curvature", "0"}};
+  std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/motorcycle/use_curvature", "0"}};
 
   valhalla::Api default_route =
       gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "motorcycle");
@@ -82,8 +85,8 @@ TEST_F(UseCurvatureTest, TestCurvyRoadWithValue0) {
 
 TEST_F(UseCurvatureTest, CurvyRoadWithValue1) {
 
-  std::unordered_map<std::string, std::string> options = 
-      {{"/costing_options/motorcycle/use_curvature", "1"}};
+  std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/motorcycle/use_curvature", "1"}};
 
   valhalla::Api default_route =
       gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "motorcycle");
@@ -97,8 +100,8 @@ TEST_F(UseCurvatureTest, CurvyRoadWithValue1) {
 
 TEST_F(UseCurvatureTest, CurvyRoadWithValue10) {
 
-  std::unordered_map<std::string, std::string> options = 
-      {{"/costing_options/motorcycle/use_curvature", "10"}};
+  std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/motorcycle/use_curvature", "10"}};
 
   valhalla::Api default_route =
       gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "motorcycle");
@@ -125,14 +128,15 @@ valhalla-tests  | [  FAILED  ] UseCurvatureTest.CurvyRoadWithDeadEnd100 (6 ms)
 /*
 TEST_F(UseCurvatureTest, CurvyRoadOnMapWithDeadEndWithValue1) {
 
-  std::unordered_map<std::string, std::string> options = 
+  std::unordered_map<std::string, std::string> options =
       {{"/costing_options/motorcycle/use_curvature", "1"}};
 
   valhalla::Api default_route =
       gurka::do_action(valhalla::Options::route, map_with_dead_end, {"A", "G"}, "motorcycle");
 
   valhalla::Api curvy_route =
-      gurka::do_action(valhalla::Options::route, map_with_dead_end, {"A", "G"}, "motorcycle", options);
+      gurka::do_action(valhalla::Options::route, map_with_dead_end, {"A", "G"}, "motorcycle",
+options);
 
   gurka::assert::raw::expect_path(default_route, {"Straight Road"});
   gurka::assert::raw::expect_path(curvy_route, {"Twisty Road"});
@@ -154,14 +158,15 @@ valhalla-tests  | [  FAILED  ] UseCurvatureTest.CurvyRoadWithDeadEnd100 (6 ms)
 /*
 TEST_F(UseCurvatureTest, CurvyRoadOnMapWithDeadEndWithValue100) {
 
-  std::unordered_map<std::string, std::string> options = 
+  std::unordered_map<std::string, std::string> options =
       {{"/costing_options/motorcycle/use_curvature", "1"}};
 
   valhalla::Api default_route =
       gurka::do_action(valhalla::Options::route, map_with_dead_end, {"A", "G"}, "motorcycle");
 
   valhalla::Api curvy_route =
-      gurka::do_action(valhalla::Options::route, map_with_dead_end, {"A", "G"}, "motorcycle", options);
+      gurka::do_action(valhalla::Options::route, map_with_dead_end, {"A", "G"}, "motorcycle",
+options);
 
   gurka::assert::raw::expect_path(default_route, {"Straight Road"});
   gurka::assert::raw::expect_path(curvy_route, {"Twisty Road", "Dead End Road"});
