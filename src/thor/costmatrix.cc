@@ -840,7 +840,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       // the fractional cost and the distance penalties
       Cost partial_cost =
           ((partial_reverse_cost * (1 / target_edge.percent_along()) * traversed_fraction) +
-           (partial_forward_cost * (1 / source_edge.percent_along()) * traversed_fraction) +
+           (partial_forward_cost * (1 / (1 - source_edge.percent_along())) * traversed_fraction) +
            fwd_pred.transition_cost() + rev_label.transition_cost()) *
           0.5;
 
@@ -982,7 +982,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
         // the fractional cost and the distance penalties
         Cost partial_cost =
             ((partial_reverse_cost * (1 / target_edge.percent_along()) * traversed_fraction) +
-             (partial_forward_cost * (1 / source_edge.percent_along()) * traversed_fraction) +
+             (partial_forward_cost * (1 / (1 - source_edge.percent_along())) * traversed_fraction) +
              fwd_label.transition_cost() + rev_pred.transition_cost()) *
             0.5;
 
@@ -1132,13 +1132,14 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.distance();
+      Cost distance_penalty(edge.distance(), 0);
+      cost += distance_penalty;
 
       // 2 adjustments related only to properly handle trivial routes:
       //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_,
-                             Cost(edge.distance(), 0), d, !directededge->not_thru(),
+                             distance_penalty, d, !directededge->not_thru(),
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
@@ -1222,13 +1223,14 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.distance();
+      Cost distance_penalty(edge.distance(), 0);
+      cost += distance_penalty;
 
       // 2 adjustments related only to properly handle trivial routes:
       //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the opp edge is even allowed (e.g. no oneway)
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
-                             Cost(edge.distance(), 0), d, !opp_dir_edge->not_thru(),
+                             distance_penalty, d, !opp_dir_edge->not_thru(),
                              !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
