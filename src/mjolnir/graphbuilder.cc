@@ -11,6 +11,8 @@
 #include "midgard/tiles.h"
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
+#include "mjolnir/dataquality.h"
+#include "mjolnir/directededgebuilder.h"
 #include "mjolnir/ferry_connections.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/linkclassification.h"

@@ -389,6 +389,11 @@ void DirectedEdge::set_name_consistency(const uint32_t idx, const bool c) {
   }
 }
 
+// Set the name consistency mask.
+void DirectedEdge::set_name_consistency(const uint8_t mask) {
+  name_consistency_ = mask;
+}
+
 // Sets the surface type (see baldr/graphconstants.h). This is a general
 // indication of smoothness.
 void DirectedEdge::set_surface(const Surface surface) {
