@@ -299,6 +299,7 @@
    * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
    * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
    * ADDED: `use_curvature` costing option for motorcycle costing [TODO](https://github.com/valhalla/valhalla/pull/TODO)
+   * ADDED: `use_curvature` costing option for motorcycle costing [#5491](https://github.com/valhalla/valhalla/pull/5491)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
