@@ -49,7 +49,7 @@ mv 000/* . && rmdir 000
 ```
 This will start the script, and create up to CONCURRENT_PROCESSES to process the pbf files (each process handles one file at a time from the queue).
 
-CSV outputs will be written to `./traffic`. These can be added to Valhalla following these steps TODO: Add link to README.md
+CSV outputs will be written to `./traffic`. These can be added to Valhalla following these [steps at adding historic traffic](../README_RADAR.md#3-valhalla-data-pipeline)
 ```
 find traffic/ -type f | head -n 10
 traffic/0/000/003/340.csv
