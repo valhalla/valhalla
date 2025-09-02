@@ -1,6 +1,5 @@
 #pragma once
 
-#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/util.h>
 
 #include <cmath>

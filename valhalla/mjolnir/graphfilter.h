@@ -1,8 +1,6 @@
 #ifndef VALHALLA_MJOLNIR_GRAPHFILTER_H
 #define VALHALLA_MJOLNIR_GRAPHFILTER_H
 
-#include <valhalla/baldr/graphreader.h>
-
 #include <boost/property_tree/ptree.hpp>
 
 namespace valhalla {
