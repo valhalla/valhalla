@@ -432,7 +432,7 @@ uint32_t compute_curvature(const std::list<PointLL>& shape) {
     }
   }
   float average_score = (n == 0) ? 0.0f : total_score / n;
-  return average_score > 15.0f ? 15 : static_cast<uint32_t>(average_score);
+  return average_score > kMaxCurvature ? kMaxCurvature : static_cast<uint32_t>(average_score);
 }
 
 // Do the 2 shape vectors match (either direction).

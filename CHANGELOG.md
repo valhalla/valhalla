@@ -129,6 +129,7 @@
    * CHANGED: Use rapidjson for transit_available serializer [#5430](https://github.com/valhalla/valhalla/pull/5430)
    * CHANGED: Switch from CircleCI to Github Actions [#5427](https://github.com/valhalla/valhalla/pull/5427)
    * CHANGED: Use rapidjson for isochrone serializer [#5429](https://github.com/valhalla/valhalla/pull/5429)
+   * ADDED: `use_curvature` costing option for motorcycle costing [TODO](https://github.com/valhalla/valhalla/pull/TODO)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
