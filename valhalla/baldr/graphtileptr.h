@@ -6,7 +6,6 @@
 #include <memory>
 #else
 #include <boost/intrusive_ptr.hpp>
-#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #endif
 
 namespace valhalla {

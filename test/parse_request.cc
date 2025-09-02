@@ -3,11 +3,11 @@
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
+#include "sif/hierarchylimits.h"
 #include "test.h"
 #include "worker.h"
 
 #include <cctype>
-#include <iostream>
 #include <string>
 #include <vector>
 

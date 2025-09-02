@@ -728,12 +728,26 @@ public:
   }
 
   /**
+   * Return the name consistency mask (8 bits)
+   * @return  Returns the name consistency mask.
+   */
+  uint8_t name_consistency() const {
+    return name_consistency_;
+  }
+
+  /**
    * Set the name consistency given the other edge's local index. This is limited
    * to the first 8 local edge indexes.
    * @param  from  Local index of the from edge.
    * @param  c     Are names consistent between the 2 edges?
    */
   void set_name_consistency(const uint32_t from, const bool c);
+
+  /**
+   * Set the name consistency mask.
+   * @param  mask  Name consistency mask (8 bits).
+   */
+  void set_name_consistency(const uint8_t mask);
 
   /**
    * Is this edge unpaved or bad surface?

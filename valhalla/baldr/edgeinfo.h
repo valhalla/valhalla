@@ -2,7 +2,7 @@
 #define VALHALLA_BALDR_EDGEINFO_H_
 
 #include <valhalla/baldr/conditional_speed_limit.h>
-#include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/midgard/encoded.h>
 #include <valhalla/midgard/pointll.h>
@@ -11,6 +11,7 @@
 #include <map>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 namespace valhalla {

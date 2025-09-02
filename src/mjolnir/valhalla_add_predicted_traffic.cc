@@ -9,7 +9,6 @@
 #include <string>
 
 namespace vm = valhalla::midgard;
-namespace vb = valhalla::baldr;
 namespace vj = valhalla::mjolnir;
 namespace bpt = boost::property_tree;
 
