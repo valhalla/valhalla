@@ -394,7 +394,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // use_tolls = 0 would penalize (positive delta to weighting factor).
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
-                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.015
 
   include_hot_ = costing_options.include_hot();
   include_hov2_ = costing_options.include_hov2();
@@ -1038,7 +1038,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options){};
+  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options) {};
 
   using AutoCost::alley_penalty_;
   using AutoCost::country_crossing_cost_;
