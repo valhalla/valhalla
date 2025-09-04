@@ -55,6 +55,7 @@
    * FIXED: ferries shouldn't be set to destination only [#5447](https://github.com/valhalla/valhalla/pull/5447)
    * FIXED: `actor_t` cleans up workers even in the case of exceptions when `auto_cleanup` is true [#5452](https://github.com/valhalla/valhalla/pull/5452)
    * FIXED: Graphfilter issue where local edge index and count, edge transitions, stop impact, headings, local_driveability, restrictions, and name consistency was not updated after filtering. [#5464](https://github.com/valhalla/valhalla/pull/5464)
+   * FIXED: around-the-block paths when node tolerance == 0 [#5451](https://github.com/valhalla/valhalla/pull/5451)
    * FIXED: "access": "no" + specific overrides for ferries [#5476](https://github.com/valhalla/valhalla/pull/5476)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
