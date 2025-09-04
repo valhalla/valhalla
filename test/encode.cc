@@ -1,5 +1,6 @@
 #include "midgard/encoded.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <string>
 

@@ -2,7 +2,8 @@
 #include "midgard/aabb2.h"
 #include "midgard/linesegment2.h"
 #include "midgard/point2.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 

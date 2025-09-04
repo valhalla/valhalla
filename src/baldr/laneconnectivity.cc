@@ -3,7 +3,6 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#include <cstring>
 #include <vector>
 
 namespace valhalla {

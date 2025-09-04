@@ -1,7 +1,7 @@
 #ifndef VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_
 #define VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <locale>
 #include <string>

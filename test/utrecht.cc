@@ -1,9 +1,9 @@
 #include "midgard/sequence.h"
 #include "mjolnir/osmway.h"
 #include "mjolnir/pbfgraphparser.h"
-#include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <filesystem>

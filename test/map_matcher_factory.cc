@@ -2,7 +2,6 @@
 #include "meili/map_matcher_factory.h"
 #include "baldr/rapidjson_utils.h"
 #include "sif/costconstants.h"
-#include "sif/costfactory.h"
 #include "test.h"
 
 #include <boost/property_tree/ptree.hpp>

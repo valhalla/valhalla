@@ -11,18 +11,10 @@
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
-#include "loki/worker.h"
-#include "midgard/constants.h"
-#include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "odin/worker.h"
-#include "thor/worker.h"
-#include "tyr/actor.h"
-#include "tyr/serializers.h"
+#include "proto/api.pb.h"
 
 #include <boost/property_tree/ptree.hpp>
-#include <gtest/gtest.h>
 
 #include <string>
 #include <tuple>

@@ -1,5 +1,7 @@
 #include "midgard/obb2.h"
-#include "test.h"
+#include "midgard/pointll.h"
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::midgard;

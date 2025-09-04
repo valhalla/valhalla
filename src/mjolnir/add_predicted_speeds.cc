@@ -4,6 +4,7 @@
 #include "baldr/predictedspeeds.h"
 #include "mjolnir/graphtilebuilder.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <filesystem>

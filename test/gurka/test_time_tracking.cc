@@ -1,12 +1,10 @@
 #include "baldr/graphreader.h"
 #include "baldr/location.h"
 #include "baldr/time_info.h"
-#include "boost/format.hpp"
 #include "gurka.h"
 #include "loki/search.h"
 #include "proto/api.pb.h"
 #include "sif/costfactory.h"
-#include "tyr/actor.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>

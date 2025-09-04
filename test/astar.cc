@@ -8,14 +8,8 @@
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/vector2.h"
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/graphenhancer.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/graphvalidator.h"
-#include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/util.h"
-#include "odin/directionsbuilder.h"
 #include "odin/worker.h"
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
@@ -23,11 +17,9 @@
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/hierarchylimits.h"
-#include "sif/pedestriancost.h"
 #include "test.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
-#include "thor/triplegbuilder.h"
 #include "thor/unidirectional_astar.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
@@ -55,9 +47,6 @@ namespace vk = valhalla::loki;
 namespace vj = valhalla::mjolnir;
 namespace vo = valhalla::odin;
 namespace vr = valhalla::tyr;
-
-#include "mjolnir/directededgebuilder.h"
-#include "mjolnir/graphtilebuilder.h"
 
 namespace {
 

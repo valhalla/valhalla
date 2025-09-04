@@ -1,8 +1,11 @@
 #pragma once
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/api.pb.h>
+#include <valhalla/proto/directions.pb.h>
+#include <valhalla/proto/expansion.pb.h>
 #include <valhalla/proto/incidents.pb.h>
 #include <valhalla/proto/matrix.pb.h>
+#include <valhalla/proto/options.pb.h>
+#include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costconstants.h>
 
 namespace valhalla {

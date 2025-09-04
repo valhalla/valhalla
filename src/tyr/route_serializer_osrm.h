@@ -2,7 +2,7 @@
 #define VALHALLA_TYR_ROUTE_SERIALIZER_OSRM_
 #pragma once
 
-#include "proto_conversions.h"
+#include "proto/api.pb.h"
 
 namespace osrm_serializers {
 /*

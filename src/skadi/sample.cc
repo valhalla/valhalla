@@ -6,6 +6,7 @@
 #include "midgard/sequence.h"
 #include "valhalla/baldr/curl_tilegetter.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <lz4frame.h>
 #include <sys/stat.h>
 

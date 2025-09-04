@@ -4,8 +4,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
-#include <assert.h>
-
 #include <bitset>
 #include <numeric>
 #include <stdexcept>

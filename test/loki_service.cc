@@ -1,8 +1,7 @@
 #include "baldr/rapidjson_utils.h"
+#include "config.h"
 #include "loki/worker.h"
-#include "midgard/logging.h"
 #include "odin/worker.h"
-#include "proto/api.pb.h"
 #include "proto_conversions.h"
 #include "test.h"
 #include "thor/worker.h"
@@ -10,7 +9,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
-#include <unistd.h>
 
 #include <cstdint>
 #include <filesystem>

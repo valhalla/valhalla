@@ -1,11 +1,8 @@
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
 #include "odin/worker.h"
 #include "test.h"
 #include "thor/worker.h"
-#include "tyr/serializers.h"
 
 #include <string>
 

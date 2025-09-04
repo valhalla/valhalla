@@ -1,6 +1,8 @@
 #include "tyr/actor.h"
 #include "test.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <functional>
 #include <string>
 

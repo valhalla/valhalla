@@ -6,9 +6,7 @@
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"
 #include "baldr/verbal_text_formatter_factory.h"
-#include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "odin/sign.h"
 #include "odin/signs.h"
@@ -16,6 +14,11 @@
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
 #include "worker.h"
+
+#ifdef LOGGING_LEVEL_DEBUG
+#include "midgard/encoded.h"
+#include "midgard/pointll.h"
+#endif
 
 #include <boost/format.hpp>
 

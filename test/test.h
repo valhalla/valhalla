@@ -1,23 +1,34 @@
 // -*- mode: c++ -*-
 #pragma once
 
+#include "baldr/directededge.h"
+#include "baldr/graphid.h"
 #include "baldr/graphreader.h"
+#include "baldr/predictedspeeds.h"
 #include "baldr/traffictile.h"
-#include "config.h"
+#include "midgard/encoded.h"
+#include "midgard/pointll.h"
 #include "midgard/polyline2.h"
-#include "mjolnir/graphtilebuilder.h"
+
+#include <boost/property_tree/ptree_fwd.hpp>
+#include <gmock/gmock-matchers.h>
+#include <gtest/gtest-assertion-result.h>
 
 #include <cmath>
+#include <functional>
 #include <random>
 #include <string>
+#include <unordered_map>
+#include <vector>
+
 #ifndef _MSC_VER
 #include <sys/mman.h>
 #endif
 
-#include <boost/property_tree/ptree.hpp>
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <sys/stat.h>
+
+using namespace valhalla::midgard;
+using namespace valhalla::baldr;
 
 namespace test {
 

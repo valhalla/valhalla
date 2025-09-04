@@ -1,4 +1,6 @@
 #include "gurka.h"
+#include "midgard/constants.h"
+#include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
 

@@ -10,6 +10,7 @@
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
+#include <valhalla/thor/pathalgorithm.h>
 
 #include <cstdint>
 #include <memory>

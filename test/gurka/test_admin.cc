@@ -1,3 +1,4 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/util.h"

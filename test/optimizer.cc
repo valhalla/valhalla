@@ -1,6 +1,6 @@
 #include "thor/optimizer.h"
-#include "config.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <vector>

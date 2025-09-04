@@ -1,9 +1,10 @@
 #include "baldr/graphreader.h"
 #include "baldr/connectivity_map.h"
 #include "baldr/tilehierarchy.h"
-#include "test.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <fcntl.h>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <filesystem>

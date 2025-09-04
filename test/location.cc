@@ -1,6 +1,6 @@
 #include "baldr/location.h"
-#include "midgard/util.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <unordered_map>
 

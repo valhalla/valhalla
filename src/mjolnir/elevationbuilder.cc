@@ -11,6 +11,8 @@
 #include "skadi/sample.h"
 #include "skadi/util.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <filesystem>
 #include <random>
 #include <thread>

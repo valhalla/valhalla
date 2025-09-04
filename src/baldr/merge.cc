@@ -1,11 +1,7 @@
 #include "baldr/merge.h"
 #include "baldr/graphreader.h"
 
-#include <boost/range/adaptor/map.hpp>
-
 #include <utility>
-
-namespace bra = boost::adaptors;
 
 namespace valhalla {
 namespace baldr {

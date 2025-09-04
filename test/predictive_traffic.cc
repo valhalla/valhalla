@@ -2,15 +2,14 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
-#include "midgard/util.h"
-#include "mjolnir/graphtilebuilder.h"
 #include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <string>
 #include <vector>
 
 using namespace valhalla::baldr;
-using namespace valhalla::mjolnir;
 using namespace valhalla::midgard;
 
 namespace {

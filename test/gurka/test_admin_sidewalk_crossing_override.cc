@@ -1,8 +1,6 @@
-#include "baldr/admin.h"
 #include "gurka.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/util.h"
-#include "test/test.h"
 
 #include <gtest/gtest.h>
 #include <sqlite3.h>

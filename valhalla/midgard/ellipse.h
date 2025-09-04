@@ -4,8 +4,6 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/linesegment2.h>
 
-#include <math.h>
-
 #include <cstdint>
 
 namespace valhalla {

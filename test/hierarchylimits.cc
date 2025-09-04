@@ -1,14 +1,10 @@
-#include "baldr/rapidjson_utils.h"
 #include "gurka/gurka.h"
-#include "loki/worker.h"
 #include "midgard/logging.h"
+#include "sif/autocost.h"
 #include "sif/dynamiccost.h"
 #include "sif/hierarchylimits.h"
 #include "test.h"
-#include "thor/costmatrix.h"
-#include "thor/timedistancematrix.h"
-#include "thor/worker.h"
-#include "tyr/serializers.h"
+#include "valhalla/worker.h"
 
 #include <boost/format.hpp>
 
@@ -18,10 +14,8 @@
 using namespace valhalla;
 using namespace valhalla::thor;
 using namespace valhalla::sif;
-using namespace valhalla::loki;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-using namespace valhalla::tyr;
 
 boost::property_tree::ptree
 make_test_config(const std::unordered_map<std::string, std::string>& overrides = {}) {

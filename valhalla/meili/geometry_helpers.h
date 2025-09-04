@@ -4,7 +4,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
 
-#include <cmath>
+#include <tuple>
 #include <vector>
 
 namespace valhalla {

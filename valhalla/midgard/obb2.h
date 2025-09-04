@@ -3,9 +3,6 @@
 
 #include <valhalla/midgard/vector2.h>
 
-#include <math.h>
-#include <stdarg.h>
-
 namespace valhalla {
 namespace midgard {
 

@@ -1,6 +1,7 @@
 #include "meili/viterbi_search.h"
 #include "meili/topk_search.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <chrono>

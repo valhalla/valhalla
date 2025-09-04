@@ -6,11 +6,12 @@
 
 #include <cmath>
 #include <sstream>
-#include <thread>
 #include <utility>
 
 #ifdef ENABLE_GDAL
 #include <gdal_priv.h>
+
+#include <thread>
 #endif
 
 using namespace valhalla::baldr::json;

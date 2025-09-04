@@ -1,5 +1,6 @@
 #include "midgard/sequence.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 

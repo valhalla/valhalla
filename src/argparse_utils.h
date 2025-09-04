@@ -1,6 +1,6 @@
-#include <valhalla/config.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
+#include "valhalla/config.h"
+#include "valhalla/midgard/logging.h"
+#include "valhalla/midgard/util.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>

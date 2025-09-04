@@ -2,8 +2,6 @@
 #include "baldr/graphconstants.h"
 #include "baldr/timedomain.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
 
 #include <algorithm>

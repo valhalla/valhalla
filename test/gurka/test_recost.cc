@@ -1,7 +1,10 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include "mjolnir/graphtilebuilder.h"
+#include "sif/costfactory.h"
 #include "sif/recost.h"
 #include "test.h"
+#include "tyr/actor.h"
+#include "valhalla/worker.h"
 
 using namespace valhalla;
 

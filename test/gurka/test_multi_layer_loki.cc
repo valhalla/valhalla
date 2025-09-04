@@ -1,4 +1,3 @@
-#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 
 #include <gtest/gtest.h>

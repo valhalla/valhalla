@@ -2,7 +2,6 @@
 
 #include <cassert>
 #include <chrono>
-#include <cstdlib>
 #include <ctime>
 #include <filesystem>
 #include <fstream>

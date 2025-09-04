@@ -1,8 +1,6 @@
 #ifndef VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMACCESS_H
 #define VALHALLA_MJOLNIR_PBFGRAPHBUILDER_OSMACCESS_H
 
-#include <valhalla/baldr/graphconstants.h>
-
 #include <cstdint>
 #include <cstring>
 

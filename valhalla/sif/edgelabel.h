@@ -6,8 +6,8 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/sif/costconstants.h>
 
+#include <cassert>
 #include <cstdint>
-#include <cstring>
 
 namespace valhalla {
 namespace sif {

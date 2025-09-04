@@ -12,8 +12,10 @@
 #include "scoped_timer.h"
 #include "sif/osrm_car_duration.h"
 
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
+#ifdef LOGGING_LEVEL_DEBUG
+#include <boost/format.hpp>
+#endif
 
 #include <string>
 #include <utility>

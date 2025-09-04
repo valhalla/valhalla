@@ -1,8 +1,7 @@
 #pragma once
 #include "config.h"
-
-#include <midgard/logging.h>
-#include <midgard/util.h>
+#include "midgard/logging.h"
+#include "midgard/util.h"
 
 #include <chrono>
 #include <string>

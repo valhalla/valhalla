@@ -5,6 +5,8 @@
 #include "meili/map_matcher.h"
 #include "sif/costconstants.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 namespace {
 
 inline float local_tile_size() {

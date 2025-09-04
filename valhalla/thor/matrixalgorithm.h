@@ -4,12 +4,12 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
+#include <valhalla/proto/expansion.pb.h>
 
 #include <boost/property_tree/ptree.hpp>
 
 #include <functional>
 // TODO(nils): should abstract more so we don't pull this in
-#include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/worker.h>
 
 namespace valhalla {

@@ -12,9 +12,7 @@
 #include "midgard/util.h"
 #include "proto/transit.pb.h"
 
-#include <boost/algorithm/string.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/tokenizer.hpp>
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
@@ -33,7 +31,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-using namespace boost::property_tree;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;

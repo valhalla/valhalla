@@ -1,6 +1,5 @@
 #include "baldr/json.h"
 #include "loki/worker.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"

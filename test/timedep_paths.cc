@@ -1,7 +1,4 @@
-#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
-#include "midgard/logging.h"
-#include "sif/autocost.h"
 #include "test.h"
 #include "thor/unidirectional_astar.h"
 #include "thor/worker.h"
