@@ -316,7 +316,7 @@ MotorcycleCost::MotorcycleCost(const Costing& costing)
   // use_tolls = 0 would penalize (positive delta to weighting factor).
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
-                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.015
 
   // Set the surface factor based on the use trails value - this is a
   // preference to use trails/tracks/bad surface types (a value from 0 to 1).
