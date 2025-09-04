@@ -343,6 +343,7 @@ message Costing {
     bool exclude_ferries = 91;
     map<uint32, HierarchyLimits> hierarchy_limits = 92;
     bool ignore_construction = 93;
+    float use_curvature = 94;
   }
 
   oneof has_options {

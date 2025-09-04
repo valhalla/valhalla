@@ -3,6 +3,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/rapidjson_utils.h"
+#include "mjolnir/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/osrm_car_duration.h"
@@ -13,11 +14,13 @@
 #include "test.h"
 #include "worker.h"
 
+#include <cmath>
 #include <random>
 #endif
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
+using namespace valhalla::mjolnir;
 
 namespace valhalla {
 namespace sif {
@@ -29,6 +32,8 @@ namespace {
 constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
 constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
 constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
+
+constexpr float kDefaultUseCurvature = 0.f;
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kImpassable;
 
@@ -86,6 +91,7 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
   cfg.disable_rail_ferry_ = true;
+  cfg.use_curvature_.def = kDefaultUseCurvature;
   return cfg;
 }
 
@@ -429,6 +435,8 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
+
+  factor *= std::pow(1.f - edge->curvature() / (kMaxCurvature + 0.1f), curvature_factor_);
 
   return {sec * factor, sec};
 }
