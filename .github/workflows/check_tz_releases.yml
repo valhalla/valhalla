@@ -24,10 +24,9 @@ jobs:
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
           latest_tag=$(git -C third_party/tz ls-remote --tags --refs --quiet origin | tail --lines 1 | awk '{print $2}' | cut --delimiter='/' --fields=3 )
-          latest_tag_commit=$(git -C third_party/tz rev-list -n 1 $latest_tag)
-          current_commit=$(git -C ./third_party/tz rev-parse HEAD)
+          current_tag=$(git -C third_party/tz describe --exact-match --tags)
 
-          if [[ $latest_tag_commit != $current_commit ]]; then 
+          if [[ $latest_tag != $current_tag ]]; then
               echo "New tz release available: ${latest_tag}"
               new_branch="gha-bump-tz-${latest_tag}"
               git checkout -b $new_branch
@@ -39,6 +38,9 @@ jobs:
               # update the url in valhalla_build_timezones 
               url_old=$(grep -oP "url=\"\Khttps://github.com/.*(?=\")" scripts/valhalla_build_timezones)
               url_new=$(echo ${url_old} | sed -E "s/download\/[0-9]{4}[a-z]/download\/${latest_tag}/")
+
+              # update the badge in the README
+              sed -i "s|\(https://img.shields.io/badge/tzdb%20version-\)${current_tag}\(-blue.svg\)|\1${latest_tag}\2|" README.md
 
               # first make sure the file is actually available
 
