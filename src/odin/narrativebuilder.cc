@@ -508,6 +508,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_instruction(FormExitBuildingInstruction(maneuver));
         break;
       }
+      case DirectionsLeg_Maneuver_Type_kLevelChange:
+        maneuver.set_instruction(FormGenericLevelChangeInstruction(maneuver));
+        break;
       case DirectionsLeg_Maneuver_Type_kContinue:
       default: {
         if (maneuver.has_node_type()) {
@@ -4242,6 +4245,29 @@ std::string NarrativeBuilder::FormStepsInstruction(Maneuver& maneuver) {
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.steps_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLevelTag, end_level);
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormGenericLevelChangeInstruction(Maneuver& maneuver) {
+  // "0": "Change to <LEVEL>",
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  std::string end_level;
+
+  if (!maneuver.end_level_ref().empty()) {
+    end_level = maneuver.end_level_ref();
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.level_change_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kLevelTag, end_level);

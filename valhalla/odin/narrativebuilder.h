@@ -419,6 +419,8 @@ protected:
 
   std::string FormExitBuildingInstruction(Maneuver& maneuver);
 
+  std::string FormGenericLevelChangeInstruction(Maneuver& maneuver);
+
   /////////////////////////////////////////////////////////////////////////////
   /**
    * Returns the transit stop count label based on the value of the specified
