@@ -348,7 +348,7 @@ TEST(StandAlone, CostMatrixDeadends) {
   )";
   // clang-format off
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}}, 
+      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}},
       {"BC", {{"highway", "residential"}}},
       {"CD", {{"highway", "residential"}}},
       {"BE", {{"highway", "residential"}}},
@@ -411,7 +411,7 @@ TEST(StandAlone, CostMatrixShapes) {
   )";
   // clang-format off
   const gurka::ways ways = {
-      {"ABCDE", {{"highway", "residential"}}}, 
+      {"ABCDE", {{"highway", "residential"}}},
       {"EFGHIJK", {{"highway", "residential"}}},
       {"KL", {{"highway", "residential"}}},
   };
@@ -810,7 +810,7 @@ TEST_P(TestConnectionCheck, HGVNoAccessPenalty) {
     A-1-------B----C----D----E--2-------F
                    |    |
                    J----K
-                   |    |             
+                   |    |
                    |    |
                    L----M
            )";
@@ -881,7 +881,7 @@ TEST_P(TestConnectionCheck, VerboseResponse) {
                    J----K--5------N
                    |    |         \
                    |    |          \
-                   3    4           6           
+                   3    4           6
                    |    |            \
                    L----M             \
                                        O
@@ -1141,3 +1141,33 @@ TEST_P(TestConnectionCheck, MultipleTrivialRoutes) {
 }
 
 INSTANTIATE_TEST_SUITE_P(connection_check, TestConnectionCheck, ::testing::Values("1", "0"));
+
+TEST(StandAlone, TrivialKeepExpanding) {
+  // target candidates includes AB but should be penalized
+  // so that path 1B, BC, Cx has less cost than the trivial one
+  const std::string ascii_map = R"(
+    A---1-----------B
+                    |
+                    |
+                2   |
+    D-----------x---C
+  )";
+  // clang-format off
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+  // clang-format on
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 25);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_keep_expanding",
+                               {{"thor.costmatrix.check_reverse_connection", "1"}});
+
+  auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto",
+                                 {{"/targets/0/radius", "80"}}, nullptr);
+
+  EXPECT_EQ(result.matrix().distances(0), 500);
+}
