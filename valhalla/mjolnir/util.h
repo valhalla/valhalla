@@ -42,6 +42,7 @@ enum class BuildStage : int8_t {
 constexpr uint8_t kMinor = 1;
 constexpr uint8_t kStopSign = 2;
 constexpr uint8_t kYieldSign = 4;
+constexpr uint8_t kMaxCurvature = 15;
 
 // Convert string to BuildStage
 inline BuildStage string_to_buildstage(const std::string& s) {

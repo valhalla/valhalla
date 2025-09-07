@@ -218,6 +218,7 @@ The following options are available for motorcycle costing:
 | `use_trails` | A riders's desire for adventure in their routes.  This is a range of values from 0 to 1, where 0 will avoid trails, tracks, unclassified or bad surfaces and values towards 1 will tend to avoid major roads and route on secondary roads.  The default value is 0.0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
+| `use_curvature` | This value indicates the preference for curvy roads over straight roads. 0 indicates no preference of curvy roads, 1 gives the curvature of the road a linear impact on the costing model. Higher values do exponentally increase the preference for curvy roads. Note that high values may even prefer dead end roads over through streets. The default value is 0. |
 
 ##### Pedestrian costing options
 

@@ -1045,6 +1045,12 @@ protected:
    */
   virtual void set_use_lit(float use_lit);
 
+  /**
+   * Calculate `curvature` costs based on curvature preference.
+   * @param use_curvature value of curvature preference in range [0; kMaxPenalty]
+   */
+  virtual void set_use_curvature(float use_curvature);
+
   // Algorithm pass
   uint32_t pass_;
 
@@ -1077,6 +1083,7 @@ protected:
   float service_factor_;       // Avoid service roads factor.
   float closure_factor_;       // Avoid closed edges factor.
   float unlit_factor_;         // Avoid unlit edges factor.
+  float curvature_factor_;     // Prefer curvy edges factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1217,6 +1224,9 @@ protected:
     // Calculate lit factor from costing options.
     set_use_lit(costing_options.use_lit());
 
+    // Calculate curvature factor from costing options.
+    set_use_curvature(costing_options.use_curvature());
+
     // Penalty and factor to use service roads
     service_penalty_ = costing_options.service_penalty();
     service_factor_ = costing_options.service_factor();
@@ -1344,6 +1354,8 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
   ranged_default_t<float> use_lit_;
+
+  ranged_default_t<float> use_curvature_;
 
   ranged_default_t<float> closure_factor_;
 
