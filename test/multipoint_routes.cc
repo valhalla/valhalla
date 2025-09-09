@@ -16,7 +16,6 @@ using namespace valhalla::sif;
 using namespace valhalla::loki;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-using namespace valhalla::tyr;
 
 namespace {
 

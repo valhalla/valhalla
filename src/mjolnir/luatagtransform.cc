@@ -7,6 +7,12 @@
 
 #include <stdexcept>
 
+extern "C" {
+#include <lauxlib.h>
+#include <lua.h>
+#include <lualib.h>
+}
+
 using namespace valhalla::mjolnir;
 
 namespace {
