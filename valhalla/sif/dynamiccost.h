@@ -266,14 +266,18 @@ public:
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
-   * @param  edge           Pointer to a directed edge.
-   * @param  is_dest        Is a directed edge the destination?
-   * @param  pred           Predecessor edge information.
-   * @param  tile           Current tile.
-   * @param  edgeid         GraphId of the directed edge.
-   * @param  current_time   Current time (seconds since epoch). A value of 0
-   *                        indicates the route is not time dependent.
-   * @param  tz_index       timezone index for the node
+   * @param  edge                        Pointer to a directed edge.
+   * @param  is_dest                     Is a directed edge the destination?
+   * @param  pred                        Predecessor edge information.
+   * @param  tile                        Current tile.
+   * @param  edgeid                      GraphId of the directed edge.
+   * @param  current_time                Current time (seconds since epoch). A value of 0
+   *                                     indicates the route is not time dependent.
+   * @param  tz_index                    timezone index for the node
+   * @param  destonly_access_restr_mask  Mask containing accesss restriction types that had a
+   * local traffic exemption at the start of the expansion. This mask will be mutated by eliminating
+   * flags for locally exempt access restriction types that no longer exist on the passed edge
+   *
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
@@ -657,6 +661,12 @@ public:
                                                   baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
+  /**
+   * Gets an edge's restrictions that have an "except_destination" flag set.
+   *
+   * @return an 8-bit mask containing a flag for each access restriction type
+   * that can be ignored by destination only traffic.
+   */
   inline uint8_t GetExemptedAccessRestrictions(const baldr::DirectedEdge* edge,
                                                const graph_tile_ptr& tile,
                                                const baldr::GraphId& edgeid) {
@@ -671,8 +681,7 @@ public:
 
     for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restr = restrictions[i];
-      if (restr.except_destination() &&
-          static_cast<size_t>(restr.type()) < baldr::kAccessRestrictionMasks.size()) {
+      if (restr.except_destination()) {
         destonly_access_restr_mask |=
             baldr::kAccessRestrictionMasks[static_cast<size_t>(restr.type())];
       }

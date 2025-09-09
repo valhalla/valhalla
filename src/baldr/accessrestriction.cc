@@ -6,7 +6,7 @@
 namespace vb = valhalla::baldr;
 
 namespace {
-constexpr std::array<const char*, 10> type_to_string = {
+constexpr std::array<const char*, 10> kTypeToString = {
     "hazmat",        "max_height",    "max_width",    "max_length",          "max_weight",
     "max_axle_load", "timed_allowed", "timed_denied", "destination_allowed", "max_axles",
 };
@@ -66,7 +66,7 @@ void AccessRestriction::set_value(const uint64_t v) {
 void AccessRestriction::json(rapidjson::writer_wrapper_t& writer) const {
   std::string restriction_type = "unsupported";
   if (static_cast<size_t>(type()) < 10) {
-    restriction_type = type_to_string[static_cast<size_t>(type())];
+    restriction_type = kTypeToString[static_cast<size_t>(type())];
   }
 
   writer.start_object();

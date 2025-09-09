@@ -113,7 +113,7 @@ public:
                        const uint64_t current_time,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx,
-                       uint8_t& destonly_access_restr_mask) const override;
+                       uint8_t& /*destonly_access_restr_mask*/) const override;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -140,7 +140,7 @@ public:
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx,
-                              uint8_t& destonly_access_restr_mask) const override;
+                              uint8_t& /*destonly_access_restr_mask*/) const override;
 
   /**
    * Checks if access is allowed for the provided node. Node access can

@@ -225,7 +225,8 @@ TEST_P(DestinationAccessRestrictionTestSimple, DestinationAccessRestrictionSimpl
                             {"CD", {{"highway", "residential"}}}};
 
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/destination_access_restrictions_simple",
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/destination_access_restrictions_simple",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
                          {"thor.costmatrix.allow_second_pass", "1"}});
 
@@ -346,8 +347,8 @@ TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestrictionWithMask) {
 
   gurka::map map =
       gurka::buildtiles(layout, ways, {}, {},
-                        "test/data/destination_access_restrictions_" + p.costing + "_" + p.tag + "_" +
-                            (p.simple ? "simple" : "not_simple"),
+                        VALHALLA_BUILD_DIR "test/data/destination_access_restrictions_" + p.costing +
+                            "_" + p.tag + "_" + (p.simple ? "simple" : "not_simple"),
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
                          {"thor.costmatrix.allow_second_pass", "1"}});
 
@@ -447,7 +448,8 @@ TEST(StandAlone, MultipleDestinationAccessRestrictions) {
                       {"EF", {{"highway", "residential"}}}};
 
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/multiple_dest_access_restrictions",
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/multiple_dest_access_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
                          {"thor.costmatrix.allow_second_pass", "1"}});
 

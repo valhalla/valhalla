@@ -46,23 +46,24 @@ public:
 
   /**
    * Constructor with values.
-   * @param predecessor         Index into the edge label list for the predecessor
-   *                            directed edge in the shortest path.
-   * @param edgeid              Directed edge Id.
-   * @param edge                Directed edge.
-   * @param cost                True cost (cost and time in seconds) to the edge.
-   * @param sortcost            Cost for sorting (includes A* heuristic)
-   * @param mode                Mode of travel along this edge.
-   * @param path_distance       Accumulated path distance
-   * @param restriction_idx     If this label has restrictions, the index where the restriction is
-   * found
-   * @param closure_pruning     Should closure pruning be enabled on this path?
-   * @param has_measured_speed  Do we have any of the measured speed types set?
-   * @param internal_turn       Did we make an turn on a short internal edge.
-   * @param path_id             When searching more than one path at a time this denotes which path
-   * the this label is tracking
-   * @param destonly            Destination only, either mode-specific or general
-   * @param hgv_access          Whether HGV is allowed
+   * @param predecessor                       Index into the edge label list for the predecessor
+   *                                          directed edge in the shortest path.
+   * @param edgeid                            Directed edge Id.
+   * @param edge                              Directed edge.
+   * @param cost                              True cost (cost and time in seconds) to the edge.
+   * @param sortcost                          Cost for sorting (includes A* heuristic)
+   * @param mode                              Mode of travel along this edge.
+   * @param path_distance                     Accumulated path distance
+   * @param restriction_idx                   If this label has restrictions, the index where the
+   * restriction is found
+   * @param closure_pruning                   Should closure pruning be enabled on this path?
+   * @param has_measured_speed                Do we have any of the measured speed types set?
+   * @param internal_turn                     Did we make an turn on a short internal edge.
+   * @param path_id                           When searching more than one path at a time this denotes
+   * which path the this label is tracking
+   * @param destonly                          Destination only, either mode-specific or general
+   * @param hgv_access                        Whether HGV is allowed
+   * @param destonly_access_restr_mask        The mask for destination only access restrictions
    */
   EdgeLabel(const uint32_t predecessor,
             const baldr::GraphId& edgeid,
@@ -534,8 +535,7 @@ public:
                 const InternalTurn internal_turn,
                 const uint8_t path_id = 0,
                 const bool destonly = false,
-                const bool hgv_access = false,
-                const uint8_t destonly_access_restr_mask = 0)
+                const bool hgv_access = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -549,8 +549,7 @@ public:
                   internal_turn,
                   path_id,
                   destonly,
-                  hgv_access,
-                  destonly_access_restr_mask),
+                  hgv_access),
         transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -604,6 +603,7 @@ public:
    * the this label is tracking
    * @param destonly            Destination only, either mode-specific or general
    * @param hgv_access          Whether HGV is allowed
+   * @param destonly_access_restr_mask        The mask for destination only access restrictions
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -645,25 +645,27 @@ public:
   /**
    * Constructor with values. Sets sortcost to the true cost.
    * Used with CostMatrix (no heuristic/distance to destination).
-   * @param predecessor         Index into the edge label list for the predecessor
-   *                            directed edge in the shortest path.
-   * @param edgeid              Directed edge.
-   * @param oppedgeid           Opposing directed edge Id.
-   * @param edge                End node of the directed edge.
-   * @param cost                True cost (cost and time in seconds) to the edge.
-   * @param mode                Mode of travel along this edge.
-   * @param tc                  Transition cost entering this edge.
-   * @param path_distance       Accumulated path distance.
-   * @param not_thru_pruning    Is not thru pruning enabled.
-   * @param closure_pruning     Is closure pruning active.
-   * @param has_measured_speed  Do we have any of the measured speed types set?
-   * @param internal_turn       Did we make an turn on a short internal edge.
-   * @param restriction_idx     If this label has restrictions, the index where the restriction is
-   * found
-   * @param path_id             When searching more than one path at a time this denotes which path
-   * the this label is tracking
-   * @param destonly            Destination only, either mode-specific or general
-   * @param hgv_access          Whether HGV is allowed
+   *
+   * @param predecessor                 Index into the edge label list for the predecessor
+   *                                    directed edge in the shortest path.
+   * @param edgeid                      Directed edge.
+   * @param oppedgeid                   Opposing directed edge Id.
+   * @param edge                        End node of the directed edge.
+   * @param cost                        True cost (cost and time in seconds) to the edge.
+   * @param mode                        Mode of travel along this edge.
+   * @param tc                          Transition cost entering this edge.
+   * @param path_distance               Accumulated path distance.
+   * @param not_thru_pruning            Is not thru pruning enabled.
+   * @param closure_pruning             Is closure pruning active.
+   * @param has_measured_speed          Do we have any of the measured speed types set?
+   * @param internal_turn               Did we make an turn on a short internal edge.
+   * @param restriction_idx             If this label has restrictions, the index where the
+   * restriction is found
+   * @param path_id                     When searching more than one path at a time this denotes which
+   * path the this label is tracking
+   * @param destonly                    Destination only, either mode-specific or general
+   * @param hgv_access                  Whether HGV is allowed
+   * @param destonly_access_restr_mask  The mask for destination only access restrictions
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -703,23 +705,25 @@ public:
 
   /**
    * Constructor with values. Used in SetOrigin.
-   * @param predecessor         Index into the edge label list for the predecessor
-   *                            directed edge in the shortest path.
-   * @param edgeid              Directed edge Id.
-   * @param edge                Directed edge.
-   * @param cost                True cost (cost and time in seconds) to the edge.
-   * @param sortcost            Cost for sorting (includes A* heuristic).
-   * @param dist                Distance to the destination in meters.
-   * @param mode                Mode of travel along this edge.
-   * @param restriction_idx     If this label has restrictions, the index where the restriction is
-   * found
-   * @param closure_pruning     Is closure pruning active.
-   * @param has_measured_speed  Do we have any of the measured speed types set?
-   * @param internal_turn       Did we make an turn on a short internal edge.
-   * @param path_id             When searching more than one path at a time this denotes which path
-   * the this label is tracking
-   * @param destonly            Destination only, either mode-specific or general
-   * @param hgv_access          Whether HGV is allowed
+   *
+   * @param predecessor                Index into the edge label list for the predecessor
+   *                                   directed edge in the shortest path.
+   * @param edgeid                     Directed edge Id.
+   * @param edge                       Directed edge.
+   * @param cost                       True cost (cost and time in seconds) to the edge.
+   * @param sortcost                   Cost for sorting (includes A* heuristic).
+   * @param dist                       Distance to the destination in meters.
+   * @param mode                       Mode of travel along this edge.
+   * @param restriction_idx            If this label has restrictions, the index where the restriction
+   * is found
+   * @param closure_pruning            Is closure pruning active.
+   * @param has_measured_speed         Do we have any of the measured speed types set?
+   * @param internal_turn              Did we make an turn on a short internal edge.
+   * @param path_id                    When searching more than one path at a time this denotes which
+   * path the this label is tracking
+   * @param destonly                   Destination only, either mode-specific or general
+   * @param hgv_access                 Whether HGV is allowed
+   * @param destonly_access_restr_mask The mask for destination only access restrictions
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
