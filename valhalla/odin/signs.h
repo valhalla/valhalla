@@ -2,7 +2,6 @@
 #define VALHALLA_ODIN_SIGNS_H_
 
 #include <valhalla/baldr/verbal_text_formatter.h>
-#include <valhalla/baldr/verbal_text_formatter_us.h>
 #include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/sign.h>
 

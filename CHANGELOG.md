@@ -55,6 +55,9 @@
    * FIXED: ferries shouldn't be set to destination only [#5447](https://github.com/valhalla/valhalla/pull/5447)
    * FIXED: `actor_t` cleans up workers even in the case of exceptions when `auto_cleanup` is true [#5452](https://github.com/valhalla/valhalla/pull/5452)
    * FIXED: Graphfilter issue where local edge index and count, edge transitions, stop impact, headings, local_driveability, restrictions, and name consistency was not updated after filtering. [#5464](https://github.com/valhalla/valhalla/pull/5464)
+   * FIXED: around-the-block paths when node tolerance == 0 [#5451](https://github.com/valhalla/valhalla/pull/5451)
+   * FIXED: Trivial CostMatrix and multiple candidates [#5376](https://github.com/valhalla/valhalla/pull/5376)
+   * FIXED: "access": "no" + specific overrides for ferries [#5476](https://github.com/valhalla/valhalla/pull/5476)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)

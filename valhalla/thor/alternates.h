@@ -1,6 +1,6 @@
 #pragma once
 
-#include "thor/bidirectional_astar.h"
+#include <valhalla/thor/bidirectional_astar.h>
 
 #include <vector>
 

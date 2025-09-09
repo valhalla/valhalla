@@ -166,6 +166,9 @@ jobs:
 
       - name: Install dependencies
         run: |
+          # see https://github.com/actions/runner-images/issues/12912
+          brew uninstall cmake
+          brew untap local/pinned
           HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
           export PATH="$(brew --prefix python)/libexec/bin:$PATH"
           sudo python -m pip install --break-system-packages requests shapely
