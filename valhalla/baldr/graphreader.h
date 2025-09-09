@@ -9,7 +9,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <mutex>

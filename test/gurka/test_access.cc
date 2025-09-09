@@ -652,3 +652,100 @@ TEST(Standalone, AccessForwardBackward) {
     gurka::assert::raw::expect_path(result, {"CFH", "ABCDE", "EG"});
   }
 }
+
+TEST(Standalone, ViaFerrata) {
+  const std::string ascii_map = R"(A----B----C)";
+  const gurka::ways ways = {{"AB", {{"highway", "via_ferrata"}, {"sac_scale", "hiking"}}},
+                            {"BC", {{"highway", "via_ferrata"}, {"sac_scale", "hiking"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/example");
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
+}
+
+TEST(Standalone, ViaFerrataDefault) {
+  const std::string ascii_map = R"(A----B----C)";
+  const gurka::ways ways = {{"AB", {{"highway", "via_ferrata"}}},
+                            {"BC", {{"highway", "via_ferrata"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/example");
+
+  try {
+    gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_STREQ(e.what(), "No suitable edges near location");
+  }
+}
+
+TEST(Standalone, AccessFerry) {
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+    A---B---C
+        |   |
+        |   |
+        |   |
+        D---E---F
+                |
+                |
+                |
+                G---H
+    )";
+
+  const gurka::ways ways = {
+      {"ABC", {{"highway", "primary"}}},
+      {"BD",
+       {
+           {"route", "ferry"},
+           // this combination of tags disables only pedestrian and bicycle access
+           {"access", "no"},
+           {"motor_vehicle", "yes"},
+       }},
+      {"CE",
+       {
+           {"route", "ferry"},
+           {"access", "no"},
+           {"foot", "yes"},
+           {"bicycle", "yes"},
+       }},
+      {"DEF", {{"highway", "primary"}}},
+      {"FG",
+       {
+           {"route", "ferry"},
+           // and this combination disables bus, taxi, truck access
+           {"access", "no"},
+           {"motorcar", "yes"},
+           {"motorcycle", "yes"},
+           {"foot", "yes"},
+           {"bicycle", "yes"},
+       }},
+      {"GH", {{"highway", "primary"}}},
+  };
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_access_ferry", build_config);
+
+  for (auto& c : costing) {
+    SCOPED_TRACE(c);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, c);
+    // `motor_vehicle` in the first ferry includes everything except bicycle and pedestrian
+    if (c == "bicycle" || c == "pedestrian") {
+      gurka::assert::raw::expect_path(result, {"ABC", "ABC", "CE", "DEF"}); // second ferry
+    } else {
+      gurka::assert::raw::expect_path(result, {"ABC", "BD", "DEF", "DEF"}); // first ferry
+    }
+  }
+
+  // Route should fail for costing that cannot use the third ferry
+  for (auto& c : costing) {
+    if (c == "auto" || c == "bicycle" || c == "motorcycle" || c == "pedestrian") {
+      EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, map, {"D", "H"}, c)) << c;
+    } else {
+      EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"D", "H"}, c)) << c;
+    }
+  }
+}

@@ -55,6 +55,9 @@
    * FIXED: ferries shouldn't be set to destination only [#5447](https://github.com/valhalla/valhalla/pull/5447)
    * FIXED: `actor_t` cleans up workers even in the case of exceptions when `auto_cleanup` is true [#5452](https://github.com/valhalla/valhalla/pull/5452)
    * FIXED: Graphfilter issue where local edge index and count, edge transitions, stop impact, headings, local_driveability, restrictions, and name consistency was not updated after filtering. [#5464](https://github.com/valhalla/valhalla/pull/5464)
+   * FIXED: around-the-block paths when node tolerance == 0 [#5451](https://github.com/valhalla/valhalla/pull/5451)
+   * FIXED: Trivial CostMatrix and multiple candidates [#5376](https://github.com/valhalla/valhalla/pull/5376)
+   * FIXED: "access": "no" + specific overrides for ferries [#5476](https://github.com/valhalla/valhalla/pull/5476)
    * FIXED: Build libspatialite for vcpkg with librttopo support for valhalla_build_admins [#5475](https://github.com/valhalla/valhalla/pull/5475)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
@@ -130,6 +133,8 @@
    * CHANGED: Use rapidjson for transit_available serializer [#5430](https://github.com/valhalla/valhalla/pull/5430)
    * CHANGED: Switch from CircleCI to Github Actions [#5427](https://github.com/valhalla/valhalla/pull/5427)
    * CHANGED: Use rapidjson for isochrone serializer [#5429](https://github.com/valhalla/valhalla/pull/5429)
+   * ADDED: Allow pedestrian routing through highway=via_ferrata [#5480](https://github.com/valhalla/valhalla/pull/5480)
+   * ADDED: generic level change maneuver [#5431](https://github.com/valhalla/valhalla/pull/5431)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
