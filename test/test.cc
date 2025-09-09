@@ -5,6 +5,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
 #include "microtar.h"
+#include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>

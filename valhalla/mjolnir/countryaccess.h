@@ -2,8 +2,6 @@
 #define VALHALLA_MJOLNIR_COUNTRY_ACCESS_H_
 
 #include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/mjolnir/adminconstants.h>
 #include <valhalla/mjolnir/osmaccess.h>
 
 #include <cstdint>

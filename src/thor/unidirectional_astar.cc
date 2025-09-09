@@ -1,6 +1,7 @@
 #include "thor/unidirectional_astar.h"
 #include "baldr/graphconstants.h"
 #include "midgard/logging.h"
+#include "sif/hierarchylimits.h"
 
 #include <algorithm>
 

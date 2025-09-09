@@ -1,4 +1,5 @@
 #include "baldr/timedomain.h"
+#include "baldr/graphconstants.h"
 
 #include <iomanip>
 #include <sstream>
