@@ -83,6 +83,7 @@ constexpr auto kEscalatorKey = "instructions.escalator";
 constexpr auto kEnterBuildingKey = "instructions.enter_building";
 constexpr auto kExitBuildingKey = "instructions.exit_building";
 constexpr auto kPosixLocaleKey = "posix_locale";
+constexpr auto kLevelChangeKey = "instructions.level_change";
 
 // Variable keys
 constexpr auto kPhrasesKey = "phrases";
@@ -401,6 +402,9 @@ public:
 
   // Escalator
   PhraseSet escalator_subset;
+
+  // Level Change
+  PhraseSet level_change_subset;
 
   // Enter Building
   EnterBuildingSubset enter_building_subset;
