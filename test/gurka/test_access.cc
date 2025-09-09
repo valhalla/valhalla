@@ -677,6 +677,8 @@ TEST(Standalone, ViaFerrataDefault) {
     gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
   } catch (const valhalla_exception_t& e) {
     EXPECT_STREQ(e.what(), "No suitable edges near location");
+  }
+}
 
 TEST(Standalone, AccessFerry) {
   constexpr double gridsize_metres = 10;
