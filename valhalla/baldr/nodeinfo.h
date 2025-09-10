@@ -7,6 +7,10 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
 
+#ifdef LOGGING_LEVEL_DEBUG
+#include <string>
+#endif
+
 namespace valhalla {
 namespace baldr {
 

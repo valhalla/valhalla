@@ -3,8 +3,6 @@
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 
-#include <boost/property_tree/ptree.hpp>
-
 #include <cstdint>
 #include <filesystem>
 #include <fstream>

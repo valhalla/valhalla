@@ -1,6 +1,7 @@
 #include "mjolnir/servicedays.h"
 #include "baldr/graphconstants.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <string>

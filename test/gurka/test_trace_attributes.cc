@@ -1,6 +1,5 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include "midgard/encoded.h"
-#include "midgard/util.h"
 #include "test.h"
 
 #include <gtest/gtest.h>

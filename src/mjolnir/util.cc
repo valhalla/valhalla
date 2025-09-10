@@ -18,7 +18,7 @@
 #include "mjolnir/transitbuilder.h"
 #include "scoped_timer.h"
 
-#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
 
