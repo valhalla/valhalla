@@ -1,7 +1,7 @@
 {
-  "posix_locale": "en_US.UTF-8",
+  "posix_locale": "ko_KR.UTF-8",
   "aliases": [
-    "en"
+    "ko"
   ],
   "instructions": {
     "arrive": {
