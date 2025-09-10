@@ -282,8 +282,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                restriction_idx, 0,
                                meta.edge->destonly() ||
                                    (costing_->is_hgv() && meta.edge->destonly_hgv()),
-                               meta.edge->forwardaccess() & kTruckAccess,
-                               pred.destonly_access_restr_mask() & destonly_restriction_mask);
+                               meta.edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
                                mode_, transition_cost,
@@ -295,8 +294,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                restriction_idx, 0,
                                opp_edge->destonly() ||
                                    (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                               opp_edge->forwardaccess() & kTruckAccess,
-                               pred.destonly_access_restr_mask() & destonly_restriction_mask);
+                               opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     }
 
     auto& edge_label = edgelabels_.back();

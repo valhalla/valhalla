@@ -336,7 +336,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      meta.edge->destonly() ||
                                          (costing_->is_hgv() && meta.edge->destonly_hgv()),
                                      meta.edge->forwardaccess() & kTruckAccess,
-                                     pred.destonly_access_restr_mask() & destonly_restriction_mask);
+                                     destonly_restriction_mask);
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
@@ -356,7 +356,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      opp_edge->destonly() ||
                                          (costing_->is_hgv() && opp_edge->destonly_hgv()),
                                      opp_edge->forwardaccess() & kTruckAccess,
-                                     pred.destonly_access_restr_mask() & destonly_restriction_mask);
+                                     destonly_restriction_mask);
     adjacencylist_reverse_.add(idx);
   }
 

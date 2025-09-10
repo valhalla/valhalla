@@ -161,7 +161,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                directededge->destonly() ||
                                    (costing_->is_hgv() && directededge->destonly_hgv()),
                                directededge->forwardaccess() & kTruckAccess,
-                               pred.destonly_access_restr_mask() & destonly_restriction_mask);
+                               destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
                                path_distance, restriction_idx,
@@ -172,8 +172,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                0,
                                opp_edge->destonly() ||
                                    (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                               opp_edge->forwardaccess() & kTruckAccess,
-                               pred.destonly_access_restr_mask() & destonly_restriction_mask);
+                               opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     }
 
     *es = {EdgeSet::kTemporary, idx};

@@ -258,7 +258,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
                                  directededge->forwardaccess() & kTruckAccess,
-                                 pred.destonly_access_restr_mask() & destonly_restriction_mask);
+                                 destonly_restriction_mask);
 
     } else {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
@@ -270,8 +270,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                                  restriction_idx, pred.path_id(),
                                  opp_edge->destonly() ||
                                      (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                                 opp_edge->forwardaccess() & kTruckAccess,
-                                 pred.destonly_access_restr_mask() & destonly_restriction_mask);
+                                 opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     }
     adjacencylist_.add(idx);
   }
