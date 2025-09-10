@@ -1,9 +1,9 @@
 #include "baldr/graphid.h"
 #include "baldr/rapidjson_utils.h"
 #include "mjolnir/util.h"
-#include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <filesystem>
 #include <sstream>

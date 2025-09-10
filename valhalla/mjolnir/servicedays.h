@@ -5,7 +5,6 @@
 #include <valhalla/baldr/graphconstants.h>
 
 #include <cstdint>
-#include <ctime>
 #include <string>
 #include <vector>
 

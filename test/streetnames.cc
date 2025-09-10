@@ -1,6 +1,7 @@
 #include "baldr/streetnames.h"
 #include "baldr/streetname.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <vector>
 

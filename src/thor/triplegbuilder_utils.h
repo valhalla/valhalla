@@ -2,6 +2,8 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/time_info.h"
+#include "proto/trip.pb.h"
+#include "sif/dynamiccost.h"
 
 #include <utility>
 

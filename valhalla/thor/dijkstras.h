@@ -12,6 +12,8 @@
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
