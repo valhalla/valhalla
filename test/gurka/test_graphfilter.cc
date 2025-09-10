@@ -1,7 +1,7 @@
 #include "baldr/graphreader.h"
 #include "gurka.h"
-#include "mjolnir/util.h"
-#include "test/test.h"
+
+#include <gtest/gtest.h>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -578,4 +578,141 @@ TEST(Standalone, FilterTestMultipleEdges) {
   }
   // the shape between including the pedestrian edges or not, should match
   EXPECT_EQ(shape, result.trip().routes(0).legs().begin()->shape());
+}
+
+TEST(Standalone, FilterTestRestrictions) {
+  constexpr double gridsize_metres = 50;
+
+  const std::string ascii_map = R"(
+          B
+          |
+          |
+          |
+   A------C------D
+         /|\
+        / | \
+       /  |  \
+      E   F   G
+  )";
+
+  const gurka::ways ways = {
+      {"AC", {{"highway", "secondary"}, {"osm_id", "100"}}},
+      {"CB", {{"highway", "secondary"}, {"osm_id", "101"}}},
+      {"CD", {{"highway", "secondary"}, {"osm_id", "102"}}},
+      {"CG", {{"highway", "footway"}, {"osm_id", "103"}}},
+      {"CF", {{"highway", "cycleway"}, {"osm_id", "104"}}},
+      {"CE", {{"highway", "cycleway"}, {"osm_id", "105"}}},
+  };
+
+  const gurka::relations relations = {{{
+                                           {gurka::way_member, "AC", "from"},
+                                           {gurka::way_member, "CG", "to"},
+                                           {gurka::node_member, "C", "via"},
+                                       },
+                                       {
+                                           {"type", "restriction"},
+                                           {"restriction", "no_right_turn"},
+                                       }},
+                                      {{
+                                           {gurka::way_member, "AC", "from"},
+                                           {gurka::way_member, "CE", "to"},
+                                           {gurka::node_member, "C", "via"},
+                                       },
+                                       {
+                                           {"type", "restriction"},
+                                           {"restriction", "no_right_turn"},
+                                       }}};
+
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-73.94913, 42.81490});
+  auto map =
+      gurka::buildtiles(layout, ways, {}, relations, work_dir,
+                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                         {"mjolnir.include_pedestrian", "false"}});
+
+  // After the CG edge is tossed, we should be able to route from AC to CF.  In other words,
+  // the indexes should be updated and there should not be a restriction on AC to CF due to
+  // the removal of CG
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "bicycle");
+  gurka::assert::raw::expect_path(result, {"AC", "CF"});
+
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+
+    GraphId AC_edge_id;
+    const DirectedEdge* AC_edge = nullptr;
+    GraphId CA_edge_id;
+    const DirectedEdge* CA_edge = nullptr;
+    std::tie(AC_edge_id, AC_edge, CA_edge_id, CA_edge) =
+        findEdge(graph_reader, map.nodes, "AC", "C", baldr::GraphId{});
+    EXPECT_NE(AC_edge, nullptr);
+    EXPECT_NE(CA_edge, nullptr);
+
+    auto node_id = gurka::findNode(graph_reader, layout, "C");
+    const auto* node = graph_reader.nodeinfo(node_id);
+
+    uint32_t ntrans = node->local_edge_count();
+    for (uint32_t k = 0; k < ntrans; k++) {
+      if ((AC_edge->restrictions() & (1 << k))) {
+        EXPECT_EQ((AC_edge->restrictions() & (1 << k)), 16);
+      }
+    }
+  }
+}
+
+TEST(Standalone, FilterTestConsistencyTTHeadingsDriveability) {
+  constexpr double gridsize_metres = 50;
+
+  const std::string ascii_map = R"(
+            B
+            |
+            |
+            |
+     A------C------D
+           /|\
+          / | \
+         /  |  \
+        E   F   G
+    )";
+
+  const gurka::ways ways = {
+      {"AC", {{"highway", "secondary"}, {"osm_id", "100"}, {"name", "ABC Road"}}},
+      {"CB", {{"highway", "secondary"}, {"osm_id", "101"}}},
+      {"CD", {{"highway", "footway"}, {"osm_id", "102"}}},
+      {"CG", {{"highway", "footway"}, {"osm_id", "103"}, {"name", "ABC Road"}}},
+      {"CF", {{"highway", "secondary"}, {"osm_id", "104"}, {"name", "Test Road"}, {"oneway", "yes"}}},
+      {"CE", {{"highway", "secondary"}, {"osm_id", "105"}}},
+  };
+
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-73.94913, 42.81490});
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, work_dir,
+                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                         {"mjolnir.include_pedestrian", "false"}});
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+
+    GraphId AC_edge_id;
+    const DirectedEdge* AC_edge = nullptr;
+    GraphId CA_edge_id;
+    const DirectedEdge* CA_edge = nullptr;
+    std::tie(AC_edge_id, AC_edge, CA_edge_id, CA_edge) =
+        findEdge(graph_reader, map.nodes, "", "C", baldr::GraphId{}, 100);
+    EXPECT_NE(AC_edge, nullptr);
+    EXPECT_NE(CA_edge, nullptr);
+
+    GraphId CF_edge_id;
+    const DirectedEdge* CF_edge = nullptr;
+    GraphId FC_edge_id;
+    const DirectedEdge* FC_edge = nullptr;
+    std::tie(CF_edge_id, CF_edge, FC_edge_id, FC_edge) =
+        findEdge(graph_reader, map.nodes, "Test Road", "F", baldr::GraphId{});
+    EXPECT_NE(CF_edge, nullptr);
+    EXPECT_NE(FC_edge, nullptr);
+
+    const auto* node = graph_reader.nodeinfo(AC_edge->endnode());
+    EXPECT_EQ((int)CF_edge->name_consistency(), 4);                       // consistency exists
+    EXPECT_EQ((int)node->local_driveability(CF_edge->localedgeidx()), 1); // kForward
+    EXPECT_EQ((int)node->heading(CF_edge->localedgeidx()), 180);
+    EXPECT_EQ((int)CF_edge->turntype(AC_edge->localedgeidx()), 2); // right
+  }
 }

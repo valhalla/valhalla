@@ -12,6 +12,7 @@
 #include "mjolnir/osmdata.h"
 #include "scoped_timer.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <boost/range/algorithm.hpp>
 
 #include <algorithm>

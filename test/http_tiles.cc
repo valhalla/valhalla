@@ -5,6 +5,7 @@
 #include "tile_server.h"
 #include "tyr/actor.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <prime_server/zmq_helpers.hpp>
 
 #include <filesystem>

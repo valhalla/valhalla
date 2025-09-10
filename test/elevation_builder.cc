@@ -1,11 +1,15 @@
 #include "baldr/curl_tilegetter.h"
-#include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
+#include "pixels.h"
+#include "skadi/sample.h"
 #include "test.h"
+#include "tile_server.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <prime_server/prime_server.hpp>
 
 #include <algorithm>
@@ -14,10 +18,6 @@
 #include <iterator>
 #include <string>
 #include <unordered_set>
-#include "mjolnir/util.h
-#include "pixels.h"
-#include "skadi/sample.h"
-#include "tile_server.h"
 
 namespace {
 // meters to resample shape to.
@@ -59,7 +59,7 @@ std::vector<std::string> full_to_relative_path(const std::string& root_dir,
   return res;
 }
 
-TEST(std::filesystem, full_to_relative_path_valid_input) {
+TEST(Filesystem, full_to_relative_path_valid_input) {
   struct test_desc {
     std::string path;
     std::string remove_pattern;
@@ -89,7 +89,7 @@ TEST(std::filesystem, full_to_relative_path_valid_input) {
     EXPECT_EQ(full_to_relative_path(test.remove_pattern, {test.path}).front(), test.res);
 }
 
-TEST(std::filesystem, full_to_relative_path_invalid_input) {
+TEST(Filesystem, full_to_relative_path_invalid_input) {
   struct test_desc {
     std::string path;
     std::string remove_pattern;
@@ -126,7 +126,7 @@ inline bool clear(const std::string& dir) {
   return true;
 }
 
-TEST(std::filesystem, clear_valid_input) {
+TEST(Filesystem, clear_valid_input) {
   std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gph",
                                  "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
                                  "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
@@ -142,7 +142,7 @@ TEST(std::filesystem, clear_valid_input) {
   EXPECT_TRUE(std::filesystem::get_files("/tmp/save_file_input/utrecht_tiles").empty());
 }
 
-TEST(std::filesystem, clear_invalid_input) {
+TEST(Filesystem, clear_invalid_input) {
   EXPECT_FALSE(clear(".foobar"));
 }
 

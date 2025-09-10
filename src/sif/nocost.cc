@@ -1,15 +1,9 @@
 #include "sif/nocost.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
-#include "baldr/nodeinfo.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
-
-#ifdef INLINE_TEST
-#include "test.h"
-#include "worker.h"
-#endif
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
