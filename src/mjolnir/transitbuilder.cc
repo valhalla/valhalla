@@ -8,6 +8,7 @@
 #include "scoped_timer.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
 #include <fstream>

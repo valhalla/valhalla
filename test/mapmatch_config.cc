@@ -1,6 +1,8 @@
 #include "meili/config.h"
 #include "test.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 namespace {
 
 const auto fake_config = test::json_to_pt(R"({

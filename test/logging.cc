@@ -1,11 +1,10 @@
 #include "midgard/logging.h"
-#include "test.h"
 
-#include <algorithm>
+#include <gtest/gtest.h>
+
 #include <cstdio>
 #include <fstream>
 #include <future>
-#include <iterator>
 #include <sstream>
 #include <thread>
 #include <vector>

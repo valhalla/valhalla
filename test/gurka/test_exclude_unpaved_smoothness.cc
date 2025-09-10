@@ -3,8 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include <filesystem>
-
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif
@@ -12,7 +10,6 @@
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::gurka;
-using namespace valhalla::mjolnir;
 
 namespace {
 const std::vector<std::string> kSupportedCostingModels = {

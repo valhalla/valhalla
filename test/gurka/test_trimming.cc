@@ -1,7 +1,9 @@
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "midgard/encoded.h"
 #include "midgard/util.h"
+#include "sif/costfactory.h"
 #include "thor/triplegbuilder.h"
 
 #include <gtest/gtest.h>

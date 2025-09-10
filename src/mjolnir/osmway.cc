@@ -2,9 +2,10 @@
 #include "baldr/edgeinfo.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
-#include "regex"
 
 #include <boost/algorithm/string.hpp>
+
+#include <regex>
 
 using namespace valhalla::baldr;
 

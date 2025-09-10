@@ -1,5 +1,6 @@
 #include "midgard/point_tile_index.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 // If supporting C++20 it'd be better to use std::numbers::pi from <numbers>.
 constexpr double kPI = 3.14159265358979323846;

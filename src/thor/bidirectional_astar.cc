@@ -8,6 +8,8 @@
 #include "sif/recost.h"
 #include "thor/alternates.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <algorithm>
 
 using namespace valhalla::midgard;

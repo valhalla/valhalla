@@ -12,6 +12,7 @@
 #include "scoped_timer.h"
 
 #include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include <algorithm>
 #include <deque>

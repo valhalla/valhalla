@@ -1,6 +1,8 @@
 #include "baldr/datetime.h"
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "just_gtfs/just_gtfs.h"
+#include "midgard/logging.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/ingest_transit.h"
 #include "proto/common.pb.h"

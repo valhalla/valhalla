@@ -22,6 +22,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
 #include <future>
