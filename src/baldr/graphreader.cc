@@ -27,8 +27,8 @@ struct tile_index_entry {
 
 /**
  * When it seems like we'll use a remote tar, we check if the tile_dir contains a
- * id.txt whose tile_url & osm_changeset match the arguments. If there's no id.txt, it'll
- * create one.
+ * id.txt whose tile_url & last-modified datee match the arguments. If there's no
+ * id.txt, it'll create one.
  *
  * @param tile_url       the config's "tile_url" value
  * @param tile_dir       the config's "tile_dir" value
@@ -43,7 +43,7 @@ bool check_tar_tile_dir(const std::string& tile_url,
   if (tile_url.empty()) {
     return false;
   }
-  // but tile_dir can't, in which case we're simply not caching
+  // tile_dir can be empty, in which case we're simply not caching
   if (tile_dir.empty()) {
     return true;
   }
@@ -52,8 +52,9 @@ bool check_tar_tile_dir(const std::string& tile_url,
   static std::mutex mutex;
   std::lock_guard lock{mutex};
 
-  const std::string tile_url_txt_path =
-      tile_dir + std::filesystem::path::preferred_separator + "id.txt";
+  std::string tile_url_txt_path = tile_dir;
+  tile_url_txt_path += std::filesystem::path::preferred_separator;
+  tile_url_txt_path += "id.txt";
   std::ifstream in_url_file(tile_url_txt_path);
 
   // if there's a url.txt in the tile_dir, it must match the tile_url & last-modified date

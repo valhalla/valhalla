@@ -1,6 +1,5 @@
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
-#include "microtar.h"
 #include "test.h"
 #include "tile_server.h"
 #include "tyr/actor.h"
@@ -52,7 +51,6 @@ boost::property_tree::ptree make_conf(const std::string& tile_dir,
   }
 
   conf.put("mjolnir.tile_url_gz", tile_url_gz);
-  conf.put("mjolnir.concurrency", "1");
   conf.put("loki.use_connectivity", false);
   return conf;
 }
