@@ -1,6 +1,6 @@
-
 #include "gurka.h"
 #include "test.h"
+#include "valhalla/worker.h"
 
 #include <boost/format.hpp>
 #include <gtest/gtest.h>

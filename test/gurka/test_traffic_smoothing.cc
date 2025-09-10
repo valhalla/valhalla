@@ -1,9 +1,12 @@
+#include "baldr/datetime.h"
 #include "gurka.h"
 #include "test.h"
 
 #include <boost/format.hpp>
 
 using namespace valhalla;
+namespace dt = valhalla::baldr::DateTime;
+namespace sc = std::chrono;
 
 void set_traffic(gurka::map& map) {
   // add live traffic

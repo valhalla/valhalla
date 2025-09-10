@@ -169,6 +169,8 @@ The `trace_attributes` results contains a list of edges and, optionally, the fol
 | `edges` | List of edges associated with input shape. See the list of [edge items](#edge-items) for details. |
 | `osm_changeset` | Identifier of the OpenStreetMap base data version. |
 | `admins` | List of the administrative codes and names. See the list of [admin items](#admin-items) for details. |
+| `elevation_interval` | The requested `elevation_interval` if it is not zero. |
+| `elevation` | Optional elevation data along the matched path, sampled at the specified `elevation_interval` in the requested units (meters or feet). Only present if the `elevation_interval` request option was set to a non-zero value. |
 | `shape` | The [encoded polyline](../../decoding.md) of the matched path. |
 | `matched_points` | List of match results when using the `map_snap` shape match algorithm. There is a one-to-one correspondence with the input set of latitude, longitude coordinates and this list of match results. See the list of [matched point items](#matched-point-items) for details. |
 | `units` | The specified units with the request, in either kilometers or miles. |

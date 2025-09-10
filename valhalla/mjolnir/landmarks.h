@@ -2,7 +2,7 @@
 
 #include <valhalla/baldr/landmark.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <memory>
 #include <string>
