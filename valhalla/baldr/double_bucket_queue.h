@@ -1,11 +1,11 @@
 #pragma once
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/midgard/util.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <stdexcept>
 #include <vector>
 
 namespace valhalla {

@@ -2,6 +2,7 @@
 #define VALHALLA_ODIN_SIGN_H_
 
 #include <valhalla/baldr/streetname.h>
+#include <valhalla/midgard/logging.h>
 
 #include <cstdint>
 #include <optional>

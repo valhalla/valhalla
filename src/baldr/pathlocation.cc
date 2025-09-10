@@ -1,5 +1,4 @@
 #include "baldr/pathlocation.h"
-#include "midgard/util.h"
 
 namespace valhalla {
 namespace baldr {
@@ -11,16 +10,17 @@ PathLocation::PathEdge::PathEdge(const GraphId& id,
                                  const SideOfStreet sos,
                                  const unsigned int outbound_reach,
                                  const unsigned int inbound_reach,
-                                 const float projected_heading)
+                                 const float projected_heading,
+                                 const bool snapped)
     : id(id), percent_along(percent_along), projected(projected), sos(sos), distance(score),
       outbound_reach(outbound_reach), inbound_reach(inbound_reach),
-      projected_heading(projected_heading) {
+      projected_heading(projected_heading), snapped(snapped) {
 }
 bool PathLocation::PathEdge::begin_node() const {
-  return percent_along == 0.f;
+  return percent_along == 0.f && snapped;
 }
 bool PathLocation::PathEdge::end_node() const {
-  return percent_along == 1.f;
+  return percent_along == 1.f && snapped;
 }
 
 PathLocation::PathLocation(const Location& location) : Location(location) {

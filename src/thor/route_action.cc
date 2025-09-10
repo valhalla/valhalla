@@ -1,9 +1,7 @@
 #include "baldr/attributes_controller.h"
 #include "midgard/logging.h"
 #include "proto/common.pb.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/pedestriancost.h"
+#include "thor/triplegbuilder.h"
 #include "thor/worker.h"
 
 #include <cstdint>

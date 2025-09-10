@@ -16,7 +16,6 @@
 #include <cxxopts.hpp>
 #include <sqlite3.h>
 
-#include <cinttypes>
 #include <cstdint>
 #include <filesystem>
 #include <unordered_map>

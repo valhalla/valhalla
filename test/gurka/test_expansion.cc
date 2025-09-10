@@ -1,4 +1,6 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
 
@@ -132,6 +134,9 @@ protected:
                          unsigned exp_feats,
                          const std::vector<std::string>& props) {
 
+    SCOPED_TRACE("Failed on " +
+                 std::string(::testing::UnitTest::GetInstance()->current_test_info()->name()));
+
     std::string res;
     auto api = do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, false);
     // get the MultiLineString feature
@@ -175,11 +180,11 @@ TEST_P(ExpansionTest, RoutingNoOpposites) {
 }
 
 TEST_P(ExpansionTest, Matrix) {
-  check_results("sources_to_targets", {"E", "H"}, false, 48, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, false, 54, GetParam());
 }
 
 TEST_P(ExpansionTest, MatrixNoOpposites) {
-  check_results("sources_to_targets", {"E", "H"}, true, 23, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, true, 24, GetParam());
 }
 
 TEST_P(ExpansionTest, IsochroneDedupe) {

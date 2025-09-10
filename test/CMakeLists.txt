@@ -7,6 +7,8 @@
 # this.
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
+# don't install googletest
+set(INSTALL_GTEST OFF)
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
 
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
@@ -31,10 +33,12 @@ target_include_directories(valhalla_test PUBLIC
 target_include_directories(valhalla_test SYSTEM PUBLIC
   ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
-  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-  ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+  ${libosmium_include_dirs}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
+target_link_libraries(valhalla_test
+  valhalla gtest gtest_main gmock
+  $<$<BOOL:${ENABLE_COVERAGE}>:gcov> 
+  ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
 
 if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_test PkgConfig::GEOS)
@@ -322,14 +326,7 @@ set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
 ## Test run targets
 foreach(test ${tests} ${cost_tests} ${tyr_tests})
   add_custom_command(OUTPUT ${test}.log
-    COMMAND
-      LOCPATH=${VALHALLA_SOURCE_DIR}/locales
-      /bin/bash -c "${CMAKE_CURRENT_BINARY_DIR}/${test} >& ${CMAKE_CURRENT_BINARY_DIR}/${test}.log \
-      && echo [PASS] ${test} \
-      || ( exit=$? ; \
-           echo [FAIL] ${test} ; \
-           cat ${CMAKE_CURRENT_BINARY_DIR}/${test}.log ; \
-           exit $exit )"
+    COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${test}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS ${test}
     VERBATIM)
@@ -382,7 +379,7 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
       LOCPATH=${VALHALLA_SOURCE_DIR}/locales
       PYTHONPATH=${CMAKE_BINARY_DIR}/src/bindings/python
       ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0
-      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log"
+      /bin/bash -cx "${Python_EXECUTABLE} -m unittest discover -s ${VALHALLA_SOURCE_DIR}/test/bindings/python -v > ${CMAKE_BINARY_DIR}/test/python_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/python_valhalla.log && exit 1)"
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS
       ${VALHALLA_SOURCE_DIR}/test/bindings/python/test_actor.py

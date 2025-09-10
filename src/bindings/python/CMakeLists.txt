@@ -17,11 +17,11 @@ endfunction()
 
 # add and install module(s)
 pybind11_add_module(_valhalla ${CMAKE_CURRENT_SOURCE_DIR}/src/_valhalla.cc)
-target_link_libraries(_valhalla PRIVATE valhalla)
+target_link_libraries(_valhalla PRIVATE valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
 pybind11_add_module(graph_utils 
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_utils.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_id.cc)
-target_link_libraries(graph_utils PRIVATE valhalla)
+target_link_libraries(graph_utils PRIVATE valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
 
 set_target_properties(_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla)
 set_target_properties(graph_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
@@ -52,7 +52,7 @@ install(TARGETS _valhalla
 install(TARGETS graph_utils
   DESTINATION "${Python_SITEARCH}/valhalla/utils"
   COMPONENT runtime)
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla
   DESTINATION "${Python_SITEARCH}"
   COMPONENT runtime
   FILES_MATCHING PATTERN "*.py*")

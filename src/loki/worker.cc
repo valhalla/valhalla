@@ -2,12 +2,6 @@
 #include "loki/polygon_search.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
-#include "sif/autocost.h"
-#include "sif/bicyclecost.h"
-#include "sif/motorcyclecost.h"
-#include "sif/motorscootercost.h"
-#include "sif/pedestriancost.h"
-#include "tyr/actor.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -18,7 +12,6 @@
 #include <unordered_set>
 
 using namespace valhalla;
-using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

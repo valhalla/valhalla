@@ -52,7 +52,7 @@ RUN echo "$VERSION_MODIFIER" > /usr/local/valhalla_version && \
 #RUN strip /usr/local/lib/libvalhalla.a
 #RUN strip /usr/local/lib/python3.12/dist-packages/valhalla/_valhalla*.so
 
-####################################################################
+###################################################################
 # copy the important stuff from the build stage to the runner image
 FROM ubuntu:24.04 AS runner
 LABEL org.opencontainers.image.authors="Kevin Kreiser <kevinkreiser@gmail.com>"
@@ -76,9 +76,9 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
 
 # grab the builder stages artifacts
 COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/local/lib/python3.12/dist-packages/valhalla/* /usr/local/lib/python3.12/dist-packages/valhalla/
+COPY --from=builder /usr/local/lib/python3.12/dist-packages/valhalla /usr/local/lib/python3.12/dist-packages/valhalla/
 
 RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
 
 # python smoke test
-RUN python3 -c "import valhalla,sys; print(sys.version, valhalla)"
+RUN python3 -c "import valhalla, sys; print(sys.version, valhalla)"

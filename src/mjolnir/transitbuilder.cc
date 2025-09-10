@@ -1,15 +1,14 @@
 #include "mjolnir/transitbuilder.h"
-#include "baldr/datetime.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "scoped_timer.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -22,7 +21,6 @@
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::baldr::DateTime;
 using namespace valhalla::mjolnir;
 
 namespace {

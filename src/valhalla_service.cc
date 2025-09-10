@@ -3,8 +3,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <list>
-#include <streambuf>
 #include <string>
 #include <thread>
 #ifdef ENABLE_SERVICES

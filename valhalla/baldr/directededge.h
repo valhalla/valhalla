@@ -3,10 +3,8 @@
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/json.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/baldr/turn.h>
-
-#include <cstdint>
 
 namespace valhalla {
 namespace baldr {
@@ -730,12 +728,26 @@ public:
   }
 
   /**
+   * Return the name consistency mask (8 bits)
+   * @return  Returns the name consistency mask.
+   */
+  uint8_t name_consistency() const {
+    return name_consistency_;
+  }
+
+  /**
    * Set the name consistency given the other edge's local index. This is limited
    * to the first 8 local edge indexes.
    * @param  from  Local index of the from edge.
    * @param  c     Are names consistent between the 2 edges?
    */
   void set_name_consistency(const uint32_t from, const bool c);
+
+  /**
+   * Set the name consistency mask.
+   * @param  mask  Name consistency mask (8 bits).
+   */
+  void set_name_consistency(const uint8_t mask);
 
   /**
    * Is this edge unpaved or bad surface?
@@ -1189,9 +1201,9 @@ public:
 
   /**
    * Create a json object representing this edge
-   * @return  Returns the json object
+   *  @param writer The writer json object to represent the object
    */
-  json::MapPtr json() const;
+  void json(rapidjson::writer_wrapper_t& writer) const;
 
 protected:
   // 1st 8-byte word

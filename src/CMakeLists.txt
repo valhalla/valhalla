@@ -32,7 +32,7 @@ function(valhalla_module)
             ${MODULE_SOURCES}
             PROPERTIES
             COMPILE_FLAGS
-            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers")
+            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp")
   endif()
   list(APPEND MODULE_SOURCES ${MODULE_SOURCES_WITH_WARNINGS})
 

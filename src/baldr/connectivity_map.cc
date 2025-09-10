@@ -6,7 +6,6 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 
-#include <iomanip>
 #include <random>
 #include <sstream>
 #include <unordered_set>

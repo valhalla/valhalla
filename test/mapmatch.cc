@@ -1,6 +1,5 @@
 #include "baldr/json.h"
 #include "loki/worker.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -545,10 +544,9 @@ TEST(Mapmatch, test_matching_indices_and_waypoint_indices) {
         // handle the tracepoint null case
         continue;
       }
-      EXPECT_EQ(result, answers[i][j]) << "expect matching_index and waypoint_index: (" +
-                                              answers[i][j].first + "," + answers[i][j].second +
-                                              "), " + "but got: (" + result.first + "," +
-                                              result.second + ")";
+      EXPECT_EQ(result, answers[i][j])
+          << "expect matching_index and waypoint_index: (" + answers[i][j].first + "," +
+                 answers[i][j].second + "), but got: (" + result.first + "," + result.second + ")";
       ++j;
     }
   }

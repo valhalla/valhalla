@@ -2,12 +2,13 @@
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
-#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
+#include "sif/hierarchylimits.h"
 #include "sif/recost.h"
 #include "thor/alternates.h"
-#include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <algorithm>
 
@@ -1127,7 +1128,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, kInvalidRestriction,
+                                     sif::InternalTurn::kNoTurn, kInvalidRestriction, 0,
                                      directededge->destonly() ||
                                          (costing_->is_hgv() && directededge->destonly_hgv()),
                                      directededge->forwardaccess() & kTruckAccess);

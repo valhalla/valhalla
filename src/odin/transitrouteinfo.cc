@@ -1,6 +1,8 @@
 #include "odin/transitrouteinfo.h"
-#include "midgard/logging.h"
+
+#ifdef LOGGING_LEVEL_TRACE
 #include "odin/util.h"
+#endif
 
 namespace valhalla {
 namespace odin {

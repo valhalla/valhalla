@@ -3,15 +3,15 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "midgard/elevation_encoding.h"
-#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/polyline2.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "scoped_timer.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
 #include <random>

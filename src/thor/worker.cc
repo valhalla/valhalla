@@ -1,9 +1,6 @@
 #include "thor/worker.h"
-#include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
 #include "thor/isochrone.h"
-#include "tyr/actor.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -13,7 +10,6 @@
 #include <unordered_map>
 
 using namespace valhalla;
-using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::meili;

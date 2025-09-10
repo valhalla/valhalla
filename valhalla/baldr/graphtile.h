@@ -1,6 +1,7 @@
 #pragma once
 
 #include <valhalla/baldr/accessrestriction.h>
+#include <valhalla/baldr/admin.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/directededge.h>
@@ -25,6 +26,11 @@
 #include <valhalla/baldr/turnlanes.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/util.h>
+
+#ifndef ENABLE_THREAD_SAFE_TILE_REF_COUNT
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
+#endif
 
 #include <cstdint>
 #include <filesystem>

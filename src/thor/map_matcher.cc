@@ -1,10 +1,7 @@
 #include "thor/map_matcher.h"
 #include "baldr/datetime.h"
 #include "baldr/time_info.h"
-#include "midgard/logging.h"
-#include "thor/worker.h"
 
-#include <algorithm>
 #include <vector>
 
 using namespace valhalla::baldr;

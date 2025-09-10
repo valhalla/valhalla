@@ -1,7 +1,7 @@
 #ifndef VALHALLA_BALDR_ADMININFO_H_
 #define VALHALLA_BALDR_ADMININFO_H_
 
-#include <valhalla/baldr/admin.h>
+#include <string>
 
 namespace valhalla {
 namespace baldr {

@@ -2,14 +2,12 @@
 #include "baldr/attributes_controller.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
-#include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "loki/worker.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
-#include "odin/util.h"
 #include "proto/api.pb.h"
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
@@ -41,7 +39,6 @@ using namespace valhalla::loki;
 using namespace valhalla::odin;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
-using namespace valhalla::meili;
 
 namespace {
 
