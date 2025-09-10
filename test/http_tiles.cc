@@ -1,10 +1,11 @@
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
+#include "microtar.h"
 #include "test.h"
+#include "tile_server.h"
 #include "tyr/actor.h"
-#include "valhalla/tile_server.h"
 
-#include <prime_server/prime_server.hpp>
+#include <prime_server/zmq_helpers.hpp>
 
 #include <filesystem>
 #include <stdexcept>
@@ -268,10 +269,37 @@ TEST(HttpTiles, test_interrupt) {
 class HttpTilesEnv : public ::testing::Environment {
 public:
   void SetUp() override {
+    const std::string tile_source_dir = {VALHALLA_BUILD_DIR "test/data/utrecht_tiles"};
+    auto tar_path = tile_source_dir + ".tar";
+    // create the tar file
+    {
+      mtar_t tar;
+      if (mtar_open(&tar, tar_path.c_str(), "w") != MTAR_ESUCCESS) {
+        throw std::runtime_error("Could not create tar file for HTTP server");
+      }
+      for (const auto& f_entry : std::filesystem::recursive_directory_iterator(tile_source_dir)) {
+        if (!f_entry.is_regular_file() || f_entry.path().extension() != ".gph") {
+          continue;
+        }
+        auto rel_fp = std::filesystem::relative(f_entry.path(), tile_source_dir);
+        if (mtar_write_file_header(&tar, rel_fp.c_str(), f_entry.file_size()) != MTAR_ESUCCESS) {
+          throw std::runtime_error("Could not write tar header for HTTP server");
+        };
+
+        std::vector<char> contents(f_entry.file_size());
+        std::ifstream file(f_entry.path(), std::ios::binary);
+        file.read(contents.data(), f_entry.file_size());
+        if (mtar_write_data(&tar, contents.data(), f_entry.file_size()) != MTAR_ESUCCESS) {
+          throw std::runtime_error("Could not write tar file data for HTTP server");
+        }
+      }
+      mtar_finalize(&tar);
+      mtar_close(&tar);
+    }
     // start a file server for utrecht tiles
     valhalla::test_tile_server_t server;
     server.set_url(tile_remote_address);
-    server.start("test/data/utrecht_tiles", context);
+    server.start(tile_source_dir, tar_path, context);
   }
 
   void TearDown() override {

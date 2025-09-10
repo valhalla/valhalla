@@ -1,11 +1,13 @@
-#include "valhalla/tile_server.h"
+#include "tile_server.h"
 #include "baldr/compression_utils.h"
+#include "filesystem_utils.h"
 
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/http_util.hpp>
 #include <prime_server/prime_server.hpp>
 
 #include <chrono>
+#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <stdexcept>
@@ -54,44 +56,83 @@ std::string extract_file_path_from_request(const std::string& request_path) {
 worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
                              void* request_info,
                              worker_t::interrupt_function_t&,
-                             const std::string& tile_source_dir) {
+                             const std::string& tile_source_dir,
+                             const std::string& tar_path) {
   worker_t::result_t result{false, std::list<std::string>(), ""};
   auto* info = static_cast<http_request_info_t*>(request_info);
   try {
     // parse request
     const auto request =
         http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
+    http_response_t response;
 
-    auto encoding_it = request.headers.find("Accept-Encoding");
-    auto gz = encoding_it != request.headers.end() && encoding_it->second == "gzip";
+    // is it about plain tiles or a tar?
+    if (request.path.rfind("/route-tile", 0) == 0) {
+      auto encoding_it = request.headers.find("Accept-Encoding");
+      auto gz = encoding_it != request.headers.end() && encoding_it->second == "gzip";
 
-    auto path = extract_file_path_from_request(request.path);
-    // load the file and gzip it if we have to
-    std::filesystem::path full_path{tile_source_dir};
-    full_path.append(path);
-    std::fstream input(full_path, std::ios::in | std::ios::binary);
-    if (input) {
-      std::string buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-      if (gz) {
-        buffer = gzip(buffer);
+      auto path = extract_file_path_from_request(request.path);
+      // load the file and gzip it if we have to
+      std::filesystem::path full_path{tile_source_dir};
+      full_path.append(path);
+      std::ifstream input(full_path, std::ios::binary);
+      if (input) {
+        std::string buffer((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+        if (gz) {
+          buffer = gzip(buffer);
+        }
+        response = http_response_t{200, "OK", buffer,
+                                   headers_t{{"Content-Encoding", gz ? "gzip" : "identity"}}};
+      } else {
+        response = http_response_t{404, "Not Found", "Not Found"};
       }
-      http_response_t response(200, "OK", buffer,
-                               headers_t{{"Content-Encoding", gz ? "gzip" : "identity"}});
-      response.from_info(*info);
-      result.messages = {response.to_string()};
+    } else if (request.path.rfind("/route-tar", 0) == 0) {
+      auto tar_path = tile_source_dir + ".tar";
+      if (request.method == method_t::HEAD) {
+        // turn the last modified file time into a HTTP (i.e. UTC) compliant time string
+        auto last_modified =
+            valhalla::filesystem_utils::last_write_time_t(std::filesystem::path(tar_path));
+        std::tm tm{};
+        gmtime_r(&last_modified, &tm);
+        std::ostringstream ss;
+        ss << std::put_time(&tm, "%a, %d %b %Y %H:%M:%S GMT");
+
+        response = http_response_t{200, "OK", "", headers_t{{"Last-Modified", ss.str()}}};
+      } else if (request.method == method_t::GET) {
+        // for now we only need to support range requests
+        auto range_header = request.headers.find("Range");
+        if (range_header == request.headers.end()) {
+          throw std::runtime_error("No Range header found to GET a tar file");
+        }
+
+        // extract start & end bytes from the header
+        std::string prefix;
+        int start_bytes, end_bytes;
+        char dash;
+        std::stringstream ss(range_header->second);
+        std::getline(ss, prefix, '='); // discard "bytes"
+        ss >> start_bytes >> dash >> end_bytes;
+
+        // read the requested byte range from the file
+        std::streamsize length = end_bytes - start_bytes + 1;
+        std::ifstream file(tar_path, std::ios::binary);
+        file.seekg(start_bytes);
+        std::string contents(length, '\0');
+        file.read(&contents[0], length);
+        contents.resize(file.gcount());
+
+        response = http_response_t{206, "OK", contents};
+      }
     }
+
+    response.from_info(*info);
+    result.messages = {response.to_string()};
   } catch (const std::exception& e) {
     http_response_t response(400, "Bad Request", e.what());
-    response.from_info(*static_cast<http_request_info_t*>(request_info));
-    result.messages = {response.to_string()};
-  }
-
-  // 404 if its not there
-  if (result.messages.empty()) {
-    http_response_t response(404, "Not Found", "Not Found");
     response.from_info(*info);
     result.messages = {response.to_string()};
   }
+
   return result;
 }
 
@@ -99,7 +140,9 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
 
 namespace valhalla {
 // static
-void test_tile_server_t::start(const std::string& tile_source_dir, zmq::context_t& context) {
+void test_tile_server_t::start(const std::string& tile_source_dir,
+                               const std::string& tar_path,
+                               zmq::context_t& context) {
   // change these to tcp://known.ip.address.with:port if you want to do this across machines
   std::string result_endpoint{"ipc:///tmp/http_test_result_endpoint" + m_url};
   std::string request_interrupt{"ipc:///tmp/http_test_request_interrupt" + m_url};
@@ -121,7 +164,7 @@ void test_tile_server_t::start(const std::string& tile_source_dir, zmq::context_
                 worker_t(context, proxy_endpoint + "_downstream", "ipc:///dev/null", result_endpoint,
                          request_interrupt,
                          std::bind(&disk_work, std::placeholders::_1, std::placeholders::_2,
-                                   std::placeholders::_3, tile_source_dir))));
+                                   std::placeholders::_3, tile_source_dir, tar_path))));
   file_worker.detach();
 
   std::this_thread::sleep_for(std::chrono::seconds(1));
