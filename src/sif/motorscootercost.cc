@@ -184,7 +184,7 @@ public:
    * @param  current_time                Current time (seconds since epoch). A value of 0
    *                                     indicates the route is not time dependent.
    * @param  tz_index                    timezone index for the node
-   * @param  destonly_access_restr_mask  Mask containing accesss restriction types that had a
+   * @param  destonly_access_restr_mask  Mask containing access restriction types that had a
    * local traffic exemption at the start of the expansion. This mask will be mutated by eliminating
    * flags for locally exempt access restriction types that no longer exist on the passed edge
    *
@@ -216,7 +216,7 @@ public:
    * @param  current_time                Current time (seconds since epoch). A value of 0
    *                                     indicates the route is not time dependent.
    * @param  tz_index                    timezone index for the node
-   * @param  destonly_access_restr_mask  Mask containing accesss restriction types that had a
+   * @param  destonly_access_restr_mask  Mask containing access restriction types that had a
    * local traffic exemption at the start of the expansion. This mask will be mutated by eliminating
    * flags for locally exempt access restriction types that no longer exist on the passed edge
    *
