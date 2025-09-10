@@ -27,7 +27,7 @@ struct tile_index_entry {
 
 /**
  * When it seems like we'll use a remote tar, we check if the tile_dir contains a
- * id.txt whose tile_url & last-modified datee match the arguments. If there's no
+ * id.txt whose tile_url & last-modified date match the arguments. If there's no
  * id.txt, it'll create one.
  *
  * @param tile_url       the config's "tile_url" value
