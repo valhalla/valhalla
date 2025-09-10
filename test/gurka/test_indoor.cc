@@ -1,8 +1,7 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include "mjolnir/osmway.h"
 #include "test.h"
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -10,7 +9,7 @@
 #endif
 
 using namespace valhalla;
-using namespace mjolnir;
+
 const std::unordered_map<std::string, std::string> build_config{{}};
 
 struct range_t {
@@ -428,7 +427,7 @@ TEST(StandAlone, ElevatorMultiCueInstructions) {
   constexpr double gridsize_metres = 1;
 
   const std::string ascii_map = R"(
-             E 
+             E
              |
              |
       A---B--C---D
@@ -482,7 +481,7 @@ TEST(Standalone, MultiEdgeSteps) {
   constexpr double gridsize_metres = 1;
 
   const std::string ascii_map = R"(
-              E 
+              E
               |
       z---A---B--C---D---x
                  |

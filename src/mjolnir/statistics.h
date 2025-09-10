@@ -5,7 +5,7 @@
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <map>
 #include <string>

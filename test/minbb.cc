@@ -1,9 +1,9 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/vector2.h"
-#include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <string>
 #include <vector>

@@ -1,10 +1,9 @@
 #include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
-#include "midgard/encoded.h"
-#include "midgard/util.h"
 #include "src/baldr/shortcut_recovery.h"
 #include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <string>
 #include <vector>

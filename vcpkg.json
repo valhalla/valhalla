@@ -23,7 +23,11 @@
       "features": ["recommended-features"]
     },
     "geos",
-    "libspatialite",
+    {
+      "name": "libspatialite",
+      "default-features": true,
+      "features": ["rttopo"]
+    },
     "pkgconf",
     "pybind11",
     "rapidjson",
