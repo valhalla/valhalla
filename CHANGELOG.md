@@ -136,6 +136,7 @@
    * ADDED: Allow pedestrian routing through highway=via_ferrata [#5480](https://github.com/valhalla/valhalla/pull/5480)
    * ADDED: generic level change maneuver [#5431](https://github.com/valhalla/valhalla/pull/5431)
    * ADDED: Publish timezone db on Github Actions artifacts [#5479](https://github.com/valhalla/valhalla/pull/5479)
+   * ADDED: Add Korean (`ko-KR`) locale [#5501](https://github.com/valhalla/valhalla/pull/5501)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
