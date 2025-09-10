@@ -1,6 +1,6 @@
 #include "baldr/json.h"
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include "loki/worker.h"
 #include "midgard/pointll.h"
 #include "mjolnir/util.h"
 #include "test.h"
@@ -8,6 +8,7 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <fstream>
 
 using namespace valhalla;
 using namespace valhalla::gurka;

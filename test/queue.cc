@@ -1,7 +1,8 @@
 #include <cstdint>
 // -*- mode: c++ -*-
 #include "meili/priority_queue.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdlib>
 #include <limits>

@@ -1,6 +1,8 @@
 #include "cpp-statsd-client/../../tests/StatsdServer.hpp"
-#include "test.h"
 #include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <thread>
 
@@ -56,7 +58,7 @@ public:
   }
 #ifdef ENABLE_SERVICES
   virtual prime_server::worker_t::result_t
-  work(const std::list<zmq::message_t>&, void*, const std::function<void()>&) {
+  work(const std::list<zmq::message_t>&, void*, const std::function<void()>&) override {
     throw std::runtime_error("We arent testing the work method directly");
   }
 #endif

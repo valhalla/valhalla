@@ -5,8 +5,6 @@
 #include "mjolnir/servicedays.h"
 #include "valhalla/proto/transit.pb.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <google/protobuf/io/coded_stream.h>

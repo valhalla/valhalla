@@ -1,7 +1,7 @@
 #include "odin/enhancedtrippath.h"
 #include "baldr/turnlanes.h"
-#include "midgard/util.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 

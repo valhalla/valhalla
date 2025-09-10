@@ -2,8 +2,8 @@
 #include "baldr/compression_utils.h"
 
 #include <prime_server/http_protocol.hpp>
-#include <prime_server/http_util.hpp>
 #include <prime_server/prime_server.hpp>
+#include <zlib.h>
 
 #include <chrono>
 #include <filesystem>
