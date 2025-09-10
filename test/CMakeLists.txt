@@ -366,8 +366,9 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
   add_dependencies(run-graphbuilder build_timezones)
-  if(ENABLE_HTTP)
-    add_dependencies(run-http_tiles utrecht_tiles)
+  if(ENABLE_HTTP AND ENABLE_SERVICES)
+    # http_tiles needs the proper .tar file with index.bin
+    add_dependencies(run-http_tiles utrecht_tiles run-scripts)
   endif()
 endif()
 

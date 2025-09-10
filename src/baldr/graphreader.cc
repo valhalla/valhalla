@@ -34,13 +34,18 @@ struct tile_index_entry {
  * @param tile_dir       the config's "tile_dir" value
  * @param last_modified  last modified header of the remote file
  * @returns false if there's a tile_dir/id.txt whose contents does not match tile_url
- *          and OSM changeset, true otherwise
+ *          and last-modified date, true otherwise
  */
 bool check_tar_tile_dir(const std::string& tile_url,
                         const std::string& tile_dir,
                         uint64_t last_modified) {
-  if (tile_url.empty() || tile_dir.empty()) {
+  // tile_url can't be empty
+  if (tile_url.empty()) {
     return false;
+  }
+  // but tile_dir can't, in which case we're simply not caching
+  if (tile_dir.empty()) {
+    return true;
   }
 
   // need to lock from here on since there's usually many GraphReaders initializing at the same time
@@ -51,10 +56,10 @@ bool check_tar_tile_dir(const std::string& tile_url,
       tile_dir + std::filesystem::path::preferred_separator + "id.txt";
   std::ifstream in_url_file(tile_url_txt_path);
 
-  // if there's a url.txt in the tile_dir, it must match the tile_url & osm_changeset
+  // if there's a url.txt in the tile_dir, it must match the tile_url & last-modified date
   if (in_url_file) {
     std::string file_url, file_last_modified;
-    if (!std::getline(in_url_file, file_url) || file_url.rfind("http", 0) != 0) {
+    if (!std::getline(in_url_file, file_url)) {
       throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
                                tile_url_txt_path);
     }

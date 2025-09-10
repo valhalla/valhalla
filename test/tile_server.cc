@@ -1,6 +1,7 @@
 #include "tile_server.h"
 #include "baldr/compression_utils.h"
 #include "filesystem_utils.h"
+#include "midgard/util.h"
 
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
@@ -16,6 +17,28 @@
 using namespace prime_server;
 
 namespace {
+class HTTPAuthException : public std::runtime_error {
+public:
+  explicit HTTPAuthException(const std::string& msg) : std::runtime_error(msg) {
+  }
+};
+
+std::string decode_basic_auth(const std::string& header) {
+  const std::string prefix = "Basic ";
+  if (header.rfind(prefix, 0) != 0) {
+    throw std::runtime_error("Not a Basic auth header");
+  }
+
+  std::string b64 = header.substr(prefix.size());
+  std::string decoded = valhalla::midgard::decode64(b64);
+
+  if (decoded.find(':') == std::string::npos) {
+    throw std::runtime_error("Invalid Basic auth credentials");
+  }
+
+  return decoded;
+}
+
 std::string gzip(std::string& uncompressed) {
   auto deflate_src = [&uncompressed](z_stream& s) {
     s.next_in = static_cast<Byte*>(static_cast<void*>(&uncompressed[0]));
@@ -57,15 +80,26 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
                              void* request_info,
                              worker_t::interrupt_function_t&,
                              const std::string& tile_source_dir,
-                             const std::string& tar_path) {
+                             const std::string& tar_path,
+                             const std::string& server_user_pw) {
   worker_t::result_t result{false, std::list<std::string>(), ""};
   auto* info = static_cast<http_request_info_t*>(request_info);
   try {
     // parse request
     const auto request =
         http_request_t::from_string(static_cast<const char*>(job.front().data()), job.front().size());
-    http_response_t response;
 
+    // if there's an authorization header set, it better match the one that was passed in
+    if (auto auth_header = request.headers.find("Authorization");
+        auth_header != request.headers.end()) {
+      const auto req_user_pw = decode_basic_auth(auth_header->second);
+      if (req_user_pw != server_user_pw) {
+        throw HTTPAuthException("Server's user_pw " + server_user_pw +
+                                " doesn't match the request's user_pw " + req_user_pw);
+      }
+    }
+
+    http_response_t response;
     // is it about plain tiles or a tar?
     if (request.path.rfind("/route-tile", 0) == 0) {
       auto encoding_it = request.headers.find("Accept-Encoding");
@@ -87,7 +121,6 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
         response = http_response_t{404, "Not Found", "Not Found"};
       }
     } else if (request.path.rfind("/route-tar", 0) == 0) {
-      auto tar_path = tile_source_dir + ".tar";
       if (request.method == method_t::HEAD) {
         // turn the last modified file time into a HTTP (i.e. UTC) compliant time string
         auto last_modified =
@@ -127,6 +160,10 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
 
     response.from_info(*info);
     result.messages = {response.to_string()};
+  } catch (const HTTPAuthException& e) {
+    http_response_t response(401, "Unauthorized", e.what());
+    response.from_info(*info);
+    result.messages = {response.to_string()};
   } catch (const std::exception& e) {
     http_response_t response(400, "Bad Request", e.what());
     response.from_info(*info);
@@ -164,7 +201,7 @@ void test_tile_server_t::start(const std::string& tile_source_dir,
                 worker_t(context, proxy_endpoint + "_downstream", "ipc:///dev/null", result_endpoint,
                          request_interrupt,
                          std::bind(&disk_work, std::placeholders::_1, std::placeholders::_2,
-                                   std::placeholders::_3, tile_source_dir, tar_path))));
+                                   std::placeholders::_3, tile_source_dir, tar_path, m_user_pw))));
   file_worker.detach();
 
   std::this_thread::sleep_for(std::chrono::seconds(1));

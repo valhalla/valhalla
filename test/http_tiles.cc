@@ -9,6 +9,7 @@
 #include <prime_server/zmq_helpers.hpp>
 
 #include <filesystem>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -19,34 +20,48 @@ using namespace valhalla;
 
 zmq::context_t context;
 const std::string tile_remote_address{"127.0.0.1:48004"};
+const std::string tile_source_dir = VALHALLA_BUILD_DIR "test/data/utrecht_tiles";
+const auto tar_path = tile_source_dir + "/tiles.tar";
+const std::string user_pw = "abcd:1234";
 
-std::string get_tile_url() {
+std::string get_tile_url(const bool is_tar) {
   std::ostringstream oss;
-  oss << tile_remote_address << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
-      << "?version=%version&access_token=%token";
+  if (is_tar) {
+    oss << tile_remote_address << "/route-tar/v1";
+  } else {
+    oss << tile_remote_address << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
+        << "?version=%version&access_token=%token";
+  }
+
   return oss.str();
 }
 
-boost::property_tree::ptree
-make_conf(const std::string& tile_dir, bool tile_url_gz, size_t curler_count) {
+boost::property_tree::ptree make_conf(const std::string& tile_dir,
+                                      const bool tile_url_gz,
+                                      const bool is_tar,
+                                      const std::string& upw) {
+
   auto conf = test::make_config(tile_dir, {{"mjolnir.user_agent", "MapboxNavigationNative"}});
 
-  conf.put("mjolnir.tile_url", get_tile_url());
+  conf.put("mjolnir.tile_url", get_tile_url(is_tar));
   if (tile_dir.empty()) {
     conf.erase("mjolnir.tile_dir");
   }
-
-  if (curler_count > 1) {
-    conf.put("mjolnir.max_concurrent_reader_users", curler_count);
+  if (!upw.empty()) {
+    conf.put("mjolnir.tile_url_user_pw", upw);
   }
 
   conf.put("mjolnir.tile_url_gz", tile_url_gz);
+  conf.put("mjolnir.concurrency", "1");
   conf.put("loki.use_connectivity", false);
   return conf;
 }
 
-void test_route(const std::string& tile_dir, bool tile_url_gz) {
-  auto conf = make_conf(tile_dir, tile_url_gz, 1);
+void test_route(const std::string& tile_dir,
+                const bool tile_url_gz,
+                const bool is_tar,
+                const std::string& upw = "") {
+  auto conf = make_conf(tile_dir, tile_url_gz, is_tar, upw);
   tyr::actor_t actor(conf);
 
   auto route_json = actor.route(R"({"locations":[{"lat":52.09620,"lon": 5.11909,"type":"break"},
@@ -60,12 +75,16 @@ void test_route(const std::string& tile_dir, bool tile_url_gz) {
   EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
 }
 
+TEST(HttpTiles, test_tar_tiles_no_cache) {
+  test_route("", false, true);
+}
+
 TEST(HttpTiles, test_no_cache_no_gz) {
-  test_route("", false);
+  test_route("", false, false);
 }
 
 TEST(HttpTiles, test_no_cache_gz) {
-  test_route("", true);
+  test_route("", true, false);
 }
 
 class HttpTilesWithCache : public ::testing::Test {
@@ -78,12 +97,44 @@ protected:
   }
 };
 
+TEST_F(HttpTilesWithCache, test_tar_cache) {
+  test_route("url_tile_cache", false, true);
+}
+
+TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {
+  test_route("url_tile_cache", false, true);
+
+  // change the last-modified date on the tar file
+  std::filesystem::last_write_time(tar_path, std::filesystem::file_time_type::clock::now());
+
+  // that should trigger a runtime error
+  try {
+    test_route("url_tile_cache", false, true);
+    FAIL() << "Expected std::runtime_error";
+  } catch (const std::runtime_error& e) {
+    EXPECT_THAT(e.what(), ::testing::HasSubstr("has a different 'Last-Modified' timestamp"));
+  }
+}
+
+TEST_F(HttpTilesWithCache, test_tar_user_pw) {
+  // happy path
+  test_route("url_tile_cache", false, true, user_pw);
+
+  // wrong user:password should return a 401
+  try {
+    test_route("url_tile_cache", false, true, "obviously:wrong");
+    FAIL() << "Expected std::runtime_error";
+  } catch (const std::runtime_error& e) {
+    EXPECT_THAT(e.what(), ::testing::HasSubstr("HTTP status 401"));
+  }
+}
+
 TEST_F(HttpTilesWithCache, test_cache_no_gz) {
-  test_route("url_tile_cache", false);
+  test_route("url_tile_cache", false, false);
 }
 
 TEST_F(HttpTilesWithCache, test_cache_gz) {
-  test_route("url_tile_cache", true);
+  test_route("url_tile_cache", true, false);
 }
 
 struct TestTileDownloadData {
@@ -270,36 +321,10 @@ TEST(HttpTiles, test_interrupt) {
 class HttpTilesEnv : public ::testing::Environment {
 public:
   void SetUp() override {
-    const std::string tile_source_dir = {VALHALLA_BUILD_DIR "test/data/utrecht_tiles"};
-    auto tar_path = tile_source_dir + ".tar";
-    // create the tar file
-    {
-      mtar_t tar;
-      if (mtar_open(&tar, tar_path.c_str(), "w") != MTAR_ESUCCESS) {
-        throw std::runtime_error("Could not create tar file for HTTP server");
-      }
-      for (const auto& f_entry : std::filesystem::recursive_directory_iterator(tile_source_dir)) {
-        if (!f_entry.is_regular_file() || f_entry.path().extension() != ".gph") {
-          continue;
-        }
-        auto rel_fp = std::filesystem::relative(f_entry.path(), tile_source_dir);
-        if (mtar_write_file_header(&tar, rel_fp.c_str(), f_entry.file_size()) != MTAR_ESUCCESS) {
-          throw std::runtime_error("Could not write tar header for HTTP server");
-        };
-
-        std::vector<char> contents(f_entry.file_size());
-        std::ifstream file(f_entry.path(), std::ios::binary);
-        file.read(contents.data(), f_entry.file_size());
-        if (mtar_write_data(&tar, contents.data(), f_entry.file_size()) != MTAR_ESUCCESS) {
-          throw std::runtime_error("Could not write tar file data for HTTP server");
-        }
-      }
-      mtar_finalize(&tar);
-      mtar_close(&tar);
-    }
     // start a file server for utrecht tiles
     valhalla::test_tile_server_t server;
     server.set_url(tile_remote_address);
+    server.set_user_pw(user_pw);
     server.start(tile_source_dir, tar_path, context);
   }
 
