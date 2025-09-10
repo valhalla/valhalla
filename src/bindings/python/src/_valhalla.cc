@@ -4,8 +4,6 @@
 #include "midgard/util.h"
 #include "tyr/actor.h"
 
-#include <boost/make_shared.hpp>
-#include <boost/noncopyable.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <pybind11/pybind11.h>
 

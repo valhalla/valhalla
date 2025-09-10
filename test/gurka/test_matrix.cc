@@ -1,8 +1,10 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "midgard/encoded.h"
+#include "proto/api.pb.h"
 #include "test.h"
-
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/thor/matrixalgorithm.h>
+#include "valhalla/proto_conversions.h"
+#include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
 
@@ -346,7 +348,7 @@ TEST(StandAlone, CostMatrixDeadends) {
   )";
   // clang-format off
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}}, 
+      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}},
       {"BC", {{"highway", "residential"}}},
       {"CD", {{"highway", "residential"}}},
       {"BE", {{"highway", "residential"}}},
@@ -409,7 +411,7 @@ TEST(StandAlone, CostMatrixShapes) {
   )";
   // clang-format off
   const gurka::ways ways = {
-      {"ABCDE", {{"highway", "residential"}}}, 
+      {"ABCDE", {{"highway", "residential"}}},
       {"EFGHIJK", {{"highway", "residential"}}},
       {"KL", {{"highway", "residential"}}},
   };
@@ -808,7 +810,7 @@ TEST_P(TestConnectionCheck, HGVNoAccessPenalty) {
     A-1-------B----C----D----E--2-------F
                    |    |
                    J----K
-                   |    |             
+                   |    |
                    |    |
                    L----M
            )";
@@ -879,7 +881,7 @@ TEST_P(TestConnectionCheck, VerboseResponse) {
                    J----K--5------N
                    |    |         \
                    |    |          \
-                   3    4           6           
+                   3    4           6
                    |    |            \
                    L----M             \
                                        O
@@ -1152,9 +1154,9 @@ TEST(StandAlone, TrivialKeepExpanding) {
   )";
   // clang-format off
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}}}, 
-      {"BC", {{"highway", "residential"}}}, 
-      {"CD", {{"highway", "residential"}}}, 
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
   };
   // clang-format on
 

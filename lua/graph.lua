@@ -32,7 +32,8 @@ highway = {
 ["busway"] =            {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
 ["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
-["platform"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
+["platform"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+["via_ferrata"] =       {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
 }
 
 road_class = {
@@ -1629,7 +1630,6 @@ function filter_tags_generic(kv)
   kv["cycle_lane_right_opposite"] = cycle_lane_right_opposite
   kv["cycle_lane_left_opposite"] = cycle_lane_left_opposite
 
-
   local highway_type = kv["highway"]
   if kv["highway"] == "construction" then
     highway_type = kv["construction"]
@@ -1638,6 +1638,10 @@ function filter_tags_generic(kv)
   if highway_type and string.find(highway_type, "_link") then --*_link
      kv["link"] = "true"  --do we need to add more?  turnlane?
      kv["link_type"] = kv["link_type"]
+  end
+
+  if kv["highway"] == "via_ferrata" and kv["sac_scale"] == nil then
+    kv["sac_scale"] = "difficult_alpine_hiking"
   end
 
   --- TODO(nils): "private" also has directionality which we don't parse and handle yet

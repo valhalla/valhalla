@@ -1,5 +1,5 @@
 #include "gurka.h"
-#include "test.h"
+#include "worker.h"
 
 #include <gtest/gtest.h>
 
@@ -650,6 +650,33 @@ TEST(Standalone, AccessForwardBackward) {
     // forward need to go around
     result = gurka::do_action(valhalla::Options::route, map, {"F", "G"}, c);
     gurka::assert::raw::expect_path(result, {"CFH", "ABCDE", "EG"});
+  }
+}
+
+TEST(Standalone, ViaFerrata) {
+  const std::string ascii_map = R"(A----B----C)";
+  const gurka::ways ways = {{"AB", {{"highway", "via_ferrata"}, {"sac_scale", "hiking"}}},
+                            {"BC", {{"highway", "via_ferrata"}, {"sac_scale", "hiking"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/example");
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
+}
+
+TEST(Standalone, ViaFerrataDefault) {
+  const std::string ascii_map = R"(A----B----C)";
+  const gurka::ways ways = {{"AB", {{"highway", "via_ferrata"}}},
+                            {"BC", {{"highway", "via_ferrata"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/example");
+
+  try {
+    gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
+  } catch (const valhalla_exception_t& e) {
+    EXPECT_STREQ(e.what(), "No suitable edges near location");
   }
 }
 

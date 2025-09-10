@@ -1,7 +1,8 @@
 #ifndef VALHALLA_BALDR_JSON_H_
 #define VALHALLA_BALDR_JSON_H_
 
-#include <boost/variant.hpp>
+#include <boost/variant/static_visitor.hpp>
+#include <boost/variant/variant.hpp>
 
 #include <cctype>
 #include <cmath>

@@ -1,10 +1,8 @@
 #include "meili/geometry_helpers.h"
-
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
+#include "midgard/distanceapproximator.h"
+#include "midgard/encoded.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
 
 using namespace valhalla;
 using namespace valhalla::meili;
