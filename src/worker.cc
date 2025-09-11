@@ -1080,8 +1080,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto exclude_polygons =
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
+  LOG_DEBUG("mhhh...");
   if (exclude_polygons) {
-    if (!exclude_polygons->IsArray() || !exclude_polygons->IsObject()) {
+    if (!(exclude_polygons->IsArray() || exclude_polygons->IsObject())) {
       add_warning(api, 204);
     } else {
       // it has to be either an array of rings
@@ -1099,10 +1100,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           exclude_polygons_array_ptr = features;
         }
       }
+      LOG_DEBUG("Try to go through the array");
       try {
         for (const auto& req_poly : exclude_polygons_array_ptr->GetArray()) {
-          if ((!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) &&
-              (!req_poly.IsObject() || (req_poly.IsObject() && req_poly.GetObject().ObjectEmpty()))) {
+          // either it's a ring or an object, in any case it can't be empty
+          if ((req_poly.IsArray() && req_poly.GetArray().Empty()) ||
+              (req_poly.IsObject() && req_poly.GetObject().ObjectEmpty())) {
             continue;
           }
           auto* pbf_ring = rings_pbf->Add();
