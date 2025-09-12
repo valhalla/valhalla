@@ -10,6 +10,8 @@
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/geometries/register/ring.hpp>
 
+#include <optional>
+
 namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
