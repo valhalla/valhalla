@@ -2,7 +2,6 @@
 #define VALHALLA_MIDGARD_TILES_H_
 
 #include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/ellipse.h>
 
 #include <cstdint>
@@ -155,12 +154,11 @@ public:
     }
 
     // If equal to the max x return the largest column
-    if (x == tilebounds_.maxx()) {
+    const typename coord_t::value_type col = (x - tilebounds_.minx()) / tilesize_;
+    if (col >= ncolumns_) {
       return ncolumns_ - 1;
-    } else {
-      float col = (x - tilebounds_.minx()) / tilesize_;
-      return (col >= 0.0) ? static_cast<int32_t>(col) : static_cast<int32_t>(col - 1);
     }
+    return (col >= 0.0) ? static_cast<int32_t>(col) : static_cast<int32_t>(col - 1);
   }
 
   /**

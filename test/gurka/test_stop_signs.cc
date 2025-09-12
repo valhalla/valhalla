@@ -1,5 +1,5 @@
 #include "gurka.h"
-#include "test/test.h"
+#include "mjolnir/util.h"
 
 #include <gtest/gtest.h>
 

@@ -2,23 +2,24 @@
 #define __VALHALLA_TYR_SERVICE_H__
 
 #include <valhalla/baldr/attributes_controller.h>
-#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/pathlocation.h>
-#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/rapidjson_fwd.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
-#include <valhalla/proto_conversions.h>
-#include <valhalla/tyr/actor.h>
 
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace valhalla {
+namespace baldr {
+class GraphReader;
+struct PathLocation;
+} // namespace baldr
+
 namespace tyr {
 
 constexpr unsigned int kDefaultPrecision = 3;
@@ -194,7 +195,7 @@ get_elevation(const TripLeg& path_leg, const float interval, const float start_d
   std::vector<std::pair<uint32_t, uint32_t>> bridges;
   for (const auto& node : path_leg.node()) {
     // Get the edge on the path, the starting elevation and sampling interval
-    auto path_edge = node.edge();
+    const auto& path_edge = node.edge();
     float edge_interval = path_edge.elevation_sampling_interval();
 
     // Identify consecutive bridge/tunnel edges and store elevation indexes at start and end.
@@ -276,7 +277,7 @@ void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 
-void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,
                                  const valhalla::IncidentsTile::Metadata& incident_metadata,
                                  const int begin_shape_index,
                                  const int end_shape_index,

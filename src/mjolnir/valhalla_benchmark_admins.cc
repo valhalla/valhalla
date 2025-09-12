@@ -1,15 +1,8 @@
 #include "argparse_utils.h"
-#include "baldr/admininfo.h"
-#include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
-#include "midgard/constants.h"
-#include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "mjolnir/sqlite3.h"
@@ -23,8 +16,8 @@
 #include <cxxopts.hpp>
 #include <sqlite3.h>
 
-#include <cinttypes>
 #include <cstdint>
+#include <filesystem>
 #include <unordered_map>
 #include <vector>
 
@@ -36,7 +29,7 @@ typedef boost::geometry::model::d2::point_xy<double> point_type;
 typedef boost::geometry::model::polygon<point_type> polygon_type;
 typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
-filesystem::path config_file_path;
+std::filesystem::path config_file_path;
 
 std::unordered_map<uint32_t, multi_polygon_type>
 GetAdminInfo(valhalla::mjolnir::Sqlite3& db,
@@ -177,7 +170,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
 }
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> input_files;
   boost::property_tree::ptree config;
@@ -186,7 +179,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "valhalla_benchmark_admins is a program to time the admin queries\n");
 
     options.add_options()
@@ -197,11 +190,11 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("version")) {
-      std::cout << "valhalla_benchmark_admins " << VALHALLA_VERSION << "\n";
+      std::cout << "valhalla_benchmark_admins " << VALHALLA_PRINT_VERSION << "\n";
       return EXIT_SUCCESS;
     }
   } catch (cxxopts::exceptions::exception& e) {

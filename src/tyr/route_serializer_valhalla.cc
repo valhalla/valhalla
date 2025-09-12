@@ -1,7 +1,7 @@
+#include "baldr/rapidjson_utils.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "odin/enhancedtrippath.h"
-#include "odin/util.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
 

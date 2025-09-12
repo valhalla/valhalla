@@ -1,8 +1,8 @@
 #ifndef VALHALLA_ODIN_TRANSIT_ROUTE_INFO_H_
 #define VALHALLA_ODIN_TRANSIT_ROUTE_INFO_H_
 
+#include <valhalla/midgard/logging.h>
 #include <valhalla/proto/common.pb.h>
-#include <valhalla/proto/trip.pb.h>
 
 #include <list>
 #include <string>

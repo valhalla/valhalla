@@ -10,9 +10,6 @@
 namespace valhalla {
 namespace baldr {
 
-// Regular expression to find numbers
-const std::regex kNumberSplitRegex("(\\D*)(\\d+)(\\D*)");
-
 /**
  * The generic verbal text formatter class that prepares strings for use with
  * a text-to-speech engine.

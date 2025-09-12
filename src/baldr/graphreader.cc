@@ -1,7 +1,5 @@
 #include "baldr/graphreader.h"
-#include "baldr/connectivity_map.h"
 #include "baldr/curl_tilegetter.h"
-#include "filesystem.h"
 #include "incident_singleton.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
@@ -9,6 +7,7 @@
 
 #include <sys/stat.h>
 
+#include <filesystem>
 #include <string>
 #include <utility>
 
@@ -81,7 +80,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       // TODO: use the "scan" to iterate over tar
-      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, true, index_loader));
+      archive = std::make_shared<midgard::tar>(pt.get<std::string>("tile_extract"), true, true,
+                                               index_loader);
       // map files to graph ids
       if (tiles.empty()) {
         for (const auto& c : archive->contents) {
@@ -123,8 +123,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       traffic_from_index = true;
-      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract"), traffic_readonly,
-                                             true, index_loader));
+      traffic_archive = std::make_shared<midgard::tar>(pt.get<std::string>("traffic_extract"),
+                                                       traffic_readonly, true, index_loader);
       if (traffic_tiles.empty()) {
         LOG_WARN(
             "Traffic extract contained no index file, expect degraded performance for tile (re-)loading.");
@@ -447,10 +447,10 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
     std::lock_guard<std::mutex> lock(factoryMutex);
     if (!globalTileCache_) {
       if (use_lru_cache) {
-        globalTileCache_.reset(new TileCacheLRU(max_cache_size, lru_mem_control));
+        globalTileCache_ = std::make_shared<TileCacheLRU>(max_cache_size, lru_mem_control);
       } else {
         // globalTileCache_.reset(new SimpleTileCache(max_cache_size));
-        globalTileCache_.reset(new FlatTileCache(max_cache_size));
+        globalTileCache_ = std::make_shared<FlatTileCache>(max_cache_size);
       }
     }
     return new SynchronizedTileCache(*globalTileCache_, globalCacheMutex_);
@@ -527,8 +527,9 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
   }
   if (tile_dir_.empty())
     return false;
-  std::string file_location =
-      tile_dir_ + filesystem::path::preferred_separator + GraphTile::FileSuffix(graphid.Tile_Base());
+  std::string file_location = tile_dir_;
+  file_location += std::filesystem::path::preferred_separator;
+  file_location += GraphTile::FileSuffix(graphid.Tile_Base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0 ||
          stat((file_location + ".gz").c_str(), &buffer) == 0;
@@ -891,11 +892,11 @@ std::unordered_set<GraphId> GraphReader::GetTileSet() const {
     // for each level
     for (uint8_t level = 0; level <= TileHierarchy::GetTransitLevel().level; ++level) {
       // crack open this level of tiles directory
-      filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
-                                std::to_string(level) + filesystem::path::preferred_separator);
-      if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
+      std::filesystem::path root_dir{tile_dir_};
+      root_dir.append(std::to_string(level));
+      if (std::filesystem::exists(root_dir) && std::filesystem::is_directory(root_dir)) {
         // iterate over all the files in there
-        for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+        for (std::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
           if (i->is_regular_file() || i->is_symlink()) {
             // add it if it can be parsed as a valid tile file name
             try {
@@ -923,11 +924,11 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     } // or individually on disk
   } else if (!tile_dir_.empty()) {
     // crack open this level of tiles directory
-    filesystem::path root_dir(tile_dir_ + filesystem::path::preferred_separator +
-                              std::to_string(level) + filesystem::path::preferred_separator);
-    if (filesystem::exists(root_dir) && filesystem::is_directory(root_dir)) {
+    std::filesystem::path root_dir{tile_dir_};
+    root_dir.append(std::to_string(level));
+    if (std::filesystem::exists(root_dir) && std::filesystem::is_directory(root_dir)) {
       // iterate over all the files in the directory and turn into GraphIds
-      for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+      for (std::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
         if (i->is_regular_file() || i->is_symlink()) {
           // add it if it can be parsed as a valid tile file name
           try {
@@ -938,6 +939,13 @@ std::unordered_set<GraphId> GraphReader::GetTileSet(const uint8_t level) const {
     }
   }
   return tiles;
+}
+
+const std::string& GraphReader::tile_extract() const {
+  static std::string empty_str;
+  if (tile_extract_->tiles.empty())
+    return empty_str;
+  return tile_extract_->archive->tar_file;
 }
 
 AABB2<PointLL> GraphReader::GetMinimumBoundingBox(const AABB2<PointLL>& bb) {
@@ -1030,18 +1038,6 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
 
 graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
   return reader_.GetGraphTile(graphid);
-}
-
-const valhalla::IncidentsTile::Metadata&
-getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
-                    const valhalla::IncidentsTile::Location& incident_location) {
-  const int64_t metadata_index = incident_location.metadata_index();
-  if (metadata_index >= tile->metadata_size()) {
-    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
-                             std::to_string(metadata_index) + " but total incident metadata of " +
-                             std::to_string(tile->metadata_size()));
-  }
-  return tile->metadata(metadata_index);
 }
 
 } // namespace baldr

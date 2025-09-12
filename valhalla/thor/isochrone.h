@@ -1,16 +1,11 @@
 #ifndef VALHALLA_THOR_ISOCHRONE_H_
 #define VALHALLA_THOR_ISOCHRONE_H_
 
-#include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
 #include <valhalla/midgard/gridded_data.h>
-#include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/dijkstras.h>
-#include <valhalla/thor/edgestatus.h>
 
 #include <cstdint>
 #include <memory>
@@ -63,8 +58,8 @@ public:
    * @param callback the functor to call back when the Dijkstra makes progress
    *                             on a given edge
    */
-  void SetInnerExpansionCallback(const expansion_callback_t callback) {
-    inner_expansion_callback_ = callback;
+  void SetInnerExpansionCallback(expansion_callback_t&& callback) {
+    inner_expansion_callback_ = std::move(callback);
   }
 
 protected:

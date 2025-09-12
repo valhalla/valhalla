@@ -1,8 +1,6 @@
 #ifndef VALHALLA_BALDR_TRANSITDEPARTURE_H_
 #define VALHALLA_BALDR_TRANSITDEPARTURE_H_
 
-#include <valhalla/baldr/graphconstants.h>
-
 #include <cstdint>
 
 namespace valhalla {

@@ -1,22 +1,19 @@
-#include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "loki/polygon_search.h"
+#include "loki/worker.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
+#include "proto/options.pb.h"
 #include "sif/costfactory.h"
 #include "worker.h"
 
-#include <valhalla/proto/options.pb.h>
-
 #include <boost/format.hpp>
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/register/multi_polygon.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
 #include <gtest/gtest.h>
+#include <test.h>
 
 using namespace valhalla;
-namespace bg = boost::geometry;
+namespace vb = valhalla::baldr;
 namespace vm = valhalla::midgard;
 namespace vl = valhalla::loki;
 

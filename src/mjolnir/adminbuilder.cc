@@ -1,5 +1,5 @@
 #include "mjolnir/adminbuilder.h"
-#include "filesystem.h"
+#include "midgard/logging.h"
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/sqlite3.h"
@@ -12,6 +12,7 @@
 #include <sqlite3.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -279,7 +280,7 @@ void to_rings(const std::pair<std::string, uint64_t>& admin_info,
     // degenerate rings are ignored, unconnected rings or missing relation members cause this
     if (ring.size() < 4 || ring.front() != ring.back()) {
       LOG_WARN("Degenerate ring for " + admin_info.first + " (" + std::to_string(admin_info.second) +
-               ") " + " near lat,lon " + std::to_string(ring.back().y()) + "," +
+               ")  near lat,lon " + std::to_string(ring.back().y()) + "," +
                std::to_string(ring.back().x()));
       continue;
     }
@@ -340,7 +341,7 @@ multipolygon_t to_multipolygon(const std::pair<std::string, uint64_t>& admin_inf
     }
     if (!found) {
       LOG_WARN("Inner with no outer " + admin_info.first + " (" + std::to_string(admin_info.second) +
-               ") " + " near lat,lon " + std::to_string(inner.front().y()) + "," +
+               ")  near lat,lon " + std::to_string(inner.front().y()) + "," +
                std::to_string(inner.front().x()));
     }
   }
@@ -375,8 +376,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return false;
   }
 
-  const filesystem::path parent_dir = filesystem::path(*database).parent_path();
-  if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+  const std::filesystem::path parent_dir = std::filesystem::path(*database).parent_path();
+  if (!std::filesystem::exists(parent_dir) && !std::filesystem::create_directories(parent_dir)) {
     LOG_ERROR("Can't create parent directory " + parent_dir.string());
     return false;
   }
@@ -400,16 +401,16 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   /* creating an admin POLYGON table */
-  sql = "SELECT InitSpatialMetaData(1); CREATE TABLE admins (";
-  sql += "admin_level INTEGER NOT NULL,";
-  sql += "iso_code TEXT,";
-  sql += "parent_admin INTEGER,";
-  sql += "name TEXT NOT NULL,";
-  sql += "name_en TEXT,";
-  sql += "drive_on_right INTEGER NULL,";
-  sql += "allow_intersection_names INTEGER NULL,";
-  sql += "default_language TEXT,";
-  sql += "supported_languages TEXT)";
+  sql = "SELECT InitSpatialMetaData(1); CREATE TABLE admins ("
+        "admin_level INTEGER NOT NULL,"
+        "iso_code TEXT,"
+        "parent_admin INTEGER,"
+        "name TEXT NOT NULL,"
+        "name_en TEXT,"
+        "drive_on_right INTEGER NULL,"
+        "allow_intersection_names INTEGER NULL,"
+        "default_language TEXT,"
+        "supported_languages TEXT)";
 
   ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -419,8 +420,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   /* creating a MULTIPOLYGON Geometry column */
-  sql = "SELECT AddGeometryColumn('admins', ";
-  sql += "'geom', 4326, 'MULTIPOLYGON', 2)";
+  sql = "SELECT AddGeometryColumn('admins', "
+        "'geom', 4326, 'MULTIPOLYGON', 2)";
   ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -437,37 +438,37 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
    * update the specs on the wiki.
    */
 
-  sql = "CREATE TABLE admin_access (";
-  sql += "admin_id INTEGER NOT NULL,";
-  sql += "iso_code TEXT,";
-  // sql += "motorway INTEGER DEFAULT NULL,";
-  // sql += "motorway_link INTEGER DEFAULT NULL,";
-  sql += "trunk INTEGER DEFAULT NULL,";
-  sql += "trunk_link INTEGER DEFAULT NULL,";
-  // sql += "prim_ary INTEGER DEFAULT NULL,";
-  // sql += "prim_ary_link INTEGER DEFAULT NULL,";
-  // sql += "secondary INTEGER DEFAULT NULL,";
-  // sql += "secondary_link INTEGER DEFAULT NULL,";
-  // sql += "residential INTEGER DEFAULT NULL,";
-  // sql += "residential_link INTEGER DEFAULT NULL,";
-  // sql += "service INTEGER DEFAULT NULL,";
-  // sql += "tertiary INTEGER DEFAULT NULL,";
-  // sql += "tertiary_link INTEGER DEFAULT NULL,";
-  // sql += "road INTEGER DEFAULT NULL,";
-  sql += "track INTEGER DEFAULT NULL,";
-  // sql += "unclassified INTEGER DEFAULT NULL,";
-  // sql += "undefined INTEGER DEFAULT NULL,";
-  // sql += "unknown INTEGER DEFAULT NULL,";
-  // sql += "living_street INTEGER DEFAULT NULL,";
-  sql += "footway INTEGER DEFAULT NULL,";
-  sql += "pedestrian INTEGER DEFAULT NULL,";
-  // sql += "steps INTEGER DEFAULT NULL,";
-  sql += "bridleway INTEGER DEFAULT NULL,";
-  // sql += "construction INTEGER DEFAULT NULL,";
-  sql += "cycleway INTEGER DEFAULT NULL,";
-  // sql += "bus_guideway INTEGER DEFAULT NULL,";
-  sql += "path INTEGER DEFAULT NULL,";
-  sql += "motorroad INTEGER DEFAULT NULL)";
+  sql = "CREATE TABLE admin_access ("
+        "admin_id INTEGER NOT NULL,"
+        "iso_code TEXT,"
+        // "motorway INTEGER DEFAULT NULL,"
+        // "motorway_link INTEGER DEFAULT NULL,"
+        "trunk INTEGER DEFAULT NULL,"
+        "trunk_link INTEGER DEFAULT NULL,"
+        // "prim_ary INTEGER DEFAULT NULL,"
+        // "prim_ary_link INTEGER DEFAULT NULL,"
+        // "secondary INTEGER DEFAULT NULL,"
+        // "secondary_link INTEGER DEFAULT NULL,"
+        // "residential INTEGER DEFAULT NULL,"
+        // "residential_link INTEGER DEFAULT NULL,"
+        // "service INTEGER DEFAULT NULL,"
+        // "tertiary INTEGER DEFAULT NULL,"
+        // "tertiary_link INTEGER DEFAULT NULL,"
+        // "road INTEGER DEFAULT NULL,"
+        "track INTEGER DEFAULT NULL,"
+        // "unclassified INTEGER DEFAULT NULL,"
+        // "undefined INTEGER DEFAULT NULL,"
+        // "unknown INTEGER DEFAULT NULL,"
+        // "living_street INTEGER DEFAULT NULL,"
+        "footway INTEGER DEFAULT NULL,"
+        "pedestrian INTEGER DEFAULT NULL,"
+        // "steps INTEGER DEFAULT NULL,"
+        "bridleway INTEGER DEFAULT NULL,"
+        // "construction INTEGER DEFAULT NULL,"
+        "cycleway INTEGER DEFAULT NULL,"
+        // "bus_guideway INTEGER DEFAULT NULL,"
+        "path INTEGER DEFAULT NULL,"
+        "motorroad INTEGER DEFAULT NULL)";
 
   ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -483,12 +484,11 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
    * inserting some MULTIPOLYGONs
    * this time too we'll use a Prepared Statement
    */
-  sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, ";
-  sql +=
-      "drive_on_right, allow_intersection_names, default_language, supported_languages, geom) VALUES (?,?,?,?,?,?,?,?,?,";
-  sql += "ST_MakeValid(CastToMulti(GeomFromText(?, 4326))))";
+  sql = "INSERT INTO admins (admin_level, iso_code, parent_admin, name, name_en, "
+        "drive_on_right, allow_intersection_names, default_language, supported_languages, geom) "
+        "VALUES (?,?,?,?,?,?,?,?,?,ST_MakeValid(CastToMulti(GeomFromText(?, 4326))))";
 
-  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
+  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
     LOG_ERROR(std::string(sqlite3_errmsg(db->get())));
@@ -504,7 +504,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   geos_helper_t::get();
 
   // for each admin area (relation)
-  uint32_t count = 0;
+  [[maybe_unused]] uint32_t count = 0;
   for (const auto& admin : admin_data.admins) {
     std::pair<std::string, uint64_t> admin_info(admin_data.name_offset_map.name(admin.name_index),
                                                 admin.id);
@@ -631,11 +631,11 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Created Level index");
 
-  sql = "UPDATE admins AS child SET parent_admin = (SELECT parent.rowid from admins";
-  sql +=
-      " AS parent WHERE parent.admin_level < child.admin_level AND ST_Covers(parent.geom, child.geom) ";
-  sql += " ORDER BY parent.admin_level DESC LIMIT 1)"; // if multiple candidates, get the one with the
-                                                       // lowest admin_level
+  sql =
+      "UPDATE admins AS child SET parent_admin = (SELECT parent.rowid from admins"
+      " AS parent WHERE parent.admin_level < child.admin_level AND ST_Covers(parent.geom, child.geom) "
+      " ORDER BY parent.admin_level DESC LIMIT 1)"; // if multiple candidates, get the one with the
+                                                    // lowest admin_level
   ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -644,8 +644,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Done updating parent admin");
 
-  sql = "UPDATE admins AS child SET drive_on_right = (SELECT parent.drive_on_right FROM ";
-  sql += "admins AS parent WHERE parent.rowid = child.parent_admin) WHERE parent_admin IS NOT NULL;";
+  sql = "UPDATE admins AS child SET drive_on_right = (SELECT parent.drive_on_right FROM "
+        "admins AS parent WHERE parent.rowid = child.parent_admin) WHERE parent_admin IS NOT NULL;";
   ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -664,8 +664,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   LOG_INFO("Created Drive On Right index");
 
   sql =
-      "UPDATE admins AS child SET allow_intersection_names = (SELECT parent.allow_intersection_names ";
-  sql +=
+      "UPDATE admins AS child SET allow_intersection_names = (SELECT parent.allow_intersection_names "
       "FROM admins AS parent WHERE parent.rowid = child.parent_admin) WHERE parent_admin IS NOT NULL;";
   ret = sqlite3_exec(db->get(), sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
@@ -684,10 +683,10 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
   LOG_INFO("Created allow intersection names index");
 
-  sql = "update admins set supported_languages = ? ";
-  sql += "where (name = ? or name_en = ?) and admin_level = ? ";
+  sql = "update admins set supported_languages = ? "
+        "where (name = ? or name_en = ?) and admin_level = ? ";
 
-  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
+  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
     LOG_ERROR(std::string(sqlite3_errmsg(db->get())));
@@ -729,13 +728,13 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Done updating supported languages");
 
-  sql = "INSERT into admin_access (admin_id, iso_code, trunk, trunk_link, track, footway, ";
-  sql += "pedestrian, bridleway, cycleway, path, motorroad) VALUES (";
-  sql += "(select rowid from admins where (name = ? or name_en = ?)), ";
-  sql += "(select iso_code from admins where (name = ? or name_en = ?)), ";
-  sql += "?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  sql = "INSERT into admin_access (admin_id, iso_code, trunk, trunk_link, track, footway, "
+        "pedestrian, bridleway, cycleway, path, motorroad) VALUES ("
+        "(select rowid from admins where (name = ? or name_en = ?)), "
+        "(select iso_code from admins where (name = ? or name_en = ?)), "
+        "?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
+  ret = sqlite3_prepare_v2(db->get(), sql.c_str(), sql.length(), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
     LOG_ERROR(std::string(sqlite3_errmsg(db->get())));
@@ -786,8 +785,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   LOG_INFO("Writing database to disk.");
-  if (filesystem::exists(*database)) {
-    filesystem::remove(*database);
+  if (std::filesystem::exists(*database)) {
+    std::filesystem::remove(*database);
   }
 
   auto db_on_disk = Sqlite3::open((*database).c_str(), SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE);

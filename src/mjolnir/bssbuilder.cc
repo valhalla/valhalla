@@ -12,6 +12,7 @@
 #include "mjolnir/osmdata.h"
 #include "scoped_timer.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <boost/range/algorithm.hpp>
 
 #include <algorithm>
@@ -364,7 +365,8 @@ void project_and_add_bss_nodes(const boost::property_tree::ptree& pt,
 
       auto tile_id = tile_start->first;
       local_tile = reader_local_level.GetGraphTile(tile_id);
-      tilebuilder_local.reset(new GraphTileBuilder{reader_local_level.tile_dir(), tile_id, true});
+      tilebuilder_local =
+          std::make_unique<GraphTileBuilder>(reader_local_level.tile_dir(), tile_id, true);
     }
 
     auto new_connections = project(*local_tile, tile_start->second);
@@ -513,7 +515,8 @@ void create_edges_from_way_node(
 
       auto tile_id = tile_start->first;
       local_tile = reader_local_level.GetGraphTile(tile_id);
-      tilebuilder_local.reset(new GraphTileBuilder{reader_local_level.tile_dir(), tile_id, true});
+      tilebuilder_local =
+          std::make_unique<GraphTileBuilder>(reader_local_level.tile_dir(), tile_id, true);
     }
     create_edges(*tilebuilder_local, *local_tile, lock, tile_start->second);
   }
@@ -641,9 +644,10 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
       // Where the range ends
       std::advance(tile_end, tile_count);
       // Make the thread
-      threads[i].reset(new std::thread(project_and_add_bss_nodes, std::cref(pt.get_child("mjolnir")),
-                                       std::ref(lock), tile_start, tile_end, std::cref(osmdata),
-                                       std::ref(all)));
+      threads[i] =
+          std::make_shared<std::thread>(project_and_add_bss_nodes, std::cref(pt.get_child("mjolnir")),
+                                        std::ref(lock), tile_start, tile_end, std::cref(osmdata),
+                                        std::ref(all));
     }
 
     for (auto& thread : threads) {
@@ -685,8 +689,9 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
       // Where the range ends
       std::advance(tile_end, tile_count);
       // Make the thread
-      threads[i].reset(new std::thread(create_edges_from_way_node, std::cref(pt.get_child("mjolnir")),
-                                       std::ref(lock), tile_start, tile_end));
+      threads[i] = std::make_shared<std::thread>(create_edges_from_way_node,
+                                                 std::cref(pt.get_child("mjolnir")), std::ref(lock),
+                                                 tile_start, tile_end);
     }
 
     for (auto& thread : threads) {

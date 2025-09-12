@@ -12,8 +12,10 @@
 #include "scoped_timer.h"
 #include "sif/osrm_car_duration.h"
 
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
+#ifdef LOGGING_LEVEL_DEBUG
+#include <boost/format.hpp>
+#endif
 
 #include <string>
 #include <utility>
@@ -510,7 +512,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         for (const auto& res : access_restrictions.all_restrictions) {
           tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                              res.second.type(), res.second.modes(),
-                                                             res.second.value()));
+                                                             res.second.value(),
+                                                             res.second.except_destination()));
         }
       }
 
@@ -671,7 +674,8 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
           auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 

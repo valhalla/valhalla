@@ -4,11 +4,10 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/pointll.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <list>
 #include <map>
@@ -18,8 +17,6 @@
 
 namespace valhalla {
 namespace mjolnir {
-
-using boost::property_tree::ptree;
 
 // Stages of the Valhalla tile building pipeline
 enum class BuildStage : int8_t {
@@ -94,6 +91,32 @@ inline std::string to_string(BuildStage stg) {
   return (i == BuildStageStrings.cend()) ? "null" : i->second;
 }
 
+// A little struct to hold stats information during each threads work
+struct enhancer_stats {
+  float max_density; //(km/km2)
+  uint32_t not_thru;
+  uint32_t no_country_found;
+  uint32_t internalcount;
+  uint32_t turnchannelcount;
+  uint32_t rampcount;
+  uint32_t pencilucount;
+  uint32_t density_counts[16];
+  void operator()(const enhancer_stats& other) {
+    if (max_density < other.max_density) {
+      max_density = other.max_density;
+    }
+    not_thru += other.not_thru;
+    no_country_found += other.no_country_found;
+    internalcount += other.internalcount;
+    turnchannelcount += other.turnchannelcount;
+    rampcount += other.rampcount;
+    pencilucount += other.pencilucount;
+    for (uint32_t i = 0; i < 16; i++) {
+      density_counts[i] += other.density_counts[i];
+    }
+  }
+};
+
 /**
  * Splits a tag into a vector of strings.
  * @param  tag_value  tag to split
@@ -142,6 +165,21 @@ uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
                               const baldr::DirectedEdge& edge);
 
 /**
+ * Process edge transitions from all other incoming edges onto the
+ * specified outbound directed edge.
+ * @param  idx            Index of the directed edge - the to edge.
+ * @param  directededge   Directed edge builder - set values.
+ * @param  edges          Other directed edges at the node.
+ * @param  ntrans         Number of transitions (either number of edges or max)
+ * @param  headings       Headings of directed edges.
+ */
+void ProcessEdgeTransitions(const uint32_t idx,
+                            baldr::DirectedEdge& directededge,
+                            const baldr::DirectedEdge* edges,
+                            const uint32_t ntrans,
+                            const baldr::NodeInfo& nodeinfo,
+                            enhancer_stats& stats);
+/**
  * Compute a curvature metric given an edge shape.
  * @param  shape  Shape of an edge (list of lat,lon vertices).
  * @return Returns a curvature measure [0-15] where higher numbers indicate
@@ -161,7 +199,7 @@ uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
  * unusable afterwards.  Set to false if you need to perform protobuf operations after building tiles.
  * @return Returns true if no errors occur, false if an error occurs.
  */
-bool build_tile_set(const ptree& config,
+bool build_tile_set(const boost::property_tree::ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate);
@@ -190,45 +228,13 @@ bool build_tile_set(const ptree& config,
 //   ]
 // }
 struct TileManifest {
-
   std::map<baldr::GraphId, size_t> tileset;
 
-  std::string ToString() const {
-    baldr::json::ArrayPtr array = baldr::json::array({});
-    for (const auto& tile : tileset) {
-      const baldr::json::Value& graphid = tile.first.json();
-      const baldr::json::MapPtr& item = baldr::json::map(
-          {{"graphid", graphid}, {"node_index", static_cast<uint64_t>(tile.second)}});
-      array->emplace_back(item);
-    }
-    std::stringstream manifest;
-    manifest << *baldr::json::map({{"tiles", array}});
-    return manifest.str();
-  }
+  std::string ToString() const;
 
-  void LogToFile(const std::string& filename) const {
-    std::ofstream handle;
-    handle.open(filename);
-    handle << ToString();
-    handle.close();
-    LOG_INFO("Writing tile manifest to " + filename);
-  }
+  void LogToFile(const std::string& filename) const;
 
-  static TileManifest ReadFromFile(const std::string& filename) {
-    ptree manifest;
-    rapidjson::read_json(filename, manifest);
-    LOG_INFO("Reading tile manifest from " + filename);
-    std::map<baldr::GraphId, size_t> tileset;
-    for (const auto& tile_info : manifest.get_child("tiles")) {
-      const ptree& graph_id = tile_info.second.get_child("graphid");
-      const baldr::GraphId id(graph_id.get<uint64_t>("value"));
-      const size_t node_index = tile_info.second.get<size_t>("node_index");
-      tileset.insert({id, node_index});
-    }
-    LOG_INFO("Reading " + std::to_string(tileset.size()) + " tiles from tile manifest file " +
-             filename);
-    return TileManifest{tileset};
-  }
+  static TileManifest ReadFromFile(const std::string& filename);
 };
 } // namespace mjolnir
 } // namespace valhalla

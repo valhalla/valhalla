@@ -5,23 +5,23 @@
 #include "baldr/graphconstants.h"
 #include "baldr/landmark.h"
 #include "baldr/signinfo.h"
-#include "baldr/tilehierarchy.h"
 #include "baldr/time_info.h"
 #include "baldr/timedomain.h"
-#include "meili/match_result.h"
 #include "midgard/elevation_encoding.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "proto/common.pb.h"
+#include "proto_conversions.h"
 #include "sif/costconstants.h"
+#include "sif/costfactory.h"
 #include "sif/recost.h"
 #include "triplegbuilder_utils.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -107,6 +107,19 @@ inline std::string country_code_from_edge(const graph_tile_ptr& tile,
   return tile->admininfo(tile->node(de.endnode())->admin_index()).country_iso();
 }
 
+// Given the Location relation, return the full metadata
+const valhalla::IncidentsTile::Metadata&
+GetIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
+                    const valhalla::IncidentsTile::Location& incident_location) {
+  const int64_t metadata_index = incident_location.metadata_index();
+  if (metadata_index >= tile->metadata_size()) {
+    throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
+                             std::to_string(metadata_index) + " but total incident metadata of " +
+                             std::to_string(tile->metadata_size()));
+  }
+  return tile->metadata(metadata_index);
+}
+
 /**
  * Used to add or update incidents attached to the provided leg. We could do something more exotic to
  * avoid linear scan, like keeping a separate lookup outside of the pbf
@@ -120,8 +133,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
                     uint32_t index,
                     const graph_tile_ptr& end_node_tile,
                     const valhalla::baldr::DirectedEdge& de) {
-  const uint64_t current_incident_id =
-      valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location).id();
+  const uint64_t current_incident_id = GetIncidentMetadata(incidents_tile, *incident_location).id();
   auto found = std::find_if(leg.mutable_incidents()->begin(), leg.mutable_incidents()->end(),
                             [current_incident_id](const TripLeg::Incident& candidate) {
                               return current_incident_id == candidate.metadata().id();
@@ -134,7 +146,7 @@ void UpdateIncident(const std::shared_ptr<const valhalla::IncidentsTile>& incide
     auto* new_incident = leg.mutable_incidents()->Add();
 
     // Get the full incident metadata from the incident-tile
-    const auto& meta = valhalla::baldr::getIncidentMetadata(incidents_tile, *incident_location);
+    const auto& meta = GetIncidentMetadata(incidents_tile, *incident_location);
     *new_incident->mutable_metadata() = meta;
 
     // Set iso country code (2 & 3 char codes) on the new incident obj created for this leg
@@ -1200,6 +1212,71 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_speed(speed);
   }
 
+  if (controller(kEdgeSpeedType)) {
+    trip_edge->set_speed_type(GetTripLegSpeedType(directededge->speed_type()));
+  }
+
+  if (controller(kEdgeSpeedsFaded) || controller(kEdgeSpeedsNonFaded)) {
+    // helper function to only get the speed from GetSpeed that we are interested in
+    auto get_speed = [&](uint8_t flow_mask, bool faded,
+                         uint64_t second_of_week = kInvalidSecondsOfWeek) -> std::optional<uint32_t> {
+      uint8_t flow_sources = 0;
+      uint64_t seconds_from_now = 0;
+      uint8_t initial_flow_mask = flow_mask;
+      if (faded) {
+        seconds_from_now = time_info.seconds_from_now;
+        // if faded current flow is requested, fade the current speed with the speed_types' flow_mask
+        if (initial_flow_mask == kCurrentFlowMask) {
+          flow_mask = costing->flow_mask();
+        }
+        flow_mask |= kCurrentFlowMask;
+      }
+      uint32_t speed = graphtile->GetSpeed(directededge, flow_mask, second_of_week, false,
+                                           &flow_sources, seconds_from_now);
+      if (flow_sources & initial_flow_mask || !initial_flow_mask ||
+          (faded && seconds_from_now == 0)) {
+        return speed;
+      }
+      return std::nullopt;
+    };
+    auto set_speeds = [&](valhalla::TripLeg_Speeds* speeds, bool faded) {
+      std::optional<uint32_t> speed;
+
+      speed = get_speed(kCurrentFlowMask, faded, time_info.second_of_week);
+      if (speed.has_value()) {
+        speeds->set_current_flow(speed.value());
+      }
+
+      speed = get_speed(kPredictedFlowMask, faded, time_info.second_of_week);
+      if (speed.has_value() && directededge->has_predicted_speed()) {
+        speeds->set_predicted_flow(speed.value());
+      }
+
+      speed = get_speed(kConstrainedFlowMask, faded);
+      if (speed.has_value() && directededge->constrained_flow_speed() > 0) {
+        speeds->set_constrained_flow(speed.value());
+      }
+
+      speed = get_speed(kFreeFlowMask, faded);
+      if (speed.has_value() && directededge->free_flow_speed() > 0) {
+        speeds->set_free_flow(speed.value());
+      }
+
+      speed = get_speed(kNoFlowMask, faded);
+      if (speed.has_value()) {
+        speeds->set_no_flow(speed.value());
+      }
+    };
+
+    if (time_info.valid && controller(kEdgeSpeedsFaded) &&
+        graphtile->trafficspeed(directededge).speed_valid()) {
+      set_speeds(trip_edge->mutable_speeds_faded(), true);
+    }
+    if (controller(kEdgeSpeedsNonFaded)) {
+      set_speeds(trip_edge->mutable_speeds_non_faded(), false);
+    }
+  }
+
   // Set country crossing if requested
   if (controller(kEdgeCountryCrossing)) {
     trip_edge->set_country_crossing(directededge->ctry_crossing());
@@ -1208,6 +1285,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Set forward if requested
   if (controller(kEdgeForward)) {
     trip_edge->set_forward(directededge->forward());
+  }
+
+  // Set traffic signal if requested
+  if (controller(kEdgeTrafficSignal)) {
+    trip_edge->set_traffic_signal(directededge->traffic_signal());
   }
 
   if (controller(kEdgeLevels)) {
@@ -1861,8 +1943,10 @@ void TripLegBuilder::Build(
 
     if (controller(kNodeType)) {
       trip_node->set_type(GetTripLegNodeType(node->type()));
-      if (node->traffic_signal())
-        trip_node->set_traffic_signal(true);
+    }
+
+    if (controller(kNodeTrafficSignal) && node->traffic_signal()) {
+      trip_node->set_traffic_signal(true);
     }
 
     if (node->intersection() == IntersectionType::kFork) {

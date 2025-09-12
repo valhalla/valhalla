@@ -5,7 +5,6 @@
 #include <valhalla/midgard/distanceapproximator.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
-#include <valhalla/midgard/util_core.h>
 
 #include <cstdint>
 #include <cstring>
@@ -681,7 +680,7 @@ template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
 
 template <typename T> struct Finally {
   T t;
-  explicit Finally(T t) : t(t){};
+  explicit Finally(T t) : t(std::move(t)){};
   Finally() = delete;
   Finally(Finally&& f) = default;
   Finally(const Finally&) = delete;

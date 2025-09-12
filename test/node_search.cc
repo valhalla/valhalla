@@ -1,14 +1,12 @@
 #include "loki/node_search.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/location.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
-#include "midgard/vector2.h"
-#include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <filesystem>
@@ -230,7 +228,8 @@ void graph_builder::write_tiles(uint8_t level) const {
     vm::PointLL end_point = writer.node_latlng(e.second);
 
     DirectedEdgeBuilder edge_builder({}, e.second, forward, start_point.Distance(end_point), 1, 1, {},
-                                     {}, 0, false, false, false, false, 0, 0, false);
+                                     {}, 0, false, false, false, false, 0, 0, false,
+                                     vb::RoadClass::kInvalid);
 
     auto opp = std::make_pair(e.second, e.first);
     auto itr =

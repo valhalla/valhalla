@@ -1,10 +1,6 @@
 #include "odin/worker.h"
-#include "baldr/json.h"
 #include "midgard/logging.h"
-#include "midgard/util.h"
 #include "odin/directionsbuilder.h"
-#include "odin/util.h"
-#include "proto/trip.pb.h"
 #include "tyr/serializers.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -89,6 +85,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
       }
     }
   } catch (const std::exception& e) {
+    LOG_ERROR("500::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
     result = serialize_error({299, std::string(e.what())}, info, request);
   }
 

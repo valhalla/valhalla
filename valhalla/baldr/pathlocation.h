@@ -4,8 +4,6 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
-#include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/proto/options.pb.h>
 
 #include <vector>
 
@@ -33,7 +31,8 @@ public:
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
              const unsigned int inbound_reach = 0,
-             const float projected_heading = -1);
+             const float projected_heading = -1,
+             const bool snapped = true);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -56,6 +55,8 @@ public:
     unsigned int inbound_reach;
     // the heading of the projected point
     float projected_heading;
+    // whether the location snapped to the beginning or end
+    bool snapped;
   };
 
   // list of edges this location appears on within the graph
@@ -148,6 +149,7 @@ public:
       edge->set_distance(e.distance);
       edge->set_outbound_reach(e.outbound_reach);
       edge->set_inbound_reach(e.inbound_reach);
+      edge->set_snapped(e.snapped);
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }

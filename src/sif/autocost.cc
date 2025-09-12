@@ -3,14 +3,12 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
-#include "midgard/constants.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/osrm_car_duration.h"
-
-#include <cassert>
 
 #ifdef INLINE_TEST
 #include "test.h"
@@ -394,7 +392,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // use_tolls = 0 would penalize (positive delta to weighting factor).
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
-                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.015
 
   include_hot_ = costing_options.include_hot();
   include_hov2_ = costing_options.include_hov2();
@@ -460,6 +458,9 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
+  if (restriction.except_destination() && allow_destination_only_)
+    return true;
+
   switch (restriction.type()) {
     case AccessType::kMaxHeight:
       return height_ <= static_cast<float>(restriction.value() * 0.01);

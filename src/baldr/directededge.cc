@@ -1,23 +1,24 @@
 #include "baldr/directededge.h"
 #include "baldr/nodeinfo.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 
 namespace {
 
-json::MapPtr access_json(uint32_t access) {
-  return json::map({{"bicycle", static_cast<bool>(access & kBicycleAccess)},
-                    {"bus", static_cast<bool>(access & kBusAccess)},
-                    {"car", static_cast<bool>(access & kAutoAccess)},
-                    {"emergency", static_cast<bool>(access & kEmergencyAccess)},
-                    {"HOV", static_cast<bool>(access & kHOVAccess)},
-                    {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
-                    {"taxi", static_cast<bool>(access & kTaxiAccess)},
-                    {"truck", static_cast<bool>(access & kTruckAccess)},
-                    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)},
-                    {"moped", static_cast<bool>(access & kMopedAccess)},
-                    {"motorcycle", static_cast<bool>(access & kMotorcycleAccess)}});
+void access_json(uint32_t access, rapidjson::writer_wrapper_t& writer) {
+  writer("bicycle", static_cast<bool>(access & kBicycleAccess));
+  writer("bus", static_cast<bool>(access & kBusAccess));
+  writer("car", static_cast<bool>(access & kAutoAccess));
+  writer("emergency", static_cast<bool>(access & kEmergencyAccess));
+  writer("HOV", static_cast<bool>(access & kHOVAccess));
+  writer("pedestrian", static_cast<bool>(access & kPedestrianAccess));
+  writer("taxi", static_cast<bool>(access & kTaxiAccess));
+  writer("truck", static_cast<bool>(access & kTruckAccess));
+  writer("wheelchair", static_cast<bool>(access & kWheelchairAccess));
+  writer("moped", static_cast<bool>(access & kMopedAccess));
+  writer("motorcycle", static_cast<bool>(access & kMotorcycleAccess));
 }
 
 /**
@@ -388,6 +389,11 @@ void DirectedEdge::set_name_consistency(const uint32_t idx, const bool c) {
   }
 }
 
+// Set the name consistency mask.
+void DirectedEdge::set_name_consistency(const uint8_t mask) {
+  name_consistency_ = mask;
+}
+
 // Sets the surface type (see baldr/graphconstants.h). This is a general
 // indication of smoothness.
 void DirectedEdge::set_surface(const Surface surface) {
@@ -515,6 +521,11 @@ void DirectedEdge::set_opp_local_idx(const uint32_t idx) {
   }
 }
 
+void DirectedEdge::set_hierarchy_roadclass(const baldr::RoadClass rc, const bool reset) {
+  shortcut_ = static_cast<uint32_t>(rc);
+  is_shortcut_ = !reset;
+}
+
 // Set the flag for whether this edge represents a shortcut between 2 nodes.
 void DirectedEdge::set_shortcut(const uint32_t shortcut) {
   // 0 is not a valid shortcut
@@ -583,75 +594,91 @@ void DirectedEdge::set_lit(const bool lit) {
   lit_ = lit;
 }
 
-// Json representation
-json::MapPtr DirectedEdge::json() const {
-  json::MapPtr map = json::map({
-      {"end_node", endnode().json()},
-      {"speeds", json::map({
-                     {"default", static_cast<uint64_t>(speed_)},
-                     {"type", to_string(static_cast<SpeedType>(speed_type_))},
-                     {"free_flow", static_cast<uint64_t>(free_flow_speed_)},
-                     {"constrained_flow", static_cast<uint64_t>(constrained_flow_speed_)},
-                     {"predicted", static_cast<bool>(has_predicted_speed_)},
-                 })},
-      //{"opp_index", static_cast<bool>(opp_index_)},
-      //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
-      //{"restrictions", restrictions_},
-      {"access_restriction", static_cast<bool>(access_restriction_)},
-      {"start_restriction", access_json(start_restriction_)},
-      {"end_restriction", access_json(end_restriction_)},
-      {"part_of_complex_restriction", static_cast<bool>(complex_restriction_)},
-      {"has_sign", static_cast<bool>(sign_)},
-      {"toll", static_cast<bool>(toll_)},
-      {"destination_only", static_cast<bool>(dest_only_)},
-      {"tunnel", static_cast<bool>(tunnel_)},
-      {"bridge", static_cast<bool>(bridge_)},
-      {"round_about", static_cast<bool>(roundabout_)},
-      {"traffic_signal", static_cast<bool>(traffic_signal_)},
-      {"forward", static_cast<bool>(forward_)},
-      {"not_thru", static_cast<bool>(not_thru_)},
-      {"stop_sign", static_cast<bool>(stop_sign_)},
-      {"yield_sign", static_cast<bool>(yield_sign_)},
-      {"cycle_lane", to_string(static_cast<CycleLane>(cycle_lane_))},
-      {"bike_network", static_cast<bool>(bike_network_)},
-      {"truck_route", static_cast<bool>(truck_route_)},
-      {"lane_count", static_cast<uint64_t>(lanecount_)},
-      {"country_crossing", static_cast<bool>(ctry_crossing_)},
-      {"sidewalk_left", static_cast<bool>(sidewalk_left_)},
-      {"sidewalk_right", static_cast<bool>(sidewalk_right_)},
-      {"sac_scale", to_string(static_cast<SacScale>(sac_scale_))},
-      {"deadend", static_cast<bool>(deadend_)},
-      {"geo_attributes",
-       json::map({
-           {"length", static_cast<uint64_t>(length_)},
-           {"weighted_grade", json::fixed_t{static_cast<double>(weighted_grade_ - 6.0) / .6, 2}},
-           {"max_up_slope", json::fixed_t{static_cast<double>(max_up_slope()), 2}},
-           {"max_down_slope", json::fixed_t{static_cast<double>(max_down_slope()), 2}},
-           {"curvature", static_cast<uint64_t>(curvature_)},
-       })},
-      {"access", access_json(forwardaccess_)},
-      //{"access", access_json(reverseaccess_)},
-      {"classification", json::map({
-                             {"classification", to_string(static_cast<RoadClass>(classification_))},
-                             {"use", to_string(static_cast<Use>(use_))},
-                             {"surface", to_string(static_cast<Surface>(surface_))},
-                             {"link", static_cast<bool>(link_)},
-                             {"internal", static_cast<bool>(internal_)},
-                         })},
-      /*{"hierarchy", json::map({
-        {"local_edge_index", static_cast<uint64_t>(localedgeidx_)},
-        {"opposing_local_index", static_cast<uint64_t>(opp_local_idx_)},
-        {"shortcut_mask", static_cast<uint64_t>(shortcut_)},
-        {"superseded_mask", static_cast<uint64_t>(superseded_)},
-        {"shortcut", static_cast<bool>(is_shortcut_)},
-      })},*/
-  });
+// json representation
+void DirectedEdge::json(rapidjson::writer_wrapper_t& writer) const {
+  writer.start_object("end_node");
+  endnode().json(writer);
+  writer.end_object();
+
+  writer.start_object("speeds");
+  writer("default", static_cast<uint64_t>(speed_));
+  writer("type", to_string(static_cast<SpeedType>(speed_type_)));
+  writer("free_flow", static_cast<uint64_t>(free_flow_speed_));
+  writer("constrained_flow", static_cast<uint64_t>(constrained_flow_speed_));
+  writer("predicted", static_cast<bool>(has_predicted_speed_));
+  writer.end_object();
+
+  //{"opp_index", static_cast<bool>(opp_index_)},
+  //{"edge_info_offset", static_cast<uint64_t>(edgeinfo_offset_)},
+  //{"restrictions", restrictions_},
+
+  writer("access_restriction", static_cast<bool>(access_restriction_));
+
+  writer.start_object("start_restriction");
+  access_json(start_restriction_, writer);
+  writer.end_object();
+  writer.start_object("end_restriction");
+  access_json(end_restriction_, writer);
+  writer.end_object();
+
+  writer("part_of_complex_restriction", static_cast<bool>(complex_restriction_));
+  writer("has_sign", static_cast<bool>(sign_));
+  writer("toll", static_cast<bool>(toll_));
+  writer("destination_only", static_cast<bool>(dest_only_));
+  writer("destination_only_hgv", static_cast<bool>(dest_only_hgv_));
+  writer("tunnel", static_cast<bool>(tunnel_));
+  writer("bridge", static_cast<bool>(bridge_));
+  writer("round_about", static_cast<bool>(roundabout_));
+  writer("traffic_signal", static_cast<bool>(traffic_signal_));
+  writer("forward", static_cast<bool>(forward_));
+  writer("not_thru", static_cast<bool>(not_thru_));
+  writer("stop_sign", static_cast<bool>(stop_sign_));
+  writer("yield_sign", static_cast<bool>(yield_sign_));
+  writer("cycle_lane", to_string(static_cast<CycleLane>(cycle_lane_)));
+  writer("bike_network", static_cast<bool>(bike_network_));
+  writer("truck_route", static_cast<bool>(truck_route_));
+  writer("lane_count", static_cast<uint64_t>(lanecount_));
+  writer("country_crossing", static_cast<bool>(ctry_crossing_));
+  writer("sidewalk_left", static_cast<bool>(sidewalk_left_));
+  writer("sidewalk_right", static_cast<bool>(sidewalk_right_));
+  writer("sac_scale", to_string(static_cast<SacScale>(sac_scale_)));
+  writer("deadend", static_cast<bool>(deadend_));
+
+  writer.start_object("geo_attributes");
+  writer("length", static_cast<uint64_t>(length_));
+  writer.set_precision(2);
+  writer("weighted_grade", static_cast<double>(weighted_grade_ - 6.0) / .6);
+  writer("max_up_slope", static_cast<double>(max_up_slope()));
+  writer("max_down_slope", static_cast<double>(max_down_slope()));
+  writer.set_precision(3);
+  writer("curvature", static_cast<uint64_t>(curvature_));
+  writer.end_object();
+
+  writer.start_object("access");
+  access_json(forwardaccess_, writer);
+  writer.end_object();
+
+  //{"access", access_json(reverseaccess_)},
+
+  writer.start_object("classification");
+  writer("classification", to_string(static_cast<RoadClass>(classification_)));
+  writer("use", to_string(static_cast<Use>(use_)));
+  writer("surface", to_string(static_cast<Surface>(surface_)));
+  writer("link", static_cast<bool>(link_));
+  writer("internal", static_cast<bool>(internal_));
+  writer.end_object();
+
+  /*{"hierarchy", json::map({
+    {"local_edge_index", static_cast<uint64_t>(localedgeidx_)},
+    {"opposing_local_index", static_cast<uint64_t>(opp_local_idx_)},
+    {"shortcut_mask", static_cast<uint64_t>(shortcut_)},
+    {"superseded_mask", static_cast<uint64_t>(superseded_)},
+    {"shortcut", static_cast<bool>(is_shortcut_)},
+  })},*/
 
   if (is_hov_only()) {
-    map->emplace("hov_type", to_string(static_cast<HOVEdgeType>(hov_type_)));
+    writer("hov_type", to_string(static_cast<HOVEdgeType>(hov_type_)));
   }
-
-  return map;
 }
 
 } // namespace baldr

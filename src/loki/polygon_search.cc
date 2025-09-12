@@ -1,12 +1,10 @@
-#include "baldr/graphreader.h"
-
-#include <valhalla/baldr/json.h>
-#include <valhalla/loki/polygon_search.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/worker.h>
+#include "baldr/json.h"
+#include "loki/polygon_search.h"
+#include "midgard/constants.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
+#include "valhalla/worker.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/register/point.hpp>

@@ -1,14 +1,11 @@
 #include "baldr/connectivity_map.h"
 #include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
 #include "baldr/json.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/constants.h"
-#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 
-#include <iomanip>
 #include <random>
 #include <sstream>
 #include <unordered_set>

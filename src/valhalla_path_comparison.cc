@@ -3,7 +3,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
 #include "baldr/rapidjson_utils.h"
-#include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "meili/map_matcher.h"
 #include "meili/map_matcher_factory.h"
@@ -18,6 +17,7 @@
 #include <cxxopts.hpp>
 
 #include <cstdint>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -162,7 +162,7 @@ std::string shape = "";
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
 
@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + " " + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_PRINT_VERSION + "\n\n"
       "a simple command line dev tool for comparing the cost between "
       "two routes.\n"
       "Use the -j option for specifying the locations or the -s option to enter an encoded shape.\n\n");
@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, &config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("json")) {

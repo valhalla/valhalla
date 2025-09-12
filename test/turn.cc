@@ -1,5 +1,6 @@
 #include "baldr/turn.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::baldr;

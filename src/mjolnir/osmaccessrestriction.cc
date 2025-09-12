@@ -1,7 +1,5 @@
 #include "mjolnir/osmaccessrestriction.h"
 
-#include <cstring>
-
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -44,6 +42,14 @@ AccessRestrictionDirection OSMAccessRestriction::direction() const {
 void OSMAccessRestriction::set_direction(AccessRestrictionDirection direction) {
   direction_ = direction;
 };
+
+bool OSMAccessRestriction::except_destination() const {
+  return static_cast<bool>(except_destination_);
+};
+
+void OSMAccessRestriction::set_except_destination(const bool except_destination) {
+  except_destination_ = except_destination;
+}
 
 } // namespace mjolnir
 } // namespace valhalla
