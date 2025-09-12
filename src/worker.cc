@@ -1095,7 +1095,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto exclude_polygons =
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
-  LOG_DEBUG("mhhh...");
   if (exclude_polygons) {
     if (!(exclude_polygons->IsArray() || exclude_polygons->IsObject())) {
       add_warning(api, 204);
@@ -1115,7 +1114,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           exclude_polygons_array_ptr = features;
         }
       }
-      LOG_DEBUG("Try to go through the array");
       try {
         for (const auto& req_poly : exclude_polygons_array_ptr->GetArray()) {
           // either it's a ring or an object, in any case it can't be empty
@@ -1125,11 +1123,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
           }
           auto* pbf_ring = rings_pbf->Add();
           auto* pbf_levels = levels_pbf->Add();
-          if (req_poly.IsArray()) {
+          if (req_poly.IsArray() && req_poly.GetArray().Size() > 0) {
             parse_ring(pbf_ring, req_poly);
-          } else { // it's an object, so it better have coordinates and maybe levels
+          } else if (req_poly.IsObject() &&
+                     !req_poly.GetObject().ObjectEmpty()) { // it's an object, so it better have
+                                                            // coordinates and maybe levels
             // we only support one ring
-            auto coordinates = rapidjson::get_child_optional(req_poly, "/geometry/coordinates/0");
+            auto coordinates = rapidjson::get_child_optional(req_poly, "/geometry/coordinates");
             auto geom_type = rapidjson::get_child_optional(req_poly, "/geometry/type");
             if (coordinates && geom_type && *geom_type == "Polygon" && coordinates->IsArray()) {
               parse_ring(pbf_ring, *coordinates);
@@ -1147,7 +1147,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
             }
           }
         }
-      } catch (...) { throw valhalla_exception_t{137}; }
+      } catch (const std::exception& e) { throw valhalla_exception_t{137, e.what()}; } catch (...) {
+        throw valhalla_exception_t{137};
+      }
     }
   } // if it was there in the pbf already
   else if (options.exclude_polygons_size()) {

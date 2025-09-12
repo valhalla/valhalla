@@ -61,12 +61,18 @@ rapidjson::Value build_exclude_level_polygons(const std::vector<ring_bg_t>& ring
                                               const std::vector<std::vector<float>>& levels,
                                               rapidjson::MemoryPoolAllocator<>& alloc) {
   assert(rings.size() == levels.size());
-  rapidjson::Value rings_j(rapidjson::kArrayType);
+  rapidjson::Value featurecollection_j(rapidjson::kObjectType);
+  featurecollection_j.AddMember("type", "FeatureCollection", alloc);
+  rapidjson::Value features_j(rapidjson::kArrayType);
   for (size_t i = 0; i < rings.size(); ++i) {
-    // one object per polygon
-    rapidjson::Value polygon_j(rapidjson::kObjectType);
+    // one GeoJSON feature per polygon
+    rapidjson::Value feature_j(rapidjson::kObjectType);
+    feature_j.AddMember("type", "Feature", alloc);
 
-    // one ring per polygon
+    rapidjson::Value properties_j(rapidjson::kObjectType);
+    rapidjson::Value geometry_j(rapidjson::kObjectType);
+
+    // one ring per feature
     rapidjson::Value ring_j(rapidjson::kArrayType);
     for (const auto& coord : rings.at(i)) {
       rapidjson::Value coords(rapidjson::kArrayType);
@@ -81,12 +87,16 @@ rapidjson::Value build_exclude_level_polygons(const std::vector<ring_bg_t>& ring
       level_j.PushBack(level, alloc);
     }
 
-    polygon_j.AddMember("levels", level_j, alloc);
-    polygon_j.AddMember("coordinates", ring_j, alloc);
-    rings_j.PushBack(polygon_j, alloc);
+    geometry_j.AddMember("type", "Polygon", alloc);
+    geometry_j.AddMember("coordinates", ring_j, alloc);
+    properties_j.AddMember("levels", level_j, alloc);
+    feature_j.AddMember("properties", properties_j, alloc);
+    feature_j.AddMember("geometry", geometry_j, alloc);
+    features_j.PushBack(feature_j, alloc);
   }
 
-  return rings_j;
+  featurecollection_j.AddMember("features", features_j, alloc);
+  return featurecollection_j;
 }
 
 // common method can't deal with arrays of floats
@@ -125,9 +135,10 @@ protected:
   static void SetUpTestSuite() {
     // several polygons and one location to avoid to reference in the tests
     const std::string ascii_map = R"(
-                                                  a---------------b
-                                     A---x--B---G-+--H----I----J  |
-                                     |      |     |  |         |  |
+                                                        t----w
+                                                  a-----+----+----b
+                                     A---x--B---G-+--H--+-I--+-J  |
+                                     |      |     |  |  u----v |  |
                                    h---i  l---m   |  K----L----M  |
                                    | | |  | | |   d-------+----+--c
                                    k---j  o---n           |    |
@@ -211,8 +222,8 @@ TEST_P(AvoidTest, TestAvoidPolygonWithDeprecatedParam) {
 }
 
 TEST_F(AvoidTest, ExcludeLevels) {
-  auto options_factory =
-      [](std::vector<float> levels) -> std::pair<valhalla::Options, valhalla::sif::cost_ptr_t> {
+  auto options_factory = [](const std::vector<float>& levels)
+      -> std::pair<valhalla::Options, valhalla::sif::cost_ptr_t> {
     valhalla::Options options;
     options.set_costing_type(valhalla::Costing::pedestrian);
     auto& co = (*options.mutable_costings())[Costing::pedestrian];
@@ -303,6 +314,48 @@ TEST_F(AvoidTest, ExcludeLevelsJSON_Multiple) {
   gurka::assert::raw::expect_path(res, {"GB", "2nd", "2nd", "2nd", "LF"});
 }
 
+TEST_F(AvoidTest, ExcludeLevelsJSON_MultiRing) {
+  std::vector<std::vector<PointLL>> exclude_rings = {
+      {avoid_map.nodes.at("a"), avoid_map.nodes.at("b"), avoid_map.nodes.at("c"),
+       avoid_map.nodes.at("d"), avoid_map.nodes.at("a")},
+      {avoid_map.nodes.at("t"), avoid_map.nodes.at("u"), avoid_map.nodes.at("v"),
+       avoid_map.nodes.at("w"), avoid_map.nodes.at("t")},
+  };
+  std::vector<PointLL> waypoints = {avoid_map.nodes.at("G"), avoid_map.nodes.at("L")};
+
+  std::vector<std::vector<float>> levels = {{3.f}, {2.f}};
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto excludes_j = build_exclude_level_polygons(exclude_rings, levels, allocator);
+  auto req =
+      build_local_req(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
+
+  auto res = gurka::do_action(Options::route, avoid_map, req);
+  gurka::assert::raw::expect_path(res, {"GB", "2nd", "2nd", "2nd", "LF"});
+}
+
+TEST_F(AvoidTest, ExcludeLevelsJSON_OnlyOneLevelExclude) {
+  std::vector<std::vector<PointLL>> exclude_rings = {
+      {avoid_map.nodes.at("a"), avoid_map.nodes.at("b"), avoid_map.nodes.at("c"),
+       avoid_map.nodes.at("d"), avoid_map.nodes.at("a")},
+      {avoid_map.nodes.at("t"), avoid_map.nodes.at("u"), avoid_map.nodes.at("v"),
+       avoid_map.nodes.at("w"), avoid_map.nodes.at("t")},
+  };
+  std::vector<PointLL> waypoints = {avoid_map.nodes.at("G"), avoid_map.nodes.at("L")};
+
+  std::vector<std::vector<float>> levels = {{3.f}, {}}; // second one is empty levels
+  rapidjson::Document doc;
+  doc.SetObject();
+  auto& allocator = doc.GetAllocator();
+  auto excludes_j = build_exclude_level_polygons(exclude_rings, levels, allocator);
+  auto req =
+      build_local_req(doc, allocator, waypoints, "pedestrian", excludes_j, "/exclude_polygons");
+
+  auto res = gurka::do_action(Options::route, avoid_map, req);
+  gurka::assert::raw::expect_path(res, {"GB", "2nd", "2nd", "2nd", "LF"});
+}
+
 TEST_P(AvoidTest, TestAvoid2Polygons) {
   // create 2 small polygons intersecting all connecting roads so it fails to find a path
   // one clockwise ring, one counter-clockwise ring
@@ -356,11 +409,13 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
   // an object!
   req_str = req_base + R"("avoid_polygons": {}})";
   std::cerr << req_str << std::endl;
-  ParseApi(req_str, Options::route, request);
-  auto res = gurka::do_action(Options::route, avoid_map, req_str);
-  EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
-  EXPECT_EQ(res.info().warnings().size(), 1);
-  EXPECT_EQ(res.info().warnings().Get(0).code(), 204);
+  try {
+    ParseApi(req_str, Options::route, request);
+    auto res = gurka::do_action(Options::route, avoid_map, req_str);
+    FAIL() << "Expected to throw";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 137); } catch (...) {
+    FAIL() << "Expected different error";
+  }
 
   // array of empty array and empty object
   req_str = req_base + R"("avoid_polygons": [[]]})";
@@ -373,7 +428,7 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
             R"("avoid_polygons": [[[1.0, 1.0], [1.00001, 1.00001], [1.00002, 1.00002], [1.0, 1.0]],
       {}]})";
   ParseApi(req_str, Options::route, request);
-  res = gurka::do_action(Options::route, avoid_map, req_str);
+  auto res = gurka::do_action(Options::route, avoid_map, req_str);
   EXPECT_TRUE(request.options().exclude_polygons_size() == 1);
 
   // protect the public API too

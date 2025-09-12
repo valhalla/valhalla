@@ -155,7 +155,11 @@ std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
     return {};
   }
 
+  // keep a lookup for the excluded levels per ring/feature
   std::vector<std::unordered_set<float>> exclude_levels(options.exclude_polygons_size());
+  // can't have more exclude levels than exclude polygons
+  assert(options.exclude_levels_size() <= options.exclude_polygons_size());
+
   for (size_t i = 0; i < options.exclude_levels_size(); ++i) {
     for (size_t j = 0; j < options.exclude_levels().at(i).levels_size(); ++j) {
       exclude_levels[i].insert(options.exclude_levels().at(i).levels().at(j));
@@ -269,7 +273,9 @@ std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
       std::queue<std::pair<uint32_t, unsigned short>> bin_queue;
       bin_queue.push(*start_bin);
       size_t n = 0;
-      while (!bin_queue.empty() && n++ < 10000) {
+
+      // don't run forever
+      while (!bin_queue.empty() && n++ < 1e6) {
         // keep looking for contained bins until we run out of bins to look at
         auto bin = bin_queue.front();
         bin_queue.pop();
@@ -365,11 +371,16 @@ std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
           bool intersects = bg::intersects(rings_bg[ring_loc], line_bg_t(edge_info.shape().begin(),
                                                                          edge_info.shape().end()));
           if (intersects) {
+            // if the edge shape intersects the ring, check if the user passed
+            // levels
             if (exclude_levels[ring_loc].size() > 0) {
+              // the user passed levels, so only exclude the edges if they run on
+              // (not across) that level
               const auto& levels = edge_info.levels();
-              for (const auto& level : levels.first) {
-                if (exclude_levels[ring_loc].find(level.first) != exclude_levels[ring_loc].end() ||
-                    exclude_levels[ring_loc].find(level.second) != exclude_levels[ring_loc].end()) {
+              // the edge runs on this level (i.e. does not merely traverse it)
+              if (levels.first.size() == 1 && levels.first[0].first == levels.first[0].second) {
+                if (exclude_levels[ring_loc].find(levels.first[0].first) !=
+                    exclude_levels[ring_loc].end()) {
                   include = true;
                 }
               }
