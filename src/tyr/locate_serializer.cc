@@ -28,9 +28,9 @@ OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de)
   return OpenLR::LocationReferencePoint::OTHER;
 }
 
-void get_access_restrictions(const graph_tile_ptr& tile,
-                             rapidjson::writer_wrapper_t& writer,
-                             uint32_t edge_idx) {
+void serialize_access_restrictions(const graph_tile_ptr& tile,
+                                   rapidjson::writer_wrapper_t& writer,
+                                   uint32_t edge_idx) {
   for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
     res.json(writer);
   }
@@ -131,7 +131,7 @@ void serialize_edges(const PathLocation& location,
           // TODO: incidents
         }
         writer.start_array("access_restrictions");
-        get_access_restrictions(tile, writer, edge.id.id());
+        serialize_access_restrictions(tile, writer, edge.id.id());
         writer.end_array();
         // write live_speed
         writer.start_object("live_speed");
