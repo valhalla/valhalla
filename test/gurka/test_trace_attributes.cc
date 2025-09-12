@@ -73,6 +73,47 @@ TEST(Standalone, ShoulderAttributes) {
   EXPECT_FALSE(edges[1]["shoulder"].GetBool());
 }
 
+TEST(Standalone, OSMNodeAttributes) {
+
+  const std::string ascii_map = R"(A-1-B-2-C)";
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}}};
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/osmid_node_attributes",
+                               {{"mjolnir.include_osmids_for_nodes", "true"}});
+
+  std::string trace_json;
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2"}, "bicycle", {}, {},
+                              &trace_json, "via");
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+
+  auto edges = result["edges"].GetArray();
+  EXPECT_TRUE(edges[0]["end_node"].HasMember("node_id"));
+}
+
+TEST(Standalone, OSMNodeAttributesMissing) {
+
+  const std::string ascii_map = R"(A-1-B-2-C)";
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}}};
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/no_osmid_node_attributes");
+
+  std::string trace_json;
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2"}, "bicycle", {}, {},
+                              &trace_json, "via");
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+
+  auto edges = result["edges"].GetArray();
+  EXPECT_FALSE(edges[0]["end_node"].HasMember("node_id"));
+}
+
 TEST(Standalone, InterpolatedPoints) {
   const std::string ascii_map = R"(
          3
