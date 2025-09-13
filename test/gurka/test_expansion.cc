@@ -1,4 +1,6 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
 

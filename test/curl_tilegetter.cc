@@ -1,6 +1,8 @@
-#include "valhalla/baldr/curl_tilegetter.h"
-#include "test.h"
-#include "valhalla/skadi/sample.h"
+#include "baldr/curl_tilegetter.h"
+#include "midgard/pointll.h"
+#include "skadi/sample.h"
+
+#include <gtest/gtest.h>
 
 namespace {
 

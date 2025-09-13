@@ -1,6 +1,7 @@
 #include "midgard/point2.h"
 #include "midgard/vector2.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <list>
 #include <unordered_map>

@@ -1,13 +1,12 @@
-
 #include "baldr/directededge.h"
 #include "baldr/graphreader.h"
 #include "baldr/merge.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
-#include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <set>

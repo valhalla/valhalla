@@ -1,15 +1,17 @@
 #include "baldr/rapidjson_utils.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "tyr/serializers.h"
 #include "worker.h"
 
 #include <cmath>
 #include <sstream>
-#include <thread>
 #include <utility>
 
 #ifdef ENABLE_GDAL
 #include <gdal_priv.h>
+
+#include <thread>
 #endif
 
 using namespace valhalla::baldr::json;

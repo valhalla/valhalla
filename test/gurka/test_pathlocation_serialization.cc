@@ -8,6 +8,8 @@
 #include "baldr/pathlocation.h"
 #include "gurka.h"
 
+#include <gtest/gtest.h>
+
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 

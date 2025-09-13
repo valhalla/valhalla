@@ -20,7 +20,6 @@
 namespace valhalla {
 namespace odin {
 
-class EnhancedTripLeg;
 class EnhancedTripLeg_Edge;
 class EnhancedTripLeg_Node;
 class EnhancedTripLeg_Admin;
