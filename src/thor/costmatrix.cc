@@ -65,9 +65,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       check_reverse_connection_(config.get<bool>("costmatrix.check_reverse_connection", true)),
       max_iterations_(std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultIterations),
                                static_cast<uint32_t>(1))),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_pathdist_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -1362,8 +1362,8 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
     request.mutable_matrix()->mutable_begin_lat()->Set(connection_idx, source_edge.ll().lat());
     request.mutable_matrix()->mutable_begin_lon()->Set(connection_idx, source_edge.ll().lng());
-    request.mutable_matrix()->mutable_end_lat()->Set(connection_idx, source_edge.ll().lat());
-    request.mutable_matrix()->mutable_end_lon()->Set(connection_idx, source_edge.ll().lng());
+    request.mutable_matrix()->mutable_end_lat()->Set(connection_idx, target_edge.ll().lat());
+    request.mutable_matrix()->mutable_end_lon()->Set(connection_idx, target_edge.ll().lng());
 
     // get begin/end heading using the path's begin/end edge shapes
     const DirectedEdge* start_edge =
