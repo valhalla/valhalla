@@ -61,6 +61,7 @@
    * FIXED: Build libspatialite for vcpkg with librttopo support for valhalla_build_admins [#5475](https://github.com/valhalla/valhalla/pull/5475)
    * FIXED: CMake install target: for PREFER_EXTERNAL_DEPS=ON, no gtest installation, python bindings [#5455](https://github.com/valhalla/valhalla/pull/5455)
    * FIXED: Set distance to 0 for unsettled destinations in partial matrices in TimeDistanceMatrix. [#5505](https://github.com/valhalla/valhalla/pull/5505)
+   * FIXED: Fix Matrix API to return correct end location. [#5509](https://github.com/valhalla/valhalla/pull/5509)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
