@@ -162,8 +162,8 @@ std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
   // can't have more exclude levels than exclude polygons
   assert(options.exclude_levels_size() <= options.exclude_polygons_size());
 
-  for (size_t i = 0; i < options.exclude_levels_size(); ++i) {
-    for (size_t j = 0; j < options.exclude_levels().at(i).levels_size(); ++j) {
+  for (size_t i = 0; i < static_cast<size_t>(options.exclude_levels_size()); ++i) {
+    for (size_t j = 0; j < static_cast<size_t>(options.exclude_levels().at(i).levels_size()); ++j) {
       exclude_levels[i].insert(options.exclude_levels().at(i).levels().at(j));
     }
   }
@@ -284,7 +284,7 @@ std::unordered_set<vb::GraphId> edges_in_rings(const Options& options,
         // settle this bin and add its neighbors
         contained_bins.push_back(bin);
 
-        for (const auto neighbor : tiles.GetNeighbors(bin.first, bin.second)) {
+        for (const auto& neighbor : tiles.GetNeighbors(bin.first, bin.second)) {
           auto neighbor_bbox = tiles.BinBBox(neighbor.first, neighbor.second);
           if (processed_bins.count(to_value(neighbor.first, neighbor.second)) > 0) {
             continue; // we have already looked at this bin

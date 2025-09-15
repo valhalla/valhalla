@@ -350,9 +350,6 @@ public:
 
     for (uint8_t i = 0; i < 8; ++i) {
       neighbors[i] = GetNeighbor(global_x, global_y, static_cast<Neighbor>(i));
-      // LOG_DEBUG("Neighbor(" + std::to_string(i) + ") for bin " + std::to_string(tileid) + "/" +
-      //           std::to_string(binid) + ": " + std::to_string(neighbors[i].first) + "/" +
-      //           std::to_string(neighbors[i].second));
     }
 
     return neighbors;

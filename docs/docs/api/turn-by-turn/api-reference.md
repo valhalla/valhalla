@@ -384,7 +384,7 @@ For `exclude_polygons`, a request only excluding intersecting edges on given lev
         "coordinates": [[[lon_1, lat_1], ..., [lon_i, lat_i]]]
       }, 
       "properties": {
-        "levels": [1,2,3]
+        "levels": [1.0,2.0,3.0]
       }
     }]
   }
