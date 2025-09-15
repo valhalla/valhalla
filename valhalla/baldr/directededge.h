@@ -260,13 +260,28 @@ public:
   bool toll() const {
     return toll_;
   }
-
+  
   /**
    * Sets the flag indicating this edge has a toll or is it part of
    * a toll road.
    * @param  toll  True if this edge is part of a toll road, false if not.
    */
   void set_toll(const bool toll);
+
+  /**
+   * Does this edge have a vignette or is it part of a vignette road?
+   * @return  Returns true if this edge is part of a vignette road, false if not.
+   */
+  bool vignette() const {
+    return vignette_;
+  }
+
+  /**
+   * Sets the flag indicating this edge has a vignette or is it part of
+   * a vignette road.
+   * @param  vignette  True if this edge is part of a vignette road, false if not.
+   */
+  void set_vignette(const bool vignette);
 
   /**
    * Is this edge part of a private or no through road that allows access
@@ -1223,6 +1238,7 @@ protected:
   uint64_t classification_ : 3;         // Classification/importance of the road/path
   uint64_t surface_ : 3;                // Representation of smoothness
   uint64_t toll_ : 1;                   // Edge is part of a toll road
+  uint64_t vignette_ : 1;                // Edge is part of a road requiring a vignette
   uint64_t roundabout_ : 1;             // Edge is part of a roundabout
   uint64_t truck_route_ : 1;            // Edge that is part of a truck route/network
   uint64_t has_predicted_speed_ : 1;    // Does this edge have a predicted speed records?

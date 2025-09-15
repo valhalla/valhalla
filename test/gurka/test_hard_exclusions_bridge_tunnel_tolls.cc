@@ -10,7 +10,7 @@ const std::vector<std::string> kSupportedCostingModels = {"auto",          "taxi
                                                           "motor_scooter", "motorcycle"};
 
 const std::vector<std::string> kExclusionParameters = {"exclude_bridges", "exclude_tunnels",
-                                                       "exclude_tolls"};
+                                                       "exclude_tolls", "exclude_vignettes"};
 
 constexpr double grid_size_meters = 100.;
 

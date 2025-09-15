@@ -2039,6 +2039,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the vignette flag.
+   * @param  vignette   Is a vignette road?
+   */
+  void set_vignette(const bool vignette) {
+    vignette_ = vignette;
+  }
+
+  /**
+   * Get the vignette flag.
+   * @return  Returns vignette flag.
+   */
+  bool vignette() const {
+    return vignette_;
+  }
+
+  /**
    * Sets the bridge flag.
    * @param  bridge   Is a bridge?
    */
@@ -2643,6 +2659,7 @@ struct OSMWay {
   uint32_t surface_ : 3;
   uint32_t tunnel_ : 1;
   uint32_t toll_ : 1;
+  uint32_t vignette_ : 1;
   uint32_t bridge_ : 1;
   uint32_t multiple_levels_ : 1;
   uint32_t drive_on_right_ : 1;
