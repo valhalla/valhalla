@@ -6,6 +6,7 @@
 #include "proto/options.pb.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
+#include "sif/hierarchylimits.h"
 
 #ifdef INLINE_TEST
 #include "test.h"

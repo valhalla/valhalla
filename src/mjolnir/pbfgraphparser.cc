@@ -8,12 +8,15 @@
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
 #include "mjolnir/osmlinguistic.h"
+#include "mjolnir/osmnodelinguistic.h"
+#include "mjolnir/osmway.h"
 #include "mjolnir/timeparsing.h"
 #include "mjolnir/util.h"
 #include "proto/common.pb.h"
 #include "scoped_timer.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
 
 #include <thread>

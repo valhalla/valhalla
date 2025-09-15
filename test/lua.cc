@@ -1,8 +1,8 @@
 #include "mjolnir/graph_lua_proc.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmdata.h"
-#include "test.h"
 
+#include <gtest/gtest.h>
 #include <osmium/builder/osm_object_builder.hpp>
 
 #include <string>

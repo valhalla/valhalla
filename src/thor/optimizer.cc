@@ -1,6 +1,8 @@
 #include "thor/optimizer.h"
 #include "midgard/logging.h"
 
+#include <algorithm>
+
 namespace valhalla {
 namespace thor {
 
