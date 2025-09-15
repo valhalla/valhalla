@@ -4,6 +4,9 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/sif/costconstants.h>
 
+#include <iomanip>
+#include <ios>
+
 namespace valhalla {
 namespace thor {
 
