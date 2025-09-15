@@ -484,7 +484,6 @@ Tiles<coord_t>::ClosestFirst(const coord_t& seed) const {
 
 template <class coord_t>
 AABB2<coord_t> Tiles<coord_t>::BinBBox(int32_t tile, unsigned short bin) const {
-  auto row_col = GetRowColumn(tile);
   auto bin_row = bin / nsubdivisions_;
   auto bin_col = bin % nsubdivisions_;
   auto tile_bounds = TileBounds(tile);
