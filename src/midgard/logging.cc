@@ -237,10 +237,7 @@ public:
     }
 
     // Enable log rolling only if both values are provided and valid
-    if ((size_config != config.end() && !size_config->second.empty()) &&
-        (archive_config != config.end() && !archive_config->second.empty())) {
-      log_rolling_enabled = true;
-    }
+    log_rolling_enabled = (max_file_size > 0) && (max_archived_files > 0);
 
     // crack the file open
     ReOpen();
@@ -362,8 +359,8 @@ protected:
   std::chrono::seconds reopen_interval;
   std::chrono::system_clock::time_point last_reopen;
   bool log_rolling_enabled = false;
-  std::size_t max_file_size = 50 * 1024 * 1024; // 50 MB default
-  unsigned int max_archived_files = 10;         // 10 files default
+  std::size_t max_file_size = 0;
+  unsigned int max_archived_files = 0;
 };
 bool file_logger_registered = RegisterLogger("file", [](const LoggingConfig& config) {
   Logger* l = new FileLogger(config);
