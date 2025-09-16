@@ -4,7 +4,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <memory>
 

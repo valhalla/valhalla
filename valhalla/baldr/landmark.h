@@ -4,7 +4,6 @@
 
 #include <cmath>
 #include <cstdint>
-#include <cstring>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>

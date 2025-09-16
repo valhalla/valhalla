@@ -1,7 +1,5 @@
 #include "mjolnir/osmaccessrestriction.h"
 
-#include <cstring>
-
 using namespace valhalla::baldr;
 
 namespace valhalla {
