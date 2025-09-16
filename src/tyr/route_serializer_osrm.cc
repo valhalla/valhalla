@@ -515,7 +515,6 @@ void intersections(rapidjson::writer_wrapper_t& writer,
 
     // Add rest_stop when passing by a rest_area or service_area
     if (i > 0 && !arrive_maneuver) {
-      bool is_rest_stop_closed = false;
       for (int m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
