@@ -313,7 +313,6 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       *meta.edge_status = {EdgeSet::kTemporary, idx};
     }
 
-    // setting this edge as reached
     if (expansion_callback_) {
       auto expansion_type =
           FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
@@ -362,7 +361,6 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
         lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
       }
 
-      // setting this edge as reached
       if (expansion_callback_) {
         auto expansion_type =
             FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
@@ -844,7 +842,6 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
         edge_label.set_destination();
       }
 
-      // setting this edge as reached
       if (expansion_callback_) {
         auto expansion_type =
             FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
