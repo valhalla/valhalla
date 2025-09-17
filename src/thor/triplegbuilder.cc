@@ -1360,6 +1360,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_toll(true);
   }
 
+  // Set vignette flag if requested
+  if (directededge->vignette() && controller(kEdgeVignette)) {
+    trip_edge->set_vignette(true);
+  }
+
   // Set unpaved flag if requested
   if (directededge->unpaved() && controller(kEdgeUnpaved)) {
     trip_edge->set_unpaved(true);
@@ -1890,6 +1895,7 @@ void TripLegBuilder::Build(
   auto intermediate_itr = trip_path.mutable_location()->begin() + 1;
   double total_distance = 0;
   bool has_toll = false;
+  bool has_vignette = false;
   bool has_ferry = false;
   bool has_highway = false;
 
@@ -1907,6 +1913,14 @@ void TripLegBuilder::Build(
 
     if (directededge->toll()) {
       has_toll = true;
+    }
+    // TODO RAHUL: REMOVE HACK
+    if (directededge->vignette()) {
+      has_vignette = true;
+    }
+    if(has_vignette)
+    {
+      LOG_INFO("Edge ID: " + std::to_string(edge.value) + " has vignette");
     }
     if (directededge->use() == Use::kFerry) {
       has_ferry = true;
@@ -2264,6 +2278,7 @@ void TripLegBuilder::Build(
 
   Summary* summary = trip_path.mutable_summary();
   summary->set_has_toll(has_toll);
+//  summary->set_has_vignette(has_vignette);
   summary->set_has_ferry(has_ferry);
   summary->set_has_highway(has_highway);
 

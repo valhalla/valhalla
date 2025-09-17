@@ -191,6 +191,9 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeToll)) {
         writer("toll", edge.toll());
       }
+      if (controller(kEdgeVignette)) {
+        writer("vignette", edge.vignette());
+      }
       if (controller(kEdgeUse)) {
         writer("use", to_string(static_cast<baldr::Use>(edge.use())));
       }
