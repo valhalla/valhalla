@@ -22,6 +22,9 @@ set(TEST_SRCS test.h test.cc)
 if(ENABLE_DATA_TOOLS)
   list(APPEND TEST_SRCS gurka/gurka.h gurka/gurka.cc)
 endif()
+if(ENABLE_HTTP AND ENABLE_SERVICES)
+  list(APPEND TEST_SRCS tile_server.h tile_server.cc)
+endif()
 add_library(valhalla_test
   ${TEST_SRCS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
@@ -39,6 +42,9 @@ target_link_libraries(valhalla_test
   valhalla gtest gtest_main gmock
   $<$<BOOL:${ENABLE_COVERAGE}>:gcov> 
   ${CMAKE_THREAD_LIBS_INIT} PkgConfig::LZ4)
+target_compile_definitions(valhalla_test PUBLIC 
+  VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
+  VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
 
 if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_test PkgConfig::GEOS)
@@ -110,9 +116,6 @@ foreach(test ${tests})
 
 
   set_target_properties(${test} PROPERTIES FOLDER "Tests")
-  target_compile_definitions(${test} PRIVATE
-      VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
-      VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
   target_link_libraries(${test} valhalla_test)
   if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
@@ -363,8 +366,9 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
   add_dependencies(run-graphbuilder build_timezones)
-  if(ENABLE_HTTP)
-    add_dependencies(run-http_tiles utrecht_tiles)
+  if(ENABLE_HTTP AND ENABLE_SERVICES)
+    # http_tiles needs the proper .tar file with index.bin
+    add_dependencies(run-http_tiles utrecht_tiles run-scripts)
   endif()
 endif()
 
