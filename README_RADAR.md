@@ -111,7 +111,7 @@ valhalla_traffic_tool --verify --traffic-path traffic_current.tar --verify-path 
 **Copying traffic.tar**
 
 cp doesn't work as the partial writing can cause Valhalla to crash.
-Copying live traffic data from one traffic.tar to another traffic.tar. Note that step is only neccessary as we upload the traffic.tar through S3. Valhalla Traffic Worker can update the live traffic.tar in place
+Copying live traffic data from one traffic.tar to another traffic.tar. Note that step is only necessary as we upload the traffic.tar through S3. Valhalla Traffic Worker can update the live traffic.tar in place
 
 ```bash
 # input
