@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     container: fedora:rawhide
     steps:
+      # Install build dependencies
       - name: Get dependencies
         run: |
           dnf install -y \
@@ -21,17 +22,18 @@ jobs:
             mingw64-gdal \
             mingw64-python3 \
             protobuf-compiler
+
+      # Checkout repository with submodules (works on forks)
       - uses: actions/checkout@v2
-      - name: Checkout submodules
-        shell: bash
-        run: |
-          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
-          git submodule sync --recursive
-          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+        with:
+          submodules: recursive
+          submodules_depth: 1
+
+      # Configure and build with MinGW64
       - name: Configure and run build
         run: |
-          mkdir build && cd build \
-          && mingw64-cmake .. \
+          mkdir -p build && cd build
+          mingw64-cmake .. \
             -DCMAKE_CROSS_COMPILING=1 \
             -DCMAKE_BUILD_TYPE=Release \
             -DENABLE_TOOLS=OFF \
@@ -45,5 +47,5 @@ jobs:
             -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a \
             -DPYTHON_EXECUTABLE=/usr/x86_64-w64-mingw32/bin/python3 \
             -DPYTHON_LIBRARIES=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libpython3.9.dll.a \
-            -DPYTHON_INCLUDE_DIRS=/usr/x86_64-w64-mingw32/sys-root/mingw/include/python3.9 \
-          && mingw64-make -j$(nproc)
+            -DPYTHON_INCLUDE_DIRS=/usr/x86_64-w64-mingw32/sys-root/mingw/include/python3.9
+          mingw64-make -j$(nproc)
