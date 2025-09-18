@@ -409,6 +409,9 @@ public:
   const std::vector<RouteLandmark>& landmarks() const;
   void set_landmarks(const std::vector<RouteLandmark>& landmarks);
 
+  bool has_level_changes() const;
+  void set_has_level_changes(const bool has_level_changes);
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -496,6 +499,7 @@ protected:
   bool escalator_;
   bool building_enter_;
   bool building_exit_;
+  bool has_level_changes_;
   std::string end_level_ref_;
 
   // Landmarks correlated to the maneuver

@@ -2,7 +2,6 @@
 #include "config.h"
 
 #include <algorithm>
-#include <cstring>
 
 using namespace valhalla::baldr;
 

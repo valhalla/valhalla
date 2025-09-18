@@ -1,6 +1,7 @@
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 

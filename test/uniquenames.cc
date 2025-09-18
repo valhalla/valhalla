@@ -1,5 +1,6 @@
 #include "mjolnir/uniquenames.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 

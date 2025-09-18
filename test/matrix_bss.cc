@@ -1,3 +1,4 @@
+#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/worker.h"
@@ -6,11 +7,8 @@
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
 #include "test.h"
-#include "thor/matrixalgorithm.h"
 #include "thor/timedistancebssmatrix.h"
 #include "thor/worker.h"
-
-#include <valhalla/baldr/rapidjson_utils.h>
 
 #include <iostream>
 #include <string>
@@ -22,7 +20,6 @@ using namespace valhalla::sif;
 using namespace valhalla::loki;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-using namespace valhalla::tyr;
 using namespace valhalla::odin;
 
 namespace rj = rapidjson;

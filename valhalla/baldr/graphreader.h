@@ -7,9 +7,8 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <mutex>

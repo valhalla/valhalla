@@ -2,7 +2,6 @@
 #define VALHALLA_MIDGARD_TILES_H_
 
 #include <valhalla/midgard/aabb2.h>
-#include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/ellipse.h>
 
 #include <cstdint>

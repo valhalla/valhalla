@@ -6,11 +6,12 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
 #include <map>
