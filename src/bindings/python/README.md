@@ -1,6 +1,6 @@
 ## Valhalla Python bindings
 
-| [![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)] | [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)] |
+[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/) [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)](https://pypi.org/project/pyvalhalla-weekly/)
 
 This folder contains the Python bindings to [Valhalla routing engine](https://github.com/valhalla/valhalla).
 
@@ -10,7 +10,7 @@ This folder contains the Python bindings to [Valhalla routing engine](https://gi
 > - `win-amd64`
 > - `macos-arm64`
 
-On top of the (very) high-level Python bindings, we package some data-building Valhalla executables to ease the process of graph creation or run Valhalla as a service, see [below](#valhalla-executables-linux-x86_x64-only).
+On top of the (very) high-level Python bindings, we package some data-building Valhalla executables to ease the process of graph creation or run Valhalla as a service, see [below](#valhalla-executables).
 
 ### Installation
 
@@ -47,7 +47,7 @@ actor = Actor(config)
 route = actor.route({"locations": [...]})
 ```
 
-#### Valhalla executables (**`linux-x86_x64` only**)
+#### Valhalla executables
 
 To access the C++ (native) executables, there are 2 options:
 
@@ -68,6 +68,33 @@ There are also some additional commands we added:
 To find out which Valhalla executables are currently included, run `python -m valhalla --help`. We limit the number of executables to control the wheel size. However, we're open to include any other executable if there's a good reason.
 
 ### Building from source
+
+Note, building the bindings from source is usually best done by building Valhalla with `cmake -B build -DENABLE_PYTHON_BINDING=ON ...`. However, if you want to package your own `pyvalhalla` bindings for some reason (e.g. fork in a bigger team), you can follow the below instructions, which are also executed by our CI.
+
+#### `cibuildwheel`
+
+On our CI, this orchestrates the packaging of all `pyvalhalla` wheels for every supported, minor Python version and every platform. It can also be run locally (obviously only being able to build wheels for _your_ platform), e.g.
+
+```shell
+python -m pip install cibuildwheel
+cibuildwheel --print-build-identifiers
+cibuildwheel --only cp313-manylinux_x86_64
+
+# for windows you'll have to set an env var to the vcpkg win root
+VCPKG_ARCH_ROOT="build/vcpkg_installed/custom-x64-windows" cibuildwheel --only cp313-win_amd64
+```
+
+> [!NOTE]
+> On Windows & OSX we expect Valhalla to be built _before_ running `cibuildwheel`. On Linux we use a `manylinux` image to orchestrate the build of both Valhalla and the bindings, see [below](#linux).
+
+The build looks at a few environment variables, some optional, some mandatory:
+
+- `VALHALLA_BUILD_BIN_DIR` (optional): Specify the relative/absolute path to the build artifacts of Valhalla, e.g. `./build`, if you want to package the C++ executables
+- `VALHALLA_VERSION_MODIFIER` (optional): Will append a string to the actual Valhalla version string, e.g. `$(git rev-parse --short HEAD)` will append the current branch's commit hash.
+- `VALHALLA_RELEASE_PKG`: To determine the package name, mostly useful for packaging, expects one of `pyvalhalla` or `pyvalhalla-weekly`.
+- `VCPKG_ARCH_ROOT` (required for Win): The relative/absolute directory of the `vcpkg` root.
+
+In the end, you'll find the wheel in `./wheelhouse`.
 
 #### Linux
 
@@ -94,21 +121,6 @@ docker exec -t valhalla-py /valhalla-py/src/bindings/python/scripts/build_manyli
 ```
 
 This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.12 installations.
-
-### `cibuildwheel`
-
-On our CI, this orchestrates the packaging of all `pyvalhalla` wheels for every supported, minor Python version and every platform. It can also be run locally (obviously only being able to build wheels for _your_ platform), e.g.
-
-```shell
-python -m pip install cibuildwheel
-cibuildwheel --print-build-identifiers
-cibuildwheel --only cp313-manylinux_x86_64
-
-# for windows you'll have to set an env var to the vcpkg win root
-VCPKG_ARCH_ROOT="build/vcpkg_installed/custom-x64-windows" cibuildwheel --only cp313-manylinux_x86_64
-```
-
-On Linux, this might download the [`manylinux` docker image](https://github.com/valhalla/manylinux/pkgs/container/manylinux). In the end, you'll find the wheel in `./wheelhouse`.
 
 ### Testing (**`linux-x86_x64` only**)
 

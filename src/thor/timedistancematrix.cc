@@ -564,7 +564,19 @@ bool TimeDistanceMatrix::UpdateDestinations(
 
   // Return true if the settled count equals the number of destinations or
   // exceeds the matrix location count provided.
-  return settled_count_ == destinations_.size() || settled_count_ >= matrix_locations;
+  if (settled_count_ == destinations_.size()) {
+    return true;
+  } else if (settled_count_ >= matrix_locations) {
+    // Change any unsettled destinations to 0 distance
+    for (size_t i = 0; i < destinations_.size(); i++) {
+      if (!destinations_[i].settled) {
+        destinations_[i].distance = 0;
+      }
+    }
+    return true;
+  } else {
+    return false;
+  }
 }
 
 // Form the time, distance matrix from the destinations list

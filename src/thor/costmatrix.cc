@@ -1378,8 +1378,8 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
     request.mutable_matrix()->mutable_begin_lat()->Set(connection_idx, source_edge.ll().lat());
     request.mutable_matrix()->mutable_begin_lon()->Set(connection_idx, source_edge.ll().lng());
-    request.mutable_matrix()->mutable_end_lat()->Set(connection_idx, source_edge.ll().lat());
-    request.mutable_matrix()->mutable_end_lon()->Set(connection_idx, source_edge.ll().lng());
+    request.mutable_matrix()->mutable_end_lat()->Set(connection_idx, target_edge.ll().lat());
+    request.mutable_matrix()->mutable_end_lon()->Set(connection_idx, target_edge.ll().lng());
 
     // get begin/end heading using the path's begin/end edge shapes
     const DirectedEdge* start_edge =
