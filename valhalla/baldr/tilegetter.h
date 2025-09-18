@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-// resp: a tilegetter_t::response_t
+// resp: a tilegetter_t::GET/HEAD_response_t
 // tile_url: string-like URL
 #define CURL_OR_THROW(resp, tile_url)                                                                \
   ([&]() {                                                                                           \
@@ -47,18 +47,16 @@ public:
   /**
    * The result of synchronous operation(s).
    */
-
-  struct response_t {
+  struct GET_response_t {
+    bytes_t bytes_;
     status_code_t status_ = status_code_t::FAILURE;
     long http_code_ = 0;
   };
 
-  struct GET_response_t : response_t {
-    bytes_t bytes_;
-  };
-
-  struct HEAD_response_t : response_t {
+  struct HEAD_response_t {
     uint64_t last_modified_time_ = 0;
+    status_code_t status_ = status_code_t::FAILURE;
+    long http_code_ = 0;
   };
 
   /**
