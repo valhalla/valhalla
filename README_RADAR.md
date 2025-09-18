@@ -73,10 +73,6 @@ open demos/routing/index-internal.html &
 
 ![architecture diagram](./radar_traffic_tools/architecture.excalidraw.png)
 
-
-
-
-
 ## Used by Radar
 
 Here are various commands that Radar will use from Valhalla
@@ -179,11 +175,9 @@ mv way_edges.txt ./data/ways_to_edges.csv
 **Building xds_segments.db**
 
 ```bash
-mkdir -p
-./data/inrix-edges-csv
+mkdir -p ./data/inrix-edges-csv
 s5cmd cp  --concurrency 256 "s3://io.radar.valhalla/inrix-conflation/*" ./data/inrix-edges-csv
 ./radar_traffic_tools/build_db.sh
-
 ```
 
 
@@ -237,13 +231,8 @@ TODO:
 ```
 
 
-
-
-
 ## Custom Fork Info
 Radar extends Valhalla source code in three main ways for live traffic.
-
-
 
 1. Building various files needed for live traffic. Some of these are already built into Valhalla but we made some modifications
   a. Modified ways_to_edges which builds ways_to_edges.db. Now it includes shortcuts, direction, and length of edge
@@ -265,6 +254,9 @@ Radar extends Valhalla source code in three main ways for live traffic.
 - valhalla-historic-traffic-builder to better use node js forking
 
 **[2025-08-14]**
+**Modified**
+- Modified calls to remove live traffic bit for unidirectional A Star searches
+
 
 **[2025-08-08]**
 **Modified**
