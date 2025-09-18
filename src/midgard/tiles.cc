@@ -482,6 +482,19 @@ Tiles<coord_t>::ClosestFirst(const coord_t& seed) const {
                    closest_first_generator_t<coord_t>(*this, seed));
 }
 
+template <class coord_t>
+AABB2<coord_t> Tiles<coord_t>::BinBBox(int32_t tile, unsigned short bin) const {
+  auto bin_row = bin / nsubdivisions_;
+  auto bin_col = bin % nsubdivisions_;
+  auto tile_bounds = TileBounds(tile);
+  coord_t lower_left(tile_bounds.minx() +
+                         static_cast<typename coord_t::value_type>(bin_col) * subdivision_size_,
+                     (tile_bounds.miny() +
+                      static_cast<typename coord_t::value_type>(bin_row) * subdivision_size_));
+  coord_t upper_right(lower_left.first + subdivision_size_, lower_left.second + subdivision_size_);
+  return AABB2<coord_t>(lower_left, upper_right);
+}
+
 // Explicit instantiation
 template class Tiles<Point2>;
 template class Tiles<PointLL>;
