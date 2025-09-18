@@ -1,6 +1,5 @@
 #include "tyr/serializers.h"
 #include "baldr/datetime.h"
-#include "baldr/json.h"
 #include "baldr/openlr.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
@@ -130,22 +129,26 @@ std::string serializeStatus(Api& request) {
   return rapidjson::to_string(status_doc);
 }
 
-void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
+std::vector<std::string> route_references(rapidjson::writer_wrapper_t& writer,
+                                          const TripRoute& route,
+                                          const Options& options) {
   const bool linear_reference =
       options.linear_references() &&
       (options.action() == Options::trace_route || options.action() == Options::route);
   if (!linear_reference) {
-    return;
+    return {};
   }
-  json::ArrayPtr references = json::array({});
+  writer.start_array("linear_references"); // linear_references
+  std::vector<std::string> linear_references;
   for (const TripLeg& leg : route.legs()) {
     auto edge_references = openlr_edges(leg);
-    references->reserve(references->size() + edge_references.size());
     for (const std::string& openlr : edge_references) {
-      references->emplace_back(openlr);
+      writer(openlr);
+      linear_references.emplace_back(openlr);
     }
   }
-  route_json->emplace("linear_references", references);
+  writer.end_array(); // linear_references
+  return linear_references;
 }
 
 void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
@@ -172,14 +175,6 @@ void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& wr
     writer.end_object();
   }
   writer.end_array();
-}
-
-json::ArrayPtr serializeWarnings(const valhalla::Api& api) {
-  auto warnings = json::array({});
-  for (const auto& warning : api.info().warnings()) {
-    warnings->emplace_back(json::map({{"code", warning.code()}, {"text", warning.description()}}));
-  }
-  return warnings;
 }
 
 std::string serializePbf(Api& request) {
@@ -253,19 +248,6 @@ std::string serializePbf(Api& request) {
 }
 
 // Generate leg shape in geojson format.
-baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL>& shape) {
-  auto geojson = baldr::json::map({});
-  auto coords = baldr::json::array({});
-  coords->reserve(shape.size());
-  for (const auto& p : shape) {
-    coords->emplace_back(
-        baldr::json::array({baldr::json::fixed_t{p.lng(), 6}, baldr::json::fixed_t{p.lat(), 6}}));
-  }
-  geojson->emplace("type", std::string("LineString"));
-  geojson->emplace("coordinates", coords);
-  return geojson;
-}
-
 void geojson_shape(const std::vector<midgard::PointLL>& shape, rapidjson::writer_wrapper_t& writer) {
   writer("type", "LineString");
   writer.start_array("coordinates");
@@ -286,72 +268,18 @@ namespace osrm {
 
 // Serialize a location (waypoint) in OSRM compatible format. Waypoint format is described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-valhalla::baldr::json::MapPtr
-waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimized) {
-  // Create a waypoint to add to the array
-  auto waypoint = json::map({});
-
-  // Output location as a lon,lat array. Note this is the projected
-  // lon,lat on the nearest road.
-  auto loc = json::array({});
-  loc->emplace_back(json::fixed_t{location.correlation().edges(0).ll().lng(), 6});
-  loc->emplace_back(json::fixed_t{location.correlation().edges(0).ll().lat(), 6});
-  waypoint->emplace("location", loc);
-
-  // Add street name.
-  std::string name =
-      location.correlation().edges_size() && location.correlation().edges(0).names_size()
-          ? location.correlation().edges(0).names(0)
-          : "";
-  waypoint->emplace("name", name);
-
-  // Add distance in meters from the input location to the nearest
-  // point on the road used in the route
-  // TODO: since distance was normalized in thor - need to recalculate here
-  //       in the future we shall have store separately from score
-  waypoint->emplace("distance",
-                    json::fixed_t{to_ll(location.ll())
-                                      .Distance(to_ll(location.correlation().edges(0).ll())),
-                                  3});
-
-  // If the location was used for a tracepoint we trigger extra serialization
-  if (is_tracepoint) {
-    waypoint->emplace("alternatives_count",
-                      static_cast<uint64_t>(location.correlation().edges_size() - 1));
-    if (location.correlation().waypoint_index() == numeric_limits<uint32_t>::max()) {
-      // when tracepoint is neither a break nor leg's starting/ending
-      // point (shape_index is uint32_t max), we assign null to its waypoint_index
-      waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
-    } else {
-      waypoint->emplace("waypoint_index",
-                        static_cast<uint64_t>(location.correlation().waypoint_index()));
-    }
-    waypoint->emplace("matchings_index", static_cast<uint64_t>(location.correlation().route_index()));
-  }
-
-  // If the location was used for optimized route we add trips_index and waypoint
-  // index (index of the waypoint in the trip)
-  if (is_optimized) {
-    int trips_index = 0; // TODO
-    waypoint->emplace("trips_index", static_cast<uint64_t>(trips_index));
-    waypoint->emplace("waypoint_index",
-                      static_cast<uint64_t>(location.correlation().waypoint_index()));
-  }
-
-  return waypoint;
-}
 void waypoint(const valhalla::Location& location,
               rapidjson::writer_wrapper_t& writer,
               bool is_tracepoint,
               bool is_optimized) {
   // Output location as a lon,lat array. Note this is the projected
   // lon,lat on the nearest road.
-  writer.start_object();
-  writer.start_array("location");
+  writer.start_object();          // object
+  writer.start_array("location"); // location
   writer.set_precision(kCoordinatePrecision);
   writer(location.correlation().edges(0).ll().lng());
   writer(location.correlation().edges(0).ll().lat());
-  writer.end_array();
+  writer.end_array(); // location
   writer.set_precision(kDefaultPrecision);
 
   // Add street name.
@@ -387,24 +315,11 @@ void waypoint(const valhalla::Location& location,
     writer("trips_index", trips_index);
     writer("waypoint_index", location.correlation().waypoint_index());
   }
-  writer.end_object();
+  writer.end_object(); // object
 }
 
 // Serialize locations (called waypoints in OSRM). Waypoints are described here:
 //     http://project-osrm.org/docs/v5.5.1/api/#waypoint-object
-json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                         bool is_tracepoint) {
-  auto waypoints = json::array({});
-  for (const auto& location : locations) {
-    if (location.correlation().edges().size() == 0) {
-      waypoints->emplace_back(static_cast<std::nullptr_t>(nullptr));
-    } else {
-      waypoints->emplace_back(waypoint(location, is_tracepoint));
-    }
-  }
-  return waypoints;
-}
-
 void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                rapidjson::writer_wrapper_t& writer,
                bool is_tracepoint) {
@@ -417,19 +332,19 @@ void waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& loc
   }
 }
 
-json::ArrayPtr waypoints(const valhalla::Trip& trip) {
-  auto waypoints = json::array({});
+void waypoints(const valhalla::Trip& trip, rapidjson::writer_wrapper_t& writer) {
+  bool noWaypoints = true;
   // For multi-route the same waypoints are used for all routes.
   for (const auto& leg : trip.routes(0).legs()) {
     for (int i = 0; i < leg.location_size(); ++i) {
       // we skip the first location of legs > 0 because that would duplicate waypoints
-      if (i == 0 && !waypoints->empty()) {
+      if (i == 0 && !noWaypoints) {
         continue;
       }
-      waypoints->emplace_back(waypoint(leg.location(i), false));
+      waypoint(leg.location(i), writer, false);
+      noWaypoints = false;
     }
   }
-  return waypoints;
 }
 
 /*
@@ -439,24 +354,20 @@ json::ArrayPtr waypoints(const valhalla::Trip& trip) {
  * Then we serialize the via_waypoints object.
  *
  */
-json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
+void intermediate_waypoints(rapidjson::writer_wrapper_t& writer, const valhalla::TripLeg& leg) {
   // Create a vector of indexes based on the number of locations.
-  auto via_waypoints = json::array({});
   // only loop thru the locations that are not origin or destinations
+  writer.set_precision(kDefaultPrecision);
   for (const auto& loc : leg.location()) {
     // Only create via_waypoints object if the locations are via or through types
     if (loc.type() == valhalla::Location::kVia || loc.type() == valhalla::Location::kThrough) {
-      auto via_waypoint = json::map({});
-      via_waypoint->emplace("geometry_index",
-                            static_cast<uint64_t>(loc.correlation().leg_shape_index()));
-      via_waypoint->emplace("distance_from_start",
-                            json::fixed_t{loc.correlation().distance_from_leg_origin(), 3});
-      via_waypoint->emplace("waypoint_index",
-                            static_cast<uint64_t>(loc.correlation().original_index()));
-      via_waypoints->emplace_back(via_waypoint);
+      writer.start_object(); // via_waypoint
+      writer("geometry_index", static_cast<uint64_t>(loc.correlation().leg_shape_index()));
+      writer("distance_from_start", loc.correlation().distance_from_leg_origin());
+      writer("waypoint_index", static_cast<uint64_t>(loc.correlation().original_index()));
+      writer.end_object(); // via_waypoint
     }
   }
-  return via_waypoints;
 }
 
 void serializeIncidentProperties(rapidjson::writer_wrapper_t& writer,

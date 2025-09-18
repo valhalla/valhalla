@@ -322,6 +322,13 @@ public:
     writer.SetMaxDecimalPlaces(precision);
   }
 
+  inline void raw_json(const std::string& json_string) {
+    writer.Flush();
+    for (char c : json_string) {
+      buffer.Put(c);
+    }
+  }
+
   template <typename K, typename V> inline void operator()(const K& key, const V& value) {
     if constexpr (is_string_like_v<K>) {
       writer.String(key);

@@ -1,4 +1,5 @@
 #include "baldr/openlr.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "proto/common.pb.h"
@@ -287,15 +288,13 @@ std::vector<OpenLR::OpenLr> LegToOpenLrs(TripLeg&& leg) {
   options.set_linear_references(true);
   valhalla::TripRoute route;
   route.mutable_legs()->Add()->Swap(&leg);
-  baldr::json::MapPtr container = baldr::json::map({});
 
   // serialize some b64 encoded openlrs and get them back out as openlr objects
-  tyr::route_references(container, route, options);
-  auto references = boost::get<baldr::json::ArrayPtr>(container->find("linear_references")->second);
+  rapidjson::writer_wrapper_t writer;
+  auto references = tyr::route_references(writer, route, options);
   std::vector<OpenLR::OpenLr> openlrs;
-  for (const auto& reference : *references) {
-    auto b64 = boost::get<std::string>(reference);
-    openlrs.emplace_back(b64, true);
+  for (const auto& reference : references) {
+    openlrs.emplace_back(reference, true);
   }
 
   return openlrs;
