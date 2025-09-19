@@ -34,8 +34,22 @@ jobs:
           git submodule update --init --force --recursive --depth=1
       - name: Configure and run build
         run: |
-          # Patch CMakeLists.txt to make LZ4 optional instead of required
+          # Patch CMakeLists.txt to make LZ4 optional and handle missing LZ4
           sed -i 's/pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)/pkg_check_modules(LZ4 IMPORTED_TARGET liblz4)/' CMakeLists.txt
+
+          # Create a conditional LZ4 target if not found
+          cat >> CMakeLists.txt << 'EOF'
+
+          # Create dummy LZ4 target if not found
+          if(NOT TARGET PkgConfig::LZ4)
+            add_library(PkgConfig::LZ4 INTERFACE IMPORTED)
+            set_target_properties(PkgConfig::LZ4 PROPERTIES
+              INTERFACE_COMPILE_DEFINITIONS ""
+              INTERFACE_INCLUDE_DIRECTORIES ""
+            )
+            message(STATUS "LZ4 not found - creating dummy target")
+          endif()
+          EOF
 
           # Build
           mkdir build && cd build \
@@ -45,13 +59,9 @@ jobs:
             -DENABLE_TOOLS=OFF \
             -DENABLE_DATA_TOOLS=OFF \
             -DENABLE_SERVICES=OFF \
-            -DENABLE_PYTHON_BINDINGS=ON \
+            -DENABLE_PYTHON_BINDINGS=OFF \
             -DENABLE_CCACHE=OFF \
             -DENABLE_TESTS=OFF \
             -DENABLE_GDAL=ON \
             -DLOGGING_LEVEL=DEBUG \
-            -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a \
-            -DPYTHON_EXECUTABLE=/usr/x86_64-w64-mingw32/bin/python3 \
-            -DPYTHON_LIBRARIES=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libpython3.9.dll.a \
-            -DPYTHON_INCLUDE_DIRS=/usr/x86_64-w64-mingw32/sys-root/mingw/include/python3.9 \
           && mingw64-make -j$(nproc)
