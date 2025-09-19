@@ -34,8 +34,15 @@ jobs:
           git submodule update --init --force --recursive --depth=1
       - name: Configure and run build
         run: |
+          # Check what LZ4 options are available
+          cd /tmp && git clone --depth 1 https://github.com/valhalla/valhalla.git valhalla-check
+          cd valhalla-check
+          grep -r "lz4\|LZ4" CMakeLists.txt cmake/ || echo "No LZ4 references found"
+
+          # Try the build without LZ4
+          cd $GITHUB_WORKSPACE
           mkdir build && cd build \
-          && mingw64-cmake .. \
+          && PKG_CONFIG_PATH="" mingw64-cmake .. \
             -DCMAKE_CROSS_COMPILING=1 \
             -DCMAKE_BUILD_TYPE=Release \
             -DENABLE_TOOLS=OFF \
