@@ -22,7 +22,9 @@ jobs:
             mingw64-geos \
             mingw64-gdal \
             mingw64-python3 \
-            mingw64-lz4 \
+            mingw64-zlib \
+            mingw64-sqlite \
+            mingw64-expat \
             protobuf-compiler
       - uses: actions/checkout@v4
         with:
