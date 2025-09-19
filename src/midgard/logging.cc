@@ -287,7 +287,7 @@ protected:
 
     // Find the highest existing archive file
     int highest = 0;
-    for (int i = 1; i <= static_cast<int>(max_archived_files); ++i) {
+    for (int i = 1; i <= static_cast<int>(max_archived_files) - 1; ++i) {
       std::string f = file_name + "." + std::to_string(i);
       if (std::filesystem::exists(f)) {
         highest = i;

@@ -40,7 +40,7 @@ TEST(Logging, FileLoggerTest) {
 
   // Clean up any existing files first to ensure clean test state
   std::remove(base_path.c_str());
-  for (int i = 1; i <= 5; ++i) {
+  for (int i = 1; i <= 4; ++i) {
     std::string archived_file = base_path + "." + std::to_string(i);
     std::remove(archived_file.c_str());
   }
@@ -124,7 +124,7 @@ TEST(Logging, FileLoggerTest) {
 
   // Clean up
   std::remove(base_path.c_str());
-  for (int i = 1; i <= 5; ++i) {
+  for (int i = 1; i <= 4; ++i) {
     std::string archived_file = base_path + "." + std::to_string(i);
     std::remove(archived_file.c_str());
   }
