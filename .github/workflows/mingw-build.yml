@@ -1,20 +1,29 @@
-name: Valhalla MinGW Build
-on: [pull_request]
+name: Build Windows (MinGW)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
-    name: MinGW64 build
     runs-on: ubuntu-latest
-    container: fedora:rawhide
+    container:
+      image: fedora:rawhide
+
     steps:
-      # Install build dependencies (including MinGW cross-compilers + lz4)
-      - name: Get dependencies
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
         run: |
           dnf install -y \
             cmake \
             gcc-c++ \
             git \
             make \
+            pkg-config \
             mingw64-gcc \
             mingw64-gcc-c++ \
             mingw64-curl \
@@ -22,33 +31,37 @@ jobs:
             mingw64-protobuf \
             mingw64-geos \
             mingw64-gdal \
-            mingw64-lz4 \
             mingw64-python3 \
+            zlib-devel \
+            lz4 \
+            lz4-devel \
             protobuf-compiler
 
-      # Checkout repository with submodules (works on forks for public repos)
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-          submodules_depth: 1
-
-      # Configure and build with MinGW64
-      - name: Configure and run build
+      - name: Configure CMake
         run: |
-          mkdir -p build && cd build
-          mingw64-cmake .. \
-            -DCMAKE_CROSS_COMPILING=1 \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DENABLE_TOOLS=OFF \
-            -DENABLE_DATA_TOOLS=OFF \
-            -DENABLE_SERVICES=OFF \
-            -DENABLE_PYTHON_BINDINGS=ON \
-            -DENABLE_CCACHE=OFF \
-            -DENABLE_TESTS=OFF \
-            -DENABLE_GDAL=ON \
-            -DLOGGING_LEVEL=DEBUG \
-            -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a \
-            -DPYTHON_EXECUTABLE=/usr/x86_64-w64-mingw32/bin/python3 \
-            -DPYTHON_LIBRARIES=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libpython3.9.dll.a \
-            -DPYTHON_INCLUDE_DIRS=/usr/x86_64-w64-mingw32/sys-root/mingw/include/python3.9
-          mingw64-make -j$(nproc)
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DCMAKE_SYSTEM_NAME=Windows \
+            -DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+            -DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+            -DENABLE_LZ4=ON \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc)
+
+      - name: Package artifacts
+        if: success()
+        run: |
+          cd build
+          tar -czf valhalla-mingw.tar.gz *
+        shell: bash
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: valhalla-mingw
+          path: build/valhalla-mingw.tar.gz
