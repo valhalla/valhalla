@@ -74,5 +74,6 @@ jobs:
             -DENABLE_CCACHE=OFF \
             -DENABLE_TESTS=OFF \
             -DENABLE_GDAL=ON \
+            -DENABLE_TIMEZONE=OFF \
             -DLOGGING_LEVEL=DEBUG \
           && mingw64-make -j$(nproc)
