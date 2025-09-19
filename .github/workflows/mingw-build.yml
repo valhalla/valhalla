@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     container: fedora:rawhide
     steps:
-      # Install build dependencies (including MinGW cross-compilers)
+      # Install build dependencies (including MinGW cross-compilers + lz4)
       - name: Get dependencies
         run: |
           dnf install -y \
@@ -22,10 +22,11 @@ jobs:
             mingw64-protobuf \
             mingw64-geos \
             mingw64-gdal \
+            mingw64-lz4 \
             mingw64-python3 \
             protobuf-compiler
 
-      # Checkout repository with submodules (recursive, works on forks for public repos)
+      # Checkout repository with submodules (works on forks for public repos)
       - uses: actions/checkout@v2
         with:
           submodules: recursive
