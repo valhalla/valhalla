@@ -75,5 +75,164 @@ jobs:
             -DENABLE_TESTS=OFF \
             -DENABLE_GDAL=ON \
             -DENABLE_TIMEZONE=OFF \
+            -DENABLE_TIMEZONE=OFF \
+            -DLOGGING_LEVEL=DEBUG \
+          && mingw64-make -j$(nproc)name: Valhalla MinGW Build
+on: [pull_request]
+
+jobs:
+  build:
+    name: MinGW64 build
+    runs-on: ubuntu-latest
+    container: fedora:rawhide
+    steps:
+      - name: Get dependencies
+        run: |
+          dnf install -y \
+            cmake \
+            gcc-c++ \
+            mingw64-gcc \
+            mingw64-gcc-c++ \
+            git \
+            make \
+            mingw64-curl \
+            mingw64-boost \
+            mingw64-protobuf \
+            mingw64-geos \
+            mingw64-gdal \
+            mingw64-python3 \
+            protobuf-compiler
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git submodule sync --recursive
+          git submodule update --init --force --recursive --depth=1
+      - name: Build LZ4 for MinGW
+        run: |
+          # Simple LZ4 build - just get the essential files
+          curl -L -o lz4.tar.gz https://github.com/lz4/lz4/archive/refs/tags/v1.9.4.tar.gz
+          tar -xzf lz4.tar.gz
+          cd lz4-1.9.4/lib
+
+          # Build just the library
+          x86_64-w64-mingw32-gcc -c -O3 -fPIC lz4.c lz4hc.c lz4frame.c xxhash.c
+          x86_64-w64-mingw32-ar rcs liblz4.a lz4.o lz4hc.o lz4frame.o xxhash.o
+
+          # Install manually
+          MINGW_PREFIX=/usr/x86_64-w64-mingw32/sys-root/mingw
+          cp liblz4.a $MINGW_PREFIX/lib/
+          cp lz4.h lz4hc.h lz4frame.h $MINGW_PREFIX/include/
+
+          # Create pkg-config file
+          cat > $MINGW_PREFIX/lib/pkgconfig/liblz4.pc << EOF
+          prefix=$MINGW_PREFIX
+          exec_prefix=\${prefix}
+          libdir=\${exec_prefix}/lib
+          includedir=\${prefix}/include
+
+          Name: lz4
+          Description: extremely fast lossless compression algorithm library
+          Version: 1.9.4
+          Libs: -L\${libdir} -llz4
+          Cflags: -I\${includedir}
+          EOF
+      - name: Configure and run build
+        run: |
+          mkdir build && cd build \
+          && mingw64-cmake .. \
+            -DCMAKE_CROSS_COMPILING=1 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_TOOLS=OFF \
+            -DENABLE_DATA_TOOLS=OFF \
+            -DENABLE_SERVICES=OFF \
+            -DENABLE_PYTHON_BINDINGS=OFF \
+            -DENABLE_CCACHE=OFF \
+            -DENABLE_TESTS=OFF \
+            -DENABLE_GDAL=ON \
+            -DENABLE_TIMEZONE=OFF \
+            -DENABLE_TIMEZONE=OFF \
+            -DLOGGING_LEVEL=DEBUG \
+          && mingw64-make -j$(nproc)name: Valhalla MinGW Build
+on: [pull_request]
+
+jobs:
+  build:
+    name: MinGW64 build
+    runs-on: ubuntu-latest
+    container: fedora:rawhide
+    steps:
+      - name: Get dependencies
+        run: |
+          dnf install -y \
+            cmake \
+            gcc-c++ \
+            mingw64-gcc \
+            mingw64-gcc-c++ \
+            git \
+            make \
+            mingw64-curl \
+            mingw64-boost \
+            mingw64-protobuf \
+            mingw64-geos \
+            mingw64-gdal \
+            mingw64-python3 \
+            protobuf-compiler
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git submodule sync --recursive
+          git submodule update --init --force --recursive --depth=1
+      - name: Build LZ4 for MinGW
+        run: |
+          # Simple LZ4 build - just get the essential files
+          curl -L -o lz4.tar.gz https://github.com/lz4/lz4/archive/refs/tags/v1.9.4.tar.gz
+          tar -xzf lz4.tar.gz
+          cd lz4-1.9.4/lib
+
+          # Build just the library
+          x86_64-w64-mingw32-gcc -c -O3 -fPIC lz4.c lz4hc.c lz4frame.c xxhash.c
+          x86_64-w64-mingw32-ar rcs liblz4.a lz4.o lz4hc.o lz4frame.o xxhash.o
+
+          # Install manually
+          MINGW_PREFIX=/usr/x86_64-w64-mingw32/sys-root/mingw
+          cp liblz4.a $MINGW_PREFIX/lib/
+          cp lz4.h lz4hc.h lz4frame.h $MINGW_PREFIX/include/
+
+          # Create pkg-config file
+          cat > $MINGW_PREFIX/lib/pkgconfig/liblz4.pc << EOF
+          prefix=$MINGW_PREFIX
+          exec_prefix=\${prefix}
+          libdir=\${exec_prefix}/lib
+          includedir=\${prefix}/include
+
+          Name: lz4
+          Description: extremely fast lossless compression algorithm library
+          Version: 1.9.4
+          Libs: -L\${libdir} -llz4
+          Cflags: -I\${includedir}
+          EOF
+      - name: Configure and run build
+        run: |
+          mkdir build && cd build \
+          && mingw64-cmake .. \
+            -DCMAKE_CROSS_COMPILING=1 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_TOOLS=OFF \
+            -DENABLE_DATA_TOOLS=OFF \
+            -DENABLE_SERVICES=OFF \
+            -DENABLE_PYTHON_BINDINGS=OFF \
+            -DENABLE_CCACHE=OFF \
+            -DENABLE_TESTS=OFF \
+            -DENABLE_GDAL=ON \
+            -DENABLE_TIMEZONE=OFF \
+            -DENABLE_TIMEZONE=OFF \
             -DLOGGING_LEVEL=DEBUG \
           && mingw64-make -j$(nproc)
