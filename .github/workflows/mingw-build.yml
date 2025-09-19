@@ -27,6 +27,7 @@ jobs:
       - name: Checkout submodules
         shell: bash
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git submodule sync --recursive
           git submodule update --init --force --recursive --depth=1
       - name: Configure and run build
