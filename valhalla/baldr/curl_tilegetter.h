@@ -36,7 +36,7 @@ public:
     return result;
   }
 
-  HEAD_response_t head(const std::string& url, header_mask_t header_mask) {
+  HEAD_response_t head(const std::string& url, header_mask_t header_mask) override {
     scoped_curler_t curler(curlers_);
     auto result = curler.get().head(url, header_mask);
     if (result.http_code_ == 200 || result.http_code_ == 206) {
