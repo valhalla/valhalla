@@ -32,7 +32,8 @@ jobs:
           # Download and build LZ4 for MinGW cross-compilation
           git clone https://github.com/lz4/lz4.git /tmp/lz4
           cd /tmp/lz4
-          make CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar PREFIX=/usr/x86_64-w64-mingw32/sys-root/mingw install
+          make CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar PREFIX=/usr/x86_64-w64-mingw32/sys-root/mingw lib
+          make CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar PREFIX=/usr/x86_64-w64-mingw32/sys-root/mingw install-lib install-pc
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
