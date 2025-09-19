@@ -38,6 +38,12 @@ size_t work() {
 TEST(Logging, FileLoggerTest) {
   std::string base_path = "test/file_log_test.log";
 
+  // Clean up any existing files first to ensure clean test state
+  std::remove(base_path.c_str());
+  for (int i = 1; i <= 5; ++i) {
+    std::string archived_file = base_path + "." + std::to_string(i);
+    std::remove(archived_file.c_str());
+  }
   // configure bogusly
   EXPECT_THROW(logging::Configure({{"type", "file"},
                                    {"file_name", "test/thread_file_log_test.log"},
@@ -48,7 +54,7 @@ TEST(Logging, FileLoggerTest) {
   logging::Configure({{"type", "file"},
                       {"file_name", base_path},
                       {"reopen_interval", "1"},
-                      {"max_file_size", "500"}, // Small size to trigger rolling
+                      {"max_file_size", "4000"}, // Small size to trigger rolling
                       {"max_archived_files", "3"}});
 
   // start up some threads
@@ -67,7 +73,7 @@ TEST(Logging, FileLoggerTest) {
   std::this_thread::sleep_for(std::chrono::milliseconds(1010));
 
   // open up the file and make sure it looks right
-  std::ifstream file("test/thread_file_log_test.log");
+  std::ifstream file(base_path);
 
   std::string line;
   size_t error = 0, warn = 0, info = 0, debug = 0, trace = 0, custom = 0;
@@ -90,14 +96,11 @@ TEST(Logging, FileLoggerTest) {
   EXPECT_EQ(trace, 9);
   EXPECT_EQ(custom, 8);
 
-  // Clean up
-  std::remove(base_path.c_str());
-
   // Test log rolling
   std::string message =
       "This message should be long enough to trigger log rolling when multiple are written.";
 
-  for (int i = 0; i < 15; ++i) {
+  for (int i = 0; i < 200; ++i) {
     LOG_INFO("Test message " + std::to_string(i) + ": " + message);
   }
 
@@ -122,7 +125,8 @@ TEST(Logging, FileLoggerTest) {
   // Clean up
   std::remove(base_path.c_str());
   for (int i = 1; i <= 5; ++i) {
-    std::remove((base_path + "." + std::to_string(i)).c_str());
+    std::string archived_file = base_path + "." + std::to_string(i);
+    std::remove(archived_file.c_str());
   }
 }
 
