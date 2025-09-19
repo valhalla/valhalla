@@ -12,6 +12,8 @@ jobs:
           dnf install -y \
             cmake \
             gcc-c++ \
+            mingw64-gcc \
+            mingw64-gcc-c++ \
             git \
             make \
             mingw64-curl \
