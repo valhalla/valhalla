@@ -32,26 +32,37 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git submodule sync --recursive
           git submodule update --init --force --recursive --depth=1
+      - name: Build LZ4 for MinGW
+        run: |
+          # Simple LZ4 build - just get the essential files
+          wget -O lz4.tar.gz https://github.com/lz4/lz4/archive/refs/tags/v1.9.4.tar.gz
+          tar -xzf lz4.tar.gz
+          cd lz4-1.9.4/lib
+
+          # Build just the library
+          x86_64-w64-mingw32-gcc -c -O3 -fPIC lz4.c lz4hc.c lz4frame.c xxhash.c
+          x86_64-w64-mingw32-ar rcs liblz4.a lz4.o lz4hc.o lz4frame.o xxhash.o
+
+          # Install manually
+          MINGW_PREFIX=/usr/x86_64-w64-mingw32/sys-root/mingw
+          cp liblz4.a $MINGW_PREFIX/lib/
+          cp lz4.h lz4hc.h lz4frame.h $MINGW_PREFIX/include/
+
+          # Create pkg-config file
+          cat > $MINGW_PREFIX/lib/pkgconfig/liblz4.pc << EOF
+          prefix=$MINGW_PREFIX
+          exec_prefix=\${prefix}
+          libdir=\${exec_prefix}/lib
+          includedir=\${prefix}/include
+
+          Name: lz4
+          Description: extremely fast lossless compression algorithm library
+          Version: 1.9.4
+          Libs: -L\${libdir} -llz4
+          Cflags: -I\${includedir}
+          EOF
       - name: Configure and run build
         run: |
-          # Patch CMakeLists.txt to make LZ4 optional and handle missing LZ4
-          sed -i 's/pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)/pkg_check_modules(LZ4 IMPORTED_TARGET liblz4)/' CMakeLists.txt
-
-          # Create a conditional LZ4 target if not found
-          cat >> CMakeLists.txt << 'EOF'
-
-          # Create dummy LZ4 target if not found
-          if(NOT TARGET PkgConfig::LZ4)
-            add_library(PkgConfig::LZ4 INTERFACE IMPORTED)
-            set_target_properties(PkgConfig::LZ4 PROPERTIES
-              INTERFACE_COMPILE_DEFINITIONS ""
-              INTERFACE_INCLUDE_DIRECTORIES ""
-            )
-            message(STATUS "LZ4 not found - creating dummy target")
-          endif()
-          EOF
-
-          # Build
           mkdir build && cd build \
           && mingw64-cmake .. \
             -DCMAKE_CROSS_COMPILING=1 \
