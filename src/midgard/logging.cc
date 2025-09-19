@@ -220,19 +220,27 @@ public:
     auto archive_config = config.find("max_archived_files");
 
     if (size_config != config.end() && !size_config->second.empty()) {
-      auto parsed_size = std::stoll(size_config->second);
-      if (parsed_size < 0) {
-        throw std::runtime_error("max_file_size must be greater than 0");
+      try {
+        auto parsed_size = std::stoll(size_config->second);
+        if (parsed_size < 0) {
+          throw std::runtime_error("max_file_size must be greater than 0");
+        }
+        max_file_size = parsed_size;
+      } catch (...) {
+        throw std::runtime_error(size_config->second + " is not a valid max_file_size");
       }
-      max_file_size = parsed_size;
     }
 
     if (archive_config != config.end() && !archive_config->second.empty()) {
-      auto parsed_archive = std::stoll(archive_config->second);
-      if (parsed_archive < 0) {
-        throw std::runtime_error("max_archived_files must be greater than 0");
+      try {
+        auto parsed_archive = std::stoll(archive_config->second);
+        if (parsed_archive < 0) {
+          throw std::runtime_error("max_archived_files must be greater than 0");
+        }
+        max_archived_files = parsed_archive;
+      } catch (...) {
+        throw std::runtime_error(archive_config->second + " is not a valid max_archived_files");
       }
-      max_archived_files = parsed_archive;
     }
 
     // Enable log rolling only if both values are provided and valid
