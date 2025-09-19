@@ -221,7 +221,7 @@ public:
 
     if (size_config != config.end() && !size_config->second.empty()) {
       try {
-        auto parsed_size = std::stoll(size_config->second);
+        auto parsed_size = std::stol(size_config->second);
         if (parsed_size < 0) {
           throw std::runtime_error("max_file_size must be greater than 0");
         }
@@ -233,7 +233,7 @@ public:
 
     if (archive_config != config.end() && !archive_config->second.empty()) {
       try {
-        auto parsed_archive = std::stoll(archive_config->second);
+        auto parsed_archive = std::stoi(archive_config->second);
         if (parsed_archive < 0) {
           throw std::runtime_error("max_archived_files must be greater than 0");
         }
