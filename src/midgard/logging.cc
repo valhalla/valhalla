@@ -221,11 +221,10 @@ public:
 
     if (size_config != config.end() && !size_config->second.empty()) {
       try {
-        auto parsed_size = std::stol(size_config->second);
-        if (parsed_size < 0) {
+        max_file_size = std::stol(size_config->second);
+        if (max_file_size < 0) {
           throw std::runtime_error("max_file_size must be greater than 0");
         }
-        max_file_size = parsed_size;
       } catch (...) {
         throw std::runtime_error(size_config->second + " is not a valid max_file_size");
       }
@@ -233,11 +232,10 @@ public:
 
     if (archive_config != config.end() && !archive_config->second.empty()) {
       try {
-        auto parsed_archive = std::stoi(archive_config->second);
-        if (parsed_archive < 0) {
+        max_archived_files = std::stoi(archive_config->second);
+        if (max_archived_files < 0) {
           throw std::runtime_error("max_archived_files must be greater than 0");
         }
-        max_archived_files = parsed_archive;
       } catch (...) {
         throw std::runtime_error(archive_config->second + " is not a valid max_archived_files");
       }
@@ -366,8 +364,8 @@ protected:
   std::chrono::seconds reopen_interval;
   std::chrono::system_clock::time_point last_reopen;
   bool log_rolling_enabled = false;
-  std::size_t max_file_size = 0;
-  unsigned int max_archived_files = 0;
+  std::int64_t max_file_size = 0;
+  std::int32_t max_archived_files = 0;
 };
 bool file_logger_registered = RegisterLogger("file", [](const LoggingConfig& config) {
   Logger* l = new FileLogger(config);
