@@ -22,18 +22,7 @@ jobs:
             mingw64-geos \
             mingw64-gdal \
             mingw64-python3 \
-            mingw64-zlib \
-            mingw64-sqlite \
-            mingw64-expat \
-            lz4-devel \
             protobuf-compiler
-      - name: Build LZ4 for MinGW
-        run: |
-          # Download and build LZ4 for MinGW cross-compilation
-          git clone https://github.com/lz4/lz4.git /tmp/lz4
-          cd /tmp/lz4
-          make CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar PREFIX=/usr/x86_64-w64-mingw32/sys-root/mingw lib
-          make CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar PREFIX=/usr/x86_64-w64-mingw32/sys-root/mingw install-lib install-pc
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -56,7 +45,6 @@ jobs:
             -DENABLE_CCACHE=OFF \
             -DENABLE_TESTS=OFF \
             -DENABLE_GDAL=ON \
-            -DENABLE_LZ4=OFF \
             -DLOGGING_LEVEL=DEBUG \
             -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a \
             -DPYTHON_EXECUTABLE=/usr/x86_64-w64-mingw32/bin/python3 \
