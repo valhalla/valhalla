@@ -35,7 +35,7 @@ jobs:
       - name: Build LZ4 for MinGW
         run: |
           # Simple LZ4 build - just get the essential files
-          wget -O lz4.tar.gz https://github.com/lz4/lz4/archive/refs/tags/v1.9.4.tar.gz
+          curl -L -o lz4.tar.gz https://github.com/lz4/lz4/archive/refs/tags/v1.9.4.tar.gz
           tar -xzf lz4.tar.gz
           cd lz4-1.9.4/lib
 
