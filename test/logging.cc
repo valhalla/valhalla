@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <future>
 #include <sstream>
@@ -35,8 +36,7 @@ size_t work() {
 }
 
 TEST(Logging, FileLoggerTest) {
-  // get rid of it first so we don't append
-  std::remove("test/thread_file_log_test.log");
+  std::string base_path = "test/file_log_test.log";
 
   // configure bogusly
   EXPECT_THROW(logging::Configure({{"type", "file"},
@@ -45,8 +45,11 @@ TEST(Logging, FileLoggerTest) {
                std::exception);
 
   // configure properly
-  logging::Configure(
-      {{"type", "file"}, {"file_name", "test/thread_file_log_test.log"}, {"reopen_interval", "1"}});
+  logging::Configure({{"type", "file"},
+                      {"file_name", base_path},
+                      {"reopen_interval", "1"},
+                      {"max_file_size", "500"}, // Small size to trigger rolling
+                      {"max_archived_files", "3"}});
 
   // start up some threads
   std::vector<std::future<size_t>> results;
@@ -86,6 +89,41 @@ TEST(Logging, FileLoggerTest) {
   EXPECT_EQ(debug, 8);
   EXPECT_EQ(trace, 9);
   EXPECT_EQ(custom, 8);
+
+  // Clean up
+  std::remove(base_path.c_str());
+
+  // Test log rolling
+  std::string message =
+      "This message should be long enough to trigger log rolling when multiple are written.";
+
+  for (int i = 0; i < 15; ++i) {
+    LOG_INFO("Test message " + std::to_string(i) + ": " + message);
+  }
+
+  // Give logger time to finish writing
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  // Verify rolling occurred
+  bool current_exists = std::filesystem::exists(base_path);
+  EXPECT_TRUE(current_exists) << "Current log file should exist";
+
+  // Check for archived files
+  size_t archived_count = 0;
+  for (int i = 1; i <= 5; ++i) {
+    std::string archived_file = base_path + "." + std::to_string(i);
+    if (std::filesystem::exists(archived_file)) {
+      archived_count++;
+    }
+  }
+
+  EXPECT_GT(archived_count, 0) << "Should have at least one archived file";
+
+  // Clean up
+  std::remove(base_path.c_str());
+  for (int i = 1; i <= 5; ++i) {
+    std::remove((base_path + "." + std::to_string(i)).c_str());
+  }
 }
 
 } // namespace
