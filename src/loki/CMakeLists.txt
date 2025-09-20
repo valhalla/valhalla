@@ -7,11 +7,7 @@ set(sources
   matrix_action.cc
   status_action.cc
   transit_available_action.cc
-  polygon_search.cc)
-
-# Enables stricter compiler checks on a file-by-file basis
-# which allows us to migrate piecemeal
-set(sources_with_warnings
+  polygon_search.cc
   isochrone_action.cc
   height_action.cc
   locate_action.cc

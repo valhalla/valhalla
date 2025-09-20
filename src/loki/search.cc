@@ -58,7 +58,7 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
   // nothing to filter if it is a minor road
   // since motorway = 0 and service = 7, higher number means smaller road class
   uint32_t road_class = static_cast<uint32_t>(opp->classification());
-  if (road_class > location.street_side_cutoff_)
+  if (road_class > static_cast<uint32_t>(location.street_side_cutoff_))
     return false;
 
   // need the driving side for this edge
