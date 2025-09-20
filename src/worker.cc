@@ -1681,6 +1681,10 @@ void service_worker_t::enqueue_statistics(Api& api) const {
         statsd_client->set(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
                            statsd_client->tags);
         break;
+      // Handle protobuf sentinel values to avoid compiler warnings
+      case StatisticType_INT_MIN_SENTINEL_DO_NOT_USE_:
+      case StatisticType_INT_MAX_SENTINEL_DO_NOT_USE_:
+        break;
     }
   }
 

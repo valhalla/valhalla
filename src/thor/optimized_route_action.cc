@@ -33,7 +33,7 @@ void thor_worker_t::optimized_route(Api& request) {
   std::vector<float> time_costs;
   bool reachable = true;
   const auto tds = request.matrix().times();
-  for (size_t i = 0; i < tds.size(); ++i) {
+  for (size_t i = 0; i < static_cast<size_t>(tds.size()); ++i) {
     // If any location is completely unreachable then we cant have a connected path
     if (i % correlated.size() == 0) {
       if (!reachable) {
