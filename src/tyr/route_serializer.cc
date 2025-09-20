@@ -2,7 +2,7 @@
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 #include "route_serializer_osrm.h"
-#include "route_serializer_valhalla.cc"
+#include "route_serializer_valhalla.h"
 #include "tyr/serializers.h"
 
 #include <cstdint>
@@ -13,10 +13,6 @@ using namespace valhalla;
 using namespace valhalla::tyr;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
-using namespace valhalla::odin;
-using namespace valhalla::tyr;
-using namespace std;
-
 namespace {
 
 /**

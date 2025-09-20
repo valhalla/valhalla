@@ -18,7 +18,6 @@ namespace {
 constexpr size_t kConfidenceScoreIndex = 0;
 constexpr size_t kRawScoreIndex = 1;
 constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
 
 void serialize_admins(const TripLeg& trip_path, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("admins");
