@@ -48,30 +48,53 @@ GeoPoint<PrecisionT> GeoPoint<PrecisionT>::PointAlongSegment(const GeoPoint<Prec
  * @param   ll2   Second lng,lat position to calculate distance to.
  * @return  Returns the distance in meters.
  */
-template <typename PrecisionT> PrecisionT GeoPoint<PrecisionT>::Distance(const GeoPoint& ll2) const {
-  // If points are the same, return 0
-  if (*this == ll2) {
-    return 0;
+template <typename PrecisionT>
+PrecisionT GeoPoint<PrecisionT>::Distance(const GeoPoint& other) const {
+  // Equal points short-circuit
+  if (*this == other) {
+    return static_cast<PrecisionT>(0);
   }
 
-  // Delta longitude. Don't need to worry about crossing 180
-  // since cos(x) = cos(-x)
-  double deltalng = (ll2.lng() - lng()) * kRadPerDegD;
-  double a = lat() * kRadPerDegD;
-  double c = ll2.lat() * kRadPerDegD;
+  // Promote to extended precision for the trig
+  const long double phi1 = static_cast<long double>(lat()) * static_cast<long double>(kRadPerDegD);
+  const long double phi2 =
+      static_cast<long double>(other.lat()) * static_cast<long double>(kRadPerDegD);
+  const long double dphi = phi2 - phi1;
 
-  // Find the angle subtended in radians (law of cosines)
-  double cosb = (sin(a) * sin(c)) + (cos(a) * cos(c) * cos(deltalng));
-
-  // Angle subtended * radius of earth (portion of the circumference).
-  // Protect against cosb being outside -1 to 1 range.
-  if (cosb >= 1) {
-    return 0.00001;
-  } else if (cosb <= -1) {
-    return kPi * kRadEarthMeters;
-  } else {
-    return static_cast<PrecisionT>(acos(cosb) * kRadEarthMeters);
+  long double dlambda =
+      static_cast<long double>(other.lng() - lng()) * static_cast<long double>(kRadPerDegD);
+  // No need to wrap at +/-pi for distance; cos terms handle it, but keeping dlambda small helps
+  // tiny-angle math
+  if (dlambda > M_PI) {
+    dlambda -= 2.0L * M_PI;
   }
+  if (dlambda < -M_PI) {
+    dlambda += 2.0L * M_PI;
+  }
+
+  const long double c1 = std::cos(phi1);
+  const long double c2 = std::cos(phi2);
+
+  // Haversine (well-conditioned for small angles)
+  const long double sdphi2 = std::sin(dphi * 0.5L);
+  const long double sdlmb2 = std::sin(dlambda * 0.5L);
+  long double h = sdphi2 * sdphi2 + c1 * c2 * sdlmb2 * sdlmb2;
+
+  // Clamp due to rounding
+  h = std::min<long double>(1, std::max<long double>(0, h));
+
+  // For extremely tiny separations, avoid asin(sqrt(h)) altogether
+  // Use equirectangular approximation with hypot, which is relatively stable
+  if (h < 1e-24L) {
+    const long double x = dlambda * std::cos((phi1 + phi2) * 0.5L);
+    const long double y = dphi;
+    const long double d = static_cast<long double>(kRadEarthMeters) * std::hypot(x, y);
+    return static_cast<PrecisionT>(d);
+  }
+
+  const long double d = 2.0L * std::asin(std::sqrt(h));
+  const long double meters = static_cast<long double>(kRadEarthMeters) * d;
+  return static_cast<PrecisionT>(meters);
 }
 
 /**
