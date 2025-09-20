@@ -3758,8 +3758,8 @@ bool ManeuversBuilder::RampLeadsToHighway(Maneuver& maneuver) const {
   // Verify that the specified maneuver is a ramp
   if (maneuver.ramp()) {
     // Loop over edges
-    for (int node_index = static_cast<int>(maneuver.end_node_index()); node_index < trip_path_->GetLastNodeIndex();
-         ++node_index) {
+    for (int node_index = static_cast<int>(maneuver.end_node_index());
+         node_index < trip_path_->GetLastNodeIndex(); ++node_index) {
       auto curr_edge = trip_path_->GetCurrEdge(node_index);
       if (curr_edge && (curr_edge->IsRampUse() || curr_edge->IsTurnChannelUse() ||
                         curr_edge->internal_intersection())) {
@@ -3782,8 +3782,8 @@ void ManeuversBuilder::SetTraversableOutboundIntersectingEdgeFlags(std::list<Man
   // Process each maneuver for traversable outbound intersecting edges
   for (Maneuver& maneuver : maneuvers) {
     bool found_first_edge_to_process = false;
-    for (int node_index = static_cast<int>(maneuver.begin_node_index()); node_index < static_cast<int>(maneuver.end_node_index());
-         ++node_index) {
+    for (int node_index = static_cast<int>(maneuver.begin_node_index());
+         node_index < static_cast<int>(maneuver.end_node_index()); ++node_index) {
       if (!found_first_edge_to_process) {
         auto curr_edge = trip_path_->GetCurrEdge(node_index);
         // Skip the initial internal and turn channel edges

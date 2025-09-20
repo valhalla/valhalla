@@ -31,7 +31,6 @@ const std::unordered_map<int, std::string>
                               {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
                                "Maneuver::RelativeDirection::kKeepLeft"}};
 
-
 } // namespace
 
 namespace valhalla {
