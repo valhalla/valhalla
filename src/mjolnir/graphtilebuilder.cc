@@ -175,8 +175,10 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // EdgeInfo. Create list of EdgeInfoBuilders. Add to text offset set.
   edge_info_offset_ = 0;
   edgeinfo_offset_map_.clear();
-  for (auto edgemap : edge_info_offsets) {
-    auto offset = edgemap.first;
+
+  auto edgemap_iter = edge_info_offsets.begin();
+  for (; edgemap_iter != edge_info_offsets.end(); ++edgemap_iter) {
+    auto offset = edgemap_iter->first;
 
     // Verify the offsets match as we create the edge info builder list
     if (offset != edge_info_offset_) {
@@ -202,12 +204,25 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
     // Add encoded elevation (if present)
     if (ei.has_elevation()) {
-      auto length = edgemap.second;
+      auto length = edgemap_iter->second;
       double interval = 0.0f;
       eib.set_encoded_elevation(ei.encoded_elevation(length, interval));
     }
 
-    edge_info_offset_ += eib.SizeOf();
+    // Get the next EdgeInfo offset to calculate the actual serialized size
+    auto next_iter = std::next(edgemap_iter);
+    size_t actual_size;
+    if (next_iter != edge_info_offsets.end()) {
+      // Use the difference between consecutive offsets as the actual size
+      actual_size = next_iter->first - offset;
+    } else {
+      // For the last EdgeInfo, use the EdgeInfoBuilder calculated size
+      actual_size = eib.SizeOf();
+    }
+
+    // Use actual serialized size to maintain offset consistency
+
+    edge_info_offset_ += actual_size;
     edgeinfo_list_.emplace_back(std::move(eib));
 
     // Associate the offset to the index in the edgeinfo list
@@ -1279,6 +1294,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
 }
 
 void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
+
   // check the edge id makes sense
   if (header_builder_.graphid().Tile_Base() != edge_id.Tile_Base()) {
     throw std::runtime_error(
