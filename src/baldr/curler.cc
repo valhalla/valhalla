@@ -224,8 +224,18 @@ namespace valhalla {
 namespace baldr {
 curler_t::curler_t(const std::string& user_agent) {
 }
-std::vector<char>
-curler_t::operator()(const std::string&, long&, bool gzipped, const curler_t::interrupt_t*) const {
+
+curler_t::GET_response_t curler_t::get(const std::string& url,
+                                       bool gzipped,
+                                       const curler_t::interrupt_t* interrupt,
+                                       uint64_t range_offset,
+                                       uint64_t range_size) const {
+  LOG_ERROR("This version of libvalhalla was not built with CURL support");
+  throw std::runtime_error("This version of libvalhalla was not built with CURL support");
+}
+
+curler_t::HEAD_response_t curler_t::head(const std::string& url,
+                                         curler_t::header_mask_t header_mask) {
   LOG_ERROR("This version of libvalhalla was not built with CURL support");
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
 }
