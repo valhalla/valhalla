@@ -160,7 +160,7 @@ public:
    */
   const NodeInfo* node(const GraphId& node) const {
     assert(node.Tile_Base() == header_->graphid().Tile_Base());
-    if (node.id() < header_->nodecount()) {
+    if (VALHALLA_LIKELY(node.id() < header_->nodecount())) {
       return &nodes_[node.id()];
     }
     throw std::runtime_error(
@@ -192,7 +192,7 @@ public:
    */
   midgard::PointLL get_node_ll(const GraphId& nodeid) const {
     assert(nodeid.Tile_Base() == header_->graphid().Tile_Base());
-    return node(nodeid)->latlng(header()->base_ll());
+    return node(nodeid)->latlng(get_header_base_ll());
   }
 
   /**
@@ -791,6 +791,14 @@ public:
   }
 
 protected:
+  midgard::PointLL get_header_base_ll() const {
+    if (VALHALLA_UNLIKELY(!base_ll_.IsValid())) {
+      base_ll_ = header()->base_ll();
+    }
+    return base_ll_;
+  }
+  mutable midgard::PointLL base_ll_;
+
   // Graph tile memory. A Graph tile owns its memory.
   std::unique_ptr<const GraphMemory> memory_;
 
