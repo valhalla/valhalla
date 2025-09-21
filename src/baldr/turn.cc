@@ -11,9 +11,9 @@ namespace {
 constexpr std::array<Turn::Type, 360> make_turn_type_lut() {
   std::array<Turn::Type, 360> t{};
 
-  auto fill = [&](int from_angle, int to_angle, Turn::Type type) {
-    for (int angle = from_angle; angle <= to_angle; ++angle)
-      t[static_cast<size_t>(angle)] = type;
+  auto fill = [&](size_t from_angle, size_t to_angle, Turn::Type type) {
+    for (auto angle = from_angle; angle <= to_angle; ++angle)
+      t[angle] = type;
   };
 
   fill(0, 10, Turn::Type::kStraight);
