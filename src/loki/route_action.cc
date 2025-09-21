@@ -122,7 +122,7 @@ void loki_worker_t::route(Api& request) {
   }
   bool connected = false;
   for (const auto& c : color_counts) {
-    if (c.second == options.locations_size()) {
+    if (c.second == static_cast<size_t>(options.locations_size())) {
       connected = true;
       break;
     }
