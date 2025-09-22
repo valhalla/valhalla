@@ -5,6 +5,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "shortcut_recovery.h"
+
 #include <sys/stat.h>
 
 #include <string>

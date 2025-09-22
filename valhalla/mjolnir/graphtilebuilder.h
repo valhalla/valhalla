@@ -498,10 +498,9 @@ public:
    * @param  directededges  Updated directed edge information.
    */
   void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges,
-                            const std::vector<NodeInfo>& modified_nodes);
+                             const std::vector<NodeInfo>& modified_nodes);
 
   void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
-
 
   /**
    * Adds a landmark to the given edge id by modifying its edgeinfo to add a name and tagged value

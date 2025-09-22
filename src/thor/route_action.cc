@@ -293,7 +293,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   if (distance > max_timedep_distance) {
     // Create a new costing with the same options but modified flow_mask
     Options modified_options = options;
-    auto& costing_options = *modified_options.mutable_costings()->find(options.costing_type())->second.mutable_options();
+    auto& costing_options =
+        *modified_options.mutable_costings()->find(options.costing_type())->second.mutable_options();
 
     // Get current flow_mask and remove current traffic bit
     uint8_t current_flow_mask = costing_options.flow_mask();
@@ -308,8 +309,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     // Replace the costing in mode_costing
     mode_costing[static_cast<uint32_t>(mode)] = new_mode_costing[static_cast<uint32_t>(new_mode)];
 
-    LOG_INFO("Removed current traffic from flow_mask for long route: " +
-             std::to_string(distance) + "m > " + std::to_string(max_timedep_distance) + "m");
+    LOG_INFO("Removed current traffic from flow_mask for long route: " + std::to_string(distance) +
+             "m > " + std::to_string(max_timedep_distance) + "m");
   }
 
   // No other special cases we land on bidirectional a*

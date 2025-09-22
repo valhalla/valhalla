@@ -1220,7 +1220,7 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
 // free flow and constrained flow speeds and the predicted traffic flag. The
 // predicted traffic is written after turn lane data.
 void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges,
-                                           const std::vector<NodeInfo>& modified_nodes) {
+                                             const std::vector<NodeInfo>& modified_nodes) {
 
   // Even if there are no predicted speeds there still may be updated directed edges
   // with free flow or constrained flow speeds - so don't return if no speed profiles

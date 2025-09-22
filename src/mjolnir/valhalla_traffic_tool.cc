@@ -15,16 +15,14 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <filesystem>
-
 
 int handle_help(cxxopts::Options options) {
   std::cout << options.help() << std::endl;
   return EXIT_SUCCESS;
 }
-
 
 int main(int argc, char** argv) {
   // args
@@ -75,19 +73,22 @@ int main(int argc, char** argv) {
         std::cerr << "Please provide a path to the traffic.tar file with --traffic-path" << std::endl;
         return EXIT_FAILURE;
       }
-      return handle_verify(result["traffic-path"].as<std::string>(), result["verify-path"].as<std::string>());
+      return handle_verify(result["traffic-path"].as<std::string>(),
+                           result["verify-path"].as<std::string>());
     }
 
     if (result.count("copy-traffic")) {
       if (!result.count("input-traffic-path")) {
-        std::cerr << "Please provide a path to the input traffic.tar file with --input-traffic-path" << std::endl;
+        std::cerr << "Please provide a path to the input traffic.tar file with --input-traffic-path"
+                  << std::endl;
         return EXIT_FAILURE;
       }
       if (!result.count("traffic-path")) {
         std::cerr << "Please provide a path to the traffic.tar file with --traffic-path" << std::endl;
         return EXIT_FAILURE;
       }
-      return handle_copy_traffic(result["input-traffic-path"].as<std::string>(), result["traffic-path"].as<std::string>());
+      return handle_copy_traffic(result["input-traffic-path"].as<std::string>(),
+                                 result["traffic-path"].as<std::string>());
     }
 
     std::cout << options.help() << std::endl;

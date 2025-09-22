@@ -2,10 +2,9 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/admin.h"
 #include "baldr/tilehierarchy.h"
-
+#include "mjolnir/admin.h"
+#include "mjolnir/graphtilebuilder.h"
 
 #include <boost/tokenizer.hpp>
 
@@ -167,8 +166,7 @@ void UpdateTile(const std::string& tile_dir,
                 const GraphId& tile_id,
                 const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
                 TrafficStats& stat,
-                std::optional<AdminDB>& tz_db
-              ) {
+                std::optional<AdminDB>& tz_db) {
   auto tile_path = tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
   if (!filesystem::exists(tile_path)) {
     LOG_ERROR("No tile at " + tile_path);
@@ -193,7 +191,8 @@ void UpdateTile(const std::string& tile_dir,
   // Copy nodes to a modifiable vector from the node_tile_builder
   std::vector<NodeInfo> modified_nodes;
   modified_nodes.reserve(node_tile_builder.header()->nodecount());
-  std::copy(node_tile_builder.nodes().begin(), node_tile_builder.nodes().end(), std::back_inserter(modified_nodes));
+  std::copy(node_tile_builder.nodes().begin(), node_tile_builder.nodes().end(),
+            std::back_inserter(modified_nodes));
 
   // Calculate timezone for each node individually
   auto base_ll = node_tile_builder.header()->base_ll();
@@ -208,14 +207,22 @@ void UpdateTile(const std::string& tile_dir,
     if ((std::unordered_set<size_t>{94, 61, 52, 110, 75, 22, 366}.count(tz_index) == 0)) {
       auto lon = node_ll.lng();
 
-      if (lon >= -125 && lon < -112.5) tz_index = 94;   // Pacific
-      else if (lon >= -112.5 && lon < -97.5) tz_index = 61;  // Mountain
-      else if (lon >= -97.5 && lon < -82.5) tz_index = 52;   // Central
-      else if (lon >= -82.5 && lon < -67.5) tz_index = 110;  // Eastern
-      else if (lon >= -67.5 && lon < -52.5) tz_index = 75;   // Atlantic
-      else if (lon >= -170 && lon < -135) tz_index = 22;     // Alaska
-      else if (lon >= -180 && lon < -170) tz_index = 366;    // Hawaii
-      else tz_index = 0;
+      if (lon >= -125 && lon < -112.5)
+        tz_index = 94; // Pacific
+      else if (lon >= -112.5 && lon < -97.5)
+        tz_index = 61; // Mountain
+      else if (lon >= -97.5 && lon < -82.5)
+        tz_index = 52; // Central
+      else if (lon >= -82.5 && lon < -67.5)
+        tz_index = 110; // Eastern
+      else if (lon >= -67.5 && lon < -52.5)
+        tz_index = 75; // Atlantic
+      else if (lon >= -170 && lon < -135)
+        tz_index = 22; // Alaska
+      else if (lon >= -180 && lon < -170)
+        tz_index = 366; // Hawaii
+      else
+        tz_index = 0;
     }
 
     // Set timezone for this specific node
@@ -269,10 +276,10 @@ void UpdateTiles(const std::string& tile_dir,
                  std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_start,
                  std::vector<std::pair<GraphId, std::vector<std::string>>>::const_iterator tile_end,
                  std::promise<TrafficStats>& result,
-                const boost::property_tree::ptree& config) {
+                 const boost::property_tree::ptree& config) {
 
-
-  // Add timezone during historic traffic tile creation. Normally this would be on tile creation but we get our tiles from Interline
+  // Add timezone during historic traffic tile creation. Normally this would be on tile creation but
+  // we get our tiles from Interline
   auto database = config.get_optional<std::string>("mjolnir.timezone");
   // Initialize the tz DB (if it exists)
   auto tz_db = database ? AdminDB::open(*database) : std::optional<AdminDB>{};
@@ -281,8 +288,6 @@ void UpdateTiles(const std::string& tile_dir,
   } else if (!tz_db) {
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
   }
-
-
 
   std::stringstream thread_name;
   thread_name << std::this_thread::get_id();

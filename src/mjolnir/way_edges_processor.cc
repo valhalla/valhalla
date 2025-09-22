@@ -18,11 +18,12 @@ void write_way_edges(const std::unordered_map<uint64_t, std::vector<EdgeAndDirec
     bool isFirst = true;
     for (auto edge : way.second) {
       if (isFirst) {
-        ways_file << "," << (uint32_t)edge.forward << "|" << (uint64_t)edge.edgeid << "|" << edge.length << "|" << (uint32_t)edge.shortcut;
+        ways_file << "," << (uint32_t)edge.forward << "|" << (uint64_t)edge.edgeid << "|"
+                  << edge.length << "|" << (uint32_t)edge.shortcut;
         isFirst = false;
-      }
-      else {
-        ways_file << "|" << (uint32_t)edge.forward << "|" << (uint64_t)edge.edgeid << "|" << edge.length << "|" << (uint32_t)edge.shortcut;
+      } else {
+        ways_file << "|" << (uint32_t)edge.forward << "|" << (uint64_t)edge.edgeid << "|"
+                  << edge.length << "|" << (uint32_t)edge.shortcut;
       }
     }
     ways_file << std::endl;
