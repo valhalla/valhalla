@@ -661,12 +661,6 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     if (!file) {
       throw std::runtime_error("Failed to write to file " + file_location.string());
     }
-    file.flush();
-    GraphTileHeader header2;
-    file.seekg(0);
-    file.read(reinterpret_cast<char*>(&header2), sizeof(GraphTileHeader));
-    auto a = header2.creation_time();
-    file.close();
   }
   LOG_INFO("Finished");
 

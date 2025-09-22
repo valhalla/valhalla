@@ -6,7 +6,6 @@
 #include <gtest/gtest.h>
 
 #include <cstdint>
-#include <fstream>
 #include <vector>
 
 using namespace valhalla::baldr;
