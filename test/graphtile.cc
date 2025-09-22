@@ -1,10 +1,12 @@
 #include "baldr/graphtile.h"
+#include "config.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
 
 #include <gtest/gtest.h>
 
 #include <cstdint>
+#include <fstream>
 #include <vector>
 
 using namespace valhalla::baldr;
@@ -128,6 +130,18 @@ TEST(GraphTileIntegrity, SizeLessThanPayload) {
 
   EXPECT_THROW(GraphTile::Create(GraphId(), std::make_unique<const TestGraphMemory>(tile_size)),
                std::runtime_error);
+}
+
+TEST(GraphTileVersion, VersionCreationTime) {
+  std::string tile_dir = VALHALLA_BUILD_DIR "test/data/utrecht_tiles";
+
+  auto tile = GraphTile::Create(tile_dir, {3196, 0, 0});
+
+  std::string expected_version = VALHALLA_VERSION;
+  EXPECT_TRUE(tile->header()->version().compare(0, expected_version.size(), expected_version) == 0);
+
+  auto creation_time_before = tile->header()->creation_time();
+  EXPECT_GT(creation_time_before, 0);
 }
 
 } // namespace

@@ -9,7 +9,7 @@ using namespace valhalla::midgard;
 
 // Expected size is 256. We want to alert if somehow any change grows this structure
 // size as that indicates incompatible tiles.
-constexpr size_t kGraphTileHeaderExpectedSize = 272;
+constexpr size_t kGraphTileHeaderExpectedSize = 280;
 
 namespace {
 
@@ -127,6 +127,13 @@ TEST(GraphtileHeader, TestWriteRead) {
 
   // Test for trying to access outside the bin index list
   EXPECT_THROW(hdr.bin_offset(kBinCount + 1), std::runtime_error);
+
+  std::string version = "3.99.99-3a4fe6b";
+  hdr.set_version(version);
+  EXPECT_EQ(hdr.version(), version);
+
+  hdr.set_creation_time(1234567890);
+  EXPECT_EQ(hdr.creation_time(), 1234567890);
 }
 
 } // namespace
