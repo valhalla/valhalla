@@ -24,6 +24,7 @@
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/turnlanes.h>
+#include <valhalla/macro.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
