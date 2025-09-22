@@ -24,7 +24,6 @@
 #include <valhalla/baldr/transitstop.h>
 #include <valhalla/baldr/transittransfer.h>
 #include <valhalla/baldr/turnlanes.h>
-#include <valhalla/macro.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
@@ -161,7 +160,7 @@ public:
    */
   const NodeInfo* node(const GraphId& node) const {
     assert(node.Tile_Base() == header_->graphid().Tile_Base());
-    if (VALHALLA_LIKELY(node.id() < header_->nodecount())) {
+    if (node.id() < header_->nodecount()) {
       return &nodes_[node.id()];
     }
     throw std::runtime_error(
