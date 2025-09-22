@@ -6,7 +6,9 @@ jobs:
     name: MinGW64 build
     runs-on: ubuntu-latest
     container: fedora:rawhide
+
     steps:
+      # Step 1: Install dependencies
       - name: Get dependencies
         run: |
           dnf install -y \
@@ -21,17 +23,20 @@ jobs:
             mingw64-gdal \
             mingw64-python3 \
             protobuf-compiler
-      - uses: actions/checkout@v2
-      - name: Checkout submodules
-        shell: bash
-        run: |
-          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
-          git submodule sync --recursive
-          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+
+      # Step 2: Checkout the repository and submodules
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      # Step 3: Configure and build Valhalla for Windows
       - name: Configure and run build
         run: |
-          mkdir build && cd build \
-          && mingw64-cmake .. \
+          mkdir -p build
+          cd build
+          mingw64-cmake .. \
             -DCMAKE_CROSS_COMPILING=1 \
             -DCMAKE_BUILD_TYPE=Release \
             -DENABLE_TOOLS=OFF \
@@ -45,5 +50,5 @@ jobs:
             -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a \
             -DPYTHON_EXECUTABLE=/usr/x86_64-w64-mingw32/bin/python3 \
             -DPYTHON_LIBRARIES=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libpython3.9.dll.a \
-            -DPYTHON_INCLUDE_DIRS=/usr/x86_64-w64-mingw32/sys-root/mingw/include/python3.9 \
-          && mingw64-make -j$(nproc)
+            -DPYTHON_INCLUDE_DIRS=/usr/x86_64-w64-mingw32/sys-root/mingw/include/python3.9
+          mingw64-make -j$(nproc)
