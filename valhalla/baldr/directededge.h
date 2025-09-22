@@ -1238,7 +1238,6 @@ protected:
   uint64_t classification_ : 3;         // Classification/importance of the road/path
   uint64_t surface_ : 3;                // Representation of smoothness
   uint64_t toll_ : 1;                   // Edge is part of a toll road
-  uint64_t vignette_ : 1;               // Edge is part of a road requiring a vignette
   uint64_t roundabout_ : 1;             // Edge is part of a roundabout
   uint64_t truck_route_ : 1;            // Edge that is part of a truck route/network
   uint64_t has_predicted_speed_ : 1;    // Does this edge have a predicted speed records?
@@ -1272,7 +1271,8 @@ protected:
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
   uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
-  uint64_t spare4_ : 3;
+  uint64_t vignette_ : 1;       // Edge is part of a road requiring a vignette
+  uint64_t spare4_ : 2;         // spare bits
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

@@ -32,10 +32,11 @@ namespace {
 constexpr float kDefaultServicePenalty = 75.0f; // Seconds
 
 // Other options
-constexpr float kDefaultUseHighways = 0.5f; // Default preference of using a motorway or trunk 0-1
-constexpr float kDefaultUseTolls = 0.5f;    // Default preference of using toll roads 0-1
-constexpr float kDefaultUseTracks = 0.f;    // Default preference of using tracks 0-1
-constexpr float kDefaultUseDistance = 0.f;  // Default preference of using distance vs time 0-1
+constexpr float kDefaultUseHighways = 0.5f;  // Default preference of using a motorway or trunk 0-1
+constexpr float kDefaultUseTolls = 0.5f;     // Default preference of using toll roads 0-1
+constexpr float kDefaultUseVignettes = 0.5f; // Default preference of using vignette roads 0-1
+constexpr float kDefaultUseTracks = 0.f;     // Default preference of using tracks 0-1
+constexpr float kDefaultUseDistance = 0.f;   // Default preference of using distance vs time 0-1
 constexpr uint32_t kDefaultRestrictionProbability = 100; // Default percentage of allowing probable
                                                          // restrictions 0% means do not include them
 
@@ -79,6 +80,7 @@ constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<float> kUseVignettesRange{0, kDefaultUseVignettes, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
 constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
@@ -341,13 +343,14 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
-  VehicleType type_;          // Vehicle type: car (default), motorcycle, etc
-  float highway_factor_;      // Factor applied when road is a motorway or trunk
+  VehicleType type_;          // Vehicle type: car (default), motorcycle, etc.
+  float highway_factor_;      // Factor applied when road is a motorway or trunk.
   float alley_factor_;        // Avoid alleys factor.
-  float toll_factor_;         // Factor applied when road has a toll
+  float toll_factor_;         // Factor applied when road has a toll.
+  float vignette_factor_;     // Factor applied when road has a vignette.
   float surface_factor_;      // How much the surface factors are applied.
-  float distance_factor_;     // How much distance factors in overall favorability
-  float inv_distance_factor_; // How much time factors in overall favorability
+  float distance_factor_;     // How much distance factors in overall favorability.
+  float inv_distance_factor_; // How much time factors in overall favorability.
 
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
@@ -392,9 +395,13 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // factor. A toll factor of 0 would indicate no adjustment to weighting for toll roads.
   // use_tolls = 1 would reduce weighting slightly (a negative delta) while
   // use_tolls = 0 would penalize (positive delta to weighting factor).
-  float use_tolls = costing_options.use_tolls();
-  toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
-                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+  float use_tolls  = costing_options.use_tolls();
+  toll_factor_     = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) :         // ranges from 4 to 0
+                     (0.5f - use_tolls) * 0.03f;                         // ranges from 0 to -0.15
+
+  float use_vignettes  = costing_options.use_vignettes();
+  vignette_factor_ = use_vignettes < 0.5f ? (4.0f - 8 * use_vignettes) : // ranges from 4 to 0
+                     (0.5f - use_vignettes) * 0.03f;                     // ranges from 0 to -0.15
   // TODO RAHUL: ADD SOFT VIGNETTE FACTOR CALCULATION
   include_hot_ = costing_options.include_hot();
   include_hov2_ = costing_options.include_hov2();
@@ -514,7 +521,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
             SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
-            edge->toll() * toll_factor_ + edge->vignette() * toll_factor_; // TODO RAHUL: Add here Vignette for SOFT AVOID
+            edge->toll() * toll_factor_ + edge->vignette() * vignette_factor_; // TODO RAHUL: Add here Vignette for SOFT AVOID
 
   switch (edge->use()) {
     case Use::kAlley:
@@ -697,6 +704,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kAlleyFactorRange, json, "/alley_factor", alley_factor);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseVignettesRange, json, "/use_vignettes", use_vignettes);
   JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance);
   JSON_PBF_RANGED_DEFAULT(co, kAutoHeightRange, json, "/height", height);
   JSON_PBF_RANGED_DEFAULT(co, kAutoWidthRange, json, "/width", width);

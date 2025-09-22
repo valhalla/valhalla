@@ -120,6 +120,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `use_ferry` | This value indicates the willingness to take ferries. This is a range of values between 0 and 1. Values near 0 attempt to avoid ferries and values near 1 will favor ferries. The default value is 0.5. Note that sometimes ferries are required to complete a route so values of 0 are not guaranteed to avoid ferries entirely. |
 | `use_highways` | This value indicates the willingness to take highways. This is a range of values between 0 and 1. Values near 0 attempt to avoid highways and values near 1 will favor highways. The default value is 1.0. Note that sometimes highways are required to complete a route so values of 0 are not guaranteed to avoid highways entirely. |
 | `use_tolls` | This value indicates the willingness to take roads with tolls. This is a range of values between 0 and 1. Values near 0 attempt to avoid tolls and values near 1 will not attempt to avoid them. The default value is 0.5. Note that sometimes roads with tolls are required to complete a route so values of 0 are not guaranteed to avoid them entirely. |
+| `use_vignettes` | This value indicates the willingness to take roads with vignettes. This is a range of values between 0 and 1. Values near 0 attempt to avoid vignettes and values near 1 will not attempt to avoid them. The default value is 0.5. Note that sometimes roads with vignettes are required to complete a route so values of 0 are not guaranteed to avoid them entirely. |
 | `use_living_streets` | This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0 for trucks, 0.1 for cars, buses, motor scooters and motorcycles. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely. |
 | `use_tracks` | This value indicates the willingness to take track roads. This is a range of values between 0 and 1. Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit. The default value is 0 for autos, 0.5 for motor scooters and motorcycles. Note that sometimes tracks are required to complete a route so values of 0 are not guaranteed to avoid tracks entirely. |
 | `service_penalty` | A penalty applied for transition to generic service road. The default penalty is 0 trucks and 15 for cars, buses, motor scooters and motorcycles. |
@@ -396,6 +397,7 @@ The summary JSON object includes:
 | `time` | Estimated elapsed time to complete the trip. |
 | `length` | Distance traveled for the entire trip. Units are either miles or kilometers based on the input units specified. |
 | `has_toll`| Flag indicating if the path uses one or more toll segments. |
+| `has_vignette`| Flag indicating if the path uses one or more vignette segments. |
 | `has_highway`| Flag indicating if the path uses one or more highway segments. |
 | `has_ferry`| Flag indicating if the path uses one or more ferry segments. |
 | `min_lat` | Minimum latitude of a bounding box containing the route. |
@@ -428,6 +430,7 @@ Each maneuver includes:
 | `begin_shape_index` | Index into the list of shape points for the start of the maneuver. |
 | `end_shape_index` | Index into the list of shape points for the end of the maneuver. |
 | `toll` | True if the maneuver has any toll, or portions of the maneuver are subject to a toll. |
+| `vignette` | True if the maneuver has any vignette, or portions of the maneuver are subject to a vignette. |
 | `highway` | True if a highway is encountered on this maneuver. |
 | `rough` | True if the maneuver is unpaved or rough pavement, or has any portions that have rough pavement. |
 | `gate` | True if a gate is encountered on this maneuver. |

@@ -353,6 +353,9 @@ message Costing {
       uint32 traffic_fading_exponent = 96;
     }
     bool exclude_vignettes = 97;
+    oneof has_use_vignettes {
+      float use_vignettes = 98;
+    }
   }
 
   oneof has_options {
