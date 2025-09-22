@@ -1,7 +1,5 @@
 #pragma once
 
-#include <boost/config.hpp>
-
 #include <exception>
 
 #define CHECK_THROWS(condition, message)                                                             \
