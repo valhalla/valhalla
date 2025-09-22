@@ -6,8 +6,6 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
 
-#include <boost/config.hpp>
-
 #include <cstdint>
 #include <cstring>
 #include <limits>
@@ -22,9 +20,6 @@
 #include <vector>
 
 #define UNUSED(x) (void)(x)
-
-#define VALHALLA_UNLIKELY(x) BOOST_UNLIKELY(x)
-#define VALHALLA_LIKELY(x) BOOST_LIKELY(x)
 
 namespace valhalla {
 namespace midgard {

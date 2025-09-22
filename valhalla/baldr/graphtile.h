@@ -192,7 +192,7 @@ public:
    */
   midgard::PointLL get_node_ll(const GraphId& nodeid) const {
     assert(nodeid.Tile_Base() == header_->graphid().Tile_Base());
-    return node(nodeid)->latlng(get_header_base_ll());
+    return node(nodeid)->latlng(base_ll_);
   }
 
   /**
@@ -791,13 +791,7 @@ public:
   }
 
 protected:
-  midgard::PointLL get_header_base_ll() const {
-    if (VALHALLA_UNLIKELY(!base_ll_.IsValid())) {
-      base_ll_ = header()->base_ll();
-    }
-    return base_ll_;
-  }
-  mutable midgard::PointLL base_ll_;
+  midgard::PointLL base_ll_{};
 
   // Graph tile memory. A Graph tile owns its memory.
   std::unique_ptr<const GraphMemory> memory_;
