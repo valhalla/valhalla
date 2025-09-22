@@ -791,6 +791,8 @@ public:
   }
 
 protected:
+  // base location of the tile, comes from `header()->base_ll()`, but we cache it here to avoid extra
+  // computation on the hot path
   midgard::PointLL base_ll_{};
 
   // Graph tile memory. A Graph tile owns its memory.
