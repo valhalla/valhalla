@@ -328,7 +328,7 @@ public:
            ((exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
             (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
             (exclude_tolls_ && !pred.toll() && edge->toll()) ||
-            (exclude_vignettes_ && !pred.vignette() && edge->vignette()) || // This is a hard avoid
+            (exclude_vignettes_ && !pred.vignette() && edge->vignette()) ||
             (exclude_highways_ && pred.classification() != baldr::RoadClass::kMotorway &&
              edge->classification() == baldr::RoadClass::kMotorway) ||
             (exclude_ferries_ &&
@@ -1291,8 +1291,6 @@ protected:
     c += bike_share_cost_ * (node->type() == baldr::NodeType::kBikeShare);
     c += toll_booth_cost_ *
          (node->type() == baldr::NodeType::kTollBooth || (edge->toll() && !pred->toll()));
-    c += toll_booth_cost_ *
-         (node->type() == baldr::NodeType::kTollBooth || (edge->vignette() && !pred->vignette()));
     c += ferry_transition_cost_ *
          (edge->use() == baldr::Use::kFerry && pred->use() != baldr::Use::kFerry);
     c += rail_ferry_transition_cost_ *

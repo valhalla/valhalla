@@ -1914,13 +1914,8 @@ void TripLegBuilder::Build(
     if (directededge->toll()) {
       has_toll = true;
     }
-    // TODO RAHUL: REMOVE HACK
     if (directededge->vignette()) {
       has_vignette = true;
-    }
-    if(has_vignette)
-    {
-      LOG_INFO("Edge ID: " + std::to_string(edge.value) + " has vignette");
     }
     if (directededge->use() == Use::kFerry) {
       has_ferry = true;
@@ -2278,7 +2273,7 @@ void TripLegBuilder::Build(
 
   Summary* summary = trip_path.mutable_summary();
   summary->set_has_toll(has_toll);
-//  summary->set_has_vignette(has_vignette);
+  summary->set_has_vignette(has_vignette);
   summary->set_has_ferry(has_ferry);
   summary->set_has_highway(has_highway);
 

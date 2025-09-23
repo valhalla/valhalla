@@ -32,7 +32,7 @@ const gurka::ways ways = {
     {"IJ", {{"highway", "residential"}}},
     {"JK", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
     {"KL", {{"highway", "residential"}}},
-    {"JM", {{"highway", "residential"}}},
+    {"JM", {{"highway", "residential"}, {"vignette", "yes"}}},
     {"MN", {{"highway", "residential"}}},
     {"NK", {{"highway", "residential"}}},
 };

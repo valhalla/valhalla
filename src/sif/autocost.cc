@@ -402,7 +402,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   float use_vignettes  = costing_options.use_vignettes();
   vignette_factor_ = use_vignettes < 0.5f ? (4.0f - 8 * use_vignettes) : // ranges from 4 to 0
                      (0.5f - use_vignettes) * 0.03f;                     // ranges from 0 to -0.15
-  // TODO RAHUL: ADD SOFT VIGNETTE FACTOR CALCULATION
+
   include_hot_ = costing_options.include_hot();
   include_hov2_ = costing_options.include_hov2();
   include_hov3_ = costing_options.include_hov3();
@@ -521,7 +521,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
             surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
             SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
-            edge->toll() * toll_factor_ + edge->vignette() * vignette_factor_; // TODO RAHUL: Add here Vignette for SOFT AVOID
+            edge->toll() * toll_factor_ + edge->vignette() * vignette_factor_;
 
   switch (edge->use()) {
     case Use::kAlley:
