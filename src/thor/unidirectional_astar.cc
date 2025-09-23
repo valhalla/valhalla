@@ -313,6 +313,17 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       *meta.edge_status = {EdgeSet::kTemporary, idx};
     }
 
+    if (expansion_callback_) {
+      auto expansion_type =
+          FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+      const auto& prev_pred = pred.predecessor() == kInvalidLabel
+                                  ? GraphId{}
+                                  : (edgelabels_)[pred.predecessor()].edgeid();
+      expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
+                          "unidirectional_astar", Expansion_EdgeStatus_reached, cost.secs,
+                          path_distance, cost.cost, expansion_type);
+    }
+
     return true;
   };
 
@@ -348,6 +359,17 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
+      }
+
+      if (expansion_callback_) {
+        auto expansion_type =
+            FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+        const auto& prev_pred = pred.predecessor() == kInvalidLabel
+                                    ? GraphId{}
+                                    : (edgelabels_)[pred.predecessor()].edgeid();
+        expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
+                            "unidirectional_astar", Expansion_EdgeStatus_reached, newcost.secs,
+                            lab.path_distance(), newcost.cost, expansion_type);
       }
       return true;
     };
@@ -512,6 +534,16 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     BDEdgeLabel pred = edgelabels_[predindex];
 
     if (pred.destination()) {
+      if (expansion_callback_) {
+        auto expansion_type =
+            FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+        const auto prev_pred = pred.predecessor() == kInvalidLabel
+                                   ? GraphId{}
+                                   : edgelabels_[pred.predecessor()].edgeid();
+        expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
+                            Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
+                            pred.cost().cost, expansion_type);
+      }
       return {FormPath(predindex)};
     }
 
@@ -519,6 +551,17 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     // edge (this will allow loops/around the block cases)
     if (!pred.origin()) {
       edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
+    }
+
+    // setting this edge as settled
+    if (expansion_callback_) {
+      auto expansion_type =
+          FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+      const auto prev_pred =
+          pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels_[pred.predecessor()].edgeid();
+      expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
+                          Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
+                          pred.cost().cost, expansion_type);
     }
 
     // Check that distance is converging towards the destination. Return route
@@ -797,6 +840,14 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       if (dest_path_edge) {
         // Set the destination flag
         edge_label.set_destination();
+      }
+
+      if (expansion_callback_) {
+        auto expansion_type =
+            FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+        expansion_callback_(graphreader, edgeid, GraphId{}, "unidirectional_astar",
+                            Expansion_EdgeStatus_reached, cost.secs,
+                            static_cast<uint32_t>(edge.distance() + 0.5), cost.cost, expansion_type);
       }
 
       adjacencylist_.add(idx);
