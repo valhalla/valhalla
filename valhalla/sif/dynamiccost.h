@@ -1297,6 +1297,7 @@ protected:
     c.cost +=
         track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
 
+    // penalize service roads that are not internal
     c.cost += service_penalty_ *
               (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) *
               !edge->internal();
