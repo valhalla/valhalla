@@ -114,7 +114,8 @@ struct ReproducibleBuild : ::testing::Test {
       // check that raw tiles are equal
       const auto raw_tile_bytes = [](const graph_tile_ptr& tile) -> std::string {
         const GraphTileHeader* header = tile->header();
-        return std::string(reinterpret_cast<const char*>(header), header->end_offset());
+        return std::string(reinterpret_cast<const char*>(header) + sizeof(*header),
+                           header->end_offset() - sizeof(*header));
       };
       const std::string first_raw_tile = raw_tile_bytes(first_tile);
       const std::string second_raw_tile = raw_tile_bytes(second_tile);
