@@ -144,6 +144,7 @@
    * ADDED: HEAD & GET range requests to curl_tilegetter [#5470](https://github.com/valhalla/valhalla/pull/5470)
    * ADDED: Expansion API extended for unidirectional A* [#5457](https://github.com/valhalla/valhalla/pull/5457)
    * CHANGED: Optimise `get_node_ll` function [#5531](https://github.com/valhalla/valhalla/pull/5531)
+   * CHANGED: Optimise Turn::GetType using lookup table [#5530] (https://github.com/valhalla/valhalla/pull/5530)
    * ADDED: support for destination exceptions for access restrictions [#5370](https://github.com/valhalla/valhalla/pull/5370)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
