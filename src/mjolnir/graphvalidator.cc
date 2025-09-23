@@ -649,7 +649,9 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     GraphTileHeader header;
     file.seekg(0);
     file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
+
     header.set_creation_time(creation_time);
+
     file.seekp(0);
     file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
     if (!file) {
