@@ -1852,7 +1852,7 @@ function filter_tags_generic(kv)
     -- find out if there are exemptions
     local conditional_tag = string.format("%s:conditional", restr_key)
     local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
-    if except_destination == 1 then
+    if except_destination == 1 and kv[restr_key] ~= nil then 
       kv[restr_key] = tostring(kv[restr_key]) .. "~" -- parse this later in graphparser
     end
     if directed then
@@ -1861,7 +1861,7 @@ function filter_tags_generic(kv)
         local tag = restr_key .. ":" .. direction
         local conditional_tag = string.format("%s:conditional", tag)
         local except_destination = conditional_access_restriction[kv[conditional_tag]] or 0
-        if except_destination == 1 then
+        if except_destination == 1 and kv[tag] ~= nil then 
           kv[key] = tostring(kv[key]) .. "~"
         end
       end

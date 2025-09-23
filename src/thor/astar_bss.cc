@@ -147,10 +147,11 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // directed edge), if no access is allowed to this edge (based on costing method),
     // or if a complex restriction exists.
     uint8_t has_time_restrictions = -1;
+    uint8_t destonly_restriction_mask = 0;
     const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (current_es->set() == EdgeSet::kPermanent ||
         !current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
-                                  has_time_restrictions) ||
+                                  has_time_restrictions, destonly_restriction_mask) ||
         current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
