@@ -519,8 +519,7 @@ void bin_tweeners_and_set_time(const std::string& tile_dir,
                                tweeners_t::iterator& start,
                                const tweeners_t::iterator& end,
                                uint64_t dataset_id,
-                               std::mutex& lock,
-                               uint64_t& last_creation_time) {
+                               std::mutex& lock) {
   // go while we have tiles to update
   while (true) {
     lock.lock();
@@ -552,13 +551,6 @@ void bin_tweeners_and_set_time(const std::string& tile_dir,
 
     // keep the extra binned edges
     GraphTileBuilder::AddBins(tile_dir, tile, tile_bin.second);
-
-    // log the creation time
-    auto now = std::chrono::duration_cast<std::chrono::seconds>(
-        std::chrono::system_clock::now().time_since_epoch());
-    lock.lock();
-    last_creation_time = static_cast<uint64_t>(now.count());
-    lock.unlock();
   }
 }
 } // namespace
@@ -633,17 +625,19 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   LOG_INFO("Binning inter-tile edges...");
   auto start = tweeners.begin();
   auto end = tweeners.end();
-  uint64_t last_creation_time = 0;
   for (auto& thread : threads) {
-    thread = std::make_shared<std::thread>(bin_tweeners_and_set_time, std::cref(tile_dir),
-                                           std::ref(start), std::cref(end), dataset_id,
-                                           std::ref(lock), std::ref(last_creation_time));
+    thread =
+        std::make_shared<std::thread>(bin_tweeners_and_set_time, std::cref(tile_dir), std::ref(start),
+                                      std::cref(end), dataset_id, std::ref(lock));
   }
   for (auto& thread : threads) {
     thread->join();
   }
 
-  // load each header, then write it back with the last tile's creation_time set
+  // load each header, then write it back with the creation_time set
+  auto now = std::chrono::duration_cast<std::chrono::seconds>(
+      std::chrono::system_clock::now().time_since_epoch());
+  auto creation_time = static_cast<uint64_t>(now.count());
   for (auto& tile_id : tileset) {
     std::filesystem::path file_location{tile_dir};
     file_location /= GraphTile::FileSuffix(tile_id.Tile_Base());
@@ -655,7 +649,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     GraphTileHeader header;
     file.seekg(0);
     file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
-    header.set_creation_time(last_creation_time);
+    header.set_creation_time(creation_time);
     file.seekp(0);
     file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
     if (!file) {
