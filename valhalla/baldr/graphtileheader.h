@@ -715,6 +715,8 @@ protected:
   std::array<uint32_t, kEmptySlots> empty_slots_ = {};
 };
 
+static_assert(sizeof(GraphTileHeader) == 272, "Bad sizeof(GraphTileHeader)");
+
 } // namespace baldr
 } // namespace valhalla
 
