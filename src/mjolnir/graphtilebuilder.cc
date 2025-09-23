@@ -1280,6 +1280,68 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   }
 }
 
+// Updates a tile with predictive speed data. Also updates directed edges with
+// free flow and constrained flow speeds and the predicted traffic flag. The
+// predicted traffic is written after turn lane data.
+void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges) {
+
+  // Even if there are no predicted speeds there still may be updated directed edges
+  // with free flow or constrained flow speeds - so don't return if no speed profiles
+
+  // Get the name of the file
+  filesystem::path filename = tile_dir_ + filesystem::path::preferred_separator +
+                              GraphTile::FileSuffix(header_builder_.graphid());
+
+  // Make sure the directory exists on the system
+  if (!filesystem::exists(filename.parent_path()))
+    filesystem::create_directories(filename.parent_path());
+
+  // Open file and truncate
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  if (file.is_open()) {
+    // Write a new header - add the offset to predicted speed data and the profile count.
+    // Update the end offset (shift by the amount of predicted speed data added).
+    size_t offset = header_->end_offset();
+    header_builder_.set_end_offset(header_->end_offset() +
+                                   (speed_profile_offset_builder_.size() * sizeof(uint32_t)) +
+                                   (speed_profile_builder_.size() * sizeof(int16_t)));
+    header_builder_.set_predictedspeeds_offset(offset);
+    header_builder_.set_predictedspeeds_count(speed_profile_builder_.size() / kCoefficientCount);
+    file.write(reinterpret_cast<const char*>(&header_builder_), sizeof(GraphTileHeader));
+
+    // Copy the nodes (they are unchanged when adding predicted speeds).
+    file.write(reinterpret_cast<const char*>(nodes_), header_->nodecount() * sizeof(NodeInfo));
+
+    // Copy the node transitions (they are unchanged when adding predicted speeds).
+    file.write(reinterpret_cast<const char*>(transitions_),
+               header_->transitioncount() * sizeof(NodeTransition));
+
+    // Write the updated directed edges. Make sure edge count matches.
+    if (directededges.size() != header_->directededgecount()) {
+      throw std::runtime_error("GraphTileBuilder::Update - directed edge count has changed");
+    }
+    file.write(reinterpret_cast<const char*>(directededges.data()),
+               directededges.size() * sizeof(DirectedEdge));
+
+    // Write out data from access restrictions to the end of lane connectivity data.
+    auto begin = reinterpret_cast<const char*>(&access_restrictions_[0]);
+    auto end = reinterpret_cast<const char*>(header()) + offset;
+    file.write(begin, end - begin);
+
+    // Append the speed profile indexes and profiles.
+    file.write(reinterpret_cast<const char*>(speed_profile_offset_builder_.data()),
+               speed_profile_offset_builder_.size() * sizeof(uint32_t));
+    file.write(reinterpret_cast<const char*>(speed_profile_builder_.data()),
+               speed_profile_builder_.size() * sizeof(int16_t));
+
+    // Write the rest of the tiles. TBD (if anything is added after the speed profiles
+    // then this will need to be updated)
+
+    // Close the file
+    file.close();
+  }
+}
+
 void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
   // check the edge id makes sense
   if (header_builder_.graphid().Tile_Base() != edge_id.Tile_Base()) {
