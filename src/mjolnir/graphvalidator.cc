@@ -4,6 +4,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem_utils.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -513,11 +514,12 @@ void merge(const tweeners_t& in, tweeners_t& out) {
 }
 
 // crack open tiles and bin edges that pass through them but dont end or begin in them
-void bin_tweeners(const std::string& tile_dir,
-                  tweeners_t::iterator& start,
-                  const tweeners_t::iterator& end,
-                  uint64_t dataset_id,
-                  std::mutex& lock) {
+// also set the creation time
+void bin_tweeners_and_set_time(const std::string& tile_dir,
+                               tweeners_t::iterator& start,
+                               const tweeners_t::iterator& end,
+                               uint64_t dataset_id,
+                               std::mutex& lock) {
   // go while we have tiles to update
   while (true) {
     lock.lock();
@@ -624,11 +626,37 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   auto start = tweeners.begin();
   auto end = tweeners.end();
   for (auto& thread : threads) {
-    thread = std::make_shared<std::thread>(bin_tweeners, std::cref(tile_dir), std::ref(start),
-                                           std::cref(end), dataset_id, std::ref(lock));
+    thread =
+        std::make_shared<std::thread>(bin_tweeners_and_set_time, std::cref(tile_dir), std::ref(start),
+                                      std::cref(end), dataset_id, std::ref(lock));
   }
   for (auto& thread : threads) {
     thread->join();
+  }
+
+  // load each header, then write it back with the creation_time set
+  auto now = std::chrono::duration_cast<std::chrono::seconds>(
+      std::chrono::system_clock::now().time_since_epoch());
+  auto creation_time = static_cast<uint64_t>(now.count());
+  for (auto& tile_id : tileset) {
+    std::filesystem::path file_location{tile_dir};
+    file_location /= GraphTile::FileSuffix(tile_id.Tile_Base());
+
+    std::fstream file(file_location.c_str(), std::ios::in | std::ios::out | std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Failed to open file " + file_location.string());
+    }
+    GraphTileHeader header;
+    file.seekg(0);
+    file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
+
+    header.set_creation_time(creation_time);
+
+    file.seekp(0);
+    file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
+    if (!file) {
+      throw std::runtime_error("Failed to write to file " + file_location.string());
+    }
   }
   LOG_INFO("Finished");
 

@@ -589,6 +589,22 @@ public:
     tile_size_ = offset;
   }
 
+  /**
+   * Get the tile creation time as UNIX epoch
+   * @returns creation time as UNIX timestamp
+   */
+  uint64_t creation_time() const {
+    return timestamp_;
+  }
+
+  /**
+   * Set the tile creation time as UNIX epoch
+   * @param time the UNIX timestamp
+   */
+  void set_creation_time(uint64_t time) {
+    timestamp_ = time;
+  }
+
 protected:
   // TODO when c++20 bitfields can be initialized here
   // GraphId (tileid and level) of this tile. Data quality metrics.
@@ -665,7 +681,9 @@ protected:
   // this should be backwards compatible. Make sure use of bits from spareword* does not
   // exceed 128 bits.
   uint64_t spareword0_ = 0;
-  uint64_t spareword1_ = 0;
+
+  // creation time of the last tile in a tileset
+  uint64_t timestamp_ = 0; // formerly spareword1_
 
   // Offsets to beginning of data (for variable size records)
   uint32_t complex_restriction_forward_offset_ = 0; // Offset to complex restriction list
@@ -695,6 +713,8 @@ protected:
   // bitfield or union or anything like that
   std::array<uint32_t, kEmptySlots> empty_slots_ = {};
 };
+
+static_assert(sizeof(GraphTileHeader) == 272, "Bad sizeof(GraphTileHeader)");
 
 } // namespace baldr
 } // namespace valhalla
