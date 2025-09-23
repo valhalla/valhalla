@@ -18,7 +18,7 @@ namespace baldr {
 // something to the tile simply subtract one from this number and add it
 // just before the empty_slots_ array below. NOTE that it can ONLY be an
 // offset in bytes and NOT a bitfield or union or anything of that sort
-constexpr size_t kEmptySlots = 9;
+constexpr size_t kEmptySlots = 11;
 
 // Maximum size of the version string (stored as a fixed size
 // character array so the GraphTileHeader size remains fixed).
@@ -682,7 +682,9 @@ protected:
   // this should be backwards compatible. Make sure use of bits from spareword* does not
   // exceed 128 bits.
   uint64_t spareword0_ = 0;
-  uint64_t spareword1_ = 0;
+
+  // creation time of the last tile in a tileset
+  uint64_t timestamp_ = 0; // formerly spareword1_
 
   // Offsets to beginning of data (for variable size records)
   uint32_t complex_restriction_forward_offset_ = 0; // Offset to complex restriction list
@@ -704,9 +706,6 @@ protected:
 
   // GraphTile data size in bytes
   uint32_t tile_size_ = 0;
-
-  // creation time of the last tile in a tileset
-  uint64_t timestamp_ = 0;
 
   // Marks the end of this version of the tile with the rest of the slots
   // being available for growth. If you want to use one of the empty slots,
