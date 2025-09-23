@@ -14,11 +14,10 @@ GraphTileHeader::GraphTileHeader()
       graphid_(0), density_(0), name_quality_(0), speed_quality_(0), exit_quality_(0),
       has_elevation_(0), has_ext_directededge_(0), nodecount_(0), directededgecount_(0),
       predictedspeeds_count_(0), spare1_(0), transitioncount_(0), spare3_(0), turnlane_count_(0),
-      spare4_(0), transfercount_(0), spare2_(0), departurecount_(0), stopcount_(0), spare5_(0),
-      routecount_(0), schedulecount_(0), signcount_(0), spare6_(0), access_restriction_count_(0),
-      admincount_(0), spare7_(0) {
-  // e.g. 3.99.99-23af13j is 15 bytes, fits perfectly
-  set_version(VALHALLA_PRINT_VERSION);
+      spare4_(0), transfercount_(0), departurecount_(0), stopcount_(0), spare5_(0), routecount_(0),
+      schedulecount_(0), signcount_(0), spare6_(0), access_restriction_count_(0), admincount_(0),
+      spare7_(0) {
+  set_version(PACKAGE_VERSION);
 }
 
 // Set the version string.
