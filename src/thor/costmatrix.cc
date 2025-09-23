@@ -479,9 +479,10 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
   uint8_t restriction_idx = kInvalidRestriction;
+  uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   if (FORWARD) {
     if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
-                           time_info.timezone_index, restriction_idx) ||
+                           time_info.timezone_index, restriction_idx, destonly_restriction_mask) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, true,
                              &edgestatus_[FORWARD][index], time_info.local_time,
                              time_info.timezone_index)) {
@@ -489,7 +490,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     }
   } else {
     if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.local_time,
-                                  time_info.timezone_index, restriction_idx) ||
+                                  time_info.timezone_index, restriction_idx,
+                                  destonly_restriction_mask) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, false,
                              &edgestatus_[FORWARD][index], time_info.local_time,
                              time_info.timezone_index)) {
@@ -553,7 +555,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                             restriction_idx, 0,
                             meta.edge->destonly() ||
                                 (costing_->is_hgv() && meta.edge->destonly_hgv()),
-                            meta.edge->forwardaccess() & kTruckAccess);
+                            meta.edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, not_thru_pruning,
@@ -563,7 +565,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                                                opp_pred_edge),
                             restriction_idx, 0,
                             opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                            opp_edge->forwardaccess() & kTruckAccess);
+                            opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
   }
   auto newsortcost =
       GetAstarHeuristic<expansion_direction>(index, t2->get_node_ll(meta.edge->endnode()));
@@ -1138,6 +1140,13 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // 2 adjustments related only to properly handle trivial routes:
       //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
+      Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
+
+      // we call this to find out if we're starting on access restrictions with a local traffic
+      // exemption and push this info into the label
+      auto destonly_restriction_mask =
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_,
                              distance_penalty, d, !directededge->not_thru(),
                              !(costing_->IsClosed(directededge, tile)),
@@ -1146,7 +1155,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()),
-                             directededge->forwardaccess() & kTruckAccess);
+                             directededge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
       auto newsortcost =
           GetAstarHeuristic<MatrixExpansionType::forward>(index, opp_tile->get_node_ll(
                                                                      directededge->endnode()));
@@ -1229,6 +1238,13 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // 2 adjustments related only to properly handle trivial routes:
       //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the opp edge is even allowed (e.g. no oneway)
+      Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
+
+      // we call this to find out if we're starting on access restrictions with a local traffic
+      // exemption and push this info into the label
+      auto destonly_restriction_mask =
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                              distance_penalty, d, !opp_dir_edge->not_thru(),
                              !(costing_->IsClosed(directededge, tile)),
@@ -1237,7 +1253,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()),
-                             directededge->forwardaccess() & kTruckAccess);
+                             directededge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
 
       auto newsortcost =
           GetAstarHeuristic<MatrixExpansionType::reverse>(index,
