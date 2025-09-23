@@ -146,6 +146,8 @@
    * CHANGED: Optimise `get_node_ll` function [#5531](https://github.com/valhalla/valhalla/pull/5531)
    * CHANGED: Optimise Turn::GetType using lookup table [#5530] (https://github.com/valhalla/valhalla/pull/5530)
    * ADDED: support for destination exceptions for access restrictions [#5370](https://github.com/valhalla/valhalla/pull/5370)
+   * ADDED: Add log rolling support for the file logger [#5477](https://github.com/valhalla/valhalla/pull/5477)
+   * ADDED: Add Korean (`ko-KR`) locale [#5501](https://github.com/valhalla/valhalla/pull/5501)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
