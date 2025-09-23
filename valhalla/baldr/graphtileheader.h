@@ -621,21 +621,22 @@ protected:
   // but in practice the number should be much less.
   uint32_t transitioncount_ : 22; // Number of node transitions
   uint32_t spare3_ : 10;          // TODO: DELETE ME IN V4
-  uint32_t turnlane_count_ : 21;  // Number of turnlane records
-  uint32_t spare4_ : 11;          // TODO: DELETE ME IN V4
-  uint64_t transfercount_ : 16;   // Number of transit transfer records
-  uint64_t spare2_ : 7;
+
+  uint32_t turnlane_count_ : 21; // Number of turnlane records
+  uint32_t spare4_ : 11;         // TODO: DELETE ME IN V4
 
   // Number of transit records
+  uint64_t transfercount_ : 16; // Number of transit transfer records
   uint64_t departurecount_ : 24;
   uint64_t stopcount_ : 16;
-  uint64_t spare5_ : 1; // TODO: DELETE ME IN V4
+  uint64_t spare5_ : 8; // TODO: DELETE ME IN V4
+
   uint64_t routecount_ : 12;
   uint64_t schedulecount_ : 12;
-
   // Counts
-  uint64_t signcount_ : 24;                // Number of signs
-  uint64_t spare6_ : 16;                   // TODO: DELETE ME IN V4
+  uint64_t signcount_ : 24; // Number of signs
+  uint64_t spare6_ : 16;    // TODO: DELETE ME IN V4
+
   uint64_t access_restriction_count_ : 24; // Number of access restriction records
   uint64_t admincount_ : 16;               // Number of admin records
   uint64_t spare7_ : 24;                   // TODO: DELETE ME IN V4
