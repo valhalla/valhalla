@@ -288,12 +288,6 @@ public:
   virtual uint8_t travel_type() const override;
 
   /**
-   * Is the current vehicle type HGV?
-   * @return  Returns whether it's a truck.
-   */
-  virtual bool is_hgv() const override;
-
-  /**
    * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
@@ -719,10 +713,6 @@ float TruckCost::AStarCostFactor() const {
 // Returns the current travel type.
 uint8_t TruckCost::travel_type() const {
   return static_cast<uint8_t>(type_);
-}
-
-bool TruckCost::is_hgv() const {
-  return true;
 }
 
 void ParseTruckCostOptions(const rapidjson::Document& doc,
