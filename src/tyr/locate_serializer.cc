@@ -173,7 +173,7 @@ void serialize_edges(const PathLocation& location,
         // historical traffic information
         writer.start_array("predicted_speeds");
         if (directed_edge->has_predicted_speed()) {
-          for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
+          for (uint32_t sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
             writer(static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
           }
         }
