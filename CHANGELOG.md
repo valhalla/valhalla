@@ -141,11 +141,11 @@
    * ADDED: Allow pedestrian routing through highway=via_ferrata [#5480](https://github.com/valhalla/valhalla/pull/5480)
    * ADDED: generic level change maneuver [#5431](https://github.com/valhalla/valhalla/pull/5431)
    * ADDED: Publish timezone db on Github Actions artifacts [#5479](https://github.com/valhalla/valhalla/pull/5479)
-   * ADDED: Support for loading tiles from a remote tarball [#5467](https://github.com/valhalla/valhalla/pull/5467)
    * ADDED: HEAD & GET range requests to curl_tilegetter [#5470](https://github.com/valhalla/valhalla/pull/5470)
    * ADDED: Expansion API extended for unidirectional A* [#5457](https://github.com/valhalla/valhalla/pull/5457)
    * CHANGED: Optimise `get_node_ll` function [#5531](https://github.com/valhalla/valhalla/pull/5531)
    * CHANGED: Optimise Turn::GetType using lookup table [#5530] (https://github.com/valhalla/valhalla/pull/5530)
+   * ADDED: Support for loading tiles from a remote tarball with optional HTTP basic auth [#5467](https://github.com/valhalla/valhalla/pull/5467)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
