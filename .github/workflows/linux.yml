@@ -3,7 +3,7 @@ name: Build Linux
 on:
   push:
     paths-ignore:
-      - "*.md"
+      - "**.md"
       - .circleci/
       - docs/
       - run_route_scripts/
@@ -15,7 +15,7 @@ on:
       - master
   pull_request:
     paths-ignore:
-      - "*.md"
+      - "**.md"
       - .circleci/
       - docs/
       - run_route_scripts/

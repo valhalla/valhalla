@@ -149,6 +149,7 @@
    * ADDED: Add log rolling support for the file logger [#5477](https://github.com/valhalla/valhalla/pull/5477)
    * ADDED: Add Korean (`ko-KR`) locale [#5501](https://github.com/valhalla/valhalla/pull/5501)
    * UPGRADED: pybind11 from 2.11.1 to 3.0.1 [#5539](https://github.com/valhalla/valhalla/pull/5539)
+   * ADDED: `creation_time` to `baldr::GraphTileHeader` [#5535](https://github.com/valhalla/valhalla/pull/5535)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
