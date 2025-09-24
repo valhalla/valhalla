@@ -2,6 +2,7 @@
 #include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/elevation_encoding.h"
+#include "midgard/logging.h"
 #include "midgard/util.h"
 
 #include <vector>

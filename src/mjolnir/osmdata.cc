@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 
 using namespace valhalla::mjolnir;
 using valhalla::baldr::ConditionalSpeedLimit;

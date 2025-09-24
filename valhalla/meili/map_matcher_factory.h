@@ -6,10 +6,9 @@
 #include <valhalla/meili/candidate_search.h>
 #include <valhalla/meili/config.h>
 #include <valhalla/meili/map_matcher.h>
-#include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/costfactory.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 namespace valhalla {
 namespace meili {

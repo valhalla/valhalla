@@ -1,8 +1,9 @@
 #include "odin/signs.h"
 #include "odin/sign.h"
-#include "test.h"
 
-#include <algorithm>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
 #include <cstdint>
 #include <vector>
 

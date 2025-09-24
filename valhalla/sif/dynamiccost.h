@@ -4,7 +4,6 @@
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/datetime.h>
 #include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/double_bucket_queue.h> // For kInvalidLabel
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtile.h>
@@ -14,11 +13,9 @@
 #include <valhalla/baldr/time_info.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
-#include <valhalla/midgard/logging.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costconstants.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/sif/hierarchylimits.h>
 #include <valhalla/thor/edgestatus.h>
 
 #include <cstdint>
@@ -269,14 +266,18 @@ public:
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
-   * @param  edge           Pointer to a directed edge.
-   * @param  is_dest        Is a directed edge the destination?
-   * @param  pred           Predecessor edge information.
-   * @param  tile           Current tile.
-   * @param  edgeid         GraphId of the directed edge.
-   * @param  current_time   Current time (seconds since epoch). A value of 0
-   *                        indicates the route is not time dependent.
-   * @param  tz_index       timezone index for the node
+   * @param  edge                        Pointer to a directed edge.
+   * @param  is_dest                     Is a directed edge the destination?
+   * @param  pred                        Predecessor edge information.
+   * @param  tile                        Current tile.
+   * @param  edgeid                      GraphId of the directed edge.
+   * @param  current_time                Current time (seconds since epoch). A value of 0
+   *                                     indicates the route is not time dependent.
+   * @param  tz_index                    timezone index for the node
+   * @param  destonly_access_restr_mask  Mask containing access restriction types that had a
+   * local traffic exemption at the start of the expansion. This mask will be mutated by eliminating
+   * flags for locally exempt access restriction types that no longer exist on the passed edge
+   *
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
@@ -286,7 +287,8 @@ public:
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       uint8_t& restriction_idx) const = 0;
+                       uint8_t& restriction_idx,
+                       uint8_t& destonly_access_restr_mask) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -313,7 +315,8 @@ public:
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              uint8_t& restriction_idx) const = 0;
+                              uint8_t& restriction_idx,
+                              uint8_t& destonly_access_restr_mask) const = 0;
 
   /**
    * Checks if any edge exclusion is present.
@@ -658,6 +661,34 @@ public:
                                                   baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
+  /**
+   * Gets an edge's restrictions that have an "except_destination" flag set.
+   *
+   * @return an 8-bit mask containing a flag for each access restriction type
+   * that can be ignored by destination only traffic.
+   */
+  inline uint8_t GetExemptedAccessRestrictions(const baldr::DirectedEdge* edge,
+                                               const graph_tile_ptr& tile,
+                                               const baldr::GraphId& edgeid) {
+
+    uint8_t destonly_access_restr_mask = 0;
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_) ||
+        allow_destination_only_)
+      return 0;
+
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), access_mask_);
+
+    for (size_t i = 0; i < restrictions.size(); ++i) {
+      const auto& restr = restrictions[i];
+      if (restr.except_destination()) {
+        destonly_access_restr_mask |=
+            baldr::kAccessRestrictionMasks[static_cast<size_t>(restr.type())];
+      }
+    }
+    return destonly_access_restr_mask;
+  }
+
   /***
    * Evaluates mode-specific and time-dependent access restrictions, including a binary
    * search to get the tile's access restrictions.
@@ -677,7 +708,8 @@ public:
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
-                                   uint8_t& restriction_idx) const {
+                                   uint8_t& restriction_idx,
+                                   uint8_t& destonly_access_restr_mask) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
 
@@ -686,6 +718,7 @@ public:
 
     bool time_allowed = false;
 
+    uint8_t tmp_mask = 0;
     for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restriction = restrictions[i];
       // Compare the time to the time-based restrictions
@@ -711,21 +744,32 @@ public:
             // If not, we should keep looking
 
             // We are in range at the time we are allowed at this edge
-            if (access_type == baldr::AccessType::kTimedAllowed)
+            if (access_type == baldr::AccessType::kTimedAllowed) {
+              destonly_access_restr_mask = tmp_mask;
               return true;
-            else if (access_type == baldr::AccessType::kDestinationAllowed)
+            } else if (access_type == baldr::AccessType::kDestinationAllowed)
               return allow_conditional_destination_ || is_dest;
             else
               return false;
           }
         }
       }
+
+      if (restriction.except_destination() &&
+          static_cast<size_t>(restriction.type()) < baldr::kAccessRestrictionMasks.size()) {
+        auto mask = baldr::kAccessRestrictionMasks[static_cast<size_t>(restriction.type())];
+        tmp_mask |= mask;
+        if ((destonly_access_restr_mask & mask) || allow_destination_only_)
+          continue;
+      }
+
       // In case there are additional restriction checks for a particular  mode,
       // check them now
       if (!ModeSpecificAllowed(restriction)) {
         return false;
       }
     }
+    destonly_access_restr_mask = tmp_mask;
 
     // if we have time allowed restrictions then these restrictions are
     // the only time we can route here.  Meaning all other time is restricted.

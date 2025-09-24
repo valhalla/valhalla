@@ -9,6 +9,7 @@
 #include "midgard/util.h"
 #include "odin/util.h"
 #include "proto_conversions.h"
+#include "sif/hierarchylimits.h"
 #include "worker.h"
 
 #include <boost/optional.hpp>
@@ -1679,6 +1680,10 @@ void service_worker_t::enqueue_statistics(Api& api) const {
       case set:
         statsd_client->set(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
                            statsd_client->tags);
+        break;
+      // Handle protobuf sentinel values to avoid compiler warnings
+      case StatisticType_INT_MIN_SENTINEL_DO_NOT_USE_:
+      case StatisticType_INT_MAX_SENTINEL_DO_NOT_USE_:
         break;
     }
   }
