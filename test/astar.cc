@@ -71,10 +71,10 @@ const gurka::ways ways1 = {{"ab", {{"highway", "motorway"}}},
 // all get merged during tile building, and we don't want a weirdly connected
 // graph because IDs are shared, so we start at 0 here but continue at 4 in the next batch
 const gurka::nodes nodes1 = {
-  {"a", {{"osm_id", "0"}}},
-  {"b", {{"osm_id", "1"}}},
-  {"c", {{"osm_id", "2"}}},
-  {"d", {{"osm_id", "3"}}},
+    {"a", {{"osm_id", "0"}}},
+    {"b", {{"osm_id", "1"}}},
+    {"c", {{"osm_id", "2"}}},
+    {"d", {{"osm_id", "3"}}},
 };
 
 //
@@ -94,9 +94,9 @@ const gurka::ways ways2 = {{"ef", {{"highway", "residential"}, {"foot", "yes"}}}
                            {"eg", {{"highway", "residential"}, {"foot", "yes"}}},
                            {"fg", {{"highway", "residential"}, {"foot", "yes"}}}};
 const gurka::nodes nodes2 = {
-  {"e", {{"osm_id", "4"}}},
-  {"f", {{"osm_id", "5"}}},
-  {"g", {{"osm_id", "6"}}},
+    {"e", {{"osm_id", "4"}}},
+    {"f", {{"osm_id", "5"}}},
+    {"g", {{"osm_id", "6"}}},
 };
 
 // Third test has a complex turn restriction preventing K->H->I->L  (marked with R)
@@ -120,15 +120,10 @@ const gurka::ways ways3 = {{"kh", {{"highway", "motorway"}}}, {"hi", {{"highway"
                            {"ij", {{"highway", "motorway"}}}, {"lm", {{"highway", "motorway"}}},
                            {"mj", {{"highway", "motorway"}}}, {"il", {{"highway", "motorway"}}},
                            {"nk", {{"highway", "motorway"}}}};
-const gurka::nodes nodes3 = {
-  {"h", {{"osm_id", "7"}}},
-  {"i", {{"osm_id", "8"}}},
-  {"j", {{"osm_id", "9"}}},
-  {"k", {{"osm_id", "10"}}},
-  {"l", {{"osm_id", "11"}}},
-  {"m", {{"osm_id", "12"}}},
-  {"n", {{"osm_id", "13"}}}
-};
+const gurka::nodes nodes3 = {{"h", {{"osm_id", "7"}}},  {"i", {{"osm_id", "8"}}},
+                             {"j", {{"osm_id", "9"}}},  {"k", {{"osm_id", "10"}}},
+                             {"l", {{"osm_id", "11"}}}, {"m", {{"osm_id", "12"}}},
+                             {"n", {{"osm_id", "13"}}}};
 
 const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member, "kh", "from"},
                                        gurka::relation_member{gurka::way_member, "il", "to"},
@@ -167,7 +162,7 @@ void make_tile() {
     // Build the maps from the ASCII diagrams, and extract the generated lon,lat values
     auto nodemap = gurka::detail::map_to_coordinates(map1, gridsize, {0, 0.2});
     gurka::detail::build_pbf(nodemap, ways1, nodes1, {}, test_dir + "/map1.pbf");
-    for (const auto &n: nodemap)
+    for (const auto& n : nodemap)
       node_locations[n.first] = n.second;
   }
 

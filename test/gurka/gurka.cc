@@ -256,21 +256,23 @@ inline void build_pbf(const nodelayout& node_locations,
 
   uint64_t osm_id = 0;
   std::unordered_set<uint64_t> used_osm_ids;
-  auto get_node_id = [&](const std::string &node_name) {
+  auto get_node_id = [&](const std::string& node_name) {
     auto found = nodes.find(node_name);
     if (found != nodes.cend() && found->second.count("osm_id") > 0) {
       return static_cast<uint64_t>(std::stoull(found->second.at("osm_id")));
     }
-    while (!used_osm_ids.insert(++osm_id).second);
+    while (!used_osm_ids.insert(++osm_id).second)
+      ;
     return osm_id;
   };
 
-  auto get_way_id = [&](const std::map<std::string, std::string> &tags) {
+  auto get_way_id = [&](const std::map<std::string, std::string>& tags) {
     auto found = tags.find("osm_id");
     if (found != tags.cend()) {
       return static_cast<uint64_t>(std::stoull(found->second));
     }
-    while (!used_osm_ids.insert(++osm_id).second);
+    while (!used_osm_ids.insert(++osm_id).second)
+      ;
     return osm_id;
   };
 
@@ -295,7 +297,7 @@ inline void build_pbf(const nodelayout& node_locations,
                                 osmium::builder::attr::_version(1),
                                 osmium::builder::attr::_timestamp(std::time(nullptr)),
                                 osmium::builder::attr::_location(
-                                  osmium::Location{loc.second.lng(), loc.second.lat()}),
+                                    osmium::Location{loc.second.lng(), loc.second.lat()}),
                                 osmium::builder::attr::_tags(tags));
     }
   }

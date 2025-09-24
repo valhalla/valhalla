@@ -473,8 +473,7 @@ void BuildTileSet(const std::string& ways_file,
       encoded_node_ids.resize(1);
       encoded_node_ids += encode7int(osm_node_ids);
       // prepend the length in bytes of the encoded value so we know how much to read later
-      encoded_node_ids.insert(1,
-                              encode7int(std::vector{encoded_node_ids.size() - 1}));
+      encoded_node_ids.insert(1, encode7int(std::vector{encoded_node_ids.size() - 1}));
     }
   };
 
