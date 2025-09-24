@@ -236,7 +236,7 @@ TEST(TaggedValuesStandalone, test_osm_node_ids) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_tagged_value_osm_node_ids",
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_tagged_value_osm_node_ids",
                                {{"mjolnir.keep_all_osm_node_ids", "true"}});
 
   // check that all nodes have correct ids
