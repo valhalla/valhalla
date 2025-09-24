@@ -511,7 +511,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT_V2(co, cfg.exclude_ferries_, json, "/exclude_ferries", exclude_ferries);
 
   JSON_PBF_DEFAULT_V2(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
-                   exclude_cash_only_tolls);
+                      exclude_cash_only_tolls);
 
   // service_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty);
