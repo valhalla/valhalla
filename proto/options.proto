@@ -80,7 +80,7 @@ message AvoidEdge {
 message HierarchyLimits {
  uint32 up_transition_count = 1;   // Keep track of # of upward transitions
                                    // Internal use only, remember to clear on incoming requests
- uint32 max_up_transitions = 2;    // Maximum number of upward transitions before 
+ uint32 max_up_transitions = 2;    // Maximum number of upward transitions before
                                    // expansion is stopped on a level.
  float expand_within_dist = 3; // Distance (m) to destination within which
                                    // expansion of a hierarchy level is
@@ -206,9 +206,7 @@ message Costing {
     oneof has_low_class_penalty {
       float low_class_penalty = 34;
     }
-    oneof has_hazmat {
-      bool hazmat = 35;
-    }
+    bool hazmat = 35;
     oneof has_weight {
       float weight = 36;
     }
@@ -227,12 +225,8 @@ message Costing {
     oneof has_cycling_speed {
       float cycling_speed = 41;
     }
-    oneof has_wheelchair {
-      bool wheelchair = 42;
-    }
-    oneof has_bicycle {
-      bool bicycle = 43;
-    }
+    bool wheelchair = 42;
+    bool bicycle = 43;
     oneof has_use_bus {
       float use_bus = 44;
     }
@@ -269,21 +263,13 @@ message Costing {
     oneof has_use_rail_ferry {
       float use_rail_ferry = 59;
     }
-    oneof has_ignore_restrictions {
-      bool ignore_restrictions = 60;
-    }
-    oneof has_ignore_oneways {
-      bool ignore_oneways = 61;
-    }
-    oneof has_ignore_access {
-      bool ignore_access = 62;
-    }
+    bool ignore_restrictions = 60;
+    bool ignore_oneways = 61;
+    bool ignore_access = 62;
     oneof has_ignore_closures {
       bool ignore_closures = 63;
     }
-    oneof has_shortest {
-      bool shortest = 64;
-    }
+    bool shortest = 64;
     oneof has_service_penalty {
       float service_penalty = 65;
     }
@@ -305,21 +291,11 @@ message Costing {
     oneof has_private_access_penalty {
       float private_access_penalty = 71;
     }
-    oneof has_exclude_unpaved {
-      bool exclude_unpaved = 72;
-    }
-    oneof has_include_hot {
-      bool include_hot = 73;
-    }
-    oneof has_include_hov2 {
-      bool include_hov2 = 74;
-    }
-    oneof has_include_hov3 {
-      bool include_hov3 = 75;
-    }
-    oneof has_exclude_cash_only_tolls {
-      bool exclude_cash_only_tolls = 76;
-    }
+    bool exclude_unpaved = 72;
+    bool include_hot = 73;
+    bool include_hov2 = 74;
+    bool include_hov3 = 75;
+    bool exclude_cash_only_tolls = 76;
     oneof has_restriction_probability {
       uint32 restriction_probability = 77;
     }
@@ -425,9 +401,7 @@ message Options {
   }
   Action action = 8;                                               // Action signifying the request type
   //deprecated = 9;
-  oneof has_range {
-    bool range = 10;                                               // Used in /height if the range between points should be serialized  [default = false]
-  }
+  bool range = 10;                                                 // Used in /height if the range between points should be serialized  [default = false]
   // verbose needs to stay oneof, so that matrix serializer can default to true
   oneof has_verbose {
     bool verbose = 11;                                             // Used in /locate & /status request to give back extensive information [default = false]
@@ -447,18 +421,14 @@ message Options {
     double resample_distance = 21;                                 // Resampling shape at regular intervals
   }
   repeated Contour contours = 22;                                  // List of isochrone contours
-  oneof has_polygons {
-    bool polygons = 23;                                            // Boolean value to determine whether to return geojson polygons or linestrings as the contours
-  }
+  bool polygons = 23;                                              // Boolean value to determine whether to return geojson polygons or linestrings as the contours
   oneof has_denoise {
     float denoise = 24;                                            // A floating point value from 0 to 1 which can be used to remove smaller contours (default 1.0)
   }
   oneof has_generalize {
     float generalize = 25;                                         // Meters used as the tolerance for Douglas-Peucker generalization
   }
-  oneof has_show_locations {
-    bool show_locations = 26;                                      // Add original locations to the isochrone geojson response
-  }
+  bool show_locations = 26;                                        // Add original locations to the isochrone geojson response
   repeated Location trace = 27;                                    // Trace points for map matching
   ShapeMatch shape_match = 28;                                     // The matching algorithm based on the type of input [default = walk_or_snap]
   //deprecated = 29;
@@ -476,9 +446,7 @@ message Options {
   oneof has_breakage_distance {
     float breakage_distance = 36;                                  // Map-matching breaking distance (distance between GPS trace points)
   }
-  oneof has_use_timestamps {
-    bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]
-  }
+  bool use_timestamps = 37;                                        // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]
   oneof has_shape_format {
     ShapeFormat shape_format = 38;                                 // Shape format, defaults to polyline6 encoding for OSRM/height, and no_shape for matrix
   }
@@ -488,9 +456,7 @@ message Options {
   oneof has_interpolation_distance {
     float interpolation_distance = 40;                             // Map-matching interpolation distance beyond which trace points are merged
   }
-  oneof has_guidance_views {
-    bool guidance_views = 41;                                      // Whether to return guidance_views in the response
-  }
+  bool guidance_views = 41;                                        // Whether to return guidance_views in the response
   // 42 is reserved
   oneof has_height_precision {
     uint32 height_precision = 43;                                  // Number of digits precision for heights returned [default = 0]
@@ -498,20 +464,14 @@ message Options {
   oneof has_roundabout_exits {
     bool roundabout_exits = 44;                                    // Whether to announce roundabout exit maneuvers [default = true]
   }
-  oneof has_linear_references {
-    bool linear_references = 45;                                   // Include linear references for graph edges returned in certain responses.
-  }
+  bool linear_references = 45;                                     // Include linear references for graph edges returned in certain responses.
   repeated Costing recostings = 46;                                // CostingType options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
-  oneof has_prioritize_bidirectional {
-    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
-  }
+  bool prioritize_bidirectional = 48;                              // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
   oneof has_expansion_action {
     Action expansion_action = 49;                                  // Meta action for /expansion endpoint
   }
-  oneof has_skip_opposites {
-    bool skip_opposites = 50;                                      // Whether to return opposite edges encountered during expansion
-  }
+  bool skip_opposites = 50;                                        // Whether to return opposite edges encountered during expansion
   repeated ExpansionProperties expansion_properties = 51;          // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
   PbfFieldSelector pbf_field_selector = 52;                        // Which pbf fields to include in the pbf format response
   bool reverse = 53;                                               // should the isochrone expansion be done in the reverse direction, ignored for multimodal isochrones
