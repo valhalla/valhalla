@@ -408,16 +408,16 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   }
 
   // various traversability flags
-  JSON_PBF_DEFAULT(co, false, json, "/ignore_restrictions", ignore_restrictions);
-  JSON_PBF_DEFAULT(co, false, json, "/ignore_oneways", ignore_oneways);
-  JSON_PBF_DEFAULT(co, false, json, "/ignore_access", ignore_access);
-  JSON_PBF_DEFAULT(co, false, json, "/ignore_closures", ignore_closures);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_restrictions", ignore_restrictions);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_oneways", ignore_oneways);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_access", ignore_access);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_closures", ignore_closures);
   JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_construction", ignore_construction);
   JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_non_vehicular_restrictions",
                       ignore_non_vehicular_restrictions);
 
   // shortest
-  JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/shortest", shortest);
 
   // disable hierarchy pruning
   co->set_disable_hierarchy_pruning(
@@ -502,7 +502,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
     JSON_PBF_RANGED_DEFAULT(co, cfg.use_rail_ferry_, json, "/use_rail_ferry", use_rail_ferry);
   }
 
-  JSON_PBF_DEFAULT(co, cfg.exclude_unpaved_, json, "/exclude_unpaved", exclude_unpaved);
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_unpaved_, json, "/exclude_unpaved", exclude_unpaved);
 
   JSON_PBF_DEFAULT_V2(co, cfg.exclude_bridges_, json, "/exclude_bridges", exclude_bridges);
   JSON_PBF_DEFAULT_V2(co, cfg.exclude_tunnels_, json, "/exclude_tunnels", exclude_tunnels);
@@ -510,8 +510,8 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT_V2(co, cfg.exclude_highways_, json, "/exclude_highways", exclude_highways);
   JSON_PBF_DEFAULT_V2(co, cfg.exclude_ferries_, json, "/exclude_ferries", exclude_ferries);
 
-  JSON_PBF_DEFAULT(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
-                   exclude_cash_only_tolls);
+  JSON_PBF_DEFAULT_V2(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
+                      exclude_cash_only_tolls);
 
   // service_penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.service_penalty_, json, "/service_penalty", service_penalty);
@@ -533,9 +533,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor);
 
   // HOT/HOV
-  JSON_PBF_DEFAULT(co, cfg.include_hot_, json, "/include_hot", include_hot);
-  JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
-  JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
+  JSON_PBF_DEFAULT_V2(co, cfg.include_hot_, json, "/include_hot", include_hot);
+  JSON_PBF_DEFAULT_V2(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
+  JSON_PBF_DEFAULT_V2(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 
   JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
 }
