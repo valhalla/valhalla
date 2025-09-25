@@ -25,58 +25,29 @@ struct tile_index_entry {
   uint32_t size;    // size of the tile in bytes
 };
 
-/**
- * When it seems like we'll use a remote tar, we check if the tile_dir contains a
- * id.txt whose tile_url & last-modified date match the arguments. If there's no
- * id.txt, it'll create one.
- *
- * @param tile_url       the config's "tile_url" value
- * @param tile_dir       the config's "tile_dir" value
- * @param last_modified  last modified header of the remote file
- * @returns false if there's a tile_dir/id.txt whose contents does not match tile_url
- *          and last-modified date, true otherwise
- */
-bool check_tar_tile_dir(const std::string& tile_url,
-                        const std::string& tile_dir,
-                        uint64_t last_modified) {
-  // tile_url can't be empty
-  if (tile_url.empty()) {
-    return false;
-  }
-  // tile_dir can be empty, in which case we're simply not caching
-  if (tile_dir.empty()) {
-    return true;
-  }
-
-  // need to lock from here on since there's usually many GraphReaders initializing at the same time
-  static std::mutex mutex;
-  std::lock_guard lock{mutex};
-
-  std::string tile_url_txt_path = tile_dir;
-  tile_url_txt_path += std::filesystem::path::preferred_separator;
-  tile_url_txt_path += "id.txt";
-  std::ifstream in_url_file(tile_url_txt_path);
-
-  // if there's a url.txt in the tile_dir, it must match the tile_url & last-modified date
-  if (in_url_file) {
-    std::string file_url, file_last_modified;
-    if (!std::getline(in_url_file, file_url)) {
+uint64_t validate_id_txt(const std::filesystem::path& id_txt_path, const std::string& tile_url) {
+  std::ifstream in_id_txt_file(id_txt_path);
+  uint64_t creation_time = 0;
+  if (in_id_txt_file) {
+    // validate that the expected lines and values are present
+    std::string file_url, file_creation_time;
+    if (!std::getline(in_id_txt_file, file_url)) {
       throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
-                               tile_url_txt_path);
+                               id_txt_path.string());
+    } else if (file_url != tile_url) {
+      // TODO: could do the GraphReader initialization on our own, clean the tile_dir and start fresh
+      throw std::runtime_error("Tile URL changed, configure a different mjolnir.tile_dir");
     }
-    if (!std::getline(in_url_file, file_last_modified)) {
-      throw std::runtime_error("Couldn't find timestamp on the second line in " + tile_url_txt_path);
+
+    if (!std::getline(in_id_txt_file, file_creation_time)) {
+      throw std::runtime_error("Couldn't find timestamp on the second line in " +
+                               id_txt_path.string());
     }
-    return file_url == tile_url && file_last_modified == std::to_string(last_modified);
+
+    creation_time = std::stoull(file_creation_time);
   }
 
-  // no id.txt, then create it in the current tile_dir
-  std::filesystem::create_directories(tile_dir);
-  std::ofstream out_url_file(tile_url_txt_path);
-  out_url_file << tile_url << std::endl;
-  out_url_file << last_modified;
-
-  return true;
+  return creation_time;
 }
 
 } // namespace
@@ -234,17 +205,6 @@ void GraphReader::load_remote_tar_offsets() {
   } else if (first_file_name != "index.bin") {
     throw std::runtime_error("The first file in the remote tar needs to be 'index.bin' at " +
                              tile_url_);
-  }
-
-  // do a HEAD request to get the last-modified header
-  auto filetime =
-      CURL_OR_THROW(tile_getter_->head(tile_url_, tile_getter_t::kHeaderLastModified), tile_url_)
-          .last_modified_time_;
-
-  if (!check_tar_tile_dir(tile_url_, tile_dir_, filetime)) {
-    throw std::runtime_error(
-        "Tar source specified, but %tile_dir%/id.txt doesn't match 'tile_url' config or "
-        "has a different 'Last-Modified' timestamp");
   }
 
   // fetch the index.bin and read its content into remote_tar_offsets
@@ -581,23 +541,41 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
       tile_dir_(tile_extract_->tiles.empty() ? pt.get<std::string>("tile_dir", "") : ""),
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
-      tile_url_(pt.get<std::string>("tile_url", "")), cache_(TileCacheFactory::createTileCache(pt)) {
+      tile_url_(pt.get<std::string>("tile_url", "")),
+      tar_id_txt_path_(std::filesystem::path(tile_dir_) / "id.txt"),
+      is_tar_url_(!tile_url_.empty() &&
+                  tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos),
+      cache_(TileCacheFactory::createTileCache(pt)) {
 
-  // Make a tile fetcher if we havent passed one in from somewhere else
-  if (!tile_getter_ && !tile_url_.empty()) {
-    tile_getter_ = std::make_unique<curl_tile_getter_t>(max_concurrent_users_,
-                                                        pt.get<std::string>("user_agent", ""),
-                                                        pt.get<bool>("tile_url_gz", false),
-                                                        pt.get<std::string>("tile_url_user_pw", ""));
+  if (!tile_url_.empty()) {
+    // Make a tile fetcher if we havent passed one in from somewhere else
+    if (!tile_getter_) {
+      tile_getter_ =
+          std::make_unique<curl_tile_getter_t>(max_concurrent_users_,
+                                               pt.get<std::string>("user_agent", ""),
+                                               pt.get<bool>("tile_url_gz", false),
+                                               pt.get<std::string>("tile_url_user_pw", ""));
+    }
+    if (is_tar_url_) {
+      // validate the id.txt if available
+      // need to lock from here on since there's usually many GraphReaders initializing at the same
+      // time
+      static std::mutex mutex;
+      std::lock_guard lock{mutex};
+      if (std::filesystem::exists(tar_id_txt_path_)) {
+        validate_id_txt(tar_id_txt_path_, tile_url_);
+      } else {
+        // no id.txt, then create it in the current tile_dir
+        // we write 0 so the next thread will find a valid creation_time_
+        std::filesystem::create_directories(tile_dir_);
+        std::ofstream out_url_file(tar_id_txt_path_, std::ios::binary);
+        out_url_file << tile_url_ << std::endl;
+        out_url_file << '0' << std::endl;
+      }
+
+      load_remote_tar_offsets();
+    }
   }
-
-  const bool is_tar_url =
-      !tile_url_.empty() && tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos;
-  // throws if the tile_url is not pointing to what we expect or it's trying to access
-  // a different tileset
-  if (is_tar_url)
-    load_remote_tar_offsets();
-
   // Reserve cache (based on whether using individual tile files or shared,
   // mmap'd file
   cache_->Reserve(tile_extract_->tiles.empty() ? AVERAGE_TILE_SIZE : AVERAGE_MM_TILE_SIZE);
@@ -720,17 +698,19 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
         }
       }
 
-      if (!tile_url_.empty() && remote_tar_offsets_.empty()) {
+      if (!tile_url_.empty() && !is_tar_url_) {
         // plain tiles
         // Get it from the url and cache it to disk if you can
         tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
-      } else if (!tile_url_.empty() && !remote_tar_offsets_.empty()) {
+      } else if (is_tar_url_) {
         // tiles from remote tar
+        auto creation_time = validate_id_txt(tar_id_txt_path_, tile_url_);
         auto pos = remote_tar_offsets_.find(base);
         tile = (pos == remote_tar_offsets_.end())
                    ? nullptr
                    : GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_,
-                                             pos->second.offset, pos->second.size);
+                                             pos->second.offset, pos->second.size, tar_id_txt_path_,
+                                             creation_time);
       }
 
       if (!tile) {
