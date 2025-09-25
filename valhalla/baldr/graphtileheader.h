@@ -165,12 +165,7 @@ public:
    * @return Returns the base lat,lon of the tile (degrees).
    */
   midgard::PointLL base_ll() const {
-    GraphId id(graphid_);
-
-    if (id.level() == TileHierarchy::GetTransitLevel().level) {
-      return TileHierarchy::GetTransitLevel().tiles.Base(id.tileid());
-    }
-    return TileHierarchy::levels()[id.level()].tiles.Base(id.tileid());
+    return {base_ll_[0], base_ll_[1]};
   }
 
   /**
@@ -178,8 +173,8 @@ public:
    * @param ll  Base lat,lon of the tile.
    */
   void set_base_ll(const midgard::PointLL& ll) {
-    base_ll_.first = ll.lng();
-    base_ll_.second = ll.lat();
+    base_ll_[0] = ll.lng();
+    base_ll_[1] = ll.lat();
   }
 
   /**
@@ -618,7 +613,7 @@ protected:
 
   // TODO: in v4, don't store this its superfluous information, the graphid has all we need
   // Base lon, lat of the tile
-  std::pair<float, float> base_ll_ = {0, 0};
+  std::array<float, 2> base_ll_ = {0.f, 0.f};
 
   // baldr version.
   std::array<char, kMaxVersionSize> version_ = {};
@@ -715,6 +710,11 @@ protected:
 };
 
 static_assert(sizeof(GraphTileHeader) == 272, "Bad sizeof(GraphTileHeader)");
+// make sure it stays POD-like so we can safely copy it around
+static_assert(std::is_trivially_copyable_v<GraphTileHeader>,
+              "GraphTileHeader is not trivially copyable");
+static_assert(std::is_standard_layout_v<GraphTileHeader>,
+              "GraphTileHeader has non-standard layout, e.g. virtual functions");
 
 } // namespace baldr
 } // namespace valhalla

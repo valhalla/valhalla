@@ -92,6 +92,8 @@ public:
    * @param  tile_getter object that will handle tile downloading
    * @param  range_offset HTTP range offsete in case of a tar URL
    * @param  range_size HTTP range offsete in case of a tar URL
+   * @param  id_txt_path the file path to the tile_dir's id.txt
+   * @param  id_creation_time the timestamp according to the id.txt
    * @return the graph tile or nullptr
    */
 
@@ -100,7 +102,9 @@ public:
                                      tile_getter_t* tile_getter,
                                      const std::string& cache_location,
                                      uint64_t range_offset = 0,
-                                     uint64_t range_size = 0);
+                                     uint64_t range_size = 0,
+                                     const std::filesystem::path& id_txt_path = "",
+                                     uint64_t id_creation_time = 0);
 
   /**
    * Construct a tile given a url for the tile using curl
