@@ -746,7 +746,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
 
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kLowClassPenaltyRange, json, "/low_class_penalty", low_class_penalty);
-  JSON_PBF_DEFAULT(co, false, json, "/hazmat", hazmat);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/hazmat", hazmat);
   JSON_PBF_RANGED_DEFAULT(co, kTruckWeightRange, json, "/weight", weight);
   JSON_PBF_RANGED_DEFAULT(co, kTruckAxleLoadRange, json, "/axle_load", axle_load);
   JSON_PBF_RANGED_DEFAULT(co, kTruckHeightRange, json, "/height", height);
