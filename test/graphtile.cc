@@ -131,7 +131,7 @@ TEST(GraphTileIntegrity, SizeLessThanPayload) {
                std::runtime_error);
 }
 
-TEST(GraphTileVersion, VersionCreationTime) {
+TEST(GraphTileVersion, VersionChecksum) {
   std::string tile_dir = VALHALLA_BUILD_DIR "test/data/utrecht_tiles";
 
   auto tile = GraphTile::Create(tile_dir, {3196, 0, 0});
