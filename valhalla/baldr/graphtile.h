@@ -104,7 +104,7 @@ public:
                                      uint64_t range_offset = 0,
                                      uint64_t range_size = 0,
                                      const std::filesystem::path& id_txt_path = "",
-                                     uint64_t id_creation_time = 0);
+                                     uint64_t id_checksum = 0);
 
   /**
    * Construct a tile given a url for the tile using curl

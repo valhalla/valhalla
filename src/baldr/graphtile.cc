@@ -228,14 +228,13 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        uint64_t range_offset,
                                        uint64_t range_size,
                                        const std::filesystem::path& id_txt_path,
-                                       uint64_t id_creation_time) {
+                                       uint64_t id_checksum) {
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
   }
 
-  LOG_INFO("Downloading tile " + std::to_string(graphid) + " from " + tile_url + " with " +
-           std::to_string(range_size) + " bytes");
+  LOG_INFO("Downloading tile " + std::to_string(graphid) + " from " + tile_url);
 
   tile_getter_t::GET_response_t result;
   if (range_size == 0) {
@@ -252,22 +251,22 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
     // it's a POD type and thus trivially copyable
     GraphTileHeader header;
     std::memcpy(&header, result.bytes_.data(), sizeof(header));
-    auto tile_creation_time = header.creation_time();
-    if (tile_creation_time == 0) {
+    auto tile_checksum = header.checksum();
+    if (tile_checksum == 0) {
       // loading tilesets from older valhalla commits has the potential to corrupt the GraphReader
-      // TODO: add github link?
       LOG_ERROR(
           "Remote tile is missing the creation_time attribute, please update the tile builder instance");
       return nullptr;
-    } else if (id_creation_time == 0) {
+    } else if (id_checksum == 0) {
+      // this is the first tile in a fresh tile_dir
       static std::mutex mutex;
       std::lock_guard lock{mutex};
       std::ofstream id_txt_file(id_txt_path, std::ios::binary);
       if (id_txt_file) {
         id_txt_file << tile_url << std::endl;
-        id_txt_file << tile_creation_time << std::endl;
+        id_txt_file << tile_checksum << std::endl;
       }
-    } else if (tile_creation_time != id_creation_time) {
+    } else if (tile_checksum != id_checksum) {
       // TODO: could re-start the graphreader on our own somehow (i.e. purger old tiles)
       LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
       return nullptr;

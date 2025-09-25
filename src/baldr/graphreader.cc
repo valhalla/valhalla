@@ -27,10 +27,10 @@ struct tile_index_entry {
 
 uint64_t validate_id_txt(const std::filesystem::path& id_txt_path, const std::string& tile_url) {
   std::ifstream in_id_txt_file(id_txt_path);
-  uint64_t creation_time = 0;
+  uint64_t checksum = 0;
   if (in_id_txt_file) {
     // validate that the expected lines and values are present
-    std::string file_url, file_creation_time;
+    std::string file_url, file_checksum;
     if (!std::getline(in_id_txt_file, file_url)) {
       throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
                                id_txt_path.string());
@@ -39,15 +39,15 @@ uint64_t validate_id_txt(const std::filesystem::path& id_txt_path, const std::st
       throw std::runtime_error("Tile URL changed, configure a different mjolnir.tile_dir");
     }
 
-    if (!std::getline(in_id_txt_file, file_creation_time)) {
-      throw std::runtime_error("Couldn't find timestamp on the second line in " +
+    if (!std::getline(in_id_txt_file, file_checksum)) {
+      throw std::runtime_error("Couldn't find MD5 hash on the second line in " +
                                id_txt_path.string());
     }
 
-    creation_time = std::stoull(file_creation_time);
+    checksum = std::stoull(file_checksum);
   }
 
-  return creation_time;
+  return checksum;
 }
 
 } // namespace
@@ -566,7 +566,7 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
         validate_id_txt(tar_id_txt_path_, tile_url_);
       } else {
         // no id.txt, then create it in the current tile_dir
-        // we write 0 so the next thread will find a valid creation_time_
+        // we write 0 so the next thread will find a valid MD5 hash
         std::filesystem::create_directories(tile_dir_);
         std::ofstream out_url_file(tar_id_txt_path_, std::ios::binary);
         out_url_file << tile_url_ << std::endl;
@@ -704,13 +704,13 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
         tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
       } else if (is_tar_url_) {
         // tiles from remote tar
-        auto creation_time = validate_id_txt(tar_id_txt_path_, tile_url_);
+        auto checksum = validate_id_txt(tar_id_txt_path_, tile_url_);
         auto pos = remote_tar_offsets_.find(base);
         tile = (pos == remote_tar_offsets_.end())
                    ? nullptr
                    : GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_,
                                              pos->second.offset, pos->second.size, tar_id_txt_path_,
-                                             creation_time);
+                                             checksum);
       }
 
       if (!tile) {
