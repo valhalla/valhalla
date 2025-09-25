@@ -21,6 +21,7 @@
 #include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <openssl/evp.h>
 
 #include <filesystem>
 #include <regex>
@@ -47,6 +48,80 @@ const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
 const std::string intersections_file = "intersections.bin";
 const std::string shapes_file = "shapes.bin";
+
+void set_checksums(std::vector<std::string> paths, const std::string& tile_dir) {
+  std::sort(paths.begin(), paths.end());
+
+  // uses openssl's API which can build the digest from byte chunks to save memory
+  EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+  std::array<unsigned char, 16> digest{};
+  try {
+    EVP_DigestInit_ex(ctx, EVP_md5(), nullptr);
+
+    std::vector<char> buffer(1 << 26); // 64 MiB
+
+    for (const auto& p : paths) {
+      std::ifstream in(p, std::ios::binary);
+      if (!in) {
+        throw std::runtime_error("Failed to open: " + p);
+      }
+
+      while (in) {
+        in.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+        std::streamsize got = in.gcount();
+        if (got > 0) {
+          if (EVP_DigestUpdate(ctx, buffer.data(), static_cast<size_t>(got)) != 1) {
+            throw std::runtime_error("EVP_DigestUpdate failed");
+          }
+        }
+      }
+    }
+
+    unsigned int out_len = 0;
+    if (EVP_DigestFinal_ex(ctx, digest.data(), &out_len) != 1 || out_len != digest.size()) {
+      throw std::runtime_error("EVP_DigestFinal_ex failed");
+    }
+  } catch (...) {
+    EVP_MD_CTX_free(ctx);
+    throw;
+  }
+
+  EVP_MD_CTX_free(ctx);
+
+  // roll the 128 bit digest into a uint64
+  uint64_t lo = 0, hi = 0;
+  for (int i = 0; i < 8; ++i) {
+    lo = (lo << 8) | digest[i];
+    hi = (hi << 8) | digest[8 + i];
+  }
+
+  // write the checksum to the tile headers
+  uint64_t checksum = lo ^ hi;
+  for (std::filesystem::recursive_directory_iterator tile_path(tile_dir), end; tile_path != end;
+       ++tile_path) {
+    if (!tile_path->is_regular_file() || tile_path->path().extension() != ".gph") {
+      continue;
+    }
+
+    std::fstream file(tile_path->path(), std::ios::in | std::ios::out | std::ios::binary);
+    if (!file.is_open()) {
+      throw std::runtime_error("Failed to open file " + tile_path->path().string());
+    }
+    GraphTileHeader header;
+    file.seekg(0);
+    file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
+
+    // very likely transit tiles will in the future write their own checksums from GTFS
+    if (!header.checksum())
+      header.set_checksum(checksum);
+
+    file.seekp(0);
+    file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
+    if (!file) {
+      throw std::runtime_error("Failed to write to file " + tile_path->path().string());
+    }
+  }
+}
 
 /**
  * Returns true if edge transition is a pencil point u-turn, false otherwise.
@@ -768,6 +843,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Validate the graph and add information that cannot be added until full graph is formed.
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
     GraphValidator::Validate(config);
+    // set the checksum of the PBF files for all tiles
+    set_checksums(input_files, tile_dir);
   }
 
   // Cleanup bin files

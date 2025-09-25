@@ -1,6 +1,9 @@
 #include "gurka.h"
 
 #include <gtest/gtest.h>
+#include <openssl/evp.h>
+
+#include <fstream>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -85,17 +88,44 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
   }
 }
 
+uint64_t get_pbf_md5(std::string pbf_path) {
+  std::ifstream file(pbf_path, std::ios::binary);
+  std::vector<unsigned char> data((std::istreambuf_iterator<char>(file)),
+                                  std::istreambuf_iterator<char>());
+
+  unsigned char digest[EVP_MAX_MD_SIZE];
+  unsigned int len = 0;
+  EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+  EVP_DigestInit_ex(ctx, EVP_md5(), nullptr);
+  EVP_DigestUpdate(ctx, data.data(), data.size());
+  EVP_DigestFinal_ex(ctx, digest, &len);
+  EVP_MD_CTX_free(ctx);
+
+  // roll the 128 bit digest into a uint64
+  uint64_t lo = 0, hi = 0;
+  for (int i = 0; i < 8; ++i) {
+    lo = (lo << 8) | digest[i];
+    hi = (hi << 8) | digest[8 + i];
+  }
+  return lo ^ hi;
+}
+
 // 1. build tiles with the same input twice
 // 2. check that the same tile sets are generated
 struct ReproducibleBuild : ::testing::Test {
   void BuildTiles(const std::string& ascii_map, const gurka::ways& ways, const double gridsize) {
-    const auto build_tiles = [&](const std::string& dir) -> gurka::map {
+    const auto build_tiles = [&](const std::string& dir) -> std::pair<gurka::map, std::string> {
       const gurka::nodelayout layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
       const std::string workdir = "test/data/gurka_reproduce_tile_build/" + dir;
-      return gurka::buildtiles(layout, ways, {}, {}, workdir, {});
+      return std::make_pair(gurka::buildtiles(layout, ways, {}, {}, workdir, {}),
+                            workdir + "/map.pbf");
     };
-    const gurka::map first_map = build_tiles("1");
-    const gurka::map second_map = build_tiles("2");
+    const auto [first_map, first_pbf] = build_tiles("1");
+    const auto [second_map, second_pbf] = build_tiles("2");
+    const auto first_pbf_md5 = get_pbf_md5(first_pbf);
+    const auto second_pbf_md5 = get_pbf_md5(second_pbf);
+    EXPECT_GT(first_pbf_md5, 0);
+    EXPECT_GT(second_pbf_md5, 0);
 
     baldr::GraphReader first_reader(first_map.config.get_child("mjolnir"));
     baldr::GraphReader second_reader(second_map.config.get_child("mjolnir"));
@@ -110,11 +140,14 @@ struct ReproducibleBuild : ::testing::Test {
 
       // human readable check
       assert_tile_equalish(*first_tile, *second_tile);
+      EXPECT_EQ(first_tile->header()->checksum(), first_pbf_md5);
+      EXPECT_EQ(second_tile->header()->checksum(), second_pbf_md5);
 
       // check that raw tiles are equal
       const auto raw_tile_bytes = [](const graph_tile_ptr& tile) -> std::string {
         const GraphTileHeader* header = tile->header();
-        return std::string(reinterpret_cast<const char*>(header), header->end_offset());
+        return std::string(reinterpret_cast<const char*>(header) + sizeof(*header),
+                           header->end_offset() - sizeof(*header));
       };
       const std::string first_raw_tile = raw_tile_bytes(first_tile);
       const std::string second_raw_tile = raw_tile_bytes(second_tile);
