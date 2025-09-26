@@ -678,7 +678,7 @@ protected:
   uint64_t spareword0_ = 0;
 
   // for road tiles: hashed md5 of the OSM PBFs
-  // for transit tiles: not implemented yet
+  // for transit tiles: so far the same
   uint64_t checksum_ = 0; // formerly spareword1_
 
   // Offsets to beginning of data (for variable size records)
