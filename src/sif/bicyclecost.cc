@@ -748,7 +748,8 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   float seconds = 0.0f;
   float turn_stress = 1.0f;
-  if (edge->stopimpact(idx) > 0) {
+  const auto stopimpact = edge->stopimpact(idx);
+  if (stopimpact > 0) {
     // Increase turn stress depending on the kind of turn that has to be made.
     uint32_t turn_type = static_cast<uint32_t>(edge->turntype(idx));
     float turn_penalty = (node->drive_on_right()) ? kRightSideTurnPenalties[turn_type]
@@ -763,7 +764,7 @@ Cost BicycleCost::TransitionCost(const baldr::DirectedEdge* edge,
     }
 
     // Transition time = stopimpact * turncost
-    seconds += edge->stopimpact(idx) * turn_cost;
+    seconds += stopimpact * turn_cost;
   }
 
   // Reduce stress by road class factor the closer use_roads_ is to 0
@@ -827,7 +828,8 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
 
   float seconds = 0.0f;
   float turn_stress = 1.0f;
-  if (edge->stopimpact(idx) > 0) {
+  const auto stopimpact = edge->stopimpact(idx);
+  if (stopimpact > 0) {
     // Increase turn stress depending on the kind of turn that has to be made.
     uint32_t turn_type = static_cast<uint32_t>(edge->turntype(idx));
     float turn_penalty = (node->drive_on_right()) ? kRightSideTurnPenalties[turn_type]
@@ -842,7 +844,7 @@ Cost BicycleCost::TransitionCostReverse(const uint32_t idx,
     }
 
     // Transition time = stopimpact * turncost
-    seconds += edge->stopimpact(idx) * turn_cost;
+    seconds += stopimpact * turn_cost;
   }
 
   // Reduce stress by road class factor the closer use_roads_ is to 0
