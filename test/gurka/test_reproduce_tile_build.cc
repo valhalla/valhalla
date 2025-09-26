@@ -1,6 +1,5 @@
 #include "gurka.h"
 
-#include <boost/functional/hash.hpp>
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
@@ -108,9 +107,8 @@ uint64_t get_pbf_md5(std::string pbf_path) {
     lo = (lo << 8) | digest[i];
     hi = (hi << 8) | digest[8 + i];
   }
-  auto checksum = lo;
   std::hash<uint64_t> hasher;
-  boost::hash_combine(checksum, hasher(hi));
+  uint64_t checksum = lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
 
   return checksum;
 }

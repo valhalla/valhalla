@@ -20,7 +20,6 @@
 
 #include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/functional/hash.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <openssl/evp.h>
 
@@ -97,9 +96,8 @@ uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& til
   }
 
   // write the checksum to the tile headers
-  auto checksum = lo;
   std::hash<uint64_t> hasher;
-  boost::hash_combine(checksum, hasher(hi));
+  uint64_t checksum = lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
 
   return checksum;
 }
