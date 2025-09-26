@@ -1,5 +1,6 @@
 #include "gurka.h"
 
+#include <boost/functional/hash.hpp>
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
@@ -126,6 +127,7 @@ struct ReproducibleBuild : ::testing::Test {
     };
     const auto [first_map, first_pbf] = build_tiles("1");
     const auto [second_map, second_pbf] = build_tiles("2");
+    // the checksums will differ when the PBFs weren't produced in the same second due to OSM header
     const auto first_pbf_md5 = get_pbf_md5(first_pbf);
     const auto second_pbf_md5 = get_pbf_md5(second_pbf);
     EXPECT_GT(first_pbf_md5, 0);
