@@ -95,7 +95,6 @@ uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& til
     hi = (hi << 8) | digest[8 + i];
   }
 
-  // write the checksum to the tile headers
   std::hash<uint64_t> hasher;
   uint64_t checksum = lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
 
