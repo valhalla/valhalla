@@ -20,6 +20,7 @@
 
 #include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/functional/hash.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <openssl/evp.h>
 

@@ -1,5 +1,6 @@
 #include "gurka.h"
 
+#include <boost/functional/hash.hpp>
 #include <gtest/gtest.h>
 #include <openssl/evp.h>
 
