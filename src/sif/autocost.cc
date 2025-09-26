@@ -708,9 +708,9 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kAutoWidthRange, json, "/width", width);
   JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
                           restriction_probability);
-  JSON_PBF_DEFAULT(co, false, json, "/include_hot", include_hot);
-  JSON_PBF_DEFAULT(co, false, json, "/include_hov2", include_hov2);
-  JSON_PBF_DEFAULT(co, false, json, "/include_hov3", include_hov3);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/include_hot", include_hot);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/include_hov2", include_hov2);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/include_hov3", include_hov3);
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
 }
 
