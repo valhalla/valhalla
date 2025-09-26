@@ -48,8 +48,9 @@ const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
 const std::string intersections_file = "intersections.bin";
 const std::string shapes_file = "shapes.bin";
+const std::string checksum_file = "checksum.txt";
 
-void set_checksums(std::vector<std::string> paths, const std::string& tile_dir) {
+uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& tile_dir) {
   std::sort(paths.begin(), paths.end());
 
   // uses openssl's API which can build the digest from byte chunks to save memory
@@ -96,31 +97,11 @@ void set_checksums(std::vector<std::string> paths, const std::string& tile_dir) 
   }
 
   // write the checksum to the tile headers
-  uint64_t checksum = lo ^ hi;
-  for (std::filesystem::recursive_directory_iterator tile_path(tile_dir), end; tile_path != end;
-       ++tile_path) {
-    if (!tile_path->is_regular_file() || tile_path->path().extension() != ".gph") {
-      continue;
-    }
+  auto checksum = lo;
+  std::hash<uint64_t> hasher;
+  boost::hash_combine(checksum, hasher(hi));
 
-    std::fstream file(tile_path->path(), std::ios::in | std::ios::out | std::ios::binary);
-    if (!file.is_open()) {
-      throw std::runtime_error("Failed to open file " + tile_path->path().string());
-    }
-    GraphTileHeader header;
-    file.seekg(0);
-    file.read(reinterpret_cast<char*>(&header), sizeof(GraphTileHeader));
-
-    // very likely transit tiles will in the future write their own checksums from GTFS
-    if (!header.checksum())
-      header.set_checksum(checksum);
-
-    file.seekp(0);
-    file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
-    if (!file) {
-      throw std::runtime_error("Failed to write to file " + tile_path->path().string());
-    }
-  }
+  return checksum;
 }
 
 /**
@@ -708,6 +689,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
                                          way_nodes_bin, access_bin);
+    osm_data.pbf_checksum_ = get_pbf_checksum(input_files, tile_dir);
 
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {
@@ -843,8 +825,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // Validate the graph and add information that cannot be added until full graph is formed.
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
     GraphValidator::Validate(config);
-    // set the checksum of the PBF files for all tiles
-    set_checksums(input_files, tile_dir);
   }
 
   // Cleanup bin files

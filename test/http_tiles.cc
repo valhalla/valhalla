@@ -102,10 +102,17 @@ TEST_F(HttpTilesWithCache, test_tar_cache) {
 TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {
   test_route("url_tile_cache", false, true);
 
-  // change the last-modified date on the tar file
-  std::filesystem::last_write_time(tar_path, std::filesystem::file_time_type::clock::now());
+  const std::string id_txt_path = "url_tile_cache/id.txt";
 
-  // that should trigger a runtime error
+  EXPECT_TRUE(std::filesystem::exists(id_txt_path));
+
+  std::ofstream id_txt_file(id_txt_path, std::ios::binary);
+  if (id_txt_file) {
+    id_txt_file << get_tile_url(true) << std::endl;
+    id_txt_file << 1234 << std::endl;
+  }
+  id_txt_file.close();
+
   try {
     test_route("url_tile_cache", false, true);
     FAIL() << "Expected std::runtime_error";

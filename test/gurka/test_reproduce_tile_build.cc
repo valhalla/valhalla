@@ -107,7 +107,11 @@ uint64_t get_pbf_md5(std::string pbf_path) {
     lo = (lo << 8) | digest[i];
     hi = (hi << 8) | digest[8 + i];
   }
-  return lo ^ hi;
+  auto checksum = lo;
+  std::hash<uint64_t> hasher;
+  boost::hash_combine(checksum, hasher(hi));
+
+  return checksum;
 }
 
 // 1. build tiles with the same input twice
