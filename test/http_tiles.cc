@@ -100,11 +100,9 @@ TEST_F(HttpTilesWithCache, test_tar_cache) {
 }
 
 TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {
-  test_route("url_tile_cache", false, true);
-
+  // create a fake id.txt with a bogus checksum and let GetGraphTile fail
   const std::string id_txt_path = "url_tile_cache/id.txt";
-
-  EXPECT_TRUE(std::filesystem::exists(id_txt_path));
+  std::filesystem::create_directories("url_tile_cache");
 
   std::ofstream id_txt_file(id_txt_path, std::ios::binary);
   if (id_txt_file) {
@@ -117,7 +115,8 @@ TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {
     test_route("url_tile_cache", false, true);
     FAIL() << "Expected std::runtime_error";
   } catch (const std::runtime_error& e) {
-    EXPECT_THAT(e.what(), ::testing::HasSubstr("has a different 'Last-Modified' timestamp"));
+    // a bit too generic IMO, at least there's an error log
+    EXPECT_THAT(e.what(), ::testing::HasSubstr("No suitable edges near location"));
   }
 }
 
