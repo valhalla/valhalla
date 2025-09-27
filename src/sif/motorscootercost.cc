@@ -379,6 +379,29 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                                const uint32_t tz_index,
                                uint8_t& restriction_idx,
                                uint8_t& destonly_access_restr_mask) const {
+  // Dutch law rules for motor scooters
+  
+  // Disallow motorways and trunk roads
+  if (edge->classification() == baldr::RoadClass::kMotorway ||
+      edge->classification() == baldr::RoadClass::kTrunk) {
+    return false;
+  }
+  
+  // Disallow roads with speed limits > 50 km/h
+  if (edge->speed() > 50) {
+    return false;
+  }
+  
+  // Allow cycleways only if tagged for mopeds/scooters
+  if (edge->use() == baldr::Use::kCycleway) {
+    // Only allow if scooters are permitted in OSM tags
+    if (edge->forwardaccess() & baldr::kMopedAccess) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -404,6 +427,29 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                       const uint32_t tz_index,
                                       uint8_t& restriction_idx,
                                       uint8_t& destonly_access_restr_mask) const {
+  // Dutch law rules for motor scooters (applied to the opposing edge)
+  
+  // Disallow motorways and trunk roads
+  if (opp_edge->classification() == baldr::RoadClass::kMotorway ||
+      opp_edge->classification() == baldr::RoadClass::kTrunk) {
+    return false;
+  }
+  
+  // Disallow roads with speed limits > 50 km/h
+  if (opp_edge->speed() > 50) {
+    return false;
+  }
+  
+  // Allow cycleways only if tagged for mopeds/scooters
+  if (opp_edge->use() == baldr::Use::kCycleway) {
+    // Only allow if scooters are permitted in OSM tags
+    if (opp_edge->forwardaccess() & baldr::kMopedAccess) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
