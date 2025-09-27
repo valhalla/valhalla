@@ -543,7 +543,7 @@ void parse_locations(const rapidjson::Document& doc,
     auto request_locations =
         rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
     if (request_locations) {
-      uint32_t last_loc_idx = request_locations->Size() - 1;
+      int last_loc_idx = static_cast<int>(request_locations->Size()) - 1;
       for (const auto& r_loc : *request_locations) {
         auto* loc = locations->Add();
         auto loc_idx = locations->size() - 1;
@@ -555,7 +555,7 @@ void parse_locations(const rapidjson::Document& doc,
       }
     } // maybe its deserialized pbf
     else if (!locations->empty()) {
-      int i = 0;
+      uint32_t i = 0;
       uint32_t locs_amount = locations->size() - 1;
       for (auto& loc : *locations) {
         bool is_last_edge = i == locs_amount;
