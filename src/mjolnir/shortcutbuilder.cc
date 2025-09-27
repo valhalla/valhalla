@@ -164,9 +164,11 @@ GraphId GetOpposingEdge(const GraphId& node,
       return edgeid;
     }
   }
+#ifdef LOGGING_LEVEL_ERROR
   PointLL ll = nodeinfo->latlng(tile->header()->base_ll());
   LOG_ERROR("Opposing directed edge not found at LL= " + std::to_string(ll.lat()) + "," +
             std::to_string(ll.lng()));
+#endif
   return GraphId(0, 0, 0);
 }
 
@@ -462,9 +464,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
           // Break out of loop. This case can happen when a shortcut edge
           // enters another shortcut edge (but is not drivable in reverse
           // direction from the node).
-          const DirectedEdge* de = tile->directededge(next_edge_id);
           LOG_ERROR("Edge not found in edge pairs. WayID = " +
-                    std::to_string(tile->edgeinfo(de).wayid()));
+                    std::to_string(tile->edgeinfo(tile->directededge(next_edge_id)).wayid()));
           break;
         }
 
