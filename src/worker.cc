@@ -1431,10 +1431,10 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
     default_hierarchy_limits.push_back(default_hl);
   }
 
-  if (!found)
+  if (!found) {
     LOG_WARN("Incomplete config for hierarchy limits found for " + algorithm +
              ". Falling back to defaults");
-
+  }
   return {max_hierarchy_limits, default_hierarchy_limits};
 };
 

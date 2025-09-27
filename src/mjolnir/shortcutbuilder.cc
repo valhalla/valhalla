@@ -580,6 +580,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     }
   }
 
+#ifdef LOGGING_LEVEL_WARN
   // Log a warning (with the node lat,lon) if the max number of shortcuts from a node
   // is exceeded. This is not serious (see NOTE above) but good to know where it occurs.
   if (shortcut_count > kMaxShortcutsFromNode) {
@@ -587,6 +588,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
              std::to_string(ll.lng()));
   }
+#endif
   return {shortcut_count, total_edge_count};
 }
 
