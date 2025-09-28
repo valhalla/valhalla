@@ -68,7 +68,7 @@ void graph_writer::write_tiles() {
     auto& tile = entry.second;
 
     // set the base lat,lng in the header builder
-    PointLL base_ll = vb::TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
+    vm::PointLL base_ll = vb::TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
     tile->header_builder().set_base_ll(base_ll);
 
     // write the tile
@@ -174,7 +174,7 @@ void graph_builder::write_tiles(uint8_t level) const {
   for (size_t i = 0; i < num_nodes; ++i) {
     auto coord = nodes[i];
     auto tile_id = vb::TileHierarchy::GetGraphId(coord, level);
-    PointLL base_ll = vb::TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
+    vm::PointLL base_ll = vb::TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
     uint32_t n = edges_from_node[i];
 
     vb::NodeInfo node_builder;
@@ -247,7 +247,7 @@ void graph_builder::write_tiles(uint8_t level) const {
 
     } else {
       // make an edgeinfo
-      std::vector<PointLL> shape = {start_point, end_point};
+      std::vector<vm::PointLL> shape = {start_point, end_point};
       if (!forward)
         std::reverse(shape.begin(), shape.end());
 

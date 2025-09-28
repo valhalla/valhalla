@@ -9,6 +9,8 @@
 #include <queue>
 #include <unordered_map>
 
+using namespace valhalla::midgard;
+
 namespace valhalla {
 namespace mjolnir {
 

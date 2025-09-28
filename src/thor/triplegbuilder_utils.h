@@ -8,7 +8,6 @@
 #include <utility>
 
 using namespace valhalla;
-using namespace valhalla::midgard;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
@@ -125,7 +124,7 @@ private:
         LatLng* stop_ll = transit_station_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller(valhalla::baldr::kNodeTransitStationInfoLatLon)) {
-          PointLL ll = node->latlng(start_tile->header()->base_ll());
+          valhalla::midgard::PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
         }
@@ -154,7 +153,7 @@ private:
         LatLng* stop_ll = transit_egress_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller(valhalla::baldr::kNodeTransitEgressInfoLatLon)) {
-          PointLL ll = node->latlng(start_tile->header()->base_ll());
+          valhalla::midgard::PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
         }
@@ -249,7 +248,7 @@ private:
         LatLng* stop_ll = transit_platform_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller(valhalla::baldr::kNodeTransitPlatformInfoLatLon)) {
-          PointLL ll = node->latlng(start_tile->header()->base_ll());
+          valhalla::midgard::PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
         }
@@ -267,7 +266,8 @@ private:
 
         const valhalla::baldr::TransitDeparture* transit_departure =
             graphtile->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(), trip_id,
-                                           time_info.second_of_week % kSecondsPerDay);
+                                           time_info.second_of_week %
+                                               valhalla::midgard::kSecondsPerDay);
 
         assumed_schedule = false;
         uint32_t origin_pivot_days, days_from_creation;
@@ -295,8 +295,8 @@ private:
           // round up the transit times to full minutes because date_time() will always round down
           // TODO: do (optional) seconds resolution for the input & output so that this becomes robust
           auto round_up_mins = [](uint32_t seconds) {
-            auto remainder = seconds % kSecondsPerMinute;
-            return remainder ? seconds + (kSecondsPerMinute - remainder) : seconds;
+            auto remainder = seconds % valhalla::midgard::kSecondsPerMinute;
+            return remainder ? seconds + (valhalla::midgard::kSecondsPerMinute - remainder) : seconds;
           };
           // round up the waiting time to full minutes, bcs time_info.date_time() floors minutes
           std::string dt =
