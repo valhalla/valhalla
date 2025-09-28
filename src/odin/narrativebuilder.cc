@@ -16,6 +16,8 @@
 #include <sstream>
 #include <string>
 
+using namespace valhalla::baldr;
+
 namespace {
 // Text instruction initial capacity
 constexpr auto kInstructionInitialCapacity = 128;

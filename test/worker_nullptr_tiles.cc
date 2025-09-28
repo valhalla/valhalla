@@ -34,7 +34,7 @@ public:
     return true;
   }
 
-  graph_tile_ptr GetGraphTile(const valhalla::baldr::GraphId& graphId) override {
+  baldr::graph_tile_ptr GetGraphTile(const valhalla::baldr::GraphId& graphId) override {
     auto rnd = distribution_(randEngine_);
     if (rnd < proba_) {
       return {};
@@ -64,7 +64,7 @@ protected:
   }
 
   static GraphReaderPtr_t createGraphReader() {
-    return std::make_shared<GraphReader>(Config.get_child("mjolnir"));
+    return std::make_shared<baldr::GraphReader>(Config.get_child("mjolnir"));
   }
 
   static RandomGraphReaderPtr_t createRandomGraphReader(GraphReaderPtr_t original_reader) {

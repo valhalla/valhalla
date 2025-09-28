@@ -161,7 +161,7 @@ inline bool IsEdgeAllowed(const baldr::DirectedEdge* edge,
                           const baldr::GraphId& edgeid,
                           const sif::cost_ptr_t& costing,
                           const Label& pred_edgelabel,
-                          const graph_tile_ptr& tile,
+                          const baldr::graph_tile_ptr& tile,
                           uint8_t& restriction_idx,
                           uint8_t& destonly_access_restr_mask) {
   bool valid_pred =
@@ -187,7 +187,7 @@ void set_origin(baldr::GraphReader& reader,
   // will also serve as roots in search trees, and sentinels to
   // indicate it reaches the beginning of a route when constructing the
   // route
-  graph_tile_ptr tile;
+  baldr::graph_tile_ptr tile;
   for (const auto& edge : origin[origin_idx].edges) {
     if (edge.begin_node()) {
       auto edge_nodes = reader.GetDirectedEdgeNodes(edge.id, tile);
@@ -231,7 +231,7 @@ void set_destinations(baldr::GraphReader& reader,
                       const std::vector<baldr::PathLocation>& destinations,
                       std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& node_dests,
                       std::unordered_map<baldr::GraphId, std::unordered_set<uint16_t>>& edge_dests) {
-  graph_tile_ptr tile;
+  baldr::graph_tile_ptr tile;
   for (uint16_t dest = 0; dest < destinations.size(); dest++) {
     for (const auto& edge : destinations[dest].edges) {
       if (edge.begin_node()) {
@@ -274,7 +274,7 @@ inline uint16_t get_inbound_edgelabel_heading(baldr::GraphReader& reader,
     return nodeinfo->heading(idx);
   } else {
     // Have to get the heading from the edge shape...
-    graph_tile_ptr tile;
+    baldr::graph_tile_ptr tile;
     const auto directededge = reader.directededge(label.edgeid(), tile);
     const auto edgeinfo = tile->edgeinfo(directededge);
     const auto& shape = edgeinfo.shape();
@@ -296,7 +296,7 @@ inline uint16_t get_inbound_edgelabel_heading(baldr::GraphReader& reader,
  * @return Returns the outbound edge heading.
  */
 // Get the outbound heading of the edge.
-inline uint16_t get_outbound_edge_heading(const graph_tile_ptr& tile,
+inline uint16_t get_outbound_edge_heading(const baldr::graph_tile_ptr& tile,
                                           const baldr::DirectedEdge* outbound_edge,
                                           const baldr::NodeInfo* nodeinfo) {
   // Get the local index of the outbound edge. If this is less
@@ -383,7 +383,7 @@ find_shortest_path(baldr::GraphReader& reader,
     // Get the node's info. The tile will be guaranteed to be nodeid's tile
     // in this block. Return if node is not found or is not allowed by
     // costing
-    graph_tile_ptr tile = reader.GetGraphTile(node);
+    baldr::graph_tile_ptr tile = reader.GetGraphTile(node);
     if (tile == nullptr) {
       return;
     }
@@ -446,7 +446,7 @@ find_shortest_path(baldr::GraphReader& reader,
       }
 
       // Get the end node tile and nodeinfo (to compute heuristic)
-      graph_tile_ptr endtile =
+      baldr::graph_tile_ptr endtile =
           directededge->leaves_tile() ? reader.GetGraphTile(directededge->endnode()) : tile;
       if (endtile != nullptr) {
         // Get cost - use EdgeCost to get time along the edge. Override
@@ -547,7 +547,7 @@ find_shortest_path(baldr::GraphReader& reader,
       for (const auto& origin_edge : origin.edges) {
         // The tile will be guaranteed to be directededge's tile in this
         // loop
-        graph_tile_ptr start_tile = nullptr;
+        baldr::graph_tile_ptr start_tile = nullptr;
         const auto* directed_edge = reader.directededge(origin_edge.id, start_tile);
 
         // Skip if edge is not allowed
@@ -603,7 +603,7 @@ find_shortest_path(baldr::GraphReader& reader,
         // and for time or time limit is 0
         if (cost.cost < max_dist && (max_time < 0 || cost.secs < max_time)) {
           // Get the end node tile and node lat,lon to compute heuristic
-          graph_tile_ptr endtile = reader.GetGraphTile(directed_edge->endnode());
+          baldr::graph_tile_ptr endtile = reader.GetGraphTile(directed_edge->endnode());
           if (endtile == nullptr) {
             continue;
           }
