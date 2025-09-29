@@ -1,4 +1,27 @@
-# huge/first formatting commit
-1230f09d784cb5fa734d21afa0576eef54705ee3
-# huge/first clang-tidy commit
-4a691800566a97526f1ad8b05d2d49702cbeb024
+# Auto-generated: 2025-09-29T21:21:56Z
+# PRs merged into master with label 'no-git-blame'
+
+# PR #5541: chore: Replace `oneof bool` to `bool` for default false options
+# https://github.com/valhalla/valhalla/pull/5541
+b74c857d0fc9b19bd32c5840e6b736dab17f50b0
+
+# PR #5526: Fix all warnings in tyr module
+# https://github.com/valhalla/valhalla/pull/5526
+c0162142a76a144f64c4c1b079de30d70d7041b7
+
+# PR #5525: Fix all warnings in thor module
+# https://github.com/valhalla/valhalla/pull/5525
+90acd9165a6e788cd0a13a68dda537a526ffd83d
+
+# PR #5524: Fix all warnings in loki module
+# https://github.com/valhalla/valhalla/pull/5524
+2cf8d8a693295a16a6e17c3453bef81a96edbe92
+
+# PR #5523: Fix all warnings in odin module
+# https://github.com/valhalla/valhalla/pull/5523
+07ca438a87de1e8fef681d2efa5da319f97dfc45
+
+# PR #5488: Remove more unused includes
+# https://github.com/valhalla/valhalla/pull/5488
+3a21fe74cf340e9195c9f34847051b01b4ff0e7f
+
