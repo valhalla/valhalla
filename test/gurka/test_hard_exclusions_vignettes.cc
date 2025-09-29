@@ -1,6 +1,10 @@
 #include "gurka.h"
+#include "test.h"
 
 #include <gtest/gtest.h>
+#include <boost/format.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 
 using namespace valhalla;
 
@@ -21,20 +25,20 @@ const std::string ascii_map = R"(
   )";
 
 const gurka::ways ways = {
-    {"EF", {{"highway", "residential"}, {"vignette", "yes"}}},
-    {"FG", {{"highway", "residential"}, {"vignette", "yes"}}},
-    {"GH", {{"highway", "residential"}}},
-    {"HI", {{"highway", "residential"}, {"vignette", "yes"}}},
-    {"IA", {{"highway", "residential"}}},
-    {"IJ", {{"highway", "residential"}}},
-    {"JK", {{"highway", "residential"}, {"vignette", "yes"}}},
-    {"KL", {{"highway", "residential"}}},
-    {"JM", {{"highway", "residential"}}},
-    {"MN", {{"highway", "residential"}}},
-    {"NK", {{"highway", "residential"}}},
+    {"EF", {{"highway", "motorway"}, {"vignette", "true"}}},
+    {"FG", {{"highway", "motorway"}, {"vignette", "true"}}},
+    {"GH", {{"highway", "motorway"}}},
+    {"HI", {{"highway", "motorway"}, {"vignette", "true"}}},
+    {"IA", {{"highway", "motorway"}}},
+    {"IJ", {{"highway", "motorway"}}},
+    {"JK", {{"highway", "motorway"}, {"vignette", "true"}}},
+    {"KL", {{"highway", "motorway"}}},
+    {"JM", {{"highway", "motorway"}}},
+    {"MN", {{"highway", "motorway"}}},
+    {"NK", {{"highway", "motorway"}}},
 };
 
-const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
+//const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
 
 void check_result(const std::string& exclude_parameter_value,
                   const std::vector<std::string>& waypoints,
@@ -58,9 +62,21 @@ protected:
   static gurka::map mapNotAllowed;
 
   static void SetUpTestSuite() {
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_vignettes",
-                            {{"service_limits.allow_hard_exclusions", "true"}});
-    mapNotAllowed = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_vignettes");
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
+
+    // Explicitly build config with service_limits
+    auto conf_with_exclusions =
+        test::make_config("/workspaces/way/test/data/hard_exclude_vignettes",
+                           {{"service_limits.allow_hard_exclusions", "true"}});
+    
+    auto conf_without_exclusions =
+        test::make_config("/workspaces/way/test/data/hard_exclude_vignettes", {});
+    std::stringstream mapSS;
+    boost::property_tree::json_parser::write_json(mapSS, conf_without_exclusions);
+    valhalla::config(mapSS.str());
+
+    map = gurka::buildtiles(layout, ways, {}, {}, conf_with_exclusions);
+    mapNotAllowed = gurka::buildtiles(layout, ways, {}, {}, conf_without_exclusions);
   }
 };
 
@@ -102,8 +118,13 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_vignettes",
-                            {{"service_limits.allow_hard_exclusions", "true"}});
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
+
+    // Explicitly build config with service_limits
+    auto conf_with_exclusions =
+        test::make_config("/workspaces/way/test/data/hard_exclude_vignettes",
+                           {{"service_limits.allow_hard_exclusions", "true"}});
+    map = gurka::buildtiles(layout, ways, {}, {}, conf_with_exclusions);
   }
 };
 
