@@ -51,7 +51,7 @@
    * FIXED: fix: `std::terminate` on unsupported request format for some actions [#5387](https://github.com/valhalla/valhalla/pull/5387)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
-   * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_vignettes`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
+   * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
    * ADDED: `admin_crossings` request parameter for `/route` [#4941](https://github.com/valhalla/valhalla/pull/4941)
    * ADDED: include level change info in `/route` response [#4942](https://github.com/valhalla/valhalla/pull/4942)
    * ADDED: steps maneuver improvements [#4960](https://github.com/valhalla/valhalla/pull/4960)

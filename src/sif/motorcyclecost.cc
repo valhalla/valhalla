@@ -26,9 +26,10 @@ namespace sif {
 namespace {
 
 // Other options
-constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
-constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
-constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
+constexpr float kDefaultUseHighways = 0.5f;   // Factor between 0 and 1
+constexpr float kDefaultUseTolls = 0.5f;      // Factor between 0 and 1
+constexpr float kDefaultUseVignettes = 0.5f;  // Factor between 0 and 1
+constexpr float kDefaultUseTrails = 0.0f;     // Factor between 0 and 1
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kImpassable;
 
@@ -55,6 +56,7 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<float> kUseVignettesRange{0, kDefaultUseVignettes, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 constexpr ranged_default_t<uint32_t> kMotorcycleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                            baldr::kMaxSpeedKph};
@@ -583,6 +585,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseVignettesRange, json, "/use_vignettes", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
   JSON_PBF_RANGED_DEFAULT(co, kMotorcycleSpeedRange, json, "/top_speed", top_speed);
 }

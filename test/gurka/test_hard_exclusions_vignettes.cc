@@ -66,11 +66,11 @@ protected:
 
     // Explicitly build config with service_limits
     auto conf_with_exclusions =
-        test::make_config("/workspaces/way/test/data/hard_exclude_vignettes",
+        test::make_config("test/data/hard_exclude_vignettes",
                            {{"service_limits.allow_hard_exclusions", "true"}});
     
     auto conf_without_exclusions =
-        test::make_config("/workspaces/way/test/data/hard_exclude_vignettes", {});
+        test::make_config("test/data/hard_exclude_vignettes", {});
     std::stringstream mapSS;
     boost::property_tree::json_parser::write_json(mapSS, conf_without_exclusions);
     valhalla::config(mapSS.str());
@@ -122,7 +122,7 @@ protected:
 
     // Explicitly build config with service_limits
     auto conf_with_exclusions =
-        test::make_config("/workspaces/way/test/data/hard_exclude_vignettes",
+        test::make_config("test/data/hard_exclude_vignettes",
                            {{"service_limits.allow_hard_exclusions", "true"}});
     map = gurka::buildtiles(layout, ways, {}, {}, conf_with_exclusions);
   }
