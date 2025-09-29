@@ -10,7 +10,7 @@ const std::vector<std::string> kSupportedCostingModels = {"auto",          "taxi
                                                           "motor_scooter", "motorcycle"};
 
 const std::vector<std::string> kExclusionParameters = {"exclude_bridges", "exclude_tunnels",
-                                                       "exclude_tolls", "exclude_vignettes"};
+                                                       "exclude_tolls"};
 
 constexpr double grid_size_meters = 100.;
 
@@ -32,7 +32,7 @@ const gurka::ways ways = {
     {"IJ", {{"highway", "residential"}}},
     {"JK", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
     {"KL", {{"highway", "residential"}}},
-    {"JM", {{"highway", "residential"}, {"vignette", "yes"}}},
+    {"JM", {{"highway", "residential"}}},
     {"MN", {{"highway", "residential"}}},
     {"NK", {{"highway", "residential"}}},
 };
