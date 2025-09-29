@@ -16,14 +16,35 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+#include <algorithm>
 #include <fstream>
 #include <istream>
+#include <iterator>
 #include <locale>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 
 namespace {
+
+inline std::string sanitize_json_input(const std::string& path) {
+  std::ifstream in(path, std::ios::binary);
+  if (!in)
+    throw std::runtime_error("Cannot open config: " + path);
+
+  std::string s((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+
+  // Strip UTF-8 BOM
+  if (s.size() >= 3 && static_cast<unsigned char>(s[0]) == 0xEF &&
+      static_cast<unsigned char>(s[1]) == 0xBB && static_cast<unsigned char>(s[2]) == 0xBF) {
+    s.erase(0, 3);
+  }
+
+  // remove \r for new lines
+  s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
+
+  return s;
+}
 
 // helper to only evaluate a constexpr once a type is known
 template <class... T> constexpr bool always_false = false;
@@ -232,7 +253,8 @@ void read_json(std::basic_istream<typename Ptree::key_type::value_type>& stream,
 
 template <class Ptree>
 void read_json(const std::string& filename, Ptree& pt, const std::locale& loc = std::locale()) {
-  std::basic_ifstream<typename Ptree::key_type::value_type> stream(filename);
+  auto json = sanitize_json_input(filename);
+  std::istringstream stream(json);
   if (!stream)
     throw std::runtime_error("Cannot open file " + filename);
   stream.imbue(loc);
@@ -248,7 +270,7 @@ inline std::string serialize(const rapidjson::Document& doc) {
   return buffer.GetString();
 }
 
-inline Document read_json(std::ifstream& stream) {
+inline Document read_json(std::istream& stream) {
   Document d;
   IStreamWrapper wrapper(stream);
   d.ParseStream(wrapper);
@@ -261,7 +283,8 @@ inline Document read_json(std::ifstream& stream) {
 }
 
 inline Document read_json(const std::string& filename, const std::locale& loc = std::locale()) {
-  std::ifstream stream(filename);
+  auto json = sanitize_json_input(filename);
+  std::istringstream stream(json);
   if (!stream)
     throw std::runtime_error("Cannot open file " + filename);
   stream.imbue(loc);
