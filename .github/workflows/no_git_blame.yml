@@ -1,0 +1,99 @@
+name: Update .git-blame-ignore-revs
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0" # once a week on Sunday 00:00
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  LABEL: no-git-blame
+  REPO: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:                            
+      file_changed: ${{ steps.generate.outputs.file_changed }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate .git-blame-ignore-revs
+        id: generate
+        run: |
+          set -euo pipefail
+          tmpfile="$(mktemp)"
+          {
+            echo "# Auto-generated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "# PRs merged into master with label '${LABEL}'"
+            echo
+          } > "$tmpfile"
+
+          # List merged PRs with the right label
+          prs_json="$(gh pr list \
+            --state merged \
+            --label "$LABEL" \
+            --base master \
+            --json number,title,url \
+            --limit 1000)"
+
+          # For each PR, get the merge commit SHA
+          # use base64 to circumvent issues with e.g. spaces etc in the JSON
+          _jq() { echo "$row" | base64 --decode | jq -r "$1"; }
+          echo "$prs_json" | jq -r '.[] | @base64' | while read -r row; do
+            num="$(_jq .number)"
+            title="$(_jq .title)"
+            pr_url="$(_jq .url)"
+            sha="$(gh api "repos/$REPO/pulls/$num" --jq .merge_commit_sha)"
+            
+            printf "# PR #%s: %s\n# %s\n%s\n\n" "$num" "$title" "$pr_url" "$sha" >> "$tmpfile"
+          done
+
+          # Create the file if missing, or update it
+          changed=true
+          if [ ! -f .git-blame-ignore-revs ]; then
+            mv "$tmpfile" .git-blame-ignore-revs
+          else
+            mv "$tmpfile" .git-blame-ignore-revs.new
+            # Keep idempotent: replace file only if content differs
+            if ! cmp -s .git-blame-ignore-revs .git-blame-ignore-revs.new; then
+              mv .git-blame-ignore-revs.new .git-blame-ignore-revs
+            else
+              rm .git-blame-ignore-revs.new
+              changed=false
+            fi
+          fi
+
+          echo "file_changed=$changed" >> "$GITHUB_OUTPUT"
+
+      - name: Update branch
+        if: steps.generate.outputs.file_changed == 'true'
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          branch="update-blame-ignore"
+          git checkout -B "$branch"
+          git add .git-blame-ignore-revs
+          git commit -m "Update .git-blame-ignore-revs from labeled merged PRs"
+          git push -u origin "$branch" || true
+
+          # Create PR or bail
+          pr_url=$(gh pr view "$branch" --json url -q .url 2>/dev/null || true)
+          if [ -z "$pr_url" ]; then
+            gh pr create \
+              --title "Update .git-blame-ignore-revs" \
+              --body "Auto-generated list of merge commits for PRs labeled ${LABEL} into master." \
+              --base master \
+              --head "$branch"
+          else
+            echo "PR already exists: $pr_url"
+          fi
