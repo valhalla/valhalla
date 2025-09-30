@@ -339,9 +339,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
       bool inbound_path_found = false;
       bool outbound_path_found = false;
-#ifdef LOGGING_LEVEL_WARN
-      PointLL ll = (*nodes[node_itr.position()]).node.latlng();
-#endif
+      [[maybe_unused]] const PointLL ll = (*nodes[node_itr.position()]).node.latlng();
 
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
