@@ -399,6 +399,10 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   toll_factor_     = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) :         // ranges from 4 to 0
                      (0.5f - use_tolls) * 0.03f;                         // ranges from 0 to -0.15
 
+  // Preference to use vignette roads. Sets a vignette factor.
+  // A vignette factor of 0 would indicate no adjustment to weighting for vignette roads.
+  // use_vignettes = 1 would reduce weighting slightly (a negative delta) while
+  // use_vignettes = 0 would penalize (positive delta to weighting factor).
   float use_vignettes  = costing_options.use_vignettes();
   vignette_factor_ = use_vignettes < 0.5f ? (4.0f - 8 * use_vignettes) : // ranges from 4 to 0
                      (0.5f - use_vignettes) * 0.03f;                     // ranges from 0 to -0.15

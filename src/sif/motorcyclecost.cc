@@ -280,10 +280,11 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 public:
-  VehicleType type_;     // Vehicle type: car (default), motorcycle, etc
-  float toll_factor_;    // Factor applied when road has a toll
-  float surface_factor_; // How much the surface factors are applied when using trails
-  float highway_factor_; // Factor applied when road is a motorway or trunk
+  VehicleType type_;      // Vehicle type: car (default), motorcycle, etc
+  float toll_factor_;     // Factor applied when road has a toll
+  float vignette_factor_; // Factor applied when road has a vignette
+  float surface_factor_;  // How much the surface factors are applied when using trails
+  float highway_factor_;  // Factor applied when road is a motorway or trunk
 };
 
 // Constructor
@@ -319,6 +320,14 @@ MotorcycleCost::MotorcycleCost(const Costing& costing)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+
+  // Set vignette factor based on preference to use roads with vignettes (value from 0 to 1).
+  // Vignette factor of 0 would indicate no adjustment to weighting for vignette roads
+  // use_vignettes = 1 would reduce weighting slightly (a negative delta) while
+  // use_vignettes = 0 would penalize (positive delta to weighting factor).
+  float use_vignettes = costing_options.use_vignettes();
+  vignette_factor_ = use_vignettes < 0.5f ? (2.0f - 4 * use_vignettes) : // ranges from 2 to 0
+                     (0.5f - use_vignettes) * 0.03f;                     // ranges from 0 to -0.15 
 
   // Set the surface factor based on the use trails value - this is a
   // preference to use trails/tracks/bad surface types (a value from 0 to 1).
@@ -421,7 +430,9 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   if (edge->toll()) {
     factor += toll_factor_;
   }
-
+  if (edge->vignette()) {
+    factor += vignette_factor_;
+  }
   if (edge->use() == Use::kTrack) {
     factor *= track_factor_;
   } else if (edge->use() == Use::kLivingStreet) {
@@ -585,7 +596,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
-  JSON_PBF_RANGED_DEFAULT(co, kUseVignettesRange, json, "/use_vignettes", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseVignettesRange, json, "/use_vignettes", use_vignettes);
   JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
   JSON_PBF_RANGED_DEFAULT(co, kMotorcycleSpeedRange, json, "/top_speed", top_speed);
 }
