@@ -331,6 +331,7 @@ public:
            ((exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
             (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
             (exclude_tolls_ && !pred.toll() && edge->toll()) ||
+            (exclude_vignettes_ && !pred.vignette() && edge->vignette()) ||
             (exclude_highways_ && pred.classification() != baldr::RoadClass::kMotorway &&
              edge->classification() == baldr::RoadClass::kMotorway) ||
             (exclude_ferries_ &&
@@ -1174,6 +1175,7 @@ protected:
   bool exclude_bridges_{false};
   bool exclude_tunnels_{false};
   bool exclude_tolls_{false};
+  bool exclude_vignettes_{false};
   bool exclude_highways_{false};
   bool exclude_ferries_{false};
   bool has_excludes_{false};
@@ -1186,6 +1188,11 @@ protected:
   bool include_hot_{false};
   bool include_hov2_{false};
   bool include_hov3_{false};
+
+  // traffic fading function parameters
+  uint64_t traffic_fading_start_;
+  uint64_t traffic_fading_duration_;
+  float traffic_fading_exponent_;
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
@@ -1282,11 +1289,16 @@ protected:
     exclude_bridges_ = costing_options.exclude_bridges();
     exclude_tunnels_ = costing_options.exclude_tunnels();
     exclude_tolls_ = costing_options.exclude_tolls();
+    exclude_vignettes_ = costing_options.exclude_vignettes();
     exclude_highways_ = costing_options.exclude_highways();
     exclude_ferries_ = costing_options.exclude_ferries();
-    has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_highways_ ||
-                    exclude_ferries_;
+    has_excludes_ = exclude_bridges_ || exclude_tunnels_ || exclude_tolls_ || exclude_vignettes_ ||
+                    exclude_highways_ || exclude_ferries_;
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
+
+    traffic_fading_duration_ = costing_options.traffic_fading_duration();
+    traffic_fading_start_ = costing_options.traffic_fading_start();
+    traffic_fading_exponent_ = costing_options.traffic_fading_exponent();
     default_hierarchy_limits = costing_options.hierarchy_limits_size() == 0;
   }
 
@@ -1398,6 +1410,7 @@ struct BaseCostingOptionsConfig {
   bool exclude_bridges_;
   bool exclude_tunnels_;
   bool exclude_tolls_;
+  bool exclude_vignettes_;
   bool exclude_highways_;
   bool exclude_ferries_;
   bool has_excludes_;
@@ -1407,6 +1420,10 @@ struct BaseCostingOptionsConfig {
   bool include_hot_ = false;
   bool include_hov2_ = false;
   bool include_hov3_ = false;
+
+  uint64_t traffic_fading_start_;
+  uint64_t traffic_fading_duration_;
+  float traffic_fading_exponent_;
 };
 
 /**

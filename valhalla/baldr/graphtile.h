@@ -32,6 +32,7 @@
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #endif
 
+#include <cmath>
 #include <cstdint>
 #include <filesystem>
 #include <iterator>
@@ -644,29 +645,40 @@ public:
                            uint64_t seconds = kInvalidSecondsOfWeek,
                            bool is_truck = false,
                            uint8_t* flow_sources = nullptr,
-                           const uint64_t seconds_from_now = 0) const {
+                           const uint64_t seconds_from_now = 0,
+                           const uint64_t traffic_fading_duration = 0,
+                           const uint64_t traffic_fading_start = 10800,
+                           const float traffic_fading_exponent = 1) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO(danpat): for short-ish durations along the route, we should fade live
-    //               speeds into any historic/predictive/average value we'd normally use
-
-    constexpr double LIVE_SPEED_FADE = 1. / 3600.;
     // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
     // route live-traffic gives more information about current congestion situation. But the further
     // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
-    // Want to have a smooth decrease function.
-    float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
+    float live_traffic_multiplier;
+    if (seconds_from_now < traffic_fading_start) {
+      live_traffic_multiplier = 1;
+    } else if (seconds_from_now >= traffic_fading_start + traffic_fading_duration) {
+      live_traffic_multiplier = 0;
+    } else {
+      int64_t numerator = seconds_from_now - traffic_fading_start - traffic_fading_duration;
+      float denominator = traffic_fading_duration;
+      float base = 1. + numerator / denominator;
+      live_traffic_multiplier = 1 - std::pow(base, traffic_fading_exponent);
+    }
+
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
     if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
-      if (live_speed.speed_valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
+      // if (live_speed.speed_valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
+      if (live_speed.speed_valid()) {
+        partial_live_speed = live_speed.get_overall_speed();
         *flow_sources |= kCurrentFlowMask;
         if (live_speed.breakpoint1 == 255) {
           partial_live_pct = 1.;

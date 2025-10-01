@@ -210,7 +210,7 @@ public:
     return header != nullptr;
   }
 
-private:
+protected:
   std::unique_ptr<const GraphMemory> memory_;
 
 public:

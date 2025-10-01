@@ -218,6 +218,13 @@ config = {
         'service': {'proxy': 'ipc:///tmp/meili'},
         'grid': {'size': 500, 'cache_size': 100240},
     },
+    'baldr': {
+        'tiling_scheme': {
+            'minpt': { 'lng': -180.0, 'lat': -90.0 },
+            'maxpt': { 'lng': 180.0, 'lat': 90.0 },
+            'columns': [ 128, 512, 2048 ]
+        } 
+    },
     'httpd': {
         'service': {
             'listen': 'tcp://*:8002',
@@ -577,6 +584,13 @@ help_text = {
             'cache_size': 'TODO: number of grids to keep in cache',
         },
     },
+    'baldr': {
+        'tiling_scheme': {
+            'minpt': { 'lng': 'Longitude of bottom-left coordinate of whole map area', 'lat': 'Latitude of bottom-left coordinate of bounding box' },
+            'maxpt': { 'lng': 'Longitude of top-right coordinate of whole map area', 'lat': 'Latitude of top-right coordinate of bounding box' },
+            'columns': 'Number of columns in the tile grid. (In this order: highway, arterial, local)',
+        } 
+    },
     'httpd': {
         'service': {
             'listen': 'The protocol, host location and port your service will bind to',
@@ -726,7 +740,7 @@ help_text = {
                 },
             },
         },
-        'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_highways or exclude_ferries are allowed on this server',
+        'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_vignettes, exclude_highways or exclude_ferries are allowed on this server',
     },
     'statsd': {
         'host': 'The statsd host address',

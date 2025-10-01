@@ -88,10 +88,11 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     for (auto& pair : options.costings()) {
       auto opts = pair.second.options();
       exclusion_detected = exclusion_detected || opts.exclude_bridges() || opts.exclude_tolls() ||
-                           opts.exclude_tunnels() || opts.exclude_highways() ||
-                           opts.exclude_ferries();
+                           opts.exclude_vignettes() || opts.exclude_tunnels() || 
+                           opts.exclude_highways() || opts.exclude_ferries();
       opts.set_exclude_bridges(false);
       opts.set_exclude_tolls(false);
+      opts.set_exclude_vignettes(false);
       opts.set_exclude_tunnels(false);
       opts.set_exclude_highways(false);
       opts.set_exclude_ferries(false);
