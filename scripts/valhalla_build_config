@@ -220,10 +220,10 @@ config = {
     },
     'baldr': {
         'tiling_scheme': {
-            'minpt': { 'lng': -180.0, 'lat': -90.0 },
-            'maxpt': { 'lng': 180.0, 'lat': 90.0 },
-            'columns': [ 128, 512, 2048 ]
-        } 
+            'minpt': {'lng': -180.0, 'lat': -90.0},
+            'maxpt': {'lng': 180.0, 'lat': 90.0},
+            'columns': [128, 512, 2048],
+        }
     },
     'httpd': {
         'service': {
@@ -586,10 +586,16 @@ help_text = {
     },
     'baldr': {
         'tiling_scheme': {
-            'minpt': { 'lng': 'Longitude of bottom-left coordinate of whole map area', 'lat': 'Latitude of bottom-left coordinate of bounding box' },
-            'maxpt': { 'lng': 'Longitude of top-right coordinate of whole map area', 'lat': 'Latitude of top-right coordinate of bounding box' },
+            'minpt': {
+                'lng': 'Longitude of bottom-left coordinate of whole map area',
+                'lat': 'Latitude of bottom-left coordinate of bounding box',
+            },
+            'maxpt': {
+                'lng': 'Longitude of top-right coordinate of whole map area',
+                'lat': 'Latitude of top-right coordinate of bounding box',
+            },
             'columns': 'Number of columns in the tile grid. (In this order: highway, arterial, local)',
-        } 
+        }
     },
     'httpd': {
         'service': {

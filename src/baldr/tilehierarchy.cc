@@ -1,10 +1,9 @@
-#include "boost/foreach.hpp"
-
-#include "baldr/tilehierarchy.h"
 #include "baldr/graphtileheader.h"
-#include "midgard/vector2.h"
-#include "midgard/aabb2.h"
+#include "baldr/tilehierarchy.h"
+#include "boost/foreach.hpp"
 #include "config.h"
+#include "midgard/aabb2.h"
+#include "midgard/vector2.h"
 
 #include <cassert>
 
@@ -19,18 +18,18 @@ void getLevels_once() {
   std::vector<int32_t> columnsvector;
   bool bSizesInConfigOk = false;
 
-  const AABB2<midgard::PointLL> wholemapbb{
-    {config().get<float>("baldr.tiling_scheme.minpt.lng", -180), config().get<float>("baldr.tiling_scheme.minpt.lat", -90)}, 
-    {config().get<float>("baldr.tiling_scheme.maxpt.lng", 180), config().get<float>("baldr.tiling_scheme.maxpt.lat", 90)}
-  };
+  const AABB2<midgard::PointLL>
+      wholemapbb{{config().get<float>("baldr.tiling_scheme.minpt.lng", -180),
+                  config().get<float>("baldr.tiling_scheme.minpt.lat", -90)},
+                 {config().get<float>("baldr.tiling_scheme.maxpt.lng", 180),
+                  config().get<float>("baldr.tiling_scheme.maxpt.lat", 90)}};
 
-  const boost::optional<const boost::property_tree::ptree &> columnsptree = config().get_child_optional("baldr.tiling_scheme.columns");
-  
+  const boost::optional<const boost::property_tree::ptree&> columnsptree =
+      config().get_child_optional("baldr.tiling_scheme.columns");
+
   if (columnsptree) {
-    BOOST_FOREACH (auto& v, *columnsptree) {
-      columnsvector.push_back( v.second.get<int32_t>("") );
-    }
-    if (columnsvector.size()>=3) {
+    BOOST_FOREACH (auto& v, *columnsptree) { columnsvector.push_back(v.second.get<int32_t>("")); }
+    if (columnsvector.size() >= 3) {
       bSizesInConfigOk = true;
     }
   }
@@ -44,23 +43,20 @@ void getLevels_once() {
 
       TileLevel{0, stringToRoadClass("Primary"), "highway",
                 midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(),
-                                                 (float)wholemapbb.Width()/columnsvector[0],
-                                                 columnsvector[0],
-                                                 columnsvector[0]/2,  
+                                                 (float)wholemapbb.Width() / columnsvector[0],
+                                                 columnsvector[0], columnsvector[0] / 2,
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
                 midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(),
-                                                 (float)wholemapbb.Width()/columnsvector[1],
-                                                 columnsvector[1],
-                                                 columnsvector[1]/2,
+                                                 (float)wholemapbb.Width() / columnsvector[1],
+                                                 columnsvector[1], columnsvector[1] / 2,
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{2, stringToRoadClass("ServiceOther"), "local",
                 midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(),
-                                                 (float)wholemapbb.Width()/columnsvector[2],
-                                                 columnsvector[2],
-                                                 columnsvector[2]/2,
+                                                 (float)wholemapbb.Width() / columnsvector[2],
+                                                 columnsvector[2], columnsvector[2] / 2,
                                                  static_cast<unsigned short>(kBinsDim)}},
 
   };

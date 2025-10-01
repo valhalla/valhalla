@@ -1,10 +1,9 @@
 #include "gurka.h"
 #include "test.h"
 
-#include <gtest/gtest.h>
 #include <boost/format.hpp>
 #include <boost/property_tree/json_parser.hpp>
-
+#include <gtest/gtest.h>
 
 using namespace valhalla;
 
@@ -38,7 +37,7 @@ const gurka::ways ways = {
     {"NK", {{"highway", "motorway"}}},
 };
 
-//const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
+// const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
 
 void check_result(const std::string& exclude_parameter_value,
                   const std::vector<std::string>& waypoints,
@@ -65,16 +64,14 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
 
     // Explicitly build config with service_limits
-    auto conf_with_exclusions =
-        test::make_config("test/data/hard_exclude_vignettes",
-                           {{"service_limits.allow_hard_exclusions", "true"}});
-    
-    auto conf_without_exclusions =
-        test::make_config("test/data/hard_exclude_vignettes", {});
-    std::stringstream mapSS;
+    auto conf_with_exclusions = test::make_config("test/data/hard_exclude_vignettes",
+                                                  {{"service_limits.allow_hard_exclusions", "true"}});
+
+    auto conf_without_exclusions = test::make_config("test/data/hard_exclude_vignettes", {});
+    /* std::stringstream mapSS;
     boost::property_tree::json_parser::write_json(mapSS, conf_without_exclusions);
     valhalla::config(mapSS.str());
-
+ */
     map = gurka::buildtiles(layout, ways, {}, {}, conf_with_exclusions);
     mapNotAllowed = gurka::buildtiles(layout, ways, {}, {}, conf_without_exclusions);
   }
@@ -113,7 +110,8 @@ INSTANTIATE_TEST_SUITE_P(ExcludeVignettesTests,
                            return values;
                          }()));
 
-class ExclusionTestNoHardExcludeVignettes : public ::testing::TestWithParam<std::vector<std::string>> {
+class ExclusionTestNoHardExcludeVignettes
+    : public ::testing::TestWithParam<std::vector<std::string>> {
 protected:
   static gurka::map map;
 
@@ -121,9 +119,8 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
 
     // Explicitly build config with service_limits
-    auto conf_with_exclusions =
-        test::make_config("test/data/hard_exclude_vignettes",
-                           {{"service_limits.allow_hard_exclusions", "true"}});
+    auto conf_with_exclusions = test::make_config("test/data/hard_exclude_vignettes",
+                                                  {{"service_limits.allow_hard_exclusions", "true"}});
     map = gurka::buildtiles(layout, ways, {}, {}, conf_with_exclusions);
   }
 };

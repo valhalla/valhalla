@@ -258,7 +258,7 @@ public:
   bool toll() const {
     return toll_;
   }
-  
+
   /**
    * Sets the flag indicating this edge has a toll or is it part of
    * a toll road.

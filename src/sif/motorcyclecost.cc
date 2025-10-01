@@ -24,10 +24,10 @@ namespace sif {
 namespace {
 
 // Other options
-constexpr float kDefaultUseHighways = 0.5f;   // Factor between 0 and 1
-constexpr float kDefaultUseTolls = 0.5f;      // Factor between 0 and 1
-constexpr float kDefaultUseVignettes = 0.5f;  // Factor between 0 and 1
-constexpr float kDefaultUseTrails = 0.0f;     // Factor between 0 and 1
+constexpr float kDefaultUseHighways = 0.5f;  // Factor between 0 and 1
+constexpr float kDefaultUseTolls = 0.5f;     // Factor between 0 and 1
+constexpr float kDefaultUseVignettes = 0.5f; // Factor between 0 and 1
+constexpr float kDefaultUseTrails = 0.0f;    // Factor between 0 and 1
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kImpassable;
 
@@ -335,7 +335,7 @@ MotorcycleCost::MotorcycleCost(const Costing& costing)
   // use_vignettes = 0 would penalize (positive delta to weighting factor).
   float use_vignettes = costing_options.use_vignettes();
   vignette_factor_ = use_vignettes < 0.5f ? (2.0f - 4 * use_vignettes) : // ranges from 2 to 0
-                     (0.5f - use_vignettes) * 0.03f;                     // ranges from 0 to -0.15 
+                         (0.5f - use_vignettes) * 0.03f;                 // ranges from 0 to -0.15
 
   // Set the surface factor based on the use trails value - this is a
   // preference to use trails/tracks/bad surface types (a value from 0 to 1).
