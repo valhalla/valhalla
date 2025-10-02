@@ -645,34 +645,36 @@ void SetStopYieldSignInfo(const graph_tile_ptr& start_tile,
     }
   }
 
-  // Read endnode stop/yield/minor info from the edge itself (stored during build phase)
-  // to avoid cross-tile reads that cause race conditions during parallel enhancement
-  uint32_t endnode_flags = directededge.endnode_stop_yield();
-  if (endnode_flags) {
-    bool minor = (endnode_flags & kMinor);
-    bool stop = (endnode_flags & kStopSign);
-    bool yield = (endnode_flags & kYieldSign);
+  // Get the tile at the startnode
+  graph_tile_ptr tile = start_tile;
+  // Get the tile at the end node
+  if (tile->id() != directededge.endnode().Tile_Base()) {
+    lock.lock();
+    tile = reader.GetGraphTile(directededge.endnode());
+    lock.unlock();
+  }
+  const NodeInfo* nodeinfo = tile->node(directededge.endnode());
+  if (nodeinfo->transition_index()) {
+
+    bool minor = (nodeinfo->transition_index() & kMinor);
+    bool stop = (nodeinfo->transition_index() & kStopSign);
+    bool yield = (nodeinfo->transition_index() & kYieldSign);
     RoadClass rc = directededge.classification();
 
     if (stop || yield) {
-      // If minor flag is set, we need to check classifications of edges at the endnode
-      // Only read from same tile to avoid race conditions
-      if (minor) {
-        graph_tile_ptr tile = start_tile;
-        if (tile->id() == directededge.endnode().Tile_Base()) {
-          const NodeInfo* nodeinfo = tile->node(directededge.endnode());
-          // Iterate through inbound edges
-          const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
-          for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
-            // Skip the candidate directed edge and any non-road edges. Skip any edges
-            // that are not drivable inbound.
-            if (!diredge->is_road() || !(diredge->reverseaccess() & kAutoAccess)) {
-              continue;
-            }
 
-            if (rc > diredge->classification()) {
-              rc = diredge->classification();
-            }
+      // Iterate through inbound edges
+      const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
+      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
+        // Skip the candidate directed edge and any non-road edges. Skip any edges
+        // that are not drivable inbound.
+        if (!diredge->is_road() || !(diredge->reverseaccess() & kAutoAccess)) {
+          continue;
+        }
+
+        if (minor) {
+          if (rc > diredge->classification()) {
+            rc = diredge->classification();
           }
         }
       }
