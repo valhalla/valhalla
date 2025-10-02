@@ -1361,37 +1361,39 @@ function filter_tags_generic(kv)
   --let all the :forward overrides through
   local mv_forward = kv["motor_vehicle:forward"] or kv["vehicle:forward"]
   if mv_forward ~= nil then
-    kv["auto_forward"] = motor_vehicle[mv_forward]
-    kv["truck_forward"] = motor_vehicle[mv_forward]
-    kv["bus_forward"] = motor_vehicle[mv_forward]
-    kv["taxi_forward"] = motor_vehicle[mv_forward]
-    kv["moped_forward"] = motor_vehicle[mv_forward]
-    kv["motorcycle_forward"] = motor_vehicle[mv_forward]
+    local access_forward = any_in(motor_vehicle, mv_forward)
+    kv["auto_forward"] = access_forward
+    kv["truck_forward"] = access_forward
+    kv["bus_forward"] = access_forward
+    kv["taxi_forward"] = access_forward
+    kv["moped_forward"] = access_forward
+    kv["motorcycle_forward"] = access_forward
   end
   if kv["foot:forward"] ~= nil then
-    kv["pedestrian_forward"] = foot[kv["foot:forward"]]
+    kv["pedestrian_forward"] = any_in(foot, kv["foot:forward"])
   end
   local bk_forward = kv["bicycle:forward"] or kv["vehicle:forward"]
   if bk_forward ~= nil then
-    kv["bike_forward"] = bicycle[bk_forward]
+    kv["bike_forward"] = any_in(bicycle, bk_forward)
   end
 
   --let all the :backward overrides through, some of this is redundant but the code is a mess...
   local mv_backward = kv["motor_vehicle:backward"] or kv["vehicle:backward"]
   if mv_backward ~= nil then
-    kv["auto_backward"] = motor_vehicle[mv_backward]
-    kv["truck_backward"] = motor_vehicle[mv_backward]
-    kv["bus_backward"] = motor_vehicle[mv_backward]
-    kv["taxi_backward"] = motor_vehicle[mv_backward]
-    kv["moped_backward"] = motor_vehicle[mv_backward]
-    kv["motorcycle_backward"] = motor_vehicle[mv_backward]
+    local access_backward = any_in(motor_vehicle, mv_backward)
+    kv["auto_backward"] = access_backward
+    kv["truck_backward"] = access_backward
+    kv["bus_backward"] = access_backward
+    kv["taxi_backward"] = access_backward
+    kv["moped_backward"] = access_backward
+    kv["motorcycle_backward"] = access_backward
   end
   if kv["foot:backward"] ~= nil then
-    kv["pedestrian_backward"] = foot[kv["foot:backward"]]
+    kv["pedestrian_backward"] = any_in(foot, kv["foot:backward"])
   end
   local bk_backward = kv["bicycle:backward"] or kv["vehicle:backward"]
   if bk_backward ~= nil then
-    kv["bike_backward"] = bicycle[bk_backward]
+    kv["bike_backward"] = any_in(bicycle, bk_backward)
   end
 
   kv["oneway_reverse"] = "false"
