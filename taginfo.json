@@ -6933,11 +6933,10 @@
     },
     {
       "key": "bicycle:backward",
-      "value": "no",
       "object_types": [
         "way"
       ],
-      "description": "Disables bicycle access in the backward direction"
+      "description": "Sets bicycle access in the backward direction"
     }
   ]
 }
