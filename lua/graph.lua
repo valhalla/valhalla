@@ -689,6 +689,9 @@ end
 -- if key is a list separated by ";" then check all key parts in table
 -- return "true" if value is "true" for any key, "false" if for any key value is "false" else return nil
 function any_in(table, key)
+  if key == nil then
+    return nil
+  end
   local val = table[key]
   if val ~= nil then
     return val
@@ -705,6 +708,9 @@ end
 -- if key is a list separated by ";" then check all key parts in table
 -- return value if value is > 0 for any key, 0 if for any key value is 0 else return nil
 function any_in_num(table, key)
+  if key == nil then
+    return nil
+  end
   local val = table[key]
   if val ~= nil then
     return val
