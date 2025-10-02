@@ -1609,13 +1609,6 @@
       "description": "Overrides access flags for pedestrian."
     },
     {
-      "key": "foot:backward",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets the foot reverse flag."
-    },
-    {
       "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "foot:conditional",
@@ -6741,13 +6734,6 @@
         "way"
       ],
       "description": "Sets bicycle access in the forward direction"
-    },
-    {
-      "key": "bicycle:backward",
-      "object_types": [
-        "way"
-      ],
-      "description": "Sets bicycle access in the backward direction"
     }
   ]
 }
