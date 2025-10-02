@@ -982,57 +982,49 @@ function filter_tags_generic(kv)
 
     --check for auto_forward overrides
     kv["auto_tag"] = any_in(motor_vehicle, kv["motorcar"]) or
-                     any_in(motor_vehicle, kv["motor_vehicle"]) or
-                     nil
+                     any_in(motor_vehicle, kv["motor_vehicle"])
     kv["auto_forward"] = kv["auto_tag"] or kv["auto_forward"]
 
     --check for truck_forward override
     kv["truck_tag"] = any_in(truck, kv["hgv"]) or
-                      any_in(motor_vehicle, kv["motor_vehicle"]) or
-                      nil
+                      any_in(motor_vehicle, kv["motor_vehicle"])
     kv["truck_forward"] = kv["truck_tag"] or kv["truck_forward"]
 
     --check for bus_forward overrides
     kv["bus_tag"] = any_in(bus, kv["bus"]) or
                     any_in(psv, kv["psv"]) or
                     psv[kv["lanes:psv:forward"]] or
-                    any_in(motor_vehicle, kv["motor_vehicle"]) or
-                    nil
+                    any_in(motor_vehicle, kv["motor_vehicle"])
     kv["bus_forward"] = kv["bus_tag"] or kv["bus_forward"]
 
     --check for taxi_forward overrides
     kv["taxi_tag"] = any_in(taxi, kv["taxi"]) or
                      any_in(psv, kv["psv"]) or
                      psv[kv["lanes:psv:forward"]] or
-                     any_in(motor_vehicle, kv["motor_vehicle"]) or
-                     nil
+                     any_in(motor_vehicle, kv["motor_vehicle"])
     kv["taxi_forward"] = kv["taxi_tag"] or kv["taxi_forward"]
 
     --check for ped overrides
     kv["foot_tag"] = any_in(foot, kv["foot"]) or
-                     foot[kv["pedestrian"]] or
-                     nil
+                     foot[kv["pedestrian"]]
     kv["pedestrian_forward"] = kv["foot_tag"] or kv["pedestrian_forward"]
 
     --check for bike_forward overrides
     kv["bike_tag"] = any_in(bicycle, kv["bicycle"]) or
                      any_in(cycleway, kv["cycleway"]) or
                      any_in(bicycle, kv["bicycle_road"]) or
-                     bicycle[kv["cyclestreet"]] or
-                     nil
+                     bicycle[kv["cyclestreet"]]
     kv["bike_forward"] = kv["bike_tag"] or kv["bike_forward"]
 
     --check for moped forward overrides
     kv["moped_tag"] = any_in(moped, kv["moped"]) or
                       any_in(moped, kv["mofa"]) or
-                      any_in(motor_vehicle, kv["motor_vehicle"]) or
-                      nil
+                      any_in(motor_vehicle, kv["motor_vehicle"])
     kv["moped_forward"] = kv["moped_tag"] or kv["moped_forward"]
 
     --check for motorcycle forward overrides
     kv["motorcycle_tag"] = any_in(motor_vehicle, kv["motorcycle"]) or
-                           any_in(motor_vehicle, kv["motor_vehicle"]) or
-                           nil
+                           any_in(motor_vehicle, kv["motor_vehicle"])
     kv["motorcycle_forward"] = kv["motorcycle_tag"] or kv["motorcycle_forward"]
 
     if kv["access"] == "psv" then
@@ -1066,14 +1058,12 @@ function filter_tags_generic(kv)
 
     --check for auto_forward overrides
     kv["auto_tag"] = any_in(motor_vehicle, kv["motorcar"]) or
-                     any_in(motor_vehicle, kv["motor_vehicle"]) or
-                     nil
+                     any_in(motor_vehicle, kv["motor_vehicle"])
     kv["auto_forward"] = kv["auto_tag"] or default_val
 
     --check for truck_forward override
     kv["truck_tag"] = any_in(truck, kv["hgv"]) or
-                      any_in(motor_vehicle, kv["motor_vehicle"]) or
-                      nil
+                      any_in(motor_vehicle, kv["motor_vehicle"])
     kv["truck_forward"] = any_in(truck, kv["hgv"]) or
                           kv["truck_forward"] or
                           any_in(motor_vehicle, kv["motor_vehicle"]) or
@@ -1083,43 +1073,37 @@ function filter_tags_generic(kv)
     kv["bus_tag"] = any_in(bus, kv["bus"]) or
                     any_in(psv, kv["psv"]) or
                     psv[kv["lanes:psv:forward"]] or
-                    any_in(motor_vehicle, kv["motor_vehicle"]) or
-                    nil
+                    any_in(motor_vehicle, kv["motor_vehicle"])
     kv["bus_forward"] = kv["bus_tag"] or default_val
 
     --check for taxi_forward overrides
     kv["taxi_tag"] = any_in(taxi, kv["taxi"]) or
                      any_in(psv, kv["psv"]) or
                      psv[kv["lanes:psv:forward"]] or
-                     any_in(motor_vehicle, kv["motor_vehicle"]) or
-                     nil
+                     any_in(motor_vehicle, kv["motor_vehicle"])
     kv["taxi_forward"] = kv["taxi_tag"] or default_val
 
     --check for ped overrides
     kv["foot_tag"] = any_in(foot, kv["foot"]) or
-                     foot[kv["pedestrian"]] or
-                     nil
+                     foot[kv["pedestrian"]]
     kv["pedestrian_forward"] = kv["foot_tag"] or ped_val
 
     --check for bike_forward overrides
     kv["bike_tag"] = any_in(bicycle, kv["bicycle"]) or
                      any_in(cycleway, kv["cycleway"]) or
                      any_in(bicycle, kv["bicycle_road"]) or
-                     bicycle[kv["cyclestreet"]] or
-                     nil
+                     bicycle[kv["cyclestreet"]]
     kv["bike_forward"] = kv["bike_tag"] or default_val
 
     --check for moped forward overrides
     kv["moped_tag"] = any_in(moped, kv["moped"]) or
                       any_in(moped, kv["mofa"]) or
-                      any_in(motor_vehicle, kv["motor_vehicle"]) or
-                      nil
+                      any_in(motor_vehicle, kv["motor_vehicle"])
     kv["moped_forward"] = kv["moped_tag"] or default_val
 
     --check for motorcycle forward overrides
     kv["motorcycle_tag"] = any_in(motor_vehicle, kv["motorcycle"]) or
-                           any_in(motor_vehicle, kv["motor_vehicle"]) or
-                           nil
+                           any_in(motor_vehicle, kv["motor_vehicle"])
     kv["motorcycle_forward"] = kv["motorcycle_tag"] or default_val
 
     if kv["bike_tag"] == nil then
@@ -1612,7 +1596,7 @@ function filter_tags_generic(kv)
 
   kv["use"] = use
 
-  local r_shoulder = shoulder[kv["shoulder"]] or shoulder[kv["shoulder:both"]] or nil
+  local r_shoulder = shoulder[kv["shoulder"]] or shoulder[kv["shoulder:both"]]
   local l_shoulder = r_shoulder
 
   if r_shoulder == nil then
