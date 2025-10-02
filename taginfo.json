@@ -2848,15 +2848,6 @@
     },
     {
       "key": "hgv",
-      "value": "agricultural;forestry",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
       "value": "official",
       "object_types": [
         "node",
@@ -2867,15 +2858,6 @@
     {
       "key": "hgv",
       "value": "forestry",
-      "object_types": [
-        "node",
-        "way"
-      ],
-      "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
-    },
-    {
-      "key": "hgv",
-      "value": "destination;delivery",
       "object_types": [
         "node",
         "way"
