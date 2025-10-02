@@ -749,3 +749,39 @@ TEST(Standalone, AccessFerry) {
     }
   }
 }
+
+class CombinedRestrictionTagValues : public ::testing::Test {
+protected:
+  static gurka::nodelayout layout;
+  static gurka::ways ways;
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 100;
+
+    const std::string ascii_map = R"(
+        A---B
+     )";
+
+    layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    ways = {
+        {"AB", {{"highway", "primary"}, {"motor_vehicle", "forestry;agricultural"}}},
+    };
+  }
+
+  void check_auto_path(const gurka::map& map, const std::vector<std::string>& expected_path) {
+    try {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
+      gurka::assert::raw::expect_path(result, expected_path);
+    } catch (const std::runtime_error& e) {
+      EXPECT_STREQ(e.what(), "No suitable edges near location");
+    }
+  }
+};
+
+gurka::nodelayout CombinedRestrictionTagValues::layout = {};
+gurka::ways CombinedRestrictionTagValues::ways = {};
+
+TEST_F(CombinedRestrictionTagValues, DeniedCombinedValueAccess) {
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/combined_restriction_tag_values");
+  check_auto_path(map, {});
+}
