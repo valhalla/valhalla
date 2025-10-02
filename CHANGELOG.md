@@ -284,6 +284,7 @@
    * ADDED: matrix second pass for connections not found in the first pass, analogous to /route [#4536](https://github.com/valhalla/valhalla/pull/4536)
    * UPDATED: cxxopts to 3.1.1 [#4541](https://github.com/valhalla/valhalla/pull/4541)
    * CHANGED: make use of vendored libraries optional (other than libraries which are not commonly in package managers or only used for testing) [#4544](https://github.com/valhalla/valhalla/pull/4544)
+   * ADDED: Add ability to specify and use custom tile sizes in valhalla config json [#4563](https://github.com/valhalla/valhalla/pull/4563)
    * ADDED: Improved instructions for blind users [#3694](https://github.com/valhalla/valhalla/pull/3694)
    * ADDED: isochrone proper polygon support & pbf output for isochrone [#4575](https://github.com/valhalla/valhalla/pull/4575)
    * ADDED: return isotile grid as geotiff  [#4594](https://github.com/valhalla/valhalla/pull/4594)
