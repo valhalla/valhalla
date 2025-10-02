@@ -279,6 +279,11 @@ truck = {
 ["residents"] = "true"
 }
 
+truck_hgv = {
+  ["designated"] = "true",
+  ["local"] = "true",
+}
+
 hazmat = {
 ["designated"] = "true",
 ["yes"] = "true",
@@ -1709,8 +1714,8 @@ function filter_tags_generic(kv)
 
   --- TODO(nils): "private" also has directionality which we don't parse and handle yet
   kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or "false"
-  kv["private_hgv"] = private[kv["hgv"]] or kv["private"] or "false"
-  kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"
+  kv["private_hgv"] = any_in(private, kv["hgv"]) or kv["private"] or "false"
+  kv["no_thru_traffic"] = any_in(no_thru_traffic, kv["access"]) or "false"
   kv["ferry"] = tostring(ferry)
   kv["rail"] = tostring(kv["auto_forward"] == "true" and (kv["railway"] == "rail" or kv["route"] == "shuttle_train"))
   kv["name"] = kv["name"]
@@ -1931,7 +1936,7 @@ function filter_tags_generic(kv)
     end
   end
 
-  if (kv["hgv:national_network"] or kv["hgv:state_network"] or kv["hgv"] == "local" or kv["hgv"] == "designated") then
+  if kv["hgv:national_network"] or kv["hgv:state_network"] or any_in(truck_hgv, kv["hgv"]) then
     kv["truck_route"] = "true"
   end
 
@@ -2015,7 +2020,7 @@ function nodes_proc (kv, nokeys)
   end
 
   --normalize a few tags that we care about
-  local initial_access = access[kv["access"]]
+  local initial_access = any_in(access, kv["access"])
   local access = initial_access or "true"
 
   if (kv["impassable"] == "yes" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
