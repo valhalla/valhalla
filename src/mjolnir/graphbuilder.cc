@@ -930,6 +930,17 @@ void BuildTileSet(const std::string& ways_file,
             directededge.set_leaves_tile(true);
           }
 
+          // Store endnode's stop/yield/minor info on the edge to avoid cross-tile reads during enhancement
+          const OSMNode& target_osm_node = (*nodes[target]).node;
+          uint32_t endnode_flags = 0;
+          if (target_osm_node.stop_sign())
+            endnode_flags |= kStopSign;
+          if (target_osm_node.yield_sign())
+            endnode_flags |= kYieldSign;
+          if (target_osm_node.minor())
+            endnode_flags |= kMinor;
+          directededge.set_endnode_stop_yield(endnode_flags);
+
           directededge.set_edgeinfo_offset(found->first);
           directededge.set_curvature(std::get<1>(found->second));
 

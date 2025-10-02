@@ -1200,6 +1200,23 @@ public:
   }
 
   /**
+   * Get the endnode stop/yield/minor info (temporary storage from build phase)
+   * Bit 0: stop sign, Bit 1: yield sign, Bit 2: minor
+   * @return Returns the endnode stop/yield/minor flags
+   */
+  uint32_t endnode_stop_yield() const {
+    return endnode_stop_yield_;
+  }
+
+  /**
+   * Set the endnode stop/yield/minor info (temporary storage during build phase)
+   * @param flags Bit 0: stop sign, Bit 1: yield sign, Bit 2: minor
+   */
+  void set_endnode_stop_yield(const uint32_t flags) {
+    endnode_stop_yield_ = flags;
+  }
+
+  /**
    * Create a json object representing this edge
    *  @param writer The writer json object to represent the object
    */
@@ -1268,7 +1285,7 @@ protected:
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
   uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
-  uint64_t spare4_ : 3;
+  uint64_t endnode_stop_yield_ : 3;  // Endnode stop/yield/minor info (temp storage for enhancement)
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)
