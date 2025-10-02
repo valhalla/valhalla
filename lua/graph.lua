@@ -1732,7 +1732,7 @@ function filter_tags_generic(kv)
   kv["int"] = kv["int"]
   kv["int_ref"] = kv["int_ref"]
   kv["surface"] = kv["surface"]
-  kv["wheelchair"] = wheelchair[kv["wheelchair"]]
+  kv["wheelchair"] = any_in(wheelchair, kv["wheelchair"])
 
   --lower the default speed for tracks
   if kv["highway"] == "track" then
