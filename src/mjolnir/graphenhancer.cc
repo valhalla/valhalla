@@ -158,11 +158,12 @@ void GetTurnTypes(const DirectedEdge& directededge,
 
   // Get the tile at the end node. and find inbound heading of the candidate
   // edge to the end node.
-  if (tile->id() != directededge.endnode().Tile_Base()) {
-    lock.lock();
-    tile = reader.GetGraphTile(directededge.endnode());
-    lock.unlock();
-  }
+  // ALWAYS read from GraphReader to get the original unmodified tile data,
+  // even if it's the same tile we're currently enhancing. This prevents
+  // reading data that's being modified by the tilebuilder.
+  lock.lock();
+  tile = reader.GetGraphTile(directededge.endnode());
+  lock.unlock();
   const NodeInfo* node = tile->node(directededge.endnode());
 
   // Iterate through outbound edges and get turn degrees from the candidate
@@ -778,11 +779,12 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
 
   // Get the tile at the end node. and find inbound heading of the candidate
   // edge to the end node.
-  if (tile->id() != directededge.endnode().Tile_Base()) {
-    lock.lock();
-    tile = reader.GetGraphTile(directededge.endnode());
-    lock.unlock();
-  }
+  // ALWAYS read from GraphReader to get the original unmodified tile data,
+  // even if it's the same tile we're currently enhancing. This prevents
+  // reading data that's being modified by the tilebuilder.
+  lock.lock();
+  tile = reader.GetGraphTile(directededge.endnode());
+  lock.unlock();
   const NodeInfo* node = tile->node(directededge.endnode());
   diredge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
