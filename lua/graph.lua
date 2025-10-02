@@ -944,6 +944,7 @@ function filter_tags_generic(kv)
     end
   end
 
+  local motor_vehicle_access = any_in(motor_vehicle, kv["motor_vehicle"])
   if forward then
     for k,v in pairs(forward) do
       kv[k] = v
@@ -987,27 +988,25 @@ function filter_tags_generic(kv)
     end
 
     --check for auto_forward overrides
-    kv["auto_tag"] = any_in(motor_vehicle, kv["motorcar"]) or
-                     any_in(motor_vehicle, kv["motor_vehicle"])
+    kv["auto_tag"] = any_in(motor_vehicle, kv["motorcar"]) or motor_vehicle_access
     kv["auto_forward"] = kv["auto_tag"] or kv["auto_forward"]
 
     --check for truck_forward override
-    kv["truck_tag"] = any_in(truck, kv["hgv"]) or
-                      any_in(motor_vehicle, kv["motor_vehicle"])
+    kv["truck_tag"] = any_in(truck, kv["hgv"]) or motor_vehicle_access
     kv["truck_forward"] = kv["truck_tag"] or kv["truck_forward"]
 
     --check for bus_forward overrides
     kv["bus_tag"] = any_in(bus, kv["bus"]) or
                     any_in(psv, kv["psv"]) or
                     psv[kv["lanes:psv:forward"]] or
-                    any_in(motor_vehicle, kv["motor_vehicle"])
+                    motor_vehicle_access
     kv["bus_forward"] = kv["bus_tag"] or kv["bus_forward"]
 
     --check for taxi_forward overrides
     kv["taxi_tag"] = any_in(taxi, kv["taxi"]) or
                      any_in(psv, kv["psv"]) or
                      psv[kv["lanes:psv:forward"]] or
-                     any_in(motor_vehicle, kv["motor_vehicle"])
+                     motor_vehicle_access
     kv["taxi_forward"] = kv["taxi_tag"] or kv["taxi_forward"]
 
     --check for ped overrides
@@ -1025,12 +1024,11 @@ function filter_tags_generic(kv)
     --check for moped forward overrides
     kv["moped_tag"] = any_in(moped, kv["moped"]) or
                       any_in(moped, kv["mofa"]) or
-                      any_in(motor_vehicle, kv["motor_vehicle"])
+                      motor_vehicle_access
     kv["moped_forward"] = kv["moped_tag"] or kv["moped_forward"]
 
     --check for motorcycle forward overrides
-    kv["motorcycle_tag"] = any_in(motor_vehicle, kv["motorcycle"]) or
-                           any_in(motor_vehicle, kv["motor_vehicle"])
+    kv["motorcycle_tag"] = any_in(motor_vehicle, kv["motorcycle"]) or motor_vehicle_access
     kv["motorcycle_forward"] = kv["motorcycle_tag"] or kv["motorcycle_forward"]
 
     if kv["access"] == "psv" then
@@ -1063,30 +1061,28 @@ function filter_tags_generic(kv)
     end
 
     --check for auto_forward overrides
-    kv["auto_tag"] = any_in(motor_vehicle, kv["motorcar"]) or
-                     any_in(motor_vehicle, kv["motor_vehicle"])
+    kv["auto_tag"] = any_in(motor_vehicle, kv["motorcar"]) or motor_vehicle_access
     kv["auto_forward"] = kv["auto_tag"] or default_val
 
     --check for truck_forward override
-    kv["truck_tag"] = any_in(truck, kv["hgv"]) or
-                      any_in(motor_vehicle, kv["motor_vehicle"])
+    kv["truck_tag"] = any_in(truck, kv["hgv"]) or motor_vehicle_access
     kv["truck_forward"] = any_in(truck, kv["hgv"]) or
                           kv["truck_forward"] or
-                          any_in(motor_vehicle, kv["motor_vehicle"]) or
+                          motor_vehicle_access or
                           default_val
 
     --check for bus_forward overrides
     kv["bus_tag"] = any_in(bus, kv["bus"]) or
                     any_in(psv, kv["psv"]) or
                     psv[kv["lanes:psv:forward"]] or
-                    any_in(motor_vehicle, kv["motor_vehicle"])
+                    motor_vehicle_access
     kv["bus_forward"] = kv["bus_tag"] or default_val
 
     --check for taxi_forward overrides
     kv["taxi_tag"] = any_in(taxi, kv["taxi"]) or
                      any_in(psv, kv["psv"]) or
                      psv[kv["lanes:psv:forward"]] or
-                     any_in(motor_vehicle, kv["motor_vehicle"])
+                     motor_vehicle_access
     kv["taxi_forward"] = kv["taxi_tag"] or default_val
 
     --check for ped overrides
@@ -1104,12 +1100,11 @@ function filter_tags_generic(kv)
     --check for moped forward overrides
     kv["moped_tag"] = any_in(moped, kv["moped"]) or
                       any_in(moped, kv["mofa"]) or
-                      any_in(motor_vehicle, kv["motor_vehicle"])
+                      motor_vehicle_access
     kv["moped_forward"] = kv["moped_tag"] or default_val
 
     --check for motorcycle forward overrides
-    kv["motorcycle_tag"] = any_in(motor_vehicle, kv["motorcycle"]) or
-                           any_in(motor_vehicle, kv["motor_vehicle"])
+    kv["motorcycle_tag"] = any_in(motor_vehicle, kv["motorcycle"]) or motor_vehicle_access
     kv["motorcycle_forward"] = kv["motorcycle_tag"] or default_val
 
     if kv["bike_tag"] == nil then
