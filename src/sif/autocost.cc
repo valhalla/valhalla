@@ -47,7 +47,7 @@ constexpr float kTCCrossing = 2.0f;
 constexpr float kTCUnfavorable = 2.5f;
 constexpr float kTCUnfavorableSharp = 3.5f;
 constexpr float kTCReverse = 9.5f;
-constexpr float kTCRamp = 10.0f;
+constexpr float kTCRamp = 1.5f;
 constexpr float kTCRoundabout = 0.5f;
 
 // How much to favor taxi roads.
@@ -88,7 +88,7 @@ constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSp
 
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
-    0.0f, // Trunk
+    0.5f, // Trunk
     0.0f, // Primary
     0.0f, // Secondary
     0.0f, // Tertiary
@@ -405,7 +405,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // use_tolls = 0 would penalize (positive delta to weighting factor).
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
-                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+                     (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.015
 
   // Preference to use vignette roads. Sets a vignette factor.
   // A vignette factor of 0 would indicate no adjustment to weighting for vignette roads.
@@ -413,7 +413,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // use_vignettes = 0 would penalize (positive delta to weighting factor).
   float use_vignettes = costing_options.use_vignettes();
   vignette_factor_ = use_vignettes < 0.5f ? (4.0f - 8 * use_vignettes) : // ranges from 4 to 0
-                         (0.5f - use_vignettes) * 0.03f;                 // ranges from 0 to -0.15
+                         (0.5f - use_vignettes) * 0.03f;                 // ranges from 0 to -0.015
 
   include_hot_ = costing_options.include_hot();
   include_hov2_ = costing_options.include_hov2();
@@ -501,12 +501,10 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const {
   // either the computed edge speed or optional top_speed
-  auto edge_speed =
-      fixed_speed_ == baldr::kDisableFixedSpeed
-          ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
-                           time_info.seconds_from_now, traffic_fading_duration_,
-                           traffic_fading_start_, traffic_fading_exponent_)
-          : fixed_speed_;
+  auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
+                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
+                                         &flow_sources, time_info.seconds_from_now)
+                        : fixed_speed_;
 
   auto final_speed = std::min(edge_speed, top_speed_);
 
@@ -971,12 +969,10 @@ public:
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
-    auto edge_speed =
-        fixed_speed_ == baldr::kDisableFixedSpeed
-            ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
-                             time_info.seconds_from_now, traffic_fading_duration_,
-                             traffic_fading_start_, traffic_fading_exponent_)
-            : fixed_speed_;
+    auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
+                          ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
+                                           &flow_sources, time_info.seconds_from_now)
+                          : fixed_speed_;
     auto final_speed = std::min(edge_speed, top_speed_);
 
     float sec = (edge->length() * kSpeedFactor[final_speed]);

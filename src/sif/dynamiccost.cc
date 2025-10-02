@@ -138,9 +138,8 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       closure_factor_{kClosureFactorRange}, exclude_unpaved_(false), exclude_bridges_(false),
       exclude_tunnels_(false), exclude_tolls_(false), exclude_vignettes_(false),
       exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
-      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
-      include_hov3_{false}, traffic_fading_start_{10800}, traffic_fading_duration_{0},
-      traffic_fading_exponent_{1} {
+      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
+                                                                                      false} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -538,14 +537,6 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT_V2(co, cfg.include_hot_, json, "/include_hot", include_hot);
   JSON_PBF_DEFAULT_V2(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT_V2(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
-
-  // fading function parameters
-  JSON_PBF_DEFAULT(co, cfg.traffic_fading_start_, json, "/traffic_fading_start",
-                   traffic_fading_start);
-  JSON_PBF_DEFAULT(co, cfg.traffic_fading_duration_, json, "/traffic_fading_duration",
-                   traffic_fading_duration);
-  JSON_PBF_DEFAULT(co, cfg.traffic_fading_exponent_, json, "/traffic_fading_exponent",
-                   traffic_fading_exponent);
 
   JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
 }

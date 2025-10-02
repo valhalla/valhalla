@@ -319,18 +319,9 @@ message Costing {
     bool exclude_ferries = 91;
     map<uint32, HierarchyLimits> hierarchy_limits = 92;
     bool ignore_construction = 93;
-    oneof has_traffic_fading_duration {
-      uint32 traffic_fading_duration = 94;
-    }
-    oneof has_traffic_fading_start {
-      uint32 traffic_fading_start = 95;
-    }
-    oneof has_traffic_fading_exponent {
-      uint32 traffic_fading_exponent = 96;
-    }
-    bool exclude_vignettes = 97;
+    bool exclude_vignettes = 94;
     oneof has_use_vignettes {
-      float use_vignettes = 98;
+      float use_vignettes = 95;
     }
   }
 
