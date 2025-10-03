@@ -1,8 +1,6 @@
 #include "gurka.h"
-#include "test.h"
+#include "valhalla/worker.h"
 
-#include <boost/format.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <gtest/gtest.h>
 
 using namespace valhalla;

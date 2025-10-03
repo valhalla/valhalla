@@ -1,5 +1,5 @@
-#include "baldr/graphtileheader.h"
 #include "baldr/tilehierarchy.h"
+#include "baldr/graphtileheader.h"
 #include "midgard/vector2.h"
 
 #include <cassert>
@@ -27,7 +27,6 @@ const std::vector<TileLevel>& TileHierarchy::levels() {
                 midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
                                                  .25,
                                                  static_cast<unsigned short>(kBinsDim)}},
-
   };
 
   return levels_;
