@@ -4,6 +4,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "filesystem_utils.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -519,6 +520,7 @@ void bin_tweeners(const std::string& tile_dir,
                   tweeners_t::iterator& start,
                   const tweeners_t::iterator& end,
                   uint64_t dataset_id,
+                  uint64_t checksum,
                   std::mutex& lock) {
   // go while we have tiles to update
   while (true) {
@@ -538,6 +540,7 @@ void bin_tweeners(const std::string& tile_dir,
     if (!tile) {
       GraphTileBuilder empty(tile_dir, tile_bin.first, false);
       empty.header_builder().set_dataset_id(dataset_id);
+      empty.header_builder().set_checksum(checksum);
       empty.StoreTileData();
       tile = GraphTile::Create(tile_dir, tile_bin.first);
     }
@@ -578,6 +581,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   graph_tile_ptr first_tile = GraphTile::Create(tile_dir, *tilequeue.begin());
   assert(tilequeue.size() && first_tile);
   auto dataset_id = first_tile->header()->dataset_id();
+  auto checksum = first_tile->header()->checksum();
 
   // An mutex we can use to do the synchronization
   std::mutex lock;
@@ -627,7 +631,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   auto end = tweeners.end();
   for (auto& thread : threads) {
     thread = std::make_shared<std::thread>(bin_tweeners, std::cref(tile_dir), std::ref(start),
-                                           std::cref(end), dataset_id, std::ref(lock));
+                                           std::cref(end), dataset_id, checksum, std::ref(lock));
   }
   for (auto& thread : threads) {
     thread->join();

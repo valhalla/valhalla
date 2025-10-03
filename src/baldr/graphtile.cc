@@ -224,15 +224,57 @@ void store(const std::string& cache_location,
 graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        const GraphId& graphid,
                                        tile_getter_t* tile_getter,
-                                       const std::string& cache_location) {
+                                       const std::string& cache_location,
+                                       uint64_t range_offset,
+                                       uint64_t range_size,
+                                       const std::filesystem::path& id_txt_path,
+                                       uint64_t id_checksum) {
   // Don't bother with invalid ids
   if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
   }
 
-  auto fname = valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
-                                                      valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
-  auto result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
+  LOG_INFO("Downloading tile " + std::to_string(graphid) + " from " + tile_url);
+
+  tile_getter_t::GET_response_t result;
+  if (range_size == 0) {
+    // requesting plain tiles
+    auto fname =
+        valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
+                                               valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
+    result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
+  } else {
+    // or HTTP range on a tar
+    result = tile_getter->get(tile_url, range_offset, range_size);
+
+    // inspect the header for the checksum
+    // it's a POD type and thus trivially copyable
+    GraphTileHeader header;
+    std::memcpy(&header, result.bytes_.data(), sizeof(header));
+    auto tile_checksum = header.checksum();
+    if (tile_checksum == 0) {
+      // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
+      LOG_WARN(
+          "Remote tile is missing the checksum attribute, please update the tile builder instance");
+    }
+    if (!cache_location.empty()) {
+      if (id_checksum == 0) {
+        // this is the first tile in a fresh tile_dir
+        static std::mutex mutex;
+        std::lock_guard lock{mutex};
+        std::ofstream id_txt_file(id_txt_path, std::ios::binary);
+        if (id_txt_file) {
+          id_txt_file << tile_url << std::endl;
+          id_txt_file << tile_checksum << std::endl;
+        }
+      } else if (tile_checksum != id_checksum) {
+        // TODO: re-start the graphreader on our own somehow (i.e. purge old tiles and tile_dir)
+        LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
+        throw std::runtime_error("Remote tar file has changed, remove the tile_dir and restart.");
+      }
+    }
+  }
+
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
     return nullptr;
   }
@@ -273,7 +315,10 @@ void GraphTile::Initialize(const GraphId& graphid) {
                              " vs raw tile data size = " + std::to_string(tile_size) +
                              ". Tile file might me corrupted");
 
-  // TODO check version
+  if (int current_version = header_->version()[0] - '0'; current_version != VALHALLA_VERSION_MAJOR) {
+    LOG_WARN("Tiles were built with version " + std::to_string(current_version) +
+             ", current process runs version " + std::to_string(VALHALLA_VERSION_MAJOR));
+  }
 
   // Set a pointer to the node list
   nodes_ = reinterpret_cast<NodeInfo*>(ptr);
