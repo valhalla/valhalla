@@ -47,9 +47,11 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y ${{ matrix.c_compiler }}
+          # no man-db triggers..
+          sudo apt-get purge -y man-db
+          sudo apt-get install -y --no-install-recommends ${{ matrix.c_compiler }}
           if [[  ${{ matrix.c_compiler }} == gcc* ]]; then
-            sudo apt-get install -y ${{ matrix.cxx_compiler }}
+            sudo apt-get install -y --no-install-recommends ${{ matrix.cxx_compiler }}
           fi
 
       # Set up Linux compiler
