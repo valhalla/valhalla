@@ -1,0 +1,104 @@
+name: Test Compilers
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.os }} • ${{ matrix.c_compiler }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # we need one job per _valid_ combination
+        include:
+          # get the min & max of Ubuntu's currently supported gcc/clang versions
+          - os: ubuntu-24.04
+            c_compiler: gcc-10
+            cxx_compiler: g++-10
+          - os: ubuntu-24.04
+            c_compiler: gcc-14
+            cxx_compiler: g++-14
+          - os: ubuntu-24.04
+            c_compiler: clang-14
+            cxx_compiler: clang++-14
+          - os: ubuntu-24.04
+            c_compiler: clang-20
+            cxx_compiler: clang++-20
+          # get the min & max of currently supported macos & windows
+          - os: macos-13
+            c_compiler: clang
+          - os: macos-15
+            c_compiler: clang
+          - os: windows-2022
+            c_compiler: msvc
+          - os: windows-2025
+            c_compiler: msvc
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      # Install Linux compiler
+      - name: Install ${{ matrix.c_compiler }}
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          # no man-db triggers..
+          sudo apt-get purge -y man-db
+          sudo apt-get install -y --no-install-recommends ${{ matrix.c_compiler }}
+          if [[  ${{ matrix.c_compiler }} == gcc* ]]; then
+            sudo apt-get install -y --no-install-recommends ${{ matrix.cxx_compiler }}
+          fi
+
+      # Set up Linux compiler
+      - name: Set up compiler (Linux) - ${{ matrix.c_compiler }} • ${{ matrix.cxx_compiler }}
+        if: runner.os == 'Linux'
+        run: |
+          echo "CC=${{ matrix.c_compiler }}"   >> $GITHUB_ENV
+          echo "CXX=${{ matrix.cxx_compiler }}"  >> $GITHUB_ENV
+
+      # Set up macOS c_compiler
+      - name: Set up compiler (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          echo "CC=clang"   >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+
+      # Configure CMake
+      - name: Configure ${{ matrix.os }} • ${{ matrix.c_compiler }}
+        if: runner.os != 'Windows'
+        run: |
+          cmake -S test/check_compilers -B build \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DCMAKE_C_COMPILER=${CC} \
+            -DCMAKE_CXX_COMPILER=${CXX}
+
+      - name: Configure ${{ matrix.os }}
+        if: matrix.os == 'windows-2022'
+        run: |
+          cmake -S test/check_compilers -B build -G "Visual Studio 17 2022" -A x64
+
+      - name: Configure ${{ matrix.os }}
+        if: matrix.os == 'windows-2025'
+        run: |
+          # there's no VS 2025
+          cmake -S test/check_compilers -B build -G "Visual Studio 17 2022" -A x64
+
+      # Build
+      - name: Build ${{ matrix.os }} • ${{ matrix.c_compiler }}
+        if: runner.os != 'Windows'
+        run: cmake --build build --config Release
+
+      - name: Build ${{ matrix.os }}
+        if: runner.os == 'Windows'
+        run: cmake --build build --config Release
+
+      # Run
+      # - name: Run executable ${{ matrix.os }} • ${{ matrix.c_compiler }}
+      #   if: runner.os != 'Windows'
+      #   run: ./build/hello
+
+      # - name: Run hello ${{ matrix.os }}
+      #   if: runner.os == 'Windows'
+      #   run: ./build/Release/hello.exe
