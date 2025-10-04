@@ -1,20 +1,18 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/meili/*.h)
 
 set(sources
-  topk_search.cc
-  routing.cc
+  candidate_search.cc
+  config.cc
   geometry_helpers.cc
   map_matcher_factory.cc
-  config.cc)
-
-set(sources_with_warnings
-  candidate_search.cc
   map_matcher.cc
   match_route.cc
+  routing.cc
+  topk_search.cc
   transition_cost_model.cc
   viterbi_search.cc)
 
-set(system_includes 
+set(system_includes
   ${date_include_dir}
   $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 

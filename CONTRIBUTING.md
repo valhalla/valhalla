@@ -20,6 +20,7 @@ We appreciate the community picking up and fixing bugs or even implementing new 
 - [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html)/[`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/) is used to format/lint the C++ code, [`black`](https://black.readthedocs.io/en/stable/index.html) & [`flake8`](https://flake8.pycqa.org/en/latest/) format/lint Python code
 - [`ASan`](https://clang.llvm.org/docs/AddressSanitizer.html) is run in CI, but without its integrated leak sanitizer due to platform issues
 - we ask for unit tests to demonstrate a working bug fix or feature implementation, please feel free to ask us for instructions in the PR
+- **don't force-push** once you got the first review; this will make it easier for reviewers to track how their change requests are being addressed
 
 Before opening a PR we'd ask you to format & lint the code:
 

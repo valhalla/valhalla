@@ -4,6 +4,7 @@
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
+#include "midgard/logging.h"
 #include "worker.h"
 
 #include <array>
@@ -29,6 +30,7 @@ inline float ClockDistance(const Measurement& left, const Measurement& right) {
                                                          : right.epoch_time() - left.epoch_time();
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string print_result(const StateContainer& container,
                          const std::vector<StateId>& original_state_ids) {
   std::string result = R"({"type":"FeatureCollection","features":[)";
@@ -40,6 +42,7 @@ std::string print_result(const StateContainer& container,
   result += R"(]})";
   return result;
 }
+#endif
 
 struct Interpolation {
   midgard::PointLL projected;

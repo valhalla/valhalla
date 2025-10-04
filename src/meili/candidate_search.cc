@@ -171,7 +171,7 @@ void IndexBin(const baldr::graph_tile_ptr& tile,
 CandidateGridQuery::CandidateGridQuery(baldr::GraphReader& reader,
                                        float cell_width,
                                        float cell_height)
-    : reader_(reader), cell_width_(cell_width), cell_height_(cell_height), grid_cache_() {
+    : cell_width_(cell_width), cell_height_(cell_height), reader_(reader) {
   bin_level_ = baldr::TileHierarchy::levels().back().level;
 }
 
