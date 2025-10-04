@@ -13,8 +13,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # get the min & max of currently supported macos & windows
-        os: [ubuntu-24.04, macos-13, macos-15, windows-2022, windows-2025]
         # we need one job per _valid_ combination
         include:
           # get the min & max of Ubuntu's currently supported gcc/clang versions
@@ -30,6 +28,7 @@ jobs:
           - os: ubuntu-24.04
             c_compiler: clang-20
             cxx_compiler: clang++-20
+          # get the min & max of currently supported macos & windows
           - os: macos-13
             c_compiler: clang
           - os: macos-15
