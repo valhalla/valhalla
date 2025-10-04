@@ -14,7 +14,6 @@ struct GEOSGeom_t;
 struct GEOSPrepGeom_t;
 struct GEOSWKBReader_t;
 
-using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 namespace valhalla {
