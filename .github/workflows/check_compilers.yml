@@ -2,9 +2,6 @@ name: Test Compilers
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - nn-compiler-check-gha
 
 jobs:
   build:
