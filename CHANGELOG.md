@@ -150,6 +150,7 @@
    * ADDED: Add Korean (`ko-KR`) locale [#5501](https://github.com/valhalla/valhalla/pull/5501)
    * UPGRADED: pybind11 from 2.11.1 to 3.0.1 [#5539](https://github.com/valhalla/valhalla/pull/5539)
    * CHANGED: Replace `oneof bool` to `bool` for default false options [#5541](https://github.com/valhalla/valhalla/pull/5541)
+   * ADDED: small CMake project and GHA to easily test statements on various compilers [#5564](https://github.com/valhalla/valhalla/pull/5564)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
