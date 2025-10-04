@@ -5,9 +5,11 @@ on:
     # every first of the month
     - cron: "0 0 1 * *"
   workflow_dispatch:
-  push:
-    branches:
-      - nn-release-check-gha
+    inputs:
+      new_tag:
+        type: string
+        description: "The new release tag"
+        required: true
 
 permissions:
   contents: write
@@ -29,9 +31,14 @@ jobs:
         id: get_tag
         run: |
           set -euo pipefail
-          latest_tag=$(git describe --tags --abbrev=0)
-          new_tag=$(echo "$latest_tag" | awk -F. -v OFS=. '{$3 = $3 + 1; print}')
-          echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
+          # manually triggered will take the passed version string
+          if [[ ${{ github.event_name }} == "workflow_dispatch" ]]; then
+            echo "new_tag=${{ inputs.new_tag }}" >> $GITHUB_OUTPUT
+          else
+            latest_tag=$(git describe --tags --abbrev=0)
+            new_tag=$(echo "$latest_tag" | awk -F. -v OFS=. '{$3 = $3 + 1; print}')
+            echo "new_tag=$new_tag" >> $GITHUB_OUTPUT
+          fi
 
       - name: Raise PR
         run: |
