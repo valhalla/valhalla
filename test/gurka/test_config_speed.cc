@@ -371,7 +371,7 @@ public:
 };
 
 TEST(Standalone, AdminFallback) {
-  DirectedEdge edge{};
+  baldr::DirectedEdge edge{};
   edge.set_all_forward_access();
 
   {
@@ -629,7 +629,7 @@ TEST(Standalone, Malformed) {
 }
 
 TEST(Standalone, HandleNulls) {
-  DirectedEdge edge{};
+  baldr::DirectedEdge edge{};
   edge.set_all_forward_access();
 
   std::ofstream speed_config("test/data/speed_config.json");
