@@ -136,5 +136,5 @@ valhalla_module(NAME baldr
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    ${curl_targets}
+    ${curl_target}
     PkgConfig::ZLIB)

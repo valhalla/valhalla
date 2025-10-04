@@ -17,7 +17,7 @@ GraphTileHeader::GraphTileHeader()
       spare4_(0), transfercount_(0), spare2_(0), departurecount_(0), stopcount_(0), spare5_(0),
       routecount_(0), schedulecount_(0), signcount_(0), spare6_(0), access_restriction_count_(0),
       admincount_(0), spare7_(0) {
-  set_version(PACKAGE_VERSION);
+  set_version(VALHALLA_PRINT_VERSION);
 }
 
 // Set the version string.

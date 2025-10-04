@@ -96,6 +96,7 @@ struct OSMData {
    */
   static void cleanup_temp_files(const std::string& tile_dir);
 
+  uint64_t pbf_checksum_;         // MD5 of PBF files as 64bit int
   uint64_t max_changeset_id_;     // The largest/newest changeset id encountered when parsing OSM data
   uint64_t osm_node_count;        // Count of osm nodes
   uint64_t osm_way_count;         // Count of osm ways
