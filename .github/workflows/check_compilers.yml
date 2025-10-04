@@ -68,7 +68,7 @@ jobs:
       - name: Configure ${{ matrix.os }} • ${{ matrix.c_compiler }}
         if: runner.os != 'Windows'
         run: |
-          cmake -S . -B build \
+          cmake -S test/check_compilers -B build \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
             -DCMAKE_C_COMPILER=${CC} \
             -DCMAKE_CXX_COMPILER=${CXX}
@@ -81,7 +81,8 @@ jobs:
       - name: Configure ${{ matrix.os }}
         if: matrix.os == 'windows-2025'
         run: |
-          cmake -S test/check_compilers -B build -G "Visual Studio 17 2025" -A x64
+          # there's no VS 2025
+          cmake -S test/check_compilers -B build -G "Visual Studio 17 2022" -A x64
 
       # Build
       - name: Build ${{ matrix.os }} • ${{ matrix.c_compiler }}
