@@ -8,6 +8,8 @@ on:
       - docs/
       - run_route_scripts/
       - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
       - "**vcpkg**"
       - ".tx"
       - ".git*"
@@ -20,6 +22,8 @@ on:
       - docs/
       - run_route_scripts/
       - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
       - "**vcpkg**"
       - ".tx"
       - ".git*"
