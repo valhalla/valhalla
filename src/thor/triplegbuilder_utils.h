@@ -7,11 +7,6 @@
 
 #include <utility>
 
-using namespace valhalla;
-using namespace valhalla::midgard;
-using namespace valhalla::sif;
-using namespace valhalla::thor;
-
 namespace {
 
 /**
@@ -39,7 +34,7 @@ struct MultimodalBuilder {
              const valhalla::baldr::GraphId& edge,
              valhalla::baldr::graph_tile_ptr start_tile,
              valhalla::baldr::graph_tile_ptr graphtile,
-             const mode_costing_t& mode_costing,
+             const valhalla::sif::mode_costing_t& mode_costing,
              const valhalla::baldr::AttributesController& controller,
              valhalla::baldr::GraphReader& graphreader) {
 
@@ -60,15 +55,16 @@ private:
    * @param mode_costing
    * @param controller
    */
-  void AddBssNode(TripLeg_Node* trip_node,
+  void AddBssNode(valhalla::TripLeg_Node* trip_node,
                   const valhalla::baldr::NodeInfo* node,
                   const valhalla::baldr::DirectedEdge* directededge,
                   const valhalla::baldr::graph_tile_ptr& start_tile,
-                  const mode_costing_t& mode_costing,
+                  const valhalla::sif::mode_costing_t& mode_costing,
                   const valhalla::baldr::AttributesController&) {
 
-    auto pedestrian_costing = mode_costing[static_cast<size_t>(travel_mode_t::kPedestrian)];
-    auto bicycle_costing = mode_costing[static_cast<size_t>(travel_mode_t::kBicycle)];
+    auto pedestrian_costing =
+        mode_costing[static_cast<size_t>(valhalla::sif::travel_mode_t::kPedestrian)];
+    auto bicycle_costing = mode_costing[static_cast<size_t>(valhalla::sif::travel_mode_t::kBicycle)];
 
     if (node->type() == valhalla::baldr::NodeType::kBikeShare && pedestrian_costing &&
         bicycle_costing) {
@@ -95,7 +91,7 @@ private:
    * @param controller  Controller specifying attributes to add to trip edge.
    *
    */
-  void AddTransitNodes(TripLeg_Node* trip_node,
+  void AddTransitNodes(valhalla::TripLeg_Node* trip_node,
                        const valhalla::baldr::NodeInfo* node,
                        const valhalla::baldr::GraphId& startnode,
                        const valhalla::baldr::graph_tile_ptr& start_tile,
@@ -105,7 +101,7 @@ private:
     if (node->type() == valhalla::baldr::NodeType::kTransitStation) {
       const valhalla::baldr::TransitStop* transit_station =
           start_tile->GetTransitStop(start_tile->node(startnode)->stop_index());
-      TransitStationInfo* transit_station_info = trip_node->mutable_transit_station_info();
+      valhalla::TransitStationInfo* transit_station_info = trip_node->mutable_transit_station_info();
 
       if (transit_station) {
         // Set onstop_id if requested
@@ -122,10 +118,10 @@ private:
         }
 
         // Set latitude and longitude
-        LatLng* stop_ll = transit_station_info->mutable_ll();
+        valhalla::LatLng* stop_ll = transit_station_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller(valhalla::baldr::kNodeTransitStationInfoLatLon)) {
-          PointLL ll = node->latlng(start_tile->header()->base_ll());
+          valhalla::midgard::PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
         }
@@ -135,7 +131,7 @@ private:
     if (node->type() == valhalla::baldr::NodeType::kTransitEgress) {
       const valhalla::baldr::TransitStop* transit_egress =
           start_tile->GetTransitStop(start_tile->node(startnode)->stop_index());
-      TransitEgressInfo* transit_egress_info = trip_node->mutable_transit_egress_info();
+      valhalla::TransitEgressInfo* transit_egress_info = trip_node->mutable_transit_egress_info();
 
       if (transit_egress) {
         // Set onstop_id if requested
@@ -151,10 +147,10 @@ private:
         }
 
         // Set latitude and longitude
-        LatLng* stop_ll = transit_egress_info->mutable_ll();
+        valhalla::LatLng* stop_ll = transit_egress_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller(valhalla::baldr::kNodeTransitEgressInfoLatLon)) {
-          PointLL ll = node->latlng(start_tile->header()->base_ll());
+          valhalla::midgard::PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
         }
@@ -162,7 +158,7 @@ private:
     }
   }
 
-  void AddTransitInfo(TripLeg_Node* trip_node,
+  void AddTransitInfo(valhalla::TripLeg_Node* trip_node,
                       uint32_t trip_id,
                       const valhalla::baldr::NodeInfo* node,
                       const valhalla::baldr::GraphId&,
@@ -170,14 +166,15 @@ private:
                       const valhalla::baldr::GraphId& edge,
                       const valhalla::baldr::graph_tile_ptr& start_tile,
                       const valhalla::baldr::graph_tile_ptr& graphtile,
-                      const sif::mode_costing_t&,
+                      const valhalla::sif::mode_costing_t&,
                       const valhalla::baldr::AttributesController& controller,
                       valhalla::baldr::GraphReader& graphreader) {
     if (node->is_transit()) {
       // Get the transit stop information and add transit stop info
       const valhalla::baldr::TransitStop* transit_platform =
           start_tile->GetTransitStop(node->stop_index());
-      TransitPlatformInfo* transit_platform_info = trip_node->mutable_transit_platform_info();
+      valhalla::TransitPlatformInfo* transit_platform_info =
+          trip_node->mutable_transit_platform_info();
 
       // TODO: for now we will set to station for rail and stop for others
       //   not sure how to deal with this in the future: maybe assume it'll be
@@ -186,9 +183,9 @@ private:
       if (directededge->use() == valhalla::baldr::Use::kRail) {
         // Set node transit info type if requested
         if (controller(valhalla::baldr::kNodeTransitPlatformInfoType)) {
-          transit_platform_info->set_type(TransitPlatformInfo_Type_kStation);
+          transit_platform_info->set_type(valhalla::TransitPlatformInfo_Type_kStation);
         }
-        prev_transit_node_type = TransitPlatformInfo_Type_kStation;
+        prev_transit_node_type = valhalla::TransitPlatformInfo_Type_kStation;
       } else if (directededge->use() == valhalla::baldr::Use::kPlatformConnection) {
         // Set node transit info type if requested
         if (controller(valhalla::baldr::kNodeTransitPlatformInfoType)) {
@@ -197,9 +194,9 @@ private:
       } else { // bus logic
         // Set node transit info type if requested
         if (controller(valhalla::baldr::kNodeTransitPlatformInfoType)) {
-          transit_platform_info->set_type(TransitPlatformInfo_Type_kStop);
+          transit_platform_info->set_type(valhalla::TransitPlatformInfo_Type_kStop);
         }
-        prev_transit_node_type = TransitPlatformInfo_Type_kStop;
+        prev_transit_node_type = valhalla::TransitPlatformInfo_Type_kStop;
       }
 
       if (transit_platform) {
@@ -246,10 +243,10 @@ private:
         }
 
         // Set latitude and longitude
-        LatLng* stop_ll = transit_platform_info->mutable_ll();
+        valhalla::LatLng* stop_ll = transit_platform_info->mutable_ll();
         // Set transit stop lat/lon if requested
         if (controller(valhalla::baldr::kNodeTransitPlatformInfoLatLon)) {
-          PointLL ll = node->latlng(start_tile->header()->base_ll());
+          valhalla::midgard::PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
         }
@@ -267,7 +264,8 @@ private:
 
         const valhalla::baldr::TransitDeparture* transit_departure =
             graphtile->GetTransitDeparture(graphtile->directededge(edge.id())->lineid(), trip_id,
-                                           time_info.second_of_week % kSecondsPerDay);
+                                           time_info.second_of_week %
+                                               valhalla::midgard::kSecondsPerDay);
 
         assumed_schedule = false;
         uint32_t origin_pivot_days, days_from_creation;
@@ -295,8 +293,8 @@ private:
           // round up the transit times to full minutes because date_time() will always round down
           // TODO: do (optional) seconds resolution for the input & output so that this becomes robust
           auto round_up_mins = [](uint32_t seconds) {
-            auto remainder = seconds % kSecondsPerMinute;
-            return remainder ? seconds + (kSecondsPerMinute - remainder) : seconds;
+            auto remainder = seconds % valhalla::midgard::kSecondsPerMinute;
+            return remainder ? seconds + (valhalla::midgard::kSecondsPerMinute - remainder) : seconds;
           };
           // round up the waiting time to full minutes, bcs time_info.date_time() floors minutes
           std::string dt =

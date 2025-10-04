@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 using namespace valhalla;
+using namespace valhalla::midgard;
 
 uint8_t LEVEL_O = baldr::TileHierarchy::get_level(baldr::RoadClass::kPrimary);
 

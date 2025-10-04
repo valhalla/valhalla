@@ -13,6 +13,7 @@
 #include <vector>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 using namespace valhalla::sif;
 
 namespace {
