@@ -5,6 +5,9 @@ on:
     # every first of the month
     - cron: "0 0 1 * *"
   workflow_dispatch:
+  push:
+    branches:
+      - nn-release-check-gha
 
 permissions:
   contents: write
@@ -13,7 +16,9 @@ permissions:
 jobs:
   release_pr:
     name: Release PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,22 +40,24 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
+          new_tag="${{ steps.get_tag.outputs.new_tag }}"
+
           # set the new patch version in valhalla/valhalla.h
-          patch_version=$(echo ${{ steps.get_tag.outputs.new_tag }} | rev | cut -c1)
+          patch_version=$(echo "$new_tag" | rev | cut -c1)
           sed -i "s/^\(#define VALHALLA_VERSION_PATCH \).*/\1${patch_version}/" valhalla/valhalla.h
 
           # update CHANGELOG.md
           sed -i "0,/^## UNRELEASED/s//## Release Date: $(date +%Y-%m-%d) Valhalla $new_tag/" CHANGELOG.md
           sed -i "1i## UNRELEASED\n* **Removed**\n* **Bug Fix**\n* **Enhancement**\n" CHANGELOG.md
 
-          branch="release-${{ steps.get_tag.outputs.new_tag }}"
+          branch="release-$new_tag"
           git checkout -B "$branch"
           git add valhalla/valhalla.h CHANGELOG.md
-          git commit -m "release version ${{ steps.get_tag.outputs.new_tag }}"
+          git commit -m "release version $new_tag"
           git push -u origin "$branch"
 
           gh pr create \
             --title "Release ${{ steps.get_tag.outputs.new_tag }}" \
-            --body "Auto-generated release ${{ steps.get_tag.outputs.new_tag }}. May need to elevate to minor release." \
+            --body "Auto-generated release ${new_tag}. May need to elevate to minor release." \
             --base master \
             --head "$branch"
