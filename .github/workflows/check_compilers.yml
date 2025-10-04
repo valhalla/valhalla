@@ -42,22 +42,25 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
 
-      # Install Linux compilers
+      # Install Linux compiler
       - name: Install ${{ matrix.c_compiler }}
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y ${{ matrix.c_compiler }}
+          if [[  ${{ matrix.c_compiler }} == "gcc*" ]]; then
+            sudo apt-get install -y ${{ matrix.cxx_compiler }}
+          fi
 
-      # Linux compilers (GCC/Clang)
-      - name: Set up ${{ matrix.c_compiler }} • ${{ matrix.cxx_compiler }}
+      # Set up Linux compiler
+      - name: Set up compiler (Linux) - ${{ matrix.c_compiler }} • ${{ matrix.cxx_compiler }}
         if: runner.os == 'Linux'
         run: |
           echo "CC=${{ matrix.c_compiler }}"   >> $GITHUB_ENV
           echo "CXX=${{ matrix.cxx_compiler }}"  >> $GITHUB_ENV
 
-      # ---- macOS c_compiler (AppleClang) ----
-      - name: Set up c_compiler (macOS)
+      # Set up macOS c_compiler
+      - name: Set up compiler (macOS)
         if: runner.os == 'macOS'
         run: |
           echo "CC=clang"   >> $GITHUB_ENV
