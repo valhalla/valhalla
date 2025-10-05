@@ -8,6 +8,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
+#include "worker.h"
 
 #include <chrono>
 #include <cmath>
@@ -270,7 +271,7 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
       } else if (tile_checksum != id_checksum) {
         // TODO: re-start the graphreader on our own somehow (i.e. purge old tiles and tile_dir)
         LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
-        throw std::runtime_error("Remote tar file has changed, remove the tile_dir and restart.");
+        throw valhalla_exception_t(446);
       }
     }
   }

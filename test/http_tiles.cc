@@ -3,6 +3,7 @@
 #include "test.h"
 #include "tile_server.h"
 #include "tyr/actor.h"
+#include "worker.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <prime_server/zmq_helpers.hpp>
@@ -113,11 +114,13 @@ TEST_F(HttpTilesWithCache, test_tar_cache_outdated) {
 
   try {
     test_route("url_tile_cache", false, true);
-    FAIL() << "Expected std::runtime_error";
-  } catch (const std::runtime_error& e) {
+    FAIL() << "Expected valhalla_exception_t";
+  } catch (const valhalla_exception_t& e) {
     // a bit too generic IMO, at least there's an error log
-    EXPECT_THAT(e.what(), ::testing::HasSubstr("No suitable edges near location"));
-  }
+    EXPECT_THAT(e.what(),
+                ::testing::HasSubstr("Remote tar file has changed, service is unavailable"));
+    EXPECT_EQ(e.code, 446);
+  } catch (...) { FAIL() << "should've raised a valhalla_exception_t"; }
 }
 
 TEST_F(HttpTilesWithCache, test_tar_user_pw) {
