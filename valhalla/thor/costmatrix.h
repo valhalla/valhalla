@@ -224,7 +224,7 @@ protected:
                    const uint32_t pred_idx,
                    const EdgeMetadata& meta,
                    uint32_t& shortcuts,
-                   const graph_tile_ptr& tile,
+                   const baldr::graph_tile_ptr& tile,
                    const baldr::TimeInfo& time_info);
 
   /**

@@ -7,8 +7,6 @@
 
 #include <cstdint>
 
-using namespace valhalla::baldr;
-
 namespace valhalla {
 namespace mjolnir {
 

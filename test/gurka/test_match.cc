@@ -216,10 +216,10 @@ protected:
       traffic_speed->breakpoint1 = 255;
     });
 
-    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+    test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
       e.set_constrained_flow_speed(25);
       e.set_free_flow_speed(75);
-      std::array<float, kBucketsPerWeek> historical;
+      std::array<float, baldr::kBucketsPerWeek> historical;
       historical.fill(7);
       for (size_t i = 0; i < historical.size(); ++i) {
         // TODO: if we are in morning or evening set a different speed and add another test
