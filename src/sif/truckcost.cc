@@ -587,8 +587,9 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   c.cost +=
       no_hgv_access_penalty_ * (pred.has_hgv_access() && !(edge->forwardaccess() & kTruckAccess));
 
+  const auto stopimpact = edge->stopimpact(idx);
   // Transition time = turncost * stopimpact * densityfactor
-  if (edge->stopimpact(idx) > 0 && !shortest_) {
+  if (stopimpact > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -606,19 +607,18 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     }
 
     float seconds = turn_cost;
-    bool is_turn = false;
+
     bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
                      edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
     bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
                       edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
     bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
-
+    bool is_turn = has_left || has_right || has_reverse;
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    if (has_left || has_right || has_reverse) {
-      seconds *= edge->stopimpact(idx);
-      is_turn = true;
+    if (is_turn) {
+      seconds *= stopimpact;
     }
 
     AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, true, pred.internal_turn(),
@@ -628,7 +628,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
     // using traffic
     if (!pred.has_measured_speed()) {
       if (!is_turn)
-        seconds *= edge->stopimpact(idx);
+        seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
@@ -667,8 +667,9 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   c.cost += no_hgv_access_penalty_ *
             ((pred->forwardaccess() & kTruckAccess) && !(edge->forwardaccess() & kTruckAccess));
 
+  const auto stopimpact = edge->stopimpact(idx);
   // Transition time = turncost * stopimpact * densityfactor
-  if (edge->stopimpact(idx) > 0 && !shortest_) {
+  if (stopimpact > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -686,19 +687,18 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     }
 
     float seconds = turn_cost;
-    bool is_turn = false;
     bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
                      edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
     bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
                       edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
     bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
 
+    bool is_turn = has_left || has_right || has_reverse;
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    if (has_left || has_right || has_reverse) {
-      seconds *= edge->stopimpact(idx);
-      is_turn = true;
+    if (is_turn) {
+      seconds *= stopimpact;
     }
 
     AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, true, internal_turn, seconds);
@@ -707,7 +707,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
     // using traffic
     if (!has_measured_speed) {
       if (!is_turn)
-        seconds *= edge->stopimpact(idx);
+        seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
