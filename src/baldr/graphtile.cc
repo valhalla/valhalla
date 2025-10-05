@@ -269,7 +269,6 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
           id_txt_file << tile_checksum << std::endl;
         }
       } else if (tile_checksum != id_checksum) {
-        // TODO: re-start the graphreader on our own somehow (i.e. purge old tiles and tile_dir)
         LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
         throw valhalla_exception_t(446);
       }
