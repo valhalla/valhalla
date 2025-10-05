@@ -162,7 +162,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kMatrixConnectionDateTime, true},
     {kMatrixConnectionTimeZoneOffset, true},
     {kMatrixConnectionTimeZoneName, true},
-    {kMatrixConnectionShape, true},
+    {kMatrixConnectionShape, false},
 };
 
 AttributesController::AttributesController() {

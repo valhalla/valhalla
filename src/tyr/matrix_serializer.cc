@@ -204,7 +204,8 @@ void serialize_row(const valhalla::Matrix& matrix,
       }
 
       writer.set_precision(tyr::kDefaultPrecision);
-      if (controller(kMatrixConnectionShape) && matrix.shapes().size() && shape_format != no_shape) {
+      if (matrix.shapes().size() &&
+          (controller(kMatrixConnectionShape) || shape_format != no_shape)) {
         // TODO(nils): tdmatrices don't have "shape" support yet
         if (!matrix.shapes()[i].empty()) {
           switch (shape_format) {
@@ -280,7 +281,7 @@ serialize(const Api& request, const AttributesController& controller, double dis
       writer.end_array();
     }
 
-    if (controller(kMatrixConnectionShape) &&
+    if ((controller(kMatrixConnectionShape) || options.shape_format() != no_shape) &&
         !(options.shape_format() == no_shape ||
           (request.matrix().algorithm() != Matrix::CostMatrix))) {
       writer.start_array("shapes");
