@@ -567,6 +567,94 @@ TEST(Matrix, slim_matrix) {
   EXPECT_TRUE(json.HasMember("units"));
 }
 
+TEST(Matrix, shape_controller_default) {
+  tyr::actor_t actor(cfg, true);
+
+  const auto request = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099}
+    ],
+    "costing":"auto"
+  })";
+
+  auto response = actor.matrix(request);
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+  const auto& first_connection = json["sources_to_targets"].GetArray()[0][0].GetObject();
+
+  EXPECT_FALSE(first_connection.HasMember("shape")) << "Shapes should not be included by default\n\n"
+                                                    << response << "\n\n";
+}
+
+TEST(Matrix, shape_controller_explicit_include) {
+  tyr::actor_t actor(cfg, true);
+
+  const auto request = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099}
+    ],
+    "costing":"auto",
+    "filters": {
+      "action": "include",
+      "attributes": ["matrix_connection.shape"]
+    }
+  })";
+
+  auto response = actor.matrix(request);
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+  const auto& first_connection = json["sources_to_targets"].GetArray()[0][0].GetObject();
+
+  EXPECT_TRUE(first_connection.HasMember("shape"))
+      << "Shapes should be included when explicitly requested via filter_attributes\n\n"
+      << response << "\n\n";
+}
+
+TEST(Matrix, shape_controller_with_shape_format) {
+  tyr::actor_t actor(cfg, true);
+
+  const auto request = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099}
+    ],
+    "costing":"auto",
+    "shape_format": "polyline6"
+  })";
+
+  auto response = actor.matrix(request);
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+  const auto& first_connection = json["sources_to_targets"].GetArray()[0][0].GetObject();
+
+  EXPECT_TRUE(first_connection.HasMember("shape"))
+      << "Shapes should be included when shape format is specified\n\n"
+      << response << "\n\n";
+}
+
 /**************************************************************************************************/
 
 int main(int argc, char* argv[]) {
