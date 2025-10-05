@@ -93,6 +93,7 @@ void DataQuality::LogIssues() const {
   dupfile.close();
 
   // Log the unconnected link edges
+#ifdef LOGGING_LEVEL_WARN
   if (unconnectedlinks_.size() > 0) {
     LOG_WARN("Link edges that are not connected. OSM Way Ids");
     for (const auto& wayid : unconnectedlinks_) {
@@ -107,6 +108,7 @@ void DataQuality::LogIssues() const {
       LOG_WARN(std::to_string(wayid));
     }
   }
+#endif
 }
 
 } // namespace mjolnir

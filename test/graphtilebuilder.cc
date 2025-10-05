@@ -15,6 +15,7 @@
 #endif
 
 using namespace std;
+using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {

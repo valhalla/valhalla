@@ -4,8 +4,6 @@
 #include <string>
 #include <unordered_map>
 
-namespace vb = valhalla::baldr;
-
 namespace {
 constexpr std::array<const char*, 10> kTypeToString = {
     "hazmat",        "max_height",    "max_width",    "max_length",          "max_weight",
