@@ -31,84 +31,6 @@ const std::unordered_map<int, std::string>
                               {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
                                "Maneuver::RelativeDirection::kKeepLeft"}};
 
-const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "kNone"},
-                                                           {1, "kStart"},
-                                                           {2, "kStartRight"},
-                                                           {3, "kStartLeft"},
-                                                           {4, "kDestination"},
-                                                           {5, "kDestinationRight"},
-                                                           {6, "kDestinationLeft"},
-                                                           {7, "kBecomes"},
-                                                           {8, "kContinue"},
-                                                           {9, "kSlightRight"},
-                                                           {10, "kRight"},
-                                                           {11, "kSharpRight"},
-                                                           {12, "kUturnRight"},
-                                                           {13, "kUturnLeft"},
-                                                           {14, "kSharpLeft"},
-                                                           {15, "kLeft"},
-                                                           {16, "kSlightLeft"},
-                                                           {17, "kRampStraight"},
-                                                           {18, "kRampRight"},
-                                                           {19, "kRampLeft"},
-                                                           {20, "kExitRight"},
-                                                           {21, "kExitLeft"},
-                                                           {22, "kStayStraight"},
-                                                           {23, "kStayRight"},
-                                                           {24, "kStayLeft"},
-                                                           {25, "kMerge"},
-                                                           {26, "kRoundaboutEnter"},
-                                                           {27, "kRoundaboutExit"},
-                                                           {28, "kFerryEnter"},
-                                                           {29, "kFerryExit"},
-                                                           {30, "kTransit"},
-                                                           {31, "kTransitTransfer"},
-                                                           {32, "kTransitRemainOn"},
-                                                           {33, "kTransitConnectionStart"},
-                                                           {34, "kTransitConnectionTransfer"},
-                                                           {35, "kTransitConnectionDestination"},
-                                                           {36, "kPostTransitConnectionDestination"},
-                                                           {37, "kMergeRight"},
-                                                           {38, "kMergeLeft"},
-                                                           {39, "kElevatorEnter"},
-                                                           {40, "kStepsEnter"},
-                                                           {41, "kEscalatorEnter"},
-                                                           {42, "kBuildingEnter"},
-                                                           {43, "kBuildingExit"}};
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error(
-        "Missing DirectionsLeg_Maneuver_Type_Name value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& DirectionsLeg_Maneuver_CardinalDirection_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "kNorth"}, {1, "kNorthEast"},
-                                                           {2, "kEast"},  {3, "kSouthEast"},
-                                                           {4, "kSouth"}, {5, "kSouthWest"},
-                                                           {6, "kWest"},  {7, "kNorthWest"}};
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error(
-        "Missing DirectionsLeg_Maneuver_CardinalDirection_Name value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TrailType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "kNone"},
-                                                           {1, "kNamedCycleway"},
-                                                           {2, "kUnnamedCycleway"},
-                                                           {3, "kNamedWalkway"},
-                                                           {4, "kUnnamedWalkway"},
-                                                           {5, "kNamedMtbTrail"},
-                                                           {6, "kUnnamedMtbTrail"}};
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing TrailType_Name value in protobuf enum to string");
-  return f->second;
-}
-
 } // namespace
 
 namespace valhalla {
@@ -135,10 +57,10 @@ Maneuver::Maneuver()
       roundabout_exit_turn_degree_(0), roundabout_exit_shape_index_(0),
       has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
       has_long_street_name_(false), elevator_(false), indoor_steps_(false), escalator_(false),
-      building_enter_(false), building_exit_(false), end_level_ref_(""), transit_connection_(false),
-      travel_mode_(TravelMode::kDrive), rail_(false), bus_(false), vehicle_type_(VehicleType::kCar),
-      pedestrian_type_(PedestrianType::kFoot), bicycle_type_(BicycleType::kRoad),
-      transit_type_(TransitType::kRail),
+      building_enter_(false), building_exit_(false), has_level_changes_(false), end_level_ref_(""),
+      transit_connection_(false), travel_mode_(TravelMode::kDrive), rail_(false), bus_(false),
+      vehicle_type_(VehicleType::kCar), pedestrian_type_(PedestrianType::kFoot),
+      bicycle_type_(BicycleType::kRoad), transit_type_(TransitType::kRail),
       bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction) {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
@@ -1227,7 +1149,30 @@ void Maneuver::set_landmarks(const std::vector<RouteLandmark>& landmarks) {
   landmarks_ = landmarks;
 }
 
+bool Maneuver::has_level_changes() const {
+  return has_level_changes_;
+};
+void Maneuver::set_has_level_changes(const bool has_level_changes) {
+  has_level_changes_ = has_level_changes;
+};
+
 #ifdef LOGGING_LEVEL_TRACE
+namespace {
+const std::string& TrailType_Name(int v) {
+  static const std::unordered_map<int, std::string> values{{0, "kNone"},
+                                                           {1, "kNamedCycleway"},
+                                                           {2, "kUnnamedCycleway"},
+                                                           {3, "kNamedWalkway"},
+                                                           {4, "kUnnamedWalkway"},
+                                                           {5, "kNamedMtbTrail"},
+                                                           {6, "kUnnamedMtbTrail"}};
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing TrailType_Name value in protobuf enum to string");
+  return f->second;
+}
+} // namespace
+
 std::string Maneuver::ToString() const {
   std::string man_str;
   man_str.reserve(256);

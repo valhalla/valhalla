@@ -5,7 +5,6 @@
 #include <valhalla/midgard/point2.h>
 
 #include <cmath>
-#include <cstdarg>
 
 namespace valhalla {
 namespace midgard {

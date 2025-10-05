@@ -1,6 +1,5 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include "midgard/encoded.h"
-#include "midgard/util.h"
 #include "test.h"
 
 #include <gtest/gtest.h>
@@ -212,12 +211,12 @@ TEST(Standalone, AdditionalSpeedAttributes) {
     traffic_speed->breakpoint1 = 255;
   });
   // set all historical speed buckets to 10 to simulate uniform historical traffic speeds for testing.
-  test::customize_historical_traffic(map.config, [&](DirectedEdge& e) {
+  test::customize_historical_traffic(map.config, [&](baldr::DirectedEdge& e) {
     e.set_constrained_flow_speed(constrained);
     e.set_free_flow_speed(free);
 
     // speeds for every 5 min bucket of the week
-    std::array<float, kBucketsPerWeek> historical;
+    std::array<float, baldr::kBucketsPerWeek> historical;
     historical.fill(predicted);
     return historical;
   });
@@ -299,7 +298,7 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   }
 
   // reset historical traffic
-  test::customize_historical_traffic(map.config, [&](DirectedEdge& e) {
+  test::customize_historical_traffic(map.config, [&](baldr::DirectedEdge& e) {
     e.set_constrained_flow_speed(0);
     e.set_free_flow_speed(0);
 
@@ -308,8 +307,8 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   // invalidate traffic speed
   test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
                                                     valhalla::baldr::TrafficSpeed* traffic_speed) {
-    traffic_speed->overall_encoded_speed = UNKNOWN_TRAFFIC_SPEED_RAW;
-    traffic_speed->encoded_speed1 = UNKNOWN_TRAFFIC_SPEED_RAW;
+    traffic_speed->overall_encoded_speed = baldr::UNKNOWN_TRAFFIC_SPEED_RAW;
+    traffic_speed->encoded_speed1 = baldr::UNKNOWN_TRAFFIC_SPEED_RAW;
     traffic_speed->breakpoint1 = 0;
   });
 
@@ -363,4 +362,33 @@ TEST(Standalone, RetrieveEdgeTrafficSignal) {
 
   EXPECT_TRUE(edges[1].HasMember("traffic_signal"));
   EXPECT_FALSE(edges[1]["traffic_signal"].GetBool());
+}
+
+TEST(Standalone, ViaFerrataNoSacScale) {
+  const std::string ascii_map = R"(
+    A--B--C
+  )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "via_ferrata"}}},
+                            {"BC", {{"highway", "via_ferrata"}}}};
+
+  const double gridsize = 10;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/sac_scale_attributes");
+
+  std::string trace_json;
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, "pedestrian",
+                              {{"/costing_options/pedestrian/max_hiking_difficulty", "6"}}, {},
+                              &trace_json, "via");
+
+  rapidjson::Document result;
+  result.Parse(trace_json.c_str());
+
+  auto edges = result["edges"].GetArray();
+  ASSERT_EQ(edges.Size(), 2);
+
+  EXPECT_TRUE(edges[0].HasMember("sac_scale"));
+  EXPECT_EQ(edges[0]["sac_scale"].GetInt(), 6);
+  EXPECT_TRUE(edges[1].HasMember("sac_scale"));
+  EXPECT_EQ(edges[1]["sac_scale"].GetInt(), 6);
 }

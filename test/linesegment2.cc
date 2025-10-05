@@ -2,7 +2,8 @@
 #include "midgard/constants.h"
 #include "midgard/point2.h"
 #include "midgard/pointll.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <vector>
 

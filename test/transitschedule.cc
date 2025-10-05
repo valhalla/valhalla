@@ -1,5 +1,7 @@
 #include "baldr/transitschedule.h"
-#include "test.h"
+#include "baldr/graphconstants.h"
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::baldr;

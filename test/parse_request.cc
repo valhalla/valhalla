@@ -3,11 +3,11 @@
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
-#include "test.h"
+#include "sif/hierarchylimits.h"
 #include "worker.h"
 
-#include <cctype>
-#include <iostream>
+#include <gtest/gtest.h>
+
 #include <string>
 #include <vector>
 
@@ -160,14 +160,6 @@ constexpr float kDefaultTransit_UseTransfers = 0.3f;
 ///////////////////////////////////////////////////////////////////////////////
 // validate by type methods
 void validate(const std::string& key, const bool expected_value, const bool pbf_value) {
-  EXPECT_EQ(pbf_value, expected_value) << "incorrect " << key;
-}
-
-void validate(const std::string& key,
-              const bool expected_value,
-              const bool has_pbf_value,
-              const bool pbf_value) {
-  ASSERT_TRUE(has_pbf_value) << "bool value not found in pbf for key=" + key;
   EXPECT_EQ(pbf_value, expected_value) << "incorrect " << key;
 }
 
@@ -386,7 +378,7 @@ void test_polygons_parsing(const bool expected_value,
                            const Options::Action action = Options::isochrone) {
   const std::string key = "polygons";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_polygons_case(), request.options().polygons());
+  validate(key, expected_value, request.options().polygons());
 }
 
 void test_denoise_parsing(const float expected_value,
@@ -408,8 +400,7 @@ void test_show_locations_parsing(const bool expected_value,
                                  const Options::Action action = Options::isochrone) {
   const std::string key = "show_locations";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_show_locations_case(),
-           request.options().show_locations());
+  validate(key, expected_value, request.options().show_locations());
 }
 
 void test_shape_match_parsing(const ShapeMatch expected_value, const Options::Action action) {

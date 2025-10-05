@@ -1,6 +1,5 @@
 #pragma once
 #include <valhalla/baldr/directededge.h>
-#include <valhalla/loki/search.h>
 #include <valhalla/thor/dijkstras.h>
 
 #include <ankerl/unordered_dense.h>
@@ -77,11 +76,11 @@ protected:
   void enqueue(const baldr::GraphId& node_id,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
-               graph_tile_ptr tile);
+               baldr::graph_tile_ptr tile);
 
   // callback fired when a node is expanded from, the node will be the end node of the previous label
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             graph_tile_ptr tile,
+                             baldr::graph_tile_ptr tile,
                              const baldr::NodeInfo* node,
                              const sif::EdgeLabel& current,
                              const sif::EdgeLabel* previous) override;

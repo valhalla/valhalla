@@ -4,13 +4,15 @@
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
 #include <valhalla/baldr/time_info.h>
+#include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathalgorithm.h>
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -112,7 +114,7 @@ protected:
 
   // A child-class must implement this to learn about what nodes were expanded
   virtual void ExpandingNode(baldr::GraphReader&,
-                             graph_tile_ptr,
+                             baldr::graph_tile_ptr,
                              const baldr::NodeInfo*,
                              const sif::EdgeLabel&,
                              const sif::EdgeLabel*) = 0;
@@ -272,7 +274,7 @@ protected:
    * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
    */
   int GetTimezone(baldr::GraphReader& graphreader, const baldr::GraphId& node) {
-    graph_tile_ptr tile = graphreader.GetGraphTile(node);
+    baldr::graph_tile_ptr tile = graphreader.GetGraphTile(node);
     return (tile == nullptr) ? 0 : tile->node(node)->timezone();
   }
 };

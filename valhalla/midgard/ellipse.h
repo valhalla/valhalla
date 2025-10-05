@@ -3,10 +3,6 @@
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/linesegment2.h>
-#include <valhalla/midgard/point2.h>
-#include <valhalla/midgard/pointll.h>
-
-#include <math.h>
 
 #include <cstdint>
 

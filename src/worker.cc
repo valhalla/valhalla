@@ -9,6 +9,7 @@
 #include "midgard/util.h"
 #include "odin/util.h"
 #include "proto_conversions.h"
+#include "sif/hierarchylimits.h"
 #include "worker.h"
 
 #include <boost/optional.hpp>
@@ -542,7 +543,7 @@ void parse_locations(const rapidjson::Document& doc,
     auto request_locations =
         rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
     if (request_locations) {
-      uint32_t last_loc_idx = request_locations->Size() - 1;
+      int last_loc_idx = static_cast<int>(request_locations->Size()) - 1;
       for (const auto& r_loc : *request_locations) {
         auto* loc = locations->Add();
         auto loc_idx = locations->size() - 1;
@@ -554,7 +555,7 @@ void parse_locations(const rapidjson::Document& doc,
       }
     } // maybe its deserialized pbf
     else if (!locations->empty()) {
-      int i = 0;
+      uint32_t i = 0;
       uint32_t locs_amount = locations->size() - 1;
       for (auto& loc : *locations) {
         bool is_last_edge = i == locs_amount;
@@ -1430,10 +1431,10 @@ parse_hierarchy_limits_from_config(const boost::property_tree::ptree& config,
     default_hierarchy_limits.push_back(default_hl);
   }
 
-  if (!found)
+  if (!found) {
     LOG_WARN("Incomplete config for hierarchy limits found for " + algorithm +
              ". Falling back to defaults");
-
+  }
   return {max_hierarchy_limits, default_hierarchy_limits};
 };
 
@@ -1679,6 +1680,10 @@ void service_worker_t::enqueue_statistics(Api& api) const {
       case set:
         statsd_client->set(stat.key(), static_cast<unsigned int>(stat.value() + 0.5), frequency,
                            statsd_client->tags);
+        break;
+      // Handle protobuf sentinel values to avoid compiler warnings
+      case StatisticType_INT_MIN_SENTINEL_DO_NOT_USE_:
+      case StatisticType_INT_MAX_SENTINEL_DO_NOT_USE_:
         break;
     }
   }

@@ -1,7 +1,6 @@
 #ifndef VALHALLA_MJOLNIR_ADMIN_H_
 #define VALHALLA_MJOLNIR_ADMIN_H_
 
-#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/mjolnir/graphtilebuilder.h>
@@ -15,7 +14,6 @@ struct GEOSGeom_t;
 struct GEOSPrepGeom_t;
 struct GEOSWKBReader_t;
 
-using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 namespace valhalla {

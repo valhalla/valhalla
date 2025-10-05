@@ -1,8 +1,6 @@
 #ifndef VALHALLA_MJOLNIR_OSMLINGUISTIC_H
 #define VALHALLA_MJOLNIR_OSMLINGUISTIC_H
 
-#include <valhalla/baldr/graphconstants.h>
-
 #include <cstdint>
 #include <cstring>
 

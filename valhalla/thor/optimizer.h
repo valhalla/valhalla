@@ -1,7 +1,6 @@
 #ifndef VALHALLA_THOR_OPTIMIZER_H_
 #define VALHALLA_THOR_OPTIMIZER_H_
 
-#include <algorithm>
 #include <cstdint>
 #include <random>
 #include <vector>

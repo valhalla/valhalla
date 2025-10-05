@@ -1,7 +1,4 @@
-#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
-#include "midgard/logging.h"
-#include "sif/autocost.h"
 #include "test.h"
 #include "thor/unidirectional_astar.h"
 #include "thor/worker.h"
@@ -15,7 +12,6 @@ using namespace valhalla::sif;
 using namespace valhalla::loki;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-using namespace valhalla::tyr;
 
 namespace {
 // Maximum edge score - base this on costing type.

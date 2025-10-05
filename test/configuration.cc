@@ -1,7 +1,7 @@
 #include "config.h"
-#include "test.h"
 
-#include <valhalla/worker.h>
+#include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
 
 #include <string>
 

@@ -12,6 +12,7 @@
 #include "scoped_timer.h"
 
 #include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include <algorithm>
 #include <deque>
@@ -208,6 +209,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                std::to_string(nodeinfo->stop_index()) + " has " +
                std::to_string(nodeinfo->edge_count())); */
     } else if (startnode.level() != transit_level) {
+#ifdef LOGGING_LEVEL_ERROR
       PointLL ll = end_tile->get_node_ll(endnode);
       if (edge.is_shortcut()) {
         LOG_ERROR(
@@ -222,6 +224,7 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
                    edge.edgeinfo_offset())
                       .str());
       }
+#endif
 
       uint32_t n = 0;
       directededge = end_tile->directededge(nodeinfo->edge_index());

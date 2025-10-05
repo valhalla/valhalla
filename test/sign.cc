@@ -1,7 +1,7 @@
 #include "baldr/sign.h"
-#include "baldr/signinfo.h"
 #include "odin/sign.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <algorithm>
 #include <cstdint>

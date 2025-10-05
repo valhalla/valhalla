@@ -2,10 +2,8 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/tilehierarchy.h>
-#include <valhalla/proto/api.pb.h>
+#include <valhalla/proto/expansion.pb.h>
 #include <valhalla/sif/dynamiccost.h>
-#include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/pathinfo.h>
 
@@ -188,7 +186,7 @@ struct EdgeMetadata {
 
   inline static EdgeMetadata make(const baldr::GraphId& node,
                                   const baldr::NodeInfo* nodeinfo,
-                                  const graph_tile_ptr& tile,
+                                  const baldr::graph_tile_ptr& tile,
                                   EdgeStatus& edge_status_) {
     baldr::GraphId edge_id = {node.tileid(), node.level(), nodeinfo->edge_index()};
     EdgeStatusInfo* edge_status = edge_status_.GetPtr(edge_id, tile);

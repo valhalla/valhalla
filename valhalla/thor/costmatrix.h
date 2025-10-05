@@ -11,7 +11,7 @@
 #include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrixalgorithm.h>
-#include <valhalla/thor/pathinfo.h>
+#include <valhalla/thor/pathalgorithm.h>
 
 #include <cstdint>
 #include <memory>
@@ -224,7 +224,7 @@ protected:
                    const uint32_t pred_idx,
                    const EdgeMetadata& meta,
                    uint32_t& shortcuts,
-                   const graph_tile_ptr& tile,
+                   const baldr::graph_tile_ptr& tile,
                    const baldr::TimeInfo& time_info);
 
   /**
