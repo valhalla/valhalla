@@ -7,7 +7,6 @@
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/expansion.pb.h>
 #include <valhalla/sif/dynamiccost.h>
-#include <valhalla/worker.h>
 
 #include <boost/property_tree/ptree.hpp>
 

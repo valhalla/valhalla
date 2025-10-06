@@ -26,38 +26,6 @@ using namespace prime_server;
 #endif
 
 namespace {
-// clang-format off
-
-// unordered map for warning pairs
-const std::unordered_map<int, std::string> warning_codes = {
-  // 1xx is for deprecations
-  {100, R"(auto_shorter costing is deprecated, use "shortest" costing option instead)"},
-  {101,
-    R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
-  {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
-  {103, R"(best_paths has been deprecated, use "alternates" instead)"},
-  // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
-  {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
-  {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
-  {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
-  {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
-  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"},
-  {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
-  {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
-  {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
-  {208, R"(Hard exclusions are not allowed on this server, ignoring hard excludes)"},
-  {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
-  {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
-  {211, R"(This action doesn't support requested format, using json instead)"},
-  // 3xx is used when costing or location options were specified but we had to change them internally for some reason
-  {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
-  {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
-  {302, R"("search_filter.level" was specified without a custom "search_cutoff", setting default default cutoff to )"},
-  {303, R"("search_cutoff" exceeds maximum allowed value due to "search_filter.level" being specified, clamping cutoff to )"},
-  // 4xx is used when we do sneaky important things the user should be aware of
-  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
-};
-// clang-format on
 
 bool is_format_supported(Options::Action action, Options::Format format) {
   constexpr uint16_t kFormatActionSupport[] = {
@@ -1171,16 +1139,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 } // namespace
 
 namespace valhalla {
-
-// function to add warnings to proto info object
-void add_warning(valhalla::Api& api, unsigned code, const std::string& extra) {
-  auto warning = warning_codes.find(code);
-  if (warning != warning_codes.end()) {
-    auto* warning_pbf = api.mutable_info()->mutable_warnings()->Add();
-    warning_pbf->set_description(warning->second + extra);
-    warning_pbf->set_code(warning->first);
-  }
-}
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& request) {
   // get the http status

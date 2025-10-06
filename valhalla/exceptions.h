@@ -5,6 +5,8 @@
 #include <string>
 
 namespace valhalla {
+class Api;
+
 /**
  * Project specific error messages and codes that can be converted to http responses
  */
@@ -35,6 +37,15 @@ struct valhalla_exception_t : public std::runtime_error {
   std::string osrm_error;
   std::string statsd_key;
 };
+
+/**
+ * Adds a warning to the request PBF object.
+ *
+ * @param api   the full request
+ * @param code  the warning code
+ * @param extra an optional string to append to the hard-coded warning message
+ */
+void add_warning(valhalla::Api& api, unsigned code, const std::string& extra = "");
 } // namespace valhalla
 
 #endif //__VALHALLA_EXCEPTIONS_H__

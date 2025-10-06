@@ -78,15 +78,6 @@ void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& options);
 
-/**
- * Adds a warning to the request PBF object.
- *
- * @param api   the full request
- * @param code  the warning code
- * @param extra an optional string to append to the hard-coded warning message
- */
-void add_warning(valhalla::Api& api, unsigned code, const std::string& extra = "");
-
 #ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t serialize_error(const valhalla_exception_t& exception,
                                                  prime_server::http_request_info_t& request_info,
