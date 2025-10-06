@@ -18,6 +18,7 @@
 #include <vector>
 
 namespace vj = valhalla::mjolnir;
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {

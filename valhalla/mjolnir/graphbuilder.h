@@ -17,8 +17,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-using boost::property_tree::ptree;
-
 /**
  * Class used to construct temporary data used to build the initial graph.
  */
@@ -52,7 +50,7 @@ public:
                     const std::string& linguistic_node_file,
                     const std::map<baldr::GraphId, size_t>& tiles);
 
-  static std::map<baldr::GraphId, size_t> BuildEdges(const ptree& conf,
+  static std::map<baldr::GraphId, size_t> BuildEdges(const boost::property_tree::ptree& conf,
                                                      const std::string& ways_file,
                                                      const std::string& way_nodes_file,
                                                      const std::string& nodes_file,

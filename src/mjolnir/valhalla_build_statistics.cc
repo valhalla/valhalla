@@ -376,7 +376,7 @@ void build(const boost::property_tree::ptree& pt,
 
     // Point tiles to the set we need for current level
     auto level = tile_id.level();
-    if (TileHierarchy::levels().back().level + 1 == level) {
+    if (TileHierarchy::levels().back().level + 1u == level) {
       level = TileHierarchy::levels().back().level;
     }
 

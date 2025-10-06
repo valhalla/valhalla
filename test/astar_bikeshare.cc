@@ -15,6 +15,7 @@
 namespace bpt = boost::property_tree;
 
 using namespace valhalla;
+namespace vb = valhalla::baldr;
 namespace vt = valhalla::thor;
 namespace vk = valhalla::loki;
 namespace vo = valhalla::odin;
@@ -32,8 +33,8 @@ const auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/paris_bss_tile
 
 struct route_tester {
   route_tester()
-      : reader(std::make_shared<GraphReader>(conf.get_child("mjolnir"))), loki_worker(conf, reader),
-        thor_worker(conf, reader), odin_worker(conf) {
+      : reader(std::make_shared<vb::GraphReader>(conf.get_child("mjolnir"))),
+        loki_worker(conf, reader), thor_worker(conf, reader), odin_worker(conf) {
   }
   Api test(const std::string& request_json) {
     Api request;
@@ -44,7 +45,7 @@ struct route_tester {
     return request;
   }
 
-  std::shared_ptr<GraphReader> reader;
+  std::shared_ptr<vb::GraphReader> reader;
   vk::loki_worker_t loki_worker;
   vt::thor_worker_t thor_worker;
   vo::odin_worker_t odin_worker;

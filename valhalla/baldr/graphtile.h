@@ -192,7 +192,7 @@ public:
    */
   midgard::PointLL get_node_ll(const GraphId& nodeid) const {
     assert(nodeid.Tile_Base() == header_->graphid().Tile_Base());
-    return node(nodeid)->latlng(header()->base_ll());
+    return node(nodeid)->latlng(base_ll_);
   }
 
   /**
@@ -791,6 +791,10 @@ public:
   }
 
 protected:
+  // base location of the tile, comes from `header()->base_ll()`, but we cache it here to avoid extra
+  // computation on the hot path
+  midgard::PointLL base_ll_{};
+
   // Graph tile memory. A Graph tile owns its memory.
   std::unique_ptr<const GraphMemory> memory_;
 

@@ -7,8 +7,8 @@
 
 using namespace valhalla;
 
-TimeDomain from_proto(const TripLeg_TimeDomain& proto) {
-  TimeDomain td;
+baldr::TimeDomain from_proto(const TripLeg_TimeDomain& proto) {
+  baldr::TimeDomain td;
   td.set_type(proto.day_dow_type());
   td.set_dow(proto.dow_mask());
   td.set_begin_hrs(proto.begin_hrs());
@@ -25,7 +25,7 @@ TimeDomain from_proto(const TripLeg_TimeDomain& proto) {
 }
 
 namespace valhalla {
-bool operator==(const TripLeg_TimeDomain& proto, const TimeDomain& td) {
+bool operator==(const TripLeg_TimeDomain& proto, const baldr::TimeDomain& td) {
   return td.td_value() == from_proto(proto).td_value();
 }
 
@@ -230,7 +230,7 @@ TEST_F(ConditionalSpeedlimit, RouteApiProto) {
   {
     // Dec Fr[-1]-Jan Mo[2]
     baldr::TimeDomain condition;
-    condition.set_type(kNthDow);
+    condition.set_type(valhalla::baldr::kNthDow);
     condition.set_dow(0b1111111);   // Magic mask that means every day, don't ask why it is not 0
     condition.set_begin_month(12);  // Dec
     condition.set_begin_day_dow(6); // Fr
