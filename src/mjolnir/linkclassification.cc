@@ -6,6 +6,8 @@
 
 #ifdef LOGGING_LEVEL_DEBUG
 #include "baldr/json.h"
+
+#include <sstream>
 #endif
 
 #include <optional>
