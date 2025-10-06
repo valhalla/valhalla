@@ -182,6 +182,11 @@ void DirectedEdge::set_toll(const bool toll) {
   toll_ = toll;
 }
 
+// Sets the flag indicating this edge has a vignette or is it part of a vignette road.
+void DirectedEdge::set_vignette(const bool vignette) {
+  vignette_ = vignette;
+}
+
 // Sets the destination only (private) flag. This indicates the edge should
 // allow access only to locations that are destinations and not allow
 // "through" traffic
@@ -624,6 +629,7 @@ void DirectedEdge::json(rapidjson::writer_wrapper_t& writer) const {
   writer("part_of_complex_restriction", static_cast<bool>(complex_restriction_));
   writer("has_sign", static_cast<bool>(sign_));
   writer("toll", static_cast<bool>(toll_));
+  writer("vignette", static_cast<bool>(vignette_));
   writer("destination_only", static_cast<bool>(dest_only_));
   writer("destination_only_hgv", static_cast<bool>(dest_only_hgv_));
   writer("tunnel", static_cast<bool>(tunnel_));
