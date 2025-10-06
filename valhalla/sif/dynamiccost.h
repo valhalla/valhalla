@@ -926,7 +926,9 @@ public:
    * Is the current vehicle type HGV?
    * @return  Returns whether it's a truck.
    */
-  virtual bool is_hgv() const;
+  bool is_hgv() const {
+    return is_hgv_;
+  }
 
   /**
    * Get the wheelchair required flag.
@@ -1186,6 +1188,9 @@ protected:
   bool include_hov2_{false};
   bool include_hov3_{false};
 
+  // Is it truck?
+  bool is_hgv_{false};
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -1328,8 +1333,8 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ *
-              ((is_hgv() ? edge->destonly_hgv() : edge->destonly()) && !pred->destonly());
+    const bool is_destonly = (is_hgv() && edge->destonly_hgv()) || (!is_hgv() && edge->destonly());
+    c.cost += destination_only_penalty_ * (is_destonly && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
@@ -1338,11 +1343,10 @@ protected:
     c.cost +=
         track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
 
-    if (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) {
-      // Do not penalize internal roads that are marked as service.
-      if (!edge->internal())
-        c.cost += service_penalty_;
-    }
+    // penalize service roads that are not internal
+    c.cost += service_penalty_ *
+              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) *
+              !edge->internal();
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
