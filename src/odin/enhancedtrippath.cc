@@ -2,12 +2,12 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"
+#include "exceptions.h"
 #include "midgard/constants.h"
 #include "midgard/util.h"
 #include "odin/util.h"
 #include "proto/common.pb.h"
 #include "proto/trip.pb.h"
-#include "worker.h"
 
 #include <cmath>
 #include <cstdlib>
