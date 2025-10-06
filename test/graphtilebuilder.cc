@@ -16,6 +16,7 @@
 
 using namespace std;
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 namespace {
