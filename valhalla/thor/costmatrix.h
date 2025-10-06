@@ -348,7 +348,7 @@ protected:
    */
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
-  float GetAstarHeuristic(const uint32_t loc_idx, const PointLL& node_ll) const;
+  float GetAstarHeuristic(const uint32_t loc_idx, const midgard::PointLL& node_ll) const;
 
 private:
   class ReachedMap;

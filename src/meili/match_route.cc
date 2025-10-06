@@ -1,8 +1,12 @@
 #include "meili/map_matcher.h"
-#include "midgard/logging.h"
 
 #include <cassert>
 #include <vector>
+
+// `ValidateRoute` is only used in debug mode
+#ifndef NDEBUG
+
+#include "midgard/logging.h"
 
 namespace {
 
@@ -46,6 +50,7 @@ bool ValidateRoute(baldr::GraphReader& graphreader,
 }
 
 }; // namespace
+#endif
 
 namespace valhalla {
 namespace meili {
