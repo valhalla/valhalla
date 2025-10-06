@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace mjolnir {
 

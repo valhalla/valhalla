@@ -4,6 +4,7 @@
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
    * REMOVED: `valhalla/filesystem` from the project in favor of the std equivalent [#5321](https://github.com/valhalla/valhalla/pull/5321)
+   * REMOVED: `use`/`using` statements from public headers [#5568](https://github.com/valhalla/valhalla/pull/5568)
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
