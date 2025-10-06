@@ -168,6 +168,7 @@
    * ADDED: Provide conditional speed limits from "maxspeed:conditional" in `/locate` and proto `/route` responses [#4851](https://github.com/valhalla/valhalla/pull/4851)
    * ADDED: Support multiple levels and level ranges [#4879](https://github.com/valhalla/valhalla/pull/4879)
    * ADDED: Level location search filter [#4926](https://github.com/valhalla/valhalla/pull/4926)
+   * CHANGED: Optimise AttributesController::category_attribute_enabled [#5580](https://github.com/valhalla/valhalla/pull/5580)
 
 ## Release Date: 2024-08-21 Valhalla 3.5.0
 * **Removed**
