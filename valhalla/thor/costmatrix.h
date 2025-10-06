@@ -266,7 +266,8 @@ protected:
    */
   void SetSources(baldr::GraphReader& graphreader,
                   const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                  const std::vector<baldr::TimeInfo>& time_infos);
+                  const std::vector<baldr::TimeInfo>& time_infos,
+                  const std::unordered_multimap<baldr::GraphId, double>& target_edges);
 
   /**
    * Set the target/destination locations. Search expands backwards from
@@ -275,7 +276,8 @@ protected:
    * @param  targets       List of target locations.
    */
   void SetTargets(baldr::GraphReader& graphreader,
-                  const google::protobuf::RepeatedPtrField<valhalla::Location>& targets);
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+                  const std::unordered_multimap<baldr::GraphId, double>& source_edges);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
