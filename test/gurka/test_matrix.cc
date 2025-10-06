@@ -1172,9 +1172,12 @@ TEST(StandAlone, TrivialKeepExpanding) {
   EXPECT_EQ(result.matrix().distances(0), 500);
 }
 
+/**
+ * inbound source edges should be kept in case of
+ * node snapping, as long as there are targets snapped
+ * to the same node (and vice versa)
+ */
 TEST(StandAlone, TrivialCorrelation) {
-  // target candidates includes AB but should be penalized
-  // so that path 1B, BC, Cx has less cost than the trivial one
   const std::string ascii_map = R"(
     2
     A------B------------C-----D
