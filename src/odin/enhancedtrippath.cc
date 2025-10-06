@@ -11,6 +11,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <iomanip>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
