@@ -1171,3 +1171,36 @@ TEST(StandAlone, TrivialKeepExpanding) {
 
   EXPECT_EQ(result.matrix().distances(0), 500);
 }
+
+TEST(StandAlone, TrivialCorrelation) {
+  // target candidates includes AB but should be penalized
+  // so that path 1B, BC, Cx has less cost than the trivial one
+  const std::string ascii_map = R"(
+    2
+    A------B------------C-----D
+    1                   |     |
+                        |     |
+                        F-----E
+  )";
+  // clang-format off
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FC", {{"highway", "residential"}}},
+  };
+  // clang-format on
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 2);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_trivial_correlation",
+                               {{"thor.costmatrix.check_reverse_connection", "1"}});
+
+  auto result =
+      gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", {}, nullptr);
+
+  EXPECT_EQ(result.matrix().distances(0), 0);
+}
