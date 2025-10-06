@@ -11,9 +11,16 @@ std::unordered_set<std::string>
 PrecomputeEnabledCategories(const std::unordered_map<std::string, bool>& attributes) {
   std::unordered_set<std::string> enabled_categories;
   for (const auto& pair : attributes) {
-    if (pair.second) {
-      enabled_categories.insert(pair.first.substr(0, pair.first.find('.') + 1));
+    if (!pair.second) {
+      continue;
     }
+
+    const auto dot_pos = pair.first.find('.');
+    assert(dot_pos != std::string::npos);
+
+    // must have a dot in the end
+    auto category = pair.first.substr(0, dot_pos + 1);
+    enabled_categories.insert(category);
   }
   return enabled_categories;
 }
