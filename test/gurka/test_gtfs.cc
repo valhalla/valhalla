@@ -18,6 +18,7 @@ using namespace gtfs;
 using namespace std::chrono;
 using namespace valhalla;
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 using boost::geometry::within;
 using point_type = boost::geometry::model::d2::point_xy<double>;
 using polygon_type = boost::geometry::model::polygon<point_type>;
