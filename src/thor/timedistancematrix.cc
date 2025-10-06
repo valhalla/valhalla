@@ -37,7 +37,7 @@ float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) cons
   }
 
   // Convert max_matrix_distance to seconds based on the average speed
-  return max_matrix_distance / (average_speed_mph * kMPHtoMetersPerSec);
+  return max_matrix_distance / (average_speed_mph * midgard::kMPHtoMetersPerSec);
 }
 
 // Expand from a node in the forward direction

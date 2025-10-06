@@ -16,6 +16,7 @@
 #include <boost/optional.hpp>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace {
 

@@ -180,10 +180,10 @@ protected:
         // fill with sentinel values meaning "no data"
         matrix.mutable_begin_heading()->Resize(size, kInvalidHeading);
         matrix.mutable_end_heading()->Resize(size, kInvalidHeading);
-        matrix.mutable_begin_lat()->Resize(size, INVALID_LL);
-        matrix.mutable_begin_lon()->Resize(size, INVALID_LL);
-        matrix.mutable_end_lat()->Resize(size, INVALID_LL);
-        matrix.mutable_end_lon()->Resize(size, INVALID_LL);
+        matrix.mutable_begin_lat()->Resize(size, midgard::INVALID_LL);
+        matrix.mutable_begin_lon()->Resize(size, midgard::INVALID_LL);
+        matrix.mutable_end_lat()->Resize(size, midgard::INVALID_LL);
+        matrix.mutable_end_lon()->Resize(size, midgard::INVALID_LL);
       }
     }
   }
