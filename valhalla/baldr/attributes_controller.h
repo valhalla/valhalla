@@ -168,6 +168,8 @@ struct AttributesController {
   // Attributes that are required by the route action to make guidance instructions.
   static const std::unordered_map<std::string, bool> kDefaultAttributes;
 
+  static const std::unordered_set<std::string> kDefaultEnabledCategories;
+
   /**
    * Constructor that will use the default values for all of the attributes.
    */
@@ -182,19 +184,26 @@ struct AttributesController {
    */
   AttributesController(const Options& options, bool is_strict_filter = false);
 
-  /**
-   * Disable all of the attributes.
-   */
-  void disable_all();
+  bool operator()(const std::string& key) const {
+    return attributes.at(key);
+  }
 
   /**
    * Returns true if any category attribute is enabled, false otherwise.
    */
-  bool category_attribute_enabled(const std::string& category) const;
+  bool category_attribute_enabled(const std::string& category) const {
+    return enabled_categories.find(category) != enabled_categories.end();
+  }
 
-  bool operator()(const std::string& key) const;
-
+private:
   std::unordered_map<std::string, bool> attributes;
+
+  std::unordered_set<std::string> enabled_categories;
+
+  /**
+   * Disable all of the attributes.
+   */
+  void disable_all();
 };
 
 } // namespace baldr
