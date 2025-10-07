@@ -955,6 +955,7 @@ function filter_tags_generic(kv)
       kv[k] = v
     end
 
+    -- expects access=private not to be combined with other values
     if kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access")) then
 
       kv["auto_forward"] = "false"
@@ -1056,6 +1057,7 @@ function filter_tags_generic(kv)
       default_val = tostring(rail)
     end
 
+    -- expect access=private not be combined with other values
     if ((ferry == false and rail == false) or kv["impassable"] == "yes" or access == "false" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
       default_val = "false"
     end
@@ -1135,6 +1137,7 @@ function filter_tags_generic(kv)
   end
 
   --TODO: handle Time conditional restrictions if available for HOVs with oneway = reversible
+  -- expect access=permissive and access=hov not to be combined with other values
   if ((kv["access"] == "permissive" or kv["access"] == "hov" or kv["access"] == "taxi") and kv["oneway"] == "reversible") then
 
     -- for now enable only for buses if the tag exists and they are allowed.
@@ -2029,6 +2032,7 @@ function nodes_proc (kv, nokeys)
   local initial_access = any_in(access, kv["access"])
   local access = initial_access or "true"
 
+  -- expect access=private not to be combined with other values
   if (kv["impassable"] == "yes" or (kv["access"] == "private" and (kv["emergency"] == "yes" or kv["service"] == "emergency_access"))) then
     access = "false"
   end
