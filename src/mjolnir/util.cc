@@ -49,7 +49,6 @@ const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
 const std::string intersections_file = "intersections.bin";
 const std::string shapes_file = "shapes.bin";
-const std::string checksum_file = "checksum.txt";
 
 uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& tile_dir) {
   std::sort(paths.begin(), paths.end());

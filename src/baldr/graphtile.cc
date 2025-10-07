@@ -3,12 +3,12 @@
 #include "baldr/curl_tilegetter.h"
 #include "baldr/sign.h"
 #include "baldr/tilehierarchy.h"
+#include "exceptions.h"
 #include "filesystem_utils.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
-#include "worker.h"
 
 #include <chrono>
 #include <cmath>
