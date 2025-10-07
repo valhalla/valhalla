@@ -62,7 +62,7 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
 
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_vignettes",
-                                                  {{"service_limits.allow_hard_exclusions", "true"}});
+                            {{"service_limits.allow_hard_exclusions", "true"}});
     mapNotAllowed = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_vignettes");
   }
 };
@@ -109,7 +109,7 @@ protected:
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
 
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_vignettes",
-                                                  {{"service_limits.allow_hard_exclusions", "true"}});
+                            {{"service_limits.allow_hard_exclusions", "true"}});
   }
 };
 
