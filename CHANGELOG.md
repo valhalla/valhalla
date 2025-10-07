@@ -153,6 +153,7 @@
    * CHANGED: Replace `oneof bool` to `bool` for default false options [#5541](https://github.com/valhalla/valhalla/pull/5541)
    * CHANGED: Optimise stopimpact calls in TransitionCost [#5545](https://github.com/valhalla/valhalla/pull/5545)
    * CHANGED: Optimise best_transition_cost function [#5537](https://github.com/valhalla/valhalla/pull/5537)
+   * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
