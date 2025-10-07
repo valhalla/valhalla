@@ -15,6 +15,7 @@
 #include <vector>
 
 namespace vb = valhalla::baldr;
+using namespace valhalla::baldr;
 
 namespace {
 

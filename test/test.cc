@@ -5,6 +5,7 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
 #include "microtar.h"
+#include "midgard/sequence.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <boost/algorithm/string.hpp>
@@ -643,7 +644,7 @@ void customize_edges(const boost::property_tree::ptree& config, const EdgesCusto
     std::vector<valhalla::baldr::DirectedEdge> edges;
     edges.reserve(tile.header()->directededgecount());
 
-    GraphId edgeid = tile_id;
+    valhalla::baldr::GraphId edgeid = tile_id;
     for (size_t j = 0; j < tile.header()->directededgecount(); ++j, ++edgeid) {
       edges.push_back(tile.directededge(j));
       setter_cb(edgeid, edges.back());

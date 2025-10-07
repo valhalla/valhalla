@@ -390,7 +390,7 @@ TEST(recosting, all_algorithms) {
         // build up the costing object
         auto costing = sif::CostFactory().Create(api.options());
 
-        const GraphId start_edge_id(leg.node().begin()->edge().id());
+        const baldr::GraphId start_edge_id(leg.node().begin()->edge().id());
         const auto* node = reader->nodeinfo(reader->edge_endnode(start_edge_id));
         const auto time_info = baldr::TimeInfo::make(date_time, node->timezone());
 
