@@ -25,31 +25,6 @@ struct tile_index_entry {
   uint32_t size;    // size of the tile in bytes
 };
 
-uint64_t validate_id_txt(const std::filesystem::path& id_txt_path, const std::string& tile_url) {
-  std::ifstream in_id_txt_file(id_txt_path);
-  uint64_t checksum = 0;
-  if (in_id_txt_file) {
-    // validate that the expected lines and values are present
-    std::string file_url, file_checksum;
-    if (!std::getline(in_id_txt_file, file_url)) {
-      throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
-                               id_txt_path.string());
-    } else if (file_url != tile_url) {
-      // TODO: could do the GraphReader initialization on our own, clean the tile_dir and start fresh
-      throw std::runtime_error("Tile URL changed, configure a different mjolnir.tile_dir");
-    }
-
-    if (!std::getline(in_id_txt_file, file_checksum)) {
-      throw std::runtime_error("Couldn't find MD5 hash on the second line in " +
-                               id_txt_path.string());
-    }
-
-    checksum = std::stoull(file_checksum);
-  }
-
-  return checksum;
-}
-
 } // namespace
 
 namespace valhalla {
@@ -540,6 +515,7 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
       tar_id_txt_path_(std::filesystem::path(tile_dir_) / "id.txt"),
       is_tar_url_(!tile_url_.empty() &&
                   tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos),
+      tar_id_txt_checksum_(load_id_txt_checksum(tar_id_txt_path_, tile_url_)),
       cache_(TileCacheFactory::createTileCache(pt)) {
 
   if (!tile_url_.empty()) {
@@ -555,20 +531,18 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
       load_remote_tar_offsets();
       // we allow to not cache tiles locally from URL
       if (!tile_dir_.empty()) {
-        // validate the id.txt if available
-        // need to lock from here on since there's usually many GraphReaders initializing at the same
+        // load & validate the id.txt if available
+        // need to lock from here on since there's often many GraphReaders initializing at the same
         // time
         static std::mutex mutex;
         std::lock_guard lock{mutex};
-        if (std::filesystem::exists(tar_id_txt_path_)) {
-          validate_id_txt(tar_id_txt_path_, tile_url_);
-        } else {
+        if (!std::filesystem::exists(tar_id_txt_path_)) {
           // no id.txt, then create it in the current tile_dir
-          // we write 0 so the next thread will find a valid MD5 hash
           std::filesystem::create_directories(tile_dir_);
           std::ofstream out_url_file(tar_id_txt_path_, std::ios::binary);
           out_url_file << tile_url_ << std::endl;
-          out_url_file << '0' << std::endl;
+          // we write 0 so the next thread will find a valid MD5 hash
+          out_url_file << tar_id_txt_checksum_ << std::endl;
         }
       }
     }
@@ -701,13 +675,12 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
         tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
       } else if (is_tar_url_) {
         // tiles from remote tar
-        auto checksum = validate_id_txt(tar_id_txt_path_, tile_url_);
         auto pos = remote_tar_offsets_.find(base);
         tile = (pos == remote_tar_offsets_.end())
                    ? nullptr
                    : GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_,
                                              pos->second.offset, pos->second.size, tar_id_txt_path_,
-                                             checksum);
+                                             tar_id_txt_checksum_);
       }
 
       if (!tile) {
@@ -1131,6 +1104,30 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
 
   return {itile, begin_index, end_index};
 }
+
+uint64_t GraphReader::load_id_txt_checksum(const std::filesystem::path& id_txt_path,
+                                           const std::string& tile_url) {
+  std::ifstream in_id_txt_file(id_txt_path);
+  std::string file_checksum = "0";
+  // if no cache wanted, never mind
+  if (!tile_dir_.empty() && in_id_txt_file) {
+    std::string file_url;
+    // validate that the expected lines and values are present
+    if (!std::getline(in_id_txt_file, file_url)) {
+      throw std::runtime_error("Couldn't find a valid HTTP URL on the first line in " +
+                               id_txt_path.string());
+    } else if (file_url != tile_url) {
+      throw std::runtime_error("Tile URL changed, configure a different mjolnir.tile_dir");
+    }
+
+    if (!std::getline(in_id_txt_file, file_checksum)) {
+      throw std::runtime_error("Couldn't find MD5 hash on the second line in " +
+                               id_txt_path.string());
+    }
+  }
+
+  return std::stoull(file_checksum);
+};
 
 graph_tile_ptr LimitedGraphReader::GetGraphTile(const GraphId& graphid) {
   return reader_.GetGraphTile(graphid);

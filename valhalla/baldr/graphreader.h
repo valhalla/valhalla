@@ -989,6 +989,7 @@ protected:
   const std::string tile_url_;
   const std::filesystem::path tar_id_txt_path_;
   const bool is_tar_url_;
+  const uint64_t tar_id_txt_checksum_;
 
   // for remote tar's we grab the index.bin when loading the remote_tar_offsets
   // so we know all tiles' offset & size
@@ -1007,6 +1008,16 @@ protected:
   std::unique_ptr<TileCache> cache_;
 
   bool enable_incidents_;
+
+  /**
+   * Loads the tile_dir/id.txt URL & MD5 hash and validates whether the URLs match
+   *
+   * @param id_txt_path the filesystem::path to the id.txt
+   * @param tile_url    the tile url in the config to match to the one in id.txt
+   * @return the checksum on the 2nd line of id.txt
+   */
+  uint64_t load_id_txt_checksum(const std::filesystem::path& id_txt_path,
+                                const std::string& tile_url);
 };
 
 class LimitedGraphReader {

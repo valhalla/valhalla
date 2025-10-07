@@ -74,6 +74,15 @@ void test_route(const std::string& tile_dir,
   EXPECT_NE(route_json.find("Lauwerstraat"), std::string::npos);
 }
 
+class HttpTilesNoCache : public ::testing::Test {
+protected:
+  void TearDown() override {
+    if (std::filesystem::exists(tile_source_dir + "/id.txt")) {
+      std::filesystem::remove(tile_source_dir + "/id.txt");
+    }
+  }
+};
+
 TEST(HttpTiles, test_tar_tiles_no_cache) {
   test_route("", false, true);
 }
