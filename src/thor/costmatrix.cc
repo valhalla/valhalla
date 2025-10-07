@@ -869,7 +869,11 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
           std::abs(static_cast<int>(fwd_pred.path_distance()) +
                    static_cast<int>(rev_label.path_distance()) - static_cast<int>(de->length()));
       best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid,
-                                   traversed_fraction == 0 ? Cost{0., 0.} : partial_cost, d);
+                                   traversed_fraction == 0
+                                       ? (fwd_pred.transition_cost() + rev_label.transition_cost()) *
+                                             0.5
+                                       : partial_cost,
+                                   d);
       if (best_connection_[idx].max_iterations == 0) {
         best_connection_[idx].max_iterations =
             n + GetThreshold(mode_,
@@ -1012,7 +1016,11 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
             std::abs(static_cast<int>(rev_pred.path_distance()) +
                      static_cast<int>(fwd_label.path_distance()) - static_cast<int>(de->length()));
         best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(),
-                                            traversed_fraction == 0 ? Cost{0., 0.} : partial_cost, d);
+                                            traversed_fraction == 0 ? (rev_pred.transition_cost() +
+                                                                       fwd_label.transition_cost()) *
+                                                                          0.5
+                                                                    : partial_cost,
+                                            d);
         // best_connection_[source_idx].found = true;
         if (best_connection_[source_idx].max_iterations == 0) {
           best_connection_[source_idx].max_iterations =
