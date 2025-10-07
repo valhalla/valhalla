@@ -9,7 +9,6 @@ namespace {
 
 TEST(AttrController, TestCtorDefaultAttributes) {
   AttributesController controller;
-  // Test that default attributes work with operator()
   for (const auto& pair : AttributesController::kDefaultAttributes) {
     EXPECT_EQ(controller(pair.first), pair.second);
   }

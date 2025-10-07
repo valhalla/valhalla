@@ -16,7 +16,10 @@ PrecomputeEnabledCategories(const std::unordered_map<std::string_view, bool>& at
     }
 
     const auto dot_pos = pair.first.find('.');
-    assert(dot_pos != std::string::npos);
+    if (dot_pos == std::string_view::npos) {
+      // it may happen for some attributes that they don't have category (e.g. kOsmChangeset)
+      continue;
+    }
 
     // must have a dot in the end
     auto category = pair.first.substr(0, dot_pos + 1);
