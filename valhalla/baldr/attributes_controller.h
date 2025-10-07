@@ -54,7 +54,8 @@ constexpr std::string_view kEdgeTransitRouteInfoTextColor = "edge.transit_route_
 constexpr std::string_view kEdgeTransitRouteInfoDescription = "edge.transit_route_info.description";
 constexpr std::string_view kEdgeTransitRouteInfoOperatorOnestopId =
     "edge.transit_route_info.operator_onestop_id";
-constexpr std::string_view kEdgeTransitRouteInfoOperatorName = "edge.transit_route_info.operator_name";
+constexpr std::string_view kEdgeTransitRouteInfoOperatorName =
+    "edge.transit_route_info.operator_name";
 constexpr std::string_view kEdgeTransitRouteInfoOperatorUrl = "edge.transit_route_info.operator_url";
 constexpr std::string_view kEdgeId = "edge.id";
 constexpr std::string_view kEdgeWayId = "edge.way_id";
@@ -105,16 +106,19 @@ constexpr std::string_view kNodeType = "node.type";
 constexpr std::string_view kNodeTrafficSignal = "node.traffic_signal";
 constexpr std::string_view kNodeFork = "node.fork";
 constexpr std::string_view kNodeTransitPlatformInfoType = "node.transit_platform_info.type";
-constexpr std::string_view kNodeTransitPlatformInfoOnestopId = "node.transit_platform_info.onestop_id";
+constexpr std::string_view kNodeTransitPlatformInfoOnestopId =
+    "node.transit_platform_info.onestop_id";
 constexpr std::string_view kNodeTransitPlatformInfoName = "node.transit_platform_info.name";
 constexpr std::string_view kNodeTransitPlatformInfoStationOnestopId =
     "node.transit_platform_info.station_onestop_id";
-constexpr std::string_view kNodeTransitPlatformInfoStationName = "node.transit_platform_info.station_name";
+constexpr std::string_view kNodeTransitPlatformInfoStationName =
+    "node.transit_platform_info.station_name";
 constexpr std::string_view kNodeTransitPlatformInfoArrivalDateTime =
     "node.transit_platform_info.arrival_date_time";
 constexpr std::string_view kNodeTransitPlatformInfoDepartureDateTime =
     "node.transit_platform_info.departure_date_time";
-constexpr std::string_view kNodeTransitPlatformInfoIsParentStop = "node.transit_platform_info.is_parent_stop";
+constexpr std::string_view kNodeTransitPlatformInfoIsParentStop =
+    "node.transit_platform_info.is_parent_stop";
 constexpr std::string_view kNodeTransitPlatformInfoAssumedSchedule =
     "node.transit_platform_info.assumed_schedule";
 constexpr std::string_view kNodeTransitPlatformInfoLatLon = "node.transit_platform_info.lat_lon";
@@ -166,9 +170,9 @@ constexpr std::string_view kShapeAttributesCategory = "shape_attributes.";
 struct AttributesController {
 
   // Attributes that are required by the route action to make guidance instructions.
-  static const std::unordered_map<std::string, bool> kDefaultAttributes;
+  static const std::unordered_map<std::string_view, bool> kDefaultAttributes;
 
-  static const std::unordered_set<std::string> kDefaultEnabledCategories;
+  static const std::unordered_set<std::string_view> kDefaultEnabledCategories;
 
   /**
    * Constructor that will use the default values for all of the attributes.
@@ -184,21 +188,21 @@ struct AttributesController {
    */
   AttributesController(const Options& options, bool is_strict_filter = false);
 
-  bool operator()(const std::string& key) const {
+  bool operator()(const std::string_view& key) const {
     return attributes.at(key);
   }
 
   /**
    * Returns true if any category attribute is enabled, false otherwise.
    */
-  bool category_attribute_enabled(const std::string& category) const {
+  bool category_attribute_enabled(const std::string_view& category) const {
     return enabled_categories.find(category) != enabled_categories.end();
   }
 
 private:
-  std::unordered_map<std::string, bool> attributes;
+  std::unordered_map<std::string_view, bool> attributes;
 
-  std::unordered_set<std::string> enabled_categories;
+  std::unordered_set<std::string_view> enabled_categories;
 
   /**
    * Disable all of the attributes.
