@@ -529,21 +529,21 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
     }
     if (is_tar_url_) {
       load_remote_tar_offsets();
-      // we allow to not cache tiles locally from URL
-      if (!tile_dir_.empty()) {
-        // load & validate the id.txt if available
-        // need to lock from here on since there's often many GraphReaders initializing at the same
-        // time
-        static std::mutex mutex;
-        std::lock_guard lock{mutex};
-        if (!std::filesystem::exists(url_id_txt_path_)) {
-          // no id.txt, then create it in the current tile_dir
-          std::filesystem::create_directories(tile_dir_);
-          std::ofstream out_url_file(url_id_txt_path_, std::ios::binary);
-          out_url_file << tile_url_ << std::endl;
-          // we write 0 so the next thread will find a valid MD5 hash
-          out_url_file << url_id_txt_checksum_ << std::endl;
-        }
+    }
+    // we allow to not cache tiles locally from URL
+    if (!tile_dir_.empty()) {
+      // load & validate the id.txt if available
+      // need to lock from here on since there's often many GraphReaders initializing at the same
+      // time
+      static std::mutex mutex;
+      std::lock_guard lock{mutex};
+      if (!std::filesystem::exists(url_id_txt_path_)) {
+        // no id.txt, then create it in the current tile_dir
+        std::filesystem::create_directories(tile_dir_);
+        std::ofstream out_url_file(url_id_txt_path_, std::ios::binary);
+        out_url_file << tile_url_ << std::endl;
+        // we write 0 so the next thread will find a valid MD5 hash
+        out_url_file << url_id_txt_checksum_ << std::endl;
       }
     }
   }
