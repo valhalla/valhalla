@@ -6,6 +6,8 @@
 
 #ifdef LOGGING_LEVEL_DEBUG
 #include "baldr/json.h"
+
+#include <sstream>
 #endif
 
 #include <optional>
@@ -14,6 +16,7 @@
 #include <vector>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace mjolnir {
