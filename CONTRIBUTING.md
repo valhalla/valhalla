@@ -15,7 +15,7 @@ There are many ways to make meaningful contributions to the project:
 
 We appreciate the community picking up and fixing bugs or even implementing new features. There are a few things to follow/be aware of when working on Valhalla:
 
-- we currently use the C++17 standard
+- we currently use the C++20 standard
 - we use [`pre-commit`](https://pre-commit.com/) to make sure commits are formatted & linted: run `./scripts/format.sh` once and it'll be installed
 - [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html)/[`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/) is used to format/lint the C++ code, [`black`](https://black.readthedocs.io/en/stable/index.html) & [`flake8`](https://flake8.pycqa.org/en/latest/) format/lint Python code
 - [`ASan`](https://clang.llvm.org/docs/AddressSanitizer.html) is run in CI, but without its integrated leak sanitizer due to platform issues

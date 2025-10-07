@@ -26,6 +26,59 @@
 #include <sys/stat.h>
 
 namespace {
+bool json_deep_equality(const rapidjson::Value& j1, const rapidjson::Value& j2) {
+  if (j1.GetType() != j2.GetType())
+    return false;
+
+  switch (j1.GetType()) {
+    case rapidjson::kNullType:
+      return true;
+    case rapidjson::kFalseType:
+      return true;
+    case rapidjson::kTrueType:
+      return true;
+
+    case rapidjson::kStringType:
+      return j1.GetStringLength() == j2.GetStringLength() &&
+             std::memcmp(j1.GetString(), j2.GetString(), j1.GetStringLength()) == 0;
+
+    case rapidjson::kNumberType: {
+      if (j1.IsInt() && j2.IsInt())
+        return j1.GetInt() == j2.GetInt();
+      if (j1.IsUint() && j2.IsUint())
+        return j1.GetUint() == j2.GetUint();
+      if (j1.IsInt64() && j2.IsInt64())
+        return j1.GetInt64() == j2.GetInt64();
+      if (j1.IsUint64() && j2.IsUint64())
+        return j1.GetUint64() == j2.GetUint64();
+      return j1.GetDouble() == j2.GetDouble();
+    }
+
+    case rapidjson::kArrayType: {
+      if (j1.Size() != j2.Size())
+        return false;
+      for (rapidjson::SizeType i = 0; i < j1.Size(); ++i)
+        if (!json_deep_equality(j1[i], j2[i]))
+          return false;
+      return true;
+    }
+
+    case rapidjson::kObjectType: {
+      if (j1.MemberCount() != j2.MemberCount())
+        return false;
+      for (auto ia = j1.MemberBegin(); ia != j1.MemberEnd(); ++ia) {
+        auto ib = j2.FindMember(ia->name);
+        if (ib == j2.MemberEnd())
+          return false;
+        if (!json_deep_equality(ia->value, ib->value))
+          return false;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 // TODO: this should support boost::property_tree::path
 // like get_child does to make it obvious that it supports
 // the path separator notation for specifying sub children
@@ -604,6 +657,14 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
       }
       mtar_next(&tar);
     }
+  }
+}
+
+void json_equality(const rapidjson::Value& j1, const rapidjson::Value& j2) {
+  const bool are_equal = json_deep_equality(j1, j2);
+  if (!are_equal) {
+    FAIL() << "JSON not equal:\nactual" << rapidjson::to_string(j1)
+           << "\nexpected: " << rapidjson::to_string(j2);
   }
 }
 
