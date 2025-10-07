@@ -1,6 +1,7 @@
 #include "sif/dynamiccost.h"
 #include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
+#include "exceptions.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
@@ -11,11 +12,11 @@
 #include "sif/pedestriancost.h"
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
-#include "worker.h"
 
 #include <boost/optional.hpp>
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 namespace {
 
@@ -160,7 +161,7 @@ DynamicCost::DynamicCost(const Costing& costing,
       ignore_construction_(costing.options().ignore_construction()),
       top_speed_(costing.options().top_speed()), fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
-      penalize_uturns_(penalize_uturns) {
+      penalize_uturns_(penalize_uturns), is_hgv_(costing.type() == Costing::truck) {
 
   // set user supplied hierarchy limits if present, fill the other
   // required levels up with sentinel values (clamping to config supplied limits/defaults is handled
@@ -319,10 +320,6 @@ bool DynamicCost::wheelchair() const {
 
 // Get the bicycle required flag.
 bool DynamicCost::bicycle() const {
-  return false;
-}
-
-bool DynamicCost::is_hgv() const {
   return false;
 }
 

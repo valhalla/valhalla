@@ -1,8 +1,8 @@
 #include "baldr/rapidjson_utils.h"
+#include "exceptions.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "tyr/serializers.h"
-#include "worker.h"
 
 #include <cmath>
 #include <sstream>
