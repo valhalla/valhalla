@@ -152,6 +152,8 @@
    * UPGRADED: pybind11 from 2.11.1 to 3.0.1 [#5539](https://github.com/valhalla/valhalla/pull/5539)
    * CHANGED: Replace `oneof bool` to `bool` for default false options [#5541](https://github.com/valhalla/valhalla/pull/5541)
    * CHANGED: Optimise stopimpact calls in TransitionCost [#5545](https://github.com/valhalla/valhalla/pull/5545)
+   * CHANGED: Optimise best_transition_cost function [#5537](https://github.com/valhalla/valhalla/pull/5537)
+   * ADDED `thor.costmatrix.min_iterations` config param [#5559](https://github.com/valhalla/valhalla/pull/5559)
    * CHANGED: Broke out exceptions.h from worker.h [#5571](https://github.com/valhalla/valhalla/pull/5571)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
