@@ -194,12 +194,7 @@ void GraphReader::load_remote_tar_offsets() {
   auto first_file_header = reinterpret_cast<tar::header_t*>(first_file_resp.bytes_.data());
 
   // verify the first file is indeed the index.bin
-  // header->name is 100 bytes long and padded with \0, need to find the first \0 and trim
   auto first_file_name = std::string_view(first_file_header->name);
-  auto first_nullpos = first_file_name.find_first_of('\0');
-  if (first_nullpos != std::string::npos) {
-    first_file_name = std::string_view(first_file_header->name, first_nullpos);
-  }
   if (!first_file_header->verify()) {
     throw std::runtime_error("The first file's tar header is not valid at " + tile_url_);
   } else if (first_file_name != "index.bin") {

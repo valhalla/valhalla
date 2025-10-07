@@ -121,41 +121,29 @@ worker_t::result_t disk_work(const std::list<zmq::message_t>& job,
         response = http_response_t{404, "Not Found", "Not Found"};
       }
     } else if (request.path.rfind("/route-tar", 0) == 0) {
-      if (request.method == method_t::HEAD) {
-        // turn the last modified file time into a HTTP (i.e. UTC) compliant time string
-        auto last_modified =
-            valhalla::filesystem_utils::last_write_time_t(std::filesystem::path(tar_path));
-        std::tm tm{};
-        gmtime_r(&last_modified, &tm);
-        std::ostringstream ss;
-        ss << std::put_time(&tm, "%a, %d %b %Y %H:%M:%S GMT");
-
-        response = http_response_t{200, "OK", "", headers_t{{"Last-Modified", ss.str()}}};
-      } else if (request.method == method_t::GET) {
-        // for now we only need to support range requests
-        auto range_header = request.headers.find("Range");
-        if (range_header == request.headers.end()) {
-          throw std::runtime_error("No Range header found to GET a tar file");
-        }
-
-        // extract start & end bytes from the header
-        std::string prefix;
-        int start_bytes, end_bytes;
-        char dash;
-        std::stringstream ss(range_header->second);
-        std::getline(ss, prefix, '='); // discard "bytes"
-        ss >> start_bytes >> dash >> end_bytes;
-
-        // read the requested byte range from the file
-        std::streamsize length = end_bytes - start_bytes + 1;
-        std::ifstream file(tar_path, std::ios::binary);
-        file.seekg(start_bytes);
-        std::string contents(length, '\0');
-        file.read(&contents[0], length);
-        contents.resize(file.gcount());
-
-        response = http_response_t{206, "OK", contents};
+      // for now we only need to support range requests
+      auto range_header = request.headers.find("Range");
+      if (range_header == request.headers.end()) {
+        throw std::runtime_error("No Range header found to GET a tar file");
       }
+
+      // extract start & end bytes from the header
+      std::string prefix;
+      int start_bytes, end_bytes;
+      char dash;
+      std::stringstream ss(range_header->second);
+      std::getline(ss, prefix, '='); // discard "bytes"
+      ss >> start_bytes >> dash >> end_bytes;
+
+      // read the requested byte range from the file
+      std::streamsize length = end_bytes - start_bytes + 1;
+      std::ifstream file(tar_path, std::ios::binary);
+      file.seekg(start_bytes);
+      std::string contents(length, '\0');
+      file.read(&contents[0], length);
+      contents.resize(file.gcount());
+
+      response = http_response_t{206, "OK", contents};
     }
 
     response.from_info(*info);
