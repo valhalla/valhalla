@@ -147,13 +147,6 @@ bool CostMatrix::SourceToTarget(Api& request,
   // location set.
   Initialize(source_location_list, target_location_list, request.matrix());
 
-  std::unordered_multimap<GraphId, double> source_edges;
-  for (const auto& s : source_location_list) {
-    for (const auto& e : s.correlation().edges()) {
-      source_edges.emplace(static_cast<GraphId>(e.graph_id()), e.percent_along());
-    }
-  }
-
   std::unordered_multimap<GraphId, double> target_edges;
   for (const auto& t : target_location_list) {
     for (const auto& e : t.correlation().edges()) {
@@ -163,8 +156,8 @@ bool CostMatrix::SourceToTarget(Api& request,
 
   // Set the source and target locations
   // TODO: for now we only allow depart_at/current date_time
-  SetSources(graphreader, source_location_list, time_infos, target_edges);
-  SetTargets(graphreader, target_location_list, source_edges);
+  SetSources(graphreader, source_location_list, time_infos, target_location_list);
+  SetTargets(graphreader, target_location_list, source_location_list);
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -1120,7 +1113,14 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
 void CostMatrix::SetSources(GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
                             const std::vector<baldr::TimeInfo>& time_infos,
-                            const std::unordered_multimap<baldr::GraphId, double>& target_edges) {
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& targets) {
+  std::unordered_multimap<GraphId, double> target_edges;
+  for (const auto& t : targets) {
+    for (const auto& e : t.correlation().edges()) {
+      target_edges.emplace(static_cast<GraphId>(e.graph_id()), e.percent_along());
+    }
+  }
+
   // Go through each source location
   uint32_t index = 0;
   Cost empty_cost;
@@ -1220,7 +1220,15 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
-                            const std::unordered_multimap<baldr::GraphId, double>& source_edges) {
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources) {
+
+  std::unordered_multimap<GraphId, double> source_edges;
+  for (const auto& s : sources) {
+    for (const auto& e : s.correlation().edges()) {
+      source_edges.emplace(static_cast<GraphId>(e.graph_id()), e.percent_along());
+    }
+  }
+
   // Go through each target location
   uint32_t index = 0;
   Cost empty_cost;
