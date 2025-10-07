@@ -26,6 +26,7 @@
 #include <filesystem>
 #include <regex>
 
+using boost::property_tree::ptree;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;

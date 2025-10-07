@@ -457,8 +457,9 @@ Cost MotorcycleCost::TransitionCost(
   Cost c = base_transition_cost(node, edge, &pred, idx);
   c.secs += OSRMCarTurnDuration(edge, node, idx);
 
+  const auto stopimpact = edge->stopimpact(idx);
   // Transition time = turncost * stopimpact * densityfactor
-  if (edge->stopimpact(idx) > 0 && !shortest_) {
+  if (stopimpact > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -476,19 +477,18 @@ Cost MotorcycleCost::TransitionCost(
     }
 
     float seconds = turn_cost;
-    bool is_turn = false;
     bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
                      edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
     bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
                       edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
     bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
 
+    bool is_turn = has_left || has_right || has_reverse;
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    if (has_left || has_right || has_reverse) {
-      seconds *= edge->stopimpact(idx);
-      is_turn = true;
+    if (is_turn) {
+      seconds *= stopimpact;
     }
 
     AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, false, InternalTurn::kNoTurn,
@@ -498,7 +498,7 @@ Cost MotorcycleCost::TransitionCost(
     // using traffic
     if (!pred.has_measured_speed()) {
       if (!is_turn)
-        seconds *= edge->stopimpact(idx);
+        seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;
@@ -530,8 +530,9 @@ Cost MotorcycleCost::TransitionCostReverse(
   Cost c = base_transition_cost(node, edge, pred, idx);
   c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
+  const auto stopimpact = edge->stopimpact(idx);
   // Transition time = turncost * stopimpact * densityfactor
-  if (edge->stopimpact(idx) > 0 && !shortest_) {
+  if (stopimpact > 0 && !shortest_) {
     float turn_cost;
     if (edge->edge_to_right(idx) && edge->edge_to_left(idx)) {
       turn_cost = kTCCrossing;
@@ -549,19 +550,19 @@ Cost MotorcycleCost::TransitionCostReverse(
     }
 
     float seconds = turn_cost;
-    bool is_turn = false;
+
     bool has_left = (edge->turntype(idx) == baldr::Turn::Type::kLeft ||
                      edge->turntype(idx) == baldr::Turn::Type::kSharpLeft);
     bool has_right = (edge->turntype(idx) == baldr::Turn::Type::kRight ||
                       edge->turntype(idx) == baldr::Turn::Type::kSharpRight);
     bool has_reverse = edge->turntype(idx) == baldr::Turn::Type::kReverse;
 
+    bool is_turn = has_left || has_right || has_reverse;
     // Separate time and penalty when traffic is present. With traffic, edge speeds account for
     // much of the intersection transition time (TODO - evaluate different elapsed time settings).
     // Still want to add a penalty so routes avoid high cost intersections.
-    if (has_left || has_right || has_reverse) {
-      seconds *= edge->stopimpact(idx);
-      is_turn = true;
+    if (is_turn) {
+      seconds *= stopimpact;
     }
 
     AddUturnPenalty(idx, node, edge, has_reverse, has_left, has_right, false, InternalTurn::kNoTurn,
@@ -571,7 +572,7 @@ Cost MotorcycleCost::TransitionCostReverse(
     // using traffic
     if (!has_measured_speed) {
       if (!is_turn)
-        seconds *= edge->stopimpact(idx);
+        seconds *= stopimpact;
       seconds *= kTransDensityFactor[node->density()];
     }
     c.cost += seconds;

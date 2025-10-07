@@ -4,6 +4,7 @@
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
    * REMOVED: `valhalla/filesystem` from the project in favor of the std equivalent [#5321](https://github.com/valhalla/valhalla/pull/5321)
+   * REMOVED: `use`/`using` statements from public headers [#5568](https://github.com/valhalla/valhalla/pull/5568)
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
@@ -150,6 +151,9 @@
    * ADDED: Add Korean (`ko-KR`) locale [#5501](https://github.com/valhalla/valhalla/pull/5501)
    * UPGRADED: pybind11 from 2.11.1 to 3.0.1 [#5539](https://github.com/valhalla/valhalla/pull/5539)
    * CHANGED: Replace `oneof bool` to `bool` for default false options [#5541](https://github.com/valhalla/valhalla/pull/5541)
+   * CHANGED: Optimise stopimpact calls in TransitionCost [#5545](https://github.com/valhalla/valhalla/pull/5545)
+   * CHANGED: Optimise best_transition_cost function [#5537](https://github.com/valhalla/valhalla/pull/5537)
+   * ADDED `thor.costmatrix.min_iterations` config param [#5559](https://github.com/valhalla/valhalla/pull/5559)
    * ADDED: `checksum` to GraphTileHeader, a 64bit MD5 hash of the OSM PBFs [#5542](https://github.com/valhalla/valhalla/pull/5542)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
