@@ -21,16 +21,17 @@ namespace {
 constexpr uint32_t kMaxMatrixIterations = 2000000;
 constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
 constexpr uint32_t kMaxLocationReservation = 25; // the default config for max matrix locations
-constexpr uint32_t kMinIterations = 100;
-constexpr uint32_t kDefaultIterations = 2800;
+constexpr uint32_t kDefaultMinIterations = 100;
+constexpr uint32_t kDefaultMaxIterations = 2800;
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
 int GetThreshold(const travel_mode_t mode,
                  const uint32_t label_count,
-                 const uint32_t max_iterations) {
+                 const uint32_t max_iterations,
+                 const uint32_t min_iterations) {
   return (mode == travel_mode_t::kDrive)
-             ? std::min(max_iterations, std::max(kMinIterations, label_count / 3))
+             ? std::min(max_iterations, std::max(min_iterations, label_count / 3))
              : 500;
 }
 
@@ -64,8 +65,12 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
       check_reverse_connection_(config.get<bool>("costmatrix.check_reverse_connection", true)),
-      max_iterations_(std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultIterations),
-                               static_cast<uint32_t>(1))),
+      min_iterations_(
+          std::max(config.get<uint32_t>("costmatrix.min_iterations", kDefaultMinIterations),
+                   static_cast<uint32_t>(1))),
+      max_iterations_(
+          std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultMaxIterations),
+                   static_cast<uint32_t>(1))),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
       current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
@@ -872,7 +877,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
             n + GetThreshold(mode_,
                              edgelabel_[MATRIX_FORW][source].size() +
                                  edgelabel_[MATRIX_REV][target].size(),
-                             max_iterations_);
+                             max_iterations_, min_iterations_);
       }
 
       // Update status and update threshold if this is the last location
@@ -901,7 +906,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
               n + GetThreshold(mode_,
                                edgelabel_[MATRIX_FORW][source].size() +
                                    edgelabel_[MATRIX_REV][target].size(),
-                               max_iterations_);
+                               max_iterations_, min_iterations_);
         }
 
         // Update status and update threshold if this is the last location
@@ -1020,7 +1025,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
               n + GetThreshold(mode_,
                                edgelabel_[MATRIX_FORW][source].size() +
                                    edgelabel_[MATRIX_REV][target].size(),
-                               max_iterations_);
+                               max_iterations_, min_iterations_);
         }
 
         // Update status and update threshold if this is the last location
@@ -1051,7 +1056,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
                 n + GetThreshold(mode_,
                                  edgelabel_[MATRIX_FORW][source].size() +
                                      edgelabel_[MATRIX_REV][target].size(),
-                                 max_iterations_);
+                                 max_iterations_, min_iterations_);
           }
 
           // Update status and update threshold if this is the last location
@@ -1088,7 +1093,7 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
       locs_status_[MATRIX_FORW][source].threshold =
           GetThreshold(mode_,
                        edgelabel_[MATRIX_FORW][source].size() + edgelabel_[MATRIX_REV][target].size(),
-                       max_iterations_);
+                       max_iterations_, min_iterations_);
     }
   }
 
@@ -1103,7 +1108,7 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
       locs_status_[MATRIX_REV][target].threshold =
           GetThreshold(mode_,
                        edgelabel_[MATRIX_FORW][source].size() + edgelabel_[MATRIX_REV][target].size(),
-                       max_iterations_);
+                       max_iterations_, min_iterations_);
     }
   }
 }
