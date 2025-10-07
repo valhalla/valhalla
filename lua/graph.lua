@@ -932,7 +932,7 @@ function filter_tags_generic(kv)
   end
   local ferry = kv["route"] == "ferry"
   local rail = kv["route"] == "shuttle_train"
-  local access = access[kv["access"]]
+  local access = any_in(access, kv["access"])
 
   kv["emergency_forward"] = "false"
   kv["emergency_backward"] = "false"
@@ -1169,7 +1169,10 @@ function filter_tags_generic(kv)
   end
 
   if kv["bike_backward"] == nil or kv["bike_backward"] == "false" then
-    kv["bike_backward"] = bike_reverse[kv["cycleway"]] or bike_reverse[kv["cycleway:left"]] or bike_reverse[kv["cycleway:right"]] or "false"
+    kv["bike_backward"] = bike_reverse[kv["cycleway"]] or
+                          bike_reverse[kv["cycleway:left"]] or
+                          bike_reverse[kv["cycleway:right"]] or
+                          "false"
   end
 
   if kv["bike_backward"] == "true" then
@@ -1713,7 +1716,10 @@ function filter_tags_generic(kv)
   end
 
   --- TODO(nils): "private" also has directionality which we don't parse and handle yet
-  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or "false"
+  kv["private"] = any_in(private, kv["access"]) or
+                  any_in(private, kv["motor_vehicle"]) or
+                  any_in(private, kv["motorcar"]) or
+                  "false"
   kv["private_hgv"] = any_in(private, kv["hgv"]) or kv["private"] or "false"
   kv["no_thru_traffic"] = any_in(no_thru_traffic, kv["access"]) or "false"
   kv["ferry"] = tostring(ferry)
@@ -2307,7 +2313,9 @@ function nodes_proc (kv, nokeys)
     end
   end
 
-  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or "false"
+  kv["private"] = any_in(private, kv["access"]) or
+                  any_in(private, kv["motor_vehicle"]) or
+                  "false"
 
   --store a mask denoting access
   kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi)
