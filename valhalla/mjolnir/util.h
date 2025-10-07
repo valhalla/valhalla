@@ -161,7 +161,7 @@ bool shapes_match(const std::vector<midgard::PointLL>& shape1,
  */
 uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
                               const baldr::GraphId& startnode,
-                              const graph_tile_ptr& tile,
+                              const baldr::graph_tile_ptr& tile,
                               const baldr::DirectedEdge& edge);
 
 /**
