@@ -104,8 +104,6 @@
                                                                    : def));                          \
   }
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace sif {
 
@@ -929,7 +927,9 @@ public:
    * Is the current vehicle type HGV?
    * @return  Returns whether it's a truck.
    */
-  virtual bool is_hgv() const;
+  bool is_hgv() const {
+    return is_hgv_;
+  }
 
   /**
    * Get the wheelchair required flag.
@@ -1190,6 +1190,9 @@ protected:
   bool include_hov2_{false};
   bool include_hov3_{false};
 
+  // Is it truck?
+  bool is_hgv_{false};
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -1333,8 +1336,8 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ *
-              ((is_hgv() ? edge->destonly_hgv() : edge->destonly()) && !pred->destonly());
+    const bool is_destonly = (is_hgv() && edge->destonly_hgv()) || (!is_hgv() && edge->destonly());
+    c.cost += destination_only_penalty_ * (is_destonly && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
@@ -1343,11 +1346,10 @@ protected:
     c.cost +=
         track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
 
-    if (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) {
-      // Do not penalize internal roads that are marked as service.
-      if (!edge->internal())
-        c.cost += service_penalty_;
-    }
+    // penalize service roads that are not internal
+    c.cost += service_penalty_ *
+              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) *
+              !edge->internal();
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
@@ -1365,38 +1367,38 @@ using mode_costing_t = std::array<cost_ptr_t, static_cast<size_t>(TravelMode::kM
 struct BaseCostingOptionsConfig {
   BaseCostingOptionsConfig();
 
-  ranged_default_t<float> dest_only_penalty_;
-  ranged_default_t<float> maneuver_penalty_;
-  ranged_default_t<float> alley_penalty_;
-  ranged_default_t<float> gate_cost_;
-  ranged_default_t<float> gate_penalty_;
-  ranged_default_t<float> private_access_penalty_;
-  ranged_default_t<float> country_crossing_cost_;
-  ranged_default_t<float> country_crossing_penalty_;
+  midgard::ranged_default_t<float> dest_only_penalty_;
+  midgard::ranged_default_t<float> maneuver_penalty_;
+  midgard::ranged_default_t<float> alley_penalty_;
+  midgard::ranged_default_t<float> gate_cost_;
+  midgard::ranged_default_t<float> gate_penalty_;
+  midgard::ranged_default_t<float> private_access_penalty_;
+  midgard::ranged_default_t<float> country_crossing_cost_;
+  midgard::ranged_default_t<float> country_crossing_penalty_;
 
   bool disable_toll_booth_ = false;
-  ranged_default_t<float> toll_booth_cost_;
-  ranged_default_t<float> toll_booth_penalty_;
+  midgard::ranged_default_t<float> toll_booth_cost_;
+  midgard::ranged_default_t<float> toll_booth_penalty_;
 
   bool disable_ferry_ = false;
-  ranged_default_t<float> ferry_cost_;
-  ranged_default_t<float> use_ferry_;
+  midgard::ranged_default_t<float> ferry_cost_;
+  midgard::ranged_default_t<float> use_ferry_;
 
   bool disable_rail_ferry_ = false;
-  ranged_default_t<float> rail_ferry_cost_;
-  ranged_default_t<float> use_rail_ferry_;
+  midgard::ranged_default_t<float> rail_ferry_cost_;
+  midgard::ranged_default_t<float> use_rail_ferry_;
 
-  ranged_default_t<float> service_penalty_;
-  ranged_default_t<float> service_factor_;
+  midgard::ranged_default_t<float> service_penalty_;
+  midgard::ranged_default_t<float> service_factor_;
 
-  ranged_default_t<float> height_;
-  ranged_default_t<float> width_;
+  midgard::ranged_default_t<float> height_;
+  midgard::ranged_default_t<float> width_;
 
-  ranged_default_t<float> use_tracks_;
-  ranged_default_t<float> use_living_streets_;
-  ranged_default_t<float> use_lit_;
+  midgard::ranged_default_t<float> use_tracks_;
+  midgard::ranged_default_t<float> use_living_streets_;
+  midgard::ranged_default_t<float> use_lit_;
 
-  ranged_default_t<float> closure_factor_;
+  midgard::ranged_default_t<float> closure_factor_;
 
   bool exclude_unpaved_;
   bool exclude_bridges_;
