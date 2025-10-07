@@ -27,6 +27,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeTraversability, true},
     {kEdgeUse, true},
     {kEdgeToll, true},
+    {kEdgeVignette, true},
     {kEdgeUnpaved, true},
     {kEdgeTunnel, true},
     {kEdgeBridge, true},
