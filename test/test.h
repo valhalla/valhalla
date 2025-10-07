@@ -27,8 +27,6 @@
 
 #include <sys/stat.h>
 
-using namespace valhalla::midgard;
-
 namespace test {
 
 // Return a random number inside [0, 1)
@@ -62,7 +60,9 @@ template <typename container_t>
 testing::AssertionResult shape_equality(const container_t& expected,
                                         const container_t& actual,
                                         typename container_t::value_type::first_type tolerance = 1) {
-  auto hd = Polyline2<typename container_t::value_type>::HausdorffDistance(expected, actual);
+  auto hd =
+      valhalla::midgard::Polyline2<typename container_t::value_type>::HausdorffDistance(expected,
+                                                                                        actual);
   if (hd > tolerance)
     return testing::AssertionFailure() << "shape exceeds tolerance by " << hd - tolerance;
   return testing::AssertionSuccess();
@@ -70,8 +70,8 @@ testing::AssertionResult shape_equality(const container_t& expected,
 
 inline testing::AssertionResult
 encoded_shape_equality(const std::string& expected, const std::string& actual, double tolerance = 1) {
-  auto expected_shp = decode<std::vector<PointLL>>(expected);
-  auto actual_shp = decode<std::vector<PointLL>>(actual);
+  auto expected_shp = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL>>(expected);
+  auto actual_shp = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL>>(actual);
   return shape_equality(expected_shp, actual_shp, tolerance);
 }
 
