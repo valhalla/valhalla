@@ -512,10 +512,10 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
       tile_url_(pt.get<std::string>("tile_url", "")),
-      tar_id_txt_path_(std::filesystem::path(tile_dir_) / "id.txt"),
+      url_id_txt_path_(std::filesystem::path(tile_dir_) / "id.txt"),
       is_tar_url_(!tile_url_.empty() &&
                   tile_url_.find(GraphTile::kTilePathPattern) == std::string::npos),
-      tar_id_txt_checksum_(load_id_txt_checksum(tar_id_txt_path_, tile_url_)),
+      url_id_txt_checksum_(load_id_txt_checksum(url_id_txt_path_, tile_url_)),
       cache_(TileCacheFactory::createTileCache(pt)) {
 
   if (!tile_url_.empty()) {
@@ -536,13 +536,13 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
         // time
         static std::mutex mutex;
         std::lock_guard lock{mutex};
-        if (!std::filesystem::exists(tar_id_txt_path_)) {
+        if (!std::filesystem::exists(url_id_txt_path_)) {
           // no id.txt, then create it in the current tile_dir
           std::filesystem::create_directories(tile_dir_);
-          std::ofstream out_url_file(tar_id_txt_path_, std::ios::binary);
+          std::ofstream out_url_file(url_id_txt_path_, std::ios::binary);
           out_url_file << tile_url_ << std::endl;
           // we write 0 so the next thread will find a valid MD5 hash
-          out_url_file << tar_id_txt_checksum_ << std::endl;
+          out_url_file << url_id_txt_checksum_ << std::endl;
         }
       }
     }
@@ -672,15 +672,16 @@ graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
       if (!tile_url_.empty() && !is_tar_url_) {
         // plain tiles
         // Get it from the url and cache it to disk if you can
-        tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_);
+        tile = GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_, 0, 0,
+                                       url_id_txt_path_, url_id_txt_checksum_);
       } else if (is_tar_url_) {
         // tiles from remote tar
         auto pos = remote_tar_offsets_.find(base);
         tile = (pos == remote_tar_offsets_.end())
                    ? nullptr
                    : GraphTile::CacheTileURL(tile_url_, base, tile_getter_.get(), tile_dir_,
-                                             pos->second.offset, pos->second.size, tar_id_txt_path_,
-                                             tar_id_txt_checksum_);
+                                             pos->second.offset, pos->second.size, url_id_txt_path_,
+                                             url_id_txt_checksum_);
       }
 
       if (!tile) {

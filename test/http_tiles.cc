@@ -83,15 +83,15 @@ protected:
   }
 };
 
-TEST(HttpTiles, test_tar_tiles_no_cache) {
+TEST(HttpTilesNoCache, test_tar_tiles_no_cache) {
   test_route("", false, true);
 }
 
-TEST(HttpTiles, test_no_cache_no_gz) {
+TEST(HttpTilesNoCache, test_no_cache_no_gz) {
   test_route("", false, false);
 }
 
-TEST(HttpTiles, test_no_cache_gz) {
+TEST(HttpTilesNoCache, test_no_cache_gz) {
   test_route("", true, false);
 }
 

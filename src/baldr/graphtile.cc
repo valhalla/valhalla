@@ -247,31 +247,31 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
   } else {
     // or HTTP range on a tar
     result = tile_getter->get(tile_url, range_offset, range_size);
+  }
 
-    // inspect the header for the checksum
-    // it's a POD type and thus trivially copyable
-    GraphTileHeader header;
-    std::memcpy(&header, result.bytes_.data(), sizeof(header));
-    auto tile_checksum = header.checksum();
-    if (tile_checksum == 0) {
-      // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
-      LOG_WARN(
-          "Remote tile is missing the checksum attribute, please update the tile builder instance");
-    }
-    if (!cache_location.empty()) {
-      if (id_checksum == 0) {
-        // this is the first tile in a fresh tile_dir
-        static std::mutex mutex;
-        std::lock_guard lock{mutex};
-        std::ofstream id_txt_file(id_txt_path, std::ios::binary);
-        if (id_txt_file) {
-          id_txt_file << tile_url << std::endl;
-          id_txt_file << tile_checksum << std::endl;
-        }
-      } else if (tile_checksum != id_checksum) {
-        LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
-        throw valhalla_exception_t(446);
+  // inspect the header for the checksum
+  // it's a POD type and thus trivially copyable
+  GraphTileHeader header;
+  std::memcpy(&header, result.bytes_.data(), sizeof(header));
+  auto tile_checksum = header.checksum();
+  if (tile_checksum == 0) {
+    // loading tilesets built by older valhalla commits has the potential to corrupt the GraphReader
+    LOG_WARN(
+        "Remote tile is missing the checksum attribute, please update the tile builder instance");
+  }
+  if (!cache_location.empty()) {
+    if (id_checksum == 0) {
+      // this is the first tile in a fresh tile_dir
+      static std::mutex mutex;
+      std::lock_guard lock{mutex};
+      std::ofstream id_txt_file(id_txt_path, std::ios::binary);
+      if (id_txt_file) {
+        id_txt_file << tile_url << std::endl;
+        id_txt_file << tile_checksum << std::endl;
       }
+    } else if (tile_checksum != id_checksum) {
+      LOG_ERROR("Remote tar file has changed, remove the tile_dir and restart.");
+      throw valhalla_exception_t(446);
     }
   }
 

@@ -987,9 +987,9 @@ protected:
   std::unique_ptr<tile_getter_t> tile_getter_;
   const size_t max_concurrent_users_;
   const std::string tile_url_;
-  const std::filesystem::path tar_id_txt_path_;
+  const std::filesystem::path url_id_txt_path_;
   const bool is_tar_url_;
-  const uint64_t tar_id_txt_checksum_;
+  const uint64_t url_id_txt_checksum_;
 
   // for remote tar's we grab the index.bin when loading the remote_tar_offsets
   // so we know all tiles' offset & size
