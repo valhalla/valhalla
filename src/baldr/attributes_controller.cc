@@ -7,9 +7,9 @@ namespace valhalla {
 namespace baldr {
 
 namespace {
-std::unordered_set<std::string>
-PrecomputeEnabledCategories(const std::unordered_map<std::string, bool>& attributes) {
-  std::unordered_set<std::string> enabled_categories;
+std::unordered_set<std::string_view>
+PrecomputeEnabledCategories(const std::unordered_map<std::string_view, bool>& attributes) {
+  std::unordered_set<std::string_view> enabled_categories;
   for (const auto& pair : attributes) {
     if (!pair.second) {
       continue;
@@ -31,7 +31,7 @@ PrecomputeEnabledCategories(const std::unordered_map<std::string, bool>& attribu
  * Most attributes are enabled by default but a few additional attributes are disabled
  * unless explicitly included with the filter attributes request option.
  */
-const std::unordered_map<std::string, bool> AttributesController::kDefaultAttributes = {
+const std::unordered_map<std::string_view, bool> AttributesController::kDefaultAttributes = {
     // Edge keys
     {kEdgeNames, true},
     {kEdgeLength, true},
@@ -171,7 +171,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kShapeAttributesClosure, false},
 };
 
-const std::unordered_set<std::string> AttributesController::kDefaultEnabledCategories =
+const std::unordered_set<std::string_view> AttributesController::kDefaultEnabledCategories =
     PrecomputeEnabledCategories(kDefaultAttributes);
 
 AttributesController::AttributesController() {
