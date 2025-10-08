@@ -30,10 +30,13 @@ const processes = parseInt(args[0].split('=')[1]);
 const valhallaPath = args[1].split('=')[1]
 const trafficPath = args[2].split('=')[1];
 const inputPath = args[3].split('=')[1];
+const useIncidents = args[4].split('=')[1];
+
 
 
 // const quadkeys = ['0302231', '0302233', '0302320', '0302322', '0302321', '0302323', '0320101', '0320110' ]; // New York State Quadkeys
 
+const incidents = useIncidents === 'true' ? ['40.145289,-80.452881,45.552525,-70.452881'] : []
 
 // Generated from quadkey_generator.js
 const quadkeys = [
@@ -307,14 +310,15 @@ const quadkeys = [
 
 console.log(`Ingesting ${quadkeys.length} quadkeys at date: ${new Date().toISOString()}.`);
 
-const processesWork = divideArrayIntoChunks(quadkeys, processes);
+const procssesWorkTraffic = divideArrayIntoChunks(quadkeys, processes);
+const procssesWorkIncidents = divideArrayIntoChunks(incidents, processes);
 
 // create and manage a forked process for each region
-const forkProcess = (processIndex, work) => new Promise((resolve, reject) => {
+const forkProcess = (processIndex, trafficWork, incidentWork) => new Promise((resolve, reject) => {
   const start = Date.now();
   const workerPath = path.join(__dirname, './src/InrixRegionWorker.js');
-  console.log(`Starting process ${processIndex} with work ${work.slice(0, 20)} of length ${work.length}.`)
-  const child = fork(workerPath, [processIndex, valhallaPath, trafficPath, inputPath, work]);
+  console.log(`Starting process ${processIndex} with traffic work ${trafficWork.slice(0, 20)} of length ${trafficWork.length} and incident work ${incidentWork.slice(0, 20)} of length ${incidentWork.length}.`)
+  const child = fork(workerPath, [processIndex, valhallaPath, trafficPath, inputPath, trafficWork, incidentWork.join('|')]);
 
   child.on('exit', (code) => {
     if (code === 0) {
@@ -333,7 +337,7 @@ const forkProcess = (processIndex, work) => new Promise((resolve, reject) => {
 async function main() {
   try {
     // fork processes for each process
-    const downloadPromises = processesWork.map((work, index) => forkProcess(index, work));
+    const downloadPromises = procssesWorkTraffic.map((trafficWork, index) => forkProcess(index, trafficWork, procssesWorkIncidents[index]));
 
     // wait for all processes to complete
     await Promise.all(downloadPromises);

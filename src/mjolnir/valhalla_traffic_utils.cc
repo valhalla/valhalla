@@ -139,27 +139,31 @@ void update_traffic_tile(uint64_t tile_offset,
                                             sizeof(mtar_raw_header_t_),
                                         tar_header.size));
 
-  std::cout << "Updating tile with tile id: " << tile.header->tile_id << std::endl;
+  LOG_INFO("Updating tile with tile id: " + std::to_string(tile.header->tile_id));
+
+  int count = 0;
 
   for (size_t paramOffset = 0; paramOffset < traffic_params.size();) {
     uint64_t edge_index = static_cast<uint64_t>(traffic_params[paramOffset]);
 
-    if (edge_index >= tile.header->directed_edge_count) {
+    if (edge_index >= tile.header->directed_edge_count) { // edge index out of bounds skip
 
-      std::cout << tile.header->directed_edge_count << "edgecount" << edge_index << "," << tile_offset
-                << std::endl;
       paramOffset = paramOffset + 7;
       continue;
       throw std::runtime_error("Edge index out of bounds");
     }
+    count++;
 
     // Access and update the edge's traffic data
     valhalla::baldr::TrafficSpeed* target_edge =
         const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + edge_index);
+
     target_edge->overall_encoded_speed = static_cast<uint64_t>(traffic_params[paramOffset + 1]);
     target_edge->encoded_speed1 = static_cast<uint64_t>(traffic_params[paramOffset + 2]);
     target_edge->encoded_speed2 = static_cast<uint64_t>(traffic_params[paramOffset + 3]);
-    target_edge->encoded_speed3 = static_cast<uint64_t>(traffic_params[paramOffset + 4]);
+    target_edge->encoded_speed3 = static_cast<uint64_t>(
+        traffic_params[paramOffset + 4]); // encoded minute timestamp into speed3 (received from
+                                          // Valhalla traffic builder)
     target_edge->breakpoint1 = static_cast<uint64_t>(traffic_params[paramOffset + 5]);
     target_edge->breakpoint2 = static_cast<uint64_t>(traffic_params[paramOffset + 6]);
     target_edge->congestion1 = static_cast<uint64_t>(0);
@@ -173,7 +177,9 @@ void update_traffic_tile(uint64_t tile_offset,
 
   tile.header->last_update = last_updated;
 
-  std::cout << "Updated edge_id successfully at " << traffic_path << std::endl;
+  LOG_INFO("Updated " + std::to_string(count) + " edges out of " +
+           std::to_string(traffic_params.size() / 7) + " in tile " +
+           std::to_string(tile.header->tile_id) + " with traffic data.");
 }
 
 int handle_tile_offset_index(std::string config_file_path) {
@@ -355,8 +361,7 @@ int handle_verify(std::string traffic_file_path, std::string verify_path) {
 }
 
 int handle_copy_traffic(std::string traffic_src_path, std::string traffic_dest_path) {
-  std::cout << "Starting to copy traffic data from " << traffic_src_path << " to "
-            << traffic_dest_path << std::endl;
+  LOG_INFO("Starting to copy traffic data from " + traffic_src_path + " to " + traffic_dest_path);
 
   const auto src_memory = std::make_shared<MMap>(traffic_src_path.c_str());
 

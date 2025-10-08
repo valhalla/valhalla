@@ -16,7 +16,7 @@ Update the `.env` with the API key listed in 1pass
 
 ```
 INRIX_APP_ID
-INRIX_HASH_KEY
+INRIX_HASH_TOKEN
 ```
 
 

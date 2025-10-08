@@ -16,6 +16,7 @@ libvalhalla.la
 date_time_zonespec.csv
 mason/
 mason_packages/
+valhalla-server/
 
 # scripts
 scripts/gdal-2.0.0/
