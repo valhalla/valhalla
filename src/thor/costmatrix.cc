@@ -24,6 +24,22 @@ constexpr uint32_t kMaxLocationReservation = 25; // the default config for max m
 constexpr uint32_t kDefaultMinIterations = 100;
 constexpr uint32_t kDefaultMaxIterations = 2800;
 
+/**
+ * Checks whether an edge of the source (target) correlation is present with the same percent_along in
+ * any of the target (source) correlations.
+ */
+bool is_super_trivial(const valhalla::PathEdge& edge,
+                      const std::unordered_multimap<GraphId, double>& other_edges) {
+  GraphId edgeid(edge.graph_id());
+  auto dests = other_edges.equal_range(edgeid);
+  for (auto it = dests.first; it != dests.second; ++it) {
+    if (edge.percent_along() == it->second) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
 int GetThreshold(const travel_mode_t mode,
@@ -151,13 +167,6 @@ bool CostMatrix::SourceToTarget(Api& request,
   // same get set to 0 time, distance and are not added to the remaining
   // location set.
   Initialize(source_location_list, target_location_list, request.matrix());
-
-  std::unordered_multimap<GraphId, double> target_edges;
-  for (const auto& t : target_location_list) {
-    for (const auto& e : t.correlation().edges()) {
-      target_edges.emplace(static_cast<GraphId>(e.graph_id()), e.percent_along());
-    }
-  }
 
   // Set the source and target locations
   // TODO: for now we only allow depart_at/current date_time
@@ -1131,16 +1140,6 @@ void CostMatrix::SetSources(GraphReader& graphreader,
   Cost empty_cost;
   // it's super trivial if both are node snapped to the same end of the same edge
   // note the check for node snapping is in the if below and not in this lambda
-  auto super_trivial = [&](const valhalla::PathEdge& edge) {
-    GraphId edgeid(edge.graph_id());
-    auto dests = target_edges.equal_range(edgeid);
-    for (auto it = dests.first; it != dests.second; ++it) {
-      if (edge.percent_along() == it->second) {
-        return true;
-      }
-    }
-    return false;
-  };
   for (const auto& origin : sources) {
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
@@ -1152,7 +1151,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
     // Iterate through edges and add to adjacency list
     for (const auto& edge : origin.correlation().edges()) {
       // If origin is at a node - skip any inbound edge (dist = 1)
-      if (has_other_edges && edge.end_node() && !super_trivial(edge)) {
+      if (has_other_edges && edge.end_node() && !is_super_trivial(edge, target_edges)) {
         continue;
       }
 
@@ -1237,16 +1236,6 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
   // Go through each target location
   uint32_t index = 0;
   Cost empty_cost;
-  auto super_trivial = [&](const valhalla::PathEdge& edge) {
-    GraphId edgeid(edge.graph_id());
-    auto srcs = source_edges.equal_range(edgeid);
-    for (auto it = srcs.first; it != srcs.second; ++it) {
-      if (edge.percent_along() == it->second) {
-        return true;
-      }
-    }
-    return false;
-  };
   for (const auto& dest : targets) {
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
@@ -1259,7 +1248,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     for (const auto& edge : dest.correlation().edges()) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
-      if (has_other_edges && edge.begin_node() && !super_trivial(edge)) {
+      if (has_other_edges && edge.begin_node() && !is_super_trivial(edge, source_edges)) {
         continue;
       }
 
