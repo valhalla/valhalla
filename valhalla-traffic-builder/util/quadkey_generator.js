@@ -133,6 +133,9 @@ quadkeys.push(...getQuadkeysInBox('1203223', '1221003', '1203333', '1221113'));
 quadkeys.push(...['1221030', '1221031', '1221120'])
 
 
+// Bulk of Europe
+quadkeys.push(...getQuadkeysInBox('0313113','0313331','1202113','1202313'));
+
 
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i--) {
