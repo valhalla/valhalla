@@ -374,6 +374,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
@@ -724,6 +725,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
+                              const baldr::GraphId& edgeid,
                               const graph_tile_ptr& tile,
                               const baldr::TimeInfo& time_info,
                               uint8_t& flow_sources) const {

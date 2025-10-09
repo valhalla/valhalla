@@ -449,7 +449,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
         continue;
       }
 
-      Cost c = pc->EdgeCost(directededge, tile);
+      Cost c = pc->EdgeCost(directededge, edgeid, tile);
       c.cost *= pc->GetModeFactor();
       newcost += c;
     }
@@ -580,7 +580,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = costing->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+    Cost cost = costing->EdgeCost(directededge, edgeid, tile) * (1.0f - edge.percent_along());
     float dist = astarheuristic_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
 
     // We need to penalize this location based on its score (distance in meters from input)
@@ -605,8 +605,8 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
             // remaining must be zero.
             const DirectedEdge* dest_diredge =
                 tile->directededge(GraphId(destination_edge.graph_id()));
-            Cost dest_cost =
-                costing->EdgeCost(dest_diredge, tile) * (1.0f - destination_edge.percent_along());
+            Cost dest_cost = costing->EdgeCost(dest_diredge, edgeid, tile) *
+                             (1.0f - destination_edge.percent_along());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
             cost.cost += destination_edge.distance();
@@ -677,7 +677,7 @@ uint32_t MultiModalPathAlgorithm::SetDestination(GraphReader& graphreader,
     graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* dest_diredge = tile->directededge(edgeid);
     destinations_[edge.graph_id()] =
-        costing->EdgeCost(dest_diredge, tile) * (1.0f - edge.percent_along());
+        costing->EdgeCost(dest_diredge, edgeid, tile) * (1.0f - edge.percent_along());
 
     // We need to penalize this location based on its score (distance in meters from input)
     // We assume the slowest speed you could travel to cover that distance to start/end the route
@@ -739,7 +739,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     // Get cost
     auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
-    Cost newcost = pred.cost() + costing->EdgeCost(directededge, tile) + transition_cost;
+    Cost newcost = pred.cost() + costing->EdgeCost(directededge, edgeid, tile) + transition_cost;
     uint32_t walking_distance = pred.path_distance() + directededge->length();
 
     // Check if lower cost path
@@ -809,7 +809,7 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
     graph_tile_ptr tile = graphreader.GetGraphTile(oppedge);
     const DirectedEdge* diredge = tile->directededge(oppedge);
     uint32_t length = static_cast<uint32_t>(diredge->length()) * ratio;
-    Cost cost = costing->EdgeCost(diredge, tile) * ratio;
+    Cost cost = costing->EdgeCost(diredge, edgeid, tile) * ratio;
     // we cannot do transition_cost on this label yet because we have no predecessor, but when we find
     // it, we will do an update on it and set the real transition cost based on the path to it
     edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, mode_, length,

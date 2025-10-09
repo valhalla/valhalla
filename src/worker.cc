@@ -102,6 +102,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {170, {170, "Locations are in unconnected regions. Go check/edit the map at osm.org", 400, HTTP_400, OSRM_NO_ROUTE, "impossible_route"}},
     {171, {171, "No suitable edges near location", 400, HTTP_400, OSRM_NO_SEGMENT, "no_edges_near"}},
     {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
+    {173, {173, "Failed to parse line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},
+    {174, {174, "Failed to edge walk line feature", 400, HTTP_400, OSRM_INVALID_VALUE, "polygon_parse_failed"}},
     {199, {199, "Unknown", 500, HTTP_500, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
@@ -161,6 +163,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {209, R"(Customized hierarchy limits are not allowed on this server, using default hierarchy limits)"},
   {210, R"(Provided hierarchy limits exceeded maximum allowed values, using max allowed hierarchy limits)"},
   {211, R"(This action doesn't support requested format, using json instead)"},
+  {212, R"("linear_cost_factors" received invalid input, ignoring linear_cost_factors)"},
   // 3xx is used when costing or location options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
@@ -665,6 +668,32 @@ void parse_recostings(const rapidjson::Document& doc,
   }
 }
 
+void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
+  assert(json_feat.IsObject());
+  auto json_obj = json_feat.GetObject();
+  for (const auto& coords_j : json_obj["geometry"].GetObject()["coordinates"].GetArray()) {
+    auto* shape_pt = line_feat->add_shape();
+    shape_pt->mutable_ll()->set_lng(coords_j.GetArray()[0].GetFloat());
+    shape_pt->mutable_ll()->set_lat(coords_j.GetArray()[1].GetFloat());
+  }
+  line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
+}
+void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
+  assert(json_feat.IsObject());
+  auto json_obj = json_feat.GetObject();
+  auto shape = std::string(json_obj["shape"].GetString());
+  auto lazy_shape = midgard::Shape5Decoder<midgard::PointLL>(shape.data(), shape.size());
+
+  while (!lazy_shape.empty()) {
+    midgard::PointLL ll = lazy_shape.pop();
+    auto* shape_pt = line_feat->add_shape();
+    shape_pt->mutable_ll()->set_lng(ll.lng());
+    shape_pt->mutable_ll()->set_lat(ll.lat());
+  }
+
+  line_feat->set_cost_factor(json_obj["factor"].GetFloat());
+}
+
 /**
  * This function takes a json document and parses it into an options (request pbf) object.
  * The implementation is such that if you passed an already filled out options object the
@@ -1114,6 +1143,29 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   else if (options.exclude_polygons_size()) {
     for (auto& ring : *options.mutable_exclude_polygons()) {
       parse_ring(&ring, rapidjson::Value{});
+    }
+  }
+
+  // does the user want to apply custom costs to linear features?
+  auto linear_feats = rapidjson::get_child_optional(doc, "/linear_cost_factors");
+
+  if (linear_feats) {
+    if (!linear_feats->IsArray()) {
+      add_warning(api, 212);
+    } else {
+      try {
+        for (const auto& linear_feat : linear_feats->GetArray()) {
+          auto is_geojson = linear_feat.GetObject().HasMember("type");
+          auto* l = options.mutable_cost_factor_lines()->Add();
+
+          // either GeoJSON
+          if (is_geojson) {
+            parse_line_geojson(linear_feat, l);
+          } else { // or an encoded polyline and a cost factor
+            parse_line(linear_feat, l);
+          }
+        }
+      } catch (...) { throw valhalla_exception_t{173}; }
     }
   }
 

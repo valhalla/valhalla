@@ -113,6 +113,25 @@ constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpe
                                                       baldr::kMaxSpeedKph};
 } // namespace
 
+void custom_cost_t::finalize() {
+  if (ranges.empty())
+    return;
+
+  std::sort(ranges.begin(), ranges.end(),
+            [](const cost_edge_t& a, const cost_edge_t& b) { return a.start < b.start; });
+
+  // keep track of how much of the edge is
+  // not covered by ranges
+  double uncovered = 1.;
+  double avg = 0.;
+  for (const auto& range : ranges) {
+    uncovered -= range.end - range.start;
+    avg += (range.end - range.start) * range.factor;
+  }
+  avg += uncovered * 1.;
+  avg_factor = avg;
+}
+
 /*
  * Assign default values for costing options in constructor. In case of different
  * default values they should be overridden in "<type>cost.cc" file.
@@ -185,6 +204,22 @@ DynamicCost::DynamicCost(const Costing& costing,
   for (auto& edge : costing.options().exclude_edges()) {
     user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
+
+  // add linear feature factors
+  for (auto& e : costing.options().cost_factor_edges()) {
+    // short-circuit the ones with factor 0 by putting them on the exclude pile
+    if (e.factor() == 0.) {
+      user_exclude_edges_.insert({static_cast<GraphId>(e.id()), e.start()});
+      break;
+    }
+    auto& cost_edge = linear_cost_edges_[static_cast<GraphId>(e.id())];
+    cost_edge.ranges.push_back({e.start(), e.end(), e.factor()});
+  }
+
+  // once all cost factors are filled, sort and precompute overall average
+  for (auto& [edge, cost_factors] : linear_cost_edges_) {
+    cost_factors.finalize();
+  }
 }
 
 DynamicCost::~DynamicCost() {
@@ -201,9 +236,11 @@ bool DynamicCost::AllowMultiPass() const {
 // using them for the current route. Here we just call out to the derived classes costing function
 // with a time that tells the function that we aren't using time. This avoids having to worry about
 // default parameters and inheritance (which are a bad mix)
-Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
+Cost DynamicCost::EdgeCost(const baldr::DirectedEdge* edge,
+                           const baldr::GraphId& edgeid,
+                           const graph_tile_ptr& tile) const {
   uint8_t flow_sources;
-  return EdgeCost(edge, tile, TimeInfo::invalid(), flow_sources);
+  return EdgeCost(edge, edgeid, tile, TimeInfo::invalid(), flow_sources);
 }
 
 // Returns the cost to make the transition from the predecessor edge.

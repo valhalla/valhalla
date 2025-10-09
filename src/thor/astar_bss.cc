@@ -156,7 +156,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       continue;
     }
 
-    auto edge_cost = current_costing->EdgeCost(directededge, tile);
+    auto edge_cost = current_costing->EdgeCost(directededge, edgeid, tile);
     Cost normalized_edge_cost = {edge_cost.cost * current_costing->GetModeFactor(), edge_cost.secs};
     auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
@@ -397,7 +397,9 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
 
     // Get cost
     nodeinfo = endtile->node(directededge->endnode());
-    Cost cost = pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+    Cost cost = pedestrian_costing_->EdgeCost(directededge, GraphId(kInvalidGraphId), tile) *
+                (1.0f - edge.percent_along()) *
+                pedestrian_costing_->GetPartialEdgeFactor(edgeid, 1.0f - edge.percent_along());
     float dist =
         pedestrian_astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
 
@@ -423,8 +425,11 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
             // remaining must be zero.
             GraphId id(destination_edge.graph_id());
             const DirectedEdge* dest_diredge = tile->directededge(id);
-            Cost dest_cost = pedestrian_costing_->EdgeCost(dest_diredge, tile) *
-                             (1.0f - destination_edge.percent_along());
+            Cost dest_cost =
+                pedestrian_costing_->EdgeCost(dest_diredge, GraphId(kInvalidGraphId), tile) *
+                (1.0f - destination_edge.percent_along()) *
+                pedestrian_costing_->GetPartialEdgeFactor(id,
+                                                          1.0f - destination_edge.percent_along());
             cost.secs -= p->second.secs;
             cost.cost -= dest_cost.cost;
             cost.cost += destination_edge.distance();
@@ -498,7 +503,9 @@ void AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valhalla:
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     destinations_[edge.graph_id()] =
-        pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
+        pedestrian_costing_->EdgeCost(directededge, GraphId(kInvalidGraphId), tile) *
+        (1.0f - edge.percent_along()) *
+        pedestrian_costing_->GetPartialEdgeFactor(edgeid, 1.0f - edge.percent_along());
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
   }

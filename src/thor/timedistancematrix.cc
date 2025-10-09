@@ -127,8 +127,8 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 
     // Get cost and update distance
     uint8_t flow_sources;
-    auto newcost = FORWARD ? costing_->EdgeCost(directededge, tile, offset_time, flow_sources)
-                           : costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources);
+    auto newcost = FORWARD ? costing_->EdgeCost(directededge, edgeid, tile, offset_time, flow_sources)
+                           : costing_->EdgeCost(opp_edge, opp_edge_id, t2, offset_time, flow_sources);
     auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
         FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter)
@@ -353,7 +353,9 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     const DirectedEdge* opp_dir_edge;
     if (FORWARD) {
       const auto percent_along = 1.0f - edge.percent_along();
-      cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) * percent_along;
+      cost =
+          costing_->EdgeCost(directededge, GraphId(kInvalidGraphId), tile, time_info, flow_sources) *
+          percent_along * costing_->GetPartialEdgeFactor(edgeid, percent_along);
       dist = static_cast<uint32_t>(directededge->length() * percent_along);
 
     } else {
@@ -362,8 +364,9 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-      cost =
-          costing_->EdgeCost(opp_dir_edge, endtile, time_info, flow_sources) * edge.percent_along();
+      cost = costing_->EdgeCost(opp_dir_edge, GraphId(kInvalidGraphId), endtile, time_info,
+                                flow_sources) *
+             edge.percent_along() * costing_->GetPartialEdgeFactor(opp_edge_id, edge.percent_along());
       dist = static_cast<uint32_t>(directededge->length() * edge.percent_along());
     }
 
@@ -430,7 +433,7 @@ void TimeDistanceMatrix::InitDestinations(
       // REVERSE
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
-      float c = costing_->EdgeCost(directededge, tile).cost;
+      float c = costing_->EdgeCost(directededge, edgeid, tile).cost;
 
       // Keep the id and the partial distance for the remainder of the edge.
       Destination& d = destinations_.back();
@@ -517,7 +520,8 @@ bool TimeDistanceMatrix::UpdateDestinations(
     uint8_t flow_sources;
     float remainder = dest_edge->second;
     Cost newcost =
-        pred.cost() - (costing_->EdgeCost(edge, tile, time_info, flow_sources) * remainder);
+        pred.cost() -
+        (costing_->EdgeCost(edge, pred.edgeid(), tile, time_info, flow_sources) * remainder);
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);

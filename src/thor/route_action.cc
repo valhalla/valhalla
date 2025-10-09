@@ -1,8 +1,11 @@
 #include "baldr/attributes_controller.h"
 #include "midgard/logging.h"
 #include "proto/common.pb.h"
+#include "thor/route_matcher.h"
 #include "thor/triplegbuilder.h"
 #include "thor/worker.h"
+
+#include <absl/strings/str_format.h>
 
 #include <cstdint>
 
@@ -164,6 +167,135 @@ opposing) { loc.mutable_correlation()->mutable_edges()->SwapElements(i, loc.path
   }
 }*/
 
+/**
+ * Adds a shortcut to the cost factor edges given one
+ * of its constituents
+ */
+void add_shortcut(baldr::GraphReader& reader,
+                  GraphId shortcut,
+                  valhalla::Costing_Options* options,
+                  valhalla::CostFactorEdge* cost_factor) {
+  GraphId edge = static_cast<GraphId>(cost_factor->id());
+  graph_tile_ptr tile = nullptr;
+  tile = reader.GetGraphTile(shortcut);
+  // it's part of a shortcut
+  auto constituents = reader.RecoverShortcut(shortcut);
+  auto* shortcut_edge = tile->directededge(shortcut);
+
+  tile = reader.GetGraphTile(edge);
+  auto* current_edge = tile->directededge(edge);
+
+  // walk the base edges until we find ours
+  uint64_t accumulated_length = 0;
+  for (const auto& constituent : constituents) {
+    if (edge == constituent)
+      break;
+
+    tile = reader.GetGraphTile(constituent, tile);
+    if (!tile)
+      break;
+
+    auto* de = tile->directededge(constituent);
+    accumulated_length += de->length();
+  }
+  auto* e = options->add_cost_factor_edges();
+  e->set_id(shortcut);
+  e->set_factor(cost_factor->factor());
+  e->set_start(static_cast<double>(accumulated_length + (static_cast<double>(current_edge->length()) *
+                                                         cost_factor->start())) /
+               static_cast<double>(shortcut_edge->length()));
+  e->set_end(static_cast<double>(accumulated_length +
+                                 (static_cast<double>(current_edge->length()) * cost_factor->end())) /
+             static_cast<double>(shortcut_edge->length()));
+}
+
+/**
+ * Given one or more cost factor shapes, resolve them into single edges with an ID, a cost factor and
+ * a range by edge walking the graph to match each shape.
+ */
+void add_cost_factor_edges(const sif::mode_costing_t& costing,
+                           const sif::TravelMode& mode,
+                           baldr::GraphReader& reader,
+                           valhalla::Options& options) {
+  Costing_Options* costing_options =
+      options.mutable_costings()->find(options.costing_type())->second.mutable_options();
+  for (auto& line : *options.mutable_cost_factor_lines()) {
+    std::vector<std::vector<PathInfo>> legs;
+    if (!RouteMatcher::FormPath(costing, mode, reader, line, false, /* use_shortcuts=*/true, legs)) {
+      throw valhalla_exception_t{174};
+    }
+    for (const auto& leg : legs) {
+      for (size_t i = 0; i < leg.size(); ++i) {
+        auto& path_info = leg[i];
+        bool is_first = i == 0;
+        bool is_last = i == leg.size() - 1;
+        if (is_first && is_last) { // trivial path
+          auto* e = costing_options->add_cost_factor_edges();
+          e->set_id(path_info.edgeid);
+          e->set_factor(line.cost_factor());
+          for (auto& edge : line.locations(0).correlation().edges()) {
+            if (path_info.edgeid == edge.graph_id()) {
+              e->set_start(edge.percent_along());
+              break;
+            }
+          }
+          for (auto& edge : line.locations(1).correlation().edges()) {
+            if (path_info.edgeid == edge.graph_id()) {
+              e->set_end(edge.percent_along());
+              break;
+            }
+          }
+          auto shortcut = reader.GetShortcut(path_info.edgeid);
+          if (shortcut.Is_Valid()) {
+            add_shortcut(reader, shortcut, costing_options, e);
+          }
+        } else if (is_first || is_last) { // beginning or end edge
+          for (auto& edge : line.locations(static_cast<size_t>(is_last)).correlation().edges()) {
+            if (path_info.edgeid == edge.graph_id()) {
+              auto* e = costing_options->add_cost_factor_edges();
+              e->set_id(path_info.edgeid);
+              e->set_factor(line.cost_factor());
+              e->set_start(is_first ? edge.percent_along() : 0.);
+              e->set_end(is_last ? edge.percent_along() : 1.);
+              auto shortcut = reader.GetShortcut(path_info.edgeid);
+              if (shortcut.Is_Valid()) {
+                add_shortcut(reader, shortcut, costing_options, e);
+              }
+              break;
+            }
+          }
+        } else { // intermediate edges
+          auto* e = costing_options->add_cost_factor_edges();
+          e->set_id(path_info.edgeid);
+          e->set_factor(line.cost_factor());
+          e->set_start(0.);
+          e->set_end(1.);
+
+          // if it's a shortcut, also add all of its constituent edges
+          if (path_info.is_shortcut) {
+            auto constituents = reader.RecoverShortcut(path_info.edgeid);
+            for (const auto& constituent : constituents) {
+              auto* e = costing_options->add_cost_factor_edges();
+              e->set_id(constituent);
+              e->set_factor(line.cost_factor());
+              e->set_start(0);
+              e->set_end(1);
+            }
+          } else {
+            // if it's not a shortcut, it may be part of one
+            // TODO: this is an expensive operation, since we need to expand the graph
+            // a little, can't we persist this information somehow?
+            auto shortcut = reader.GetShortcut(path_info.edgeid);
+            if (shortcut.Is_Valid()) {
+              add_shortcut(reader, shortcut, costing_options, e);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 } // namespace
 
 namespace valhalla {
@@ -211,6 +343,10 @@ void thor_worker_t::route(Api& request) {
   auto& options = *request.mutable_options();
   adjust_scores(options);
   controller = AttributesController(options);
+
+  if (!request.options().cost_factor_lines().empty())
+    add_cost_factor_edges(mode_costing, mode, *reader, *request.mutable_options());
+
   auto costing = parse_costing(request);
 
   // get all the legs

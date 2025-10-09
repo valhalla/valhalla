@@ -208,8 +208,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
   // Compute the cost to the end of this edge
   uint8_t flow_sources;
-  auto edge_cost = FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
-                           : costing_->EdgeCost(opp_edge, endtile, time_info, flow_sources);
+  auto edge_cost = FORWARD
+                       ? costing_->EdgeCost(meta.edge, meta.edge_id, tile, time_info, flow_sources)
+                       : costing_->EdgeCost(opp_edge, opp_edge_id, endtile, time_info, flow_sources);
   auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
 
   sif::Cost transition_cost =
@@ -783,7 +784,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     }
 
     uint8_t flow_sources;
-    auto edge_cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources);
+    auto edge_cost = costing_->EdgeCost(directededge, edgeid, tile, time_info, flow_sources);
 
     auto add_label = [&](const valhalla::PathEdge* dest_path_edge) {
       auto percent_traversed = !dest_path_edge ? 1.0f
@@ -797,7 +798,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
         return;
       }
 
-      auto cost = edge_cost * percent_traversed;
+      auto cost =
+          edge_cost * percent_traversed * costing_->GetPartialEdgeFactor(edgeid, percent_traversed);
       cost.cost += edge.distance() + (dest_path_edge ? dest_path_edge->distance() : 0.0f);
 
       auto dist = 0.0f;

@@ -201,6 +201,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
@@ -399,6 +400,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
+                              const baldr::GraphId& edgeid,
                               const graph_tile_ptr& tile,
                               const baldr::TimeInfo& time_info,
                               uint8_t& flow_sources) const {

@@ -241,6 +241,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
@@ -486,6 +487,7 @@ bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) 
 
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const {
@@ -548,6 +550,11 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
+  }
+
+  if (!linear_cost_edges_.empty()) {
+    auto id = tile->header()->graphid();
+    // auto it = linear_cost_edges_.find()
   }
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
@@ -956,6 +963,7 @@ public:
    * @return  Returns the cost to traverse the edge.
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
@@ -989,6 +997,12 @@ public:
     if (IsClosed(edge, tile)) {
       // Add a penalty for traversing a closed edge
       factor *= closure_factor_;
+    }
+
+    if (!linear_cost_edges_.empty() && edgeid != kInvalidGraphId) {
+      if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end()) {
+        factor *= it->second.avg_factor;
+      }
     }
 
     return Cost(sec * factor, sec);
