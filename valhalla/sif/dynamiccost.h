@@ -19,6 +19,7 @@
 #include <valhalla/thor/edgestatus.h>
 
 #include <boost/container/small_vector.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
