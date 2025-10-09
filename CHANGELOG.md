@@ -153,6 +153,7 @@
    * CHANGED: Replace `oneof bool` to `bool` for default false options [#5541](https://github.com/valhalla/valhalla/pull/5541)
    * CHANGED: Optimise stopimpact calls in TransitionCost [#5545](https://github.com/valhalla/valhalla/pull/5545)
    * CHANGED: Optimise best_transition_cost function [#5537](https://github.com/valhalla/valhalla/pull/5537)
+   * CHANGED: Use boost::container::small_vector in DynamicCost::Restricted to avoid allocations [#5586](https://github.com/valhalla/valhalla/pull/5586)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
