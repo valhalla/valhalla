@@ -1427,7 +1427,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
     const auto* edge = tile->directededge(edgeid);
     if (edge->end_restriction() & costing->access_mode()) {
       auto restrictions = tile->GetRestrictions(true, edgeid, costing->access_mode());
-      if (restrictions.size() == 0) {
+      if (restrictions.empty()) {
         // TODO Should we actually throw here? Or assert to gracefully continue in release?
         // This implies corrupt data or logic bug
         throw std::logic_error(

@@ -44,6 +44,106 @@ const std::string SUFFIX_NON_COMPRESSED = ".gph";
 const std::string SUFFIX_COMPRESSED = ".gph.gz";
 
 class tile_getter_t;
+
+class RestrictionView {
+public:
+  class iterator {
+  public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ComplexRestriction*;
+    using difference_type = std::ptrdiff_t;
+    using pointer = ComplexRestriction**;
+    using reference = ComplexRestriction*&;
+
+    iterator(char* data, size_t size, GraphId id, uint64_t modes, bool forward)
+        : data_(data), end_(data + size), id_(id), modes_(modes), forward_(forward), offset_(0) {
+      advance_to_next_match();
+    }
+
+    iterator(char* end) : data_(end), end_(end), id_(), modes_(0), forward_(true), offset_(0) {
+    }
+
+    ComplexRestriction* operator*() const {
+      return reinterpret_cast<ComplexRestriction*>(data_ + offset_);
+    }
+
+    ComplexRestriction* operator->() const {
+      return reinterpret_cast<ComplexRestriction*>(data_ + offset_);
+    }
+
+    iterator& operator++() {
+      if (offset_ < static_cast<size_t>(end_ - data_)) {
+        offset_ += reinterpret_cast<ComplexRestriction*>(data_ + offset_)->SizeOf();
+        advance_to_next_match();
+      }
+      return *this;
+    }
+
+    iterator operator++(int) {
+      iterator tmp = *this;
+      ++(*this);
+      return tmp;
+    }
+
+    bool operator==(const iterator& other) const {
+      return (data_ + offset_) == (other.data_ + other.offset_);
+    }
+
+    bool operator!=(const iterator& other) const {
+      return !(*this == other);
+    }
+
+  private:
+    void advance_to_next_match() {
+      while (offset_ < static_cast<size_t>(end_ - data_)) {
+        ComplexRestriction* cr = reinterpret_cast<ComplexRestriction*>(data_ + offset_);
+        if (forward_) {
+          if (cr->to_graphid() == id_ && (cr->modes() & modes_)) {
+            return;
+          }
+        } else {
+          if (cr->from_graphid() == id_ && (cr->modes() & modes_)) {
+            return;
+          }
+        }
+        offset_ += cr->SizeOf();
+      }
+      // No match found, set to end
+      offset_ = end_ - data_;
+    }
+
+    char* data_;
+    char* end_;
+    GraphId id_;
+    uint64_t modes_;
+    bool forward_;
+    size_t offset_;
+  };
+
+  RestrictionView(char* data, size_t size, GraphId id, uint64_t modes, bool forward)
+      : data_(data), size_(size), id_(id), modes_(modes), forward_(forward) {
+  }
+
+  iterator begin() const {
+    return iterator(data_, size_, id_, modes_, forward_);
+  }
+
+  iterator end() const {
+    return iterator(data_ + size_);
+  }
+
+  bool empty() const {
+    return begin() == end();
+  }
+
+private:
+  char* data_;
+  size_t size_;
+  GraphId id_;
+  uint64_t modes_;
+  bool forward_;
+};
+
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
@@ -404,11 +504,10 @@ public:
    * @param   forward - do we want the restrictions in reverse order?
    * @param   id - edge id
    * @param   modes - access modes
-   * @return  Returns the vector of complex restrictions in the order requested
-   *          based on the id and modes.
+   * @return  Returns a view of complex restrictions in the order requested
+   *          based on the id and modes. The view allows iteration without copying.
    */
-  std::vector<ComplexRestriction*>
-  GetRestrictions(const bool forward, const GraphId id, const uint64_t modes) const;
+  RestrictionView GetRestrictions(const bool forward, const GraphId id, const uint64_t modes) const;
 
   /**
    * Convenience method to get the directed edges originating at a node.

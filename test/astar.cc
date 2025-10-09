@@ -1460,11 +1460,11 @@ TEST(ComplexRestriction, WalkVias) {
     const auto first_id = correlated.edges.front().id;
     auto restrictions = tile->GetRestrictions(is_forward, first_id, costing->access_mode());
     if (!restrictions.empty())
-      return restrictions.front();
+      return *restrictions.begin();
     const auto second_id = correlated.edges.back().id;
     restrictions = tile->GetRestrictions(is_forward, second_id, costing->access_mode());
     if (!restrictions.empty())
-      return restrictions.front();
+      return *restrictions.begin();
     return nullptr;
   }();
 

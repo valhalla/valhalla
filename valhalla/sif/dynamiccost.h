@@ -561,7 +561,7 @@ public:
         (!forward && (edge->start_restriction() & access_mask_))) {
       // Get complex restrictions. Return false if no restrictions are found
       auto restrictions = tile->GetRestrictions(forward, edgeid, access_mask_);
-      if (restrictions.size() == 0) {
+      if (restrictions.empty()) {
         return false;
       }
 

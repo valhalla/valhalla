@@ -415,7 +415,7 @@ void validate(
           uint32_t modes = 0;
           for (uint32_t mode = 1; mode < kAllAccess; mode *= 2) {
             if ((de->end_restriction() & mode) &&
-                tile->GetRestrictions(true, edgeid, mode).size() > 0) {
+                !tile->GetRestrictions(true, edgeid, mode).empty()) {
               modes |= mode;
             }
           }
@@ -425,7 +425,7 @@ void validate(
           uint32_t modes = 0;
           for (uint32_t mode = 1; mode < kAllAccess; mode *= 2) {
             if ((de->start_restriction() & mode) &&
-                tile->GetRestrictions(false, edgeid, mode).size() > 0) {
+                !tile->GetRestrictions(false, edgeid, mode).empty()) {
               modes |= mode;
             }
           }
