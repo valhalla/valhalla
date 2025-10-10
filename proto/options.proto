@@ -319,6 +319,10 @@ message Costing {
     bool exclude_ferries = 91;
     map<uint32, HierarchyLimits> hierarchy_limits = 92;
     bool ignore_construction = 93;
+    bool exclude_vignettes = 94;
+    oneof has_use_vignettes {
+      float use_vignettes = 95;
+    }
   }
 
   oneof has_options {
