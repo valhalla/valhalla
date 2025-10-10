@@ -118,7 +118,8 @@ struct custom_cost_t {
   double avg_factor{1.};
 
   // once ranges are filled up, sort and compute average
-  void finalize();
+  // returns the minimum factor
+  double finalize();
 };
 
 const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingTypeMapping{
@@ -1040,23 +1041,38 @@ public:
     return (avoid != user_exclude_edges_.end() && avoid->second <= percent_along);
   }
 
-  double GetPartialEdgeFactor(const baldr::GraphId& edgeid, const float percent_along) const {
+  /**
+   * Returns the averaged factor for an edge fraction based on user provided custom factors
+   * along linear features. If no custom factors are present for an edge, returns 1.
+   */
+  double PartialEdgeFactor(const baldr::GraphId& edgeid, const float percent_along) const {
     if (linear_cost_edges_.empty())
       return 1.;
 
     if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end()) {
       double partial_factor = 0.;
-      double uncovered = 1. - percent_along;
+      double uncovered = 1.;
       for (const auto& factor : it->second.ranges) {
         if (factor.end <= percent_along)
           continue;
-        partial_factor += (factor.end - std::max(static_cast<double>(percent_along), factor.start) /
-                                            (1. - percent_along)) *
-                          factor.factor;
+        double fraction = (factor.end - std::max(static_cast<double>(percent_along), factor.start)) /
+                          (1. - static_cast<double>(percent_along));
+        partial_factor += fraction * factor.factor;
+        uncovered -= fraction;
       }
-      partial_factor += (uncovered / (1. - percent_along)) * 1.;
+      partial_factor += uncovered;
       return partial_factor;
     }
+
+    return 1.;
+  }
+
+  double EdgeFactor(const baldr::GraphId& edgeid) const {
+    if (linear_cost_edges_.empty() || edgeid == baldr::kInvalidGraphId)
+      return 1.;
+
+    if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end())
+      return it->second.avg_factor;
 
     return 1.;
   }
@@ -1158,6 +1174,7 @@ protected:
 
   // User specified edges to cost based on user provided factors
   std::unordered_map<baldr::GraphId, custom_cost_t> linear_cost_edges_;
+  double min_linear_cost_factor_;
 
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;

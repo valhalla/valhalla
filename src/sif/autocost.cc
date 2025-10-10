@@ -298,7 +298,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return kSpeedFactor[top_speed_];
+    return kSpeedFactor[top_speed_] * static_cast<float>(min_linear_cost_factor_);
   }
 
   /**
@@ -547,15 +547,13 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
   }
 
+  factor *= EdgeFactor(edgeid);
+
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
 
-  if (!linear_cost_edges_.empty()) {
-    auto id = tile->header()->graphid();
-    // auto it = linear_cost_edges_.find()
-  }
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
@@ -999,6 +997,7 @@ public:
       factor *= closure_factor_;
     }
 
+    std::cerr << "AAHHHH\n";
     if (!linear_cost_edges_.empty() && edgeid != kInvalidGraphId) {
       if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end()) {
         factor *= it->second.avg_factor;

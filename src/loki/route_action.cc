@@ -130,9 +130,11 @@ void loki_worker_t::route(Api& request) {
     size_t i = 0;
     for (auto& line : *options.mutable_cost_factor_lines()) {
       const auto& correlated_start = projections.at(locations[locations_end + 2 * i]);
-      PathLocation::toPBF(correlated_start, &line.mutable_locations()->at(0), *reader);
+      auto* start = line.mutable_locations()->Add();
+      PathLocation::toPBF(correlated_start, start, *reader);
       const auto& correlated_end = projections.at(locations[locations_end + 2 * i + 1]);
-      PathLocation::toPBF(correlated_end, &line.mutable_locations()->at(1), *reader);
+      auto* end = line.mutable_locations()->Add();
+      PathLocation::toPBF(correlated_end, end, *reader);
       ++i;
     }
   } catch (const std::exception&) { throw valhalla_exception_t{171}; }

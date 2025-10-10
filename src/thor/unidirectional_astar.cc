@@ -799,7 +799,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       }
 
       auto cost =
-          edge_cost * percent_traversed * costing_->GetPartialEdgeFactor(edgeid, percent_traversed);
+          edge_cost * percent_traversed * costing_->PartialEdgeFactor(edgeid, percent_traversed);
       cost.cost += edge.distance() + (dest_path_edge ? dest_path_edge->distance() : 0.0f);
 
       auto dist = 0.0f;

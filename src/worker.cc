@@ -669,7 +669,6 @@ void parse_recostings(const rapidjson::Document& doc,
 }
 
 void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
-  assert(json_feat.IsObject());
   auto json_obj = json_feat.GetObject();
   for (const auto& coords_j : json_obj["geometry"].GetObject()["coordinates"].GetArray()) {
     auto* shape_pt = line_feat->add_shape();
@@ -679,7 +678,6 @@ void parse_line_geojson(const rapidjson::Value& json_feat, valhalla::LinearFeatu
   line_feat->set_cost_factor(json_obj["properties"].GetObject()["factor"].GetFloat());
 }
 void parse_line(const rapidjson::Value& json_feat, valhalla::LinearFeatureCost* line_feat) {
-  assert(json_feat.IsObject());
   auto json_obj = json_feat.GetObject();
   auto shape = std::string(json_obj["shape"].GetString());
   auto lazy_shape = midgard::Shape5Decoder<midgard::PointLL>(shape.data(), shape.size());
@@ -1165,7 +1163,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
             parse_line(linear_feat, l);
           }
         }
-      } catch (...) { throw valhalla_exception_t{173}; }
+      } catch (const std::exception& e) { throw valhalla_exception_t{173, std::string(e.what())}; }
     }
   }
 

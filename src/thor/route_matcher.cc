@@ -427,8 +427,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                                                            begin_edge_tile, offset_time_info,
                                                            flow_sources) *
             (1.f - edge.percent_along()) *
-            mode_costing[static_cast<int>(mode)]->GetPartialEdgeFactor(graphid,
-                                                                       1.f - edge.percent_along());
+            mode_costing[static_cast<int>(mode)]->PartialEdgeFactor(graphid,
+                                                                    1.f - edge.percent_along());
         // overwrite time with timestamps
         if (use_timestamps)
           elapsed.secs = options.shape(index).time() - options.shape(0).time();
@@ -518,7 +518,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                      costing->EdgeCost(end_de, GraphId(kInvalidGraphId), end_edge_tile,
                                        offset_time_info, flow_sources) *
                          end_edge.percent_along() *
-                         costing->GetPartialEdgeFactor(end_edge_graphid, end_edge.percent_along());
+                         costing->PartialEdgeFactor(end_edge_graphid, end_edge.percent_along());
           // overwrite time with timestamps
           if (use_timestamps)
             elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
@@ -547,8 +547,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                                                              flow_sources) *
               (end.second.first.percent_along() - edge.percent_along()) *
               mode_costing[static_cast<int>(mode)]
-                  ->GetPartialEdgeFactor(GraphId(edge.graph_id()),
-                                         (end.second.first.percent_along() - edge.percent_along()));
+                  ->PartialEdgeFactor(GraphId(edge.graph_id()),
+                                      (end.second.first.percent_along() - edge.percent_along()));
           if (use_timestamps)
             elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 

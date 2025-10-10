@@ -206,7 +206,8 @@ nodelayout map_to_coordinates(const std::string& map,
         // TODO: Change the type to char instead of std::string so that its obvious
         if (!inserted.second) {
           throw std::logic_error(
-              "Duplicate node name in ascii map, only single char names are supported");
+              "Duplicate node name in ascii map, only single char names are supported: " +
+              std::string(1, ch));
         }
       }
     }

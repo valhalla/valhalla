@@ -1137,7 +1137,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       Cost edgecost = costing_->EdgeCost(directededge, GraphId(kInvalidGraphId), tile,
                                          time_infos[index], flow_sources) *
                       (1.0f - edge.percent_along()) *
-                      costing_->GetPartialEdgeFactor(edgeid, (1.0f - edge.percent_along()));
+                      costing_->PartialEdgeFactor(edgeid, (1.0f - edge.percent_along()));
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
       // We need to penalize this location based on its score (distance in meters from input)
@@ -1236,7 +1236,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       Cost edgecost = costing_->EdgeCost(directededge, GraphId(kInvalidGraphId), tile,
                                          TimeInfo::invalid(), flow_sources) *
                       edge.percent_along() *
-                      costing_->GetPartialEdgeFactor(edgeid, edge.percent_along());
+                      costing_->PartialEdgeFactor(edgeid, edge.percent_along());
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 
       // We need to penalize this location based on its score (distance in meters from input)

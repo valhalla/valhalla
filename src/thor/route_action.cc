@@ -344,8 +344,10 @@ void thor_worker_t::route(Api& request) {
   adjust_scores(options);
   controller = AttributesController(options);
 
-  if (!request.options().cost_factor_lines().empty())
+  if (!request.options().cost_factor_lines().empty()) {
+    parse_costing(request);
     add_cost_factor_edges(mode_costing, mode, *reader, *request.mutable_options());
+  }
 
   auto costing = parse_costing(request);
 

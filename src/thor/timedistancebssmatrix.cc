@@ -319,7 +319,7 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
       const auto percent_along = 1.0f - edge.percent_along();
       cost = pedestrian_costing_->EdgeCost(directededge, GraphId(kInvalidGraphId), tile, time_info,
                                            flow_sources) *
-             percent_along * pedestrian_costing_->GetPartialEdgeFactor(edgeid, percent_along);
+             percent_along * pedestrian_costing_->PartialEdgeFactor(edgeid, percent_along);
       dist = static_cast<uint32_t>(directededge->length() * percent_along);
 
     } else {
@@ -331,7 +331,7 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
       cost = pedestrian_costing_->EdgeCost(opp_dir_edge, GraphId(kInvalidGraphId), endtile, time_info,
                                            flow_sources) *
              edge.percent_along() *
-             pedestrian_costing_->GetPartialEdgeFactor(opp_edge_id, edge.percent_along());
+             pedestrian_costing_->PartialEdgeFactor(opp_edge_id, edge.percent_along());
       dist = static_cast<uint32_t>(directededge->length() * edge.percent_along());
     }
 
@@ -465,9 +465,9 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
     float remainder = dest_edge->second;
-    Cost newcost = pred.cost() -
-                   (pedestrian_costing_->EdgeCost(edge, GraphId(kInvalidGraphId), tile) * remainder *
-                    pedestrian_costing_->GetPartialEdgeFactor(pred.edgeid(), remainder));
+    Cost newcost =
+        pred.cost() - (pedestrian_costing_->EdgeCost(edge, GraphId(kInvalidGraphId), tile) *
+                       remainder * pedestrian_costing_->PartialEdgeFactor(pred.edgeid(), remainder));
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);
