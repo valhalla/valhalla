@@ -405,14 +405,15 @@ TEST(Matrix, test_matrix_osrm) {
   set_hierarchy_limits(mode_costing[0]);
 
   CostMatrix cost_matrix;
+  AttributesController controller;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  auto json_res = tyr::serializeMatrix(request);
+  auto json_res = tyr::serializeMatrix(request, controller);
   std::string algo = "costmatrix";
   check_osrm_response(json_res, algo);
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  json_res = tyr::serializeMatrix(request);
+  json_res = tyr::serializeMatrix(request, controller);
   algo = "timedistancematrix";
   check_osrm_response(json_res, algo);
 }
@@ -564,6 +565,94 @@ TEST(Matrix, slim_matrix) {
   EXPECT_FALSE(json.HasMember("sources"));
   EXPECT_FALSE(json.HasMember("targets"));
   EXPECT_TRUE(json.HasMember("units"));
+}
+
+TEST(Matrix, shape_controller_default) {
+  tyr::actor_t actor(cfg, true);
+
+  const auto request = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099}
+    ],
+    "costing":"auto"
+  })";
+
+  auto response = actor.matrix(request);
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+  const auto& first_connection = json["sources_to_targets"].GetArray()[0][0].GetObject();
+
+  EXPECT_FALSE(first_connection.HasMember("shape")) << "Shapes should not be included by default\n\n"
+                                                    << response << "\n\n";
+}
+
+TEST(Matrix, shape_controller_explicit_include) {
+  tyr::actor_t actor(cfg, true);
+
+  const auto request = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099}
+    ],
+    "costing":"auto",
+    "filters": {
+      "action": "include",
+      "attributes": ["matrix_connection.shape"]
+    }
+  })";
+
+  auto response = actor.matrix(request);
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+  const auto& first_connection = json["sources_to_targets"].GetArray()[0][0].GetObject();
+
+  EXPECT_TRUE(first_connection.HasMember("shape"))
+      << "Shapes should be included when explicitly requested via filter_attributes\n\n"
+      << response << "\n\n";
+}
+
+TEST(Matrix, shape_controller_with_shape_format) {
+  tyr::actor_t actor(cfg, true);
+
+  const auto request = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099}
+    ],
+    "costing":"auto",
+    "shape_format": "polyline6"
+  })";
+
+  auto response = actor.matrix(request);
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+  const auto& first_connection = json["sources_to_targets"].GetArray()[0][0].GetObject();
+
+  EXPECT_TRUE(first_connection.HasMember("shape"))
+      << "Shapes should be included when shape format is specified\n\n"
+      << response << "\n\n";
 }
 
 /**************************************************************************************************/

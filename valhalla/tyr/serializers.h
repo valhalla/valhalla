@@ -33,7 +33,7 @@ std::string serializeDirections(Api& request);
 /**
  * Turn a time distance matrix into json that one can look up location pair results from
  */
-std::string serializeMatrix(Api& request);
+std::string serializeMatrix(Api& request, const baldr::AttributesController& controller);
 
 /**
  * Turn grid data contours into geojson
