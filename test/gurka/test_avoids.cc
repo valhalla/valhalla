@@ -1,12 +1,12 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
+#include "exceptions.h"
 #include "gurka.h"
 #include "loki/polygon_search.h"
 #include "loki/worker.h"
 #include "midgard/pointll.h"
 #include "proto/options.pb.h"
 #include "sif/costfactory.h"
-#include "worker.h"
 
 #include <boost/format.hpp>
 #include <gtest/gtest.h>

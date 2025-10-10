@@ -3,6 +3,7 @@
 
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/exceptions.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costfactory.h>
