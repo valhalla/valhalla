@@ -1,4 +1,7 @@
+name: Clear S3 cache (master on workflow_dispatch)
+
 on:
+  workflow_dispatch:
   schedule:
     # every first of the month
     - cron: "0 0 1 * *"
@@ -20,7 +23,7 @@ jobs:
           ./mc --help
           ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
       
-      - name: Remove matching cache objects
+      - name: Remove branch's cache objects
         shell: bash
         run: |
           # CAREFUL: only bash, not zsh compatible
@@ -38,7 +41,7 @@ jobs:
           done
   clear_ccache:
     runs-on: ubuntu-latest
-    if: github.event_name == 'schedule'
+    if: {{  github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Install and setup mc client
         run: |
@@ -47,7 +50,7 @@ jobs:
           ./mc --help
           ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
       
-      - name: Delete master ccache(s)
+      - name: Delete master caches
         run: |
           set -euo pipefail
           mc find hetzner/gha-cache --path "ccache-debug-linux-x86_64-master*" --exec "mc rm --force {}"
