@@ -1,4 +1,7 @@
 on:
+  schedule:
+    # every first of the month
+    - cron: "0 0 1 * *"
   pull_request:
     branches: 
       - master
@@ -6,8 +9,9 @@ on:
       - closed
 
 jobs:
-  clear_cache:
+  clear_s3_cache:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - name: Install and setup mc client
         run: |
@@ -32,3 +36,21 @@ jobs:
           for entry in $filtered; do
             ./mc rm --recursive --force hetzner/gha-cache/${entry} || echo "couldn't find $entry"
           done
+  clear_ccache:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Install and setup mc client
+        run: |
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          ./mc --help
+          ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+      
+      - name: Delete master ccache(s)
+        run: |
+          set -euo pipefail
+          mc find hetzner/gha-cache --path "ccache-debug-linux-x86_64-master*" --exec "mc rm --force {}"
+          mc find hetzner/gha-cache --path "ccache-release-linux-x86_64-master*" --exec "mc rm --force {}"
+          mc find hetzner/gha-cache --path "ccache-release-linux-aarch64-master*" --exec "mc rm --force {}"
+          mc find hetzner/gha-cache --path "ccache-osx-master*" --exec "mc rm --force {}"
