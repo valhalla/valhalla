@@ -557,6 +557,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
+  factor *= EdgeFactor(edgeid);
 
   return {sec * factor, sec};
 }
@@ -718,7 +719,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  return kSpeedFactor[top_speed_];
+  return kSpeedFactor[top_speed_] * min_linear_cost_factor_;
 }
 
 // Returns the current travel type.

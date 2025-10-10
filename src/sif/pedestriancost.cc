@@ -461,9 +461,9 @@ public:
         factor *= service_factor_;
       }
 
-      return (speedfactor_ * factor);
+      return (speedfactor_ * factor * min_linear_cost_factor_);
     } else {
-      return (kSecPerHour * 0.001f) / static_cast<float>(kMaxFerrySpeedKph);
+      return (kSecPerHour * 0.001f) / static_cast<float>(kMaxFerrySpeedKph) * min_linear_cost_factor_;
     }
   }
 
@@ -767,6 +767,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   factor *= edge->lit() + (!edge->lit() * unlit_factor_);
+  factor *= EdgeFactor(edgeid);
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
   return {sec * factor, sec};

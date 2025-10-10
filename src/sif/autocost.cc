@@ -997,12 +997,7 @@ public:
       factor *= closure_factor_;
     }
 
-    std::cerr << "AAHHHH\n";
-    if (!linear_cost_edges_.empty() && edgeid != kInvalidGraphId) {
-      if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end()) {
-        factor *= it->second.avg_factor;
-      }
-    }
+    factor *= EdgeFactor(edgeid);
 
     return Cost(sec * factor, sec);
   }

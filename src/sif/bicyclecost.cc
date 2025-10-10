@@ -382,7 +382,7 @@ public:
    */
   virtual float AStarCostFactor() const override {
     // Assume max speed of 2 * the average speed set for costing
-    return kSpeedFactor[static_cast<uint32_t>(2 * speed_)];
+    return kSpeedFactor[static_cast<uint32_t>(2 * speed_)] * min_linear_cost_factor_;
   }
 
   /**
@@ -715,6 +715,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                              (speed_ * surface_speed_factor_[static_cast<uint32_t>(edge->surface())] *
                               kGradeBasedSpeedFactor[edge->weighted_grade()]) +
                              0.5f);
+
+  factor *= EdgeFactor(edgeid);
 
   // Compute elapsed time based on speed. Modulate cost with weighting factors.
   float sec = (edge->length() * kSpeedFactor[bike_speed]);
