@@ -104,8 +104,6 @@
                                                                    : def));                          \
   }
 
-using namespace valhalla::midgard;
-
 namespace valhalla {
 namespace sif {
 
@@ -283,7 +281,7 @@ public:
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const bool is_dest,
                        const EdgeLabel& pred,
-                       const graph_tile_ptr& tile,
+                       const baldr::graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
@@ -311,7 +309,7 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const graph_tile_ptr& tile,
+                              const baldr::graph_tile_ptr& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
@@ -364,7 +362,7 @@ public:
    * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
    */
   inline virtual bool Allowed(const baldr::DirectedEdge* edge,
-                              const graph_tile_ptr&,
+                              const baldr::graph_tile_ptr&,
                               uint16_t disallow_mask = kDisallowNone) const {
     auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
@@ -424,7 +422,7 @@ public:
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const graph_tile_ptr& tile,
+                        const baldr::graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const = 0;
 
@@ -435,7 +433,7 @@ public:
    * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
    * @return  Returns the cost and time (seconds).
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const baldr::graph_tile_ptr& tile) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -451,7 +449,7 @@ public:
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
                               const EdgeLabel& pred,
-                              const graph_tile_ptr& tile,
+                              const baldr::graph_tile_ptr& tile,
                               const std::function<baldr::LimitedGraphReader()>& reader_getter) const;
 
   /**
@@ -476,7 +474,7 @@ public:
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
                                      const baldr::DirectedEdge* opp_pred_edge,
-                                     const graph_tile_ptr& tile,
+                                     const baldr::graph_tile_ptr& tile,
                                      const baldr::GraphId& pred_id,
                                      const std::function<baldr::LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed = false,
@@ -503,7 +501,7 @@ public:
   bool Restricted(const baldr::DirectedEdge* edge,
                   const EdgeLabel& pred,
                   const edge_labels_container_t& edge_labels,
-                  const graph_tile_ptr& tile,
+                  const baldr::graph_tile_ptr& tile,
                   const baldr::GraphId& edgeid,
                   const bool forward,
                   thor::EdgeStatus* edgestatus = nullptr,
@@ -668,7 +666,7 @@ public:
    * that can be ignored by destination only traffic.
    */
   inline uint8_t GetExemptedAccessRestrictions(const baldr::DirectedEdge* edge,
-                                               const graph_tile_ptr& tile,
+                                               const baldr::graph_tile_ptr& tile,
                                                const baldr::GraphId& edgeid) {
 
     uint8_t destonly_access_restr_mask = 0;
@@ -704,7 +702,7 @@ public:
   inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
                                    const bool is_dest,
-                                   const graph_tile_ptr& tile,
+                                   const baldr::graph_tile_ptr& tile,
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
@@ -928,7 +926,9 @@ public:
    * Is the current vehicle type HGV?
    * @return  Returns whether it's a truck.
    */
-  virtual bool is_hgv() const;
+  bool is_hgv() const {
+    return is_hgv_;
+  }
 
   /**
    * Get the wheelchair required flag.
@@ -961,19 +961,19 @@ public:
   /**
    * Checks if we should exclude or not.
    */
-  virtual void AddToExcludeList(const graph_tile_ptr& tile);
+  virtual void AddToExcludeList(const baldr::graph_tile_ptr& tile);
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const graph_tile_ptr& tile, const baldr::DirectedEdge* edge);
+  virtual bool IsExcluded(const baldr::graph_tile_ptr& tile, const baldr::DirectedEdge* edge);
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const graph_tile_ptr& tile, const baldr::NodeInfo* node);
+  virtual bool IsExcluded(const baldr::graph_tile_ptr& tile, const baldr::NodeInfo* node);
 
   /**
    * Adds a list of edges (GraphIds) to the user specified avoid list.
@@ -1038,12 +1038,13 @@ public:
    * @param  edgeid         GraphId of the opposing edge.
    * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
    */
-  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
+  inline virtual bool IsClosed(const baldr::DirectedEdge* edge,
+                               const baldr::graph_tile_ptr& tile) const {
     return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 
   float SpeedPenalty(const baldr::DirectedEdge* edge,
-                     const graph_tile_ptr& tile,
+                     const baldr::graph_tile_ptr& tile,
                      const baldr::TimeInfo& time_info,
                      uint8_t flow_sources,
                      float edge_speed) const {
@@ -1187,6 +1188,9 @@ protected:
   bool include_hov2_{false};
   bool include_hov3_{false};
 
+  // Is it truck?
+  bool is_hgv_{false};
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -1329,8 +1333,8 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ *
-              ((is_hgv() ? edge->destonly_hgv() : edge->destonly()) && !pred->destonly());
+    const bool is_destonly = (is_hgv() && edge->destonly_hgv()) || (!is_hgv() && edge->destonly());
+    c.cost += destination_only_penalty_ * (is_destonly && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
@@ -1339,11 +1343,10 @@ protected:
     c.cost +=
         track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
 
-    if (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) {
-      // Do not penalize internal roads that are marked as service.
-      if (!edge->internal())
-        c.cost += service_penalty_;
-    }
+    // penalize service roads that are not internal
+    c.cost += service_penalty_ *
+              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) *
+              !edge->internal();
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
@@ -1361,38 +1364,38 @@ using mode_costing_t = std::array<cost_ptr_t, static_cast<size_t>(TravelMode::kM
 struct BaseCostingOptionsConfig {
   BaseCostingOptionsConfig();
 
-  ranged_default_t<float> dest_only_penalty_;
-  ranged_default_t<float> maneuver_penalty_;
-  ranged_default_t<float> alley_penalty_;
-  ranged_default_t<float> gate_cost_;
-  ranged_default_t<float> gate_penalty_;
-  ranged_default_t<float> private_access_penalty_;
-  ranged_default_t<float> country_crossing_cost_;
-  ranged_default_t<float> country_crossing_penalty_;
+  midgard::ranged_default_t<float> dest_only_penalty_;
+  midgard::ranged_default_t<float> maneuver_penalty_;
+  midgard::ranged_default_t<float> alley_penalty_;
+  midgard::ranged_default_t<float> gate_cost_;
+  midgard::ranged_default_t<float> gate_penalty_;
+  midgard::ranged_default_t<float> private_access_penalty_;
+  midgard::ranged_default_t<float> country_crossing_cost_;
+  midgard::ranged_default_t<float> country_crossing_penalty_;
 
   bool disable_toll_booth_ = false;
-  ranged_default_t<float> toll_booth_cost_;
-  ranged_default_t<float> toll_booth_penalty_;
+  midgard::ranged_default_t<float> toll_booth_cost_;
+  midgard::ranged_default_t<float> toll_booth_penalty_;
 
   bool disable_ferry_ = false;
-  ranged_default_t<float> ferry_cost_;
-  ranged_default_t<float> use_ferry_;
+  midgard::ranged_default_t<float> ferry_cost_;
+  midgard::ranged_default_t<float> use_ferry_;
 
   bool disable_rail_ferry_ = false;
-  ranged_default_t<float> rail_ferry_cost_;
-  ranged_default_t<float> use_rail_ferry_;
+  midgard::ranged_default_t<float> rail_ferry_cost_;
+  midgard::ranged_default_t<float> use_rail_ferry_;
 
-  ranged_default_t<float> service_penalty_;
-  ranged_default_t<float> service_factor_;
+  midgard::ranged_default_t<float> service_penalty_;
+  midgard::ranged_default_t<float> service_factor_;
 
-  ranged_default_t<float> height_;
-  ranged_default_t<float> width_;
+  midgard::ranged_default_t<float> height_;
+  midgard::ranged_default_t<float> width_;
 
-  ranged_default_t<float> use_tracks_;
-  ranged_default_t<float> use_living_streets_;
-  ranged_default_t<float> use_lit_;
+  midgard::ranged_default_t<float> use_tracks_;
+  midgard::ranged_default_t<float> use_living_streets_;
+  midgard::ranged_default_t<float> use_lit_;
 
-  ranged_default_t<float> closure_factor_;
+  midgard::ranged_default_t<float> closure_factor_;
 
   bool exclude_unpaved_;
   bool exclude_bridges_;

@@ -17,6 +17,7 @@
 
 using namespace std;
 using namespace valhalla;
+using namespace valhalla::baldr;
 using namespace valhalla::odin;
 
 namespace {

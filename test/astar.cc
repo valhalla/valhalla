@@ -39,6 +39,7 @@
 namespace bpt = boost::property_tree;
 
 using namespace valhalla;
+using namespace valhalla::baldr;
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vs = valhalla::sif;
