@@ -5,8 +5,6 @@
 #include "thor/triplegbuilder.h"
 #include "thor/worker.h"
 
-#include <absl/strings/str_format.h>
-
 #include <cstdint>
 
 using namespace valhalla;
