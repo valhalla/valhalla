@@ -267,6 +267,21 @@ public:
   void set_toll(const bool toll);
 
   /**
+   * Does this edge have a vignette or is it part of a vignette road?
+   * @return  Returns true if this edge is part of a vignette road, false if not.
+   */
+  bool vignette() const {
+    return vignette_;
+  }
+
+  /**
+   * Sets the flag indicating this edge has a vignette or is it part of
+   * a vignette road.
+   * @param  vignette  True if this edge is part of a vignette road, false if not.
+   */
+  void set_vignette(const bool vignette);
+
+  /**
    * Is this edge part of a private or no through road that allows access
    * only if required to get to a destination?
    * @return  Returns true if the edge is destination only / private access.
@@ -1268,8 +1283,9 @@ protected:
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
   uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
-  uint64_t spare4_ : 3;
-
+  uint64_t vignette_ : 1;       // Edge is part of a road requiring a vignette
+  uint64_t spare4_ : 2;         // spare bits
+  
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)
   uint64_t edge_to_left_ : 8;   // Is there an edge to the left (between
