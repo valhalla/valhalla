@@ -488,6 +488,70 @@ TEST(Standalone, DontIgnoreRestriction) {
   }
 }
 
+TEST(Standalone, DontIgnoreRestrictionUnderMiddleLocation) {
+  const std::string ascii_map = R"(
+                D----F----G
+               /
+      A----B--C
+           |
+      H----E
+)";
+
+  const gurka::ways ways = {
+      {"GF", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"FD", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"DC", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"CB", {{"highway", "secondary"}, {"oneway", "yes"}}},
+      {"BE", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"EH", {{"highway", "primary"}, {"oneway", "yes"}}},
+      {"BA", {{"highway", "primary"}, {"oneway", "yes"}}}
+  };
+
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "DC", "from"},
+           {gurka::way_member, "CB", "via"},
+           {gurka::way_member, "BE", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_entry"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, relations, "test/data/dont_ignore_restriction_under_middle_location",
+                               {{"mjolnir.concurrency", "1"}});
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "C", "H"}, "auto", {}, {}, nullptr, "break_through");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "C", "H"}, "auto", {}, {}, nullptr, "through");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "C", "H"}, "auto", {}, {}, nullptr, "via");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+
+  try {
+    auto result = gurka::do_action(valhalla::Options::route, map, {"G", "C", "H"}, "auto", {}, {}, nullptr, "break");
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
+}
+
 TEST(Standalone, BridgingEdgeIsRestricted) {
   const std::string ascii_map = R"(
    A----B----C--------D----E----F-----G
