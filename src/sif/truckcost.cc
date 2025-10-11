@@ -249,12 +249,10 @@ public:
    * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return Returns the cost and time (seconds)
    */
-  virtual Cost
-  TransitionCost(const baldr::DirectedEdge* edge,
-                 const baldr::NodeInfo* node,
-                 const EdgeLabel& pred,
-                 const graph_tile_ptr& tile,
-                 const std::function<LimitedGraphReader()>& reader_getter) const override;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -277,7 +275,6 @@ public:
                                      const baldr::DirectedEdge* edge,
                                      const graph_tile_ptr& tile,
                                      const GraphId& pred_id,
-                                     const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed,
                                      const InternalTurn internal_turn) const override;
 
@@ -563,8 +560,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
                                const baldr::NodeInfo* node,
                                const EdgeLabel& pred,
-                               const graph_tile_ptr& /*tile*/,
-                               const std::function<LimitedGraphReader()>& /*reader_getter*/) const {
+                               const graph_tile_ptr& /*tile*/) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -640,7 +636,6 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
                                       const baldr::DirectedEdge* edge,
                                       const graph_tile_ptr& /*tile*/,
                                       const GraphId& /*pred_id*/,
-                                      const std::function<LimitedGraphReader()>& /*reader_getter*/,
                                       const bool has_measured_speed,
                                       const InternalTurn internal_turn) const {
 
@@ -751,7 +746,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT_V2(co, kUseTruckRouteRange, json, "/use_truck_route", use_truck_route);
 }
 
-cost_ptr_t CreateTruckCost(const Costing& costing_options) {
+cost_ptr_t CreateTruckCost(const Costing& costing_options, baldr::GraphReader& /*reader*/) {
   return std::make_shared<TruckCost>(costing_options);
 }
 

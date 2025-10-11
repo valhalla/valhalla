@@ -244,8 +244,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
     // get the cost of traversing the node, there is no turn cost the first time
     Cost transition_cost{};
     if (elapsed.secs > 0) {
-      auto reader_getter = [&matcher]() { return baldr::LimitedGraphReader(matcher->graphreader()); };
-      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter);
+      transition_cost = costing->TransitionCost(directededge, nodeinfo, pred, tile);
       elapsed += transition_cost;
     }
 

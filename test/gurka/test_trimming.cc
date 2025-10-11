@@ -80,7 +80,7 @@ TEST(Trimming, routes) {
   sif::ParseCosting(doc, "/costing_options", options);
   sif::TravelMode mode;
   sif::CostFactory factory;
-  auto mode_costings = factory.CreateModeCosting(options, mode);
+  auto mode_costings = factory.CreateModeCosting(options, mode, reader);
   const auto& costing = mode_costings[static_cast<size_t>(mode)];
 
   // fake up a route

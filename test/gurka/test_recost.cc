@@ -388,7 +388,7 @@ TEST(recosting, all_algorithms) {
         std::string date_time = dt_itr != option.cend() ? dt_itr->second : "";
         auto type_itr = option.find("/date_time/type");
         // build up the costing object
-        auto costing = sif::CostFactory().Create(api.options());
+        auto costing = sif::CostFactory().Create(api.options(), *reader);
 
         const baldr::GraphId start_edge_id(leg.node().begin()->edge().id());
         const auto* node = reader->nodeinfo(reader->edge_endnode(start_edge_id));
@@ -441,7 +441,7 @@ TEST(recosting, throwing) {
   };
 
   // build up the costing object
-  auto costing = sif::CostFactory().Create(Costing::auto_);
+  auto costing = sif::CostFactory().Create(Costing::auto_, *reader);
 
   // those percentages are bonkers
   EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb, -90, 476), std::logic_error);

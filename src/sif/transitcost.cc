@@ -192,12 +192,10 @@ public:
    * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return Returns the cost and time (seconds)
    */
-  virtual Cost
-  TransitionCost(const baldr::DirectedEdge* edge,
-                 const baldr::NodeInfo* node,
-                 const EdgeLabel& pred,
-                 const graph_tile_ptr& tile,
-                 const std::function<baldr::LimitedGraphReader()>& reader_getter) const override;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile) const override;
 
   /**
    * Returns the transfer cost between 2 transit stops.
@@ -591,12 +589,10 @@ Cost TransitCost::EdgeCost(const baldr::DirectedEdge* edge,
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
-Cost TransitCost::TransitionCost(
-    const baldr::DirectedEdge* edge,
-    const baldr::NodeInfo* /*node*/,
-    const EdgeLabel& pred,
-    const graph_tile_ptr& /*tile*/,
-    const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/) const {
+Cost TransitCost::TransitionCost(const baldr::DirectedEdge* edge,
+                                 const baldr::NodeInfo* /*node*/,
+                                 const EdgeLabel& pred,
+                                 const graph_tile_ptr& /*tile*/) const {
   if (pred.mode() == TravelMode::kPedestrian) {
     // Apply any mode-based penalties when boarding transit
     // Do we want any time cost to board?
@@ -709,7 +705,7 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   }
 }
 
-cost_ptr_t CreateTransitCost(const Costing& costing_options) {
+cost_ptr_t CreateTransitCost(const Costing& costing_options, baldr::GraphReader& /*reader*/) {
   return std::make_shared<TransitCost>(costing_options);
 }
 

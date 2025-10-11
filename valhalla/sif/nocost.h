@@ -23,8 +23,9 @@ void ParseNoCostOptions(const rapidjson::Document& doc,
  * Create an route cost method. This is generally shortest time but uses
  * hierarchies and can avoid "shortcuts" through residential areas.
  * @param  options pbf with request options.
+ * @param  reader  graph reader reference.
  */
-cost_ptr_t CreateNoCost(const Costing& costing);
+cost_ptr_t CreateNoCost(const Costing& costing, baldr::GraphReader& reader);
 
 } // namespace sif
 } // namespace valhalla

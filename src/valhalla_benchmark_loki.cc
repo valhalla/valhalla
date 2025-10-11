@@ -66,7 +66,7 @@ struct result_t {
 };
 using results_t = std::set<result_t>;
 
-valhalla::sif::cost_ptr_t create_costing() {
+valhalla::sif::cost_ptr_t create_costing(valhalla::baldr::GraphReader& reader) {
   valhalla::Options options;
   valhalla::Costing::Type costing;
   if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
@@ -75,13 +75,13 @@ valhalla::sif::cost_ptr_t create_costing() {
     options.set_costing_type(valhalla::Costing::none_);
   }
   (*options.mutable_costings())[costing];
-  return valhalla::sif::CostFactory{}.Create(options);
+  return valhalla::sif::CostFactory{}.Create(options, reader);
 }
 
 void work(const boost::property_tree::ptree& config, std::promise<results_t>& promise) {
   // lambda to do the current job
-  auto costing = create_costing();
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+  auto costing = create_costing(reader);
   auto search = [&reader, &costing](const job_t& job) {
     // so that we dont benefit from cache coherency
     reader.Clear();

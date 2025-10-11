@@ -106,11 +106,11 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     // For the begin and end of multimodal we expect you to be walking
     if (options.costing_type() == Costing::multimodal) {
       options.set_costing_type(Costing::pedestrian);
-      costing = factory.Create(options);
+      costing = factory.Create(options, *reader);
       options.set_costing_type(Costing::multimodal);
     } // otherwise use the provided costing
     else {
-      costing = factory.Create(options);
+      costing = factory.Create(options, *reader);
     }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
