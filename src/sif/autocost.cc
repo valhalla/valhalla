@@ -360,12 +360,22 @@ public:
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
   float width_;  // Vehicle width in meters
+
+  std::array<std::array<float, 2 /* is default flow*/>, 256 /* use types*/> use_factor_lut_;
 };
 
 // Constructor
 AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
     : DynamicCost(costing, TravelMode::kDrive, access_mask, true) {
   const auto& costing_options = costing.options();
+
+  std::fill(use_factor_lut_.begin(), use_factor_lut_.end(), std::array<float, 2>({1.0f, 1.0f}));
+  use_factor_lut_[static_cast<uint8_t>(Use::kAlley)] = {alley_factor_, alley_factor_};
+  use_factor_lut_[static_cast<uint8_t>(Use::kTrack)] = {track_factor_, track_factor_};
+  use_factor_lut_[static_cast<uint8_t>(Use::kLivingStreet)] = {living_street_factor_,
+                                                               living_street_factor_};
+  use_factor_lut_[static_cast<uint8_t>(Use::kServiceRoad)] = {service_factor_, service_factor_};
+  use_factor_lut_[static_cast<uint8_t>(Use::kTurnChannel)] = {1.0, kTurnChannelFactor};
 
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
@@ -522,28 +532,8 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
             SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
             edge->toll() * toll_factor_;
 
-  switch (edge->use()) {
-    case Use::kAlley:
-      factor *= alley_factor_;
-      break;
-    case Use::kTrack:
-      factor *= track_factor_;
-      break;
-    case Use::kLivingStreet:
-      factor *= living_street_factor_;
-      break;
-    case Use::kServiceRoad:
-      factor *= service_factor_;
-      break;
-    case Use::kTurnChannel:
-      if (flow_sources & kDefaultFlowMask) {
-        // boost only historic & live speeds
-        factor *= kTurnChannelFactor;
-      }
-      break;
-    default:
-      break;
-  }
+  factor *= use_factor_lut_[static_cast<uint8_t>(edge->use())]
+                           [static_cast<bool>(flow_sources & kDefaultFlowMask)];
 
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
@@ -977,15 +967,9 @@ public:
       factor *= kTaxiFactor;
     }
 
-    if (edge->use() == Use::kAlley) {
-      factor *= alley_factor_;
-    } else if (edge->use() == Use::kTrack) {
-      factor *= track_factor_;
-    } else if (edge->use() == Use::kLivingStreet) {
-      factor *= living_street_factor_;
-    } else if (edge->use() == Use::kServiceRoad) {
-      factor *= service_factor_;
-    }
+    factor *=
+        use_factor_lut_[static_cast<uint8_t>(edge->use())][(flow_sources & kDefaultFlowMask) != 0];
+
     if (IsClosed(edge, tile)) {
       // Add a penalty for traversing a closed edge
       factor *= closure_factor_;
