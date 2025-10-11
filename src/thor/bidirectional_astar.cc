@@ -306,13 +306,13 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   if (t2 == nullptr && !get_opp_edge_data())
     return false;
 
+  const auto& end_node_ll = t2->get_node_ll(meta.edge->endnode());
+
   // Find the sort cost (with A* heuristic) using the lat,lng at the
   // end node of the directed edge.
   float dist = 0.0f;
-  float sortcost =
-      newcost.cost + (FORWARD
-                          ? astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist)
-                          : astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist));
+  float sortcost = newcost.cost + (FORWARD ? astarheuristic_forward_.Get(end_node_ll, dist)
+                                           : astarheuristic_reverse_.Get(end_node_ll, dist));
 
   // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
   // We allow settling not_thru edges so we can connect both trees on them.
@@ -327,7 +327,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
         kUnlimitedTransitions) {
       // Override distance to the destination with a distance from the origin.
       // It will be used by hierarchy limits
-      dist = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+      dist = astarheuristic_reverse_.GetDistance(end_node_ll);
     }
     edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, not_thru_pruning,
@@ -346,7 +346,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
         kUnlimitedTransitions) {
       // Override distance to the origin with a distance from the destination.
       // It will be used by hierarchy limits
-      dist = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+      dist = astarheuristic_forward_.GetDistance(end_node_ll);
     }
     edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, not_thru_pruning,
@@ -1121,7 +1121,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float dist = astarheuristic_reverse_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+
+    const auto& end_node_ll = tile->get_node_ll(opp_dir_edge->endnode());
+    float dist = astarheuristic_reverse_.GetDistance(end_node_ll);
     float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -1133,7 +1135,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
         kUnlimitedTransitions) {
       // Override distance to the origin with a distance from the destination.
       // It will be used by hierarchy limits
-      dist = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+      dist = astarheuristic_forward_.GetDistance(end_node_ll);
     }
 
     // we call this to find out if we're starting on access restrictions with a local traffic
