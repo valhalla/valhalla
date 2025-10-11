@@ -259,7 +259,7 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
   Options options;
   auto costing = mode == vs::TravelMode::kPedestrian ? Costing::pedestrian : Costing::auto_;
   create_costing_options(options, costing);
-  auto mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
+  auto mode_costing = sif::CostFactory().CreateModeCosting(options, mode, *reader);
   set_hierarchy_limits(mode_costing[int(mode)], true);
   ASSERT_TRUE(bool(mode_costing[int(mode)]));
 
@@ -296,12 +296,12 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
 // to D appear first in the PathLocation.
 void TestTrivialPath(vt::PathAlgorithm& astar) {
 
+  auto reader = get_graph_reader(test_dir);
+
   Options options;
   create_costing_options(options, Costing::auto_);
   sif::TravelMode mode;
-  auto mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
-
-  auto reader = get_graph_reader(test_dir);
+  auto mode_costing = sif::CostFactory().CreateModeCosting(options, mode, *reader);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["1"]});
@@ -340,12 +340,12 @@ TEST(Astar, TestTrivialPathReverse) {
 // to G appear first in the PathLocation.
 TEST(Astar, TestTrivialPathTriangle) {
 
+  auto reader = get_graph_reader(test_dir);
+
   Options options;
   create_costing_options(options, Costing::pedestrian);
   vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
-
-  auto reader = get_graph_reader(test_dir);
+  auto costs = vs::CostFactory().CreateModeCosting(options, mode, *reader);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["4"]});
@@ -375,12 +375,12 @@ TEST(Astar, TestTrivialPathTriangle) {
 void TestPartialDuration(vt::PathAlgorithm& astar) {
   // Tests that a partial duration is returned when starting on a partial edge
 
+  auto reader = get_graph_reader(test_dir);
+
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
-
-  auto reader = get_graph_reader(test_dir);
+  auto costs = vs::CostFactory().CreateModeCosting(options, mode, *reader);
 
   std::vector<valhalla::baldr::Location> locations;
   locations.push_back({node_locations["1"]});
@@ -998,14 +998,14 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
   // The other tests with Bayfront Singapore tests with a detour _before_
   // the complex restriction
 
+  auto reader = get_graph_reader(test_dir);
+
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
+  auto costs = vs::CostFactory().CreateModeCosting(options, mode, *reader);
   ASSERT_TRUE(bool(costs[int(mode)]));
   set_hierarchy_limits(costs[int(mode)], true);
-
-  auto reader = get_graph_reader(test_dir);
 
   auto tile = reader->GetGraphTile(tile_id);
 
@@ -1258,7 +1258,7 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
+  auto costs = vs::CostFactory().CreateModeCosting(options, mode, *reader);
   ASSERT_TRUE(bool(costs[int(mode)]));
   set_hierarchy_limits(costs[int(mode)], true);
 
@@ -1368,7 +1368,7 @@ TEST(Astar, test_IsBridgingEdgeRestricted) {
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
+  auto costs = vs::CostFactory().CreateModeCosting(options, mode, *reader);
   std::vector<sif::BDEdgeLabel> edge_labels_fwd;
   std::vector<sif::BDEdgeLabel> edge_labels_rev;
 
@@ -1441,7 +1441,7 @@ TEST(ComplexRestriction, WalkVias) {
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode mode;
-  auto costs = vs::CostFactory().CreateModeCosting(options, mode);
+  auto costs = vs::CostFactory().CreateModeCosting(options, mode, *reader);
   auto costing = costs[int(mode)];
 
   bool is_forward = true;
@@ -1534,7 +1534,7 @@ TEST(Astar, BiDirTrivial) {
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode mode;
-  auto mode_costing = vs::CostFactory().CreateModeCosting(options, mode);
+  auto mode_costing = vs::CostFactory().CreateModeCosting(options, mode, graph_reader);
   const auto& cost = mode_costing[int(mode)];
   set_hierarchy_limits(cost, true);
 
@@ -1638,7 +1638,7 @@ TEST(BiDiAstar, test_recost_path) {
     hl->insert({level.level, lims});
   }
 
-  const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
+  const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode, graphreader);
 
   std::vector<vb::Location> locations;
   // set origin location
@@ -1720,7 +1720,7 @@ TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   Options options;
   create_costing_options(options, Costing::auto_);
   vs::TravelMode travel_mode = vs::TravelMode::kDrive;
-  const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
+  const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode, graphreader);
 
   std::vector<vb::Location> locations;
   // set origin location

@@ -24,8 +24,9 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
  * uses the same rules except for some different access restrictions
  * and the tendency to avoid hills
  * @param  options pbf with request options.
+ * @param  reader  graph reader reference.
  */
-cost_ptr_t CreateMotorScooterCost(const Costing& costing);
+cost_ptr_t CreateMotorScooterCost(const Costing& costing, baldr::GraphReader& reader);
 
 } // namespace sif
 } // namespace valhalla

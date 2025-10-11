@@ -31,7 +31,7 @@ TEST(Reach, check_all_reach) {
   // get tile access
   GraphReader reader(conf.get_child("mjolnir"));
 
-  auto costing = vs::CostFactory{}.Create(Costing::auto_);
+  auto costing = vs::CostFactory{}.Create(Costing::auto_, reader);
   Reach reach_finder;
 
   // look at all the edges
@@ -100,10 +100,10 @@ TEST(Reach, transition_misscount) {
 
   // get an auto costing
   sif::CostFactory factory;
-  auto costing = factory.Create(Costing::auto_);
 
   // find the problem edge
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  auto costing = factory.Create(Costing::auto_, reader);
   auto edge = gurka::findEdgeByNodes(reader, map.nodes, "a", "f");
 
   // check its reach

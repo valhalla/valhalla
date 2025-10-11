@@ -144,7 +144,7 @@ int main(int argc, char* argv[]) {
   // Get the costing method - pass the JSON configuration
   valhalla::TripLeg trip_path;
   sif::TravelMode mode;
-  auto mode_costing = factory.CreateModeCosting(options, mode);
+  auto mode_costing = factory.CreateModeCosting(options, mode, reader);
 
   // Find locations
   const std::shared_ptr<DynamicCost>& cost = mode_costing[static_cast<uint32_t>(mode)];

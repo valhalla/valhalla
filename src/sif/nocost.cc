@@ -147,14 +147,12 @@ public:
    * @param  node          Node (intersection) where transition occurs.
    * @param  pred          Predecessor edge information.
    * @param  tile          Pointer to the graph tile containing the to edge.
-   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return Returns the cost and time (seconds)
    */
   virtual Cost TransitionCost(const baldr::DirectedEdge*,
                               const baldr::NodeInfo*,
                               const EdgeLabel&,
-                              const baldr::graph_tile_ptr&,
-                              const std::function<baldr::LimitedGraphReader()>&) const override {
+                              const baldr::graph_tile_ptr&) const override {
     return {};
   }
 
@@ -167,8 +165,6 @@ public:
    * @param  edge               the opposing predecessor in the reverse tree
    * @param  tile               Graphtile that contains the node and the opp_edge
    * @param  edge_id            Graph ID of opp_pred_edge to get its tile if needed
-   * @param  reader_getter      Functor that facilitates access to a limited version of the graph
-   * reader
    * @param  has_measured_speed Do we have any of the measured speed types set?
    * @param  internal_turn      Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
@@ -179,7 +175,6 @@ public:
                                      const baldr::DirectedEdge*,
                                      const graph_tile_ptr&,
                                      const GraphId&,
-                                     const std::function<baldr::LimitedGraphReader()>&,
                                      const bool,
                                      const InternalTurn) const override {
     return {};
@@ -215,7 +210,7 @@ void ParseNoCostOptions(const rapidjson::Document&, const std::string&, Costing*
   c->set_name(Costing_Enum_Name(c->type()));
 }
 
-cost_ptr_t CreateNoCost(const Costing& costing_options) {
+cost_ptr_t CreateNoCost(const Costing& costing_options, baldr::GraphReader& /*reader*/) {
   return std::make_shared<NoCost>(costing_options);
 }
 

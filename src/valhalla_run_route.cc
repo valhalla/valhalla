@@ -554,7 +554,7 @@ int main(int argc, char* argv[]) {
   CostFactory factory;
   // Get the costing method - pass the JSON configuration
   TravelMode mode;
-  auto mode_costing = factory.CreateModeCosting(options, mode);
+  auto mode_costing = factory.CreateModeCosting(options, mode, reader);
 
   // Find path locations (loki) for sources and targets
   auto tw0 = std::chrono::high_resolution_clock::now();

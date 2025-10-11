@@ -63,8 +63,7 @@ void print_edge(GraphReader& reader,
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
 
-    auto reader_getter = [&reader]() { return baldr::LimitedGraphReader(reader); };
-    Cost trans_cost = costing->TransitionCost(edge, node, pred_label, tile, reader_getter);
+    Cost trans_cost = costing->TransitionCost(edge, node, pred_label, tile);
     trans_total += trans_cost;
     std::cout << "TransitionCost cost: " << trans_cost.cost;
     std::cout << " secs: " << trans_cost.secs << "\n";
@@ -282,7 +281,8 @@ int main(int argc, char* argv[]) {
   }
 
   valhalla::sif::TravelMode mode;
-  auto mode_costings = valhalla::sif::CostFactory{}.CreateModeCosting(request.options(), mode);
+  auto mode_costings =
+      valhalla::sif::CostFactory{}.CreateModeCosting(request.options(), mode, reader);
   const auto& cost_ptr = mode_costings[static_cast<uint32_t>(mode)];
 
   // If a shape is entered use edge walking

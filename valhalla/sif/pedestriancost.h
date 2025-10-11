@@ -22,10 +22,11 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
 /**
  * Create a pedestriancost
  * @param  options pbf with request options.
+ * @param  reader  graph reader reference.
  */
-cost_ptr_t CreatePedestrianCost(const Costing& costing);
+cost_ptr_t CreatePedestrianCost(const Costing& costing, baldr::GraphReader& reader);
 
-cost_ptr_t CreateBikeShareCost(const Costing& costing);
+cost_ptr_t CreateBikeShareCost(const Costing& costing, baldr::GraphReader& reader);
 
 } // namespace sif
 } // namespace valhalla

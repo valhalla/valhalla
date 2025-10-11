@@ -1008,6 +1008,8 @@ public:
    */
   virtual graph_tile_ptr GetGraphTile(const GraphId& graphid);
 
+  virtual ~LimitedGraphReader() = default;
+
 protected:
   GraphReader& reader_;
 };

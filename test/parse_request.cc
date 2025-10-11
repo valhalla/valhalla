@@ -1,11 +1,14 @@
+#include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "proto/options.pb.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
 #include "sif/hierarchylimits.h"
+#include "test/test.h"
 #include "worker.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <gtest/gtest.h>
 
 #include <string>
@@ -1658,7 +1661,8 @@ protected:
     set_disable_hierarchy_pruning(options, costing_type);
     create_costing_options(options, costing_type);
     valhalla::sif::TravelMode travel_mode;
-    const auto mode_costing = valhalla::sif::CostFactory().CreateModeCosting(options, travel_mode);
+    valhalla::baldr::GraphReader reader(test::make_config("test/data/utrecht_tiles"));
+    const auto mode_costing = valhalla::sif::CostFactory().CreateModeCosting(options, travel_mode, reader);
 
     // Check hierarchy limits
     const auto& hierarchy_limits = mode_costing[int(travel_mode)]->GetHierarchyLimits();

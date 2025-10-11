@@ -22,8 +22,9 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
 /**
  * Create a bicyclecost
  * @param  costing pbf with request options.
+ * @param  reader  graph reader reference.
  */
-cost_ptr_t CreateBicycleCost(const Costing& optcostingions);
+cost_ptr_t CreateBicycleCost(const Costing& costing, baldr::GraphReader& reader);
 
 } // namespace sif
 } // namespace valhalla

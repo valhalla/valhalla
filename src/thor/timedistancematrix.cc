@@ -129,11 +129,10 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     uint8_t flow_sources;
     auto newcost = FORWARD ? costing_->EdgeCost(directededge, tile, offset_time, flow_sources)
                            : costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources);
-    auto reader_getter = [&graphreader]() { return baldr::LimitedGraphReader(graphreader); };
     auto transition_cost =
-        FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred, tile, reader_getter)
+        FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred, tile)
                 : costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                  opp_pred_edge, t2, pred.edgeid(), reader_getter,
+                                                  opp_pred_edge, t2, pred.edgeid(),
                                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                   pred.internal_turn());
     newcost += pred.cost() + transition_cost;

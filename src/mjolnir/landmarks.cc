@@ -331,7 +331,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
         // call loki::Search to get nearby edges to each landmark
         std::unordered_map<valhalla::baldr::Location, PathLocation> result =
-            loki::Search({landmark_location}, reader, sif::CreateNoCost({}));
+            loki::Search({landmark_location}, reader, sif::CreateNoCost({}, reader));
 
         // we only have one landmark as input so the return size should be no more than one
         if (result.size() > 1) {

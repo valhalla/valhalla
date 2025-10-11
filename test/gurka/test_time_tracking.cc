@@ -32,7 +32,7 @@ TEST(TimeTracking, make) {
            new baldr::DateTime::tz_sys_info_cache_t,
        }) {
     // get some loki results
-    auto costing = sif::CostFactory().Create(Costing::none_);
+    auto costing = sif::CostFactory().Create(Costing::none_, reader);
     auto found = loki::Search({baldr::Location(map.nodes.begin()->second)}, reader, costing);
     Location location;
     baldr::PathLocation::toPBF(found.begin()->second, &location, reader);

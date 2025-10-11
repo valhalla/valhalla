@@ -449,8 +449,7 @@ public:
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
                               const EdgeLabel& pred,
-                              const baldr::graph_tile_ptr& tile,
-                              const std::function<baldr::LimitedGraphReader()>& reader_getter) const;
+                              const baldr::graph_tile_ptr& tile) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -476,7 +475,6 @@ public:
                                      const baldr::DirectedEdge* opp_pred_edge,
                                      const baldr::graph_tile_ptr& tile,
                                      const baldr::GraphId& pred_id,
-                                     const std::function<baldr::LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed = false,
                                      const InternalTurn internal_turn = InternalTurn::kNoTurn) const;
 

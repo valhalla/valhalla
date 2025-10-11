@@ -126,7 +126,7 @@ TEST_F(TestReach, ReachWithNoClosures) {
   c.mutable_options()->set_flow_mask(baldr::kDefaultFlowMask);
   c.set_filter_closures(false);
 
-  auto costing = factory.Create(c);
+  auto costing = factory.Create(c, *reader);
   auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "A", "B");
 
   // check its reach
@@ -162,7 +162,7 @@ TEST_F(TestReach, ReachWithClosures) {
   c.set_filter_closures(true);
   // Check reach for AB - enclosed by closures, so reach should be 0
   {
-    auto costing = factory.Create(c);
+    auto costing = factory.Create(c, *reader);
     auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "A", "B");
     auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 
@@ -172,7 +172,7 @@ TEST_F(TestReach, ReachWithClosures) {
   }
   // Check reach for HI - open, but reduced reach without ignoring closures
   {
-    auto costing = factory.Create(c);
+    auto costing = factory.Create(c, *reader);
     auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "H", "I");
     auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 
@@ -183,7 +183,7 @@ TEST_F(TestReach, ReachWithClosures) {
   // Check reach for AB ignoring closures
   {
     c.set_filter_closures(false);
-    auto costing = factory.Create(c);
+    auto costing = factory.Create(c, *reader);
     auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "A", "B");
     auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 
@@ -193,7 +193,7 @@ TEST_F(TestReach, ReachWithClosures) {
   // Check reach for HI ignoring closures
   {
     c.set_filter_closures(false);
-    auto costing = factory.Create(c);
+    auto costing = factory.Create(c, *reader);
     auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "H", "I");
     auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 
@@ -221,7 +221,7 @@ TEST_F(TestReach, DISABLED_ReachWithClosures2) {
   c.set_type(Costing::auto_);
   c.mutable_options()->set_flow_mask(baldr::kDefaultFlowMask);
   c.set_filter_closures(false);
-  auto costing = factory.Create(c);
+  auto costing = factory.Create(c, *reader);
   auto edge = gurka::findEdgeByNodes(*reader, closure_map.nodes, "K", "L");
   auto reach = reach_checker(std::get<1>(edge), std::get<0>(edge), 50, *reader, costing);
 

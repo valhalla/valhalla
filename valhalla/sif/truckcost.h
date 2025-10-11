@@ -22,8 +22,9 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
 /**
  * Create a truckcost
  * @param  options pbf with request options.
+ * @param  reader  graph reader reference.
  */
-cost_ptr_t CreateTruckCost(const Costing& costing);
+cost_ptr_t CreateTruckCost(const Costing& costing, baldr::GraphReader& reader);
 
 } // namespace sif
 } // namespace valhalla

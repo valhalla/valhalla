@@ -37,7 +37,7 @@ MapMatcher* MapMatcherFactory::Create(const Options& options) {
   // Merge any customizable options with the config defaults
   const auto& config = MergeConfig(options);
 
-  valhalla::sif::cost_ptr_t cost = cost_factory_.Create(options);
+  valhalla::sif::cost_ptr_t cost = cost_factory_.Create(options, *graphreader_);
   valhalla::sif::TravelMode mode = cost->travel_mode();
 
   mode_costing_[static_cast<uint32_t>(mode)] = cost;

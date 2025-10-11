@@ -77,7 +77,7 @@ void try_path(GraphReader& reader,
   // For now this just tests auto costing - could extend to other
   request.mutable_options()->set_costing_type(Costing::auto_);
   sif::TravelMode mode;
-  auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode);
+  auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode, reader);
 
   TimeDepForward astar;
   valhalla::Location origin = request.options().locations(0);

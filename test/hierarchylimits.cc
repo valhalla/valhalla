@@ -4,6 +4,7 @@
 #include "sif/dynamiccost.h"
 #include "sif/hierarchylimits.h"
 #include "test.h"
+#include "valhalla/baldr/graphreader.h"
 #include "valhalla/worker.h"
 
 #include <boost/format.hpp>
@@ -135,7 +136,8 @@ TEST_P(TestHierarchyLimits, from_request) {
   }
   sif::mode_costing_t mode_costing;
   auto costings = request.options().costings().find(request.options().costing_type())->second;
-  mode_costing[0] = CreateAutoCost(costings);
+  baldr::GraphReader reader(test::make_config("test/data/utrecht_tiles"));
+  mode_costing[0] = CreateAutoCost(costings, reader);
 
   // Now make sure the costmatrix hierarchy limits match up with what we expect
   hierarchy_limits_equal(test_params.expected_hierarchy_limits,
@@ -179,7 +181,8 @@ TEST(StandAlone, ClampHierarchyLimitsMatrix) {
 
   sif::mode_costing_t mode_costing;
   auto costings = request.options().costings().find(request.options().costing_type())->second;
-  mode_costing[0] = CreateAutoCost(costings);
+  baldr::GraphReader reader(test::make_config("test/data/utrecht_tiles"));
+  mode_costing[0] = CreateAutoCost(costings, reader);
 
   Costing_Options opts;
   hierarchy_limits_config_t config_matrix =
@@ -209,7 +212,8 @@ TEST(StandAlone, ClampHierarchyLimitsBidirAStar) {
 
   sif::mode_costing_t mode_costing;
   auto costings = request.options().costings().find(request.options().costing_type())->second;
-  mode_costing[0] = CreateAutoCost(costings);
+  baldr::GraphReader reader(test::make_config("test/data/utrecht_tiles"));
+  mode_costing[0] = CreateAutoCost(costings, reader);
 
   Costing_Options opts;
   hierarchy_limits_config_t config_bidir =
@@ -240,7 +244,8 @@ TEST(StandAlone, ClampHierarchyLimitsUnidirAStar) {
 
   sif::mode_costing_t mode_costing;
   auto costings = request.options().costings().find(request.options().costing_type())->second;
-  mode_costing[0] = CreateAutoCost(costings);
+  baldr::GraphReader reader(test::make_config("test/data/utrecht_tiles"));
+  mode_costing[0] = CreateAutoCost(costings, reader);
 
   Costing_Options opts;
   hierarchy_limits_config_t config_bidir =

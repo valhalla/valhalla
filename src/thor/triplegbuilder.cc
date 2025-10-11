@@ -1724,7 +1724,7 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
   sif::CostFactory factory;
   for (const auto& recosting : options.recostings()) {
     // get the costing
-    auto costing = factory.Create(recosting);
+    auto costing = factory.Create(recosting, reader);
     // reset to the beginning of the route
     in_itr = leg.node().begin();
     out_itr = leg.mutable_node()->begin();

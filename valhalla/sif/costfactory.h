@@ -24,7 +24,8 @@ namespace sif {
  */
 class CostFactory {
 public:
-  using factory_function_t = std::function<cost_ptr_t(const Costing& options)>;
+  using factory_function_t =
+      std::function<cost_ptr_t(const Costing& options, baldr::GraphReader& reader)>;
 
   /**
    * Constructor
@@ -60,12 +61,13 @@ public:
   /**
    * Make a cost from its specified type
    * @param options  pbf with costing type and costing options
+   * @param reader   graph reader reference
    */
-  cost_ptr_t Create(const Options& options) const {
+  cost_ptr_t Create(const Options& options, baldr::GraphReader& reader) const {
     // create the cost using the creation function
     auto found = options.costings().find(options.costing_type());
     if (found != options.costings().end()) {
-      return Create(found->second);
+      return Create(found->second, reader);
     } // if we didnt have costing options we need to use some default ones
     else {
       throw std::runtime_error("No costing options provided to cost factory");
@@ -76,10 +78,10 @@ public:
    * Make a default cost from its specified type
    * @param costing_type  which costing to create
    */
-  cost_ptr_t Create(Costing::Type costing_type) const {
+  cost_ptr_t Create(Costing::Type costing_type, baldr::GraphReader& reader) const {
     Costing default_costing;
     default_costing.set_type(costing_type);
-    return Create(default_costing);
+    return Create(default_costing, reader);
   }
 
   /**
@@ -87,22 +89,23 @@ public:
    * @param costing  the type of cost to create
    * @param options  pbf with request options
    */
-  cost_ptr_t Create(const Costing& costing) const {
+  cost_ptr_t Create(const Costing& costing, baldr::GraphReader& reader) const {
     auto itr = factory_funcs_.find(costing.type());
     if (itr == factory_funcs_.end()) {
       auto costing_str = Costing_Enum_Name(costing.type());
       throw std::runtime_error("No costing method found for '" + costing_str + "'");
     }
     // create the cost using the function pointer
-    return itr->second(costing);
+    return itr->second(costing, reader);
   }
 
-  mode_costing_t CreateModeCosting(const Options& options, TravelMode& mode) {
+  mode_costing_t
+  CreateModeCosting(const Options& options, TravelMode& mode, baldr::GraphReader& reader) {
     mode_costing_t mode_costing;
     mode = TravelMode::kMaxTravelMode;
     // Set travel mode and construct costing(s) for this type
     for (const auto& costing : kCostingTypeMapping.at(options.costing_type())) {
-      valhalla::sif::cost_ptr_t cost = Create(options.costings().find(costing)->second);
+      valhalla::sif::cost_ptr_t cost = Create(options.costings().find(costing)->second, reader);
       mode = cost->travel_mode();
       mode_costing[static_cast<uint32_t>(mode)] = cost;
     }
