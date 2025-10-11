@@ -157,6 +157,7 @@
    * CHANGED: Broke out exceptions.h from worker.h [#5571](https://github.com/valhalla/valhalla/pull/5571)
    * ADDED: `checksum` to GraphTileHeader, a 64bit MD5 hash of the OSM PBFs [#5542](https://github.com/valhalla/valhalla/pull/5542)
    * ADDED: small CMake project and GHA to easily test statements on various compilers [#5564](https://github.com/valhalla/valhalla/pull/5564)
+   * CHANGED: Use boost::container::small_vector in DynamicCost::Restricted to avoid allocations [#5586](https://github.com/valhalla/valhalla/pull/5586)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
