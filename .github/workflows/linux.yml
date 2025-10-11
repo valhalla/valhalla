@@ -114,7 +114,10 @@ jobs:
           key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
 
       - name: Run tests
-        run: ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
+        run: |
+          ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
+          # remove the huge trace logs
+          rm -f build/test/*.log
       
       - name: Install Valhalla
         run: |
