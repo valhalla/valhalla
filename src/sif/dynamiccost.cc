@@ -1,6 +1,7 @@
 #include "sif/dynamiccost.h"
 #include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
+#include "exceptions.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
@@ -11,7 +12,6 @@
 #include "sif/pedestriancost.h"
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
-#include "worker.h"
 
 #include <boost/optional.hpp>
 
