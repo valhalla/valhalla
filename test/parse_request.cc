@@ -1662,7 +1662,8 @@ protected:
     create_costing_options(options, costing_type);
     valhalla::sif::TravelMode travel_mode;
     valhalla::baldr::GraphReader reader(test::make_config("test/data/utrecht_tiles"));
-    const auto mode_costing = valhalla::sif::CostFactory().CreateModeCosting(options, travel_mode, reader);
+    const auto mode_costing =
+        valhalla::sif::CostFactory().CreateModeCosting(options, travel_mode, reader);
 
     // Check hierarchy limits
     const auto& hierarchy_limits = mode_costing[int(travel_mode)]->GetHierarchyLimits();
