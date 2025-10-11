@@ -13,6 +13,7 @@ on:
 
 jobs:
   clear_s3_cache:
+    name: Clear S3 cache on PR merge/close
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
@@ -40,6 +41,7 @@ jobs:
             ./mc rm --recursive --force hetzner/gha-cache/${entry} || echo "couldn't find $entry"
           done
   clear_ccache:
+    name: Clear ccache on branch
     runs-on: ubuntu-latest
     if: {{  github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     steps:
@@ -53,7 +55,13 @@ jobs:
       - name: Delete master caches
         run: |
           set -euo pipefail
-          mc find hetzner/gha-cache --path "ccache-debug-linux-x86_64-master*" --exec "mc rm --force {}"
-          mc find hetzner/gha-cache --path "ccache-release-linux-x86_64-master*" --exec "mc rm --force {}"
-          mc find hetzner/gha-cache --path "ccache-release-linux-aarch64-master*" --exec "mc rm --force {}"
-          mc find hetzner/gha-cache --path "ccache-osx-master*" --exec "mc rm --force {}"
+          # get branch
+          if [[ ${{  github.event_name == 'schedule'  }} ]]; then
+            branch="master"
+          else
+            branch="${{ github.ref_name }}"
+          fi
+          mc find hetzner/gha-cache --path "ccache-debug-linux-x86_64-${branch}*" --exec "mc rm --force {}"
+          mc find hetzner/gha-cache --path "ccache-release-linux-x86_64-${branch}*" --exec "mc rm --force {}"
+          mc find hetzner/gha-cache --path "ccache-release-linux-aarch64-${branch}*" --exec "mc rm --force {}"
+          mc find hetzner/gha-cache --path "ccache-osx-${branch}*" --exec "mc rm --force {}"
