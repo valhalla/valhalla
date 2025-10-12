@@ -115,7 +115,7 @@ TEST(TruckSpeed, MaxTruckSpeed) {
       traffic_speed->breakpoint1 = 255;
       traffic_speed->encoded_speed1 = 140 >> 1;
     } else {
-      traffic_speed->overall_encoded_speed = UNKNOWN_TRAFFIC_SPEED_RAW - 1;
+      traffic_speed->overall_encoded_speed = baldr::UNKNOWN_TRAFFIC_SPEED_RAW - 1;
     }
   });
 
@@ -136,7 +136,7 @@ TEST(TruckSpeed, MaxTruckSpeed) {
       traffic_speed->breakpoint1 = 255;
       traffic_speed->encoded_speed1 = 50 >> 1;
     } else {
-      traffic_speed->overall_encoded_speed = UNKNOWN_TRAFFIC_SPEED_RAW - 1;
+      traffic_speed->overall_encoded_speed = baldr::UNKNOWN_TRAFFIC_SPEED_RAW - 1;
     }
   });
 
@@ -304,7 +304,7 @@ TEST(Standalone, TruckSpeeds) {
   gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/truck_speed");
 
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  const DirectedEdge *de_fwd, *de_rev, *de_both_1, *de_both_2;
+  const baldr::DirectedEdge *de_fwd, *de_rev, *de_both_1, *de_both_2;
   std::tie(std::ignore, de_fwd) = gurka::findEdgeByNodes(reader, layout, "A", "B");
   std::tie(std::ignore, de_rev) = gurka::findEdgeByNodes(reader, layout, "C", "B");
   std::tie(std::ignore, de_both_1) = gurka::findEdgeByNodes(reader, layout, "C", "D");

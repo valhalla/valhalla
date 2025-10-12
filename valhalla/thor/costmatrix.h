@@ -123,8 +123,9 @@ protected:
   uint32_t max_reserved_locations_count_;
   bool check_reverse_connection_;
 
-  // upper bound for the number of additional iterations per expansion once a connection has been
-  // found
+  // lower and upper bounds for the number of additional iterations per expansion once a connection
+  // has been found
+  uint32_t min_iterations_;
   uint32_t max_iterations_;
 
   // Access mode used by the costing method
@@ -224,7 +225,7 @@ protected:
                    const uint32_t pred_idx,
                    const EdgeMetadata& meta,
                    uint32_t& shortcuts,
-                   const graph_tile_ptr& tile,
+                   const baldr::graph_tile_ptr& tile,
                    const baldr::TimeInfo& time_info);
 
   /**
@@ -346,7 +347,7 @@ protected:
    */
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
-  float GetAstarHeuristic(const uint32_t loc_idx, const PointLL& node_ll) const;
+  float GetAstarHeuristic(const uint32_t loc_idx, const midgard::PointLL& node_ll) const;
 
 private:
   class ReachedMap;

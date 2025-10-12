@@ -18,6 +18,8 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 
+#include <boost/container/small_vector.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
@@ -103,8 +105,6 @@
                                                                    ? costing_options->option_name()  \
                                                                    : def));                          \
   }
-
-using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace sif {
@@ -266,24 +266,29 @@ public:
    * allowed on the edge. However, it can be extended to exclude access
    * based on other parameters such as conditional restrictions and
    * conditional access that can depend on time and travel mode.
-   * @param  edge           Pointer to a directed edge.
-   * @param  is_dest        Is a directed edge the destination?
-   * @param  pred           Predecessor edge information.
-   * @param  tile           Current tile.
-   * @param  edgeid         GraphId of the directed edge.
-   * @param  current_time   Current time (seconds since epoch). A value of 0
-   *                        indicates the route is not time dependent.
-   * @param  tz_index       timezone index for the node
+   * @param  edge                        Pointer to a directed edge.
+   * @param  is_dest                     Is a directed edge the destination?
+   * @param  pred                        Predecessor edge information.
+   * @param  tile                        Current tile.
+   * @param  edgeid                      GraphId of the directed edge.
+   * @param  current_time                Current time (seconds since epoch). A value of 0
+   *                                     indicates the route is not time dependent.
+   * @param  tz_index                    timezone index for the node
+   * @param  destonly_access_restr_mask  Mask containing access restriction types that had a
+   * local traffic exemption at the start of the expansion. This mask will be mutated by eliminating
+   * flags for locally exempt access restriction types that no longer exist on the passed edge
+   *
    * @return Returns true if access is allowed, false if not.
    */
   virtual bool Allowed(const baldr::DirectedEdge* edge,
                        const bool is_dest,
                        const EdgeLabel& pred,
-                       const graph_tile_ptr& tile,
+                       const baldr::graph_tile_ptr& tile,
                        const baldr::GraphId& edgeid,
                        const uint64_t current_time,
                        const uint32_t tz_index,
-                       uint8_t& restriction_idx) const = 0;
+                       uint8_t& restriction_idx,
+                       uint8_t& destonly_access_restr_mask) const = 0;
 
   /**
    * Checks if access is allowed for an edge on the reverse path
@@ -306,11 +311,12 @@ public:
   virtual bool AllowedReverse(const baldr::DirectedEdge* edge,
                               const EdgeLabel& pred,
                               const baldr::DirectedEdge* opp_edge,
-                              const graph_tile_ptr& tile,
+                              const baldr::graph_tile_ptr& tile,
                               const baldr::GraphId& opp_edgeid,
                               const uint64_t current_time,
                               const uint32_t tz_index,
-                              uint8_t& restriction_idx) const = 0;
+                              uint8_t& restriction_idx,
+                              uint8_t& destonly_access_restr_mask) const = 0;
 
   /**
    * Checks if any edge exclusion is present.
@@ -358,7 +364,7 @@ public:
    * @return true if the edge is allowed to be used (either as a candidate or a reach traversal)
    */
   inline virtual bool Allowed(const baldr::DirectedEdge* edge,
-                              const graph_tile_ptr&,
+                              const baldr::graph_tile_ptr&,
                               uint16_t disallow_mask = kDisallowNone) const {
     auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
@@ -418,7 +424,7 @@ public:
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
-                        const graph_tile_ptr& tile,
+                        const baldr::graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const = 0;
 
@@ -429,7 +435,7 @@ public:
    * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
    * @return  Returns the cost and time (seconds).
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const baldr::graph_tile_ptr& tile) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -445,7 +451,7 @@ public:
   virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
                               const baldr::NodeInfo* node,
                               const EdgeLabel& pred,
-                              const graph_tile_ptr& tile,
+                              const baldr::graph_tile_ptr& tile,
                               const std::function<baldr::LimitedGraphReader()>& reader_getter) const;
 
   /**
@@ -470,7 +476,7 @@ public:
                                      const baldr::NodeInfo* node,
                                      const baldr::DirectedEdge* opp_edge,
                                      const baldr::DirectedEdge* opp_pred_edge,
-                                     const graph_tile_ptr& tile,
+                                     const baldr::graph_tile_ptr& tile,
                                      const baldr::GraphId& pred_id,
                                      const std::function<baldr::LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed = false,
@@ -497,7 +503,7 @@ public:
   bool Restricted(const baldr::DirectedEdge* edge,
                   const EdgeLabel& pred,
                   const edge_labels_container_t& edge_labels,
-                  const graph_tile_ptr& tile,
+                  const baldr::graph_tile_ptr& tile,
                   const baldr::GraphId& edgeid,
                   const bool forward,
                   thor::EdgeStatus* edgestatus = nullptr,
@@ -514,8 +520,12 @@ public:
           (label->predecessor() == baldr::kInvalidLabel) ? label : &edge_labels[label->predecessor()];
       return next_pred;
     };
+
+    // up to 16 elements will be allocated on stack - best effort to avoid heap allocations
+    using EdgeIdsInComplexRestriction = boost::container::small_vector<baldr::GraphId, 16>;
+
     auto reset_edge_status =
-        [&edgestatus](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
+        [&edgestatus](const EdgeIdsInComplexRestriction& edge_ids_in_complex_restriction) {
           // A complex restriction spans multiple edges, e.g. from A to C via B.
           //
           // At the point of triggering a complex restriction, all edges leading up to C
@@ -578,8 +588,7 @@ public:
         bool match = true;
         const EdgeLabel* next_pred = first_pred;
         // Remember the edge_ids in restriction for later reset
-        std::vector<baldr::GraphId> edge_ids_in_complex_restriction;
-        edge_ids_in_complex_restriction.reserve(10);
+        EdgeIdsInComplexRestriction edge_ids_in_complex_restriction;
 
         cr->WalkVias([&match, &next_pred, next_predecessor,
                       &edge_ids_in_complex_restriction](const baldr::GraphId* via) {
@@ -655,6 +664,34 @@ public:
                                                   baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
+  /**
+   * Gets an edge's restrictions that have an "except_destination" flag set.
+   *
+   * @return an 8-bit mask containing a flag for each access restriction type
+   * that can be ignored by destination only traffic.
+   */
+  inline uint8_t GetExemptedAccessRestrictions(const baldr::DirectedEdge* edge,
+                                               const baldr::graph_tile_ptr& tile,
+                                               const baldr::GraphId& edgeid) {
+
+    uint8_t destonly_access_restr_mask = 0;
+    if (ignore_restrictions_ || !(edge->access_restriction() & access_mask_) ||
+        allow_destination_only_)
+      return 0;
+
+    const std::vector<baldr::AccessRestriction>& restrictions =
+        tile->GetAccessRestrictions(edgeid.id(), access_mask_);
+
+    for (size_t i = 0; i < restrictions.size(); ++i) {
+      const auto& restr = restrictions[i];
+      if (restr.except_destination()) {
+        destonly_access_restr_mask |=
+            baldr::kAccessRestrictionMasks[static_cast<size_t>(restr.type())];
+      }
+    }
+    return destonly_access_restr_mask;
+  }
+
   /***
    * Evaluates mode-specific and time-dependent access restrictions, including a binary
    * search to get the tile's access restrictions.
@@ -670,11 +707,12 @@ public:
   inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
                                    const bool is_dest,
-                                   const graph_tile_ptr& tile,
+                                   const baldr::graph_tile_ptr& tile,
                                    const baldr::GraphId& edgeid,
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
-                                   uint8_t& restriction_idx) const {
+                                   uint8_t& restriction_idx,
+                                   uint8_t& destonly_access_restr_mask) const {
     if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
       return true;
 
@@ -683,6 +721,7 @@ public:
 
     bool time_allowed = false;
 
+    uint8_t tmp_mask = 0;
     for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restriction = restrictions[i];
       // Compare the time to the time-based restrictions
@@ -708,21 +747,32 @@ public:
             // If not, we should keep looking
 
             // We are in range at the time we are allowed at this edge
-            if (access_type == baldr::AccessType::kTimedAllowed)
+            if (access_type == baldr::AccessType::kTimedAllowed) {
+              destonly_access_restr_mask = tmp_mask;
               return true;
-            else if (access_type == baldr::AccessType::kDestinationAllowed)
+            } else if (access_type == baldr::AccessType::kDestinationAllowed)
               return allow_conditional_destination_ || is_dest;
             else
               return false;
           }
         }
       }
+
+      if (restriction.except_destination() &&
+          static_cast<size_t>(restriction.type()) < baldr::kAccessRestrictionMasks.size()) {
+        auto mask = baldr::kAccessRestrictionMasks[static_cast<size_t>(restriction.type())];
+        tmp_mask |= mask;
+        if ((destonly_access_restr_mask & mask) || allow_destination_only_)
+          continue;
+      }
+
       // In case there are additional restriction checks for a particular  mode,
       // check them now
       if (!ModeSpecificAllowed(restriction)) {
         return false;
       }
     }
+    destonly_access_restr_mask = tmp_mask;
 
     // if we have time allowed restrictions then these restrictions are
     // the only time we can route here.  Meaning all other time is restricted.
@@ -881,7 +931,9 @@ public:
    * Is the current vehicle type HGV?
    * @return  Returns whether it's a truck.
    */
-  virtual bool is_hgv() const;
+  bool is_hgv() const {
+    return is_hgv_;
+  }
 
   /**
    * Get the wheelchair required flag.
@@ -914,19 +966,19 @@ public:
   /**
    * Checks if we should exclude or not.
    */
-  virtual void AddToExcludeList(const graph_tile_ptr& tile);
+  virtual void AddToExcludeList(const baldr::graph_tile_ptr& tile);
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const graph_tile_ptr& tile, const baldr::DirectedEdge* edge);
+  virtual bool IsExcluded(const baldr::graph_tile_ptr& tile, const baldr::DirectedEdge* edge);
 
   /**
    * Checks if we should exclude or not.
    * @return  Returns true if we should exclude, false if not.
    */
-  virtual bool IsExcluded(const graph_tile_ptr& tile, const baldr::NodeInfo* node);
+  virtual bool IsExcluded(const baldr::graph_tile_ptr& tile, const baldr::NodeInfo* node);
 
   /**
    * Adds a list of edges (GraphIds) to the user specified avoid list.
@@ -991,12 +1043,13 @@ public:
    * @param  edgeid         GraphId of the opposing edge.
    * @return  Returns true if the edge is closed due to live traffic constraints, false if not.
    */
-  inline virtual bool IsClosed(const baldr::DirectedEdge* edge, const graph_tile_ptr& tile) const {
+  inline virtual bool IsClosed(const baldr::DirectedEdge* edge,
+                               const baldr::graph_tile_ptr& tile) const {
     return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 
   float SpeedPenalty(const baldr::DirectedEdge* edge,
-                     const graph_tile_ptr& tile,
+                     const baldr::graph_tile_ptr& tile,
                      const baldr::TimeInfo& time_info,
                      uint8_t flow_sources,
                      float edge_speed) const {
@@ -1140,6 +1193,9 @@ protected:
   bool include_hov2_{false};
   bool include_hov3_{false};
 
+  // Is it truck?
+  bool is_hgv_{false};
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
@@ -1282,8 +1338,8 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ *
-              ((is_hgv() ? edge->destonly_hgv() : edge->destonly()) && !pred->destonly());
+    const bool is_destonly = (is_hgv() && edge->destonly_hgv()) || (!is_hgv() && edge->destonly());
+    c.cost += destination_only_penalty_ * (is_destonly && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
@@ -1292,11 +1348,10 @@ protected:
     c.cost +=
         track_penalty_ * (edge->use() == baldr::Use::kTrack && pred->use() != baldr::Use::kTrack);
 
-    if (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) {
-      // Do not penalize internal roads that are marked as service.
-      if (!edge->internal())
-        c.cost += service_penalty_;
-    }
+    // penalize service roads that are not internal
+    c.cost += service_penalty_ *
+              (edge->use() == baldr::Use::kServiceRoad && pred->use() != baldr::Use::kServiceRoad) *
+              !edge->internal();
 
     // shortest ignores any penalties in favor of path length
     c.cost *= !shortest_;
@@ -1314,38 +1369,38 @@ using mode_costing_t = std::array<cost_ptr_t, static_cast<size_t>(TravelMode::kM
 struct BaseCostingOptionsConfig {
   BaseCostingOptionsConfig();
 
-  ranged_default_t<float> dest_only_penalty_;
-  ranged_default_t<float> maneuver_penalty_;
-  ranged_default_t<float> alley_penalty_;
-  ranged_default_t<float> gate_cost_;
-  ranged_default_t<float> gate_penalty_;
-  ranged_default_t<float> private_access_penalty_;
-  ranged_default_t<float> country_crossing_cost_;
-  ranged_default_t<float> country_crossing_penalty_;
+  midgard::ranged_default_t<float> dest_only_penalty_;
+  midgard::ranged_default_t<float> maneuver_penalty_;
+  midgard::ranged_default_t<float> alley_penalty_;
+  midgard::ranged_default_t<float> gate_cost_;
+  midgard::ranged_default_t<float> gate_penalty_;
+  midgard::ranged_default_t<float> private_access_penalty_;
+  midgard::ranged_default_t<float> country_crossing_cost_;
+  midgard::ranged_default_t<float> country_crossing_penalty_;
 
   bool disable_toll_booth_ = false;
-  ranged_default_t<float> toll_booth_cost_;
-  ranged_default_t<float> toll_booth_penalty_;
+  midgard::ranged_default_t<float> toll_booth_cost_;
+  midgard::ranged_default_t<float> toll_booth_penalty_;
 
   bool disable_ferry_ = false;
-  ranged_default_t<float> ferry_cost_;
-  ranged_default_t<float> use_ferry_;
+  midgard::ranged_default_t<float> ferry_cost_;
+  midgard::ranged_default_t<float> use_ferry_;
 
   bool disable_rail_ferry_ = false;
-  ranged_default_t<float> rail_ferry_cost_;
-  ranged_default_t<float> use_rail_ferry_;
+  midgard::ranged_default_t<float> rail_ferry_cost_;
+  midgard::ranged_default_t<float> use_rail_ferry_;
 
-  ranged_default_t<float> service_penalty_;
-  ranged_default_t<float> service_factor_;
+  midgard::ranged_default_t<float> service_penalty_;
+  midgard::ranged_default_t<float> service_factor_;
 
-  ranged_default_t<float> height_;
-  ranged_default_t<float> width_;
+  midgard::ranged_default_t<float> height_;
+  midgard::ranged_default_t<float> width_;
 
-  ranged_default_t<float> use_tracks_;
-  ranged_default_t<float> use_living_streets_;
-  ranged_default_t<float> use_lit_;
+  midgard::ranged_default_t<float> use_tracks_;
+  midgard::ranged_default_t<float> use_living_streets_;
+  midgard::ranged_default_t<float> use_lit_;
 
-  ranged_default_t<float> closure_factor_;
+  midgard::ranged_default_t<float> closure_factor_;
 
   bool exclude_unpaved_;
   bool exclude_bridges_;

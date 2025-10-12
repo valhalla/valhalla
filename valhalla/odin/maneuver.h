@@ -15,8 +15,6 @@
 #include <memory>
 #include <string>
 
-using namespace valhalla::baldr;
-
 namespace valhalla {
 namespace odin {
 
@@ -69,9 +67,9 @@ public:
   bool is_tunnel() const;
   void set_tunnel(bool tunnel);
 
-  const StreetNames& street_names() const;
+  const baldr::StreetNames& street_names() const;
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
-  void set_street_names(std::unique_ptr<StreetNames>&& street_names);
+  void set_street_names(std::unique_ptr<baldr::StreetNames>&& street_names);
   bool HasStreetNames() const;
   void ClearStreetNames();
 
@@ -81,15 +79,15 @@ public:
   bool HasSimilarNames(const Maneuver* other_maneuver,
                        bool allow_begin_intersecting_edge_name_consistency = false) const;
 
-  const StreetNames& begin_street_names() const;
+  const baldr::StreetNames& begin_street_names() const;
   void set_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
-  void set_begin_street_names(std::unique_ptr<StreetNames>&& begin_street_names);
+  void set_begin_street_names(std::unique_ptr<baldr::StreetNames>&& begin_street_names);
   bool HasBeginStreetNames() const;
   void ClearBeginStreetNames();
 
-  const StreetNames& cross_street_names() const;
+  const baldr::StreetNames& cross_street_names() const;
   void set_cross_street_names(const std::vector<std::pair<std::string, bool>>& names);
-  void set_cross_street_names(std::unique_ptr<StreetNames>&& cross_street_names);
+  void set_cross_street_names(std::unique_ptr<baldr::StreetNames>&& cross_street_names);
   bool HasCrossStreetNames() const;
   void ClearCrossStreetNames();
 
@@ -277,16 +275,17 @@ public:
   float roundabout_exit_length(const Options::Units& units = Options::kilometers) const;
   void set_roundabout_exit_length(float roundabout_exit_km_length); // Kilometers
 
-  const StreetNames& roundabout_exit_street_names() const;
+  const baldr::StreetNames& roundabout_exit_street_names() const;
   void set_roundabout_exit_street_names(const std::vector<std::pair<std::string, bool>>& names);
-  void set_roundabout_exit_street_names(std::unique_ptr<StreetNames>&& roundabout_exit_street_names);
+  void set_roundabout_exit_street_names(
+      std::unique_ptr<baldr::StreetNames>&& roundabout_exit_street_names);
   bool HasRoundaboutExitStreetNames() const;
   void ClearRoundaboutExitStreetNames();
 
-  const StreetNames& roundabout_exit_begin_street_names() const;
+  const baldr::StreetNames& roundabout_exit_begin_street_names() const;
   void set_roundabout_exit_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
   void set_roundabout_exit_begin_street_names(
-      std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names);
+      std::unique_ptr<baldr::StreetNames>&& roundabout_exit_begin_street_names);
   bool HasRoundaboutExitBeginStreetNames() const;
   void ClearRoundaboutExitBeginStreetNames();
 
@@ -373,8 +372,8 @@ public:
   void set_verbal_arrive_instruction(const std::string& verbal_arrive_instruction);
   void set_verbal_arrive_instruction(std::string&& verbal_arrive_instruction);
 
-  const VerbalTextFormatter* verbal_formatter() const;
-  void set_verbal_formatter(std::unique_ptr<VerbalTextFormatter>&& verbal_formatter);
+  const baldr::VerbalTextFormatter* verbal_formatter() const;
+  void set_verbal_formatter(std::unique_ptr<baldr::VerbalTextFormatter>&& verbal_formatter);
 
   const std::vector<DirectionsLeg_GuidanceView>& guidance_views() const;
   std::vector<DirectionsLeg_GuidanceView>* mutable_guidance_views();
@@ -426,9 +425,9 @@ protected:
   bool is_steps_;
   bool is_bridge_;
   bool is_tunnel_;
-  std::unique_ptr<StreetNames> street_names_;
-  std::unique_ptr<StreetNames> begin_street_names_;
-  std::unique_ptr<StreetNames> cross_street_names_;
+  std::unique_ptr<baldr::StreetNames> street_names_;
+  std::unique_ptr<baldr::StreetNames> begin_street_names_;
+  std::unique_ptr<baldr::StreetNames> cross_street_names_;
   std::string instruction_;
   float length_;      // Kilometers
   double time_;       // Seconds
@@ -479,8 +478,8 @@ protected:
   bool has_combined_enter_exit_roundabout_;
   float roundabout_length_;      // Kilometers
   float roundabout_exit_length_; // Kilometers
-  std::unique_ptr<StreetNames> roundabout_exit_street_names_;
-  std::unique_ptr<StreetNames> roundabout_exit_begin_street_names_;
+  std::unique_ptr<baldr::StreetNames> roundabout_exit_street_names_;
+  std::unique_ptr<baldr::StreetNames> roundabout_exit_begin_street_names_;
   Signs roundabout_exit_signs_;
   uint32_t roundabout_exit_begin_heading_;
   uint32_t roundabout_exit_turn_degree_;
@@ -537,7 +536,7 @@ protected:
 
   DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_;
 
-  std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
+  std::unique_ptr<baldr::VerbalTextFormatter> verbal_formatter_;
 
   std::vector<DirectionsLeg_GuidanceView> guidance_views_;
 };

@@ -4,6 +4,8 @@
 
 #include <ostream>
 
+using namespace valhalla::baldr;
+
 namespace valhalla {
 namespace mjolnir {
 
