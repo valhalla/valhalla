@@ -7,8 +7,6 @@ jobs:
   build_and_publish:
     strategy:
       matrix:
-        dockerfile: [Dockerfile, Dockerfile-scripted]
-        os: [ubuntu-latest, ubuntu-24.04-arm]
         include:
           - os: ubuntu-latest
             platform: linux/amd64
