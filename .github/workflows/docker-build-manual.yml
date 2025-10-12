@@ -81,3 +81,8 @@ jobs:
             --amend ghcr.io/valhalla/valhalla:${{ github.ref_name }}-amd64 \
             --amend ghcr.io/valhalla/valhalla:${{ github.ref_name }}-arm64 
           docker manifest push ghcr.io/valhalla/valhalla:${{ github.ref_name }}
+          docker manifest create \
+            ghcr.io/valhalla/valhalla-scripted:${{ github.ref_name }} \
+            --amend ghcr.io/valhalla/valhalla-scripted:${{ github.ref_name }}-amd64 \
+            --amend ghcr.io/valhalla/valhalla-scripted:${{ github.ref_name }}-arm64 
+          docker manifest push ghcr.io/valhalla/valhalla-scripted:${{ github.ref_name }}
