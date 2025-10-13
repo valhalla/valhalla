@@ -6,12 +6,35 @@
 namespace valhalla {
 namespace baldr {
 
+namespace {
+std::unordered_set<std::string_view>
+PrecomputeEnabledCategories(const std::unordered_map<std::string_view, bool>& attributes) {
+  std::unordered_set<std::string_view> enabled_categories;
+  for (const auto& pair : attributes) {
+    if (!pair.second) {
+      continue;
+    }
+
+    const auto dot_pos = pair.first.find('.');
+    if (dot_pos == std::string_view::npos) {
+      // it may happen for some attributes that they don't have category (e.g. kOsmChangeset)
+      continue;
+    }
+
+    // must have a dot in the end
+    auto category = pair.first.substr(0, dot_pos + 1);
+    enabled_categories.insert(category);
+  }
+  return enabled_categories;
+}
+} // namespace
+
 /*
  * Map of attributes that a user can request to enable or disable, and their defaults.
  * Most attributes are enabled by default but a few additional attributes are disabled
  * unless explicitly included with the filter attributes request option.
  */
-const std::unordered_map<std::string, bool> AttributesController::kDefaultAttributes = {
+const std::unordered_map<std::string_view, bool> AttributesController::kDefaultAttributes = {
     // Edge keys
     {kEdgeNames, true},
     {kEdgeLength, true},
@@ -151,8 +174,12 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kShapeAttributesClosure, false},
 };
 
+const std::unordered_set<std::string_view> AttributesController::kDefaultEnabledCategories =
+    PrecomputeEnabledCategories(kDefaultAttributes);
+
 AttributesController::AttributesController() {
   attributes = kDefaultAttributes;
+  enabled_categories = kDefaultEnabledCategories;
 }
 
 AttributesController::AttributesController(const Options& options, bool is_strict_filter) {
@@ -184,28 +211,14 @@ AttributesController::AttributesController(const Options& options, bool is_stric
 
   // Set the edge elevation attributes based on elevation interval being set
   attributes.at(kEdgeElevation) = options.elevation_interval() > 0.0f;
+
+  enabled_categories = PrecomputeEnabledCategories(attributes);
 }
 
 void AttributesController::disable_all() {
   for (auto& pair : attributes) {
     pair.second = false;
   }
-}
-
-bool AttributesController::operator()(const std::string& key) const {
-  return attributes.at(key);
-}
-
-// Used to check if any keys starting with the `category` string are enabled.
-bool AttributesController::category_attribute_enabled(const std::string& category) const {
-  for (const auto& pair : attributes) {
-    // if the key starts with the specified category and it is enabled
-    // then return true
-    if ((pair.first.compare(0, category.size(), category) == 0) && pair.second) {
-      return true;
-    }
-  }
-  return false;
 }
 
 } // namespace baldr
