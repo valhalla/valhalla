@@ -87,6 +87,45 @@ TEST(AttrController, TestAdminAttributeEnabled) {
   TryCategoryAttributeEnabled(controller, kAdminCategory, true);
 }
 
+TEST(AttrController, TestMatrixAttributeEnabled) {
+  AttributesController controller;
+
+  // Test default
+  TryCategoryAttributeEnabled(controller, kMatrixConnectionCategory, true);
+
+  // Test all matrix attributes disabled
+  controller.disable_all();
+  TryCategoryAttributeEnabled(controller, kMatrixConnectionCategory, false);
+
+  // Test one matrix attribute enabled
+  controller.attributes.at(kMatrixConnectionDistance) = true;
+  TryCategoryAttributeEnabled(controller, kMatrixConnectionCategory, true);
+
+  // Test some matrix attributes enabled
+  controller.disable_all();
+  controller.attributes.at(kMatrixConnectionBeginHeading) = true;
+  controller.attributes.at(kMatrixConnectionEndHeading) = true;
+  controller.attributes.at(kMatrixConnectionDistance) = false;
+  controller.attributes.at(kMatrixConnectionShape) = true;
+  TryCategoryAttributeEnabled(controller, kMatrixConnectionCategory, true);
+}
+
+TEST(AttrController, TestMatrixAttributesFiltering) {
+  // Test include filter action
+  valhalla::Options options;
+  options.set_filter_action(valhalla::FilterAction::include);
+  options.add_filter_attributes(kMatrixConnectionDistance);
+  options.add_filter_attributes(kMatrixConnectionTime);
+
+  AttributesController controller(options, true);
+
+  // Only included attributes should be enabled
+  EXPECT_TRUE(controller(kMatrixConnectionDistance));
+  EXPECT_TRUE(controller(kMatrixConnectionTime));
+  EXPECT_FALSE(controller(kMatrixConnectionBeginHeading));
+  EXPECT_FALSE(controller(kMatrixConnectionEndHeading));
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
