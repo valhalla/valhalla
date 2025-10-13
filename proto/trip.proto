@@ -236,6 +236,14 @@ message TripLeg {
     }
     SpeedType speed_type = 65;
     bool traffic_signal = 66;
+  
+    oneof has_osmid {
+      uint64 begin_node_osmid = 67;
+    }
+
+    oneof has_end_osmid {
+        uint64 end_node_osmid = 68;
+    }
   }
 
   message IntersectingEdge {
@@ -293,7 +301,11 @@ message TripLeg {
     PathCost cost = 12;             // how much cost did it take at this node in the path
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for recostings
     BikeShareStationInfo bss_info = 14;
-     bool traffic_signal = 21;
+    oneof has_osmid {
+      uint64 osmid = 15;
+    }
+    bool traffic_signal = 21;
+    
  }
 
   message Admin {
