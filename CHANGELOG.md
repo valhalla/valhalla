@@ -65,6 +65,7 @@
    * FIXED: Fix Matrix API to return correct end location. [#5509](https://github.com/valhalla/valhalla/pull/5509)
    * FIXED: Set node snap flags properly in PBF PathEDGE [#5508](https://github.com/valhalla/valhalla/pull/5508)
    * FIXED: Add error handling to valhalla_build_tiles command in Docker [#5520](https://github.com/valhalla/valhalla/pull/5520)
+   * FIXED: Stabilize floating point calculations for small or nearly equal values [#5529](https://github.com/valhalla/valhalla/pull/5529)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
@@ -153,6 +154,11 @@
    * CHANGED: Replace `oneof bool` to `bool` for default false options [#5541](https://github.com/valhalla/valhalla/pull/5541)
    * CHANGED: Optimise stopimpact calls in TransitionCost [#5545](https://github.com/valhalla/valhalla/pull/5545)
    * CHANGED: Optimise best_transition_cost function [#5537](https://github.com/valhalla/valhalla/pull/5537)
+   * ADDED `thor.costmatrix.min_iterations` config param [#5559](https://github.com/valhalla/valhalla/pull/5559)
+   * CHANGED: Broke out exceptions.h from worker.h [#5571](https://github.com/valhalla/valhalla/pull/5571)
+   * ADDED: `checksum` to GraphTileHeader, a 64bit MD5 hash of the OSM PBFs [#5542](https://github.com/valhalla/valhalla/pull/5542)
+   * ADDED: small CMake project and GHA to easily test statements on various compilers [#5564](https://github.com/valhalla/valhalla/pull/5564)
+   * CHANGED: Use boost::container::small_vector in DynamicCost::Restricted to avoid allocations [#5586](https://github.com/valhalla/valhalla/pull/5586)
    * CHANGED: Optimise turntype calls in TransitionCost [#5590](https://github.com/valhalla/valhalla/pull/5590)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
@@ -169,6 +175,7 @@
    * ADDED: Provide conditional speed limits from "maxspeed:conditional" in `/locate` and proto `/route` responses [#4851](https://github.com/valhalla/valhalla/pull/4851)
    * ADDED: Support multiple levels and level ranges [#4879](https://github.com/valhalla/valhalla/pull/4879)
    * ADDED: Level location search filter [#4926](https://github.com/valhalla/valhalla/pull/4926)
+   * CHANGED: Optimise AttributesController::category_attribute_enabled [#5580](https://github.com/valhalla/valhalla/pull/5580)
 
 ## Release Date: 2024-08-21 Valhalla 3.5.0
 * **Removed**
