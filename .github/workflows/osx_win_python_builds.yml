@@ -18,6 +18,10 @@ on:
       - docs/
       - run_route_scripts/
       - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
     branches:
       - master
     tags:
@@ -29,6 +33,10 @@ on:
       - docs/
       - run_route_scripts/
       - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
     branches:
       - master
   workflow_dispatch:
