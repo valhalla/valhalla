@@ -173,8 +173,8 @@ void make_tile() {
   }
 }
 
-std::shared_ptr<vs::DynamicCost> create_costing() {
-  return vs::CreateNoCost({});
+std::shared_ptr<vs::DynamicCost> create_costing(valhalla::baldr::GraphReader& reader) {
+  return vs::CreateNoCost({}, reader);
 }
 
 void search(valhalla::baldr::Location location,
@@ -193,7 +193,7 @@ void search(valhalla::baldr::Location location,
   location = PathLocation::fromPBF(pbf);
   location.street_side_max_distance_ = 5000;
 
-  const auto costing = create_costing();
+  const auto costing = create_costing(reader);
   const auto results = Search({location}, reader, costing);
   const auto& p = results.at(location);
 
@@ -231,7 +231,7 @@ void search(valhalla::baldr::Location location, size_t result_count, int reachab
   location = PathLocation::fromPBF(pbf);
   location.street_side_max_distance_ = 5000;
 
-  const auto costing = create_costing();
+  const auto costing = create_costing(reader);
 
   const auto results = Search({location}, reader, costing);
   if (results.empty() && result_count == 0)

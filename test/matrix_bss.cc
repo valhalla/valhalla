@@ -47,7 +47,7 @@ public:
     rapidjson::Document doc;
     sif::ParseCosting(doc, "/costing_options", options);
     sif::TravelMode mode;
-    mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
+    mode_costing = sif::CostFactory().CreateModeCosting(options, mode, reader);
   }
 
   std::string make_matrix_request(const std::vector<std::pair<float, float>>& sources,

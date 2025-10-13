@@ -23,8 +23,9 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
  * Create an auto route cost method. This is generally shortest time but uses
  * hierarchies and can avoid "shortcuts" through residential areas.
  * @param  costing pbf with request options.
+ * @param  reader  graph reader reference.
  */
-cost_ptr_t CreateAutoCost(const Costing& costing);
+cost_ptr_t CreateAutoCost(const Costing& costing, baldr::GraphReader& reader);
 
 /**
  * Parses the bus cost options from json and stores values in pbf.
@@ -42,8 +43,9 @@ void ParseBusCostOptions(const rapidjson::Document& doc,
  * uses the same rules except for using the bus access flag instead
  * of the auto access flag.
  * @param  costing pbf with request options.
+ * @param  reader  graph reader reference.
  */
-cost_ptr_t CreateBusCost(const Costing& costing);
+cost_ptr_t CreateBusCost(const Costing& costing, baldr::GraphReader& reader);
 
 /**
  * Parses the taxi cost options from json and stores values in pbf.
@@ -60,8 +62,9 @@ void ParseTaxiCostOptions(const rapidjson::Document& doc,
  * Create a taxi cost method. This is derived from auto costing and
  * uses the same rules except for favoring taxi roads
  * @param  costing pbf with request options.
+ * @param  reader  graph reader reference.
  */
-cost_ptr_t CreateTaxiCost(const Costing& costing);
+cost_ptr_t CreateTaxiCost(const Costing& costing, baldr::GraphReader& reader);
 
 } // namespace sif
 } // namespace valhalla

@@ -266,15 +266,12 @@ public:
    * @param  node          Node (intersection) where transition occurs.
    * @param  pred          Predecessor edge information.
    * @param  tile          Pointer to the graph tile containing the to edge.
-   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return Returns the cost and time (seconds)
    */
-  virtual Cost
-  TransitionCost(const baldr::DirectedEdge* edge,
-                 const baldr::NodeInfo* node,
-                 const EdgeLabel& pred,
-                 const graph_tile_ptr& tile,
-                 const std::function<baldr::LimitedGraphReader()>& reader_getter) const override;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -285,8 +282,6 @@ public:
    * @param  edge               the opposing predecessor in the reverse tree
    * @param  tile               Graphtile that contains the node and the opp_edge
    * @param  edge_id            Graph ID of opp_pred_edge to get its tile if needed
-   * @param  reader_getter      Functor that facilitates access to a limited version of the graph
-   * reader
    * @param  has_measured_speed Do we have any of the measured speed types set?
    * @param  internal_turn      Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
@@ -297,7 +292,6 @@ public:
                                      const baldr::DirectedEdge* edge,
                                      const graph_tile_ptr& tile,
                                      const GraphId& pred_id,
-                                     const std::function<baldr::LimitedGraphReader()>& reader_getter,
                                      const bool has_measured_speed,
                                      const InternalTurn /*internal_turn*/) const override;
 
@@ -472,12 +466,10 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
-Cost MotorScooterCost::TransitionCost(
-    const baldr::DirectedEdge* edge,
-    const baldr::NodeInfo* node,
-    const EdgeLabel& pred,
-    const graph_tile_ptr& /*tile*/,
-    const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/) const {
+Cost MotorScooterCost::TransitionCost(const baldr::DirectedEdge* edge,
+                                      const baldr::NodeInfo* node,
+                                      const EdgeLabel& pred,
+                                      const graph_tile_ptr& /*tile*/) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
@@ -538,16 +530,14 @@ Cost MotorScooterCost::TransitionCost(
 // when using a reverse search (from destination towards the origin).
 // pred is the opposing current edge in the reverse tree
 // edge is the opposing predecessor in the reverse tree
-Cost MotorScooterCost::TransitionCostReverse(
-    const uint32_t idx,
-    const baldr::NodeInfo* node,
-    const baldr::DirectedEdge* pred,
-    const baldr::DirectedEdge* edge,
-    const graph_tile_ptr& /*tile*/,
-    const GraphId& /*pred_id*/,
-    const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
-    const bool has_measured_speed,
-    const InternalTurn /*internal_turn*/) const {
+Cost MotorScooterCost::TransitionCostReverse(const uint32_t idx,
+                                             const baldr::NodeInfo* node,
+                                             const baldr::DirectedEdge* pred,
+                                             const baldr::DirectedEdge* edge,
+                                             const graph_tile_ptr& /*tile*/,
+                                             const GraphId& /*pred_id*/,
+                                             const bool has_measured_speed,
+                                             const InternalTurn /*internal_turn*/) const {
 
   // MotorScooters should be able to make uturns on short internal edges; therefore, InternalTurn
   // is ignored for now.
@@ -622,7 +612,7 @@ void ParseMotorScooterCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUsePrimaryRange, json, "/use_primary", use_primary);
 }
 
-cost_ptr_t CreateMotorScooterCost(const Costing& costing_options) {
+cost_ptr_t CreateMotorScooterCost(const Costing& costing_options, baldr::GraphReader& /*reader*/) {
   return std::make_shared<MotorScooterCost>(costing_options);
 }
 

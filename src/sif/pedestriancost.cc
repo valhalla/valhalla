@@ -12,6 +12,8 @@
 #include "test.h"
 #include "worker.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 #include <random>
 #endif
 
@@ -254,7 +256,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  PedestrianCost(const Costing& costing_options);
+  PedestrianCost(const Costing& costing_options, baldr::GraphReader& reader);
 
   // virtual destructor
   virtual ~PedestrianCost() {
@@ -386,15 +388,12 @@ public:
    * @param  node          Node (intersection) where transition occurs.
    * @param  pred          Predecessor edge information.
    * @param  tile          Pointer to the graph tile containing the to edge.
-   * @param  reader_getter Functor that facilitates access to a limited version of the graph reader
    * @return  Returns the cost and time (seconds)
    */
-  virtual Cost
-  TransitionCost(const baldr::DirectedEdge* edge,
-                 const baldr::NodeInfo* node,
-                 const EdgeLabel& pred,
-                 const graph_tile_ptr& tile,
-                 const std::function<LimitedGraphReader()>& reader_getter) const override;
+  virtual Cost TransitionCost(const baldr::DirectedEdge* edge,
+                              const baldr::NodeInfo* node,
+                              const EdgeLabel& pred,
+                              const graph_tile_ptr& tile) const override;
 
   /**
    * Returns the cost to make the transition from the predecessor edge
@@ -407,8 +406,6 @@ public:
    * @param  edge               the opposing predecessor in the reverse tree
    * @param  tile               Graphtile that contains the node and the opp_edge
    * @param  edge_id            Graph ID of opp_pred_edge to get its tile if needed
-   * @param  reader_getter      Functor that facilitates access to a limited version of the graph
-   * reader
    * @param  has_measured_speed Do we have any of the measured speed types set?
    * @param  internal_turn      Did we make an turn on a short internal edge.
    * @return  Returns the cost and time (seconds)
@@ -419,7 +416,6 @@ public:
                                      const baldr::DirectedEdge* edge,
                                      const graph_tile_ptr& tile,
                                      const GraphId& edge_id,
-                                     const std::function<LimitedGraphReader()>& reader_getter,
                                      const bool /*has_measured_speed*/,
                                      const InternalTurn /*internal_turn*/) const override;
 
@@ -591,12 +587,17 @@ public:
     c.cost *= !shortest_;
     return c;
   }
+
+private:
+  // limited version of graph reader
+  std::unique_ptr<baldr::LimitedGraphReader> graph_reader_;
 };
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-PedestrianCost::PedestrianCost(const Costing& costing)
-    : DynamicCost(costing, TravelMode::kPedestrian, kPedestrianAccess) {
+PedestrianCost::PedestrianCost(const Costing& costing, baldr::GraphReader& reader)
+    : DynamicCost(costing, TravelMode::kPedestrian, kPedestrianAccess),
+      graph_reader_(std::make_unique<baldr::LimitedGraphReader>(reader)) {
   const auto& costing_options = costing.options();
 
   // Set hierarchy to allow unlimited transitions
@@ -774,8 +775,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
 Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
                                     const baldr::NodeInfo* node,
                                     const EdgeLabel& pred,
-                                    const graph_tile_ptr& tile,
-                                    const std::function<LimitedGraphReader()>& reader_getter) const {
+                                    const graph_tile_ptr& tile) const {
   // Special cases: fixed penalty for steps/stairs
   if (edge->use() == Use::kSteps) {
     return {step_penalty_, 0.0f};
@@ -787,8 +787,7 @@ Cost PedestrianCost::TransitionCost(const baldr::DirectedEdge* edge,
 
   // fixed per level penalty for elevator
   if (node->type() == NodeType::kElevator) {
-    auto reader = reader_getter();
-    auto pred_tile = reader.GetGraphTile(pred.edgeid());
+    auto pred_tile = graph_reader_->GetGraphTile(pred.edgeid());
     auto levels = tile->edgeinfo(edge).levels();
     auto other_de = pred_tile->directededge(pred.edgeid());
     auto prev_levels = pred_tile->edgeinfo(other_de).levels();
@@ -824,7 +823,6 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
                                            const baldr::DirectedEdge* edge,
                                            const graph_tile_ptr& tile,
                                            const GraphId& edge_id,
-                                           const std::function<LimitedGraphReader()>& reader_getter,
                                            const bool /*has_measured_speed*/,
                                            const InternalTurn /*internal_turn*/) const {
 
@@ -844,8 +842,7 @@ Cost PedestrianCost::TransitionCostReverse(const uint32_t idx,
   // per level penalty for elevator node
   if (node->type() == NodeType::kElevator) {
     // call functor to get limited access to reader
-    baldr::LimitedGraphReader reader = reader_getter();
-    auto to_tile = reader.GetGraphTile(edge_id);
+    auto to_tile = graph_reader_->GetGraphTile(edge_id);
     auto levels = tile->edgeinfo(pred).levels();
     auto prev_levels = to_tile->edgeinfo(edge).levels();
     unsigned int traversed_levels = levels.first.size() == 1 && prev_levels.first.size() == 1 &&
@@ -916,12 +913,12 @@ void ParsePedestrianCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kElevatorPenaltyRange, json, "/elevator_penalty", elevator_penalty);
 }
 
-cost_ptr_t CreatePedestrianCost(const Costing& costing_options) {
-  return std::make_shared<PedestrianCost>(costing_options);
+cost_ptr_t CreatePedestrianCost(const Costing& costing_options, baldr::GraphReader& reader) {
+  return std::make_shared<PedestrianCost>(costing_options, reader);
 }
 
-cost_ptr_t CreateBikeShareCost(const Costing& costing_options) {
-  auto cost_ptr = std::make_shared<PedestrianCost>(costing_options);
+cost_ptr_t CreateBikeShareCost(const Costing& costing_options, baldr::GraphReader& reader) {
+  auto cost_ptr = std::make_shared<PedestrianCost>(costing_options, reader);
   cost_ptr->project_on_bss_connection = true;
   return cost_ptr;
 }
@@ -938,9 +935,16 @@ using namespace sif;
 
 namespace {
 
+// Create a minimal graph reader for testing (doesn't need actual tiles)
+baldr::GraphReader& get_test_reader() {
+  static baldr::GraphReader reader(test::make_config("test/data/utrecht_tiles"));
+  return reader;
+}
+
 class TestPedestrianCost : public PedestrianCost {
 public:
-  TestPedestrianCost(const Costing& costing_options) : PedestrianCost(costing_options){};
+  TestPedestrianCost(const Costing& costing_options, baldr::GraphReader& reader)
+      : PedestrianCost(costing_options, reader){};
 
   using PedestrianCost::alley_penalty_;
   using PedestrianCost::country_crossing_cost_;
@@ -960,7 +964,8 @@ TestPedestrianCost* make_pedestriancost_from_json(const std::string& property,
      << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestPedestrianCost(request.options().costings().find(Costing::pedestrian)->second);
+  return new TestPedestrianCost(request.options().costings().find(Costing::pedestrian)->second,
+                                get_test_reader());
 }
 
 std::uniform_real_distribution<float>*

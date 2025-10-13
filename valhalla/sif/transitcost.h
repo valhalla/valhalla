@@ -22,8 +22,9 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
 /**
  * Create a transit cost object.
  * @param  options pbf with request options.
+ * @param  reader  graph reader reference.
  */
-cost_ptr_t CreateTransitCost(const Costing& costing);
+cost_ptr_t CreateTransitCost(const Costing& costing, baldr::GraphReader& reader);
 
 } // namespace sif
 } // namespace valhalla

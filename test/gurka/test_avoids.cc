@@ -263,8 +263,8 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
     ll->set_lng(coord.lng());
   }
 
-  const auto costing = valhalla::sif::CostFactory{}.Create(co);
   vb::GraphReader reader(avoid_map.config.get_child("mjolnir"));
+  const auto costing = valhalla::sif::CostFactory{}.Create(co, reader);
 
   // should return the shortcut edge ID as well
   size_t found_shortcuts = 0;
