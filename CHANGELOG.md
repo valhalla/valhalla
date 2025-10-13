@@ -6,7 +6,6 @@
    * REMOVED: `valhalla/filesystem` from the project in favor of the std equivalent [#5321](https://github.com/valhalla/valhalla/pull/5321)
    * REMOVED: `use`/`using` statements from public headers [#5568](https://github.com/valhalla/valhalla/pull/5568)
 * **Bug Fix**
-   * FIXED: Fix valhalla_build_tiles crash with dense point graphs [#5529](https://github.com/valhalla/valhalla/pull/5529)
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
    * FIXED: Fix valhalla_benchmark_loki benchmark application. [#4981](https://github.com/valhalla/valhalla/pull/4981)
@@ -66,6 +65,7 @@
    * FIXED: Fix Matrix API to return correct end location. [#5509](https://github.com/valhalla/valhalla/pull/5509)
    * FIXED: Set node snap flags properly in PBF PathEDGE [#5508](https://github.com/valhalla/valhalla/pull/5508)
    * FIXED: Add error handling to valhalla_build_tiles command in Docker [#5520](https://github.com/valhalla/valhalla/pull/5520)
+   * FIXED: Stabilize floating point calculations for small or nearly equal values [#5529](https://github.com/valhalla/valhalla/pull/5529)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)

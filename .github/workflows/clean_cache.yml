@@ -6,7 +6,7 @@ on:
     # every first of the month
     - cron: "0 0 1 * *"
   pull_request:
-    branches: 
+    branches:
       - master
     types:
       - closed
@@ -23,7 +23,7 @@ jobs:
           chmod +x mc
           ./mc --help
           ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-      
+
       - name: Remove branch's cache objects
         shell: bash
         run: |
@@ -43,7 +43,7 @@ jobs:
   clear_ccache:
     name: Clear ccache on branch
     runs-on: ubuntu-latest
-    if: {{  github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    if: ${{  github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Install and setup mc client
         run: |
@@ -51,7 +51,7 @@ jobs:
           chmod +x mc
           ./mc --help
           ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-      
+
       - name: Delete master caches
         run: |
           set -euo pipefail
