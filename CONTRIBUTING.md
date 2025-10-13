@@ -79,6 +79,12 @@ We can alter the logic for the requests inside that script, depending on what we
     --format 'csv'
 ```
 
+### Compiler tests
+
+We add a placeholder CMake project at [`test/compiler_checks`](https://github.com/valhalla/valhalla/blob/master/test/compiler_checks), which can be used to make assertions about non-standard behavior to be able to quickly judge compatibility across a range of compilers.
+
+To use this, add your executable(s) code, they will be picked up automatically by CMake. Then push to a branch and use the manual trigger of the `check_compilers.yml` GHA workflow to run it.
+
 ## Translation contributions
 
 Valhalla currently supports almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. We're using [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) to manage translations and try to download all improvements before each release.
