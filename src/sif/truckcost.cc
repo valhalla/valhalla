@@ -384,7 +384,7 @@ TruckCost::TruckCost(const Costing& costing)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.015
-  
+
   // Preference to use vignette roads. Sets a vignette factor.
   // A vignette factor of 0 would indicate no adjustment to weighting for vignette roads.
   // use_vignettes = 1 would reduce weighting slightly (a negative delta) while
