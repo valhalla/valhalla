@@ -446,7 +446,6 @@ template <class coord_t> double sample::get(const coord_t& coord, tile_data& til
   // the caller can pass a cached tile, so we only fetch one if its not the one they already have
   if (index != tile.get_index()) {
     {
-      std::lock_guard<std::mutex> _(cache_lck);
       tile = cache_->source(index);
     }
     if (!tile) {
@@ -504,7 +503,6 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
   if (!filesystem_utils::save(fpath, raw_data))
     return false;
 
-  std::lock_guard<std::mutex> _(cache_lck);
   return cache_->insert(data->first, fpath.string(), data->second);
 }
 
@@ -541,7 +539,6 @@ template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
 }
 
 void sample::add_single_tile(const std::string& path) {
-  std::lock_guard<std::mutex> _(cache_lck);
   cache_->insert(0, path, format_t::RAW);
 }
 
