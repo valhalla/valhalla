@@ -1285,7 +1285,7 @@ protected:
   uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
   uint64_t vignette_ : 1;       // Edge is part of a road requiring a vignette
   uint64_t spare4_ : 2;         // spare bits
-  
+
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)
   uint64_t edge_to_left_ : 8;   // Is there an edge to the left (between

@@ -355,7 +355,7 @@ public:
   float highway_factor_;      // Factor applied when road is a motorway or trunk
   float alley_factor_;        // Avoid alleys factor.
   float toll_factor_;         // Factor applied when road has a toll
-  float vignette_factor_; // Factor applied when road has a vignette.
+  float vignette_factor_;     // Factor applied when road has a vignette.
   float surface_factor_;      // How much the surface factors are applied.
   float distance_factor_;     // How much distance factors in overall favorability
   float inv_distance_factor_; // How much time factors in overall favorability
