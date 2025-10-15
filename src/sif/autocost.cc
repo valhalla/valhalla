@@ -720,6 +720,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance);
   JSON_PBF_RANGED_DEFAULT(co, kAutoHeightRange, json, "/height", height);
   JSON_PBF_RANGED_DEFAULT(co, kAutoWidthRange, json, "/width", width);
+  JSON_PBF_RANGED_DEFAULT(co, kAutoLengthRange, json, "/length", height);
+  JSON_PBF_RANGED_DEFAULT(co, kAutoWeightRange, json, "/weight", height);
   JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
                           restriction_probability);
   JSON_PBF_DEFAULT_V2(co, false, json, "/include_hot", include_hot);
