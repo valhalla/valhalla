@@ -242,7 +242,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     if (FORWARD) {
-      bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
+      bdedgelabels_.emplace_back(pred_idx, edgeid, kInvalidGraphId, directededge, newcost, mode_,
                                  transition_cost, path_dist, false,
                                  (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
