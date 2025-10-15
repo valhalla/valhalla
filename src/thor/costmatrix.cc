@@ -1,10 +1,10 @@
 #include "thor/costmatrix.h"
 #include "baldr/datetime.h"
+#include "exceptions.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/hierarchylimits.h"
 #include "sif/recost.h"
-#include "worker.h"
 
 #include <ankerl/unordered_dense.h>
 
@@ -23,6 +23,22 @@ constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
 constexpr uint32_t kMaxLocationReservation = 25; // the default config for max matrix locations
 constexpr uint32_t kDefaultMinIterations = 100;
 constexpr uint32_t kDefaultMaxIterations = 2800;
+
+/**
+ * Checks whether an edge of the source (target) correlation is present with the same percent_along in
+ * any of the target (source) correlations.
+ */
+bool is_super_trivial(const valhalla::PathEdge& edge,
+                      const std::unordered_multimap<GraphId, double>& other_edges) {
+  GraphId edgeid(edge.graph_id());
+  auto dests = other_edges.equal_range(edgeid);
+  for (auto it = dests.first; it != dests.second; ++it) {
+    if (edge.percent_along() == it->second) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
@@ -154,8 +170,8 @@ bool CostMatrix::SourceToTarget(Api& request,
 
   // Set the source and target locations
   // TODO: for now we only allow depart_at/current date_time
-  SetSources(graphreader, source_location_list, time_infos);
-  SetTargets(graphreader, target_location_list);
+  SetSources(graphreader, source_location_list, time_infos, target_location_list);
+  SetTargets(graphreader, target_location_list, source_location_list);
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -859,7 +875,12 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       uint32_t d =
           std::abs(static_cast<int>(fwd_pred.path_distance()) +
                    static_cast<int>(rev_label.path_distance()) - static_cast<int>(de->length()));
-      best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, partial_cost, d);
+      best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid,
+                                   traversed_fraction == 0
+                                       ? (fwd_pred.transition_cost() + rev_label.transition_cost()) *
+                                             0.5
+                                       : partial_cost,
+                                   d);
       if (best_connection_[idx].max_iterations == 0) {
         best_connection_[idx].max_iterations =
             n + GetThreshold(mode_,
@@ -1001,7 +1022,12 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
         uint32_t d =
             std::abs(static_cast<int>(rev_pred.path_distance()) +
                      static_cast<int>(fwd_label.path_distance()) - static_cast<int>(de->length()));
-        best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), partial_cost, d);
+        best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(),
+                                            traversed_fraction == 0 ? (rev_pred.transition_cost() +
+                                                                       fwd_label.transition_cost()) *
+                                                                          0.5
+                                                                    : partial_cost,
+                                            d);
         // best_connection_[source_idx].found = true;
         if (best_connection_[source_idx].max_iterations == 0) {
           best_connection_[source_idx].max_iterations =
@@ -1100,10 +1126,20 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
 // locations.
 void CostMatrix::SetSources(GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                            const std::vector<baldr::TimeInfo>& time_infos) {
+                            const std::vector<baldr::TimeInfo>& time_infos,
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& targets) {
+  std::unordered_multimap<GraphId, double> target_edges;
+  for (const auto& t : targets) {
+    for (const auto& e : t.correlation().edges()) {
+      target_edges.emplace(static_cast<GraphId>(e.graph_id()), e.percent_along());
+    }
+  }
+
   // Go through each source location
   uint32_t index = 0;
   Cost empty_cost;
+  // it's super trivial if both are node snapped to the same end of the same edge
+  // note the check for node snapping is in the if below and not in this lambda
   for (const auto& origin : sources) {
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
@@ -1115,7 +1151,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
     // Iterate through edges and add to adjacency list
     for (const auto& edge : origin.correlation().edges()) {
       // If origin is at a node - skip any inbound edge (dist = 1)
-      if (has_other_edges && edge.end_node()) {
+      if (has_other_edges && edge.end_node() && !is_super_trivial(edge, target_edges)) {
         continue;
       }
 
@@ -1152,7 +1188,6 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // exemption and push this info into the label
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
-
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_,
                              distance_penalty, d, !directededge->not_thru(),
                              !(costing_->IsClosed(directededge, tile)),
@@ -1188,7 +1223,16 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 // Set the target/destination locations. Search expands backwards from
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
-                            const google::protobuf::RepeatedPtrField<valhalla::Location>& targets) {
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources) {
+
+  std::unordered_multimap<GraphId, double> source_edges;
+  for (const auto& s : sources) {
+    for (const auto& e : s.correlation().edges()) {
+      source_edges.emplace(static_cast<GraphId>(e.graph_id()), e.percent_along());
+    }
+  }
+
   // Go through each target location
   uint32_t index = 0;
   Cost empty_cost;
@@ -1204,7 +1248,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     for (const auto& edge : dest.correlation().edges()) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
-      if (has_other_edges && edge.begin_node()) {
+      if (has_other_edges && edge.begin_node() && !is_super_trivial(edge, source_edges)) {
         continue;
       }
 
@@ -1250,7 +1294,6 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // exemption and push this info into the label
       auto destonly_restriction_mask =
           costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
-
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                              distance_penalty, d, !opp_dir_edge->not_thru(),
                              !(costing_->IsClosed(directededge, tile)),
