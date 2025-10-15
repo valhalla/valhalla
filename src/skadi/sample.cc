@@ -328,8 +328,12 @@ tile_data cache_t::source(uint16_t index) {
   // if we don't have anything maybe it's lazy loaded
   auto& item = cache[index];
   if (item.get_data() == nullptr) {
-    auto f = data_source + get_hgt_file_name(index);
-    item.init(f, format_t::RAW);
+    mutex.lock();
+    if (item.get_data() == nullptr) {
+      auto f = data_source + get_hgt_file_name(index);
+      item.init(f, format_t::RAW);
+    }
+    mutex.unlock();
   }
 
   // it wasn't in cache and when we tried to load it the file was of unknown type
