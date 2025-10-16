@@ -2039,6 +2039,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the vignette flag.
+   * @param  vignette   Is a vignette road?
+   */
+  void set_vignette(const bool vignette) {
+    vignette_ = vignette;
+  }
+
+  /**
+   * Get the vignette flag.
+   * @return  Returns vignette flag.
+   */
+  bool vignette() const {
+    return vignette_;
+  }
+
+  /**
    * Sets the bridge flag.
    * @param  bridge   Is a bridge?
    */
@@ -2658,6 +2674,7 @@ struct OSMWay {
   uint32_t sidewalk_right_ : 1;
   uint32_t sidewalk_left_ : 1;
   uint32_t sac_scale_ : 3;
+  uint32_t vignette_ : 1;
 
   // Classification
   uint32_t road_class_ : 3; // Importance of the road/path
