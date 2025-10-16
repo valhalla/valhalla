@@ -162,6 +162,7 @@
    * ADDED: small CMake project and GHA to easily test statements on various compilers [#5564](https://github.com/valhalla/valhalla/pull/5564)
    * CHANGED: Use boost::container::small_vector in DynamicCost::Restricted to avoid allocations [#5586](https://github.com/valhalla/valhalla/pull/5586)
    * CHANGED: Optimise turntype calls in TransitionCost [#5590](https://github.com/valhalla/valhalla/pull/5590)
+   * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**

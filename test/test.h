@@ -76,6 +76,16 @@ encoded_shape_equality(const std::string& expected, const std::string& actual, d
 }
 
 /**
+ * Deep compares rapidjson::Value, descending into arrays & objects.
+ *
+ * FAIL()s when the both args aren't equal.
+ *
+ * @param j1 the actual JSON
+ * @param j2 the expected JSON
+ */
+void json_equality(const rapidjson::Value& j1, const rapidjson::Value& j2);
+
+/**
  * Generate a new GraphReader that doesn't re-use a previously
  * statically initizalized tile_extract member variable.
  *
