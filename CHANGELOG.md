@@ -66,7 +66,8 @@
    * FIXED: Set node snap flags properly in PBF PathEDGE [#5508](https://github.com/valhalla/valhalla/pull/5508)
    * FIXED: Add error handling to valhalla_build_tiles command in Docker [#5520](https://github.com/valhalla/valhalla/pull/5520)
    * FIXED: Stabilize floating point calculations for small or nearly equal values [#5529](https://github.com/valhalla/valhalla/pull/5529)
-   * FIXED: Trivial Matrix connections when a source and target share a same correlation point [#5579](https://github.com/valhalla/valhalla/pull/5579) master
+   * FIXED: Trivial Matrix connections when a source and target share a same correlation point [#5579](https://github.com/valhalla/valhalla/pull/5579)
+   * FIXED: Improved Isochrone/Reach performance by removing unnecessary getting of the opp edge [#5602](https://github.com/valhalla/valhalla/pull/5602)
    * FIXED: Elevation resampling algorithm for 2 points [#5597](https://github.com/valhalla/valhalla/pull/5597) master
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
