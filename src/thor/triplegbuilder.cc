@@ -599,56 +599,56 @@ void AddSignInfo(const AttributesController& controller,
     for (const auto& sign : edge_signs) {
       switch (sign.type()) {
         case valhalla::baldr::Sign::Type::kExitNumber: {
-          if (controller.attributes.at(kEdgeSignExitNumber)) {
+          if (controller(kEdgeSignExitNumber)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_exit_numbers()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitBranch: {
-          if (controller.attributes.at(kEdgeSignExitBranch)) {
+          if (controller(kEdgeSignExitBranch)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_exit_onto_streets()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitToward: {
-          if (controller.attributes.at(kEdgeSignExitToward)) {
+          if (controller(kEdgeSignExitToward)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_exit_toward_locations()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kExitName: {
-          if (controller.attributes.at(kEdgeSignExitName)) {
+          if (controller(kEdgeSignExitName)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_exit_names()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuideBranch: {
-          if (controller.attributes.at(kEdgeSignGuideBranch)) {
+          if (controller(kEdgeSignGuideBranch)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_guide_onto_streets()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuideToward: {
-          if (controller.attributes.at(kEdgeSignGuideToward)) {
+          if (controller(kEdgeSignGuideToward)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_guide_toward_locations()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewJunction: {
-          if (controller.attributes.at(kEdgeSignGuidanceViewJunction)) {
+          if (controller(kEdgeSignGuidanceViewJunction)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_guidance_view_junctions()->Add());
           }
           break;
         }
         case valhalla::baldr::Sign::Type::kGuidanceViewSignboard: {
-          if (controller.attributes.at(kEdgeSignGuidanceViewSignboard)) {
+          if (controller(kEdgeSignGuidanceViewSignboard)) {
             PopulateSignElement(sign_index, sign, linguistics,
                                 trip_sign->mutable_guidance_view_signboards()->Add());
           }
@@ -863,7 +863,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   }
 
   // Add names to edge if requested
-  if (controller.attributes.at(kEdgeNames)) {
+  if (controller(kEdgeNames)) {
 
     auto edgeinfo = graphtile->edgeinfo(intersecting_de);
     auto names_and_types = edgeinfo.GetNamesAndTypes(true);
@@ -1162,7 +1162,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
       for (const auto& sign : node_signs) {
         switch (sign.type()) {
           case valhalla::baldr::Sign::Type::kJunctionName: {
-            if (controller.attributes.at(kEdgeSignJunctionName)) {
+            if (controller(kEdgeSignJunctionName)) {
               PopulateSignElement(sign_index, sign, linguistics,
                                   trip_sign->mutable_junction_names()->Add());
             }

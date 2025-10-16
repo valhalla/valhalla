@@ -1,4 +1,5 @@
 #include "odin/directionsbuilder.h"
+#include "exceptions.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuversbuilder.h"
 #include "odin/markup_formatter.h"
@@ -6,7 +7,6 @@
 #include "odin/narrativebuilder.h"
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
-#include "worker.h"
 
 namespace {
 // Minimum edge length to verify heading (~3 feet)

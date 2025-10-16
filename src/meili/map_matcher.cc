@@ -1,11 +1,11 @@
 #include "meili/map_matcher.h"
+#include "exceptions.h"
 #include "meili/emission_cost_model.h"
 #include "meili/geometry_helpers.h"
 #include "meili/routing.h"
 #include "meili/transition_cost_model.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
-#include "worker.h"
 
 #include <array>
 #include <cmath>

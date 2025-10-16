@@ -18,6 +18,8 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 
+#include <boost/container/small_vector.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
@@ -536,8 +538,12 @@ public:
           (label->predecessor() == baldr::kInvalidLabel) ? label : &edge_labels[label->predecessor()];
       return next_pred;
     };
+
+    // up to 16 elements will be allocated on stack - best effort to avoid heap allocations
+    using EdgeIdsInComplexRestriction = boost::container::small_vector<baldr::GraphId, 16>;
+
     auto reset_edge_status =
-        [&edgestatus](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
+        [&edgestatus](const EdgeIdsInComplexRestriction& edge_ids_in_complex_restriction) {
           // A complex restriction spans multiple edges, e.g. from A to C via B.
           //
           // At the point of triggering a complex restriction, all edges leading up to C
@@ -600,8 +606,7 @@ public:
         bool match = true;
         const EdgeLabel* next_pred = first_pred;
         // Remember the edge_ids in restriction for later reset
-        std::vector<baldr::GraphId> edge_ids_in_complex_restriction;
-        edge_ids_in_complex_restriction.reserve(10);
+        EdgeIdsInComplexRestriction edge_ids_in_complex_restriction;
 
         cr->WalkVias([&match, &next_pred, next_predecessor,
                       &edge_ids_in_complex_restriction](const baldr::GraphId* via) {
