@@ -238,17 +238,11 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       continue;
     }
 
-    // Only needed if you want to connect with a reverse path - for reverse mode,
-    // these were populated earlier
-    if (FORWARD) {
-      t2 = tile;
-      oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
-    }
-
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     if (FORWARD) {
+      // note that we don't bother actually getting the opposing edge ID for the forward expansion
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                  transition_cost, path_dist, false,
                                  (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
