@@ -229,7 +229,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
   auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
   auto pbf_filename = workdir + "/map.pbf";
-  detail::build_pbf(node_layout, ways, nodes, relations, pbf_filename, 0, false);
+  detail::build_pbf(node_layout, ways, nodes, relations, pbf_filename, false);
 
   valhalla::gurka::map result;
   result.nodes = node_layout;
