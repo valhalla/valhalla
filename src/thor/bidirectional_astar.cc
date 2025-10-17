@@ -1363,7 +1363,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
                               std::vector<sif::BDEdgeLabel>& edge_labels_rev,
                               const BDEdgeLabel& fwd_pred,
                               const BDEdgeLabel& rev_pred,
-                              const std::shared_ptr<sif::DynamicCost>& costing) {
+                              const sif::cost_ptr_t& costing) {
 
   const uint8_t M = 10;                 // TODO Look at data to figure this out
   const uint8_t PATCH_PATH_SIZE = M * 2 // Expand M in both directions
