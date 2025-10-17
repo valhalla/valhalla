@@ -253,7 +253,7 @@ struct projector_wrapper {
 struct bin_handler_t {
   std::vector<projector_wrapper> pps;
   valhalla::baldr::GraphReader& reader;
-  std::shared_ptr<DynamicCost> costing;
+  cost_ptr_t costing;
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
@@ -265,7 +265,7 @@ struct bin_handler_t {
 
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
-                const std::shared_ptr<DynamicCost>& costing)
+                const cost_ptr_t& costing)
       : reader(reader), costing(costing) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
@@ -826,7 +826,7 @@ namespace loki {
 std::unordered_map<valhalla::baldr::Location, PathLocation>
 Search(const std::vector<valhalla::baldr::Location>& locations,
        GraphReader& reader,
-       const std::shared_ptr<DynamicCost>& costing) {
+       const cost_ptr_t& costing) {
   // we cannot continue without costing
   if (!costing)
     throw std::runtime_error("No costing was provided for edge candidate search");
