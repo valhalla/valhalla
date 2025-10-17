@@ -101,7 +101,7 @@ protected:
   std::vector<Destination> destinations_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::cost_ptr_t costing_;
 
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
