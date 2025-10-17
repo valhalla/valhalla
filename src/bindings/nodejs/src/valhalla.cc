@@ -1,6 +1,7 @@
 #include <napi.h>
 #include <string>
 #include <sstream>
+#include <functional>
 #include <boost/property_tree/ptree.hpp>
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
@@ -35,6 +36,54 @@ const boost::property_tree::ptree configure(const std::string& config) {
 }
 
 } // namespace
+
+// Forward declaration
+class Actor;
+
+// Generic AsyncWorker for all Valhalla operations
+class ValhallaAsyncWorker : public Napi::AsyncWorker {
+public:
+  using ActorMethodFunction = std::function<std::string(vt::actor_t*, const std::string&)>;
+
+  ValhallaAsyncWorker(const Napi::Env& env,
+                      vt::actor_t* actor,
+                      ActorMethodFunction method,
+                      const std::string& request,
+                      const std::string& method_name)
+      : Napi::AsyncWorker(env),
+        deferred_(Napi::Promise::Deferred::New(env)),
+        actor_(actor),
+        method_(method),
+        request_(request),
+        method_name_(method_name) {}
+
+  Napi::Promise GetPromise() { return deferred_.Promise(); }
+
+protected:
+  void Execute() override {
+    try {
+      result_ = method_(actor_, request_);
+    } catch (const std::exception& e) {
+      SetError(std::string(method_name_) + " error: " + e.what());
+    }
+  }
+
+  void OnOK() override {
+    deferred_.Resolve(Napi::String::New(Env(), result_));
+  }
+
+  void OnError(const Napi::Error& e) override {
+    deferred_.Reject(e.Value());
+  }
+
+private:
+  Napi::Promise::Deferred deferred_;
+  vt::actor_t* actor_;
+  ActorMethodFunction method_;
+  std::string request_;
+  std::string method_name_;
+  std::string result_;
+};
 
 // Actor class wrapper for Node.js
 class Actor : public Napi::ObjectWrap<Actor> {
@@ -84,8 +133,10 @@ public:
 private:
   std::unique_ptr<vt::actor_t> actor_;
 
-  // Route method
-  Napi::Value Route(const Napi::CallbackInfo& info) {
+  // Helper method to create async worker
+  Napi::Value CreateAsyncRequest(const Napi::CallbackInfo& info,
+                                  ValhallaAsyncWorker::ActorMethodFunction method,
+                                  const std::string& method_name) {
     Napi::Env env = info.Env();
 
     if (info.Length() < 1 || !info[0].IsString()) {
@@ -95,245 +146,117 @@ private:
 
     std::string request = info[0].As<Napi::String>().Utf8Value();
 
-    try {
-      std::string result = actor_->route(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("Route error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    auto* worker = new ValhallaAsyncWorker(env, actor_.get(), method, request, method_name);
+    worker->Queue();
+    return worker->GetPromise();
+  }
+
+  // Route method
+  Napi::Value Route(const Napi::CallbackInfo& info) {
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->route(request);
+      },
+      "Route");
   }
 
   // Locate method
   Napi::Value Locate(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->locate(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("Locate error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->locate(request);
+      },
+      "Locate");
   }
 
   // Matrix method
   Napi::Value Matrix(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->matrix(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("Matrix error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->matrix(request);
+      },
+      "Matrix");
   }
 
   // OptimizedRoute method
   Napi::Value OptimizedRoute(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->optimized_route(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("OptimizedRoute error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->optimized_route(request);
+      },
+      "OptimizedRoute");
   }
 
   // Isochrone method
   Napi::Value Isochrone(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->isochrone(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("Isochrone error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->isochrone(request);
+      },
+      "Isochrone");
   }
 
   // TraceRoute method
   Napi::Value TraceRoute(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->trace_route(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("TraceRoute error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->trace_route(request);
+      },
+      "TraceRoute");
   }
 
   // TraceAttributes method
   Napi::Value TraceAttributes(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->trace_attributes(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("TraceAttributes error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->trace_attributes(request);
+      },
+      "TraceAttributes");
   }
 
   // Height method
   Napi::Value Height(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->height(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("Height error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->height(request);
+      },
+      "Height");
   }
 
   // TransitAvailable method
   Napi::Value TransitAvailable(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->transit_available(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("TransitAvailable error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->transit_available(request);
+      },
+      "TransitAvailable");
   }
 
   // Expansion method
   Napi::Value Expansion(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->expansion(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("Expansion error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->expansion(request);
+      },
+      "Expansion");
   }
 
   // Centroid method
   Napi::Value Centroid(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->centroid(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("Centroid error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->centroid(request);
+      },
+      "Centroid");
   }
 
   // Status method
   Napi::Value Status(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-
-    if (info.Length() < 1 || !info[0].IsString()) {
-      Napi::TypeError::New(env, "String request expected").ThrowAsJavaScriptException();
-      return env.Null();
-    }
-
-    std::string request = info[0].As<Napi::String>().Utf8Value();
-
-    try {
-      std::string result = actor_->status(request);
-      return Napi::String::New(env, result);
-    } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("Status error: ") + e.what())
-          .ThrowAsJavaScriptException();
-      return env.Null();
-    }
+    return CreateAsyncRequest(info,
+      [](vt::actor_t* actor, const std::string& request) {
+        return actor->status(request);
+      },
+      "Status");
   }
 };
 
