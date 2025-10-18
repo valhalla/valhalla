@@ -15,20 +15,20 @@ on:
       - ".git*"
     branches:
       - master
-  pull_request:
-    paths-ignore:
-      - "*.md"
-      - .circleci/
-      - docs/
-      - run_route_scripts/
-      - test_requests/
-      - test/check_compilers/
-      - .github/workflows/check_compilers.yml
-      - "**vcpkg**"
-      - ".tx"
-      - ".git*"
-    branches:
-      - master
+  # pull_request:
+  #   paths-ignore:
+  #     - "*.md"
+  #     - .circleci/
+  #     - docs/
+  #     - run_route_scripts/
+  #     - test_requests/
+  #     - test/check_compilers/
+  #     - .github/workflows/check_compilers.yml
+  #     - "**vcpkg**"
+  #     - ".tx"
+  #     - ".git*"
+  #   branches:
+  #     - master
   workflow_dispatch:
     inputs:
       debug_enabled:
