@@ -26,7 +26,7 @@ test('actor', async(t) => {
         { lat: 52.09987, lon: 5.14913 }
       ],
       costing: "bicycle",
-      directions_options: { language: "ru-RU" }
+      directions_options: { language: "bg-BG" }
     };
 
     const result = await actor.route(JSON.stringify(query));

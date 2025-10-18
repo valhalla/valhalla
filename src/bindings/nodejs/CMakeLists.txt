@@ -51,7 +51,7 @@ target_include_directories(valhalla_node PRIVATE
 )
 
 # Link against Valhalla
-target_link_libraries(valhalla_node PRIVATE valhalla)
+target_link_libraries(valhalla_node PRIVATE valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
 
 # Define NAPI settings
 target_compile_definitions(valhalla_node PRIVATE
