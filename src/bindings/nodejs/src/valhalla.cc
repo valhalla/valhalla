@@ -70,7 +70,7 @@ protected:
 
 private:
   Napi::Promise::Deferred deferred_;
-  std::shared_ptr<vt::actor_t> actor_; 
+  std::shared_ptr<vt::actor_t> actor_;
   ActorMethodFunction method_;
   std::string request_;
   std::string method_name_;
