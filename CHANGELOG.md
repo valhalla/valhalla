@@ -5,6 +5,7 @@
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
    * REMOVED: `valhalla/filesystem` from the project in favor of the std equivalent [#5321](https://github.com/valhalla/valhalla/pull/5321)
    * REMOVED: `use`/`using` statements from public headers [#5568](https://github.com/valhalla/valhalla/pull/5568)
+   * REMOVED: Extra synchronization in elevation cache [#5598](https://github.com/valhalla/valhalla/pull/5598)
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
@@ -164,6 +165,7 @@
    * CHANGED: Use boost::container::small_vector in DynamicCost::Restricted to avoid allocations [#5586](https://github.com/valhalla/valhalla/pull/5586)
    * CHANGED: Optimise turntype calls in TransitionCost [#5590](https://github.com/valhalla/valhalla/pull/5590)
    * CHANGED: Consistent use of `cost_ptr_t` [#5615](https://github.com/valhalla/valhalla/pull/5615)
+   * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
