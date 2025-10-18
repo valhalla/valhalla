@@ -1,13 +1,15 @@
-#include <napi.h>
-#include <string>
-#include <sstream>
-#include <functional>
-#include <boost/property_tree/ptree.hpp>
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "tyr/actor.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <napi.h>
+
+#include <functional>
+#include <sstream>
+#include <string>
 
 namespace vt = valhalla::tyr;
 
@@ -25,9 +27,7 @@ const boost::property_tree::ptree configure(const std::string& config) {
           logging_subtree.get());
       valhalla::midgard::logging::Configure(logging_config);
     }
-  } catch (...) {
-    throw std::runtime_error("Failed to load config from: " + config);
-  }
+  } catch (...) { throw std::runtime_error("Failed to load config from: " + config); }
 
   return pt;
 }
@@ -45,22 +45,19 @@ public:
                       ActorMethodFunction method,
                       const std::string& request,
                       const std::string& method_name)
-      : Napi::AsyncWorker(env),
-        deferred_(Napi::Promise::Deferred::New(env)),
-        actor_(actor),
-        method_(method),
-        request_(request),
-        method_name_(method_name) {}
+      : Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), actor_(actor),
+        method_(method), request_(request), method_name_(method_name) {
+  }
 
-  Napi::Promise GetPromise() { return deferred_.Promise(); }
+  Napi::Promise GetPromise() {
+    return deferred_.Promise();
+  }
 
 protected:
   void Execute() override {
     try {
       result_ = method_(actor_, request_);
-    } catch (const std::exception& e) {
-      SetError(std::string(method_name_) + " error: " + e.what());
-    }
+    } catch (const std::exception& e) { SetError(std::string(method_name_) + " error: " + e.what()); }
   }
 
   void OnOK() override {
@@ -84,20 +81,19 @@ private:
 class Actor : public Napi::ObjectWrap<Actor> {
 public:
   static Napi::Object Init(Napi::Env env, Napi::Object exports) {
-    Napi::Function func = DefineClass(env, "Actor", {
-      InstanceMethod("route", &Actor::Route),
-      InstanceMethod("locate", &Actor::Locate),
-      InstanceMethod("matrix", &Actor::Matrix),
-      InstanceMethod("optimizedRoute", &Actor::OptimizedRoute),
-      InstanceMethod("isochrone", &Actor::Isochrone),
-      InstanceMethod("traceRoute", &Actor::TraceRoute),
-      InstanceMethod("traceAttributes", &Actor::TraceAttributes),
-      InstanceMethod("height", &Actor::Height),
-      InstanceMethod("transitAvailable", &Actor::TransitAvailable),
-      InstanceMethod("expansion", &Actor::Expansion),
-      InstanceMethod("centroid", &Actor::Centroid),
-      InstanceMethod("status", &Actor::Status)
-    });
+    Napi::Function func =
+        DefineClass(env, "Actor",
+                    {InstanceMethod("route", &Actor::Route), InstanceMethod("locate", &Actor::Locate),
+                     InstanceMethod("matrix", &Actor::Matrix),
+                     InstanceMethod("optimizedRoute", &Actor::OptimizedRoute),
+                     InstanceMethod("isochrone", &Actor::Isochrone),
+                     InstanceMethod("traceRoute", &Actor::TraceRoute),
+                     InstanceMethod("traceAttributes", &Actor::TraceAttributes),
+                     InstanceMethod("height", &Actor::Height),
+                     InstanceMethod("transitAvailable", &Actor::TransitAvailable),
+                     InstanceMethod("expansion", &Actor::Expansion),
+                     InstanceMethod("centroid", &Actor::Centroid),
+                     InstanceMethod("status", &Actor::Status)});
 
     Napi::FunctionReference* constructor = new Napi::FunctionReference();
     *constructor = Napi::Persistent(func);
@@ -130,8 +126,8 @@ private:
 
   // Helper method to create async worker
   Napi::Value CreateAsyncRequest(const Napi::CallbackInfo& info,
-                                  ValhallaAsyncWorker::ActorMethodFunction method,
-                                  const std::string& method_name) {
+                                 ValhallaAsyncWorker::ActorMethodFunction method,
+                                 const std::string& method_name) {
     Napi::Env env = info.Env();
 
     if (info.Length() < 1 || !info[0].IsString()) {
@@ -147,99 +143,87 @@ private:
   }
 
   Napi::Value Route(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->route(request);
-      },
-      "Route");
+    return CreateAsyncRequest(
+        info, [](vt::actor_t* actor, const std::string& request) { return actor->route(request); },
+        "Route");
   }
 
   Napi::Value Locate(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->locate(request);
-      },
-      "Locate");
+    return CreateAsyncRequest(
+        info, [](vt::actor_t* actor, const std::string& request) { return actor->locate(request); },
+        "Locate");
   }
 
   Napi::Value Matrix(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->matrix(request);
-      },
-      "Matrix");
+    return CreateAsyncRequest(
+        info, [](vt::actor_t* actor, const std::string& request) { return actor->matrix(request); },
+        "Matrix");
   }
 
   Napi::Value OptimizedRoute(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->optimized_route(request);
-      },
-      "OptimizedRoute");
+    return CreateAsyncRequest(
+        info,
+        [](vt::actor_t* actor, const std::string& request) {
+          return actor->optimized_route(request);
+        },
+        "OptimizedRoute");
   }
 
   Napi::Value Isochrone(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->isochrone(request);
-      },
-      "Isochrone");
+    return CreateAsyncRequest(
+        info,
+        [](vt::actor_t* actor, const std::string& request) { return actor->isochrone(request); },
+        "Isochrone");
   }
 
   Napi::Value TraceRoute(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->trace_route(request);
-      },
-      "TraceRoute");
+    return CreateAsyncRequest(
+        info,
+        [](vt::actor_t* actor, const std::string& request) { return actor->trace_route(request); },
+        "TraceRoute");
   }
 
   Napi::Value TraceAttributes(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->trace_attributes(request);
-      },
-      "TraceAttributes");
+    return CreateAsyncRequest(
+        info,
+        [](vt::actor_t* actor, const std::string& request) {
+          return actor->trace_attributes(request);
+        },
+        "TraceAttributes");
   }
 
   Napi::Value Height(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->height(request);
-      },
-      "Height");
+    return CreateAsyncRequest(
+        info, [](vt::actor_t* actor, const std::string& request) { return actor->height(request); },
+        "Height");
   }
 
   Napi::Value TransitAvailable(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->transit_available(request);
-      },
-      "TransitAvailable");
+    return CreateAsyncRequest(
+        info,
+        [](vt::actor_t* actor, const std::string& request) {
+          return actor->transit_available(request);
+        },
+        "TransitAvailable");
   }
 
   Napi::Value Expansion(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->expansion(request);
-      },
-      "Expansion");
+    return CreateAsyncRequest(
+        info,
+        [](vt::actor_t* actor, const std::string& request) { return actor->expansion(request); },
+        "Expansion");
   }
 
   Napi::Value Centroid(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->centroid(request);
-      },
-      "Centroid");
+    return CreateAsyncRequest(
+        info, [](vt::actor_t* actor, const std::string& request) { return actor->centroid(request); },
+        "Centroid");
   }
 
   Napi::Value Status(const Napi::CallbackInfo& info) {
-    return CreateAsyncRequest(info,
-      [](vt::actor_t* actor, const std::string& request) {
-        return actor->status(request);
-      },
-      "Status");
+    return CreateAsyncRequest(
+        info, [](vt::actor_t* actor, const std::string& request) { return actor->status(request); },
+        "Status");
   }
 };
 
