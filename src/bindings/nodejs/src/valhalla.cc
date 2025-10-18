@@ -41,7 +41,7 @@ public:
   using ActorMethodFunction = std::function<std::string(vt::actor_t*, const std::string&)>;
 
   ValhallaAsyncWorker(const Napi::Env& env,
-                      vt::actor_t* actor,
+                      std::shared_ptr<vt::actor_t> actor,
                       ActorMethodFunction method,
                       const std::string& request,
                       const std::string& method_name)
@@ -56,7 +56,7 @@ public:
 protected:
   void Execute() override {
     try {
-      result_ = method_(actor_, request_);
+      result_ = method_(actor_.get(), request_);
     } catch (const std::exception& e) { SetError(std::string(method_name_) + " error: " + e.what()); }
   }
 
@@ -70,7 +70,7 @@ protected:
 
 private:
   Napi::Promise::Deferred deferred_;
-  vt::actor_t* actor_;
+  std::shared_ptr<vt::actor_t> actor_; 
   ActorMethodFunction method_;
   std::string request_;
   std::string method_name_;
@@ -113,7 +113,7 @@ public:
     std::string config = info[0].As<Napi::String>().Utf8Value();
 
     try {
-      actor_ = std::make_unique<vt::actor_t>(configure(config), true);
+      actor_ = std::make_shared<vt::actor_t>(configure(config), true);
     } catch (const std::exception& e) {
       Napi::Error::New(env, std::string("Failed to create actor: ") + e.what())
           .ThrowAsJavaScriptException();
@@ -121,7 +121,7 @@ public:
   }
 
 private:
-  std::unique_ptr<vt::actor_t> actor_;
+  std::shared_ptr<vt::actor_t> actor_;
 
   Napi::Value CreateAsyncRequest(const Napi::CallbackInfo& info,
                                  ValhallaAsyncWorker::ActorMethodFunction method,
@@ -135,7 +135,7 @@ private:
 
     std::string request = info[0].As<Napi::String>().Utf8Value();
 
-    auto* worker = new ValhallaAsyncWorker(env, actor_.get(), method, request, method_name);
+    auto* worker = new ValhallaAsyncWorker(env, actor_, method, request, method_name);
     worker->Queue();
     return worker->GetPromise();
   }
