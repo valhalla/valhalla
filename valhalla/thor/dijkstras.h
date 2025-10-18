@@ -143,7 +143,7 @@ protected:
   std::unordered_set<uint32_t> processed_tiles_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::cost_ptr_t costing_;
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> bdedgelabels_;
@@ -231,8 +231,8 @@ protected:
                                const sif::MMEdgeLabel& pred,
                                const uint32_t pred_idx,
                                const bool from_transition,
-                               const std::shared_ptr<sif::DynamicCost>& pc,
-                               const std::shared_ptr<sif::DynamicCost>& tc,
+                               const sif::cost_ptr_t& pc,
+                               const sif::cost_ptr_t& tc,
                                const sif::mode_costing_t& mode_costing,
                                const baldr::TimeInfo& time_info);
 
@@ -244,7 +244,7 @@ protected:
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                          const std::shared_ptr<sif::DynamicCost>& costing);
+                          const sif::cost_ptr_t& costing);
 
   /**
    * Add edge(s) at each origin location to the adjacency list.
@@ -255,7 +255,7 @@ protected:
   void SetOriginLocationsMultiModal(
       baldr::GraphReader& graphreader,
       google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-      const std::shared_ptr<sif::DynamicCost>& costing);
+      const sif::cost_ptr_t& costing);
 
   /**
    * Add edge(s) at each destination location to the adjacency list.
@@ -265,7 +265,7 @@ protected:
    */
   void SetDestinationLocations(baldr::GraphReader& graphreader,
                                google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                               const std::shared_ptr<sif::DynamicCost>& costing);
+                               const sif::cost_ptr_t& costing);
 
   /**
    * Convenience method to get the timezone index at a node.

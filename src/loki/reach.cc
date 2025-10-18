@@ -15,7 +15,7 @@ Reach::Reach() : Dijkstras() {
 
 void Reach::enqueue(const baldr::GraphId& node_id,
                     baldr::GraphReader& reader,
-                    const std::shared_ptr<sif::DynamicCost>& costing,
+                    const sif::cost_ptr_t& costing,
                     graph_tile_ptr tile) {
   // skip nodes which are done or invalid
   if (!node_id.Is_Valid() || done_.find(node_id) != done_.cend())
@@ -44,7 +44,7 @@ directed_reach Reach::operator()(const DirectedEdge* edge,
                                  const baldr::GraphId edge_id,
                                  uint32_t max_reach,
                                  GraphReader& reader,
-                                 const std::shared_ptr<sif::DynamicCost>& costing,
+                                 const sif::cost_ptr_t& costing,
                                  uint8_t direction) {
 
   // no reach is needed
@@ -159,7 +159,7 @@ directed_reach Reach::exact(const valhalla::baldr::DirectedEdge* edge,
                             const GraphId edge_id,
                             uint32_t max_reach,
                             valhalla::baldr::GraphReader& reader,
-                            const std::shared_ptr<sif::DynamicCost>& costing,
+                            const sif::cost_ptr_t& costing,
                             uint8_t direction) {
   // can we even try to expand?
   directed_reach reach{};

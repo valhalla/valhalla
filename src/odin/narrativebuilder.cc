@@ -1,12 +1,12 @@
 #include "odin/narrativebuilder.h"
 #include "baldr/verbal_text_formatter.h"
+#include "exceptions.h"
 #include "midgard/constants.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/maneuver.h"
 #include "odin/markup_formatter.h"
 #include "odin/narrative_dictionary.h"
 #include "odin/util.h"
-#include "worker.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>

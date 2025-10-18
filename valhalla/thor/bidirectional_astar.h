@@ -92,7 +92,7 @@ protected:
   uint8_t travel_type_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::cost_ptr_t costing_;
 
   // Hierarchy limits
   std::vector<HierarchyLimits> hierarchy_limits_forward_;
@@ -269,7 +269,7 @@ bool IsBridgingEdgeRestricted(baldr::GraphReader& graphreader,
                               std::vector<sif::BDEdgeLabel>& edge_labels_rev,
                               const sif::BDEdgeLabel& fwd_pred,
                               const sif::BDEdgeLabel& rev_pred,
-                              const std::shared_ptr<sif::DynamicCost>& costing);
+                              const sif::cost_ptr_t& costing);
 
 } // namespace thor
 } // namespace valhalla

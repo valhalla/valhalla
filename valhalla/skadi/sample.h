@@ -99,7 +99,6 @@ private:
    */
   void cache_initialisation(const std::string& source_path);
 
-  std::mutex cache_lck;
   std::string url_;
   std::unique_ptr<baldr::tile_getter_t> remote_loader_;
   // This parameter is used only in tests

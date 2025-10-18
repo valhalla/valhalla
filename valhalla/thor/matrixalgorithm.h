@@ -3,14 +3,14 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/exceptions.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/expansion.pb.h>
+#include <valhalla/sif/dynamiccost.h>
 
 #include <boost/property_tree/ptree.hpp>
 
 #include <functional>
-// TODO(nils): should abstract more so we don't pull this in
-#include <valhalla/worker.h>
 
 namespace valhalla {
 namespace thor {

@@ -238,17 +238,11 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       continue;
     }
 
-    // Only needed if you want to connect with a reverse path - for reverse mode,
-    // these were populated earlier
-    if (FORWARD) {
-      t2 = tile;
-      oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
-    }
-
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     if (FORWARD) {
+      // note that we don't bother actually getting the opposing edge ID for the forward expansion
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                  transition_cost, path_dist, false,
                                  (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
@@ -418,8 +412,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
                                         const MMEdgeLabel& pred,
                                         const uint32_t pred_idx,
                                         const bool from_transition,
-                                        const std::shared_ptr<DynamicCost>& pc,
-                                        const std::shared_ptr<DynamicCost>& tc,
+                                        const cost_ptr_t& pc,
+                                        const cost_ptr_t& tc,
                                         const sif::mode_costing_t& mode_costing,
                                         const TimeInfo& time_info) {
   // Get the tile and the node info. Skip if tile is null (can happen
@@ -779,7 +773,7 @@ void Dijkstras::ComputeMultiModal(
 // Add edge(s) at each origin to the adjacency list
 void Dijkstras::SetOriginLocations(GraphReader& graphreader,
                                    google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                                   const std::shared_ptr<DynamicCost>& costing) {
+                                   const cost_ptr_t& costing) {
   // Bail if you want to do a multipath expansion with more locations than edge label/status supports
   if (multipath_ && locations.size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");
@@ -864,7 +858,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 void Dijkstras::SetDestinationLocations(
     GraphReader& graphreader,
     google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-    const std::shared_ptr<DynamicCost>& costing) {
+    const cost_ptr_t& costing) {
   // Bail if you want to do a multipath expansion with more locations than edge label/status supports
   if (multipath_ && locations.size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");
@@ -959,7 +953,7 @@ void Dijkstras::SetDestinationLocations(
 void Dijkstras::SetOriginLocationsMultiModal(
     GraphReader& graphreader,
     google::protobuf::RepeatedPtrField<valhalla::Location>& origin_locations,
-    const std::shared_ptr<DynamicCost>& costing) {
+    const cost_ptr_t& costing) {
   // Add edges for each location to the adjacency list
   for (auto& origin : origin_locations) {
     // Only skip inbound edges if we have other options
