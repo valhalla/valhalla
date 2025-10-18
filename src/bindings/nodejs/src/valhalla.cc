@@ -13,13 +13,10 @@ namespace vt = valhalla::tyr;
 
 namespace {
 
-// Configure Valhalla from a JSON config string or file path
 const boost::property_tree::ptree configure(const std::string& config) {
   boost::property_tree::ptree pt;
   try {
-    // Try to parse as a file first, then as a JSON string
-    std::stringstream ss(config);
-    rapidjson::read_json(ss, pt);
+    rapidjson::read_json(config, pt);
 
     auto logging_subtree = pt.get_child_optional("mjolnir.logging");
     if (logging_subtree) {
@@ -37,10 +34,8 @@ const boost::property_tree::ptree configure(const std::string& config) {
 
 } // namespace
 
-// Forward declaration
 class Actor;
 
-// Generic AsyncWorker for all Valhalla operations
 class ValhallaAsyncWorker : public Napi::AsyncWorker {
 public:
   using ActorMethodFunction = std::function<std::string(vt::actor_t*, const std::string&)>;
@@ -151,7 +146,6 @@ private:
     return worker->GetPromise();
   }
 
-  // Route method
   Napi::Value Route(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -160,7 +154,6 @@ private:
       "Route");
   }
 
-  // Locate method
   Napi::Value Locate(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -169,7 +162,6 @@ private:
       "Locate");
   }
 
-  // Matrix method
   Napi::Value Matrix(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -178,7 +170,6 @@ private:
       "Matrix");
   }
 
-  // OptimizedRoute method
   Napi::Value OptimizedRoute(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -187,7 +178,6 @@ private:
       "OptimizedRoute");
   }
 
-  // Isochrone method
   Napi::Value Isochrone(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -196,7 +186,6 @@ private:
       "Isochrone");
   }
 
-  // TraceRoute method
   Napi::Value TraceRoute(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -205,7 +194,6 @@ private:
       "TraceRoute");
   }
 
-  // TraceAttributes method
   Napi::Value TraceAttributes(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -214,7 +202,6 @@ private:
       "TraceAttributes");
   }
 
-  // Height method
   Napi::Value Height(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -223,7 +210,6 @@ private:
       "Height");
   }
 
-  // TransitAvailable method
   Napi::Value TransitAvailable(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -232,7 +218,6 @@ private:
       "TransitAvailable");
   }
 
-  // Expansion method
   Napi::Value Expansion(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -241,7 +226,6 @@ private:
       "Expansion");
   }
 
-  // Centroid method
   Napi::Value Centroid(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -250,7 +234,6 @@ private:
       "Centroid");
   }
 
-  // Status method
   Napi::Value Status(const Napi::CallbackInfo& info) {
     return CreateAsyncRequest(info,
       [](vt::actor_t* actor, const std::string& request) {
@@ -260,9 +243,7 @@ private:
   }
 };
 
-// Module initialization
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  // Add version info
   exports.Set(Napi::String::New(env, "VALHALLA_VERSION"),
               Napi::String::New(env, VALHALLA_PRINT_VERSION));
 
