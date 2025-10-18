@@ -270,7 +270,6 @@ if(ENABLE_PYTHON_BINDINGS)
   endif()
 endif()
 
-## Node.js bindings
 if(ENABLE_NODE_BINDINGS)
   add_subdirectory(src/bindings/nodejs)
 endif()
