@@ -14,6 +14,7 @@ option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
 option(ENABLE_HTTP "Enable the use of CURL" ON)
 option(ENABLE_PYTHON_BINDINGS "Enable Python bindings" ON)
+option(ENABLE_NODE_BINDINGS "Enable Node.js bindings" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_COMPILER_WARNINGS "Build with compiler warnings" OFF)
@@ -267,6 +268,10 @@ if(ENABLE_PYTHON_BINDINGS)
     set(ENABLE_PYTHON_BINDINGS OFF)
     message(WARNING "Python development version not found, skipping Python bindings...")
   endif()
+endif()
+
+if(ENABLE_NODE_BINDINGS)
+  add_subdirectory(src/bindings/nodejs)
 endif()
 
 ## Executable targets
