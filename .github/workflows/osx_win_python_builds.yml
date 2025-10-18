@@ -74,6 +74,7 @@ jobs:
     name: Build Linux Node.js bindings
     runs-on: ubuntu-latest
     steps:
+      - run: sudo apt-get update -y && sudo apt-get install -y libcurl4-openssl-dev
       - uses: actions/checkout@v4
         with:
           submodules: recursive
