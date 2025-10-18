@@ -74,6 +74,12 @@ jobs:
     name: Build Linux Node.js bindings
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # we need to fetch all tags for setuptools-scm to work properly
+          fetch-depth: 0
+          fetch-tags: true
       - uses: mlugg/setup-zig@v2
       - run: zig version
       - run: |
