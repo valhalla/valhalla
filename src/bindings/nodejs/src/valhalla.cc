@@ -77,7 +77,6 @@ private:
   std::string result_;
 };
 
-// Actor class wrapper for Node.js
 class Actor : public Napi::ObjectWrap<Actor> {
 public:
   static Napi::Object Init(Napi::Env env, Napi::Object exports) {
@@ -124,7 +123,6 @@ public:
 private:
   std::unique_ptr<vt::actor_t> actor_;
 
-  // Helper method to create async worker
   Napi::Value CreateAsyncRequest(const Napi::CallbackInfo& info,
                                  ValhallaAsyncWorker::ActorMethodFunction method,
                                  const std::string& method_name) {
