@@ -92,10 +92,7 @@ jobs:
           -DENABLE_GDAL=ON \
           -DENABLE_TESTS=OFF \
           -DVALHALLA_VERSION_MODIFIFER=1 \
-          -DENABLE_SINGLE_FILES_WERROR=OFF \
-          -DCMAKE_SKIP_BUILD_RPATH=FALSE \
-          -DCMAKE_BUILD_WITH_INSTALL_RPATH=FALSE \
-          -DCMAKE_INSTALL_RPATH='$ORIGIN/lib'
+          -DENABLE_SINGLE_FILES_WERROR=OFF
           cmake --build build -j$(nproc)
       
       - name: Check dependencies before repair
@@ -110,6 +107,9 @@ jobs:
           OUTPUT_DIR="nodejs_dist"
           
           src/bindings/nodejs/scripts/bundle.sh $NODE_FILE $OUTPUT_DIR --strip --tar
+          
+          mv valhalla_node-bundle.tar.gz valhalla-nodejs-linux-x64.tar.gz
+
           echo "[INFO] Contents of tarball:"
           tar -tzf valhalla-nodejs-linux-x64.tar.gz
       
