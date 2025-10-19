@@ -87,10 +87,20 @@ jobs:
       - run: zig version
       - run: |
           mkdir -p build
-          cmake -B build -DENABLE_HTTP=OFF -DCMAKE_BUILD_TYPE=Release -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=1 -DENABLE_NODE_BINDINGS=ON
+          cmake -B build -DENABLE_HTTP=OFF -DCMAKE_BUILD_TYPE=Release -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=OFF -DVALHALLA_VERSION_MODIFIFER=1 -DENABLE_NODE_BINDINGS=ON \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DProtobuf_USE_STATIC_LIBS=ON \
+            -DCMAKE_FIND_LIBRARY_SUFFIXES=".a" \
+            -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-static-libstdc++ -static-libgcc"
           cmake --build build -j$(nproc)
       - run: ls -R build/
       - run: ldd build/src/bindings/nodejs/lib/valhalla_node.node
+      - name: Upload Node.js binding artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-nodejs-linux-x64
+          path: build/src/bindings/nodejs/lib/valhalla_node.node
   
   # build_python_wheels_linux:
   #   name: Build Linux Python wheels
