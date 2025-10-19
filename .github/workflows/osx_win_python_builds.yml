@@ -146,7 +146,7 @@ jobs:
           echo "[INFO] Testing Node.js binding..."
           cat > test.js << 'EOF'
           try {
-            const valhalla = require('./valhalla_binding/nodejs_dist.valhalla_node.node');
+            const valhalla = require('./valhalla_binding/nodejs_dist/valhalla_node.node');
             console.log('[SUCCESS] Valhalla binding loaded successfully!');
             console.log('[INFO] VALHALLA_VERSION:', valhalla.VALHALLA_VERSION);
             console.log('[INFO] Available exports:', Object.keys(valhalla));
