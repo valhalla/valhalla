@@ -91,6 +91,7 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DProtobuf_USE_STATIC_LIBS=ON \
             -DCMAKE_FIND_LIBRARY_SUFFIXES=".a" \
+            -DENABLE_SERVICES=OFF \
             -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc" \
             -DCMAKE_SHARED_LINKER_FLAGS="-static-libstdc++ -static-libgcc"
           cmake --build build -j$(nproc)
