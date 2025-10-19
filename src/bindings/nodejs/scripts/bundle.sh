@@ -50,7 +50,7 @@ cp -f "$BINDING_SRC" "$BINDING_DST"
 
 # Libraries we should NOT bundle (system/glibc pieces). Extend if needed.
 # We'll skip anything matching these regexes (case-insensitive).
-EXCLUDE_RE='^((linux-vdso\.so.*)|(ld-linux.*\.so.*)|(ld-musl.*\.so.*)|(libc\.so.*)|(libm\.so.*)|(libpthread\.so.*)|(librt\.so.*)|(libdl\.so.*)|(libnsl\.so.*)|(libresolv\.so.*)|(libutil\.so.*)|(libcrypt\.so.*)|(libanl\.so.*)|(libnss_.*\.so.*)|(libgcc_s\.so.*)|(libstdc\+\+\.so.*)|(libgomp\.so.*)|(libselinux\.so.*)|(libpcre2?.*\.so.*)|(libbsd\.so.*)|(libmd\.so.*))$'
+EXCLUDE_RE='^((linux-vdso\.so.*)|(ld-linux.*\.so.*)|(ld-musl.*\.so.*)|(libc\.so.*)|(libm\.so.*)|(libpthread\.so.*)|(librt\.so.*)|(libdl\.so.*)|(libnsl\.so.*)|(libresolv\.so.*)|(libutil\.so.*)|(libcrypt\.so.*)|(libanl\.so.*)|(libnss_.*\.so.*)|(libgcc_s\.so.*)|(libstdc\+\+\.so.*)|(libgomp\.so.*)|(libselinux\.so.*)|(libbsd\.so.*)|(libmd\.so.*))$'
 
 # Collect dependencies with ldd, return absolute paths (one per line)
 collect_deps() {
