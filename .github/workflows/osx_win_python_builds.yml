@@ -86,6 +86,7 @@ jobs:
       - uses: mlugg/setup-zig@v2
       - run: zig version
       - run: |
+          export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
           mkdir -p build
           cmake -B build -DENABLE_HTTP=OFF -DCMAKE_BUILD_TYPE=Release -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=OFF -DVALHALLA_VERSION_MODIFIFER=1 -DENABLE_NODE_BINDINGS=ON \
             -DBUILD_SHARED_LIBS=OFF \
