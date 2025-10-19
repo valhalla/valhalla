@@ -137,16 +137,16 @@ jobs:
           tar -xzf valhalla-nodejs-linux-x64.tar.gz -C valhalla_binding
           
           echo "[INFO] Contents:"
-          ls -lh valhalla_binding/
-          ls -lh valhalla_binding/lib/ | head -20
+          ls -lh valhalla_binding/nodejs_dist/
+          ls -lh valhalla_binding/nodejs_dist/lib/ | head -20
           
           echo "[INFO] Checking dependencies..."
-          ldd valhalla_binding/valhalla_node.node
+          ldd valhalla_binding/nodejs_dist/valhalla_node.node
           
           echo "[INFO] Testing Node.js binding..."
           cat > test.js << 'EOF'
           try {
-            const valhalla = require('./valhalla_binding/valhalla_node.node');
+            const valhalla = require('./valhalla_binding/nodejs_dist.valhalla_node.node');
             console.log('[SUCCESS] Valhalla binding loaded successfully!');
             console.log('[INFO] VALHALLA_VERSION:', valhalla.VALHALLA_VERSION);
             console.log('[INFO] Available exports:', Object.keys(valhalla));
