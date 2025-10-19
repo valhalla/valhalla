@@ -82,13 +82,15 @@ jobs:
           fetch-tags: true
       - name: Install deps
         run: ./scripts/install-linux-deps.sh >& /dev/null
+      - run: sudo apt install --yes --quiet musl-tools
       - uses: mlugg/setup-zig@v2
       - run: zig version
       - run: |
           mkdir -p build
           cmake -B build -DENABLE_HTTP=OFF -DCMAKE_BUILD_TYPE=Release -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=1 -DENABLE_NODE_BINDINGS=ON
           cmake --build build -j$(nproc)
-      - run: ldd build/src/bindings/nodejs/valhalla_node.node
+      - run: ls -R build/
+      - run: ldd build/lib/valhalla_node.node
   
   # build_python_wheels_linux:
   #   name: Build Linux Python wheels
