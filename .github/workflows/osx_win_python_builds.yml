@@ -62,13 +62,13 @@ jobs:
   # # only publish to PyPI on tags, schedule or workflow_dispatch (only on master!)
   # # very annoying: env vars can't be referenced in job's "if" statements, so we have to do this
   # # https://stackoverflow.com/questions/73797254/environment-variables-in-github-actions
-  publish_pypi:
-    name: Whether to publish PyPI
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Are we publishing to PyPI? ${{ env.PUBLISH_PYPI }}"
-    outputs:
-      PUBLISH_PYPI: ${{ env.PUBLISH_PYPI }}
+  # publish_pypi:
+  #   name: Whether to publish PyPI
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - run: echo "Are we publishing to PyPI? ${{ env.PUBLISH_PYPI }}"
+  #   outputs:
+  #     PUBLISH_PYPI: ${{ env.PUBLISH_PYPI }}
 
   build_nodejs_bindings_linux:
     name: Build Linux Node.js bindings
@@ -81,7 +81,8 @@ jobs:
           # we need to fetch all tags for setuptools-scm to work properly
           fetch-depth: 0
           fetch-tags: true
-      - run: | 
+      - name: Build Valhalla with Node.js bindings
+        run: | 
           export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
           mkdir -p build
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
@@ -91,112 +92,152 @@ jobs:
           -DENABLE_GDAL=ON \
           -DENABLE_TESTS=OFF \
           -DVALHALLA_VERSION_MODIFIFER=1 \
-          -DENABLE_SINGLE_FILES_WERROR=OFF
+          -DENABLE_SINGLE_FILES_WERROR=OFF \
+          -DCMAKE_SKIP_BUILD_RPATH=FALSE \
+          -DCMAKE_BUILD_WITH_INSTALL_RPATH=FALSE \
+          -DCMAKE_INSTALL_RPATH='$ORIGIN/lib'
           cmake --build build -j$(nproc)
-      - run: ldd build/src/bindings/nodejs/lib/valhalla_node.node
-      # - name: Install deps
-      #   run: ./scripts/install-linux-deps.sh >& /dev/null
-      # - run: sudo apt install --yes --quiet musl-tools
-      # - uses: mlugg/setup-zig@v2
-      # - run: zig version
-      # - run: |
-      #     export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
-      #     mkdir -p build
-      #     cmake -B build -DENABLE_HTTP=OFF -DCMAKE_BUILD_TYPE=Release -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=OFF -DVALHALLA_VERSION_MODIFIFER=1 -DENABLE_NODE_BINDINGS=ON \
-      #       -DBUILD_SHARED_LIBS=OFF \
-      #       -DCMAKE_FIND_LIBRARY_SUFFIXES=".a" \
-      #       -DENABLE_SERVICES=OFF \
-      #       -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
-      #       -DCMAKE_EXE_LINKER_FLAGS="-static-libstdc++ -static-libgcc" \
-      #       -DCMAKE_SHARED_LINKER_FLAGS="-static-libstdc++ -static-libgcc"
-      #     cmake --build build -j$(nproc)
-      # - run: ls -R build/
-      # - run: ldd build/src/bindings/nodejs/lib/valhalla_node.node
-      # - name: Upload Node.js binding artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: valhalla-nodejs-linux-x64
-      #     path: build/src/bindings/nodejs/lib/valhalla_node.node
-  
-  build_python_wheels_linux:
-    name: Build Linux Python wheels
-    runs-on: ubuntu-latest
-    needs: [publish_pypi]
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          # we need to fetch all tags for setuptools-scm to work properly
-          fetch-depth: 0
-          fetch-tags: true
-
-      # this is only used to run cibuildwheel
-      - name: Configure Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.12'
-
-      - name: Get branch name
-        run: |
-          echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
-
-      - name: Get version modifier
-        id: version-modifier
-        if: github.ref == 'refs/heads/master'
-        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
-      - name: Determine package to publish
-        run: |
-          VALHALLA_RELEASE_PKG="pyvalhalla"
-          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
-          fi
-          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
-
-      - name: Restore ccache
-        uses: tespkg/actions-cache/restore@v1
-        id: cache-ccache-restore
-        with:
-          endpoint: hel1.your-objectstorage.com
-          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
-          # actions/cache compatible properties: https://github.com/actions/cache
-          path: /home/runner/.cache/ccache
-          key: ccache-manylinux_2_28_x86_64
-
-      - uses: pypa/cibuildwheel@v2.23.3
-        env:
-          # the host system's "/" is mounted to "/host" in the manylinux container
-          CIBW_ENVIRONMENT: >
-            CCACHE_DIR=/host/home/runner/.cache/ccache
-            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
-            VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}
-            VALHALLA_BUILD_BIN_DIR="build_manylinux"
-          # uncomment when testing
-          # CIBW_BUILD: cp313-*
       
-      # TODO: probably need to delete the key first, since it's just a single key
-
-      - name: Save ccache
-        if: always()
-        uses: tespkg/actions-cache/save@v1
-        with:
-          endpoint: hel1.your-objectstorage.com
-          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
-          path: /home/runner/.cache/ccache
-          key: ccache-manylinux_2_28_x86_64
-
-      - name: Upload wheels
+      - name: Check dependencies before repair
+        run: |
+          echo "[INFO] Dependencies before repair:"
+          ldd build/src/bindings/nodejs/lib/valhalla_node.node
+      
+      - name: Repair Node.js binding (make relocatable)
+        run: |
+          export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
+          NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
+          OUTPUT_DIR="nodejs_dist"
+          
+          echo "[INFO] Repairing Node.js binding for relocatability..."
+          
+          # Create output structure
+          mkdir -p "$OUTPUT_DIR/lib"
+          cp "$NODE_FILE" "$OUTPUT_DIR/"
+          
+          # Find and copy dependencies from /usr/local (our custom-built libs)
+          echo "[INFO] Bundling dependencies..."
+          ldd "$NODE_FILE" | grep "=> /" | awk '{print $3}' | while read -r lib; do
+            if [[ "$lib" == /usr/local/* ]]; then
+              lib_name=$(basename "$lib")
+              echo "[INFO] Bundling: $lib_name from $lib"
+              cp -L "$lib" "$OUTPUT_DIR/lib/" || true
+              
+              # Also handle versioned symlinks
+              lib_dir=$(dirname "$lib")
+              lib_base=$(basename "$lib" | sed 's/\.[0-9]*$//')
+              if [ "$lib_base" != "$lib_name" ]; then
+                cp -L "$lib_dir/$lib_base"* "$OUTPUT_DIR/lib/" 2>/dev/null || true
+              fi
+            fi
+          done
+          
+          # Set RPATH to look for libraries in ./lib directory
+          echo "[INFO] Setting RPATH to '\$ORIGIN/lib'..."
+          patchelf --set-rpath '$ORIGIN/lib' "$OUTPUT_DIR/valhalla_node.node"
+          
+          # Also set RPATH for bundled libraries to find each other
+          for lib in "$OUTPUT_DIR/lib"/*.so*; do
+            if [ -f "$lib" ] && [ ! -L "$lib" ]; then
+              echo "[INFO] Setting RPATH for $(basename $lib)"
+              patchelf --set-rpath '$ORIGIN' "$lib" 2>/dev/null || true
+            fi
+          done
+          
+          echo "[INFO] Verifying repaired binary..."
+          echo "[INFO] RPATH: $(patchelf --print-rpath $OUTPUT_DIR/valhalla_node.node)"
+          echo "[INFO] Dependencies after repair:"
+          ldd "$OUTPUT_DIR/valhalla_node.node"
+          
+          echo "[INFO] Creating tarball..."
+          tar -czf valhalla-nodejs-linux-x64.tar.gz -C "$OUTPUT_DIR" .
+          
+          echo "[INFO] Contents of tarball:"
+          tar -tzf valhalla-nodejs-linux-x64.tar.gz
+      
+      - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux-x64
-          path: wheelhouse/*.whl
+          name: valhalla-nodejs-linux-x64
+          path: valhalla-nodejs-linux-x64.tar.gz
+  
+  # build_python_wheels_linux:
+  #   name: Build Linux Python wheels
+  #   runs-on: ubuntu-latest
+  #   needs: [publish_pypi]
+  #   if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: recursive
+  #         # we need to fetch all tags for setuptools-scm to work properly
+  #         fetch-depth: 0
+  #         fetch-tags: true
+
+  #     # this is only used to run cibuildwheel
+  #     - name: Configure Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.12'
+
+  #     - name: Get branch name
+  #       run: |
+  #         echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
+
+  #     - name: Get version modifier
+  #       id: version-modifier
+  #       if: github.ref == 'refs/heads/master'
+  #       run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+  #     - name: Determine package to publish
+  #       run: |
+  #         VALHALLA_RELEASE_PKG="pyvalhalla"
+  #         if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
+  #           VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
+  #         fi
+  #         echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+
+  #     - name: Restore ccache
+  #       uses: tespkg/actions-cache/restore@v1
+  #       id: cache-ccache-restore
+  #       with:
+  #         endpoint: hel1.your-objectstorage.com
+  #         accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+  #         secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+  #         bucket: gha-cache
+  #         # actions/cache compatible properties: https://github.com/actions/cache
+  #         path: /home/runner/.cache/ccache
+  #         key: ccache-manylinux_2_28_x86_64
+
+  #     - uses: pypa/cibuildwheel@v2.23.3
+  #       env:
+  #         # the host system's "/" is mounted to "/host" in the manylinux container
+  #         CIBW_ENVIRONMENT: >
+  #           CCACHE_DIR=/host/home/runner/.cache/ccache
+  #           VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
+  #           VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}
+  #           VALHALLA_BUILD_BIN_DIR="build_manylinux"
+  #         # uncomment when testing
+  #         # CIBW_BUILD: cp313-*
       
-      - run: ls -R build_manylinux
+  #     # TODO: probably need to delete the key first, since it's just a single key
+
+  #     - name: Save ccache
+  #       if: always()
+  #       uses: tespkg/actions-cache/save@v1
+  #       with:
+  #         endpoint: hel1.your-objectstorage.com
+  #         accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+  #         secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+  #         bucket: gha-cache
+  #         path: /home/runner/.cache/ccache
+  #         key: ccache-manylinux_2_28_x86_64
+
+  #     - name: Upload wheels
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: wheels-linux-x64
+  #         path: wheelhouse/*.whl
 
   #     - name: Setup tmate session
   #       uses: mxschmitt/action-tmate@v3
