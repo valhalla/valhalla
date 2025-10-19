@@ -53,7 +53,7 @@ public:
                             const baldr::GraphId edge_id,
                             uint32_t max_reach,
                             baldr::GraphReader& reader,
-                            const std::shared_ptr<sif::DynamicCost>& costing,
+                            const sif::cost_ptr_t& costing,
                             uint8_t direction = kInbound | kOutbound);
 
 protected:
@@ -65,7 +65,7 @@ protected:
                        const baldr::GraphId edge_id,
                        uint32_t max_reach,
                        baldr::GraphReader& reader,
-                       const std::shared_ptr<sif::DynamicCost>& costing,
+                       const sif::cost_ptr_t& costing,
                        uint8_t direction = kInbound | kOutbound);
 
   // we keep a queue of nodes to expand from, to prevent duplicate expansion we use a set
@@ -75,7 +75,7 @@ protected:
   // this allows us to have "duplicate" nodes but not do any trickery with the expansion
   void enqueue(const baldr::GraphId& node_id,
                baldr::GraphReader& reader,
-               const std::shared_ptr<sif::DynamicCost>& costing,
+               const sif::cost_ptr_t& costing,
                baldr::graph_tile_ptr tile);
 
   // callback fired when a node is expanded from, the node will be the end node of the previous label
