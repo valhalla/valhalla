@@ -155,6 +155,26 @@ jobs:
           echo "[INFO] Contents of tarball:"
           tar -tzf valhalla-nodejs-linux-x64.tar.gz
       
+      - name: Test relocatable binary in clean environment
+        run: |
+          # Extract to a temp location and test without any environment variables
+          mkdir -p /tmp/test_nodejs
+          tar -xzf valhalla-nodejs-linux-x64.tar.gz -C /tmp/test_nodejs
+          
+          echo "[INFO] Testing binary from /tmp without LD_LIBRARY_PATH..."
+          cd /tmp/test_nodejs
+          unset LD_LIBRARY_PATH
+          
+          # Verify all dependencies are found
+          if ldd valhalla_node.node | grep "not found"; then
+            echo "[ERROR] Missing dependencies detected!"
+            ldd valhalla_node.node
+            exit 1
+          else
+            echo "[SUCCESS] All dependencies found! Binary is relocatable."
+            ldd valhalla_node.node | head -20
+          fi
+      
       - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
         with:
