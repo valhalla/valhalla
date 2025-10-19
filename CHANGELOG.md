@@ -5,6 +5,7 @@
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
    * REMOVED: `valhalla/filesystem` from the project in favor of the std equivalent [#5321](https://github.com/valhalla/valhalla/pull/5321)
    * REMOVED: `use`/`using` statements from public headers [#5568](https://github.com/valhalla/valhalla/pull/5568)
+   * REMOVED: Extra synchronization in elevation cache [#5598](https://github.com/valhalla/valhalla/pull/5598)
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
@@ -66,7 +67,9 @@
    * FIXED: Set node snap flags properly in PBF PathEDGE [#5508](https://github.com/valhalla/valhalla/pull/5508)
    * FIXED: Add error handling to valhalla_build_tiles command in Docker [#5520](https://github.com/valhalla/valhalla/pull/5520)
    * FIXED: Stabilize floating point calculations for small or nearly equal values [#5529](https://github.com/valhalla/valhalla/pull/5529)
-   * FIXED: Trivial Matrix connections when a source and target share a same correlation point [#5579](https://github.com/valhalla/valhalla/pull/5579) master
+   * FIXED: Trivial Matrix connections when a source and target share a same correlation point [#5579](https://github.com/valhalla/valhalla/pull/5579)
+   * FIXED: Improved Isochrone/Reach performance by removing unnecessary getting of the opp edge [#5602](https://github.com/valhalla/valhalla/pull/5602)
+   * FIXED: Elevation resampling algorithm for 2 points [#5597](https://github.com/valhalla/valhalla/pull/5597) master
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
@@ -161,6 +164,8 @@
    * ADDED: small CMake project and GHA to easily test statements on various compilers [#5564](https://github.com/valhalla/valhalla/pull/5564)
    * CHANGED: Use boost::container::small_vector in DynamicCost::Restricted to avoid allocations [#5586](https://github.com/valhalla/valhalla/pull/5586)
    * CHANGED: Optimise turntype calls in TransitionCost [#5590](https://github.com/valhalla/valhalla/pull/5590)
+   * CHANGED: Consistent use of `cost_ptr_t` [#5615](https://github.com/valhalla/valhalla/pull/5615)
+   * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
