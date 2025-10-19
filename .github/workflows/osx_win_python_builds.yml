@@ -103,77 +103,15 @@ jobs:
           echo "[INFO] Dependencies before repair:"
           ldd build/src/bindings/nodejs/lib/valhalla_node.node
       
-      - name: Repair Node.js binding (make relocatable)
+      - name: Make relocatable
         run: |
           export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
           NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
           OUTPUT_DIR="nodejs_dist"
           
-          echo "[INFO] Repairing Node.js binding for relocatability..."
-          
-          # Create output structure
-          mkdir -p "$OUTPUT_DIR/lib"
-          cp "$NODE_FILE" "$OUTPUT_DIR/"
-          
-          # Find and copy dependencies from /usr/local (our custom-built libs)
-          echo "[INFO] Bundling dependencies..."
-          ldd "$NODE_FILE" | grep "=> /" | awk '{print $3}' | while read -r lib; do
-            if [[ "$lib" == /usr/local/* ]]; then
-              lib_name=$(basename "$lib")
-              echo "[INFO] Bundling: $lib_name from $lib"
-              cp -L "$lib" "$OUTPUT_DIR/lib/" || true
-              
-              # Also handle versioned symlinks
-              lib_dir=$(dirname "$lib")
-              lib_base=$(basename "$lib" | sed 's/\.[0-9]*$//')
-              if [ "$lib_base" != "$lib_name" ]; then
-                cp -L "$lib_dir/$lib_base"* "$OUTPUT_DIR/lib/" 2>/dev/null || true
-              fi
-            fi
-          done
-          
-          # Set RPATH to look for libraries in ./lib directory
-          echo "[INFO] Setting RPATH to '\$ORIGIN/lib'..."
-          patchelf --set-rpath '$ORIGIN/lib' "$OUTPUT_DIR/valhalla_node.node"
-          
-          # Also set RPATH for bundled libraries to find each other
-          for lib in "$OUTPUT_DIR/lib"/*.so*; do
-            if [ -f "$lib" ] && [ ! -L "$lib" ]; then
-              echo "[INFO] Setting RPATH for $(basename $lib)"
-              patchelf --set-rpath '$ORIGIN' "$lib" 2>/dev/null || true
-            fi
-          done
-          
-          echo "[INFO] Verifying repaired binary..."
-          echo "[INFO] RPATH: $(patchelf --print-rpath $OUTPUT_DIR/valhalla_node.node)"
-          echo "[INFO] Dependencies after repair:"
-          ldd "$OUTPUT_DIR/valhalla_node.node"
-          
-          echo "[INFO] Creating tarball..."
-          tar -czf valhalla-nodejs-linux-x64.tar.gz -C "$OUTPUT_DIR" .
-          
+          src/bindings/nodejs/scripts/bundle.sh $NODE_FILE $OUTPUT_DIR --strip --tar
           echo "[INFO] Contents of tarball:"
           tar -tzf valhalla-nodejs-linux-x64.tar.gz
-      
-      - name: Test relocatable binary in clean environment
-        run: |
-          # Extract to a temp location and test without any environment variables
-          mkdir -p /tmp/test_nodejs
-          tar -xzf valhalla-nodejs-linux-x64.tar.gz -C /tmp/test_nodejs
-          
-          echo "[INFO] Testing binary from /tmp without LD_LIBRARY_PATH..."
-          cd /tmp/test_nodejs
-          unset LD_LIBRARY_PATH
-          
-          # Verify all dependencies are found
-          if ldd valhalla_node.node | grep "not found"; then
-            echo "[ERROR] Missing dependencies detected!"
-            ldd valhalla_node.node
-            exit 1
-          else
-            echo "[SUCCESS] All dependencies found! Binary is relocatable."
-            ldd valhalla_node.node | head -20
-          fi
       
       - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
