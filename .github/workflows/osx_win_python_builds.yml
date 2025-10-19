@@ -181,6 +181,47 @@ jobs:
           name: valhalla-nodejs-linux-x64
           path: valhalla-nodejs-linux-x64.tar.gz
   
+  verify_nodejs_bindings_linux:
+    name: Verify Linux Node.js bindings
+    runs-on: ubuntu-latest
+    needs: [build_nodejs_bindings_linux]
+    container: node:18
+    steps:
+      - name: Download Node.js binding artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-nodejs-linux-x64
+      
+      - name: Extract and verify binding
+        run: |
+          echo "[INFO] Extracting artifact..."
+          mkdir -p valhalla_binding
+          tar -xzf valhalla-nodejs-linux-x64.tar.gz -C valhalla_binding
+          
+          echo "[INFO] Contents:"
+          ls -lh valhalla_binding/
+          ls -lh valhalla_binding/lib/ | head -20
+          
+          echo "[INFO] Checking dependencies..."
+          ldd valhalla_binding/valhalla_node.node
+          
+          echo "[INFO] Testing Node.js binding..."
+          cat > test.js << 'EOF'
+          try {
+            const valhalla = require('./valhalla_binding/valhalla_node.node');
+            console.log('[SUCCESS] Valhalla binding loaded successfully!');
+            console.log('[INFO] VALHALLA_VERSION:', valhalla.VALHALLA_VERSION);
+            console.log('[INFO] Available exports:', Object.keys(valhalla));
+            process.exit(0);
+          } catch (error) {
+            console.error('[ERROR] Failed to load Valhalla binding:', error.message);
+            console.error(error.stack);
+            process.exit(1);
+          }
+          EOF
+          
+          node test.js
+  
   # build_python_wheels_linux:
   #   name: Build Linux Python wheels
   #   runs-on: ubuntu-latest
