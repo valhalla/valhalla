@@ -100,4 +100,5 @@ valhalla_module(NAME mjolnir
     Boost::boost
     PkgConfig::LuaJIT
     Threads::Threads
-    PkgConfig::ZLIB)
+    PkgConfig::ZLIB
+    PkgConfig::OPENSSL)
