@@ -241,6 +241,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
@@ -297,7 +298,7 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
-    return kSpeedFactor[top_speed_];
+    return kSpeedFactor[top_speed_] * static_cast<float>(min_linear_cost_factor_);
   }
 
   /**
@@ -486,6 +487,7 @@ bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) 
 
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const {
@@ -545,10 +547,13 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
   }
 
+  factor *= EdgeFactor(edgeid);
+
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
+
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);
@@ -956,6 +961,7 @@ public:
    * @return  Returns the cost to traverse the edge.
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
@@ -990,6 +996,8 @@ public:
       // Add a penalty for traversing a closed edge
       factor *= closure_factor_;
     }
+
+    factor *= EdgeFactor(edgeid);
 
     return Cost(sec * factor, sec);
   }

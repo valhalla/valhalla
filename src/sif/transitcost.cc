@@ -171,6 +171,7 @@ public:
    * @return
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge*,
+                        const baldr::GraphId&,
                         const graph_tile_ptr&,
                         const baldr::TimeInfo&,
                         uint8_t&) const override {

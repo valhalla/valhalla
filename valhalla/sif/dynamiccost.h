@@ -109,6 +109,21 @@
 namespace valhalla {
 namespace sif {
 
+struct cost_edge_t {
+  double start{0.};
+  double end{1.};
+  double factor{1.};
+};
+
+struct custom_cost_t {
+  std::vector<cost_edge_t> ranges;
+  double avg_factor{1.};
+
+  // once ranges are filled up, sort and compute average
+  // returns the minimum factor
+  double finalize();
+};
+
 const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingTypeMapping{
     {Costing::none_, {Costing::none_}},
     {Costing::bicycle, {Costing::bicycle}},
@@ -424,6 +439,7 @@ public:
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& id,
                         const baldr::graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const = 0;
@@ -435,7 +451,9 @@ public:
    * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
    * @return  Returns the cost and time (seconds).
    */
-  virtual Cost EdgeCost(const baldr::DirectedEdge* edge, const baldr::graph_tile_ptr& tile) const;
+  virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
+                        const baldr::graph_tile_ptr& tile) const;
 
   /**
    * Returns the cost to make the transition from the predecessor edge.
@@ -1029,6 +1047,42 @@ public:
   }
 
   /**
+   * Returns the averaged factor for an edge fraction based on user provided custom factors
+   * along linear features. If no custom factors are present for an edge, returns 1.
+   */
+  double PartialEdgeFactor(const baldr::GraphId& edgeid, const float percent_along) const {
+    if (linear_cost_edges_.empty())
+      return 1.;
+
+    if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end()) {
+      double partial_factor = 0.;
+      double uncovered = 1.;
+      for (const auto& factor : it->second.ranges) {
+        if (factor.end <= percent_along)
+          continue;
+        double fraction = (factor.end - std::max(static_cast<double>(percent_along), factor.start)) /
+                          (1. - static_cast<double>(percent_along));
+        partial_factor += fraction * factor.factor;
+        uncovered -= fraction;
+      }
+      partial_factor += uncovered;
+      return partial_factor;
+    }
+
+    return 1.;
+  }
+
+  double EdgeFactor(const baldr::GraphId& edgeid) const {
+    if (linear_cost_edges_.empty() || edgeid == baldr::kInvalidGraphId)
+      return 1.;
+
+    if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end())
+      return it->second.avg_factor;
+
+    return 1.;
+  }
+
+  /**
    * Get the flow mask used for accessing traffic flow data from the tile
    * @return the flow mask used
    */
@@ -1122,6 +1176,10 @@ protected:
 
   // User specified edges to avoid with percent along (for avoiding PathEdges of locations)
   std::unordered_map<baldr::GraphId, float> user_exclude_edges_;
+
+  // User specified edges to cost based on user provided factors
+  std::unordered_map<baldr::GraphId, custom_cost_t> linear_cost_edges_;
+  double min_linear_cost_factor_;
 
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;
