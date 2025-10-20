@@ -38,6 +38,7 @@
     "sqlite3",
     "zlib",
     "unordered-dense",
-    "libosmium"
+    "libosmium",
+    "openssl"
   ]
 }
