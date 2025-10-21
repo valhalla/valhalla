@@ -1,0 +1,414 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import platform
+import re
+import shutil
+import subprocess
+import sys
+import tarfile
+from pathlib import Path
+from typing import Set, List
+
+
+# Libraries we should NOT bundle (system/glibc pieces)
+EXCLUDE_RE_LINUX = re.compile(
+    r'^((linux-vdso\.so.*)|(ld-linux.*\.so.*)|(ld-musl.*\.so.*)|(libc\.so.*)|'
+    r'(libm\.so.*)|(libpthread\.so.*)|(librt\.so.*)|(libdl\.so.*)|'
+    r'(libnsl\.so.*)|(libresolv\.so.*)|(libutil\.so.*)|(libcrypt\.so.*)|'
+    r'(libanl\.so.*)|(libnss_.*\.so.*)|(libgcc_s\.so.*)|(libstdc\+\+\.so.*)|'
+    r'(libgomp\.so.*)|(libselinux\.so.*)|(libbsd\.so.*)|(libmd\.so.*))$',
+    re.IGNORECASE
+)
+
+
+def require_cmd(cmd: str) -> None:
+    """Check if a command exists in PATH."""
+    if shutil.which(cmd) is None:
+        print(f"Error: '{cmd}' is required but not found in PATH.", file=sys.stderr)
+        sys.exit(1)
+
+
+def is_macos() -> bool:
+    """Check if running on macOS."""
+    return platform.system() == "Darwin"
+
+
+def collect_deps_linux(elf_path: str) -> List[str]:
+    """Collect dependencies using ldd on Linux."""
+    try:
+        result = subprocess.run(
+            ["ldd", elf_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+    except subprocess.CalledProcessError:
+        return []
+    
+    deps = []
+    for line in result.stdout.splitlines():
+        parts = line.strip().split()
+        if len(parts) >= 3 and parts[1] == "=>" and parts[2].startswith("/"):
+            deps.append(parts[2])
+        elif len(parts) >= 1 and parts[0].startswith("/"):
+            deps.append(parts[0])
+    
+    return sorted(set(deps))
+
+
+def collect_deps_macos(macho_path: str) -> List[str]:
+    """Collect dependencies using otool on macOS."""
+    try:
+        result = subprocess.run(
+            ["otool", "-L", macho_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+    except subprocess.CalledProcessError:
+        return []
+    
+    deps = []
+    lines = result.stdout.splitlines()
+    # Skip first line (it's the file path)
+    for line in lines[1:]:
+        parts = line.strip().split()
+        if parts and parts[0].startswith("/"):
+            deps.append(parts[0])
+    
+    return sorted(set(deps))
+
+
+def collect_deps(path: str) -> List[str]:
+    """Collect dependencies based on platform."""
+    if is_macos():
+        return collect_deps_macos(path)
+    else:
+        return collect_deps_linux(path)
+
+
+def should_exclude(dep: str) -> bool:
+    """Check if a library should be excluded from bundling."""
+    if is_macos():
+        if dep.startswith("/System") or dep.startswith("/usr/lib"):
+            return True
+        return False
+    else:
+        basename = os.path.basename(dep)
+        return EXCLUDE_RE_LINUX.match(basename.lower()) is not None
+
+
+def copy_dep(dep_path: str, out_dir: Path) -> None:
+    """Copy a dependency to OUT_DIR/lib if allowed and not already present."""
+    lib_dir = out_dir / "lib"
+    basename = os.path.basename(dep_path)
+    
+    if should_exclude(basename):
+        return
+    
+    dest_path = lib_dir / basename
+    if dest_path.exists():
+        return
+    
+    # Copy the actual file contents (follow symlinks)
+    shutil.copy2(dep_path, dest_path, follow_symlinks=True)
+    
+    # If it was a symlink, try to preserve the link name
+    if os.path.islink(dep_path):
+        target = os.readlink(dep_path)
+        target_basename = os.path.basename(target)
+        if target and target_basename != basename:
+            target_path = lib_dir / target_basename
+            if target_path.exists():
+                link_path = lib_dir / basename
+                if link_path.exists():
+                    link_path.unlink()
+                try:
+                    link_path.symlink_to(target_basename)
+                except Exception:
+                    pass
+
+
+def collect_deps_recursively(binary_path: str) -> List[str]:
+    """Recursively collect all dependencies of a binary."""
+    all_deps = []
+    queue = [binary_path]
+    seen: Set[str] = set()
+    
+    while queue:
+        cur = queue.pop(0)
+        
+        if cur in seen:
+            continue
+        seen.add(cur)
+        
+        # Get deps of current binary
+        deps = collect_deps(cur)
+        for dep in deps:
+            if not os.path.isfile(dep):
+                continue
+            
+            if should_exclude(dep):
+                continue
+            
+            # Add to result if not already there
+            if dep not in all_deps:
+                all_deps.append(dep)
+            
+            # Queue for recursive processing
+            if dep not in seen:
+                queue.append(dep)
+    
+    return all_deps
+
+
+def bundle_all_deps(binding_dst: Path, out_dir: Path) -> None:
+    """Recursively collect and copy dependencies."""
+    # Collect all dependencies first
+
+    all_deps = collect_deps_recursively(str(binding_dst))
+
+    # Copy all collected dependencies
+    for dep in all_deps:
+        copy_dep(dep, out_dir)
+
+
+def patch_rpaths_linux(binding_dst: Path, out_dir: Path) -> None:
+    """Patch RPATHs on Linux using patchelf."""
+    # Patch the binding to look into ./lib
+    subprocess.run(
+        ["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/lib", str(binding_dst)],
+        check=True
+    )
+    
+    # Patch each bundled library to look within the lib dir
+    lib_dir = out_dir / "lib"
+    for so in lib_dir.glob("*.so*"):
+        # Check if it's an ELF file
+        try:
+            result = subprocess.run(
+                ["file", str(so)],
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            if "ELF" in result.stdout:
+                try:
+                    subprocess.run(
+                        ["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN", str(so)],
+                        check=True
+                    )
+                except subprocess.CalledProcessError:
+                    print(f"Warning: failed to patchelf {so} (continuing)")
+        except subprocess.CalledProcessError:
+            continue
+
+
+def codesign_adhoc(path: Path) -> None:
+    """Re-sign a binary with ad-hoc signature to fix invalidated signatures."""
+    try:
+        subprocess.run(
+            ["codesign", "--force", "--sign", "-", str(path)],
+            capture_output=True,
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"Warning: failed to re-sign {path}: {e.stderr.decode()}")
+
+
+def patch_rpaths_macos(binding_dst: Path, out_dir: Path) -> None:
+    """Patch install names on macOS using install_name_tool."""
+    lib_dir = out_dir / "lib"
+    modified_files = set()
+    
+    # First, update the library IDs of all bundled libraries
+    for dylib in lib_dir.glob("*.dylib"):
+        try:
+            subprocess.run(
+                ["install_name_tool", "-id", f"@loader_path/{dylib.name}", str(dylib)],
+                capture_output=True,
+                check=True
+            )
+            modified_files.add(dylib)
+        except subprocess.CalledProcessError:
+            print(f"Warning: failed to set ID for {dylib} (continuing)")
+    
+    # Update references in the binding
+    deps = collect_deps_macos(str(binding_dst))
+    binding_modified = False
+    for dep in deps:
+        basename = os.path.basename(dep)
+        if (lib_dir / basename).exists():
+            try:
+                subprocess.run(
+                    ["install_name_tool", "-change", dep, f"@loader_path/lib/{basename}", str(binding_dst)],
+                    capture_output=True,
+                    check=True
+                )
+                binding_modified = True
+            except subprocess.CalledProcessError:
+                pass
+    
+    if binding_modified:
+        modified_files.add(binding_dst)
+    
+    # Update references in each library
+    for dylib in lib_dir.glob("*.dylib"):
+        deps = collect_deps_macos(str(dylib))
+        dylib_modified = False
+        for dep in deps:
+            basename = os.path.basename(dep)
+            if (lib_dir / basename).exists():
+                try:
+                    subprocess.run(
+                        ["install_name_tool", "-change", dep, f"@loader_path/{basename}", str(dylib)],
+                        capture_output=True,
+                        check=True
+                    )
+                    dylib_modified = True
+                except subprocess.CalledProcessError:
+                    pass
+        
+        if dylib_modified:
+            modified_files.add(dylib)
+    
+    # Re-sign all modified files with ad-hoc signature
+    for path in modified_files:
+        codesign_adhoc(path)
+
+
+def patch_rpaths(binding_dst: Path, out_dir: Path) -> None:
+    """Patch RPATHs/install names based on platform."""
+    if is_macos():
+        patch_rpaths_macos(binding_dst, out_dir)
+    else:
+        patch_rpaths_linux(binding_dst, out_dir)
+
+
+def strip_symbols(binding_dst: Path, out_dir: Path) -> None:
+    """Strip symbols from binaries."""
+    strip_cmd = "strip"
+    strip_args = ["-x"] if is_macos() else ["--strip-unneeded"]
+    stripped_files = []
+    
+    # Strip the binding
+    try:
+        # Make writable first
+        os.chmod(binding_dst, 0o755)
+        subprocess.run(
+            [strip_cmd] + strip_args + [str(binding_dst)],
+            capture_output=True,
+            check=False
+        )
+        stripped_files.append(binding_dst)
+    except Exception:
+        pass
+    
+    # Strip libraries
+    lib_dir = out_dir / "lib"
+    for lib in lib_dir.glob("*.so*" if not is_macos() else "*.dylib"):
+        try:
+            # Make writable first
+            os.chmod(lib, 0o755)
+            subprocess.run(
+                [strip_cmd] + strip_args + [str(lib)],
+                capture_output=True,
+                check=False
+            )
+            stripped_files.append(lib)
+        except Exception:
+            pass
+    
+    # Re-sign stripped files on macOS (strip also invalidates signatures)
+    if is_macos():
+        for path in stripped_files:
+            codesign_adhoc(path)
+
+
+def create_tarball(out_dir: Path, binding_dst: Path) -> str:
+    """Create a tarball of the bundle."""
+    binding_name = binding_dst.stem  # without .node extension
+    tar_name = f"{binding_name}-bundle.tar.gz"
+    tar_path = out_dir.parent / tar_name
+    
+    with tarfile.open(tar_path, "w:gz") as tar:
+        tar.add(out_dir, arcname=out_dir.name)
+    
+    return str(tar_path.resolve())
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Bundle Node.js addon with its dependencies"
+    )
+    parser.add_argument("binding_src", help="Path to the addon.node file")
+    parser.add_argument("out_dir", help="Path to the output directory")
+    parser.add_argument("--strip", action="store_true", help="Strip symbols from binaries")
+    parser.add_argument("--tar", action="store_true", help="Create a tarball of the bundle")
+    
+    args = parser.parse_args()
+    
+    # Check required commands
+    if is_macos():
+        require_cmd("otool")
+        require_cmd("install_name_tool")
+    else:
+        require_cmd("ldd")
+        require_cmd("patchelf")
+    
+    # Validate input
+    binding_src = Path(args.binding_src)
+    if not binding_src.is_file():
+        print(f"Error: binding not found: {binding_src}", file=sys.stderr)
+        sys.exit(1)
+    
+    # Setup output directory
+    out_dir = Path(args.out_dir)
+    lib_dir = out_dir / "lib"
+    lib_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Copy binding
+    binding_dst = out_dir / binding_src.name
+    shutil.copy2(binding_src, binding_dst)
+    
+    # Bundle dependencies
+    print("[1/4] Bundling dependencies...")
+    bundle_all_deps(binding_dst, out_dir)
+
+    # Patch RPATHs
+    print("[2/4] Patching RPATHs...")
+    patch_rpaths(binding_dst, out_dir)
+    
+    # Strip symbols
+    if args.strip:
+        print("[3/4] Stripping symbols (optional)...")
+        strip_symbols(binding_dst, out_dir)
+    else:
+        print("[3/4] Skipping strip (use --strip to enable).")
+    
+    # Create tarball
+    if args.tar:
+        print("[4/4] Creating tarball...")
+        tar_path = create_tarball(out_dir, binding_dst)
+        print(f"Tarball: {tar_path}")
+    else:
+        print(f"[4/4] Done. Relocatable bundle at: {out_dir}")
+    
+    # Print summary
+    print()
+    print("Summary:")
+    print(f"  Binding: {binding_dst}")
+    print(f"  Lib dir: {lib_dir}")
+    if is_macos():
+        print("  Install names: @loader_path/lib (binding)")
+        print("  Install names: @loader_path (libs)")
+    else:
+        print("  RPATH(binding): $ORIGIN/lib")
+        print("  RPATH(libs):    $ORIGIN")
+
+
+if __name__ == "__main__":
+    main()
+

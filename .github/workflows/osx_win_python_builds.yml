@@ -105,7 +105,8 @@ jobs:
           NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
           OUTPUT_DIR="nodejs_dist"
           
-          src/bindings/nodejs/scripts/bundle.sh $NODE_FILE $OUTPUT_DIR --strip --tar
+          #src/bindings/nodejs/scripts/bundle.sh $NODE_FILE $OUTPUT_DIR --strip --tar
+          python src/bindings/nodejs/scripts/bundle.py $NODE_FILE $OUTPUT_DIR --strip --tar
           
           mv valhalla_node-bundle.tar.gz valhalla-nodejs-macos-arm64.tar.gz
 
