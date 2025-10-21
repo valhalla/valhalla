@@ -95,7 +95,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: ${{  github.ref == "refs/heads/master"  || github.event_name == "pull_request"}}
+        if: ${{  github.ref == 'refs/heads/master'  || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Write pyproject.toml
@@ -182,7 +182,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: ${{  github.ref == "refs/heads/master"  || github.event_name == "pull_request"}}
+        if: ${{  github.ref == 'refs/heads/master'  || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Restore ccache
@@ -331,7 +331,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: ${{  github.ref == "refs/heads/master"  || github.event_name == "pull_request"}}
+        if: ${{  github.ref == 'refs/heads/master'  || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Configure CMake
