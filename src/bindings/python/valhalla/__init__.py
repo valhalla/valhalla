@@ -1,5 +1,4 @@
 from pathlib import Path
-import sys
 
 try:
     from ._valhalla import VALHALLA_PRINT_VERSION, VALHALLA_PYTHON_PACKAGE
