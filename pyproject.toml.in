@@ -1,5 +1,5 @@
 [project]
-name = "pyvalhalla-weekly"
+name = "@VALHALLA_RELEASE_PKG@"
 dynamic = ["version"]
 requires-python = ">=3.9.0"
 authors = [{ name = "Nils Nolde" }, {name = "Kevin Kreiser"}]
@@ -38,7 +38,7 @@ build-backend = "scikit_build_core.build"
 # Ask setuptools-scm for the version at build time
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 # stable build folder for incremental builds
-build-dir = "/home/nilsnolde/dev/cpp/valhalla/build/python/src/bindings/python"
+build-dir = "@VALHALLA_BUILD_FOLDER@"
 # creates a valhalla directory in the wheel
 wheel.install-dir = "valhalla"
 # only installs the python cmake COMPONENT

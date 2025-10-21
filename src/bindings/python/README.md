@@ -19,6 +19,25 @@ We distribute all currently maintained CPython versions as **binary wheels** for
 `pip install pyvalhalla` to install the most recent Valhalla **release**.  
 `pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
 
+> [!TIP]
+> **For developers**: `pip install -e` (editable build) will by default build into a temp directory, so everytime it's invoked it'll rebuild all of libvalhalla. Use the following command to enable real incremental builds:
+> 
+> ```shell
+> pip install -e . --no-build-isolation \
+>   -Cbuild-dir=build/Release (or other build dir) \
+>   -Ccmake.build-type=Release
+> ```
+> 
+> Similarly for building a wheel:
+> 
+> ```shell
+> pip wheel . -w dist --no-build-isolation \
+>   -Cbuild-dir=build/Release (or other build dir) \
+>   -Ccmake.build-type=Release
+> ```
+>
+> Both commands have to repeated for each build.
+
 ### Usage
 
 #### Bindings
