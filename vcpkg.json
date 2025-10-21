@@ -29,7 +29,7 @@
       "features": ["rttopo"]
     },
     "pkgconf",
-    "pybind11",
+    "nanobind",
     "rapidjson",
     "spatialite-tools",
     "luajit",
