@@ -56,7 +56,7 @@ concurrency:
 env:
   # only run tmate if manually invoked and debug_enabled == true or a previous step failed
   SETUP_TMATE: ${{ ((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) && (github.repository_owner == 'valhalla') }}
-  PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
+  PUBLISH_PYPI: ${{ (github.event_name == 'pull_request') || (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
 
 jobs:
   # only publish to PyPI on tags, schedule or workflow_dispatch (only on master!)
@@ -95,16 +95,16 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: github.ref == 'refs/heads/master'
+        if: ${{  github.ref == "refs/heads/master"  || github.event_name == "pull_request"}}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Determine package to publish
+      - name: Write pyproject.toml
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
             VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
-          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
 
       - name: Restore ccache
         uses: tespkg/actions-cache/restore@v1
@@ -123,10 +123,9 @@ jobs:
           # the host system's "/" is mounted to "/host" in the manylinux container
           CIBW_ENVIRONMENT: >
             CCACHE_DIR=/host/home/runner/.cache/ccache
-            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
-            CMAKE_ARGS="'VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}'"
+            SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
           # uncomment when testing
-          # CIBW_BUILD: cp313-*
+          CIBW_BUILD: cp313-*
       
       # TODO: probably need to delete the key first, since it's just a single key
 
@@ -183,7 +182,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: github.ref == 'refs/heads/master'
+        if: ${{  github.ref == "refs/heads/master"  || github.event_name == "pull_request"}}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Restore ccache
@@ -232,25 +231,24 @@ jobs:
       
       # only package python bindings if it's not a PR
 
-      - name: Determine package to publish
+      - name: Write pyproject.toml
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
             VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
-          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           CIBW_ENVIRONMENT: >
-            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
-            CMAKE_ARGS="'VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}'"
+            SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
           MACOSX_DEPLOYMENT_TARGET: 14
           # uncomment when testing
-          # CIBW_BUILD: cp313-*
+          CIBW_BUILD: cp313-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -333,7 +331,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: github.ref == 'refs/heads/master'
+        if: ${{  github.ref == "refs/heads/master"  || github.event_name == "pull_request"}}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Configure CMake
@@ -395,27 +393,25 @@ jobs:
           ls -l build/vcpkg_installed/custom-x64-windows/lib
           ls -l build/vcpkg_installed/custom-x64-windows/bin
       
-      - name: Determine package to publish
+      # only package python bindings if it's not a PR
+
+      - name: Write pyproject.toml
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
-        shell: bash
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
             VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
-          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
-          # used in setup.py
-          CIBW_ENVIRONMENT: >
-            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
           CIBW_ENVIRONMENT_WINDOWS: >
             VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
-            CMAKE_ARGS="'VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}'"
+            SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
           # uncomment when testing
-          # CIBW_BUILD: cp313-*
+          CIBW_BUILD: cp313-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -497,29 +493,29 @@ jobs:
           python -m valhalla valhalla_service -h
           python -m valhalla valhalla_build_tiles -h
 
-  upload_all:
-    name: Upload if release
-    needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
-    runs-on: ubuntu-latest
-    # if: ${{ always() }}
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+  # upload_all:
+  #   name: Upload if release
+  #   needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
+  #   runs-on: ubuntu-latest
+  #   # if: ${{ always() }}
+  #   if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
 
-    permissions:
-      id-token: write # This is required for requesting the JWT from Github for PyPI
+  #   permissions:
+  #     id-token: write # This is required for requesting the JWT from Github for PyPI
 
-    steps:
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.13'
+  #   steps:
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.13'
 
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         path: dist
+  #         merge-multiple: true
 
-      - name: Publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
-        with:
-          verbose: true
-          # uncomment when testing!
-          # repository-url: https://test.pypi.org/legacy/
+  #     - name: Publish to Test PyPI
+  #       uses: pypa/gh-action-pypi-publish@v1.13.0
+  #       with:
+  #         verbose: true
+  #         # uncomment when testing!
+  #         # repository-url: https://test.pypi.org/legacy/

@@ -13,7 +13,6 @@ try:
     from .__version__ import __version__
 
     # extend with version modifier (so far the git hash)
-    print(VALHALLA_PRINT_VERSION, file=sys.stderr)
     if (idx := VALHALLA_PRINT_VERSION.find("-")) != -1:
         __version__ = __version__ + VALHALLA_PRINT_VERSION[idx:]
 except ModuleNotFoundError:

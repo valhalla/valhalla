@@ -4,7 +4,7 @@
 # TODO: don't forget to change black's config
 
 [project]
-name = "@VALHALLA_RELEASE_PKG@"
+name = "@PYVALHALLA_NAME@"
 dynamic = ["version"]
 requires-python = ">=3.9.0"
 authors = [{ name = "Nils Nolde" }, {name = "Kevin Kreiser"}]
@@ -14,6 +14,7 @@ license = "MIT"
 license-files = ["COPYING"]
 
 [project.urls]
+Homepage = "https://github.com/valhalla/valhalla"
 Documentation = "https://valhalla.github.io/valhalla/"
 Repository = "https://github.com/valhalla/valhalla"
 Issues = "https://github.com/valhalla/valhalla/issues"
@@ -42,8 +43,6 @@ build-backend = "scikit_build_core.build"
 [tool.scikit-build]
 # Ask setuptools-scm for the version at build time
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
-# stable build folder for incremental builds
-build-dir = "@VALHALLA_BUILD_FOLDER@"
 # creates a valhalla directory in the wheel
 wheel.install-dir = "valhalla"
 # only installs the python cmake COMPONENT
@@ -51,7 +50,7 @@ install.components = ["python"]
 
 # a few standard build flags for a scikit-build-core build
 [tool.scikit-build.cmake.define]
-ENABLE_PYTHON_BINDINGS = "OFF"
+ENABLE_PYTHON_BINDINGS = "ON"
 ENABLE_TESTS = "OFF"
 ENABLE_SINGLE_FILES_WERROR = "OFF"
 ENABLE_GDAL = "ON"
@@ -99,10 +98,12 @@ repair-wheel-command = "delvewheel repair --analyze-existing-exes --add-path bui
 test-command=[
     'dnf remove -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel > /dev/null',
     '{project}/src/bindings/python/test/test_pyvalhalla_package.sh',
-    'dnf install -y gdal-devel libspatialite-devel luajit-devel lz 4-devel czmq-devel > /dev/null'
+    'dnf install -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel > /dev/null'
 ]
-# patch auditwheel so that it allows to vendor libraries also linked to libpython
+# 1. patch auditwheel so that it allows to vendor libraries also linked to libpython
+# 2. configure and write the pyproject.toml
 before-build = """
+  python -m pip install -r src/bindings/python/requirements-build.txt
   python src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1
 """
 # e.g. geos is both installed to the system and built from source, need to prioritize the latter
@@ -124,6 +125,6 @@ repair-wheel-command = [
         'link_target="$(readlink -f $(which "auditwheel"))"',
         'python_bin="$(dirname "$link_target")/python"',
         'echo "[INFO] Using $($python_bin -V) from $(which "$python_bin")"',
-        'export LD_LIBRARY_PATH=/usr/local/lib64',
+        'export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib',
         '$python_bin src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1',
     ]

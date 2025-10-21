@@ -23,17 +23,23 @@ We distribute all currently maintained CPython versions as **binary wheels** for
 > **For developers**: `pip install -e` (editable build) will by default build into a temp directory, so everytime it's invoked it'll rebuild all of libvalhalla. Use the following command to enable real incremental builds:
 > 
 > ```shell
+> # produces pyproject.toml, optionally specify the package name
+> cmake -DPYVALHALLA_NAME=pyvalhalla-weekly -P cmake/ValhallaConfigPyProject.cmake
 > pip install -e . --no-build-isolation \
->   -Cbuild-dir=build/Release (or other build dir) \
->   -Ccmake.build-type=Release
+>   -Cbuild-dir=build_python (or other build dir) \
+>   -Ccmake.build-type=Release \
+>   -Ccmake.define.VALHALLA_VERSION_MODIFIER="$(git rev-parse --short HEAD)"
 > ```
 > 
 > Similarly for building a wheel:
 > 
 > ```shell
+> # produces pyproject.toml, optionally specify the package name
+> cmake -DPYVALHALLA_NAME=pyvalhalla -P cmake/ValhallaConfigPyProject.cmake
 > pip wheel . -w dist --no-build-isolation \
->   -Cbuild-dir=build/Release (or other build dir) \
->   -Ccmake.build-type=Release
+>   -Cbuild-dir=build_python (or other build dir) \
+>   -Ccmake.build-type=Release \
+>   -Ccmake.define.VALHALLA_VERSION_MODIFIER="$(git rev-parse --short HEAD)"
 > ```
 >
 > Both commands have to repeated for each build.
@@ -90,9 +96,8 @@ To find out which Valhalla executables are currently included, run `python -m va
 
 Note, building the bindings from source is usually best done by building Valhalla with `cmake -B build -DENABLE_PYTHON_BINDING=ON ...`. However, if you want to package your own `pyvalhalla` bindings for some reason (e.g. fork in a bigger team), you can follow the below instructions, which are also executed by our CI.
 
-The Python build respects a few configuration variables:
+The Python build respects a few CMake configuration variables:
 
-- `VALHALLA_BUILD_FOLDER` (optional): Specify the build folder manually (relative to project source or absolute), default ${CMAKE_CURRENT_BINARY_DIR}
 - `VALHALLA_VERSION_MODIFIER` (optional): Will append a string to the actual Valhalla version string, e.g. `$(git rev-parse --short HEAD)` will append the current branch's commit hash.
 
 #### `cibuildwheel`
@@ -108,13 +113,8 @@ cibuildwheel --only cp313-manylinux_x86_64
 VCPKG_ARCH_ROOT="build/vcpkg_installed/custom-x64-windows" cibuildwheel --only cp313-win_amd64
 ```
 
-> [!NOTE]
-> On Windows & OSX we expect Valhalla to be built _before_ running `cibuildwheel`. On Linux we use a `manylinux` image to orchestrate the build of both Valhalla and the bindings, see [below](#linux).
+The build looks at a few environment variables:
 
-The build looks at a few environment variables, some optional, some mandatory:
-
-- `VALHALLA_BUILD_BIN_DIR` (optional): Specify the relative/absolute path to the build artifacts of Valhalla, e.g. `./build`, if you want to package the C++ executables
-- `VALHALLA_RELEASE_PKG` (optional): To determine the package name, mostly useful for packaging, expects one of `pyvalhalla` or `pyvalhalla-weekly` (default).
 - `VCPKG_ARCH_ROOT` (required for Win): The relative/absolute directory of the `vcpkg` root.
 
 In the end, you'll find the wheel in `./wheelhouse`.
