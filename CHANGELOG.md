@@ -167,6 +167,7 @@
    * CHANGED: Optimise turntype calls in TransitionCost [#5590](https://github.com/valhalla/valhalla/pull/5590)
    * CHANGED: Consistent use of `cost_ptr_t` [#5615](https://github.com/valhalla/valhalla/pull/5615)
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
+   * CHANGED: Adjust speed penalty and add dimensions length and weight to autocosting [#5627](https://github.com/valhalla/valhalla/pull/5627)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
