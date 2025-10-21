@@ -1,3 +1,8 @@
+# this will be turned into pyproject.toml by cmake/ValhallaPyProjectToml.cmake
+# there's no other way to have different "project.name"s
+
+# TODO: don't forget to change black's config
+
 [project]
 name = "@VALHALLA_RELEASE_PKG@"
 dynamic = ["version"]
@@ -44,6 +49,14 @@ wheel.install-dir = "valhalla"
 # only installs the python cmake COMPONENT
 install.components = ["python"]
 
+# a few standard build flags for a scikit-build-core build
+[tool.scikit-build.cmake.define]
+ENABLE_PYTHON_BINDINGS = "OFF"
+ENABLE_TESTS = "OFF"
+ENABLE_SINGLE_FILES_WERROR = "OFF"
+ENABLE_GDAL = "ON"
+CMAKE_BUILD_TYPE = "Release"
+
 [tool.setuptools_scm]
 version_file = "src/bindings/python/valhalla/__version__.py"
 version_scheme = "no-guess-dev"
@@ -76,12 +89,9 @@ archs = "native"
 manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
 
 [tool.cibuildwheel.windows]
-# installing from github for now, to get early support to patch executables
-# https://github.com/adang1345/delvewheel/issues/62
-before-all = "pip install https://github.com/adang1345/delvewheel/archive/8b90061.zip"
+# this is v1.11.2
+before-all = "pip install \"delvewheel<=2.0.0\""
 repair-wheel-command = "delvewheel repair --analyze-existing-exes --add-path build/vcpkg_installed/custom-x64-windows/bin {wheel} -w {dest_dir}"
-# this should be sync'd with the GHA cmake command
-environment = { VALHALLA_BUILD_BIN_DIR="build/Release" }
 
 [tool.cibuildwheel.linux]
 # we remove some system libraries to try and simulate a more pristine environment before testing
@@ -89,15 +99,14 @@ environment = { VALHALLA_BUILD_BIN_DIR="build/Release" }
 test-command=[
     'dnf remove -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel > /dev/null',
     '{project}/src/bindings/python/test/test_pyvalhalla_package.sh',
-    'dnf install -y gdal-devel libspatialite-devel luajit-devel lz4-devel czmq-devel > /dev/null'
+    'dnf install -y gdal-devel libspatialite-devel luajit-devel lz 4-devel czmq-devel > /dev/null'
 ]
-# build & install libvalhalla before building the bindings
-before-all = """
-{project}/src/bindings/python/scripts/build_manylinux.sh build_manylinux
+# patch auditwheel so that it allows to vendor libraries also linked to libpython
+before-build = """
+  python src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1
 """
 # e.g. geos is both installed to the system and built from source, need to prioritize the latter
-# VALHALLA_BUILD_BIN_DIR needs to be sync'd with the argument to 'build_manylinux.sh' above
-environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64", VALHALLA_BUILD_BIN_DIR="build_manylinux" }
+environment = { LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64" }
 
 [tool.cibuildwheel.macos]
 repair-wheel-command = [

@@ -90,6 +90,11 @@ To find out which Valhalla executables are currently included, run `python -m va
 
 Note, building the bindings from source is usually best done by building Valhalla with `cmake -B build -DENABLE_PYTHON_BINDING=ON ...`. However, if you want to package your own `pyvalhalla` bindings for some reason (e.g. fork in a bigger team), you can follow the below instructions, which are also executed by our CI.
 
+The Python build respects a few configuration variables:
+
+- `VALHALLA_BUILD_FOLDER` (optional): Specify the build folder manually (relative to project source or absolute), default ${CMAKE_CURRENT_BINARY_DIR}
+- `VALHALLA_VERSION_MODIFIER` (optional): Will append a string to the actual Valhalla version string, e.g. `$(git rev-parse --short HEAD)` will append the current branch's commit hash.
+
 #### `cibuildwheel`
 
 On our CI, this orchestrates the packaging of all `pyvalhalla` wheels for every supported, minor Python version and every platform. It can also be run locally (obviously only being able to build wheels for _your_ platform), e.g.
@@ -109,8 +114,7 @@ VCPKG_ARCH_ROOT="build/vcpkg_installed/custom-x64-windows" cibuildwheel --only c
 The build looks at a few environment variables, some optional, some mandatory:
 
 - `VALHALLA_BUILD_BIN_DIR` (optional): Specify the relative/absolute path to the build artifacts of Valhalla, e.g. `./build`, if you want to package the C++ executables
-- `VALHALLA_VERSION_MODIFIER` (optional): Will append a string to the actual Valhalla version string, e.g. `$(git rev-parse --short HEAD)` will append the current branch's commit hash.
-- `VALHALLA_RELEASE_PKG`: To determine the package name, mostly useful for packaging, expects one of `pyvalhalla` or `pyvalhalla-weekly`.
+- `VALHALLA_RELEASE_PKG` (optional): To determine the package name, mostly useful for packaging, expects one of `pyvalhalla` or `pyvalhalla-weekly` (default).
 - `VCPKG_ARCH_ROOT` (required for Win): The relative/absolute directory of the `vcpkg` root.
 
 In the end, you'll find the wheel in `./wheelhouse`.

@@ -14,9 +14,52 @@ if (NOT VALHALLA_RELEASE_PKG)
   set(VALHALLA_RELEASE_PKG "pyvalhalla-weekly")
 endif()
 
-# determine the build folder for the bindings
-if (NOT VALHALLA_BUILD_FOLDER)
-  set(VALHALLA_BUILD_FOLDER ${CMAKE_CURRENT_BINARY_DIR})
+# scikit-build-core does a different build than CMake
+if (SKBUILD)
+  # determine the build folder for the bindings
+  # for cmake, this doesn't need to be set, it's only used in pyproject.toml.in
+  if (NOT VALHALLA_BUILD_FOLDER)
+    set(VALHALLA_BUILD_FOLDER ${CMAKE_CURRENT_BINARY_DIR})
+  endif()
+
+  # this will be set by CI/cibuildwheel for releases
+  # for manual installations, this should be added to CMake config or it's empty
+  if (NOT VALHALLA_VERSION_MODIFIER)
+    target_compile_definitions(_valhalla PRIVATE VALHALLA_VERSION_MODIFIER="")
+  endif()
+  
+  # SKBUILD_PLATLIB_DIR: the platlib path inside the wheel (site-packages or dist-packages or so)
+  set(VALHALLA_INSTALL_PYDIR "${SKBUILD_PLATLIB_DIR}")
+
+  # install the executables when built with scikit-build-core (not with CMake directly)
+  list(APPEND py_srcs
+    valhalla/__version__.py  # will already exist at this point by setuptools_scm
+    valhalla/__main__.py
+    valhalla/_scripts.py)
+
+  function(install_executable exe)
+    install(TARGETS ${exe}
+      DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/bin"
+      COMPONENT python)
+  endfunction()
+
+  if (ENABLE_TOOLS)
+    set(tools valhalla_service)
+    foreach (exe ${tools})
+      install_executable(${exe})
+    endforeach()
+  endif()
+
+  if (ENABLE_DATA_TOOLS)
+    set(data_tools valhalla_build_tiles valhalla_build_admins valhalla_add_predicted_traffic valhalla_add_landmarks valhalla_ingest_transit valhalla_convert_transit)
+    foreach (exe ${data_tools})
+      install_executable(${exe})
+    endforeach()
+  endif()
+
+  configure_file(${VALHALLA_SOURCE_DIR}/pyproject.toml.in ${VALHALLA_SOURCE_DIR}/pyproject.toml @ONLY)
+else()
+  set(VALHALLA_INSTALL_PYDIR "${Python_SITEARCH}")
 endif()
 
 message(STATUS "Installing python modules to ${Python_SITEARCH}")
@@ -62,42 +105,6 @@ set(py_srcs
   valhalla/utils/__init__.py
   valhalla/utils/graph_utils.pyi
   valhalla/utils/decode_polyline.py)
-
-if (SKBUILD)
-  # scikit-build-core provides these helper dirs:
-  # - SKBUILD_PLATLIB_DIR: the platlib path inside the wheel (site-packages)
-  # - SKBUILD_SCRIPTS_DIR: the scripts/console-scripts dir in the wheel
-  set(VALHALLA_INSTALL_PYDIR "${SKBUILD_PLATLIB_DIR}")
-
-  # install the executables when built with scikit-build-core (not with CMake directly)
-  list(APPEND py_srcs
-    valhalla/__main__.py
-    valhalla/_scripts.py)
-
-  function(install_executable exe)
-    install(TARGETS ${exe}
-      DESTINATION "${VALHALLA_INSTALL_PYDIR}/valhalla/bin"
-      COMPONENT python)
-  endfunction()
-
-  if (ENABLE_TOOLS)
-    set(tools valhalla_service)
-    foreach (exe ${tools})
-      install_executable(${exe})
-    endforeach()
-  endif()
-
-  if (ENABLE_DATA_TOOLS)
-    set(data_tools valhalla_build_tiles valhalla_build_admins valhalla_add_predicted_traffic valhalla_add_landmarks valhalla_ingest_transit valhalla_convert_transit)
-    foreach (exe ${data_tools})
-      install_executable(${exe})
-    endforeach()
-  endif()
-
-  configure_file(${VALHALLA_SOURCE_DIR}/pyproject.toml.in ${VALHALLA_SOURCE_DIR}/pyproject.toml @ONLY)
-else()
-  set(VALHALLA_INSTALL_PYDIR "${Python_SITEARCH}")
-endif()
 
 # copy valhalla python sources from src to build
 function(set_output_python rel_path)
