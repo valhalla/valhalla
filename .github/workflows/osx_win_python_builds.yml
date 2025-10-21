@@ -99,6 +99,24 @@ jobs:
           -DENABLE_SINGLE_FILES_WERROR=OFF
           cmake --build build -j$(nproc)
       - run: otool -L build/src/bindings/nodejs/lib/valhalla_node.node
+
+      - name: Make relocatable
+        run: |
+          NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
+          OUTPUT_DIR="nodejs_dist"
+          
+          src/bindings/nodejs/scripts/bundle.sh $NODE_FILE $OUTPUT_DIR --strip --tar
+          
+          mv valhalla_node-bundle.tar.gz valhalla-nodejs-macos-arm64.tar.gz
+
+          echo "[INFO] Contents of tarball:"
+          tar -tzf valhalla-nodejs-macos-arm64.tar.gz
+      
+      - name: Upload Node.js binding artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: valhalla-nodejs-macos-arm64
+          path: valhalla-nodejs-macos-arm64.tar.gz
   build_nodejs_bindings_linux:
     name: Build Linux Node.js bindings
     runs-on: ubuntu-latest
@@ -188,7 +206,52 @@ jobs:
           EOF
           
           node test.js
-  
+
+  verify_nodejs_bindings_macos:
+    name: Verify macOS Node.js bindings
+    runs-on: macos-14
+    needs: [build_nodejs_bindings_macos]
+    steps:
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Download Node.js binding artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-nodejs-macos-arm64
+
+      - name: Extract and verify binding
+        run: |
+          echo "[INFO] Extracting artifact..."
+          mkdir -p valhalla_binding
+          tar -xzf valhalla-nodejs-macos-arm64.tar.gz -C valhalla_binding
+
+          echo "[INFO] Contents:"
+          ls -lh valhalla_binding/nodejs_dist/
+          ls -lh valhalla_binding/nodejs_dist/lib/ | head -20
+
+          echo "[INFO] Checking dependencies..."
+          otool -L valhalla_binding/nodejs_dist/valhalla_node.node
+
+          echo "[INFO] Testing Node.js binding..."
+          cat > test.js << 'EOF'
+          try {
+            const valhalla = require('./valhalla_binding/nodejs_dist/valhalla_node.node');
+            console.log('[SUCCESS] Valhalla binding loaded successfully!');
+            console.log('[INFO] VALHALLA_VERSION:', valhalla.VALHALLA_VERSION);
+            console.log('[INFO] Available exports:', Object.keys(valhalla));
+            process.exit(0);
+          } catch (error) {
+            console.error('[ERROR] Failed to load Valhalla binding:', error.message);
+            console.error(error.stack);
+            process.exit(1);
+          }
+          EOF
+
+          node test.js
+
   # build_python_wheels_linux:
   #   name: Build Linux Python wheels
   #   runs-on: ubuntu-latest
