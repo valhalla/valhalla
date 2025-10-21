@@ -98,7 +98,7 @@ pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
 
 # cURL
 set(curl_target "")
-if (ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+if (ENABLE_HTTP)
   pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
   if (CURL_FOUND)
     target_compile_definitions(PkgConfig::CURL INTERFACE ENABLE_HTTP)
