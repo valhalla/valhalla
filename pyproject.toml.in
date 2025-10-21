@@ -1,8 +1,6 @@
 # this will be turned into pyproject.toml by cmake/ValhallaPyProjectToml.cmake
 # there's no other way to have different "project.name"s
 
-# TODO: don't forget to change black's config
-
 [project]
 name = "@PYVALHALLA_NAME@"
 dynamic = ["version"]
