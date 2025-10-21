@@ -70,6 +70,35 @@ jobs:
   #   outputs:
   #     PUBLISH_PYPI: ${{ env.PUBLISH_PYPI }}
 
+  build_nodejs_bindings_macos:
+    name: Build macOS Node.js bindings
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # we need to fetch all tags for setuptools-scm to work properly
+          fetch-depth: 0
+      - name: Install dependencies
+        run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
+          export PATH="$(brew --prefix python)/libexec/bin:$PATH"
+          sudo python -m pip install --break-system-packages requests shapely
+          git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j$(sysctl -n hw.logicalcpu) && sudo make install
+
+      - name: Build Valhalla with Node.js bindings
+        run: |
+          mkdir -p build
+          cmake -B build -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
+          -DENABLE_NODE_BINDINGS=ON \
+          -DENABLE_GDAL=ON \
+          -DENABLE_TESTS=OFF \
+          -DVALHALLA_VERSION_MODIFIFER=1 \
+          -DENABLE_SINGLE_FILES_WERROR=OFF
+          cmake --build build -j$(nproc)
+
   build_nodejs_bindings_linux:
     name: Build Linux Node.js bindings
     runs-on: ubuntu-latest
