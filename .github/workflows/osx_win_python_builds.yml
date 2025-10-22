@@ -119,9 +119,16 @@ jobs:
           name: valhalla-nodejs-macos-arm64
           path: valhalla-nodejs-macos-arm64.tar.gz
   build_nodejs_bindings_linux:
-    name: Build Linux Node.js bindings
-    runs-on: ubuntu-latest
+    name: Build Linux Node.js bindings (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
         with:
@@ -156,33 +163,40 @@ jobs:
           
           src/bindings/nodejs/scripts/bundle.sh $NODE_FILE $OUTPUT_DIR --strip --tar
           
-          mv valhalla_node-bundle.tar.gz valhalla-nodejs-linux-x64.tar.gz
+          mv valhalla_node-bundle.tar.gz valhalla-nodejs-linux-${{ matrix.arch }}.tar.gz
 
           echo "[INFO] Contents of tarball:"
-          tar -tzf valhalla-nodejs-linux-x64.tar.gz
+          tar -tzf valhalla-nodejs-linux-${{ matrix.arch }}.tar.gz
       
       - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
         with:
-          name: valhalla-nodejs-linux-x64
-          path: valhalla-nodejs-linux-x64.tar.gz
+          name: valhalla-nodejs-linux-${{ matrix.arch }}
+          path: valhalla-nodejs-linux-${{ matrix.arch }}.tar.gz
   
   verify_nodejs_bindings_linux:
-    name: Verify Linux Node.js bindings
-    runs-on: ubuntu-latest
+    name: Verify Linux Node.js bindings (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
     needs: [build_nodejs_bindings_linux]
     container: node:18
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
     steps:
       - name: Download Node.js binding artifact
         uses: actions/download-artifact@v4
         with:
-          name: valhalla-nodejs-linux-x64
+          name: valhalla-nodejs-linux-${{ matrix.arch }}
       
       - name: Extract and verify binding
         run: |
           echo "[INFO] Extracting artifact..."
           mkdir -p valhalla_binding
-          tar -xzf valhalla-nodejs-linux-x64.tar.gz -C valhalla_binding
+          tar -xzf valhalla-nodejs-linux-${{ matrix.arch }}.tar.gz -C valhalla_binding
           
           echo "[INFO] Contents:"
           ls -lh valhalla_binding/nodejs_dist/
