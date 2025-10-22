@@ -90,8 +90,7 @@ valhalla_module(NAME mjolnir
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
       ${unordered_dense_include_dir}
-      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-      ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+      ${libosmium_include_dirs}
   DEPENDS
     valhalla::proto
     valhalla::baldr
@@ -101,4 +100,5 @@ valhalla_module(NAME mjolnir
     Boost::boost
     PkgConfig::LuaJIT
     Threads::Threads
-    PkgConfig::ZLIB)
+    PkgConfig::ZLIB
+    PkgConfig::OPENSSL)

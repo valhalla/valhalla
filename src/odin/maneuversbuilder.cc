@@ -6,16 +6,19 @@
 #include "baldr/turn.h"
 #include "baldr/turnlanes.h"
 #include "baldr/verbal_text_formatter_factory.h"
-#include "midgard/encoded.h"
+#include "exceptions.h"
 #include "midgard/logging.h"
-#include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "odin/sign.h"
 #include "odin/signs.h"
 #include "odin/util.h"
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
-#include "worker.h"
+
+#ifdef LOGGING_LEVEL_DEBUG
+#include "midgard/encoded.h"
+#include "midgard/pointll.h"
+#endif
 
 #include <boost/format.hpp>
 
@@ -72,6 +75,12 @@ std::vector<std::string> split(const std::string& source, char delimiter) {
 bool is_pair(const std::vector<std::string>& tokens) {
   return (tokens.size() == 2);
 }
+
+bool has_level_changes(
+    const ::google::protobuf::RepeatedPtrField<valhalla::TripLeg_Edge_Level>& levels) {
+  return levels.size() == 1 ? levels[0].start() != levels[0].end() : levels.size() != 0;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -246,7 +255,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
     LOG_TRACE(std::string("  prev2curr_turn_degree=") + std::to_string(prev2curr_turn_degree) +
               " is a " + Turn::GetTypeString(Turn::GetType(prev2curr_turn_degree)));
-    for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
+    for (int z = 0; z < node->intersecting_edge_size(); ++z) {
       auto intersecting_edge = node->GetIntersectingEdge(z);
       auto xturn_degree = GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading());
       LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
@@ -274,7 +283,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
       switch (node->type()) {
         case TripLeg_Node_Type_kStreetIntersection: {
           std::vector<std::pair<std::string, bool>> name_list;
-          for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
+          for (int z = 0; z < node->intersecting_edge_size(); ++z) {
             auto intersecting_edge = node->GetIntersectingEdge(z);
             for (const auto& name : intersecting_edge->name()) {
               std::pair<std::string, bool> cur_street = {name.value(), name.is_route_number()};
@@ -318,12 +327,12 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
             (curr_edge ? curr_edge->ToParameterString() : "NONE"));
   LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
   auto node = trip_path_->GetEnhancedNode(0);
-  for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
+  for (int z = 0; z < node->intersecting_edge_size(); ++z) {
     auto intersecting_edge = node->GetIntersectingEdge(z);
     LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
   }
   LOG_TRACE("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-  for (size_t z = 0; z < trip_path_->admin_size(); ++z) {
+  for (int z = 0; z < trip_path_->admin_size(); ++z) {
     auto admin = trip_path_->GetAdmin(z);
     LOG_TRACE("ADMIN " + std::to_string(z) + ": " + admin->ToString());
   }
@@ -404,6 +413,12 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       // if current or next maneuver is an escalator
       else if (curr_man->escalator() || next_man->escalator()) {
         LOG_TRACE("+++ Do Not Combine: if current or next maneuver is an escalator +++");
+        // Update with no combine
+        prev_man = curr_man;
+        curr_man = next_man;
+        ++next_man;
+      } else if (curr_man->has_level_changes() != next_man->has_level_changes()) {
+        LOG_TRACE("+++ Do Not Combine: if only one maneuver has level changes +++");
         // Update with no combine
         prev_man = curr_man;
         curr_man = next_man;
@@ -895,6 +910,10 @@ ManeuversBuilder::CombineManeuvers(std::list<Maneuver>& maneuvers,
     curr_man->set_escalator(true);
   }
 
+  if (next_man->has_level_changes()) {
+    curr_man->set_has_level_changes(true);
+  }
+
   // If needed, set ramp
   if (next_man->ramp()) {
     curr_man->set_ramp(true);
@@ -1140,7 +1159,8 @@ void ManeuversBuilder::CreateStartManeuver(Maneuver& maneuver) {
   auto curr_edge = trip_path_->GetCurrEdge(node_index);
 
   // exception: start maneuvers are not helpful for routes starting on stairs or escalators
-  if (curr_edge->IsStepsUse() || curr_edge->IsEscalatorUse()) {
+  if (curr_edge->IsStepsUse() || curr_edge->IsEscalatorUse() ||
+      has_level_changes(curr_edge->levels())) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kNone);
   }
 
@@ -1183,6 +1203,10 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Escalator
   if (prev_edge->IsEscalatorUse()) {
     maneuver.set_escalator(true);
+  }
+
+  if (has_level_changes(prev_edge->levels())) {
+    maneuver.set_has_level_changes(true);
   }
 
   // Ramp
@@ -1838,6 +1862,8 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
   else if (maneuver.building_exit()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kBuildingExit);
     LOG_TRACE("ManeuverType=BUILDING_EXIT");
+  } else if (maneuver.has_level_changes() && !maneuver.end_level_ref().empty()) {
+    maneuver.set_type(DirectionsLeg_Maneuver_Type_kLevelChange);
   }
   // Process simple direction
   else {
@@ -2248,6 +2274,10 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   /////////////////////////////////////////////////////////////////////////////
   // Process building entrance
   if (node->IsBuildingEntrance()) {
+    return false;
+  }
+
+  if (maneuver.has_level_changes() != has_level_changes(prev_edge->levels())) {
     return false;
   }
 
@@ -3728,8 +3758,8 @@ bool ManeuversBuilder::RampLeadsToHighway(Maneuver& maneuver) const {
   // Verify that the specified maneuver is a ramp
   if (maneuver.ramp()) {
     // Loop over edges
-    for (uint32_t node_index = maneuver.end_node_index(); node_index < trip_path_->GetLastNodeIndex();
-         ++node_index) {
+    for (int node_index = static_cast<int>(maneuver.end_node_index());
+         node_index < trip_path_->GetLastNodeIndex(); ++node_index) {
       auto curr_edge = trip_path_->GetCurrEdge(node_index);
       if (curr_edge && (curr_edge->IsRampUse() || curr_edge->IsTurnChannelUse() ||
                         curr_edge->internal_intersection())) {
@@ -3752,8 +3782,8 @@ void ManeuversBuilder::SetTraversableOutboundIntersectingEdgeFlags(std::list<Man
   // Process each maneuver for traversable outbound intersecting edges
   for (Maneuver& maneuver : maneuvers) {
     bool found_first_edge_to_process = false;
-    for (int node_index = maneuver.begin_node_index(); node_index < maneuver.end_node_index();
-         ++node_index) {
+    for (int node_index = static_cast<int>(maneuver.begin_node_index());
+         node_index < static_cast<int>(maneuver.end_node_index()); ++node_index) {
       if (!found_first_edge_to_process) {
         auto curr_edge = trip_path_->GetCurrEdge(node_index);
         // Skip the initial internal and turn channel edges

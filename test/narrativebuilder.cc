@@ -5,18 +5,19 @@
 #include "odin/markup_formatter.h"
 #include "odin/narrative_builder_factory.h"
 #include "odin/narrative_dictionary.h"
-#include "odin/sign.h"
 #include "odin/signs.h"
 #include "odin/util.h"
 #include "proto/common.pb.h"
 #include "proto/directions.pb.h"
 #include "proto/trip.pb.h"
-#include "test.h"
+
+#include <gtest/gtest.h>
 
 #include <cstdint>
 
 using namespace std;
 using namespace valhalla;
+using namespace valhalla::baldr;
 using namespace valhalla::odin;
 
 namespace {

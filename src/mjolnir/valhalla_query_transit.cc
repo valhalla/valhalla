@@ -5,8 +5,6 @@
 #include "mjolnir/servicedays.h"
 #include "valhalla/proto/transit.pb.h"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <google/protobuf/io/coded_stream.h>
@@ -96,8 +94,7 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
 
         // Iterate through the stop pairs in this tile and form Valhalla departure
         // records
-        uint32_t tileid;
-        for (uint32_t i = 0; i < spp.stop_pairs_size(); i++) {
+        for (int i = 0; i < spp.stop_pairs_size(); i++) {
           const Transit_StopPair& sp = spp.stop_pairs(i);
 
           // Skip stop pair if either stop graph Id is invalid
@@ -266,7 +263,7 @@ void LogSchedule(const std::string& transit_dir,
         uint32_t tileid;
         GraphId orig_graphid;
         std::string origin_time;
-        for (uint32_t i = 0; i < spp.stop_pairs_size(); i++) {
+        for (int i = 0; i < spp.stop_pairs_size(); i++) {
           const Transit_StopPair& sp = spp.stop_pairs(i);
 
           // Skip stop pair if either stop graph Id is invalid
@@ -338,14 +335,14 @@ void LogSchedule(const std::string& transit_dir,
 // Log the list of routes within the tile
 void LogRoutes(const Transit& transit) {
   LOG_INFO("Routes:");
-  for (uint32_t i = 0; i < transit.routes_size(); i++) {
+  for (int i = 0; i < transit.routes_size(); i++) {
     const Transit_Route& r = transit.routes(i);
     LOG_INFO("Route idx = " + std::to_string(i) + ": " + r.name() + "," + r.route_long_name());
   }
 }
 
 GraphId GetGraphId(Transit& transit, const std::string& onestop_id) {
-  for (uint32_t i = 0; i < transit.nodes_size(); i++) {
+  for (int i = 0; i < transit.nodes_size(); i++) {
     const Transit_Node& node = transit.nodes(i);
     if (node.onestop_id() == onestop_id) {
       LOG_INFO("Node: " + node.name());

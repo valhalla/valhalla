@@ -12,8 +12,10 @@
 #include "scoped_timer.h"
 #include "sif/osrm_car_duration.h"
 
-#include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
+#ifdef LOGGING_LEVEL_DEBUG
+#include <boost/format.hpp>
+#endif
 
 #include <string>
 #include <utility>
@@ -162,9 +164,11 @@ GraphId GetOpposingEdge(const GraphId& node,
       return edgeid;
     }
   }
+#ifdef LOGGING_LEVEL_ERROR
   PointLL ll = nodeinfo->latlng(tile->header()->base_ll());
   LOG_ERROR("Opposing directed edge not found at LL= " + std::to_string(ll.lat()) + "," +
             std::to_string(ll.lng()));
+#endif
   return GraphId(0, 0, 0);
 }
 
@@ -460,9 +464,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
           // Break out of loop. This case can happen when a shortcut edge
           // enters another shortcut edge (but is not drivable in reverse
           // direction from the node).
-          const DirectedEdge* de = tile->directededge(next_edge_id);
           LOG_ERROR("Edge not found in edge pairs. WayID = " +
-                    std::to_string(tile->edgeinfo(de).wayid()));
+                    std::to_string(tile->edgeinfo(tile->directededge(next_edge_id)).wayid()));
           break;
         }
 
@@ -578,6 +581,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     }
   }
 
+#ifdef LOGGING_LEVEL_WARN
   // Log a warning (with the node lat,lon) if the max number of shortcuts from a node
   // is exceeded. This is not serious (see NOTE above) but good to know where it occurs.
   if (shortcut_count > kMaxShortcutsFromNode) {
@@ -585,6 +589,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
              std::to_string(ll.lng()));
   }
+#endif
   return {shortcut_count, total_edge_count};
 }
 

@@ -4,10 +4,13 @@
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 using namespace valhalla;
 using namespace valhalla::loki;
-using namespace valhalla::thor;
+using namespace valhalla::midgard;
 using namespace valhalla::odin;
+using namespace valhalla::thor;
 
 namespace valhalla {
 namespace tyr {

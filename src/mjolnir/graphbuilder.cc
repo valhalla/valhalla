@@ -11,6 +11,8 @@
 #include "midgard/tiles.h"
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
+#include "mjolnir/dataquality.h"
+#include "mjolnir/directededgebuilder.h"
 #include "mjolnir/ferry_connections.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/linkclassification.h"
@@ -20,6 +22,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
 #include <future>
@@ -489,6 +492,7 @@ void BuildTileSet(const std::string& ways_file,
       // Information about tile creation
       graphtile.AddTileCreationDate(tile_creation_date);
       graphtile.header_builder().set_dataset_id(osmdata.max_changeset_id_);
+      graphtile.header_builder().set_checksum(osmdata.pbf_checksum_);
 
       // Set the base lat,lon of the tile
       uint32_t id = tile_id.tileid();

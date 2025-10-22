@@ -1,25 +1,21 @@
 #include "loki/node_search.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
-#include "baldr/location.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/pointll.h"
-#include "midgard/vector2.h"
-#include "test.h"
-
-#include <boost/property_tree/ptree.hpp>
-
-#include <cstdint>
-#include <filesystem>
-
-namespace vm = valhalla::midgard;
-namespace vb = valhalla::baldr;
-
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/graphvalidator.h"
 
+#include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
+
+#include <cstdint>
+#include <filesystem>
+
+namespace vb = valhalla::baldr;
+namespace vm = valhalla::midgard;
 namespace vj = valhalla::mjolnir;
 
 namespace {
@@ -72,7 +68,7 @@ void graph_writer::write_tiles() {
     auto& tile = entry.second;
 
     // set the base lat,lng in the header builder
-    PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
+    vm::PointLL base_ll = vb::TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
     tile->header_builder().set_base_ll(base_ll);
 
     // write the tile
@@ -83,7 +79,7 @@ void graph_writer::write_tiles() {
 
     // write the bin data
     GraphTileBuilder::tweeners_t tweeners;
-    auto reloaded = GraphTile::Create(test_tile_dir, tile_id);
+    auto reloaded = vb::GraphTile::Create(test_tile_dir, tile_id);
     auto bins = GraphTileBuilder::BinEdges(reloaded, tweeners);
     GraphTileBuilder::AddBins(test_tile_dir, reloaded, bins);
 
@@ -177,11 +173,11 @@ void graph_builder::write_tiles(uint8_t level) const {
   node_ids.reserve(num_nodes);
   for (size_t i = 0; i < num_nodes; ++i) {
     auto coord = nodes[i];
-    auto tile_id = TileHierarchy::GetGraphId(coord, level);
-    PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
+    auto tile_id = vb::TileHierarchy::GetGraphId(coord, level);
+    vm::PointLL base_ll = vb::TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
     uint32_t n = edges_from_node[i];
 
-    NodeInfo node_builder;
+    vb::NodeInfo node_builder;
     node_builder.set_latlng(base_ll, coord);
     node_builder.set_edge_index(edge_counts.update(tile_id, n));
     node_builder.set_edge_count(n);
@@ -251,7 +247,7 @@ void graph_builder::write_tiles(uint8_t level) const {
 
     } else {
       // make an edgeinfo
-      std::vector<PointLL> shape = {start_point, end_point};
+      std::vector<vm::PointLL> shape = {start_point, end_point};
       if (!forward)
         std::reverse(shape.begin(), shape.end());
 

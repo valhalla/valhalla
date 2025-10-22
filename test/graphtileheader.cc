@@ -1,9 +1,11 @@
-
 #include "baldr/graphtileheader.h"
-#include "test.h"
+#include "midgard/pointll.h"
+
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 
 // Expected size is 256. We want to alert if somehow any change grows this structure
 // size as that indicates incompatible tiles.
@@ -30,9 +32,9 @@ TEST(GraphtileHeader, TestWriteRead) {
   hdr.set_base_ll(base);
   EXPECT_EQ(hdr.base_ll(), base);
 
-  std::string ver = "v1.5";
-  hdr.set_version(ver);
-  EXPECT_EQ(hdr.version(), ver);
+  std::string version = "3.99.99-3a4fe6b";
+  hdr.set_version(version + "more_characters"); // should be truncated
+  EXPECT_EQ(hdr.version(), version);
 
   hdr.set_dataset_id(5678);
   EXPECT_EQ(hdr.dataset_id(), 5678);
@@ -125,6 +127,10 @@ TEST(GraphtileHeader, TestWriteRead) {
 
   // Test for trying to access outside the bin index list
   EXPECT_THROW(hdr.bin_offset(kBinCount + 1), std::runtime_error);
+
+  uint64_t checksum = 24189014;
+  hdr.set_checksum(checksum);
+  EXPECT_EQ(hdr.checksum(), checksum);
 }
 
 } // namespace

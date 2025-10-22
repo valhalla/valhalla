@@ -1,10 +1,8 @@
 #include "mjolnir/edgeinfobuilder.h"
 #include "baldr/edgeinfo.h"
-#include "baldr/graphid.h"
-#include "baldr/sign.h"
-#include "test.h"
 
 #include <boost/shared_array.hpp>
+#include <gtest/gtest.h>
 
 #include <cstdint>
 #include <fstream>
@@ -13,6 +11,7 @@
 
 using namespace std;
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 namespace {

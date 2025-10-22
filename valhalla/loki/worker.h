@@ -3,12 +3,11 @@
 
 #include <valhalla/baldr/connectivity_map.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
+#include <valhalla/exceptions.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/skadi/sample.h>
-#include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
 
 #include <boost/property_tree/ptree.hpp>

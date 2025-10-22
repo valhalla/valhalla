@@ -1,22 +1,22 @@
 #include "baldr/graphreader.h"
 #include "baldr/landmark.h"
 #include "gurka.h"
+#include "midgard/logging.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/landmarks.h"
 #include "mjolnir/util.h"
-#include "odin/enhancedtrippath.h"
 #include "test/test.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <gtest/gtest.h>
 
 #include <filesystem>
-#include <iomanip>
 #include <vector>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::gurka;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 // config for the first three tests

@@ -1,6 +1,8 @@
 #include "baldr/datetime.h"
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "just_gtfs/just_gtfs.h"
+#include "midgard/logging.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/ingest_transit.h"
 #include "proto/common.pb.h"
@@ -12,13 +14,14 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <gtest/gtest.h>
 
+using namespace gtfs;
+using namespace std::chrono;
+using namespace valhalla;
+using namespace valhalla::baldr;
+using namespace valhalla::midgard;
+using boost::geometry::within;
 using point_type = boost::geometry::model::d2::point_xy<double>;
 using polygon_type = boost::geometry::model::polygon<point_type>;
-using boost::geometry::within;
-
-using namespace gtfs;
-using namespace valhalla;
-using namespace std::chrono;
 using rp = rapidjson::Pointer;
 
 // since writing GTFS feeds with C++ is sooo annoying, we'll have some var templates, e.g.

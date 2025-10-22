@@ -3,14 +3,14 @@
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/exceptions.h>
 #include <valhalla/proto/api.pb.h>
+#include <valhalla/proto/expansion.pb.h>
+#include <valhalla/sif/dynamiccost.h>
 
 #include <boost/property_tree/ptree.hpp>
 
 #include <functional>
-// TODO(nils): should abstract more so we don't pull this in
-#include <valhalla/thor/pathalgorithm.h>
-#include <valhalla/worker.h>
 
 namespace valhalla {
 namespace thor {
@@ -179,10 +179,10 @@ protected:
         // fill with sentinel values meaning "no data"
         matrix.mutable_begin_heading()->Resize(size, kInvalidHeading);
         matrix.mutable_end_heading()->Resize(size, kInvalidHeading);
-        matrix.mutable_begin_lat()->Resize(size, INVALID_LL);
-        matrix.mutable_begin_lon()->Resize(size, INVALID_LL);
-        matrix.mutable_end_lat()->Resize(size, INVALID_LL);
-        matrix.mutable_end_lon()->Resize(size, INVALID_LL);
+        matrix.mutable_begin_lat()->Resize(size, midgard::INVALID_LL);
+        matrix.mutable_begin_lon()->Resize(size, midgard::INVALID_LL);
+        matrix.mutable_end_lat()->Resize(size, midgard::INVALID_LL);
+        matrix.mutable_end_lon()->Resize(size, midgard::INVALID_LL);
       }
     }
   }

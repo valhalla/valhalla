@@ -12,6 +12,7 @@
 #include "mjolnir/osmdata.h"
 #include "scoped_timer.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <boost/range/algorithm.hpp>
 
 #include <algorithm>
@@ -184,6 +185,10 @@ std::vector<BSSConnection> project(const GraphTile& local_tile,
     auto best_ped = BestProjection{};
     auto best_bicycle = BestProjection{};
 
+    // Ensures that nearly-equivalent distances result in stable winners
+    // across clang/gcc builds.
+    auto distanceEpsilon = 0.000001;
+
     // Loop over all nodes in the tile to find the nearest edge
     for (uint32_t i = 0; i < local_tile.header()->nodecount(); ++i) {
       const NodeInfo* node = local_tile.node(i);
@@ -209,7 +214,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile,
         auto this_closest = bss_ll.Project(this_shape);
 
         if (directededge->forwardaccess() & kPedestrianAccess) {
-          if (std::get<1>(this_closest) < mindist_ped) {
+          if (std::get<1>(this_closest) < mindist_ped - distanceEpsilon) {
             mindist_ped = std::get<1>(this_closest);
             best_ped.directededge = directededge;
             best_ped.shape = this_shape;
@@ -218,7 +223,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile,
           }
         }
         if (directededge->forwardaccess() & kBicycleAccess) {
-          if (std::get<1>(this_closest) < mindist_bicycle) {
+          if (std::get<1>(this_closest) < mindist_bicycle - distanceEpsilon) {
             mindist_bicycle = std::get<1>(this_closest);
             best_bicycle.directededge = directededge;
             best_bicycle.shape = this_shape;

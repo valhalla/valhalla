@@ -4,7 +4,7 @@
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphtileptr.h>
-#include <valhalla/midgard/logging.h>
+#include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/midgard/pointll.h>
 
 #include <boost/property_tree/ptree_fwd.hpp>
@@ -91,6 +91,32 @@ inline std::string to_string(BuildStage stg) {
   return (i == BuildStageStrings.cend()) ? "null" : i->second;
 }
 
+// A little struct to hold stats information during each threads work
+struct enhancer_stats {
+  float max_density; //(km/km2)
+  uint32_t not_thru;
+  uint32_t no_country_found;
+  uint32_t internalcount;
+  uint32_t turnchannelcount;
+  uint32_t rampcount;
+  uint32_t pencilucount;
+  uint32_t density_counts[16];
+  void operator()(const enhancer_stats& other) {
+    if (max_density < other.max_density) {
+      max_density = other.max_density;
+    }
+    not_thru += other.not_thru;
+    no_country_found += other.no_country_found;
+    internalcount += other.internalcount;
+    turnchannelcount += other.turnchannelcount;
+    rampcount += other.rampcount;
+    pencilucount += other.pencilucount;
+    for (uint32_t i = 0; i < 16; i++) {
+      density_counts[i] += other.density_counts[i];
+    }
+  }
+};
+
 /**
  * Splits a tag into a vector of strings.
  * @param  tag_value  tag to split
@@ -135,9 +161,24 @@ bool shapes_match(const std::vector<midgard::PointLL>& shape1,
  */
 uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
                               const baldr::GraphId& startnode,
-                              const graph_tile_ptr& tile,
+                              const baldr::graph_tile_ptr& tile,
                               const baldr::DirectedEdge& edge);
 
+/**
+ * Process edge transitions from all other incoming edges onto the
+ * specified outbound directed edge.
+ * @param  idx            Index of the directed edge - the to edge.
+ * @param  directededge   Directed edge builder - set values.
+ * @param  edges          Other directed edges at the node.
+ * @param  ntrans         Number of transitions (either number of edges or max)
+ * @param  headings       Headings of directed edges.
+ */
+void ProcessEdgeTransitions(const uint32_t idx,
+                            baldr::DirectedEdge& directededge,
+                            const baldr::DirectedEdge* edges,
+                            const uint32_t ntrans,
+                            const baldr::NodeInfo& nodeinfo,
+                            enhancer_stats& stats);
 /**
  * Compute a curvature metric given an edge shape.
  * @param  shape  Shape of an edge (list of lat,lon vertices).

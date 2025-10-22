@@ -1,5 +1,7 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include "test.h"
+#include "valhalla/worker.h"
 
 #include <boost/format.hpp>
 
@@ -282,12 +284,12 @@ protected:
       traffic_speed->breakpoint1 = 255;
     });
 
-    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+    test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
       e.set_constrained_flow_speed(25);
       e.set_free_flow_speed(75);
 
       // speeds for every 5 min bucket of the week
-      std::array<float, kBucketsPerWeek> historical;
+      std::array<float, baldr::kBucketsPerWeek> historical;
       historical.fill(7);
       for (size_t i = 0; i < historical.size(); ++i) {
         // TODO: if we are in morning or evening set a different speed and add another test
@@ -320,7 +322,7 @@ uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTes
          AlgorithmTest::freeflow = 0;
 
 uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
-  uint32_t kmh = invalid<uint32_t>();
+  uint32_t kmh = midgard::invalid<uint32_t>();
   const auto& nodes = api.trip().routes(0).legs(0).node();
   for (int i = 0; i < nodes.size() - 1; ++i) {
     const auto& node = nodes.Get(i);
@@ -331,7 +333,7 @@ uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_ed
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (is_valid(kmh) && compare_with_previous_edge) {
+    if (midgard::is_valid(kmh) && compare_with_previous_edge) {
       EXPECT_EQ(kmh, new_kmh);
     }
     kmh = new_kmh;
@@ -559,14 +561,15 @@ TEST(Standalone, AvoidExtraDetours) {
 
   auto reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
-  std::vector<GraphId> not_thru_edgeids;
+  std::vector<baldr::GraphId> not_thru_edgeids;
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "C")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "C", "B")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "B", "A")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "D", "E")));
   not_thru_edgeids.push_back(std::get<0>(gurka::findEdgeByNodes(*reader, nodes, "E", "F")));
 
-  test::customize_edges(map.config, [&not_thru_edgeids](const GraphId& edgeid, DirectedEdge& edge) {
+  test::customize_edges(map.config, [&not_thru_edgeids](const baldr::GraphId& edgeid,
+                                                        baldr::DirectedEdge& edge) {
     if (std::find(not_thru_edgeids.begin(), not_thru_edgeids.end(), edgeid) != not_thru_edgeids.end())
       edge.set_not_thru(true);
   });

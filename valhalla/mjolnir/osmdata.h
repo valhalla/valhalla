@@ -5,9 +5,7 @@
 #include <valhalla/mjolnir/osmaccessrestriction.h>
 #include <valhalla/mjolnir/osmlinguistic.h>
 #include <valhalla/mjolnir/osmnode.h>
-#include <valhalla/mjolnir/osmnodelinguistic.h>
 #include <valhalla/mjolnir/osmrestriction.h>
-#include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 #include <cstdint>
@@ -98,6 +96,7 @@ struct OSMData {
    */
   static void cleanup_temp_files(const std::string& tile_dir);
 
+  uint64_t pbf_checksum_;         // MD5 of PBF files as 64bit int
   uint64_t max_changeset_id_;     // The largest/newest changeset id encountered when parsing OSM data
   uint64_t osm_node_count;        // Count of osm nodes
   uint64_t osm_way_count;         // Count of osm ways

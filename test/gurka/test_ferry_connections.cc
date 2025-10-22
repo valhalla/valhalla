@@ -1,8 +1,11 @@
 #include "gurka.h"
+#include "midgard/constants.h"
+#include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
 
 using namespace valhalla;
+using namespace valhalla::midgard;
 
 uint8_t LEVEL_O = baldr::TileHierarchy::get_level(baldr::RoadClass::kPrimary);
 

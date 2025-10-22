@@ -1,16 +1,11 @@
 #ifndef VALHALLA_THOR_ISOCHRONE_H_
 #define VALHALLA_THOR_ISOCHRONE_H_
 
-#include <valhalla/baldr/double_bucket_queue.h>
-#include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/baldr/location.h>
 #include <valhalla/midgard/gridded_data.h>
-#include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/dijkstras.h>
-#include <valhalla/thor/edgestatus.h>
 
 #include <cstdint>
 #include <memory>
@@ -71,7 +66,7 @@ protected:
   // when we expand up to a node we color the cells of the grid that the edge that ends at the
   // node touches
   virtual void ExpandingNode(baldr::GraphReader& graphreader,
-                             graph_tile_ptr tile,
+                             baldr::graph_tile_ptr tile,
                              const baldr::NodeInfo* node,
                              const sif::EdgeLabel& current,
                              const sif::EdgeLabel* previous) override;

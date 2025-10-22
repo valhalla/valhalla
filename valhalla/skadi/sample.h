@@ -1,12 +1,11 @@
 #ifndef __VALHALLA_SAMPLE_H__
 #define __VALHALLA_SAMPLE_H__
 
-#include "valhalla/baldr/tilegetter.h"
+#include <valhalla/baldr/tilegetter.h>
 
-#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include <mutex>
-#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -100,7 +99,6 @@ private:
    */
   void cache_initialisation(const std::string& source_path);
 
-  std::mutex cache_lck;
   std::string url_;
   std::unique_ptr<baldr::tile_getter_t> remote_loader_;
   // This parameter is used only in tests

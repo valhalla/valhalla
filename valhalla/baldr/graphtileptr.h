@@ -6,7 +6,6 @@
 #include <memory>
 #else
 #include <boost/intrusive_ptr.hpp>
-#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #endif
 
 namespace valhalla {
@@ -19,5 +18,3 @@ using graph_tile_ptr = boost::intrusive_ptr<const GraphTile>;
 #endif
 } // namespace baldr
 } // namespace valhalla
-
-using graph_tile_ptr = valhalla::baldr::graph_tile_ptr;

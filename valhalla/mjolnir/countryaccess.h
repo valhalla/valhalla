@@ -2,13 +2,9 @@
 #define VALHALLA_MJOLNIR_COUNTRY_ACCESS_H_
 
 #include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/graphconstants.h>
-#include <valhalla/mjolnir/adminconstants.h>
 #include <valhalla/mjolnir/osmaccess.h>
 
 #include <cstdint>
-
-using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {
@@ -45,7 +41,7 @@ uint32_t GetAccess(const uint32_t current_access,
  * @param  country_access   Country specific access.
  * @param  user_access      User entered access tags.
  */
-void SetCountryAccess(DirectedEdge& directededge,
+void SetCountryAccess(baldr::DirectedEdge& directededge,
                       const std::vector<int>& country_access,
                       const OSMAccess& user_access);
 

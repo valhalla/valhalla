@@ -1,10 +1,10 @@
-#include <valhalla/baldr/json.h>
-#include <valhalla/loki/polygon_search.h>
-#include <valhalla/midgard/constants.h>
-#include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/pointll.h>
-#include <valhalla/midgard/util.h>
-#include <valhalla/worker.h>
+#include "baldr/json.h"
+#include "loki/polygon_search.h"
+#include "midgard/constants.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/util.h"
+#include "valhalla/worker.h"
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
@@ -97,7 +97,7 @@ namespace loki {
 std::unordered_set<vb::GraphId>
 edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_pbf,
                baldr::GraphReader& reader,
-               const std::shared_ptr<sif::DynamicCost>& costing,
+               const sif::cost_ptr_t& costing,
                float max_length) {
   // protect for bogus input
   if (rings_pbf.empty() || rings_pbf.Get(0).coords().empty() ||

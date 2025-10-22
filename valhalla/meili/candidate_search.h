@@ -2,19 +2,14 @@
 #ifndef MMP_CANDIDATE_SEARCH_H_
 #define MMP_CANDIDATE_SEARCH_H_
 
-#include <valhalla/baldr/directededge.h>
-#include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/meili/grid_range_query.h>
-#include <valhalla/midgard/distanceapproximator.h>
-#include <valhalla/midgard/linesegment2.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/sif/dynamiccost.h>
 
-#include <algorithm>
 #include <cmath>
 
 namespace valhalla {

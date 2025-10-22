@@ -5,16 +5,12 @@
 #include "baldr/tilehierarchy.h"
 #include "filesystem_utils.h"
 #include "midgard/aabb2.h"
+#include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
 
-#include <boost/algorithm/string.hpp>
-
 #include <chrono>
 #include <cmath>
-#include <cstdio>
-#include <cstring>
-#include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -277,7 +273,10 @@ void GraphTile::Initialize(const GraphId& graphid) {
                              " vs raw tile data size = " + std::to_string(tile_size) +
                              ". Tile file might me corrupted");
 
-  // TODO check version
+  if (int current_version = header_->version()[0] - '0'; current_version != VALHALLA_VERSION_MAJOR) {
+    LOG_WARN("Tiles were built with version " + std::to_string(current_version) +
+             ", current process runs version " + std::to_string(VALHALLA_VERSION_MAJOR));
+  }
 
   // Set a pointer to the node list
   nodes_ = reinterpret_cast<NodeInfo*>(ptr);
@@ -381,6 +380,9 @@ void GraphTile::Initialize(const GraphId& graphid) {
   if (graphid.level() == 3) {
     AssociateOneStopIds(graphid);
   }
+
+  // `base_ll()` has some non-trivial calculations, so cache it
+  base_ll_ = header_->base_ll();
 }
 
 // For transit tiles we need to save off the pair<tileid,lineid> lookup via

@@ -6,6 +6,7 @@
 #include "midgard/sequence.h"
 #include "valhalla/baldr/curl_tilegetter.h"
 
+#include <boost/property_tree/ptree.hpp>
 #include <lz4frame.h>
 #include <sys/stat.h>
 
@@ -327,8 +328,12 @@ tile_data cache_t::source(uint16_t index) {
   // if we don't have anything maybe it's lazy loaded
   auto& item = cache[index];
   if (item.get_data() == nullptr) {
-    auto f = data_source + get_hgt_file_name(index);
-    item.init(f, format_t::RAW);
+    mutex.lock();
+    if (item.get_data() == nullptr) {
+      auto f = data_source + get_hgt_file_name(index);
+      item.init(f, format_t::RAW);
+    }
+    mutex.unlock();
   }
 
   // it wasn't in cache and when we tried to load it the file was of unknown type
@@ -444,10 +449,7 @@ template <class coord_t> double sample::get(const coord_t& coord, tile_data& til
 
   // the caller can pass a cached tile, so we only fetch one if its not the one they already have
   if (index != tile.get_index()) {
-    {
-      std::lock_guard<std::mutex> _(cache_lck);
-      tile = cache_->source(index);
-    }
+    tile = cache_->source(index);
     if (!tile) {
       if (!fetch(index))
         return get_no_data_value();
@@ -503,7 +505,6 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
   if (!filesystem_utils::save(fpath, raw_data))
     return false;
 
-  std::lock_guard<std::mutex> _(cache_lck);
   return cache_->insert(data->first, fpath.string(), data->second);
 }
 
@@ -540,7 +541,6 @@ template <class coord_t> uint16_t sample::get_tile_index(const coord_t& coord) {
 }
 
 void sample::add_single_tile(const std::string& path) {
-  std::lock_guard<std::mutex> _(cache_lck);
   cache_->insert(0, path, format_t::RAW);
 }
 

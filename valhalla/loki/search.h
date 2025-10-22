@@ -1,7 +1,6 @@
 #ifndef VALHALLA_LOKI_SEARCH_H_
 #define VALHALLA_LOKI_SEARCH_H_
 
-#include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
@@ -25,7 +24,7 @@ namespace loki {
 std::unordered_map<baldr::Location, baldr::PathLocation>
 Search(const std::vector<baldr::Location>& locations,
        baldr::GraphReader& reader,
-       const std::shared_ptr<sif::DynamicCost>& costing);
+       const sif::cost_ptr_t& costing);
 
 } // namespace loki
 } // namespace valhalla

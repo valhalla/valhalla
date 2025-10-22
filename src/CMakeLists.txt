@@ -141,13 +141,14 @@ set(valhalla_hdrs
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     ${VALHALLA_SOURCE_DIR}/valhalla/filesystem_utils.h
     ${VALHALLA_SOURCE_DIR}/valhalla/proto_conversions.h
-    ${VALHALLA_SOURCE_DIR}/valhalla/config.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/exceptions.h
     )
 
 set(valhalla_src
     config.cc
     worker.cc
     proto_conversions.cc
+    exceptions.cc
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
 
