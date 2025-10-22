@@ -316,9 +316,10 @@ endif()
 
 ## Python bindings
 # needs to be after defining the tool targets above
-if(ENABLE_PYTHON_BINDINGS)  
+if(ENABLE_PYTHON_BINDINGS)
+  find_package(Python 3.12 COMPONENTS Interpreter Development Development.Module Development.SABIModule)
   add_subdirectory(src/bindings/python)
-  if (NOT Python3_FOUND)
+  if (NOT Python_FOUND)
     set(ENABLE_PYTHON_BINDINGS OFF)
     message(WARNING "Python development version not found, skipping Python bindings...")
   endif()

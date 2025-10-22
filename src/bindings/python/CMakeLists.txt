@@ -19,16 +19,22 @@ nanobind_add_module(_valhalla
   STABLE_ABI
   LTO
   ${CMAKE_CURRENT_SOURCE_DIR}/src/_valhalla.cc)
-nanobind_extension_abi3(_valhalla)
-target_link_libraries(_valhalla PRIVATE valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
 nanobind_add_module(graph_utils
   NB_STATIC
   STABLE_ABI
   LTO
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_utils.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_id.cc)
-nanobind_extension_abi3(graph_utils)
-target_link_libraries(graph_utils PRIVATE valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
+
+foreach(tgt IN ITEMS _valhalla graph_utils)
+  # force abi3.so extension
+  nanobind_extension_abi3(${tgt})
+
+  target_link_libraries(${tgt} PRIVATE 
+    valhalla
+    Python::SABIModule
+    $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
+endforeach()
 
 if(APPLE)
   set_target_properties(_valhalla PROPERTIES INSTALL_RPATH "@loader_path")
@@ -60,7 +66,6 @@ set(py_srcs
 
 # scikit-build-core does a different build than CMake
 if (SKBUILD)
-  find_package(Python3 3.12 EXACT COMPONENTS Development Interpreter)
   # SKBUILD_PLATLIB_DIR: the platlib path inside the wheel (site-packages or dist-packages or so)
   set(VALHALLA_INSTALL_PYDIR "${SKBUILD_PLATLIB_DIR}")
 
@@ -89,7 +94,6 @@ if (SKBUILD)
     endforeach()
   endif()
 else()
-  find_package(Python3 COMPONENTS Development Interpreter)
   set(VALHALLA_INSTALL_PYDIR "${Python_SITEARCH}")
   # write the __version__.py
   file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/valhalla/__version__.py"
@@ -97,7 +101,7 @@ else()
 endif()
 
 # propagate up to the parent
-set(Python3_FOUND PARENT ${Python3_FOUND} PARENT_SCOPE)
+set(Python_FOUND ${Python_FOUND} PARENT_SCOPE)
 
 # copy valhalla python sources from src to build
 function(set_output_python rel_path)
