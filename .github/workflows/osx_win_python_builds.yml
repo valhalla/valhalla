@@ -397,6 +397,7 @@ jobs:
       # only package python bindings if it's not a PR
 
       - name: Write pyproject.toml
+        shell: bash
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"

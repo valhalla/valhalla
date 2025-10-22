@@ -19,6 +19,7 @@ nanobind_add_module(_valhalla
   STABLE_ABI
   LTO
   ${CMAKE_CURRENT_SOURCE_DIR}/src/_valhalla.cc)
+nanobind_extension_abi3(_valhalla)
 target_link_libraries(_valhalla PRIVATE valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
 nanobind_add_module(graph_utils
   NB_STATIC
@@ -26,6 +27,7 @@ nanobind_add_module(graph_utils
   LTO
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_utils.cc
   ${CMAKE_CURRENT_SOURCE_DIR}/src/graph_id.cc)
+nanobind_extension_abi3(graph_utils)
 target_link_libraries(graph_utils PRIVATE valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
 
 if(APPLE)
