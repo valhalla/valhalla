@@ -70,16 +70,34 @@ jobs:
   #   outputs:
   #     PUBLISH_PYPI: ${{ env.PUBLISH_PYPI }}
 
-  build_nodejs_bindings_macos:
-    name: Build macOS Node.js bindings
-    runs-on: macos-14
+  build_nodejs_bindings:
+    name: Build Node.js bindings (${{ matrix.os }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container }}
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: x64
+            runner: ubuntu-latest
+            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
+          - os: macos
+            arch: arm64
+            runner: macos-14
+            container: null
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          # we need to fetch all tags for setuptools-scm to work properly
           fetch-depth: 0
-      - name: Install dependencies
+          fetch-tags: true
+      
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos'
         run: |
           HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
           export PATH="$(brew --prefix python)/libexec/bin:$PATH"
@@ -88,57 +106,7 @@ jobs:
 
       - name: Build Valhalla with Node.js bindings
         run: |
-          mkdir -p build
-          cmake -B build -DCMAKE_BUILD_TYPE=Release \
-          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
-          -DENABLE_NODE_BINDINGS=ON \
-          -DENABLE_GDAL=ON \
-          -DENABLE_TESTS=OFF \
-          -DVALHALLA_VERSION_MODIFIFER=1 \
-          -DENABLE_SINGLE_FILES_WERROR=OFF
-          cmake --build build -j$(nproc)
-      - run: otool -L build/src/bindings/nodejs/lib/valhalla_node.node
-
-      - name: Make relocatable
-        run: |
-          NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
-          OUTPUT_DIR="nodejs_dist"
-          
-          #src/bindings/nodejs/scripts/bundle.sh $NODE_FILE $OUTPUT_DIR --strip --tar
-          python src/bindings/nodejs/scripts/bundle.py $NODE_FILE $OUTPUT_DIR --strip --tar
-          
-          mv valhalla_node-bundle.tar.gz valhalla-nodejs-macos-arm64.tar.gz
-
-          echo "[INFO] Contents of tarball:"
-          tar -tzf valhalla-nodejs-macos-arm64.tar.gz
-      
-      - name: Upload Node.js binding artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: valhalla-nodejs-macos-arm64
-          path: valhalla-nodejs-macos-arm64.tar.gz
-  build_nodejs_bindings_linux:
-    name: Build Linux Node.js bindings (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
-    container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
-    strategy:
-      matrix:
-        include:
-          - arch: x64
-            runner: ubuntu-latest
-          - arch: arm64
-            runner: ubuntu-24.04-arm
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          # we need to fetch all tags for setuptools-scm to work properly
-          fetch-depth: 0
-          fetch-tags: true
-      - name: Build Valhalla with Node.js bindings
-        run: | 
-          export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
+          ${{ matrix.os == 'linux' && 'export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"' || '' }}
           mkdir -p build
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
@@ -150,84 +118,53 @@ jobs:
           -DENABLE_SINGLE_FILES_WERROR=OFF
           cmake --build build -j$(nproc)
       
-      - name: Check dependencies before repair
+      - name: Check dependencies
         run: |
-          echo "[INFO] Dependencies before repair:"
-          ldd build/src/bindings/nodejs/lib/valhalla_node.node
+          echo "[INFO] Dependencies:"
+          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} build/src/bindings/nodejs/lib/valhalla_node.node
       
       - name: Make relocatable
         run: |
-          export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
+          ${{ matrix.os == 'linux' && 'export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"' || '' }}
           NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
           OUTPUT_DIR="nodejs_dist"
           
-          src/bindings/nodejs/scripts/bundle.sh $NODE_FILE $OUTPUT_DIR --strip --tar
+          ${{ matrix.os == 'macos' && 'python' || '' }} src/bindings/nodejs/scripts/bundle.${{ matrix.os == 'macos' && 'py' || 'sh' }} $NODE_FILE $OUTPUT_DIR --strip --tar
           
-          mv valhalla_node-bundle.tar.gz valhalla-nodejs-linux-${{ matrix.arch }}.tar.gz
+          mv valhalla_node-bundle.tar.gz valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
 
           echo "[INFO] Contents of tarball:"
-          tar -tzf valhalla-nodejs-linux-${{ matrix.arch }}.tar.gz
+          tar -tzf valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
       
       - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
         with:
-          name: valhalla-nodejs-linux-${{ matrix.arch }}
-          path: valhalla-nodejs-linux-${{ matrix.arch }}.tar.gz
+          name: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}
+          path: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
   
-  verify_nodejs_bindings_linux:
-    name: Verify Linux Node.js bindings (${{ matrix.arch }})
+  verify_nodejs_bindings:
+    name: Verify Node.js bindings (${{ matrix.os }}-${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
-    needs: [build_nodejs_bindings_linux]
-    container: node:18
+    needs: [build_nodejs_bindings]
+    container: ${{ matrix.container }}
     strategy:
       matrix:
         include:
-          - arch: x64
+          - os: linux
+            arch: x64
             runner: ubuntu-latest
-          - arch: arm64
+            container: node:18
+          - os: linux
+            arch: arm64
             runner: ubuntu-24.04-arm
+            container: node:18
+          - os: macos
+            arch: arm64
+            runner: macos-14
+            container: null
     steps:
-      - name: Download Node.js binding artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: valhalla-nodejs-linux-${{ matrix.arch }}
-      
-      - name: Extract and verify binding
-        run: |
-          echo "[INFO] Extracting artifact..."
-          mkdir -p valhalla_binding
-          tar -xzf valhalla-nodejs-linux-${{ matrix.arch }}.tar.gz -C valhalla_binding
-          
-          echo "[INFO] Contents:"
-          ls -lh valhalla_binding/nodejs_dist/
-          ls -lh valhalla_binding/nodejs_dist/lib/ | head -20
-          
-          echo "[INFO] Checking dependencies..."
-          ldd valhalla_binding/nodejs_dist/valhalla_node.node
-          
-          echo "[INFO] Testing Node.js binding..."
-          cat > test.js << 'EOF'
-          try {
-            const valhalla = require('./valhalla_binding/nodejs_dist/valhalla_node.node');
-            console.log('[SUCCESS] Valhalla binding loaded successfully!');
-            console.log('[INFO] VALHALLA_VERSION:', valhalla.VALHALLA_VERSION);
-            console.log('[INFO] Available exports:', Object.keys(valhalla));
-            process.exit(0);
-          } catch (error) {
-            console.error('[ERROR] Failed to load Valhalla binding:', error.message);
-            console.error(error.stack);
-            process.exit(1);
-          }
-          EOF
-          
-          node test.js
-
-  verify_nodejs_bindings_macos:
-    name: Verify macOS Node.js bindings
-    runs-on: macos-14
-    needs: [build_nodejs_bindings_macos]
-    steps:
-      - name: Install Node.js
+      - name: Install Node.js (macOS)
+        if: matrix.os == 'macos'
         uses: actions/setup-node@v4
         with:
           node-version: '18'
@@ -235,21 +172,21 @@ jobs:
       - name: Download Node.js binding artifact
         uses: actions/download-artifact@v4
         with:
-          name: valhalla-nodejs-macos-arm64
-
+          name: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}
+      
       - name: Extract and verify binding
         run: |
           echo "[INFO] Extracting artifact..."
           mkdir -p valhalla_binding
-          tar -xzf valhalla-nodejs-macos-arm64.tar.gz -C valhalla_binding
-
+          tar -xzf valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz -C valhalla_binding
+          
           echo "[INFO] Contents:"
           ls -lh valhalla_binding/nodejs_dist/
           ls -lh valhalla_binding/nodejs_dist/lib/ | head -20
-
+          
           echo "[INFO] Checking dependencies..."
-          otool -L valhalla_binding/nodejs_dist/valhalla_node.node
-
+          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} valhalla_binding/nodejs_dist/valhalla_node.node
+          
           echo "[INFO] Testing Node.js binding..."
           cat > test.js << 'EOF'
           try {
@@ -264,7 +201,7 @@ jobs:
             process.exit(1);
           }
           EOF
-
+          
           node test.js
 
   # build_python_wheels_linux:
