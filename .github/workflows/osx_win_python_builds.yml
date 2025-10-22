@@ -128,7 +128,7 @@ jobs:
             CIBW_BUILD_VERBOSITY=3
             SKBUILD_LOGGING_LEVEL=DEBUG
 
-          # uncomment when testing
+          # represents the minimum python version
           CIBW_BUILD: cp312-*
       
       # TODO: probably need to delete the key first, since it's just a single key
@@ -251,7 +251,7 @@ jobs:
             # try to use the existing build folder
             PIP_NO_BUILD_ISOLATION="1"
           MACOSX_DEPLOYMENT_TARGET: 14
-          # uncomment when testing
+          # represents the minimum python version
           CIBW_BUILD: cp312-*
 
       - name: Upload wheels
@@ -414,9 +414,12 @@ jobs:
         env:
           CIBW_ENVIRONMENT_WINDOWS: >
             PIP_NO_BUILD_ISOLATION="1"
-            VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
-            SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
-          # uncomment when testing
+            SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }};CMAKE_TOOLCHAIN_FILE=$VCPKG_TOOLCHAIN_FILE;VCPKG_TARGET_TRIPLET=$VCPKG_DEFAULT_TRIPLET;VCPKG_OVERLAY_TRIPLETS=$VCPKG_OVERLAY_TRIPLETS"
+            CMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE"
+            VCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS"
+            VCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET"
+            VCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS"
+          # represents the minimum python version
           CIBW_BUILD: cp312-*
 
       - name: Upload wheels
