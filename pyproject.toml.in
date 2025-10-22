@@ -62,21 +62,6 @@ version_scheme = "no-guess-dev"
 # PyPI doesn't accept local hashed version strings, important for pyvalhalla-weekly
 local_scheme = "no-local-version"
 
-[tool.black]
-line-length = 105
-skip-string-normalization = true
-extend-exclude = '''
-/(
-    \\..*
-  | dist
-  | wheelhouse
-  | '*build'
-  | __pycache__
-  | '*.toml'
-  | '*.egg-info'
-)/
-'''
-
 [tool.cibuildwheel]
 # it's enough here to know it's importable, actual test is run on other CI
 # mostly to avoid building utrecht tiles within the bindings build
