@@ -60,6 +60,7 @@ set(py_srcs
 
 # scikit-build-core does a different build than CMake
 if (SKBUILD)
+  find_package(Python3 3.12 EXACT COMPONENTS Development Interpreter)
   # SKBUILD_PLATLIB_DIR: the platlib path inside the wheel (site-packages or dist-packages or so)
   set(VALHALLA_INSTALL_PYDIR "${SKBUILD_PLATLIB_DIR}")
 
@@ -88,11 +89,15 @@ if (SKBUILD)
     endforeach()
   endif()
 else()
+  find_package(Python3 COMPONENTS Development Interpreter)
   set(VALHALLA_INSTALL_PYDIR "${Python_SITEARCH}")
   # write the __version__.py
   file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/valhalla/__version__.py"
     "__version__ = \"${VERSION}\"\n")
 endif()
+
+# propagate up to the parent
+set(Python3_FOUND PARENT ${Python3_FOUND} PARENT_SCOPE)
 
 # copy valhalla python sources from src to build
 function(set_output_python rel_path)
