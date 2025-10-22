@@ -127,7 +127,7 @@ jobs:
             VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}
             VALHALLA_BUILD_BIN_DIR="build_manylinux"
           # uncomment when testing
-          CIBW_BUILD: cp31-*
+          CIBW_BUILD: cp313-*
       
       # TODO: probably need to delete the key first, since it's just a single key
 
@@ -253,7 +253,7 @@ jobs:
             VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
           MACOSX_DEPLOYMENT_TARGET: 14
-          # represents the minimum python version
+          # uncomment when testing
           CIBW_BUILD: cp313-*
 
       - name: Upload wheels
@@ -420,7 +420,7 @@ jobs:
             VALHALLA_BUILD_BIN_DIR=build/Release
             VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}
           # uncomment when testing
-          # CIBW_BUILD: cp313-*
+          CIBW_BUILD: cp313-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -502,29 +502,29 @@ jobs:
           python -m valhalla valhalla_service -h
           python -m valhalla valhalla_build_tiles -h
 
-  upload_all:
-    name: Upload if release
-    needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
-    runs-on: ubuntu-latest
-    # if: ${{ always() }}
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+  # upload_all:
+  #   name: Upload if release
+  #   needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
+  #   runs-on: ubuntu-latest
+  #   # if: ${{ always() }}
+  #   if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
 
-    permissions:
-      id-token: write # This is required for requesting the JWT from Github for PyPI
+  #   permissions:
+  #     id-token: write # This is required for requesting the JWT from Github for PyPI
 
-    steps:
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.13'
+  #   steps:
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.13'
 
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         path: dist
+  #         merge-multiple: true
 
-      - name: Publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
-        with:
-          verbose: true
-          # uncomment when testing!
-          # repository-url: https://test.pypi.org/legacy/
+  #     - name: Publish to Test PyPI
+  #       uses: pypa/gh-action-pypi-publish@v1.13.0
+  #       with:
+  #         verbose: true
+  #         # uncomment when testing!
+  #         # repository-url: https://test.pypi.org/legacy/
