@@ -72,8 +72,8 @@ constexpr float kMaxFactor = 100000.0f;
 // Default auto attributes
 constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
 constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
-constexpr float kDefaultAutoLength = 5.3f; // Meters (208,661 inches)
-constexpr float kDefaultAutoWeight = 3.0f; // Metric Tons (6613,87 lbs)
+constexpr float kDefaultAutoLength = 2.7f; // Meters (106,299 inches)
+constexpr float kDefaultAutoWeight = 0.8f; // Metric Tons (1763,7 lbs)
 
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
