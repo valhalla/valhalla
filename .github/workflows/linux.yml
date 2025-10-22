@@ -95,6 +95,11 @@ jobs:
           restore-keys: |
             ccache-release-linux-x86_64-master
             ccache-release-linux-x86_64
+
+      # we have a minimum version of 3.12 for python
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       
       - name: Build Valhalla
         run: |
@@ -244,6 +249,11 @@ jobs:
           restore-keys: |
             ccache-release-linux-aarch64-master
             ccache-release-linux-aarch64
+
+      # we have a minimum version of 3.12 for python
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12' 
       
       - name: Build Valhalla
         run: |
