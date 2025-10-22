@@ -419,6 +419,7 @@ jobs:
             VCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS"
             VCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET"
             VCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS"
+            Python_FIND_VIRTUALENV=ONLY
           # represents the minimum python version
           CIBW_BUILD: cp312-*
 

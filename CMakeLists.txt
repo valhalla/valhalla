@@ -317,6 +317,10 @@ endif()
 ## Python bindings
 # needs to be after defining the tool targets above
 if(ENABLE_PYTHON_BINDINGS)
+  set(Python_FIND_STRATEGY LOCATION)
+  set(Python_FIND_REGISTRY NEVER)
+  set(Python_FIND_IMPLEMENTATIONS CPython)
+  set(Python_FIND_VIRTUALENV ONLY)
   find_package(Python COMPONENTS Interpreter Development Development.Module Development.SABIModule)
   add_subdirectory(src/bindings/python)
   if (NOT Python_FOUND)
