@@ -85,16 +85,12 @@ jobs:
             arch: arm64
             runner: ubuntu-24.04-arm
             container: ghcr.io/valhalla/manylinux:2_28_valhalla_python
-          - os: macos
-            arch: arm64
-            runner: macos-14
-            container: null
+          # - os: macos
+          #   arch: arm64
+          #   runner: macos-14
+          #   container: null
     steps:
-      - name: Configure Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
-      - run: python --version
+      - run: python3.12 --version
       - uses: actions/checkout@v4
         with:
           submodules: recursive
