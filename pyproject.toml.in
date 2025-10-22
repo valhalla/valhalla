@@ -4,7 +4,7 @@
 [project]
 name = "@PYVALHALLA_NAME@"
 dynamic = ["version"]
-requires-python = ">=3.9.0"
+requires-python = ">=3.12.0"
 authors = [{ name = "Nils Nolde" }, {name = "Kevin Kreiser"}]
 description = "High-level bindings to the Valhalla C++ library"
 readme = "README.md"
@@ -39,6 +39,8 @@ requires = [
 build-backend = "scikit_build_core.build"
 
 [tool.scikit-build]
+# nanobind’s STABLE_ABI feature targets Python >= 3.12
+wheel.py-api = "cp312"
 # Ask setuptools-scm for the version at build time
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 # creates a valhalla directory in the wheel
@@ -113,16 +115,3 @@ repair-wheel-command = [
     'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-listdeps {wheel}',
     'DYLD_LIBRARY_PATH=$LIBRARY_PATH delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}'
 ]
-
-# we prepend a few commands to patch the auditwheel source a bit
-# main challenge is to find the same python version auditwheel will use for repairing
-[[tool.cibuildwheel.overrides]]
-    select = "*-manylinux_*"
-    inherit.repair-wheel-command = "prepend"
-    repair-wheel-command = [
-        'link_target="$(readlink -f $(which "auditwheel"))"',
-        'python_bin="$(dirname "$link_target")/python"',
-        'echo "[INFO] Using $($python_bin -V) from $(which "$python_bin")"',
-        'export LD_LIBRARY_PATH=/usr/local/lib64:/usr/local/lib',
-        '$python_bin src/bindings/python/scripts/auditwheel_patch.py libexpat.so.1 libz.so.1',
-    ]

@@ -124,6 +124,7 @@ jobs:
           CIBW_ENVIRONMENT: >
             CCACHE_DIR=/host/home/runner/.cache/ccache
             SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
+            LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64"
           # uncomment when testing
           CIBW_BUILD: cp313-*
       
