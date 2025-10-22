@@ -125,8 +125,8 @@ jobs:
             CCACHE_DIR=/host/home/runner/.cache/ccache
             SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
             LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64"
-            CIBW_BUILD_VERBOSITY: 3
-            SKBUILD_LOGGING_LEVEL=DEBUGSKBUILD_LOGGING_LEVEL=DEBUG
+            CIBW_BUILD_VERBOSITY=3
+            SKBUILD_LOGGING_LEVEL=DEBUG
 
           # uncomment when testing
           CIBW_BUILD: cp312-*
@@ -413,7 +413,6 @@ jobs:
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           CIBW_ENVIRONMENT_WINDOWS: >
-            # try to use the existing build folder
             PIP_NO_BUILD_ISOLATION="1"
             VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
             SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
