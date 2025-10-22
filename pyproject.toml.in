@@ -4,7 +4,7 @@
 [project]
 name = "@PYVALHALLA_NAME@"
 dynamic = ["version"]
-requires-python = ">=3.12.0"
+requires-python = ">=3.9.0"
 authors = [{ name = "Nils Nolde" }, {name = "Kevin Kreiser"}]
 description = "High-level bindings to the Valhalla C++ library"
 readme = "README.md"

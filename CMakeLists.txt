@@ -317,7 +317,7 @@ endif()
 ## Python bindings
 # needs to be after defining the tool targets above
 if(ENABLE_PYTHON_BINDINGS)
-  find_package(Python 3.12 COMPONENTS Interpreter Development Development.Module Development.SABIModule)
+  find_package(Python COMPONENTS Interpreter Development Development.Module Development.SABIModule)
   add_subdirectory(src/bindings/python)
   if (NOT Python_FOUND)
     set(ENABLE_PYTHON_BINDINGS OFF)
