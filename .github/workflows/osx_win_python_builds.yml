@@ -130,7 +130,7 @@ jobs:
           NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
           OUTPUT_DIR="nodejs_dist"
           
-          python src/bindings/nodejs/scripts/bundle.py $NODE_FILE $OUTPUT_DIR --strip --tar
+          python3.12 src/bindings/nodejs/scripts/bundle.py $NODE_FILE $OUTPUT_DIR --strip --tar
           
           mv valhalla_node-bundle.tar.gz valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
 
