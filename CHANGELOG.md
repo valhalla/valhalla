@@ -1,5 +1,10 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2025-10-23 Valhalla 3.6.0
+* **Removed**
    * REMOVED: validity checks for historical speeds [#5087](https://github.com/valhalla/valhalla/pull/5087)
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
