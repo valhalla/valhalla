@@ -126,7 +126,7 @@ jobs:
             SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
             LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64"
           # uncomment when testing
-          CIBW_BUILD: cp313-*
+          CIBW_BUILD: cp312-*
       
       # TODO: probably need to delete the key first, since it's just a single key
 
@@ -245,9 +245,11 @@ jobs:
           CIBW_ENVIRONMENT: >
             SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
+            # try to use the existing build folder
+            PIP_NO_BUILD_ISOLATION="1"
           MACOSX_DEPLOYMENT_TARGET: 14
           # uncomment when testing
-          CIBW_BUILD: cp313-*
+          CIBW_BUILD: cp312-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -407,10 +409,12 @@ jobs:
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           CIBW_ENVIRONMENT_WINDOWS: >
+            # try to use the existing build folder
+            PIP_NO_BUILD_ISOLATION="1"
             VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
             SKBUILD_CMAKE_DEFINE="VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}"
           # uncomment when testing
-          CIBW_BUILD: cp313-*
+          CIBW_BUILD: cp312-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
