@@ -1,7 +1,6 @@
 #ifndef VALHALLA_BALDR_TRANSITTRANSFER_H_
 #define VALHALLA_BALDR_TRANSITTRANSFER_H_
 
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {

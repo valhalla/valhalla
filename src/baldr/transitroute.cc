@@ -1,6 +1,6 @@
 #include "baldr/transitroute.h"
+
 #include <stdexcept>
-#include <string.h>
 
 namespace valhalla {
 namespace baldr {

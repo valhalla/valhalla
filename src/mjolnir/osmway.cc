@@ -1,10 +1,11 @@
 #include "mjolnir/osmway.h"
 #include "baldr/edgeinfo.h"
-#include "mjolnir/util.h"
-#include "regex"
-
 #include "midgard/logging.h"
+#include "mjolnir/util.h"
+
 #include <boost/algorithm/string.hpp>
+
+#include <regex>
 
 using namespace valhalla::baldr;
 
@@ -160,7 +161,7 @@ void OSMWay::AddPronunciationsWithLang(std::vector<std::string>& pronunciations,
 
   auto get_pronunciations = [](const std::vector<std::string>& pronunciation_tokens,
                                const std::vector<baldr::Language>& pronunciation_langs,
-                               const std::map<size_t, size_t> indexMap, const size_t key,
+                               const std::map<size_t, size_t>& indexMap, const size_t key,
                                const baldr::PronunciationAlphabet verbal_type) {
     linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone),
                                     0,
@@ -500,6 +501,7 @@ void OSMWay::ProcessNamesPronunciations(
         if (!diff_names && names_w_no_lang.size() >= 1 && found_languages.size() == 1) {
 
           std::vector<std::pair<std::string, std::string>> temp_token_languages;
+          temp_token_languages.reserve(names_w_no_lang.size());
           for (size_t i = 0; i < names_w_no_lang.size(); ++i) {
             temp_token_languages.emplace_back(names_w_no_lang[i], found_languages.at(0));
           }
@@ -539,6 +541,7 @@ void OSMWay::ProcessNamesPronunciations(
         } else {
           std::vector<std::pair<std::string, std::string>> temp_token_languages;
 
+          temp_token_languages.reserve(names_w_no_lang.size());
           for (size_t i = 0; i < names_w_no_lang.size(); ++i) {
             temp_token_languages.emplace_back(names_w_no_lang[i], "");
           }
@@ -1108,7 +1111,7 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
     // so we keep track of the max
     int precision = 0;
     for (size_t i = 0; i < tokens.size(); ++i) {
-      const auto token = tokens[i];
+      const auto& token = tokens[i];
       auto dash_pos = token.find(dash);
       std::pair<float, float> range;
       if (dash_pos != std::string::npos && dash_pos != 0) {

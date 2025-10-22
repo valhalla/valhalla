@@ -1,9 +1,8 @@
 #include "baldr/location.h"
-#include "midgard/util.h"
+
+#include <gtest/gtest.h>
 
 #include <unordered_map>
-
-#include "test.h"
 
 using namespace std;
 using namespace valhalla::baldr;

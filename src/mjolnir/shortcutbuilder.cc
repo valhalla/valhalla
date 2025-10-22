@@ -1,13 +1,4 @@
 #include "mjolnir/shortcutbuilder.h"
-#include "mjolnir/graphtilebuilder.h"
-#include "scoped_timer.h"
-
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <string>
-#include <utility>
-#include <vector>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
@@ -16,8 +7,19 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 #include "sif/osrm_car_duration.h"
+
+#include <boost/property_tree/ptree.hpp>
+#ifdef LOGGING_LEVEL_DEBUG
+#include <boost/format.hpp>
+#endif
+
+#include <string>
+#include <utility>
+#include <vector>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -162,9 +164,11 @@ GraphId GetOpposingEdge(const GraphId& node,
       return edgeid;
     }
   }
+#ifdef LOGGING_LEVEL_ERROR
   PointLL ll = nodeinfo->latlng(tile->header()->base_ll());
   LOG_ERROR("Opposing directed edge not found at LL= " + std::to_string(ll.lat()) + "," +
             std::to_string(ll.lng()));
+#endif
   return GraphId(0, 0, 0);
 }
 
@@ -380,7 +384,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
   }
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
-  auto last_edge = [&reader](graph_tile_ptr tile, const GraphId& endnode, EdgePairs& edgepairs) {
+  auto last_edge = [&reader](const graph_tile_ptr& tile, const GraphId& endnode,
+                             EdgePairs& edgepairs) {
     return !CanContract(reader, tile, endnode, edgepairs);
   };
 
@@ -459,9 +464,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
           // Break out of loop. This case can happen when a shortcut edge
           // enters another shortcut edge (but is not drivable in reverse
           // direction from the node).
-          const DirectedEdge* de = tile->directededge(next_edge_id);
           LOG_ERROR("Edge not found in edge pairs. WayID = " +
-                    std::to_string(tile->edgeinfo(de).wayid()));
+                    std::to_string(tile->edgeinfo(tile->directededge(next_edge_id)).wayid()));
           break;
         }
 
@@ -509,7 +513,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         for (const auto& res : access_restrictions.all_restrictions) {
           tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
                                                              res.second.type(), res.second.modes(),
-                                                             res.second.value()));
+                                                             res.second.value(),
+                                                             res.second.except_destination()));
         }
       }
 
@@ -576,6 +581,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     }
   }
 
+#ifdef LOGGING_LEVEL_WARN
   // Log a warning (with the node lat,lon) if the max number of shortcuts from a node
   // is exceeded. This is not serious (see NOTE above) but good to know where it occurs.
   if (shortcut_count > kMaxShortcutsFromNode) {
@@ -583,6 +589,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
     LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
              std::to_string(ll.lng()));
   }
+#endif
   return {shortcut_count, total_edge_count};
 }
 
@@ -670,7 +677,8 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
           auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
           for (const auto& res : restrictions) {
             tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                               res.type(), res.modes(), res.value()));
+                                                               res.type(), res.modes(), res.value(),
+                                                               res.except_destination()));
           }
         }
 

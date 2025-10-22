@@ -1,4 +1,8 @@
 #include "mjolnir/countryaccess.h"
+#include "baldr/graphconstants.h"
+#include "mjolnir/adminconstants.h"
+
+using namespace valhalla::baldr;
 
 namespace valhalla {
 namespace mjolnir {

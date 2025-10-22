@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
-
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/mjolnir/uniquenames.h>
+
+#include <cstdint>
+#include <vector>
 
 namespace valhalla {
 namespace mjolnir {

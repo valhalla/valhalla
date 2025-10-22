@@ -1,10 +1,15 @@
+#include "mjolnir/ferry_connections.h"
+#include "baldr/graphconstants.h"
+#include "midgard/logging.h"
+#include "midgard/util.h"
+#include "mjolnir/node_expander.h"
+#include "mjolnir/osmdata.h"
+#include "scoped_timer.h"
+
 #include <queue>
 #include <unordered_map>
 
-#include "baldr/graphconstants.h"
-#include "midgard/util.h"
-#include "mjolnir/ferry_connections.h"
-#include "scoped_timer.h"
+using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace mjolnir {
@@ -232,7 +237,7 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
           sequence<Edge>::iterator element = edges[edge.second];
           auto update_edge = *element;
           if (update_edge.attributes.importance > kFerryUpClass) {
-            update_edge.attributes.importance = kFerryUpClass;
+            update_edge.attributes.importance_hierarchy = kFerryUpClass;
             update_edge.attributes.reclass_ferry = true;
             element = update_edge;
             edge_count++;
@@ -325,9 +330,9 @@ void ReclassifyFerryConnections(const std::string& ways_file,
 
   // Iterate through nodes and find any that connect to both a ferry and a
   // regular (non-ferry) edge. Skip short ferry edges (river crossing?)
-  uint32_t ferry_endpoint_count = 0;
-  uint32_t total_count = 0;
-  uint32_t missed_both = 0;
+  [[maybe_unused]] uint32_t ferry_endpoint_count = 0;
+  [[maybe_unused]] uint32_t total_count = 0;
+  [[maybe_unused]] uint32_t missed_both = 0;
   sequence<Node>::iterator node_itr = nodes.begin();
   while (node_itr != nodes.end()) {
     auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -336,7 +341,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
       bool inbound_path_found = false;
       bool outbound_path_found = false;
-      PointLL ll = (*nodes[node_itr.position()]).node.latlng();
+      [[maybe_unused]] const PointLL ll = (*nodes[node_itr.position()]).node.latlng();
 
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
@@ -385,7 +390,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           sequence<Edge>::iterator element = edges[edge.second];
           auto update_edge = *element;
           if (ret1.second && ret2.second && update_edge.attributes.importance > kFerryUpClass) {
-            update_edge.attributes.importance = kFerryUpClass;
+            update_edge.attributes.importance_hierarchy = kFerryUpClass;
             update_edge.attributes.reclass_ferry = remove_destonly;
             element = update_edge;
             total_count++;
@@ -404,7 +409,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
             sequence<Edge>::iterator element = edges[edge.second];
             auto update_edge = *element;
             if (update_edge.attributes.importance > kFerryUpClass) {
-              update_edge.attributes.importance = kFerryUpClass;
+              update_edge.attributes.importance_hierarchy = kFerryUpClass;
               update_edge.attributes.reclass_ferry = remove_destonly;
               element = update_edge;
               total_count++;
@@ -423,6 +428,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
       // Log cases where reclassification fails
       if (!inbound_path_found && !outbound_path_found) {
         missed_both++;
+#ifdef LOGGING_LEVEL_WARN
       } else {
         if (!inbound_path_found) {
           LOG_WARN("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) +
@@ -432,6 +438,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           LOG_WARN("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) +
                    "," + std::to_string(ll.lng()));
         }
+#endif
       }
     }
 

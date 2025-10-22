@@ -1,8 +1,7 @@
 #include "baldr/graphreader.h"
-#include "mjolnir/util.h"
-
 #include "gurka.h"
-#include "test/test.h"
+
+#include <gtest/gtest.h>
 
 using namespace valhalla;
 using namespace valhalla::baldr;

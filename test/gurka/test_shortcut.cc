@@ -1,12 +1,12 @@
-#include "gurka.h"
-#include <gtest/gtest.h>
-
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
+#include "gurka.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
+
+#include <gtest/gtest.h>
 
 using namespace valhalla;
+using namespace valhalla::baldr;
 
 // Here 2 shortcuts should be created: from A to C all edges have speed 80 and from C to A all have
 // speed 90

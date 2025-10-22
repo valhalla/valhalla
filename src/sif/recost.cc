@@ -40,7 +40,7 @@ void recost_forward(baldr::GraphReader& reader,
   }
 
   // fetch the graph objects
-  graph_tile_ptr tile;
+  baldr::graph_tile_ptr tile;
   const baldr::DirectedEdge* edge = reader.directededge(edge_id, tile);
 
   // first edge is bogus
@@ -92,6 +92,7 @@ void recost_forward(baldr::GraphReader& reader,
     // so that we can find if we reach the end of the restriction. then we need to replay the
     // queued edges as normal
     uint8_t time_restrictions_TODO = baldr::kInvalidRestriction;
+    uint8_t destonly_restriction_mask = 0;
     // if its not time dependent set to 0 for Allowed method below
     const uint64_t localtime = offset_time.valid ? offset_time.local_time : 0;
     // we should call 'Allowed' method even if 'ignore_access' flag is true in order to
@@ -99,7 +100,8 @@ void recost_forward(baldr::GraphReader& reader,
     const auto next_id = edge_cb();
     if (predecessor != baldr::kInvalidLabel &&
         (!costing.Allowed(edge, !next_id.Is_Valid(), label, tile, edge_id, localtime,
-                          offset_time.timezone_index, time_restrictions_TODO) &&
+                          offset_time.timezone_index, time_restrictions_TODO,
+                          destonly_restriction_mask) &&
          !ignore_access)) {
       throw std::runtime_error("This path requires different edge access than this costing allows");
     }

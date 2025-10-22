@@ -1,12 +1,12 @@
 #ifndef VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_
 #define VALHALLA_ODIN_NARRATIVE_DICTIONARY_H_
 
+#include <boost/property_tree/ptree_fwd.hpp>
+
 #include <locale>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include <boost/property_tree/ptree.hpp>
 
 namespace {
 
@@ -83,6 +83,7 @@ constexpr auto kEscalatorKey = "instructions.escalator";
 constexpr auto kEnterBuildingKey = "instructions.enter_building";
 constexpr auto kExitBuildingKey = "instructions.exit_building";
 constexpr auto kPosixLocaleKey = "posix_locale";
+constexpr auto kLevelChangeKey = "instructions.level_change";
 
 // Variable keys
 constexpr auto kPhrasesKey = "phrases";
@@ -401,6 +402,9 @@ public:
 
   // Escalator
   PhraseSet escalator_subset;
+
+  // Level Change
+  PhraseSet level_change_subset;
 
   // Enter Building
   EnterBuildingSubset enter_building_subset;

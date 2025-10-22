@@ -1,9 +1,10 @@
 #include "thor/unidirectional_astar.h"
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
-#include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "worker.h"
+#include "sif/hierarchylimits.h"
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <algorithm>
 
 using namespace valhalla::baldr;
@@ -230,16 +231,19 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
     // (based on costing method)
     uint8_t restriction_idx = kInvalidRestriction;
+    uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
     if (FORWARD) {
       if (!costing_->Allowed(meta.edge, dest_path_edge, pred, tile, meta.edge_id,
-                             time_info.local_time, nodeinfo->timezone(), restriction_idx) ||
+                             time_info.local_time, nodeinfo->timezone(), restriction_idx,
+                             destonly_restriction_mask) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                                time_info.local_time, nodeinfo->timezone())) {
         return false;
       }
     } else {
       if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
-                                    time_info.local_time, nodeinfo->timezone(), restriction_idx) ||
+                                    time_info.local_time, nodeinfo->timezone(), restriction_idx,
+                                    destonly_restriction_mask) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false, &edgestatus_,
                                time_info.local_time, nodeinfo->timezone())) {
         return false;
@@ -280,7 +284,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                restriction_idx, 0,
                                meta.edge->destonly() ||
                                    (costing_->is_hgv() && meta.edge->destonly_hgv()),
-                               meta.edge->forwardaccess() & kTruckAccess);
+                               meta.edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     } else {
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
                                mode_, transition_cost,
@@ -292,7 +296,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                restriction_idx, 0,
                                opp_edge->destonly() ||
                                    (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                               opp_edge->forwardaccess() & kTruckAccess);
+                               opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
     }
 
     auto& edge_label = edgelabels_.back();
@@ -312,6 +316,17 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       *meta.edge_status = {EdgeSet::kTemporary, idx};
     }
 
+    if (expansion_callback_) {
+      auto expansion_type =
+          FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+      const auto& prev_pred = pred.predecessor() == kInvalidLabel
+                                  ? GraphId{}
+                                  : (edgelabels_)[pred.predecessor()].edgeid();
+      expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
+                          "unidirectional_astar", Expansion_EdgeStatus_reached, cost.secs,
+                          path_distance, cost.cost, expansion_type);
+    }
+
     return true;
   };
 
@@ -323,16 +338,18 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
     auto update_label = [&]() {
       uint8_t restriction_idx = kInvalidRestriction;
+      uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
       if (FORWARD) {
         if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
-                               nodeinfo->timezone(), restriction_idx) ||
+                               nodeinfo->timezone(), restriction_idx, destonly_restriction_mask) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                                  time_info.local_time, nodeinfo->timezone())) {
           return false;
         }
       } else {
         if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
-                                      time_info.local_time, nodeinfo->timezone(), restriction_idx) ||
+                                      time_info.local_time, nodeinfo->timezone(), restriction_idx,
+                                      destonly_restriction_mask) ||
             costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false,
                                  &edgestatus_, time_info.local_time, nodeinfo->timezone())) {
           return false;
@@ -347,6 +364,17 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
+      }
+
+      if (expansion_callback_) {
+        auto expansion_type =
+            FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+        const auto& prev_pred = pred.predecessor() == kInvalidLabel
+                                    ? GraphId{}
+                                    : (edgelabels_)[pred.predecessor()].edgeid();
+        expansion_callback_(graphreader, FORWARD ? meta.edge_id : opp_edge_id, prev_pred,
+                            "unidirectional_astar", Expansion_EdgeStatus_reached, newcost.secs,
+                            lab.path_distance(), newcost.cost, expansion_type);
       }
       return true;
     };
@@ -511,6 +539,16 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     BDEdgeLabel pred = edgelabels_[predindex];
 
     if (pred.destination()) {
+      if (expansion_callback_) {
+        auto expansion_type =
+            FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+        const auto prev_pred = pred.predecessor() == kInvalidLabel
+                                   ? GraphId{}
+                                   : edgelabels_[pred.predecessor()].edgeid();
+        expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
+                            Expansion_EdgeStatus_connected, pred.cost().secs, pred.path_distance(),
+                            pred.cost().cost, expansion_type);
+      }
       return {FormPath(predindex)};
     }
 
@@ -518,6 +556,17 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     // edge (this will allow loops/around the block cases)
     if (!pred.origin()) {
       edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
+    }
+
+    // setting this edge as settled
+    if (expansion_callback_) {
+      auto expansion_type =
+          FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+      const auto prev_pred =
+          pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels_[pred.predecessor()].edgeid();
+      expansion_callback_(graphreader, pred.edgeid(), prev_pred, "unidirectional_astar",
+                          Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
+                          pred.cost().cost, expansion_type);
     }
 
     // Check that distance is converging towards the destination. Return route
@@ -759,6 +808,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
 
       // Add EdgeLabel to the adjacency list
       uint32_t idx = edgelabels_.size();
+      auto destonly_restriction_mask =
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
 
       if (FORWARD) {
         edgelabels_.emplace_back(kInvalidLabel, edgeid, GraphId(), directededge, cost, sortcost, dist,
@@ -767,7 +818,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                                  kInvalidRestriction, 0,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
-                                 directededge->forwardaccess() & kTruckAccess);
+                                 directededge->forwardaccess() & kTruckAccess,
+                                 destonly_restriction_mask);
       } else {
         edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, Cost{}, false,
@@ -776,7 +828,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                                  kInvalidRestriction, 0,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
-                                 directededge->forwardaccess() & kTruckAccess);
+                                 directededge->forwardaccess() & kTruckAccess,
+                                 destonly_restriction_mask);
       }
 
       auto& edge_label = edgelabels_.back();
@@ -796,6 +849,14 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       if (dest_path_edge) {
         // Set the destination flag
         edge_label.set_destination();
+      }
+
+      if (expansion_callback_) {
+        auto expansion_type =
+            FORWARD ? Expansion_ExpansionType_forward : Expansion_ExpansionType_reverse;
+        expansion_callback_(graphreader, edgeid, GraphId{}, "unidirectional_astar",
+                            Expansion_EdgeStatus_reached, cost.secs,
+                            static_cast<uint32_t>(edge.distance() + 0.5), cost.cost, expansion_type);
       }
 
       adjacencylist_.add(idx);

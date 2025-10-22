@@ -1,15 +1,11 @@
-#include <algorithm>
-#include <cstdint>
-#include <string>
+#include "mjolnir/timeparsing.h"
+#include "baldr/timedomain.h"
 
 #include <boost/algorithm/string/split.hpp>
+#include <gtest/gtest.h>
 
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/timedomain.h"
-#include "mjolnir/timeparsing.h"
-
-#include "test.h"
+#include <cstdint>
+#include <string>
 
 using namespace std;
 using namespace valhalla::baldr;

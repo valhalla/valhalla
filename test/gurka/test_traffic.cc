@@ -1,12 +1,16 @@
-#include "gurka.h"
-#include "test.h"
-
 #include "baldr/graphreader.h"
 #include "baldr/traffictile.h"
+#include "gurka.h"
+#include "test.h"
+#include "tyr/actor.h"
+
+#ifndef _WIN32
+#include <sys/mman.h>
+#endif
+
+#include <sys/stat.h>
 
 #include <cmath>
-#include <sys/mman.h>
-#include <sys/stat.h>
 
 using namespace valhalla;
 using LiveTrafficCustomize = test::LiveTrafficCustomize;
@@ -82,7 +86,7 @@ TEST(Traffic, BasicUpdates) {
     if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
       current->overall_encoded_speed = 0;
     } else {
-      current->overall_encoded_speed = UNKNOWN_TRAFFIC_SPEED_RAW - 1;
+      current->overall_encoded_speed = baldr::UNKNOWN_TRAFFIC_SPEED_RAW - 1;
     }
   };
   test::customize_live_traffic_data(map.config, cb_setter_max);

@@ -1,8 +1,12 @@
+#include "baldr/datetime.h"
 #include "gurka.h"
 #include "test.h"
+
 #include <boost/format.hpp>
 
 using namespace valhalla;
+namespace dt = valhalla::baldr::DateTime;
+namespace sc = std::chrono;
 
 void set_traffic(gurka::map& map) {
   // add live traffic
@@ -14,12 +18,12 @@ void set_traffic(gurka::map& map) {
     traffic_speed->breakpoint1 = 255;
   });
 
-  test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
     e.set_constrained_flow_speed(40);
     e.set_free_flow_speed(100);
 
     // speeds for every 5 min bucket of the week
-    std::array<float, kBucketsPerWeek> historical;
+    std::array<float, baldr::kBucketsPerWeek> historical;
     historical.fill(10);
     for (size_t i = 0; i < historical.size(); ++i) {
       size_t min_timestamp = (i % (24 * 12)) / 12;
@@ -559,9 +563,9 @@ protected:
       traffic_speed->breakpoint1 = 255;
     });
 
-    test::customize_historical_traffic(map.config, [](DirectedEdge&) {
+    test::customize_historical_traffic(map.config, [](baldr::DirectedEdge&) {
       // speeds for every 5 min bucket of the week
-      std::array<float, kBucketsPerWeek> historical;
+      std::array<float, baldr::kBucketsPerWeek> historical;
       historical.fill(6);
       return historical;
     });

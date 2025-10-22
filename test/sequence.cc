@@ -1,7 +1,8 @@
 #include "midgard/sequence.h"
-#include <cstdint>
 
-#include "test.h"
+#include <gtest/gtest.h>
+
+#include <cstdint>
 
 using namespace valhalla::midgard;
 

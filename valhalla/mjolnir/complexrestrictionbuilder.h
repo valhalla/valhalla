@@ -1,14 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
 #define VALHALLA_MJOLNIR_COMPLEXRESTRICTIONBUILDER_H_
 
-#include <cstdint>
-#include <vector>
-
 #include <valhalla/baldr/complexrestriction.h>
 #include <valhalla/baldr/graphconstants.h>
 
-using namespace valhalla::midgard;
-using namespace valhalla::baldr;
+#include <cstdint>
+#include <vector>
 
 namespace valhalla {
 namespace mjolnir {
@@ -29,7 +26,7 @@ public:
    * Set the from edge graph id.
    * @param  from_id  from graph id.
    */
-  void set_from_id(const GraphId& from_id) {
+  void set_from_id(const baldr::GraphId& from_id) {
     from_graphid_ = from_id.value;
   }
 
@@ -37,7 +34,7 @@ public:
    * Set the to edge graph id.
    * @param  to_id  to graph id.
    */
-  void set_to_id(const GraphId& to_id) {
+  void set_to_id(const baldr::GraphId& to_id) {
     to_graphid_ = to_id.value;
   }
 
@@ -45,13 +42,13 @@ public:
    * Set the vias for this restriction
    * @param  via_list  via list.
    */
-  void set_via_list(const std::vector<GraphId>& via_list);
+  void set_via_list(const std::vector<baldr::GraphId>& via_list);
 
   /**
    * Set the restriction type.
    * @param  type  restriction type.
    */
-  void set_type(const RestrictionType type) {
+  void set_type(const baldr::RestrictionType type) {
     type_ = (static_cast<uint8_t>(type));
   }
 
@@ -201,11 +198,11 @@ protected:
    * @param  count Number of vias
    */
   void set_via_count(const uint8_t count) {
-    via_count_ = (count > kMaxViasPerRestriction) ? kMaxViasPerRestriction : count;
+    via_count_ = (count > baldr::kMaxViasPerRestriction) ? baldr::kMaxViasPerRestriction : count;
   }
 
   // via list
-  std::vector<GraphId> via_list_;
+  std::vector<baldr::GraphId> via_list_;
 
   friend std::ostream& operator<<(std::ostream& os, const ComplexRestrictionBuilder& crb);
 };

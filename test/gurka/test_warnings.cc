@@ -1,4 +1,5 @@
-#include "gurka.h"
+#include "valhalla/worker.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;

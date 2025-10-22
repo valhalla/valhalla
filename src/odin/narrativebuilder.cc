@@ -1,21 +1,22 @@
+#include "odin/narrativebuilder.h"
+#include "baldr/verbal_text_formatter.h"
+#include "exceptions.h"
+#include "midgard/constants.h"
+#include "odin/enhancedtrippath.h"
+#include "odin/maneuver.h"
+#include "odin/markup_formatter.h"
+#include "odin/narrative_dictionary.h"
+#include "odin/util.h"
+
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
+
 #include <cmath>
 #include <iomanip>
 #include <sstream>
 #include <string>
 
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/algorithm/string/replace.hpp>
-
-#include "baldr/verbal_text_formatter.h"
-#include "midgard/constants.h"
-
-#include "odin/enhancedtrippath.h"
-#include "odin/maneuver.h"
-#include "odin/markup_formatter.h"
-#include "odin/narrative_dictionary.h"
-#include "odin/narrativebuilder.h"
-#include "odin/util.h"
-#include "worker.h"
+using namespace valhalla::baldr;
 
 namespace {
 // Text instruction initial capacity
@@ -482,7 +483,16 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       }
       case DirectionsLeg_Maneuver_Type_kStepsEnter: {
         // Set instruction
-        maneuver.set_instruction(FormStepsInstruction(maneuver));
+        auto instr = FormStepsInstruction(maneuver);
+        maneuver.set_instruction(instr);
+        maneuver.set_verbal_transition_alert_instruction(instr);
+
+        // Set verbal pre transition instruction
+        maneuver.set_verbal_pre_transition_instruction(instr);
+
+        // Set verbal post transition instruction
+        maneuver.set_verbal_post_transition_instruction(
+            FormVerbalPostTransitionInstruction(maneuver));
         break;
       }
       case DirectionsLeg_Maneuver_Type_kEscalatorEnter: {
@@ -500,6 +510,9 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_instruction(FormExitBuildingInstruction(maneuver));
         break;
       }
+      case DirectionsLeg_Maneuver_Type_kLevelChange:
+        maneuver.set_instruction(FormGenericLevelChangeInstruction(maneuver));
+        break;
       case DirectionsLeg_Maneuver_Type_kContinue:
       default: {
         if (maneuver.has_node_type()) {
@@ -4234,6 +4247,29 @@ std::string NarrativeBuilder::FormStepsInstruction(Maneuver& maneuver) {
 
   // Set instruction to the determined tagged phrase
   instruction = dictionary_.steps_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLevelTag, end_level);
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormGenericLevelChangeInstruction(Maneuver& maneuver) {
+  // "0": "Change to <LEVEL>",
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  std::string end_level;
+
+  if (!maneuver.end_level_ref().empty()) {
+    end_level = maneuver.end_level_ref();
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.level_change_subset.phrases.at(std::to_string(phrase_id));
 
   // Replace phrase tags with values
   boost::replace_all(instruction, kLevelTag, end_level);

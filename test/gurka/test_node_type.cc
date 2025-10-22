@@ -1,4 +1,7 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "tyr/actor.h"
+
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)

@@ -1,11 +1,6 @@
+#include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "loki/worker.h"
-
-#include "baldr/datetime.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -127,7 +122,7 @@ void loki_worker_t::route(Api& request) {
   }
   bool connected = false;
   for (const auto& c : color_counts) {
-    if (c.second == options.locations_size()) {
+    if (c.second == static_cast<size_t>(options.locations_size())) {
       connected = true;
       break;
     }

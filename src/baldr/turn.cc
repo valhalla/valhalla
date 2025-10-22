@@ -1,10 +1,35 @@
 #include "baldr/turn.h"
+
+#include <array>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-
 namespace valhalla {
 namespace baldr {
+
+namespace {
+constexpr std::array<Turn::Type, 360> make_turn_type_lut() {
+  std::array<Turn::Type, 360> t{};
+
+  auto fill = [&](size_t from_angle, size_t to_angle, Turn::Type type) {
+    for (auto angle = from_angle; angle <= to_angle; ++angle)
+      t[angle] = type;
+  };
+
+  fill(0, 10, Turn::Type::kStraight);
+  fill(11, 44, Turn::Type::kSlightRight);
+  fill(45, 135, Turn::Type::kRight);
+  fill(136, 159, Turn::Type::kSharpRight);
+  fill(160, 200, Turn::Type::kReverse);
+  fill(201, 224, Turn::Type::kSharpLeft);
+  fill(225, 315, Turn::Type::kLeft);
+  fill(316, 349, Turn::Type::kSlightLeft);
+  fill(350, 359, Turn::Type::kStraight);
+
+  return t;
+}
+constexpr auto kTurnTypeLUT = make_turn_type_lut();
+} // namespace
 
 const std::unordered_map<int, std::string>
     turn_type_to_string{{static_cast<int>(Turn::Type::kStraight), "straight"},
@@ -18,25 +43,8 @@ const std::unordered_map<int, std::string>
 
 // Returns the turn type based on the specified turn degree.
 Turn::Type Turn::GetType(uint32_t turn_degree) {
-  turn_degree %= 360;
-  if ((turn_degree > 349) || (turn_degree < 11)) {
-    return Turn::Type::kStraight;
-  } else if ((turn_degree > 10) && (turn_degree < 45)) {
-    return Turn::Type::kSlightRight;
-  } else if ((turn_degree > 44) && (turn_degree < 136)) {
-    return Turn::Type::kRight;
-  } else if ((turn_degree > 135) && (turn_degree < 160)) {
-    return Turn::Type::kSharpRight;
-  } else if ((turn_degree > 159) && (turn_degree < 201)) {
-    return Turn::Type::kReverse;
-  } else if ((turn_degree > 200) && (turn_degree < 225)) {
-    return Turn::Type::kSharpLeft;
-  } else if ((turn_degree > 224) && (turn_degree < 316)) {
-    return Turn::Type::kLeft;
-  } else if ((turn_degree > 315) && (turn_degree < 350)) {
-    return Turn::Type::kSlightLeft;
-  }
-  throw std::runtime_error("Turn degree out of range");
+  // this function is on the hot path, so we use a lookup table to avoid branch prediction misses
+  return kTurnTypeLUT[turn_degree % 360];
 }
 
 std::string Turn::GetTypeString(Turn::Type turn_type) {

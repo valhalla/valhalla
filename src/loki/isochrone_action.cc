@@ -1,8 +1,5 @@
-#include "baldr/datetime.h"
-#include "baldr/rapidjson_utils.h"
 #include "loki/search.h"
 #include "loki/worker.h"
-#include "midgard/logging.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -44,7 +41,7 @@ void loki_worker_t::init_isochrones(Api& request) {
   // check that the number of contours is ok
   if (options.contours_size() < 1) {
     throw valhalla_exception_t{113};
-  } else if (options.contours_size() > max_contours) {
+  } else if (options.contours_size() > static_cast<int>(max_contours)) {
     throw valhalla_exception_t{152, std::to_string(max_contours)};
   }
 
@@ -66,7 +63,7 @@ void loki_worker_t::isochrones(Api& request) {
   init_isochrones(request);
   auto& options = *request.mutable_options();
   // check that location size does not exceed max
-  if (options.locations_size() > max_locations.find("isochrone")->second) {
+  if (options.locations_size() > static_cast<int>(max_locations.find("isochrone")->second)) {
     throw valhalla_exception_t{150, std::to_string(max_locations.find("isochrone")->second)};
   };
 

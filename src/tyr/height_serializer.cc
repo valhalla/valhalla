@@ -1,8 +1,6 @@
-#include <sstream>
-
-#include "baldr/json.h"
 #include "skadi/sample.h"
 #include "tyr/serializers.h"
+#include "valhalla/baldr/rapidjson_utils.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -10,51 +8,71 @@ using namespace valhalla::baldr;
 
 namespace {
 
-json::ArrayPtr serialize_range_height(const std::vector<double>& ranges,
-                                      const std::vector<double>& heights,
-                                      const uint32_t precision,
-                                      const double no_data_value) {
-  auto array = json::array({});
+namespace {
+inline void
+write_with_precision(rapidjson::writer_wrapper_t& writer, double value, uint32_t precision) {
+  if (precision == 0) {
+    writer(static_cast<int64_t>(std::round(value)));
+  } else {
+    writer(value);
+  }
+}
+} // namespace
+
+void serialize_range_height(rapidjson::writer_wrapper_t& writer,
+                            const std::vector<double>& ranges,
+                            const std::vector<double>& heights,
+                            const uint32_t precision,
+                            const double no_data_value) {
+  writer.start_array("range_height");
+  // rapidjson can't handle 0 precision
+  writer.set_precision(std::max(precision, 1u));
   // for each posting
   auto range = ranges.cbegin();
 
   for (const auto height : heights) {
-    auto element = json::array({json::fixed_t{*range, 0}});
+    writer.start_array();
+    write_with_precision(writer, *range, precision);
+
     if (height == no_data_value) {
-      element->push_back(nullptr);
+      writer(nullptr);
     } else {
-      element->push_back({json::fixed_t{height, precision}});
+      write_with_precision(writer, height, precision);
     }
-    array->push_back(element);
+    writer.end_array();
     ++range;
   }
-  return array;
+  writer.end_array();
 }
 
-json::ArrayPtr serialize_height(const std::vector<double>& heights,
-                                const uint32_t precision,
-                                const double no_data_value) {
-  auto array = json::array({});
-
+void serialize_height(rapidjson::writer_wrapper_t& writer,
+                      const std::vector<double>& heights,
+                      const uint32_t precision,
+                      const double no_data_value) {
+  writer.start_array("height");
+  writer.set_precision(std::max(precision, 1u));
   for (const auto height : heights) {
     // add all heights's to an array
     if (height == no_data_value) {
-      array->push_back(nullptr);
+      writer(nullptr);
     } else {
-      array->push_back({json::fixed_t{height, precision}});
+      write_with_precision(writer, height, precision);
     }
   }
-
-  return array;
+  writer.end_array();
 }
 
-json::ArrayPtr serialize_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape) {
-  auto array = json::array({});
+void serialize_shape(rapidjson::writer_wrapper_t& writer,
+                     const google::protobuf::RepeatedPtrField<valhalla::Location>& shape) {
+  writer.start_array("shape");
+  writer.set_precision(tyr::kCoordinatePrecision);
   for (const auto& p : shape) {
-    array->emplace_back(json::map(
-        {{"lon", json::fixed_t{p.ll().lng(), 6}}, {"lat", json::fixed_t{p.ll().lat(), 6}}}));
+    writer.start_object();
+    writer("lat", p.ll().lat());
+    writer("lon", p.ll().lng());
+    writer.end_object();
   }
-  return array;
+  writer.end_array();
 }
 
 } // namespace
@@ -71,37 +89,36 @@ namespace tyr {
 std::string serializeHeight(const Api& request,
                             const std::vector<double>& heights,
                             const std::vector<double>& ranges) {
-  auto json = json::map({});
+  rapidjson::writer_wrapper_t writer(4096);
+  writer.start_object();
 
   // get the precision to use for returned heights
   uint32_t precision = request.options().height_precision();
 
-  // get the distances between the postings
-  if (ranges.size()) {
-    json = json::map({{"range_height", serialize_range_height(ranges, heights, precision,
-                                                              skadi::get_no_data_value())}});
-  } // just the postings
-  else {
-    json = json::map({{"height", serialize_height(heights, precision, skadi::get_no_data_value())}});
-  }
   // send back the shape as well
   if (request.options().has_encoded_polyline_case()) {
-    json->emplace("encoded_polyline", request.options().encoded_polyline());
+    writer("encoded_polyline", request.options().encoded_polyline());
   } else {
-    json->emplace("shape", serialize_shape(request.options().shape()));
+    serialize_shape(writer, request.options().shape());
   }
+  // get the distances between the postings
+  if (ranges.size()) {
+    serialize_range_height(writer, ranges, heights, precision, skadi::get_no_data_value());
+  } // just the postings
+  else {
+    serialize_height(writer, heights, precision, skadi::get_no_data_value());
+  }
+
   if (request.options().has_id_case()) {
-    json->emplace("id", request.options().id());
+    writer("id", request.options().id());
   }
 
   // add warnings to json response
   if (request.info().warnings_size() >= 1) {
-    json->emplace("warnings", serializeWarnings(request));
+    serializeWarnings(request, writer);
   }
-
-  std::stringstream ss;
-  ss << *json;
-  return ss.str();
+  writer.end_object();
+  return writer.get_buffer();
 }
 } // namespace tyr
 } // namespace valhalla

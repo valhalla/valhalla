@@ -2,8 +2,7 @@
 #define VALHALLA_MJOLNIR_OSMLINGUISTIC_H
 
 #include <cstdint>
-
-#include <valhalla/baldr/graphconstants.h>
+#include <cstring>
 
 namespace valhalla {
 namespace mjolnir {

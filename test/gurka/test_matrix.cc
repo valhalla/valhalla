@@ -1,7 +1,10 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "midgard/encoded.h"
+#include "proto/api.pb.h"
 #include "test.h"
-#include <valhalla/midgard/encoded.h>
-#include <valhalla/thor/matrixalgorithm.h>
+#include "valhalla/proto_conversions.h"
+#include "valhalla/worker.h"
 
 #include <gtest/gtest.h>
 
@@ -345,7 +348,7 @@ TEST(StandAlone, CostMatrixDeadends) {
   )";
   // clang-format off
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}}, 
+      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}},
       {"BC", {{"highway", "residential"}}},
       {"CD", {{"highway", "residential"}}},
       {"BE", {{"highway", "residential"}}},
@@ -408,7 +411,7 @@ TEST(StandAlone, CostMatrixShapes) {
   )";
   // clang-format off
   const gurka::ways ways = {
-      {"ABCDE", {{"highway", "residential"}}}, 
+      {"ABCDE", {{"highway", "residential"}}},
       {"EFGHIJK", {{"highway", "residential"}}},
       {"KL", {{"highway", "residential"}}},
   };
@@ -671,7 +674,10 @@ TEST_F(DateTimeTest, NoTimeZone) {
   }
 }
 
-TEST(StandAlone, MatrixSecondPass) {
+// Parameterize check_reverse_connection
+class TestConnectionCheck : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(TestConnectionCheck, MatrixSecondPass) {
   // from no-thru to no-thru should trigger a second pass
   // JL has a forward destination-only,
   //   so K -> I also triggers second pass (see oneway at HK), but I -> K doesn't (no oneway)
@@ -693,7 +699,8 @@ TEST(StandAlone, MatrixSecondPass) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
   const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_second_pass",
-                                     {{"thor.costmatrix.allow_second_pass", "1"}});
+                                     {{"thor.costmatrix.allow_second_pass", "1"},
+                                      {"thor.costmatrix.check_reverse_connection", GetParam()}});
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
   // Make sure the relevant edges are actually built as no-thru
@@ -731,7 +738,7 @@ TEST(StandAlone, MatrixSecondPass) {
   }
 }
 
-TEST(StandAlone, CostMatrixTrivialRoutes) {
+TEST_P(TestConnectionCheck, CostMatrixTrivialRoutes) {
   const std::string ascii_map = R"(
     A---B--2->-1--C---D
         |         |
@@ -746,7 +753,8 @@ TEST(StandAlone, CostMatrixTrivialRoutes) {
   };
   auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map =
-      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_trivial");
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_trivial",
+                        {{"thor.costmatrix.check_reverse_connection", GetParam()}});
 
   std::unordered_map<std::string, std::string> options = {{"/shape_format", "polyline6"}};
 
@@ -795,14 +803,14 @@ TEST(StandAlone, CostMatrixTrivialRoutes) {
   }
 }
 
-TEST(StandAlone, HGVNoAccessPenalty) {
+TEST_P(TestConnectionCheck, HGVNoAccessPenalty) {
   // if hgv_no_penalty is on we should still respect the maxweight restriction on CD
   // so we should take the next-best hgv=no edge with JK
   const std::string ascii_map = R"(
     A-1-------B----C----D----E--2-------F
                    |    |
                    J----K
-                   |    |             
+                   |    |
                    |    |
                    L----M
            )";
@@ -821,7 +829,8 @@ TEST(StandAlone, HGVNoAccessPenalty) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hgv_no_access_penalty",
-                                     {{"service_limits.max_timedep_distance_matrix", "50000"}});
+                                     {{"service_limits.max_timedep_distance_matrix", "50000"},
+                                      {"thor.costmatrix.check_reverse_connection", GetParam()}});
 
   std::unordered_map<std::string, std::string> cost_matrix =
       {{"/costing_options/truck/hgv_no_access_penalty", "2000"},
@@ -864,17 +873,22 @@ TEST(StandAlone, HGVNoAccessPenalty) {
   }
 }
 
-TEST(StandAlone, VerboseResponse) {
+TEST_P(TestConnectionCheck, VerboseResponse) {
 
   const std::string ascii_map = R"(
     A-1-------B----C----D----E--2-------F
                    |    |
-                   J----K
-                   |    |             
-                   |    |             
-                   3    4             
-                   |    |
-                   L----M
+                   J----K--5------N
+                   |    |         \
+                   |    |          \
+                   3    4           6
+                   |    |            \
+                   L----M             \
+                                       O
+                                       |
+                                       7
+                                       |
+                                       P
            )";
 
   const gurka::ways ways = {
@@ -882,15 +896,16 @@ TEST(StandAlone, VerboseResponse) {
       {"CD", {{"highway", "residential"}}}, {"DE", {{"highway", "residential"}}},
       {"FE", {{"highway", "residential"}}}, {"CJ", {{"highway", "residential"}}},
       {"JK", {{"highway", "residential"}}}, {"JLMK", {{"highway", "residential"}}},
-      {"KD", {{"highway", "residential"}}},
+      {"KD", {{"highway", "residential"}}}, {"KNOP", {{"highway", "residential"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_verbose_response",
-                                     {{"service_limits.max_timedep_distance_matrix", "50000"}});
-  rapidjson::Document res_doc;
-  std::string res;
+                                     {{"service_limits.max_timedep_distance_matrix", "50000"},
+                                      {"thor.costmatrix.check_reverse_connection", GetParam()}});
   {
+    rapidjson::Document res_doc;
+    std::string res;
     auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1", "2", "3", "4"},
                                 {"1", "2", "3", "4"}, "auto", {{"/prioritize_bidirectional", "1"}},
                                 nullptr, &res);
@@ -962,6 +977,94 @@ TEST(StandAlone, VerboseResponse) {
                   .GetDouble(),
               180);
   }
+
+  // check heading at long and winding edges
+  {
+    rapidjson::Document res_doc;
+    std::string res;
+    auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1", "5", "6", "7"},
+                                {"1", "5", "6", "7"}, "auto",
+                                {{"/prioritize_bidirectional", "1"}, {"/shape_format", "polyline6"}},
+                                nullptr, &res);
+
+    res_doc.Parse(res.c_str());
+
+    // sanity check
+    EXPECT_EQ(api.matrix().algorithm(), Matrix::CostMatrix);
+
+    for (size_t i = 0; i < 4; ++i) {
+      for (size_t j = 0; j < 4; ++j) {
+        bool key_should_exist = true;
+        if (i == j)
+          key_should_exist = false;
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "begin_heading"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "end_heading"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "begin_lat"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "begin_lon"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "end_lat"),
+                  key_should_exist);
+        EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject().HasMember(
+                      "end_lon"),
+                  key_should_exist);
+      }
+    }
+    size_t a, b;
+    auto get_shape = [&res_doc](size_t i, size_t j) {
+      return res_doc["sources_to_targets"]
+          .GetArray()[i]
+          .GetArray()[j]
+          .GetObject()["shape"]
+          .GetString();
+    };
+    auto get_heading = [&res_doc](size_t i, size_t j, const char* which) {
+      return res_doc["sources_to_targets"].GetArray()[i].GetArray()[j].GetObject()[which].GetDouble();
+    };
+
+    // 1 -> 5
+    a = 0;
+    b = 1;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 90) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 90) << get_shape(a, b);
+
+    // 5 -> 1
+    a = 1;
+    b = 0;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 270) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 270) << get_shape(a, b);
+
+    // 1 -> 6
+    a = 0;
+    b = 2;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 90) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 140.1) << get_shape(a, b);
+
+    // 6 -> 1
+    a = 2;
+    b = 0;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 320.1) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 270) << get_shape(a, b);
+
+    // 1 -> 7
+    a = 0;
+    b = 3;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 90) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 180) << get_shape(a, b);
+
+    // 7 -> 1
+    a = 3;
+    b = 0;
+    EXPECT_EQ(get_heading(a, b, "begin_heading"), 0) << get_shape(a, b);
+    EXPECT_EQ(get_heading(a, b, "end_heading"), 270) << get_shape(a, b);
+  }
 }
 
 /************************************************************************ */
@@ -1014,7 +1117,7 @@ void check_trivial_matrix(const gurka::map& map, gurka::nodelayout& layout) {
   }
 }
 
-TEST(StandAlone, MultipleTrivialRoutes) {
+TEST_P(TestConnectionCheck, MultipleTrivialRoutes) {
   const std::string ascii_map = R"(
     B-------------C
     |             |
@@ -1029,10 +1132,78 @@ TEST(StandAlone, MultipleTrivialRoutes) {
       {"DA", {{"highway", "residential"}, {"oneway", "yes"}}},
   };
   auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map =
-      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_fail", {});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_fail",
+                               {{"thor.costmatrix.check_reverse_connection", GetParam()}});
   check_trivial_matrix(map, layout);
   // ensure consistent behavior regardless of whether we do the reverse connection check
   map.config.put("thor.costmatrix_check_reverse_connection", "1");
   check_trivial_matrix(map, layout);
+}
+
+INSTANTIATE_TEST_SUITE_P(connection_check, TestConnectionCheck, ::testing::Values("1", "0"));
+
+TEST(StandAlone, TrivialKeepExpanding) {
+  // target candidates includes AB but should be penalized
+  // so that path 1B, BC, Cx has less cost than the trivial one
+  const std::string ascii_map = R"(
+    A---1-----------B
+                    |
+                    |
+                2   |
+    D-----------x---C
+  )";
+  // clang-format off
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+  };
+  // clang-format on
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 25);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_keep_expanding",
+                               {{"thor.costmatrix.check_reverse_connection", "1"}});
+
+  auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto",
+                                 {{"/targets/0/radius", "80"}}, nullptr);
+
+  EXPECT_EQ(result.matrix().distances(0), 500);
+}
+
+/**
+ * inbound source edges should be kept in case of
+ * node snapping, as long as there are targets snapped
+ * to the same node (and vice versa)
+ */
+TEST(StandAlone, TrivialCorrelation) {
+  const std::string ascii_map = R"(
+    2
+    A------B------------C-----D
+    1                   |     |
+                        |     |
+                        F-----E
+  )";
+  // clang-format off
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FC", {{"highway", "residential"}}},
+  };
+  // clang-format on
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 2);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_trivial_correlation",
+                               {{"thor.costmatrix.check_reverse_connection", "1"}});
+
+  auto result =
+      gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", {}, nullptr);
+
+  EXPECT_EQ(result.matrix().distances(0), 0);
 }

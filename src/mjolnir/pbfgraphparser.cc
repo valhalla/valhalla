@@ -1,26 +1,24 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "baldr/complexrestriction.h"
-#include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
 #include "graph_lua_proc.h"
-#include "midgard/aabb2.h"
 #include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/polyline2.h"
 #include "midgard/sequence.h"
-#include "midgard/tiles.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
 #include "mjolnir/osmlinguistic.h"
+#include "mjolnir/osmnodelinguistic.h"
+#include "mjolnir/osmway.h"
 #include "mjolnir/timeparsing.h"
 #include "mjolnir/util.h"
 #include "proto/common.pb.h"
 #include "scoped_timer.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/range/algorithm/remove_if.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
+
 #include <thread>
 #include <utility>
 
@@ -29,6 +27,17 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
+
+// Limits number of Lua workers in `PBFGraphParser::ParseWays()`.
+// Increase this number if downstream processing can handle more.
+constexpr size_t kMaxLuaConcurrency = 8;
+// Number of OSM pbf buffers per Lua worker in `PBFGraphParser::ParseWays()`.
+constexpr size_t kOsmBuffersPerLua = 4;
+// Number of processed OSM pbf buffers (buffer has many ways) per Lua worker. That one should be
+// reasonably big because `PBFGraphParser::ParseWays()` keeps original order of OSM ways and this
+// buffer allows Lua workers not to stuck if next needed buffer takes more time than others.
+constexpr size_t kWaysChunksPerLua = 8;
+constexpr char kExceptDestinationRestrictionFlag = '~';
 
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
@@ -42,6 +51,16 @@ int get_number(const std::string& tag, const std::string& value) { // NOLINT
     LOG_DEBUG("out_of_range exception thrown for " + tag + " value: " + value);
   }
   return num;
+}
+
+void set_access_restriction_value(OSMAccessRestriction& restriction,
+                                  const std::string& value,
+                                  const std::function<uint64_t(const std::string&)>& value_setter) {
+  // we appended a tilde in graph.lua in case of a destination exemption
+  auto pos = value.find(kExceptDestinationRestrictionFlag);
+  bool found_tilde = pos != std::string::npos;
+  restriction.set_value(value_setter(found_tilde ? value.substr(0, pos) : value));
+  restriction.set_except_destination(found_tilde);
 }
 
 // This class helps to set "culdesac" labels to loop roads correctly.
@@ -118,7 +137,7 @@ private:
 
   // Sets "culdesac" labels to loop roads and saves ways.
   void fix(sequence<OSMWay>& osm_way_seq) {
-    size_t number_of_culdesac = 0;
+    [[maybe_unused]] size_t number_of_culdesac = 0;
     for (const auto& loop_way_id_to_meta : loops_meta_) {
       const auto& meta = loop_way_id_to_meta.second;
       if (meta.is_culdesac()) {
@@ -164,7 +183,6 @@ struct graph_parser {
     use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
 
     empty_node_tags_ = lua_.Transform(OSMType::kNode, 0, {});
-    empty_way_tags_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_tags_ = lua_.Transform(OSMType::kRelation, 0, {});
 
     tag_handlers_["driving_side"] = [this]() {
@@ -984,145 +1002,165 @@ struct graph_parser {
     tag_handlers_["hazmat"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kHazmat);
-      restriction.set_value(tag_.second == "true" ? true : false);
       restriction.set_modes(kTruckAccess);
+      set_access_restriction_value(restriction, tag_.second, [](const std::string& val) {
+        return val == "true" ? true : false;
+      });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["hazmat_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kHazmat);
-      restriction.set_value(tag_.second == "true" ? true : false);
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
+      set_access_restriction_value(restriction, tag_.second, [](const std::string& val) {
+        return val == "true" ? true : false;
+      });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["hazmat_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kHazmat);
-      restriction.set_value(tag_.second == "true" ? true : false);
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
+      set_access_restriction_value(restriction, tag_.second, [](const std::string& val) {
+        return val == "true" ? true : false;
+      });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxheight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxHeight);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxheight_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxHeight);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxheight_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxHeight);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxwidth"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWidth);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxwidth_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWidth);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxwidth_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWidth);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess | kAutoAccess | kHOVAccess | kTaxiAccess | kBusAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxlength_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight_forward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kForward);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxweight_backward"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
       restriction.set_direction(AccessRestrictionDirection::kBackward);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxaxleload"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxAxleLoad);
-      restriction.set_value(std::stof(tag_.second) * 100);
       restriction.set_modes(kTruckAccess);
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val) * 100; });
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
     tag_handlers_["maxaxles"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxAxles);
-      restriction.set_value(std::stoul(tag_.second));
+      set_access_restriction_value(restriction, tag_.second,
+                                   [](const std::string& val) { return std::stof(val); });
       restriction.set_modes(kTruckAccess);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
@@ -1986,10 +2024,10 @@ struct graph_parser {
 
     std::string buffer;
     bss_info.SerializeToString(&buffer);
-    n.set_bss_info_index(osmdata_.node_names.index(buffer));
+    const uint32_t bss_info_index = osmdata_.node_names.index(buffer);
     ++osmdata_.node_name_count;
 
-    bss_nodes_->push_back(n);
+    bss_nodes_->push_back({n, bss_info_index});
   }
 
   void node(const osmium::Node& node) {
@@ -2295,16 +2333,18 @@ struct graph_parser {
     osmdata_.edge_count -= intersection; // more accurate but undercounts by skipping lone edges
   }
 
-  void way(const osmium::Way& way) {
-    changeset(way.changeset());
+  // Intermediate structure that represents transformed (by Lua) osm way
+  struct Way {
+    uint64_t osmid;
+    std::vector<uint64_t> nodes;
+    Tags tags;
+    uint64_t changeset_id;
+  };
 
-    osmid_ = static_cast<uint64_t>(way.id());
-    // unsorted extracts are just plain nasty, so they can bugger off!
-    if (osmid_ < last_way_) {
-      throw std::runtime_error("Detected unsorted input data");
-    }
-    last_way_ = osmid_;
-
+  static void transform_way(const osmium::Way& way,
+                            LuaTagTransform& lua,
+                            const Tags& empty_way_tags,
+                            std::vector<Way>& transformed) {
     std::vector<uint64_t> nodes;
     nodes.reserve(way.nodes().size());
     for (const auto& node : way.nodes()) {
@@ -2331,11 +2371,28 @@ struct graph_parser {
 
     // Transform tags. If no results that means the way does not have tags
     // suitable for use in routing.
-    const Tags tags =
-        way.tags().empty() ? empty_way_tags_ : lua_.Transform(OSMType::kWay, osmid_, way.tags());
+    Tags tags =
+        way.tags().empty() ? empty_way_tags : lua.Transform(OSMType::kWay, way.id(), way.tags());
     if (tags.empty()) {
       return;
     }
+
+    transformed.emplace_back(
+        Way{static_cast<uint64_t>(way.id()), std::move(nodes), std::move(tags), way.changeset()});
+  }
+
+  void way(const Way& way) {
+    changeset(way.changeset_id);
+
+    osmid_ = way.osmid;
+    // unsorted extracts are just plain nasty, so they can bugger off!
+    if (osmid_ < last_way_) {
+      throw std::runtime_error("Detected unsorted input data");
+    }
+    last_way_ = osmid_;
+
+    const auto& nodes = way.nodes;
+    const auto& tags = way.tags;
 
     try {
       // Throw away use if include_driveways_ is false
@@ -4215,7 +4272,7 @@ struct graph_parser {
              sequence<OSMAccess>* access,
              sequence<OSMRestriction>* complex_restrictions_from,
              sequence<OSMRestriction>* complex_restrictions_to,
-             sequence<OSMNode>* bss_nodes,
+             sequence<OSMBSSNode>* bss_nodes,
              sequence<OSMNodeLinguistic>* node_linguistics) {
     // reset the pointers (either null them out or set them to something valid)
     ways_.reset(ways);
@@ -4401,7 +4458,7 @@ struct graph_parser {
     }
   }
 
-  void ProcessNameTag(const robin_hood::pair<std::string, std::string>& tag,
+  void ProcessNameTag(const std::pair<std::string, std::string>& tag,
                       std::string& name_w_lang,
                       std::string& language,
                       bool is_lang_pronunciation = false) {
@@ -4442,7 +4499,7 @@ struct graph_parser {
     std::vector<std::string> tokens = GetTagTokens(t, ':');
     if (tokens.size() == 2) {
 
-      std::string lang = tokens.at(1);
+      const std::string& lang = tokens.at(1);
       if (stringLanguage(lang) != Language::kNone &&
           !tag.second.empty()) // name:en, name:ar, name:fr, etc
       {
@@ -4463,7 +4520,7 @@ struct graph_parser {
     }
   }
 
-  void ProcessLeftRightNameTag(const robin_hood::pair<std::string, std::string>& tag,
+  void ProcessLeftRightNameTag(const std::pair<std::string, std::string>& tag,
                                std::string& name_left_right_w_lang,
                                std::string& lang_left_right,
                                bool is_lang_pronunciation = false) {
@@ -4604,7 +4661,7 @@ struct graph_parser {
     name_lr_fb_w_lang_index = get_pronunciation_index(t, alpha);
     lang_lr_fb_index = get_lang_index(t, alpha);
 
-    const std::string name_lr_fb_w_lang = osmdata_.name_offset_map.name(name_lr_fb_w_lang_index);
+    const std::string& name_lr_fb_w_lang = osmdata_.name_offset_map.name(name_lr_fb_w_lang_index);
     std::string name = name_lr_fb;
     std::string lang = osmdata_.name_offset_map.name(lang_lr_fb_index);
 
@@ -4844,7 +4901,7 @@ struct graph_parser {
   std::unordered_map<std::string, TagHandler> tag_handlers_;
   // Tag handlers capture these fields
   OSMWay way_;
-  robin_hood::pair<std::string, std::string> tag_;
+  std::pair<std::string, std::string> tag_;
   uint64_t osmid_;
 
   const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
@@ -5007,7 +5064,7 @@ struct graph_parser {
   // this lets us only have to iterate over the whole set once
   size_t current_way_node_index_;
   uint64_t last_node_, last_way_, last_relation_;
-  robin_hood::unordered_map<uint64_t, size_t> loop_nodes_;
+  ankerl::unordered_dense::map<uint64_t, size_t> loop_nodes_;
 
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;
@@ -5018,7 +5075,7 @@ struct graph_parser {
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_to_;
 
   // bss nodes
-  std::unique_ptr<sequence<OSMNode>> bss_nodes_;
+  std::unique_ptr<sequence<OSMBSSNode>> bss_nodes_;
 
   // node linguistics
   std::unique_ptr<sequence<OSMNodeLinguistic>> node_linguistics_;
@@ -5028,7 +5085,6 @@ struct graph_parser {
 
   // empty objects initialized with defaults to use when no tags are present on objects
   Tags empty_node_tags_;
-  Tags empty_way_tags_;
   Tags empty_relation_tags_;
 
   uint32_t get_pronunciation_index(const uint8_t type, const uint8_t alpha) {
@@ -5058,17 +5114,24 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                   const std::string& ways_file,
                                   const std::string& way_nodes_file,
                                   const std::string& access_file) {
-  // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
-  // option 2: synchronize around adding things to a single osmdata. will have to test to see
-  // which is the least expensive (memory and speed). leaning towards option 2
-  //  unsigned int threads =
-  //      std::max(static_cast<unsigned int>(1),
-  //               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
-
   // Create OSM data. Set the member pointer so that the parsing callback methods can use it.
   SCOPED_TIMER();
   OSMData osmdata{};
   graph_parser parser(pt, osmdata);
+  const auto lua_script = graph_parser::get_lua(pt);
+
+  // Asymmetric multithreading (in data flow order):
+  // - osmium::thread::pool for parsing PBF file
+  // - 1 thread to feed the lua transform pool and guarantee the order of ways
+  // - `lua_concurrency` threads for lua transform, no more than `kMaxLuaConcurrency`
+  // - current thread for working with OSMData in `graph_parser::way()`
+  // None of them will saturate the full CPU core, so total count can be bigger than
+  // `std::thread::hardware_concurrency()` or "concurrency" parameter.
+  const size_t concurrency =
+      std::max(static_cast<size_t>(1),
+               pt.get<size_t>("concurrency", std::thread::hardware_concurrency()));
+  const size_t lua_concurrency =
+      std::clamp(concurrency - 1, static_cast<size_t>(1), kMaxLuaConcurrency);
 
   LOG_INFO("Parsing files for ways: " + boost::algorithm::join(input_files, ", "));
 
@@ -5080,16 +5143,78 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
   for (auto& file : input_files) {
     parser.current_way_node_index_ = parser.last_node_ = parser.last_way_ = parser.last_relation_ = 0;
 
-    osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
-    while (const osmium::memory::Buffer buffer = reader.read()) {
-      for (const osmium::memory::Item& item : buffer) {
-        parser.way(static_cast<const osmium::Way&>(item));
+    // These two queues maintains the order of processed ways by holding futures that correspond
+    // to the promises sent to the Lua workers. Lua workers take that promises and corresponding
+    // osmium buffers, process them and set the value of the promise.
+    using Ways = std::vector<graph_parser::Way>;
+    osmium::thread::Queue<std::future<Ways>> ways_queue(lua_concurrency * kWaysChunksPerLua);
+    osmium::thread::Queue<std::pair<osmium::memory::Buffer, std::promise<Ways>>> buffer_queue(
+        lua_concurrency * kOsmBuffersPerLua);
+
+    // Single reader thread that guarantees the order of ways via future/promise magic.
+    std::thread reader_thread([&file, &ways_queue, &buffer_queue, lua_concurrency] {
+      osmium::io::Reader reader(file, osmium::osm_entity_bits::way);
+      while (osmium::memory::Buffer buffer = reader.read()) {
+        std::promise<Ways> promise;
+        ways_queue.push(promise.get_future()); // Blocks if queue is full.
+        buffer_queue.push(std::make_pair(std::move(buffer), std::move(promise)));
+      }
+
+      // Send stop signals to all threads.
+      ways_queue.push({});
+      for (size_t i = 0; i < lua_concurrency; ++i) {
+        buffer_queue.push({});
+      }
+
+      reader.close(); // Explicit close to get an exception in case of an error.
+    });
+
+    // Thread pool for Lua processing.
+    std::vector<std::thread> lua_pool;
+    lua_pool.reserve(lua_concurrency);
+    for (size_t i = 0; i < lua_concurrency; ++i) {
+      lua_pool.emplace_back(std::thread([&lua_script, &buffer_queue] {
+        LuaTagTransform lua(lua_script);
+        const Tags empty_way_tags = lua.Transform(OSMType::kWay, 0, {});
+
+        while (true) {
+          std::pair<osmium::memory::Buffer, std::promise<Ways>> buffer_promise;
+          buffer_queue.wait_and_pop(buffer_promise);
+          if (!buffer_promise.first) {
+            break; // End of the queue
+          }
+
+          Ways transformed;
+          for (const osmium::memory::Item& item : buffer_promise.first) {
+            graph_parser::transform_way(static_cast<const osmium::Way&>(item), lua, empty_way_tags,
+                                        transformed);
+          }
+          buffer_promise.second.set_value(std::move(transformed));
+        }
+      }));
+    }
+
+    while (true) {
+      std::future<Ways> future;
+      ways_queue.wait_and_pop(future);
+      if (!future.valid()) {
+        break; // End of the queue
+      }
+
+      Ways transformed = future.get();
+      for (const auto& way : transformed) {
+        parser.way(way);
       }
     }
-    reader.close(); // Explicit close to get an exception in case of an error.
+
+    reader_thread.join();
+    for (auto& t : lua_pool) {
+      t.join();
+    }
   }
 
   // Clarifies types of loop roads and saves fixed ways.
+  LOG_INFO("Clarifying and fixing cul-de-sacs...");
   parser.culdesac_processor_.clarify_and_fix(*parser.way_nodes_, *parser.ways_);
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
@@ -5206,7 +5331,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
           0;
       // we send a null way_nodes file so that only the bike share stations are parsed
       parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
-                   new sequence<OSMNode>(bss_nodes_file, create), nullptr);
+                   new sequence<OSMBSSNode>(bss_nodes_file, create), nullptr);
       create = false;
 
       osmium::io::Reader reader(file, osmium::osm_entity_bits::node);
@@ -5219,7 +5344,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
     }
     // Since the sequence must be flushed before reading it...
     parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
-    LOG_INFO("Found " + std::to_string(sequence<OSMNode>{bss_nodes_file, false}.size()) +
+    LOG_INFO("Found " + std::to_string(sequence<OSMBSSNode>{bss_nodes_file, false}.size()) +
              " bss nodes...");
   }
   parser.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);

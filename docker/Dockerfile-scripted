@@ -1,0 +1,68 @@
+# This is based on previous work in https://github.com/nilsnolde/docker-valhalla
+
+# Take the plain valhalla docker image,
+# remove a few superfluous things and
+# create a new runner image from ubuntu:24.04
+# with the previous runner's artifacts
+ARG VALHALLA_BUILDER_IMAGE=ghcr.io/valhalla/valhalla:latest
+FROM $VALHALLA_BUILDER_IMAGE AS builder
+LABEL org.opencontainers.image.authors="nilsnolde+github@proton.me"
+
+# remove some stuff from the original image
+RUN cd /usr/local/bin && \
+  preserve="valhalla_service valhalla_build_tiles valhalla_build_config valhalla_build_admins valhalla_build_timezones valhalla_build_elevation valhalla_ways_to_edges valhalla_build_extract valhalla_export_edges valhalla_add_predicted_traffic valhalla_ingest_transit valhalla_convert_transit valhalla_add_landmarks valhalla_build_landmarks" && \
+  mv $preserve .. && \
+  for f in valhalla*; do rm $f; done && \
+  cd .. && mv $preserve ./bin
+
+# sync this with the other Dockerfile
+# create a final image with minimal footprint
+FROM ubuntu:24.04 AS runner_base
+LABEL org.opencontainers.image.authors="nilsnolde+github@proton.me"
+
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"
+ENV LD_LIBRARY_PATH="/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32"
+
+# install the non-dev dependencies
+RUN apt-get update > /dev/null && \
+  export DEBIAN_FRONTEND=noninteractive && \
+  apt-get install -y libluajit-5.1-2 libgdal34 \
+  libzmq5 libczmq4 spatialite-bin libprotobuf-lite32 sudo locales \
+  libsqlite3-0 libsqlite3-mod-spatialite libcurl4 \
+  python3.12-minimal python3-requests python3-shapely python-is-python3 \
+  curl unzip moreutils jq spatialite-bin > /dev/null && \
+  rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/local /usr/local
+# python minor version will change with newer ubuntu releases
+COPY --from=builder /usr/local/lib/python3.12/dist-packages/valhalla /usr/local/lib/python3.12/dist-packages/
+COPY docker/scripts/. /valhalla/scripts
+
+# default expected env vars
+ENV use_tiles_ignore_pbf=True
+ENV build_tar=True
+ENV serve_tiles=True
+ENV update_existing_config=True
+ENV force_rebuild=False
+ENV path_extension=""
+ENV build_admins=True
+ENV build_time_zones=True
+ENV build_elevation=False
+ENV build_transit=False
+ENV use_default_speeds_config=True
+ENV traffic_name=""
+ENV default_speeds_config_url="https://raw.githubusercontent.com/OpenStreetMapSpeeds/schema/master/default_speeds.json"
+
+# Smoke tests
+RUN python -c "import valhalla, sys; print(sys.version, valhalla)" \
+  && valhalla_build_config | jq type \
+  && cat /usr/local/valhalla_version \
+  && valhalla_build_tiles -v \
+  && ls -la /usr/local/bin/valhalla*
+
+WORKDIR /custom_files
+
+# Expose the necessary port
+EXPOSE 8002
+ENTRYPOINT ["/valhalla/scripts/docker-entrypoint.sh"]
+CMD ["build_tiles"]

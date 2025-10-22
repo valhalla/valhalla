@@ -1,4 +1,3 @@
-
 #include "mjolnir/pbfadminparser.h"
 #include "admin_lua_proc.h"
 #include "idtable.h"
@@ -7,9 +6,10 @@
 #include "mjolnir/osmadmindata.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
-
 #include <osmium/osm/entity_bits.hpp>
+
 #include <string>
 #include <utility>
 

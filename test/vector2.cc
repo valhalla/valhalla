@@ -1,7 +1,7 @@
 #include "midgard/vector2.h"
 #include "midgard/point2.h"
 
-#include "test.h"
+#include <gtest/gtest.h>
 
 using namespace std;
 using namespace valhalla::midgard;

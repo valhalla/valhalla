@@ -1,7 +1,10 @@
 #include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
 #include "odin/util.h"
-#include "test.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <gtest/gtest.h>
+
 #include <locale>
 #include <regex>
 #include <set>

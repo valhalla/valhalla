@@ -1,12 +1,12 @@
-#include "test.h"
-
+#include "mjolnir/graphtilebuilder.h"
 #include "baldr/graphid.h"
 #include "baldr/tilehierarchy.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
-#include "mjolnir/graphtilebuilder.h"
+
+#include <gtest/gtest.h>
+
 #include <fstream>
-#include <streambuf>
 #include <string>
 #include <vector>
 
@@ -15,6 +15,8 @@
 #endif
 
 using namespace std;
+using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 namespace {

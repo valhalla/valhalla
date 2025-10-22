@@ -3,7 +3,6 @@
 #include "baldr/tilehierarchy.h"
 #include "loki/reach.h"
 #include "midgard/distanceapproximator.h"
-#include "midgard/linesegment2.h"
 #include "midgard/util.h"
 
 #include <algorithm>
@@ -59,7 +58,7 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
   // nothing to filter if it is a minor road
   // since motorway = 0 and service = 7, higher number means smaller road class
   uint32_t road_class = static_cast<uint32_t>(opp->classification());
-  if (road_class > location.street_side_cutoff_)
+  if (road_class > static_cast<uint32_t>(location.street_side_cutoff_))
     return false;
 
   // need the driving side for this edge
@@ -273,7 +272,7 @@ struct projector_wrapper {
 struct bin_handler_t {
   std::vector<projector_wrapper> pps;
   valhalla::baldr::GraphReader& reader;
-  std::shared_ptr<DynamicCost> costing;
+  cost_ptr_t costing;
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
   std::unordered_set<uint64_t> correlated_edges;
@@ -285,7 +284,7 @@ struct bin_handler_t {
 
   bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
                 valhalla::baldr::GraphReader& reader,
-                const std::shared_ptr<DynamicCost>& costing)
+                const cost_ptr_t& costing)
       : reader(reader), costing(costing) {
     // get the unique set of input locations and the max reachability of them all
     std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
@@ -447,17 +446,16 @@ struct bin_handler_t {
                                  : candidate.sq_distance,
                              sq_tolerance, sq_max_distance);
       auto reach = get_reach(candidate.edge_id, candidate.edge);
-      PathLocation::PathEdge path_edge{
-          candidate.edge_id,
-          length_ratio,
-          candidate.point,
-          distance,
-          candidate.bounding_circle,
-          side,
-          reach.outbound,
-          reach.inbound,
-          angle,
-      };
+      PathLocation::PathEdge path_edge{candidate.edge_id,
+                                       length_ratio,
+                                       candidate.point,
+                                       distance,
+                                       candidate.bounding_circle,
+                                       side,
+                                       reach.outbound,
+                                       reach.inbound,
+                                       angle,
+                                       false};
       // correlate the edge we found if its not filtered out
       bool hard_filtered =
           search_filter(candidate.edge, *costing, candidate.tile, location.search_filter_);
@@ -484,7 +482,8 @@ struct bin_handler_t {
                                                flip_side(side),
                                                reach.outbound,
                                                reach.inbound,
-                                               opp_angle};
+                                               opp_angle,
+                                               false};
         // angle is 180 degrees opposite of the one above
         if (side_filter(other_path_edge, location, reader) || heading_filter(location, opp_angle) ||
             layer_filter(location, layer)) {
@@ -939,7 +938,7 @@ namespace loki {
 std::unordered_map<valhalla::baldr::Location, PathLocation>
 Search(const std::vector<valhalla::baldr::Location>& locations,
        GraphReader& reader,
-       const std::shared_ptr<DynamicCost>& costing) {
+       const cost_ptr_t& costing) {
   // we cannot continue without costing
   if (!costing)
     throw std::runtime_error("No costing was provided for edge candidate search");

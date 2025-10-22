@@ -1,0 +1,67 @@
+name: Clear S3 cache (master on workflow_dispatch)
+
+on:
+  workflow_dispatch:
+  schedule:
+    # every first of the month
+    - cron: "0 0 1 * *"
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+
+jobs:
+  clear_s3_cache:
+    name: Clear S3 cache on PR merge/close
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Install and setup mc client
+        run: |
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          ./mc --help
+          ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+
+      - name: Remove branch's cache objects
+        shell: bash
+        run: |
+          # CAREFUL: only bash, not zsh compatible
+          all_objects=$(./mc ls --quiet --recursive hetzner/gha-cache | awk '{ print $6 }')
+          filtered=""
+          for line in $all_objects; do
+            # will match (any_char)<branch_name>(-<any_number>)/cache.tzst, anything inside () being optional
+            if [[ "$line" =~ ^.*${{ github.head_ref }}-?[0-9]*?\/cache\.tzst$ ]]; then
+              filtered="$line $filtered"
+            fi
+          done
+
+          for entry in $filtered; do
+            ./mc rm --recursive --force hetzner/gha-cache/${entry} || echo "couldn't find $entry"
+          done
+  clear_ccache:
+    name: Clear ccache on branch
+    runs-on: ubuntu-latest
+    if: ${{  github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Install and setup mc client
+        run: |
+          wget https://dl.min.io/client/mc/release/linux-amd64/mc
+          chmod +x mc
+          ./mc --help
+          ./mc alias set hetzner https://hel1.your-objectstorage.com ${{ secrets.HETZNER_S3_ACCESS_KEY }} ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+
+      - name: Delete master caches
+        run: |
+          set -euo pipefail
+          # get branch
+          if [[ ${{  github.event_name == 'schedule'  }} ]]; then
+            branch="master"
+          else
+            branch="${{ github.ref_name }}"
+          fi
+          mc find hetzner/gha-cache --path "ccache-debug-linux-x86_64-${branch}*" --exec "mc rm --force {}"
+          mc find hetzner/gha-cache --path "ccache-release-linux-x86_64-${branch}*" --exec "mc rm --force {}"
+          mc find hetzner/gha-cache --path "ccache-release-linux-aarch64-${branch}*" --exec "mc rm --force {}"
+          mc find hetzner/gha-cache --path "ccache-osx-${branch}*" --exec "mc rm --force {}"

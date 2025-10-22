@@ -1,3 +1,8 @@
+#include "baldr/attributes_controller.h"
+#include "meili/match_result.h"
+#include "thor/map_matcher.h"
+#include "thor/route_matcher.h"
+#include "thor/triplegbuilder.h"
 #include "thor/worker.h"
 
 #include <algorithm>
@@ -5,14 +10,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "baldr/attributes_controller.h"
-#include "meili/map_matcher.h"
-#include "meili/match_result.h"
-#include "midgard/util.h"
-#include "thor/map_matcher.h"
-#include "thor/route_matcher.h"
-#include "thor/triplegbuilder.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -32,11 +29,8 @@ struct MapMatch {
   int edge_index = -1;
 };
 
-// <Confidence score, raw score, match results, trip path> tuple indexes
-constexpr size_t kConfidenceScoreIndex = 0;
+// raw score tuple index
 constexpr size_t kRawScoreIndex = 1;
-constexpr size_t kMatchResultsIndex = 2;
-constexpr size_t kTripLegIndex = 3;
 
 void add_path_edge(valhalla::Location* l,
                    const GraphId& edge_id,
@@ -123,6 +117,10 @@ void thor_worker_t::trace_route(Api& request) {
       }
       // clang-format on
       break;
+    // Handle protobuf sentinel values to avoid compiler warnings
+    case ShapeMatch_INT_MIN_SENTINEL_DO_NOT_USE_:
+    case ShapeMatch_INT_MAX_SENTINEL_DO_NOT_USE_:
+      throw valhalla_exception_t{400, "Invalid shape_match value"};
   }
 }
 
@@ -202,7 +200,7 @@ thor_worker_t::map_match(Api& request) {
     // here Note that we only support trace_route as OSRM format so best_paths == 1
     if (options.action() == Options::trace_route && options.format() == Options::osrm) {
       graph_tile_ptr tile = nullptr;
-      for (int i = 0; i < result.results.size(); ++i) {
+      for (size_t i = 0; i < result.results.size(); ++i) {
         // Get the match
         const auto& match = result.results[i];
         if (!match.edgeid.Is_Valid()) {
@@ -222,7 +220,7 @@ thor_worker_t::map_match(Api& request) {
         if (!match.HasState()) {
           continue;
         }
-        for (int j = 0;
+        for (size_t j = 0;
              j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1; ++j) {
           options.mutable_shape(i)->mutable_correlation()->mutable_edges()->Add();
         }
@@ -297,8 +295,8 @@ void thor_worker_t::build_trace(
     const auto* last_segment = path.second.back();
     const auto& last_match = match_results[last_segment->last_match_idx]; // cant use edge_index
     if (last_match.begins_discontinuity) {
-      auto found = edge_trimming[last_match.edge_index].second = {true, last_match.lnglat,
-                                                                  last_match.distance_along};
+      edge_trimming[last_match.edge_index].second = {true, last_match.lnglat,
+                                                     last_match.distance_along};
     }
   }
 
@@ -399,13 +397,15 @@ void thor_worker_t::build_route(
 
       // if we uturn onto this edge we must trim the beginning
       if (prev_segment && prev_segment->edgeid != segment->edgeid && prev_segment->target < 1.f &&
-          segment->first_match_idx > -1 && segment->first_match_idx < match_results.size()) {
+          segment->first_match_idx > -1 &&
+          static_cast<size_t>(segment->first_match_idx) < match_results.size()) {
         edge_trimming[i].first = {true, match_results[segment->first_match_idx].lnglat,
                                   segment->source};
       }
       // if we uturn off of this edge we must trim the end
       if (next_segment && segment->edgeid != next_segment->edgeid && segment->target < 1.f &&
-          segment->last_match_idx > -1 && segment->last_match_idx < match_results.size()) {
+          segment->last_match_idx > -1 &&
+          static_cast<size_t>(segment->last_match_idx) < match_results.size()) {
         edge_trimming[i].second = {true, match_results[segment->last_match_idx].lnglat,
                                    segment->target};
       }

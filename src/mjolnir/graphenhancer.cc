@@ -1,11 +1,29 @@
 #include "mjolnir/graphenhancer.h"
+#include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphreader.h"
+#include "baldr/graphtile.h"
+#include "baldr/streetnames.h"
+#include "baldr/streetnames_factory.h"
+#include "baldr/tilehierarchy.h"
+#include "midgard/aabb2.h"
+#include "midgard/constants.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/countryaccess.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/osmaccess.h"
 #include "mjolnir/util.h"
+#include "scoped_timer.h"
 #include "speed_assigner.h"
 
-#include <cinttypes>
+#include <ankerl/unordered_dense.h>
+
+#include <cstdint>
+#include <functional>
 #include <future>
 #include <limits>
 #include <list>
@@ -21,74 +39,105 @@
 #include <utility>
 #include <vector>
 
-#include <boost/format.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/io/wkt/wkt.hpp>
-
-#include "baldr/datetime.h"
-#include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphreader.h"
-#include "baldr/graphtile.h"
-#include "baldr/streetnames.h"
-#include "baldr/streetnames_factory.h"
-#include "baldr/tilehierarchy.h"
-#include "midgard/aabb2.h"
-#include "midgard/constants.h"
-#include "midgard/distanceapproximator.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "midgard/sequence.h"
-#include "midgard/util.h"
-#include "mjolnir/osmaccess.h"
-#include "scoped_timer.h"
-
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 namespace {
 
-// Geometry types for admin queries
-typedef boost::geometry::model::d2::point_xy<double> point_type;
-typedef boost::geometry::model::polygon<point_type> polygon_type;
-typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
-
 // Number of tries when determining not thru edges
 constexpr uint32_t kMaxNoThruTries = 256;
 
 // Radius (km) to use for density
 constexpr float kDensityRadius = 2.0f;
-constexpr float kDensityRadius2 = kDensityRadius * kDensityRadius;
 constexpr float kDensityLatDeg = (kDensityRadius * kMetersPerKm) / kMetersPerDegreeLat;
 
-// A little struct to hold stats information during each threads work
-struct enhancer_stats {
-  float max_density; //(km/km2)
-  uint32_t not_thru;
-  uint32_t no_country_found;
-  uint32_t internalcount;
-  uint32_t turnchannelcount;
-  uint32_t rampcount;
-  uint32_t pencilucount;
-  uint32_t density_counts[16];
-  void operator()(const enhancer_stats& other) {
-    if (max_density < other.max_density) {
-      max_density = other.max_density;
+struct DensityCellId {
+  // `cell_id` is computed by shifting coordinate values by this amount, meaning that a bigger
+  // level produces bigger cells (as fewer bits remain from coordinate).
+  // - 15: 362m x 181m cell at 60 latitude, approx 7.5k cells to cover single tile
+  // - 14: 181m x 90m cell at 60 latitude, approx 30k cells to cover single tile
+  // - 13: 90m x 45m cell at 60 latitude, approx 120k cells to cover single tile
+  static constexpr uint32_t kGridLevel = 14; // good compromise between performance and accuracy
+
+  // Cell size in degrees
+  static constexpr float kSizeDeg = static_cast<float>(1 << kGridLevel) / 1e7;
+
+  // Count number of cells required to cover the given bounding box
+  static size_t cover_count(const AABB2<PointLL>& bbox) {
+    const size_t x_cells = static_cast<size_t>(floor(bbox.Width() / kSizeDeg)) + 1;
+    const size_t y_cells = static_cast<size_t>(floor(bbox.Height() / kSizeDeg)) + 1;
+    return x_cells * y_cells;
+  }
+
+  // If lat/lon is represented by 32 bit integer and coordinates are right-shifted by `kGridLevel`
+  // to identify a cell, the minimum grid level that keeps cells globally unique is 16, as smaller
+  // levels will lead to keeping too many coordinate bits that `id_` can hold. At the same time, as
+  // density is being calculated for a single tile (0.25 deg size) and its neighbors, such global
+  // uniqueness is not required, allowing to use such a small type for id.
+  // Alternatively, `uint64_t` can be used for global uniqueness with levels smaller than 16.
+  uint32_t id_;
+  static constexpr uint32_t kComponentBits = sizeof(id_) * 8 / 2;
+  static constexpr uint32_t kComponentMask = (1 << kComponentBits) - 1;
+
+  DensityCellId(uint32_t id) : id_(id) {
+  }
+
+  DensityCellId(const PointLL& ll) {
+    uint32_t x = static_cast<uint32_t>((ll.lng() + 180.0) * 1e7);
+    uint32_t y = static_cast<uint32_t>((ll.lat() + 90.0) * 1e7);
+
+    x = x >> kGridLevel;
+    y = y >> kGridLevel;
+
+    id_ = (x & kComponentMask) | ((y & kComponentMask) << kComponentBits);
+  }
+
+  // Neighboring cells ids within the given radius in degrees
+  std::vector<DensityCellId> neighbors(float radius_lng_deg, float radius_lat_deg) const {
+    const int x_neighbors = std::ceil(radius_lng_deg / DensityCellId::kSizeDeg);
+    const int y_neighbors = std::ceil(radius_lat_deg / DensityCellId::kSizeDeg);
+
+    // Convert cell_id back to x, y coordinates
+    const int x = id_ & kComponentMask;
+    const int y = (id_ >> kComponentBits) & kComponentMask;
+
+    std::vector<DensityCellId> neighbors;
+    neighbors.reserve(4 * x_neighbors * y_neighbors);
+    for (int nx = -x_neighbors; nx <= x_neighbors; nx++) {
+      for (int ny = -y_neighbors; ny <= y_neighbors; ny++) {
+        // Keep only neighbors within the radius
+        if (nx * nx + ny * ny <= x_neighbors * y_neighbors) {
+          uint32_t neighbor_id =
+              ((x + nx) & kComponentMask) | (((y + ny) & kComponentMask) << kComponentBits);
+          neighbors.push_back(neighbor_id);
+        }
+      }
     }
-    not_thru += other.not_thru;
-    no_country_found += other.no_country_found;
-    internalcount += other.internalcount;
-    turnchannelcount += other.turnchannelcount;
-    rampcount += other.rampcount;
-    pencilucount += other.pencilucount;
-    for (uint32_t i = 0; i < 16; i++) {
-      density_counts[i] += other.density_counts[i];
-    }
+    return neighbors;
+  }
+
+  bool operator==(const DensityCellId& other) const {
+    return id_ == other.id_;
+  }
+
+  bool operator!=(const DensityCellId& other) const {
+    return !(*this == other);
   }
 };
+
+using DensityIndex = ankerl::unordered_dense::map<DensityCellId, uint32_t>;
+} // namespace
+
+namespace std {
+template <> struct hash<DensityCellId> {
+  size_t operator()(const DensityCellId& cell) const {
+    return cell.id_;
+  }
+};
+} // namespace std
+
+namespace {
 
 // Get the turn types.  This is used the determine if we should enhance or update
 // Turn lanes based on the turns at this node.
@@ -806,452 +855,116 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   return true;
 }
 
-/**
- * Get the road density around the specified lat,lng position. This is a
- * value from 0-15 indicating a relative road density. This can be used
- * in costing methods to help avoid dense, urban areas.
- * @param  reader        Graph reader
- * @param  lock          Mutex for locking while tiles are retrieved
- * @param  ll            Lat,lng position
- * @param  maxdensity    (OUT) max density found
- * @param  tiles         Tiling (for getting list of required tiles)
- * @param  local_level   Level of the local tiles.
- * @return  Returns the relative road density (0-15) - higher values are
- *          more dense.
- */
-uint32_t GetDensity(GraphReader& reader,
-                    std::mutex& lock,
-                    const PointLL& ll,
-                    enhancer_stats& stats,
-                    const Tiles<PointLL>& tiles,
-                    uint8_t local_level) {
-  // Radius is in km - turn into meters
-  auto rm = kDensityRadius * kMetersPerKm;
-  auto mr2 = rm * rm;
-
-  // Use distance approximator for all distance checks
-  DistanceApproximator<PointLL> approximator(ll);
-
-  // Get a list of tiles required for a node search within this radius
-  auto lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
-  AABB2<PointLL> bbox(ll.lng() - lngdeg, ll.lat() - kDensityLatDeg, ll.lng() + lngdeg,
-                      ll.lat() + kDensityLatDeg);
-  std::vector<int32_t> tilelist = tiles.TileList(bbox);
-
-  // For all tiles needed to find nodes within the radius...find nodes within
-  // the radius (squared) and add lengths of directed edges
+float NodeRoadlengths(const graph_tile_ptr& tile, const NodeInfo* node) {
   float roadlengths = 0.0f;
-  for (const auto t : tilelist) {
-    // Check all the nodes within the tile. Skip if tile has no nodes (can be
-    // an empty tile added for connectivity map logic).
+  const DirectedEdge* directededge = tile->directededge(node->edge_index());
+  for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
+    // Exclude non-roads (parking, walkways, ferries, construction, etc.)
+    if (directededge->is_road() || directededge->use() == Use::kRamp ||
+        directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
+        directededge->use() == Use::kEmergencyAccess) {
+      roadlengths += directededge->length();
+    }
+  }
+  return roadlengths;
+}
+
+/**
+ * Build a density index by accumulating edge lengths in each grid cell and convert
+ * to the relative density values (0-15) used by the enhancer.
+ * This dramatically speeds up density calculations by pre-computing densities.
+ * @param reader        Graph reader
+ * @param lock          Mutex for thread-safe tile access
+ * @param tile          Current tile being processed
+ * @param local_level   Local hierarchy level
+ * @param stats         Reference to stats object to update max_density
+ * @return              Density grid mapping cell IDs to relative density values (0-15)
+ */
+DensityIndex BuildDensityIndex(GraphReader& reader,
+                               std::mutex& lock,
+                               const graph_tile_ptr& tile,
+                               const TileLevel& tile_level,
+                               enhancer_stats& stats) {
+  // To properly count density on the tile edges, the bbox should be extended by the density radius,
+  // rounded up to the grid cell size to get fully filled edge cells
+  const AABB2<PointLL> tile_bbox = tile->BoundingBox();
+  const float lat_cos = cosf(kRadPerDeg * tile_bbox.Center().lat());
+  const float density_lng_deg = kDensityLatDeg / lat_cos;
+  const AABB2<PointLL> bbox(tile_bbox.minpt().lng() - (density_lng_deg + DensityCellId::kSizeDeg),
+                            tile_bbox.minpt().lat() - (kDensityLatDeg + DensityCellId::kSizeDeg),
+                            tile_bbox.maxpt().lng() + (density_lng_deg + DensityCellId::kSizeDeg),
+                            tile_bbox.maxpt().lat() + (kDensityLatDeg + DensityCellId::kSizeDeg));
+
+  // Grid where each cell contains a sum of lengths of all edges of all nodes within the cell
+  ankerl::unordered_dense::map<DensityCellId, float> density_grid;
+  density_grid.reserve(DensityCellId::cover_count(bbox));
+
+  // Process current tile separately from neighbors to always have a cell for each node in the tile
+  {
+    const PointLL base_ll = tile->header()->base_ll();
+    const auto start_node = tile->node(0);
+    const auto end_node = start_node + tile->header()->nodecount();
+    for (auto node = start_node; node < end_node; ++node) {
+      density_grid[node->latlng(base_ll)] += NodeRoadlengths(tile, node);
+    }
+  }
+
+  // process neighboring tiles
+  for (const auto& t : tile_level.tiles.TileList(bbox)) {
+    const GraphId tile_id(t, tile_level.level, 0);
+    if (tile_id == tile->id()) {
+      continue; // skip current tile as it was processed above
+    }
+
     lock.lock();
-    auto newtile = reader.GetGraphTile(GraphId(t, local_level, 0));
+    auto newtile = reader.GetGraphTile(tile_id);
     lock.unlock();
     if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
     }
-    PointLL base_ll = newtile->header()->base_ll();
+
+    const PointLL base_ll = newtile->header()->base_ll();
     const auto start_node = newtile->node(0);
     const auto end_node = start_node + newtile->header()->nodecount();
     for (auto node = start_node; node < end_node; ++node) {
-      // Check if within radius
-      if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
-        // Get all directed edges and add length
-        const DirectedEdge* directededge = newtile->directededge(node->edge_index());
-        for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
-          // Exclude non-roads (parking, walkways, ferries, construction, etc.)
-          if (directededge->is_road() || directededge->use() == Use::kRamp ||
-              directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
-              directededge->use() == Use::kEmergencyAccess) {
-            roadlengths += directededge->length();
-          }
-        }
+      const PointLL node_ll = node->latlng(base_ll);
+      if (bbox.Contains(node_ll)) {
+        density_grid[node_ll] += NodeRoadlengths(newtile, node);
       }
     }
   }
 
-  // Form density measure as km/km^2. Convert roadlengths to km and divide by 2
-  // (since 2 directed edges per edge)
-  float density = (roadlengths * 0.0005f) / (kPi * kDensityRadius2);
-  if (density > stats.max_density) {
-    stats.max_density = density;
-  }
+  // The difference between cell areas at the top of the 0.25 tile vs cell at the bottom of that tile
+  // reaches 1.2% at 70s latitude, which is acceptable here
+  const float cell_size_km = DensityCellId::kSizeDeg * kMetersPerDegreeLat / kMetersPerKm;
+  const float cell_area = cell_size_km * cell_size_km * lat_cos;
 
-  // Convert density into a relative value from 0-16.
-  uint32_t relative_density = std::round(density * 0.7f);
-  if (relative_density > 15) {
-    relative_density = 15;
-  }
-  stats.density_counts[relative_density]++;
-  return relative_density;
-}
+  // Now build the density index where each cell contains density value for nodes in that cell
+  DensityIndex density_index;
+  density_index.reserve(density_grid.size());
+  for (const auto& [cell_id, _] : density_grid) {
+    float roadlengths = 0.0f;
 
-/**
- * Returns true if edge transition is a pencil point u-turn, false otherwise.
- * A pencil point intersection happens when a doubly-digitized road transitions
- * to a singly-digitized road - which looks like a pencil point - for example:
- *        -----\____
- *        -----/
- *
- * @param  from_index  Index of the 'from' directed edge.
- * @param  to_index  Index of the 'to' directed edge.
- * @param  directededge  Directed edge builder.
- * @param  edges  Directed edges outbound from a node.
- * @param  node_info  Node info builder used for name consistency.
- * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
- *
- * @return true if edge transition is a pencil point u-turn, false otherwise.
- */
-bool IsPencilPointUturn(uint32_t from_index,
-                        uint32_t to_index,
-                        const DirectedEdge& directededge,
-                        const DirectedEdge* edges,
-                        const NodeInfo& node_info,
-                        uint32_t turn_degree) {
-  // Logic for drive on right
-  if (node_info.drive_on_right()) {
-    // If the turn is a sharp left (179 < turn < 211)
-    //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
-    // and oneway edgesb
-    // and an intersecting right road exists
-    // and no intersecting left road exists
-    // and the from and to edges have a common base name
-    // then it is a left pencil point u-turn
-    if ((((turn_degree > 179) && (turn_degree < 211)) ||
-         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
-          (turn_degree > 179) && (turn_degree < 226))) &&
-        (!(edges[from_index].forwardaccess() & kAutoAccess) &&
-         (edges[from_index].reverseaccess() & kAutoAccess)) &&
-        ((directededge.forwardaccess() & kAutoAccess) &&
-         !(directededge.reverseaccess() & kAutoAccess)) &&
-        directededge.edge_to_right(from_index) && !directededge.edge_to_left(from_index) &&
-        edges[to_index].name_consistency(from_index)) {
-      return true;
-    }
-
-  }
-  // Logic for drive on left
-  else {
-    // If the turn is a sharp right (149 < turn < 181)
-    //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
-    // and oneway edges
-    // and no intersecting right road exists
-    // and an intersecting left road exists
-    // and the from and to edges have a common base name
-    // then it is a right pencil point u-turn
-    if ((((turn_degree > 149) && (turn_degree < 181)) ||
-         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
-          (turn_degree > 134) && (turn_degree < 181))) &&
-        (!(edges[from_index].forwardaccess() & kAutoAccess) &&
-         (edges[from_index].reverseaccess() & kAutoAccess)) &&
-        ((directededge.forwardaccess() & kAutoAccess) &&
-         !(directededge.reverseaccess() & kAutoAccess)) &&
-        !directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index) &&
-        edges[to_index].name_consistency(from_index)) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-/**
- * Returns true if edge transition is a cycleway u-turn, false otherwise.
- *
- * @param  from_index  Index of the 'from' directed edge.
- * @param  to_index  Index of the 'to' directed edge.
- * @param  directededge  Directed edge builder.
- * @param  edges  Directed edges outbound from a node.
- * @param  node_info  Node info builder used for name consistency.
- * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
- *
- * @return true if edge transition is a cycleway u-turn, false otherwise.
- */
-bool IsCyclewayUturn(uint32_t from_index,
-                     uint32_t to_index,
-                     const DirectedEdge& directededge,
-                     const DirectedEdge* edges,
-                     const NodeInfo& node_info,
-                     uint32_t turn_degree) {
-
-  // we only deal with Cycleways
-  if (edges[from_index].use() != Use::kCycleway || edges[to_index].use() != Use::kCycleway) {
-    return false;
-  }
-
-  // Logic for drive on right
-  if (node_info.drive_on_right()) {
-    // If the turn is a sharp left (179 < turn < 211)
-    //    or short distance (< 50m) and wider sharp left (179 < turn < 226)
-    // and an intersecting right road exists
-    // and an intersecting left road exists
-    // then it is a cycleway u-turn
-    if ((((turn_degree > 179) && (turn_degree < 211)) ||
-         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
-          (turn_degree > 179) && (turn_degree < 226))) &&
-        directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index)) {
-      return true;
-    }
-  }
-  // Logic for drive on left
-  else {
-    // If the turn is a sharp right (149 < turn < 181)
-    //    or short distance (< 50m) and wider sharp right (134 < turn < 181)
-    // and an intersecting right road exists
-    // and an intersecting left road exists
-    // then it is a right cyclewayt u-turn
-    if ((((turn_degree > 149) && (turn_degree < 181)) ||
-         (((edges[from_index].length() < 50) || (directededge.length() < 50)) &&
-          (turn_degree > 134) && (turn_degree < 181))) &&
-        directededge.edge_to_right(from_index) && directededge.edge_to_left(from_index)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-/**
- * Gets the stop likelihoood / impact at an intersection when transitioning
- * from one edge to another. This depends on the difference between the
- * classifications/importance of the from and to edge and the highest
- * classification of the remaining edges at the intersection. Low impact
- * values occur when the from and to roads are higher class roads than other
- * roads. There is less likelihood of having to stop in these cases (or stops
- * will usually be shorter duration). Where traffic lights are (or might be)
- * present it is more likely that a favorable "green" is present in the
- * direction of the higher classification. If classifications are all equal
- * the stop impact will depend on the classification. All directions are
- * likely to stop and duration is likely longer with higher classification
- * roads (e.g. a 4 way stop of tertiary roads is likely to be shorter than
- * a 4 way stop (with traffic light) at an intersection of 4 primary roads.
- * Higher stop impacts occur when the from and to edges are lower class
- * than the others. There is almost certainly a stop (stop sign, traffic
- * light) and longer waits are likely when a low class road crosses
- * a higher class road. Special cases occur for links (ramps/turn channels)
- * and parking aisles.
- * @param  from  Index of the from directed edge.
- * @param  to    Index of the to directed edge.
- * @param  directededge   Directed edge builder - set values.
- * @param  edges Directed edges outbound from a node.
- * @param  count Number of outbound directed edges to consider.
- * @param  node_info  Node info builder used for name consistency.
- * @param  turn_degree  The turn degree between the 'from' and 'to' edge.
- *
- * @return  Returns stop impact ranging from 0 (no likely impact) to
- *          7 - large impact.
- */
-uint32_t GetStopImpact(uint32_t from,
-                       uint32_t to,
-                       const DirectedEdge& directededge,
-                       const DirectedEdge* edges,
-                       const uint32_t count,
-                       const NodeInfo& nodeinfo,
-                       uint32_t turn_degree,
-                       enhancer_stats& stats) {
-
-  ///////////////////////////////////////////////////////////////////////////
-  // Special cases.
-
-  // Handle Roundabouts
-  if (edges[from].roundabout() && edges[to].roundabout()) {
-    return 0;
-  }
-
-  // Handle Pencil point u-turn
-  if (IsPencilPointUturn(from, to, directededge, edges, nodeinfo, turn_degree)) {
-    stats.pencilucount++;
-    return 7;
-  }
-
-  // Handle Cycleway u-turn
-  if (IsCyclewayUturn(from, to, directededge, edges, nodeinfo, turn_degree)) {
-    return 7;
-  }
-
-  ///////////////////////////////////////////////////////////////////////////
-
-  // Get the highest classification of other roads at the intersection
-  bool all_ramps = true;
-  const DirectedEdge* edge = &edges[0];
-  // kUnclassified,  kResidential, and kServiceOther are grouped
-  // together for the stop_impact logic.
-  RoadClass bestrc = RoadClass::kUnclassified;
-  for (uint32_t i = 0; i < count; i++, edge++) {
-    // Check the road if it is drivable TO the intersection and is neither
-    // the "to" nor "from" edge. Treat roundabout edges as two levels lower
-    // classification (higher value) to reduce the stop impact.
-    if (i != to && i != from && (edge->reverseaccess() & kAutoAccess)) {
-      if (edge->roundabout()) {
-        uint32_t c = static_cast<uint32_t>(edge->classification()) + 2;
-        if (c < static_cast<uint32_t>(bestrc)) {
-          bestrc = static_cast<RoadClass>(c);
-        }
-      } else if (edge->classification() < bestrc) {
-        bestrc = edge->classification();
+    const auto neighbors = cell_id.neighbors(density_lng_deg, kDensityLatDeg);
+    for (const auto& neighbor : neighbors) {
+      if (auto it = density_grid.find(neighbor); it != density_grid.end()) {
+        roadlengths += it->second;
       }
     }
 
-    // Check if not a ramp or turn channel
-    if (!edge->link()) {
-      all_ramps = false;
-    }
-  }
-
-  // kUnclassified,  kResidential, and kServiceOther are grouped
-  // together for the stop_impact logic.
-  RoadClass from_rc = edges[from].classification();
-  if (from_rc > RoadClass::kUnclassified) {
-    from_rc = RoadClass::kUnclassified;
-  }
-
-  // High stop impact from a turn channel onto a turn channel unless
-  // the other edge a low class road (walkways often intersect
-  // turn channels)
-  if (edges[from].use() == Use::kTurnChannel && edges[to].use() == Use::kTurnChannel &&
-      bestrc < RoadClass::kUnclassified) {
-    return 7;
-  }
-
-  // Set stop impact to the difference in road class (make it non-negative)
-  int impact = static_cast<int>(from_rc) - static_cast<int>(bestrc);
-  uint32_t stop_impact = (impact < -3) ? 0 : impact + 3;
-
-  // TODO: possibly increase stop impact at large intersections (more edges)
-  // or if several are high class
-  // Reduce stop impact from a turn channel or when only links
-  // (ramps and turn channels) are involved. Exception - sharp turns.
-  Turn::Type turn_type = Turn::GetType(turn_degree);
-  bool is_sharp = (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kSharpRight ||
-                   turn_type == Turn::Type::kReverse);
-  bool is_slight = (turn_type == Turn::Type::kStraight || turn_type == Turn::Type::kSlightRight ||
-                    turn_type == Turn::Type::kSlightLeft);
-  if (all_ramps) {
-    if (is_sharp) {
-      stop_impact += 2;
-    } else if (is_slight) {
-      stop_impact /= 2;
-    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
-      stop_impact -= 1;
-    }
-  } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
-             bestrc < RoadClass::kUnclassified) {
-    // Ramp may be crossing a road (not a path or service road)
-    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
-      stop_impact = 4;
-    } else if (count > 3) {
-      stop_impact += 2;
-    }
-  } else if (edges[from].use() == Use::kRamp && edges[to].use() != Use::kRamp &&
-             !edges[from].internal() && !edges[to].internal()) {
-    // Increase stop impact on merge
-    if (is_sharp) {
-      stop_impact += 3;
-    } else if (is_slight) {
-      stop_impact += 1;
-    } else {
-      stop_impact += 2;
+    // Form density measure as km/km^2. Convert roadlengths to km and divide by 2
+    // (since 2 directed edges per edge)
+    float density = (roadlengths * 0.0005f) / (cell_area * neighbors.size());
+    if (density > stats.max_density) {
+      stats.max_density = density;
     }
 
-  } else if (edges[from].use() == Use::kTurnChannel) {
-    // Penalize sharp turns
-    if (is_sharp) {
-      stop_impact += 2;
-    } else if (edges[to].use() == Use::kRamp) {
-      stop_impact += 1;
-    } else if (is_slight) {
-      stop_impact /= 2;
-    } else if (stop_impact != 0) { // make sure we do not subtract 1 from 0
-      stop_impact -= 1;
-    }
-  } else if (edges[from].use() == Use::kParkingAisle && edges[to].use() == Use::kParkingAisle) {
-    // decrease stop impact inside parking lots
-    if (stop_impact != 0)
-      stop_impact -= 1;
+    // Convert to relative density (0-15)
+    const uint32_t relative_value = std::round(density * 0.7f);
+    density_index[cell_id] = std::min(relative_value, 15u);
   }
-  // add to the stop impact when transitioning from higher to lower class road and we are not on a TC
-  // or ramp penalize lefts when driving on the right.
-  else if (nodeinfo.drive_on_right() &&
-           (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
-           from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
-           edges[to].use() != Use::kTurnChannel) {
-    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
-      stop_impact += 2;
-    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
-      stop_impact++;
-    // penalize rights when driving on the left.
-  } else if (!nodeinfo.drive_on_right() &&
-             (turn_type == Turn::Type::kSharpRight || turn_type == Turn::Type::kRight) &&
-             from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
-             edges[to].use() != Use::kTurnChannel) {
-    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
-      stop_impact += 2;
-    } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
-      stop_impact++;
-  }
-  // Clamp to kMaxStopImpact
-  return (stop_impact <= kMaxStopImpact) ? stop_impact : kMaxStopImpact;
-}
 
-/**
- * Process edge transitions from all other incoming edges onto the
- * specified outbound directed edge.
- * @param  idx            Index of the directed edge - the to edge.
- * @param  directededge   Directed edge builder - set values.
- * @param  edges          Other directed edges at the node.
- * @param  ntrans         Number of transitions (either number of edges or max)
- * @param  headings       Headings of directed edges.
- */
-void ProcessEdgeTransitions(const uint32_t idx,
-                            DirectedEdge& directededge,
-                            const DirectedEdge* edges,
-                            const uint32_t ntrans,
-                            const NodeInfo& nodeinfo,
-                            enhancer_stats& stats) {
-  for (uint32_t i = 0; i < ntrans; i++) {
-    // Get the turn type (reverse the heading of the from directed edge since
-    // it is incoming
-    uint32_t from_heading = ((nodeinfo.heading(i) + 180) % 360);
-    uint32_t turn_degree = GetTurnDegree(from_heading, nodeinfo.heading(idx));
-    directededge.set_turntype(i, Turn::GetType(turn_degree));
-
-    // Set the edge_to_left and edge_to_right flags
-    uint32_t right_count = 0;
-    uint32_t left_count = 0;
-    if (ntrans > 2) {
-      for (uint32_t j = 0; j < ntrans; ++j) {
-        // Skip the from and to edges; also skip roads under construction
-        if (j == i || j == idx || edges[j].use() == Use::kConstruction) {
-          continue;
-        }
-
-        // Get the turn degree from incoming edge i to j and check if right
-        // or left of the turn degree from incoming edge i onto idx
-        uint32_t degree = GetTurnDegree(from_heading, nodeinfo.heading(j));
-        if (turn_degree > 180) {
-          if (degree > turn_degree || degree < 180) {
-            ++right_count;
-          } else if (degree < turn_degree && degree > 180) {
-            ++left_count;
-          }
-        } else {
-          if (degree > turn_degree && degree < 180) {
-            ++right_count;
-          } else if (degree < turn_degree || degree > 180) {
-            ++left_count;
-          }
-        }
-      }
-    }
-    directededge.set_edge_to_left(i, (left_count > 0));
-    directededge.set_edge_to_right(i, (right_count > 0));
-
-    // Get stop impact
-    // NOTE: stop impact uses the right and left edges so this logic must
-    // come after the right/left edge logic
-    uint32_t stopimpact =
-        GetStopImpact(i, idx, directededge, edges, ntrans, nodeinfo, turn_degree, stats);
-    directededge.set_stopimpact(i, stopimpact);
-  }
+  return density_index;
 }
 
 bool ConsistentNames(const std::string& country_code,
@@ -1290,16 +1003,17 @@ void enhance(const boost::property_tree::ptree& pt,
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
   // Initialize the admin DB (if it exists)
-  sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
+  auto admin_db = (database && use_admin_db) ? AdminDB::open(*database) : std::optional<AdminDB>{};
   if (!database && use_admin_db) {
-    LOG_WARN("Admin db not found.  Not saving admin information.");
-  } else if (!admin_db_handle && use_admin_db) {
-    LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
+    LOG_WARN("Admin db not found. Not saving admin information.");
+  } else if (!admin_db && use_admin_db) {
+    LOG_WARN("Admin db " + *database + " not found. Not saving admin information.");
   }
-  auto admin_conn = make_spatialite_cache(admin_db_handle);
 
-  std::unordered_map<std::string, std::vector<int>> country_access =
-      GetCountryAccess(admin_db_handle);
+  std::unordered_map<std::string, std::vector<int>> country_access;
+  if (admin_db) {
+    country_access = GetCountryAccess(*admin_db);
+  }
 
   // Local Graphreader
   GraphReader reader(hierarchy_properties);
@@ -1310,8 +1024,7 @@ void enhance(const boost::property_tree::ptree& pt,
 
   // Get some things we need throughout
   enhancer_stats stats{std::numeric_limits<float>::min(), 0, 0, 0, 0, 0, 0, {}};
-  const auto& local_level = TileHierarchy::levels().back().level;
-  const auto& tiles = TileHierarchy::levels().back().tiles;
+  const TileLevel& tile_level = TileHierarchy::levels().back();
 
   // Iterate through the tiles in the queue and perform enhancements
   while (true) {
@@ -1351,7 +1064,7 @@ void enhance(const boost::property_tree::ptree& pt,
     // First pass - update links (set use to ramp or turn channel) and
     // set opposing local index.
     for (uint32_t i = 0; i < tilebuilder->header()->nodecount(); i++) {
-      GraphId startnode(id, local_level, i);
+      GraphId startnode(id, tile_level.level, i);
       NodeInfo& nodeinfo = tilebuilder->node_builder(i);
 
       // Get headings of the edges - set in NodeInfo. Set driveability info
@@ -1422,16 +1135,20 @@ void enhance(const boost::property_tree::ptree& pt,
       }
     }
 
+    // Get relative road density and local density if the urban tag is not set
+    const auto density_index =
+        !use_urban_tag ? BuildDensityIndex(reader, lock, tile, tile_level, stats) : DensityIndex{};
+
     // Second pass - add admin information and edge transition information.
-    PointLL base_ll = tilebuilder->header()->base_ll();
+    const PointLL base_ll = tilebuilder->header()->base_ll();
     for (uint32_t i = 0; i < tilebuilder->header()->nodecount(); i++) {
-      GraphId startnode(id, local_level, i);
+      GraphId startnode(id, tile_level.level, i);
       NodeInfo& nodeinfo = tilebuilder->node_builder(i);
 
-      // Get relative road density and local density if the urban tag is not set
       uint32_t density = 0;
-      if (!use_urban_tag) {
-        density = GetDensity(reader, lock, nodeinfo.latlng(base_ll), stats, tiles, local_level);
+      if (auto it = density_index.find(nodeinfo.latlng(base_ll)); it != density_index.end()) {
+        density = it->second;
+        stats.density_counts[density]++;
         nodeinfo.set_density(density);
       }
 
@@ -1491,7 +1208,7 @@ void enhance(const boost::property_tree::ptree& pt,
                directededge.use() == Use::kPedestrianCrossing ||
                directededge.use() == Use::kSidewalk || directededge.use() == Use::kTrack)) {
 
-            std::vector<int> access = country_access.at(country_code);
+            const std::vector<int>& access = country_access.at(country_code);
             // leaves tile flag indicates that we have an access record for this edge.
             // leaves tile flag is updated later to the real value.
             if (directededge.leaves_tile()) {
@@ -1690,17 +1407,13 @@ void enhance(const boost::property_tree::ptree& pt,
     // Write the new file
     lock.lock();
     tilebuilder->StoreTileData();
-    LOG_TRACE((boost::format("GraphEnhancer completed tile %1%") % tile_id).str());
+    LOG_TRACE("GraphEnhancer completed tile " + std::to_string(tile_id));
 
     // Check if we need to clear the tile cache
     if (reader.OverCommitted()) {
       reader.Trim();
     }
     lock.unlock();
-  }
-
-  if (admin_db_handle) {
-    sqlite3_close(admin_db_handle);
   }
 
   // Send back the statistics
@@ -1746,9 +1459,10 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
   // Start the threads
   for (auto& thread : threads) {
     results.emplace_back();
-    thread.reset(new std::thread(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
-                                 std::cref(access_file), std::ref(hierarchy_properties),
-                                 std::ref(tilequeue), std::ref(lock), std::ref(results.back())));
+    thread =
+        std::make_shared<std::thread>(enhance, std::cref(hierarchy_properties), std::cref(osmdata),
+                                      std::cref(access_file), std::ref(hierarchy_properties),
+                                      std::ref(tilequeue), std::ref(lock), std::ref(results.back()));
   }
 
   // Wait for them to finish up their work

@@ -1,6 +1,9 @@
 #include "baldr/graphconstants.h"
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "sif/autocost.h"
 #include "test.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;

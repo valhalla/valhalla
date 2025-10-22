@@ -1,14 +1,11 @@
 #ifndef VALHALLA_BALDR_PATHLOCATION_H_
 #define VALHALLA_BALDR_PATHLOCATION_H_
 
-#include <vector>
-
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/location.h>
-#include <valhalla/baldr/rapidjson_utils.h>
-
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/proto/options.pb.h>
+#include <valhalla/baldr/location.h>
+
+#include <vector>
 
 namespace valhalla {
 namespace baldr {
@@ -31,20 +28,22 @@ public:
              const double percent_along,
              const midgard::PointLL& projected,
              const double score,
-             const std::pair<midgard::PointLL, uint16_t>& bounding_circle,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
              const unsigned int inbound_reach = 0,
-             const float projected_heading = -1);
+             const float projected_heading = -1,
+             const bool snapped = true);
 
     PathEdge(const GraphId& id,
              const double percent_along,
              const midgard::PointLL& projected,
              const double score,
+             const std::pair<midgard::PointLL, uint16_t>& bounding_circle,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
              const unsigned int inbound_reach = 0,
-             const float projected_heading = -1);
+             const float projected_heading = -1,
+             const bool snapped = true);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -70,6 +69,8 @@ public:
     unsigned int inbound_reach;
     // the heading of the projected point
     float projected_heading;
+    // whether the location snapped to the beginning or end
+    bool snapped;
   };
 
   // list of edges this location appears on within the graph
@@ -151,8 +152,8 @@ public:
       auto* edge = path_edges->Add();
       edge->set_graph_id(e.id);
       edge->set_percent_along(e.percent_along);
-      edge->set_begin_node(e.percent_along == 0.0f);
-      edge->set_end_node(e.percent_along == 1.0f);
+      edge->set_begin_node(e.percent_along == 0.0f && e.snapped);
+      edge->set_end_node(e.percent_along == 1.0f && e.snapped);
       edge->mutable_ll()->set_lng(e.projected.first);
       edge->mutable_ll()->set_lat(e.projected.second);
       edge->set_side_of_street(e.sos == PathLocation::LEFT

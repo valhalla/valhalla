@@ -1,14 +1,15 @@
-#include <iostream>
-#include <string>
-#include <vector>
-
+#include "baldr/rapidjson_utils.h"
 #include "proto/options.pb.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
+#include "sif/hierarchylimits.h"
 #include "worker.h"
 
-#include "test.h"
+#include <gtest/gtest.h>
+
+#include <string>
+#include <vector>
 
 using namespace valhalla;
 
@@ -117,7 +118,7 @@ constexpr float kDefaultBicycle_UseHills = 0.25f;
 constexpr float kDefaultBicycle_AvoidBadSurfaces = 0.25f; // Factor between 0 and 1
 constexpr float kDefaultBicycle_UseLivingStreets = 0.5f;  // Factor between 0 and 1
 constexpr float kDefaultBicycle_ServicePenalty = 15.0f;   // Seconds
-const std::string kDefaultBicycle_BicycleType = "Hybrid"; // Bicycle type
+const std::string kDefaultBicycle_BicycleType = "hybrid"; // Bicycle type
 constexpr float kDefaultBicycle_CyclingSpeed[] = {
     25.0f, // Road bicycle: ~15.5 MPH
     20.0f, // Cross bicycle: ~13 MPH
@@ -159,14 +160,6 @@ constexpr float kDefaultTransit_UseTransfers = 0.3f;
 ///////////////////////////////////////////////////////////////////////////////
 // validate by type methods
 void validate(const std::string& key, const bool expected_value, const bool pbf_value) {
-  EXPECT_EQ(pbf_value, expected_value) << "incorrect " << key;
-}
-
-void validate(const std::string& key,
-              const bool expected_value,
-              const bool has_pbf_value,
-              const bool pbf_value) {
-  ASSERT_TRUE(has_pbf_value) << "bool value not found in pbf for key=" + key;
   EXPECT_EQ(pbf_value, expected_value) << "incorrect " << key;
 }
 
@@ -385,7 +378,7 @@ void test_polygons_parsing(const bool expected_value,
                            const Options::Action action = Options::isochrone) {
   const std::string key = "polygons";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_polygons_case(), request.options().polygons());
+  validate(key, expected_value, request.options().polygons());
 }
 
 void test_denoise_parsing(const float expected_value,
@@ -407,8 +400,7 @@ void test_show_locations_parsing(const bool expected_value,
                                  const Options::Action action = Options::isochrone) {
   const std::string key = "show_locations";
   Api request = get_request(get_request_str(key, expected_value), action);
-  validate(key, expected_value, request.options().has_show_locations_case(),
-           request.options().show_locations());
+  validate(key, expected_value, request.options().show_locations());
 }
 
 void test_shape_match_parsing(const ShapeMatch expected_value, const Options::Action action) {
@@ -1784,16 +1776,20 @@ TEST(ParseRequest, test_transport_type) {
   std::string transport_type_key = "type";
 
   Costing::Type costing = Costing::pedestrian;
-  for (const auto& transport_type_value : {"foot", "wheelchair"}) {
-    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                                transport_type_value);
+  auto lowered = std::vector<std::string>{"foot", "wheelchair", "blind"};
+  auto expected = lowered.begin();
+  for (const auto& transport_type_value : {"Foot", "Wheelchair", "Blind"}) {
+    test_transport_type_parsing(costing, transport_type_key, transport_type_value, *expected);
+    ++expected;
   }
 
   costing = Costing::bicycle;
   transport_type_key = "bicycle_type";
-  for (const auto& transport_type_value : {"Road", "Cross", "Hybrid", "Mountain"}) {
-    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                                transport_type_value);
+  lowered = std::vector<std::string>{"road", "cross", "hybrid", "mountain"};
+  expected = lowered.begin();
+  for (const auto& transport_type_value : {"Road", "Cross", "hybrid", "Mountain"}) {
+    test_transport_type_parsing(costing, transport_type_key, transport_type_value, *expected);
+    ++expected;
   }
 }
 
@@ -2656,7 +2652,7 @@ TEST(ParseRequest, test_avoid_bad_surfaces) {
 TEST(ParseRequest, test_cycling_speed) {
   Costing::Type costing = Costing::bicycle;
 
-  std::string transport_type = "Road";
+  std::string transport_type = "road";
   float default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kRoad)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
@@ -2665,7 +2661,7 @@ TEST(ParseRequest, test_cycling_speed) {
   test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
   test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
 
-  transport_type = "Cross";
+  transport_type = "cross";
   default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kCross)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
@@ -2674,7 +2670,7 @@ TEST(ParseRequest, test_cycling_speed) {
   test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
   test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
 
-  transport_type = "Hybrid";
+  transport_type = "hybrid";
   default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kHybrid)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);
@@ -2683,7 +2679,7 @@ TEST(ParseRequest, test_cycling_speed) {
   test_cycling_speed_parsing(costing, transport_type, 2.f, default_value);
   test_cycling_speed_parsing(costing, transport_type, 70.f, default_value);
 
-  transport_type = "Mountain";
+  transport_type = "mountain";
   default_value =
       kDefaultBicycle_CyclingSpeed[static_cast<uint32_t>(valhalla::sif::BicycleType::kMountain)];
   test_cycling_speed_parsing(costing, transport_type, default_value, default_value);

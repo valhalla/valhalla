@@ -1,11 +1,17 @@
 #include "mjolnir/luatagtransform.h"
-
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
 
 #include <boost/format.hpp>
 #include <osmium/osm/tag.hpp>
+
 #include <stdexcept>
+
+extern "C" {
+#include <lauxlib.h>
+#include <lua.h>
+#include <lualib.h>
+}
 
 using namespace valhalla::mjolnir;
 

@@ -1,9 +1,11 @@
 #include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
+#include "gurka.h"
 #include "midgard/encoded.h"
 #include "midgard/util.h"
+#include "sif/costfactory.h"
 #include "thor/triplegbuilder.h"
 
-#include "gurka.h"
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -79,7 +81,7 @@ TEST(Trimming, routes) {
   sif::TravelMode mode;
   sif::CostFactory factory;
   auto mode_costings = factory.CreateModeCosting(options, mode);
-  auto costing = mode_costings[static_cast<size_t>(mode)];
+  const auto& costing = mode_costings[static_cast<size_t>(mode)];
 
   // fake up a route
   std::vector<thor::PathInfo>

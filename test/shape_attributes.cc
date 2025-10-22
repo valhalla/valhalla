@@ -1,10 +1,9 @@
-#include "test.h"
-
-#include "midgard/distanceapproximator.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/encoded.h"
-#include "midgard/logging.h"
-#include "midgard/util.h"
+#include "test.h"
 #include "tyr/actor.h"
+
+#include <boost/property_tree/ptree.hpp>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

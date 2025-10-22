@@ -1,40 +1,30 @@
+#include "gurka.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "loki/worker.h"
 #include "midgard/constants.h"
-#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
-#include "midgard/util.h"
 #include "mjolnir/util.h"
-#include "odin/worker.h"
 #include "proto/trip.pb.h"
-#include "thor/worker.h"
+#include "test.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
+#include "valhalla/proto_conversions.h"
 
-#include "gurka.h"
-#include "test.h"
-
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
-
+#include <gtest/gtest.h>
 #include <osmium/builder/attr.hpp>
-#include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/output_iterator.hpp>
 #include <osmium/io/pbf_output.hpp>
 #include <osmium/object_pointer_collection.hpp>
-#include <osmium/osm/object_comparisons.hpp>
 
 #include <filesystem>
 #include <regex>
 #include <string>
 #include <tuple>
 #include <utility>
-
-#include <gtest/gtest.h>
 
 namespace valhalla {
 namespace gurka {
@@ -344,6 +334,7 @@ inline void build_pbf(const nodelayout& node_locations,
     }
 
     std::vector<std::pair<std::string, std::string>> tags;
+    tags.reserve(relation.tags.size());
     for (const auto& tag : relation.tags) {
       tags.push_back({tag.first, tag.second});
     }
@@ -509,7 +500,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
       }
       // Now, see if the endnode for this edge is our end_node
       auto de_endnode = forward_directed_edge->endnode();
-      graph_tile_ptr reverse_tile = tile;
+      baldr::graph_tile_ptr reverse_tile = tile;
       auto de_endnode_coordinates =
           reader.GetGraphTile(de_endnode, reverse_tile)->get_node_ll(de_endnode);
 
@@ -522,13 +513,14 @@ findEdge(valhalla::baldr::GraphReader& reader,
             if (tile->edgeinfo(forward_directed_edge).wayid() == way_id) {
 
               // Skip any edges that are not drivable inbound.
-              if (!(forward_directed_edge->forwardaccess() & kVehicularAccess))
+              if (!(forward_directed_edge->forwardaccess() & baldr::kVehicularAccess))
                 continue;
 
               auto forward_edge_id = tile_id;
               forward_edge_id.set_id(i);
-              graph_tile_ptr reverse_tile = nullptr;
-              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              baldr::graph_tile_ptr reverse_tile = nullptr;
+              baldr::GraphId reverse_edge_id =
+                  reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
               auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
               return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                      reverse_directed_edge);
@@ -540,8 +532,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
             if (name == way_name) {
               auto forward_edge_id = tile_id;
               forward_edge_id.set_id(i);
-              graph_tile_ptr reverse_tile = nullptr;
-              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              baldr::graph_tile_ptr reverse_tile = nullptr;
+              baldr::GraphId reverse_edge_id =
+                  reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
               auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
               return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                      reverse_directed_edge);

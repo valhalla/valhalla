@@ -1,6 +1,6 @@
-
 #include "gurka.h"
-#include "test.h"
+#include "valhalla/worker.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -63,7 +63,8 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictions) {
                                        },
                                        {{"type", "restriction"}, {"restriction", "no_straight_on"}}}};
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, relations, "test/data/ignore_non_vehicular_restrictions",
+      gurka::buildtiles(layout, ways, {}, relations,
+                        VALHALLA_BUILD_DIR "test/data/ignore_non_vehicular_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   // first, route through turn restriction, should fail...
   try {
@@ -111,7 +112,8 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictionsFail) {
       {"EF", {{"highway", "secondary"}}},
   };
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_non_vehicular_restrictions",
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/ignore_non_vehicular_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   // should fail, too low
   try {
@@ -153,7 +155,8 @@ TEST(CommonRestrictionsFail, Truck) {
                             {"CD", {{"highway", "residential"}}}};
 
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_non_vehicular_restrictions_truck",
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/ignore_non_vehicular_restrictions_truck",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
 
   // too long
@@ -178,3 +181,361 @@ TEST(CommonRestrictionsFail, Truck) {
     FAIL() << "Expected to fail with a different error code.";
   }
 }
+
+struct params_t {
+
+  std::string tag, value, conditional_value, costing, costing_key, costing_value;
+  bool simple, reverse;
+
+  params_t(const std::string& tag,
+           const std::string& value,
+           const std::string& conditional_value,
+           const std::string& costing,
+           const std::string& costing_key,
+           const std::string& costing_value,
+           const bool simple = false,
+           const bool reverse = false)
+      : tag(tag), value(value), conditional_value(conditional_value), costing(costing),
+        costing_key(costing_key), costing_value(costing_value), simple(simple), reverse(reverse){};
+};
+inline std::ostream& operator<<(std::ostream& out, const params_t& params) {
+  out << params.tag << "|" << params.value << "|" << params.conditional_value
+      << "| simple = " << params.simple << "| reverse = " << params.reverse << "\n";
+  return out;
+}
+
+class DestinationAccessRestrictionTestSimple : public ::testing::TestWithParam<params_t> {};
+
+TEST_P(DestinationAccessRestrictionTestSimple, DestinationAccessRestrictionSimple) {
+  params_t p = GetParam();
+
+  const std::string ascii_map = R"(
+      A----B-----C----D
+    )";
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+                            {"BC",
+                             {
+                                 {"highway", "residential"},
+                                 {p.tag, p.value},
+                                 {p.tag + ":conditional", p.conditional_value},
+                             }},
+                            {"CD", {{"highway", "residential"}}}};
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/destination_access_restrictions_simple",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
+                         {"thor.costmatrix.allow_second_pass", "1"}});
+
+  // should succeed
+  std::vector<std::string> waypoints;
+  if (p.reverse) {
+    waypoints.push_back("D");
+    waypoints.push_back("A");
+  } else {
+    waypoints.push_back("A");
+    waypoints.push_back("D");
+  }
+  valhalla::Api route =
+      gurka::do_action(valhalla::Options::route, map, waypoints, p.costing,
+                       {{"/costing_options/" + p.costing + "/" + p.costing_key, p.costing_value}});
+
+  // better yet, call costmatrix which gives us a warning on second pass
+  route = gurka::do_action(valhalla::Options::sources_to_targets, map, {waypoints[0]}, {waypoints[1]},
+                           p.costing,
+                           {{"/costing_options/" + p.costing + "/" + p.costing_key, p.costing_value},
+                            {"/prioritize_bidirectional", "1"}});
+  ASSERT_TRUE(route.info().warnings().size() > 0);
+  EXPECT_EQ(route.info().warnings(0).code(), 400);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    DestinationAccessRestrictionSimple,
+    DestinationAccessRestrictionTestSimple,
+    ::testing::ValuesIn([]() {
+      std::vector<params_t> res;
+      std::array<std::string, 4> conditional_values = {"none @ destination", "none @ (destination)",
+                                                       "none @ delivery", "no @ destination"};
+
+      for (const auto& auto_opts : {"height", "width"}) {
+        for (const auto& cv : conditional_values) {
+          res.emplace_back("max" + std::string(auto_opts), "3", cv, "auto", auto_opts, "5");
+          res.emplace_back("max" + std::string(auto_opts) + ":forward", "3", cv, "auto", auto_opts,
+                           "5");
+          res.emplace_back("max" + std::string(auto_opts) + ":backward", "3", cv, "auto", auto_opts,
+                           "5", false, true);
+        }
+      }
+
+      for (const auto& truck_opts : {"height", "length", "width", "weight", "axles"}) {
+        for (const auto& cv : conditional_values) {
+          res.emplace_back("max" + std::string(truck_opts), "3", cv, "truck",
+                           std::string(truck_opts) == "axles" ? "axle_count" : truck_opts, "5");
+          if (std::string(truck_opts) != "axles") {
+            res.emplace_back("max" + std::string(truck_opts) + ":forward", "3", cv, "truck",
+                             std::string(truck_opts) == "axles" ? "axle_count" : truck_opts, "5");
+            res.emplace_back("max" + std::string(truck_opts) + ":backward", "3", cv, "truck",
+                             std::string(truck_opts) == "axles" ? "axle_count" : truck_opts, "5",
+                             false, true);
+          }
+        }
+      }
+
+      // don't forget hazmat
+      res.emplace_back("hazmat", "no", "none @ destination", "truck", "hazmat", "1");
+      return res;
+    }()));
+
+class DestinationAccessRestrictionTest : public ::testing::TestWithParam<params_t> {};
+TEST_P(DestinationAccessRestrictionTest, DestinationAccessRestrictionWithMask) {
+  params_t p = GetParam();
+
+  const std::string ascii_map = R"(
+      A----B-----C----D------E------F
+           |          |
+           |          |
+           |          |
+           |          |
+           G----------H
+    )";
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+                      {"BC",
+                       {
+                           {"highway", "residential"},
+                           {p.tag, p.value},
+                           {p.tag + ":conditional", p.conditional_value},
+                       }},
+                      {"BG", {{"highway", "residential"}}},
+                      {"GH", {{"highway", "residential"}}},
+                      {"HD", {{"highway", "residential"}}},
+                      {"DE", {{"highway", "residential"}}},
+                      {"EF", {{"highway", "residential"}}}};
+
+  // test a "simple" scenario with just BC having the excepted restriction
+  if (p.simple) {
+    ways.emplace("CD", std::map<std::string, std::string>{
+                           {"highway", "residential"},
+                       });
+  } else { // ..and one where both BC and CD have it
+    ways.emplace("CD",
+                 std::map<std::string, std::string>{{"highway", "residential"},
+                                                    {p.tag, p.value},
+                                                    {p.tag + ":conditional", p.conditional_value}});
+  }
+
+  std::vector<std::string> waypoints_base;
+  std::vector<std::string> waypoints;
+  std::vector<std::string> expected_path_base;
+  std::vector<std::string> expected_path;
+
+  if (p.reverse) {
+    waypoints_base = {"F", "A"};
+    waypoints = {"F", "B"};
+    expected_path_base = {"EF", "DE", "HD", "GH", "BG", "AB"};
+    expected_path = {"EF", "DE", "CD", "BC"};
+  } else {
+    waypoints_base = {"A", "F"};
+    waypoints = {"B", "F"};
+    expected_path_base = {"AB", "BG", "GH", "HD", "DE", "EF"};
+    expected_path = {"BC", "CD", "DE", "EF"};
+  }
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/destination_access_restrictions_" + p.costing +
+                            "_" + p.tag + "_" + (p.simple ? "simple" : "not_simple"),
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
+                         {"thor.costmatrix.allow_second_pass", "1"}});
+
+  // base case: we don't start on a restricted edge, BC and DE are not allowed
+  valhalla::Api route =
+      gurka::do_action(valhalla::Options::route, map, waypoints_base, p.costing,
+                       {{"/costing_options/" + p.costing + "/" + p.costing_key, p.costing_value}});
+
+  gurka::assert::raw::expect_path(route, expected_path_base);
+
+  // start on a restricted edge, shouldn't take the detour
+  route =
+      gurka::do_action(valhalla::Options::route, map, waypoints, p.costing,
+                       {{"/costing_options/" + p.costing + "/" + p.costing_key, p.costing_value}});
+
+  gurka::assert::raw::expect_path(route, expected_path,
+                                  "Failed with tag " + p.tag +
+                                      (p.simple ? ", simple" : ", not simple"));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Blah,
+    DestinationAccessRestrictionTest,
+    ::testing::ValuesIn([]() {
+      std::vector<params_t> res;
+      for (const bool simple : {true, false}) {
+        for (const auto& auto_opts : {"height", "width"}) {
+          res.emplace_back("max" + std::string(auto_opts), "3", "none @ destination", "auto",
+                           auto_opts, "5", simple);
+          res.emplace_back("max" + std::string(auto_opts) + ":forward", "3", "none @ destination",
+                           "auto", auto_opts, "5", simple);
+        }
+
+        for (const auto& truck_opts : {"height", "length", "width", "weight", "axles"}) {
+          res.emplace_back("max" + std::string(truck_opts), "3", "none @ destination", "truck",
+                           std::string(truck_opts) == "axles" ? "axle_count" : truck_opts, "5",
+                           simple);
+          if (std::string(truck_opts) != "axles") {
+            res.emplace_back("max" + std::string(truck_opts) + ":forward", "3", "none @ destination",
+                             "truck", std::string(truck_opts) == "axles" ? "axle_count" : truck_opts,
+                             "5", simple);
+            res.emplace_back("max" + std::string(truck_opts) + ":backward", "3", "none @ destination",
+                             "truck", std::string(truck_opts) == "axles" ? "axle_count" : truck_opts,
+                             "5", simple, true);
+          }
+        }
+        // don't forget hazmat
+        res.emplace_back("hazmat", "no", "none @ destination", "truck", "hazmat", "1", simple);
+        res.emplace_back("hazmat:forward", "no", "none @ destination", "truck", "hazmat", "1",
+                         simple);
+        res.emplace_back("hazmat:backward", "no", "none @ destination", "truck", "hazmat", "1",
+                         simple, true);
+      }
+
+      return res;
+    }()));
+
+TEST(StandAlone, MultipleDestinationAccessRestrictions) {
+  const std::string ascii_map = R"(
+      A----B-----C----D------E------F
+           |                 |
+           |                 |
+           |                 |
+           |                 |
+           G-----------------H
+    )";
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+                      {"BC",
+                       {
+                           {"highway", "residential"},
+                           {"maxheight", "2"},
+                           {"maxheight:conditional", "no @ destination"},
+                           {"maxweight", "2"},
+                           {"maxweight:conditional", "no @ destination"},
+                           {"maxwidth", "2"},
+                           {"maxwidth:conditional", "no @ destination"},
+                       }},
+                      {"CD",
+                       {
+                           {"highway", "residential"},
+                           {"maxheight", "2"},
+                           {"maxheight:conditional", "no @ destination"},
+                           {"maxweight", "2"},
+                           {"maxweight:conditional", "no @ destination"},
+                       }},
+                      {"DE",
+                       {
+                           {"highway", "residential"},
+                           {"maxheight", "2"},
+                           {"maxheight:conditional", "no @ destination"},
+                       }},
+                      {"BG", {{"highway", "residential"}}},
+                      {"GH", {{"highway", "residential"}}},
+                      {"HE", {{"highway", "residential"}}},
+                      {"EF", {{"highway", "residential"}}}};
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {},
+                        VALHALLA_BUILD_DIR "test/data/multiple_dest_access_restrictions",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
+                         {"thor.costmatrix.allow_second_pass", "1"}});
+
+  // base case takes the long route
+  valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "truck",
+                                         {{"/costing_options/truck/height", "4"},
+                                          {"/costing_options/truck/weight", "4"},
+                                          {"/costing_options/truck/width", "4"}});
+
+  gurka::assert::raw::expect_path(route, {"AB", "BG", "GH", "HE", "EF"});
+
+  // now start at B, should be allowed to use the short route
+  route = gurka::do_action(valhalla::Options::route, map, {"B", "F"}, "truck",
+                           {{"/costing_options/truck/height", "4"},
+                            {"/costing_options/truck/weight", "4"},
+                            {"/costing_options/truck/width", "4"}});
+
+  gurka::assert::raw::expect_path(route, {"BC", "CD", "DE", "EF"});
+
+  // now test the reverse case: start on an edge with only one restriction
+  // shouldn't be able to get onto edges with more than the initial one
+  route = gurka::do_action(valhalla::Options::route, map, {"E", "A"}, "truck",
+                           {{"/costing_options/truck/height", "4"},
+                            {"/costing_options/truck/weight", "4"},
+                            {"/costing_options/truck/width", "4"}});
+
+  gurka::assert::raw::expect_path(route, {"HE", "GH", "BG", "AB"});
+}
+
+/**
+ * Note on unidirectional a*: destination only is allowed by default, so
+ * these restrictions are ignored, e.g. on time-dependent routes. Behavior
+ * could be changed though to mimic that of bidir a*: https://github.com/valhalla/valhalla/issues/5445
+ */
+// TEST(StandAlone, MultipleDestinationAccessRestrictionsUnidirectional) {
+//   const std::string ascii_map = R"(
+//       A----B-----C----D------E------F
+//            |                 |
+//            |                 |
+//            |                 |
+//            |                 |
+//            G-----------------H
+//     )";
+
+//   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+//   gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+//                       {"BC",
+//                        {
+//                            {"highway", "residential"},
+//                            {"maxheight", "2"},
+//                            {"maxheight:conditional", "no @ destination"},
+//                            {"maxweight", "2"},
+//                            {"maxweight:conditional", "no @ destination"},
+//                            {"maxwidth", "2"},
+//                            {"maxwidth:conditional", "no @ destination"},
+//                        }},
+//                       {"CD",
+//                        {
+//                            {"highway", "residential"},
+//                            {"maxheight", "2"},
+//                            {"maxheight:conditional", "no @ destination"},
+//                            {"maxweight", "2"},
+//                            {"maxweight:conditional", "no @ destination"},
+//                        }},
+//                       {"DE",
+//                        {
+//                            {"highway", "residential"},
+//                            {"maxheight", "2"},
+//                            {"maxheight:conditional", "no @ destination"},
+//                        }},
+//                       {"BG", {{"highway", "residential"}}},
+//                       {"GH", {{"highway", "residential"}}},
+//                       {"HE", {{"highway", "residential"}}},
+//                       {"EF", {{"highway", "residential"}}}};
+
+//   gurka::map map =
+//       gurka::buildtiles(layout, ways, {}, {}, "test/data/multiple_dest_access_restrictions",
+//                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}},
+//                          {"thor.costmatrix.allow_second_pass", "1"}});
+
+//   // base case takes the long route
+//   auto route = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "truck",
+//                                 {{"/date_time/type", "1"},
+//                                  {"/date_time/value", "2025-08-14T20:00"},
+//                                  {"/costing_options/truck/height", "4"},
+//                                  {"/costing_options/truck/weight", "4"},
+//                                  {"/costing_options/truck/width", "4"}});
+//   // NOTE: this fails right now
+//   gurka::assert::raw::expect_path(route, {"AB", "BG", "GH", "HE", "EF"});
+// }

@@ -20,19 +20,33 @@ struct curler_t {
   explicit curler_t(const std::string& user_agent);
 
   using interrupt_t = tile_getter_t::interrupt_t;
+  using HEAD_response_t = tile_getter_t::HEAD_response_t;
+  using GET_response_t = tile_getter_t::GET_response_t;
+  using header_mask_t = tile_getter_t::header_mask_t;
+
   /**
    * Fetch a url and return the bytes that we got
    *
    * @param  url                the url to fetch
-   * @param  http_code          the code we got back when fetching
    * @param  gzipped            whether to request for gzip compressed data
    * @param  interrupt          throws if request should be interrupted
+   * @param  range_offset       the HTTP Range start offset
+   * @param  range_size       the HTTP Range size
    * @return the bytes we fetched
    */
-  std::vector<char> operator()(const std::string& url,
-                               long& http_code,
-                               bool gzipped,
-                               const interrupt_t* interrupt) const;
+  GET_response_t get(const std::string& url,
+                     bool gzipped,
+                     const interrupt_t* interrupt,
+                     const uint64_t range_offset,
+                     const uint64_t range_size) const;
+  /**
+   * Performs a HEAD request.
+   *
+   * @param url         The URL to query
+   * @param http_code   What we got back from the server
+   * @param header_mask Which response headers should be recorded
+   */
+  HEAD_response_t head(const std::string& url, header_mask_t header_mask);
 
   /**
    * Allow only moves and forbid copies. We don't want

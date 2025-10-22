@@ -1,7 +1,10 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include "mjolnir/graphtilebuilder.h"
+#include "sif/costfactory.h"
 #include "sif/recost.h"
 #include "test.h"
+#include "tyr/actor.h"
+#include "valhalla/worker.h"
 
 using namespace valhalla;
 
@@ -387,7 +390,7 @@ TEST(recosting, all_algorithms) {
         // build up the costing object
         auto costing = sif::CostFactory().Create(api.options());
 
-        const GraphId start_edge_id(leg.node().begin()->edge().id());
+        const baldr::GraphId start_edge_id(leg.node().begin()->edge().id());
         const auto* node = reader->nodeinfo(reader->edge_endnode(start_edge_id));
         const auto time_info = baldr::TimeInfo::make(date_time, node->timezone());
 
@@ -433,7 +436,9 @@ TEST(recosting, throwing) {
 
   // setup a callback for the recosting to tell us about the new label each made
   bool called = false;
-  sif::LabelCallback label_cb = [&called](const sif::PathEdgeLabel& label) -> void { called = true; };
+  sif::LabelCallback label_cb = [&called](const sif::PathEdgeLabel& /*label*/) -> void {
+    called = true;
+  };
 
   // build up the costing object
   auto costing = sif::CostFactory().Create(Costing::auto_);

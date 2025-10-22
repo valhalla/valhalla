@@ -1,5 +1,7 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include <boost/algorithm/string/join.hpp>
+#include "valhalla/worker.h"
+
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -36,7 +38,8 @@ protected:
                                     std::string action,
                                     const std::vector<std::string>& props,
                                     const std::vector<std::string>& waypoints,
-                                    const bool pbf) {
+                                    const bool pbf,
+                                    const bool use_depart_at = false) {
     std::unordered_map<std::string, std::string> options = {{"/skip_opposites",
                                                              skip_opps ? "1" : "0"},
                                                             {"/action", action},
@@ -48,7 +51,9 @@ protected:
     if (action == "isochrone") {
       options.insert({{"/contours/0/time", "10"}, {"/contours/1/time", "20"}});
     }
-
+    if (action == "route" && use_depart_at) {
+      options.insert({{"/date_time/type", "1"}, {"/date_time/value", "2025-08-15T14:50"}});
+    }
     // get the response
     valhalla::Api api;
 
@@ -66,18 +71,23 @@ protected:
                      bool skip_opps,
                      unsigned exp_feats,
                      const std::vector<std::string>& props = {},
-                     bool dedupe = false) {
-    check_result_json(action, waypoints, skip_opps, dedupe, exp_feats, props);
-    check_result_pbf(action, waypoints, skip_opps, dedupe, exp_feats, props);
+                     bool dedupe = false,
+                     const bool use_depart_at = false,
+                     std::unordered_map<std::string, std::string> expected_props = {}) {
+    check_result_json(action, waypoints, skip_opps, dedupe, exp_feats, props, use_depart_at,
+                      expected_props);
+    check_result_pbf(action, waypoints, skip_opps, dedupe, exp_feats, props, use_depart_at);
   }
   void check_result_pbf(const std::string& action,
                         const std::vector<std::string>& waypoints,
                         bool skip_opps,
                         bool dedupe,
                         unsigned exp_feats,
-                        const std::vector<std::string>& props) {
+                        const std::vector<std::string>& props,
+                        bool use_depart_at) {
     std::string res;
-    auto api = do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, true);
+    auto api =
+        do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, true, use_depart_at);
 
     Api parsed_api;
     parsed_api.ParseFromString(res);
@@ -130,10 +140,16 @@ protected:
                          bool skip_opps,
                          bool dedupe,
                          unsigned exp_feats,
-                         const std::vector<std::string>& props) {
+                         const std::vector<std::string>& props,
+                         const bool use_depart_at = false,
+                         std::unordered_map<std::string, std::string> expected_props = {}) {
+
+    SCOPED_TRACE("Failed on " +
+                 std::string(::testing::UnitTest::GetInstance()->current_test_info()->name()));
 
     std::string res;
-    auto api = do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, false);
+    auto api =
+        do_expansion_action(&res, skip_opps, dedupe, action, props, waypoints, false, use_depart_at);
     // get the MultiLineString feature
     rapidjson::Document res_doc;
     res_doc.Parse(res.c_str());
@@ -145,6 +161,12 @@ protected:
     ASSERT_EQ(feat["properties"].MemberCount(), props.size());
     for (const auto& prop : props) {
       ASSERT_TRUE(feat["properties"].HasMember(prop));
+    }
+
+    for (const auto& expected_prop : expected_props) {
+      ASSERT_TRUE(res_doc["properties"].HasMember(expected_prop.first));
+      ASSERT_EQ(res_doc["properties"].GetObject()[expected_prop.first].GetString(),
+                expected_prop.second);
     }
   }
 };
@@ -169,17 +191,23 @@ TEST_P(ExpansionTest, Routing) {
   check_results("route", {"E", "H"}, false, 23, GetParam());
 }
 
+TEST_P(ExpansionTest, RoutingWithDepartAt) {
+  // test AStar expansion
+  check_results("route", {"E", "H"}, false, 10, GetParam(), false, true,
+                {{"algorithm", "unidirectional_astar"}});
+}
+
 TEST_P(ExpansionTest, RoutingNoOpposites) {
   // test AStar expansion and no opposite edges
-  check_results("route", {"E", "H"}, true, 16, GetParam());
+  check_results("route", {"E", "H"}, true, 15, GetParam());
 }
 
 TEST_P(ExpansionTest, Matrix) {
-  check_results("sources_to_targets", {"E", "H"}, false, 48, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, false, 54, GetParam());
 }
 
 TEST_P(ExpansionTest, MatrixNoOpposites) {
-  check_results("sources_to_targets", {"E", "H"}, true, 23, GetParam());
+  check_results("sources_to_targets", {"E", "H"}, true, 24, GetParam());
 }
 
 TEST_P(ExpansionTest, IsochroneDedupe) {
@@ -194,7 +222,7 @@ TEST_P(ExpansionTest, IsochroneNoOppositesDedupe) {
 
 TEST_P(ExpansionTest, RoutingDedupe) {
   // test AStar expansion
-  check_results("route", {"E", "H"}, false, 7, GetParam(), true);
+  check_results("route", {"E", "H"}, false, 9, GetParam(), true);
 }
 
 TEST_P(ExpansionTest, RoutingNoOppositesDedupe) {

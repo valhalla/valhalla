@@ -1,18 +1,16 @@
 #ifndef VALHALLA_MJOLNIR_OSMDATA_H
 #define VALHALLA_MJOLNIR_OSMDATA_H
 
-#include <cstdint>
-#include <string>
-#include <unordered_set>
-
 #include <valhalla/baldr/conditional_speed_limit.h>
 #include <valhalla/mjolnir/osmaccessrestriction.h>
 #include <valhalla/mjolnir/osmlinguistic.h>
 #include <valhalla/mjolnir/osmnode.h>
-#include <valhalla/mjolnir/osmnodelinguistic.h>
 #include <valhalla/mjolnir/osmrestriction.h>
-#include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/uniquenames.h>
+
+#include <cstdint>
+#include <string>
+#include <unordered_set>
 
 namespace valhalla {
 namespace mjolnir {
@@ -25,6 +23,13 @@ struct OSMWayNode {
   OSMNode node;
   uint32_t way_index = 0;
   uint32_t way_shape_node_index = 0;
+};
+
+// Structure to store OSM node information for BSS
+struct OSMBSSNode {
+  OSMNode node;
+  // Index with serialized `BikeShareStationInfo` within the node_names list
+  uint32_t bss_info_index;
 };
 
 // OSM bicycle data (stored within OSMData)
@@ -91,6 +96,7 @@ struct OSMData {
    */
   static void cleanup_temp_files(const std::string& tile_dir);
 
+  uint64_t pbf_checksum_;         // MD5 of PBF files as 64bit int
   uint64_t max_changeset_id_;     // The largest/newest changeset id encountered when parsing OSM data
   uint64_t osm_node_count;        // Count of osm nodes
   uint64_t osm_way_count;         // Count of osm ways

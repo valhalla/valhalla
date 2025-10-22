@@ -3,14 +3,11 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 
 #include <array>
 #include <cstdint>
 #include <unordered_map>
-
-using namespace valhalla::baldr;
 
 // Factors used to adjust speed assignments
 constexpr float kTurnChannelFactor = 1.25f;
@@ -127,7 +124,7 @@ protected:
    *                             information has been loaded
    * @return the speed to use for the directededge or kUnconfiguredSpeed if none is configured
    */
-  uint32_t FromConfig(DirectedEdge& directededge,
+  uint32_t FromConfig(valhalla::baldr::DirectedEdge& directededge,
                       const uint32_t density,
                       const std::string& country,
                       const std::string& state) const {
@@ -137,8 +134,10 @@ protected:
     }
 
     // let the other function handle ferry stuff or anything not motor vehicle
-    if (directededge.use() == Use::kFerry || directededge.use() == Use::kRailFerry ||
-        !((directededge.forwardaccess() | directededge.reverseaccess()) & kVehicularAccess))
+    if (directededge.use() == valhalla::baldr::Use::kFerry ||
+        directededge.use() == valhalla::baldr::Use::kRailFerry ||
+        !((directededge.forwardaccess() | directededge.reverseaccess()) &
+          valhalla::baldr::kVehicularAccess))
       return kUnconfiguredSpeed;
 
     // try first the country state combo, then country only, then neither, then bail
@@ -157,13 +156,13 @@ protected:
 
     // some kind of special use
     switch (directededge.use()) {
-      case Use::kDriveway:
+      case valhalla::baldr::Use::kDriveway:
         return speed_table.service[0];
-      case Use::kAlley:
+      case valhalla::baldr::Use::kAlley:
         return speed_table.service[1];
-      case Use::kParkingAisle:
+      case valhalla::baldr::Use::kParkingAisle:
         return speed_table.service[2];
-      case Use::kDriveThru:
+      case valhalla::baldr::Use::kDriveThru:
         return speed_table.service[3];
       default:
         break;
@@ -248,7 +247,7 @@ public:
    * @return  true if config based speeds were used to update the edge.
    *          false indicates the conventional heuristic based approach was used
    */
-  bool UpdateSpeed(DirectedEdge& directededge,
+  bool UpdateSpeed(valhalla::baldr::DirectedEdge& directededge,
                    const uint32_t density,
                    bool infer_turn_channels,
                    const std::string& country_code,
@@ -258,22 +257,24 @@ public:
     auto configured_speed = FromConfig(directededge, density, country_code, state_code);
     if (configured_speed != kUnconfiguredSpeed) {
       directededge.set_speed(configured_speed);
-      directededge.set_speed_type(SpeedType::kClassified);
+      directededge.set_speed_type(valhalla::baldr::SpeedType::kClassified);
       return true;
     }
 
     // Update speed on ramps (if not a tagged speed) and turn channels
     if (directededge.link()) {
       uint32_t speed = directededge.speed();
-      Use use = directededge.use();
-      if (use == Use::kTurnChannel && infer_turn_channels) {
+      valhalla::baldr::Use use = directededge.use();
+      if (use == valhalla::baldr::Use::kTurnChannel && infer_turn_channels) {
         speed = static_cast<uint32_t>((speed * kTurnChannelFactor) + 0.5f);
-      } else if ((use == Use::kRamp) && (directededge.speed_type() != SpeedType::kTagged)) {
+      } else if ((use == valhalla::baldr::Use::kRamp) &&
+                 (directededge.speed_type() != valhalla::baldr::SpeedType::kTagged)) {
         // If no tagged speed set ramp speed to slightly lower than speed
         // for roads of this classification
-        RoadClass rc = directededge.classification();
-        if ((rc == RoadClass::kMotorway) || (rc == RoadClass::kTrunk) ||
-            (rc == RoadClass::kPrimary)) {
+        valhalla::baldr::RoadClass rc = directededge.classification();
+        if ((rc == valhalla::baldr::RoadClass::kMotorway) ||
+            (rc == valhalla::baldr::RoadClass::kTrunk) ||
+            (rc == valhalla::baldr::RoadClass::kPrimary)) {
           speed = (density > kMaxRuralDensity)
                       ? static_cast<uint32_t>((speed * kRampDensityFactor) + 0.5f)
                       : static_cast<uint32_t>((speed * kRampFactor) + 0.5f);
@@ -289,10 +290,10 @@ public:
 
     // If speed is assigned from an OSM max_speed tag we only update it based
     // on surface type.
-    if (directededge.speed_type() == SpeedType::kTagged) {
+    if (directededge.speed_type() == valhalla::baldr::SpeedType::kTagged) {
       // Reduce speed on rough pavements. TODO - do we want to increase
       // more on worse surface types?
-      if (directededge.surface() >= Surface::kPavedRough) {
+      if (directededge.surface() >= valhalla::baldr::Surface::kPavedRough) {
         uint32_t speed = directededge.speed();
         if (speed >= 50) {
           directededge.set_speed(speed - 10);
@@ -305,10 +306,10 @@ public:
 
     // Set speed on ferries. Base the speed on the length - assumes
     // that longer lengths generally use a faster ferry boat
-    if (directededge.use() == Use::kRailFerry) {
+    if (directededge.use() == valhalla::baldr::Use::kRailFerry) {
       directededge.set_speed(65); // 40 MPH
       return false;
-    } else if (directededge.use() == Use::kFerry) {
+    } else if (directededge.use() == valhalla::baldr::Use::kFerry) {
       // if duration flag is set do nothing with speed - currently set
       // as the leaves tile flag.
       // leaves tile flag is updated later to the real value.
@@ -337,16 +338,16 @@ public:
 
     // Reduce speeds on parking aisles, driveways, and drive-thrus. These uses are
     // marked as destination only in pbfgraphparser.
-    if (directededge.use() == Use::kParkingAisle) {
-      directededge.set_speed(kParkingAisleSpeed);
-    } else if (directededge.use() == Use::kDriveway) {
-      directededge.set_speed(kDrivewaySpeed);
-    } else if (directededge.use() == Use::kDriveThru) {
-      directededge.set_speed(kDriveThruSpeed);
+    if (directededge.use() == valhalla::baldr::Use::kParkingAisle) {
+      directededge.set_speed(valhalla::baldr::kParkingAisleSpeed);
+    } else if (directededge.use() == valhalla::baldr::Use::kDriveway) {
+      directededge.set_speed(valhalla::baldr::kDrivewaySpeed);
+    } else if (directededge.use() == valhalla::baldr::Use::kDriveThru) {
+      directededge.set_speed(valhalla::baldr::kDriveThruSpeed);
     }
 
     // Modify speed based on surface.
-    if (directededge.surface() >= Surface::kPavedRough) {
+    if (directededge.surface() >= valhalla::baldr::Surface::kPavedRough) {
       uint32_t speed = directededge.speed();
       directededge.set_speed(speed / 2);
     }

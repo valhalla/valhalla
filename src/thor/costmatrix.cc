@@ -1,17 +1,19 @@
+#include "thor/costmatrix.h"
+#include "baldr/datetime.h"
+#include "exceptions.h"
+#include "midgard/encoded.h"
+#include "midgard/logging.h"
+#include "sif/hierarchylimits.h"
+#include "sif/recost.h"
+
+#include <ankerl/unordered_dense.h>
+
 #include <algorithm>
 #include <cmath>
 #include <vector>
 
-#include "baldr/datetime.h"
-#include "midgard/encoded.h"
-#include "midgard/logging.h"
-#include "sif/recost.h"
-#include "thor/costmatrix.h"
-#include "worker.h"
-
-#include <robin_hood.h>
-
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 using namespace valhalla::sif;
 
 namespace {
@@ -19,11 +21,34 @@ namespace {
 constexpr uint32_t kMaxMatrixIterations = 2000000;
 constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
 constexpr uint32_t kMaxLocationReservation = 25; // the default config for max matrix locations
+constexpr uint32_t kDefaultMinIterations = 100;
+constexpr uint32_t kDefaultMaxIterations = 2800;
+
+/**
+ * Checks whether an edge of the source (target) correlation is present with the same percent_along in
+ * any of the target (source) correlations.
+ */
+bool is_super_trivial(const valhalla::PathEdge& edge,
+                      const std::unordered_multimap<GraphId, double>& other_edges) {
+  GraphId edgeid(edge.graph_id());
+  auto dests = other_edges.equal_range(edgeid);
+  for (auto it = dests.first; it != dests.second; ++it) {
+    if (edge.percent_along() == it->second) {
+      return true;
+    }
+  }
+  return false;
+}
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
-int GetThreshold(const travel_mode_t mode, const int n) {
-  return (mode == travel_mode_t::kDrive) ? std::min(2800, std::max(100, n / 3)) : 500;
+int GetThreshold(const travel_mode_t mode,
+                 const uint32_t label_count,
+                 const uint32_t max_iterations,
+                 const uint32_t min_iterations) {
+  return (mode == travel_mode_t::kDrive)
+             ? std::min(max_iterations, std::max(min_iterations, label_count / 3))
+             : 500;
 }
 
 bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
@@ -45,7 +70,8 @@ inline const valhalla::PathEdge& find_correlated_edge(const valhalla::Location& 
 namespace valhalla {
 namespace thor {
 
-class CostMatrix::ReachedMap : public robin_hood::unordered_map<uint64_t, std::vector<uint32_t>> {};
+class CostMatrix::ReachedMap : public ankerl::unordered_dense::map<uint64_t, std::vector<uint32_t>> {
+};
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
@@ -54,7 +80,13 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
                                                       kInitialEdgeLabelCountBidirDijkstra)),
       max_reserved_locations_count_(
           config.get<uint32_t>("costmatrix.max_reserved_locations", kMaxLocationReservation)),
-      check_reverse_connections_(config.get<bool>("costmatrix.check_reverse_connection", false)),
+      check_reverse_connection_(config.get<bool>("costmatrix.check_reverse_connection", true)),
+      min_iterations_(
+          std::max(config.get<uint32_t>("costmatrix.min_iterations", kDefaultMinIterations),
+                   static_cast<uint32_t>(1))),
+      max_iterations_(
+          std::max(config.get<uint32_t>("costmatrix.max_iterations", kDefaultMaxIterations),
+                   static_cast<uint32_t>(1))),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
       current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
@@ -68,7 +100,7 @@ CostMatrix::~CostMatrix() {
 void CostMatrix::Clear() {
   // Clear the target edge markings
   targets_->clear();
-  if (check_reverse_connections_)
+  if (check_reverse_connection_)
     sources_->clear();
 
   // Clear all adjacency lists, edge labels, and edge status
@@ -138,8 +170,8 @@ bool CostMatrix::SourceToTarget(Api& request,
 
   // Set the source and target locations
   // TODO: for now we only allow depart_at/current date_time
-  SetSources(graphreader, source_location_list, time_infos);
-  SetTargets(graphreader, target_location_list);
+  SetSources(graphreader, source_location_list, time_infos, target_location_list);
+  SetTargets(graphreader, target_location_list, source_location_list);
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -469,9 +501,10 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
   uint8_t restriction_idx = kInvalidRestriction;
+  uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   if (FORWARD) {
     if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
-                           time_info.timezone_index, restriction_idx) ||
+                           time_info.timezone_index, restriction_idx, destonly_restriction_mask) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, true,
                              &edgestatus_[FORWARD][index], time_info.local_time,
                              time_info.timezone_index)) {
@@ -479,7 +512,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     }
   } else {
     if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.local_time,
-                                  time_info.timezone_index, restriction_idx) ||
+                                  time_info.timezone_index, restriction_idx,
+                                  destonly_restriction_mask) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, false,
                              &edgestatus_[FORWARD][index], time_info.local_time,
                              time_info.timezone_index)) {
@@ -543,7 +577,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                             restriction_idx, 0,
                             meta.edge->destonly() ||
                                 (costing_->is_hgv() && meta.edge->destonly_hgv()),
-                            meta.edge->forwardaccess() & kTruckAccess);
+                            meta.edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, not_thru_pruning,
@@ -553,7 +587,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                                                opp_pred_edge),
                             restriction_idx, 0,
                             opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                            opp_edge->forwardaccess() & kTruckAccess);
+                            opp_edge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
   }
   auto newsortcost =
       GetAstarHeuristic<expansion_direction>(index, t2->get_node_ll(meta.edge->endnode()));
@@ -563,7 +597,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // mark the edge as settled for the connection check
   if (!FORWARD) {
     (*targets_)[meta.edge_id].push_back(index);
-  } else if (check_reverse_connections_) {
+  } else if (check_reverse_connection_) {
     (*sources_)[meta.edge_id].push_back(index);
   }
 
@@ -571,7 +605,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   if (expansion_callback_) {
     expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix",
                         Expansion_EdgeStatus_reached, newcost.secs, pred_dist, newcost.cost,
-                        static_cast<Expansion_ExpansionType>(expansion_direction));
+                        static_cast<Expansion_ExpansionType>(
+                            !static_cast<bool>(expansion_direction)));
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -617,12 +652,14 @@ bool CostMatrix::Expand(const uint32_t index,
         pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
     expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
                         Expansion_EdgeStatus_settled, pred.cost().secs, pred.path_distance(),
-                        pred.cost().cost, static_cast<Expansion_ExpansionType>(expansion_direction));
+                        pred.cost().cost,
+                        static_cast<Expansion_ExpansionType>(
+                            !static_cast<bool>(expansion_direction)));
   }
 
   if (FORWARD) {
     CheckForwardConnections(index, pred, n, graphreader, options);
-  } else if (check_reverse_connections_) {
+  } else if (check_reverse_connection_) {
     CheckReverseConnections(index, pred, n, graphreader, options);
   }
 
@@ -795,6 +832,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     // has been found to the end node of this directed edge
     const auto& rev_edgestate = edgestatus_[MATRIX_REV][target];
     EdgeStatusInfo rev_edgestatus = rev_edgestate.Get(rev_edgeid);
+    const auto& fwd_edgelabels = edgelabel_[MATRIX_FORW][source];
     const auto& rev_edgelabels = edgelabel_[MATRIX_REV][target];
     uint32_t rev_predidx = rev_edgelabels[rev_edgestatus.index()].predecessor();
     const BDEdgeLabel& rev_label = rev_edgelabels[rev_edgestatus.index()];
@@ -808,44 +846,76 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
 
       // if source percent along edge is larger than target percent along,
       // can't connect on this edge
-      if (find_correlated_edge(options.sources(source), fwd_pred.edgeid()).percent_along() >
-          find_correlated_edge(options.targets(target), fwd_pred.edgeid()).percent_along()) {
+      const auto source_edge = find_correlated_edge(options.sources(source), fwd_pred.edgeid());
+      const auto target_edge = find_correlated_edge(options.targets(target), fwd_pred.edgeid());
+      if (source_edge.percent_along() > target_edge.percent_along()) {
         continue;
       }
 
-      // remember: transition_cost is abused in SetSources/Targets: cost is secs, secs is length
-      float s =
-          std::abs(fwd_pred.cost().secs + rev_label.cost().secs - rev_label.transition_cost().cost);
+      // how much of the edge is traversed from source to target
+      float traversed_fraction = target_edge.percent_along() - source_edge.percent_along();
+      // remember that transition cost represents the distance penalty on initial labels
+      Cost partial_reverse_cost = rev_label.cost() - rev_label.transition_cost();
+      Cost partial_forward_cost = fwd_pred.cost() - fwd_pred.transition_cost();
+
+      // the forward and reverse label costs include 1) the partial cost to/from the end/start of
+      // the edge and 2) the distance penalty. We use the distance penalty stored in transition_cost
+      // to scale the costs to the traversed fraction and set the route cost to the average of both
+      // the fractional cost and the distance penalties
+      Cost partial_cost =
+          ((partial_reverse_cost * (1 / target_edge.percent_along()) * traversed_fraction) +
+           (partial_forward_cost * (1 / (1 - source_edge.percent_along())) * traversed_fraction) +
+           fwd_pred.transition_cost() + rev_label.transition_cost()) *
+          0.5;
 
       // Update best connection and set found = true.
       // distance computation only works with the casts.
-      uint32_t d = std::abs(static_cast<int>(fwd_pred.path_distance()) +
-                            static_cast<int>(rev_label.path_distance()) -
-                            static_cast<int>(rev_label.transition_cost().secs));
-      best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, Cost(s, s), d);
-      best_connection_[idx].found = true;
+      graph_tile_ptr tile = nullptr;
+      auto* de = graphreader.directededge(GraphId(source_edge.graph_id()), tile);
+      uint32_t d =
+          std::abs(static_cast<int>(fwd_pred.path_distance()) +
+                   static_cast<int>(rev_label.path_distance()) - static_cast<int>(de->length()));
+      best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid,
+                                   traversed_fraction == 0
+                                       ? (fwd_pred.transition_cost() + rev_label.transition_cost()) *
+                                             0.5
+                                       : partial_cost,
+                                   d);
+      if (best_connection_[idx].max_iterations == 0) {
+        best_connection_[idx].max_iterations =
+            n + GetThreshold(mode_,
+                             edgelabel_[MATRIX_FORW][source].size() +
+                                 edgelabel_[MATRIX_REV][target].size(),
+                             max_iterations_, min_iterations_);
+      }
 
       // Update status and update threshold if this is the last location
       // to find for this source or target
       UpdateStatus(source, target);
     } else {
-      float oppcost = (rev_predidx == kInvalidLabel) ? 0.f : rev_edgelabels[rev_predidx].cost().cost;
-      float c = fwd_pred.cost().cost + oppcost + rev_label.transition_cost().cost;
+      // at this point, the found connection might still be somewhat trivial:
+      // the connecting edge might be an initial edge for either the given source or target
+      // there are two things we need to take care of in that case: we have to make sure to
+      // (1) only add the partial cost/distance for the connecting edge and (2) use the
+      // correct transition cost
+      auto& opp_label = rev_predidx == kInvalidLabel ? rev_label : rev_edgelabels[rev_predidx];
+      auto& label = rev_predidx == kInvalidLabel ? fwd_edgelabels[fwd_pred.predecessor()] : fwd_pred;
 
+      Cost total_cost =
+          label.cost() + opp_label.cost() +
+          (rev_predidx == kInvalidLabel ? fwd_pred.transition_cost() : rev_label.transition_cost());
       // Check if best connection
-      if (c < best_connection_[idx].cost.cost) {
-        float oppsec = (rev_predidx == kInvalidLabel) ? 0.f : rev_edgelabels[rev_predidx].cost().secs;
-        uint32_t oppdist =
-            (rev_predidx == kInvalidLabel) ? 0U : rev_edgelabels[rev_predidx].path_distance();
-        float s = fwd_pred.cost().secs + oppsec + rev_label.transition_cost().secs;
-        uint32_t d = fwd_pred.path_distance() + oppdist;
+      if (total_cost < best_connection_[idx].cost) {
+        uint32_t total_dist = label.path_distance() + opp_label.path_distance();
 
         // Update best connection and set a threshold
-        best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, Cost(c, s), d);
+        best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, total_cost, total_dist);
         if (best_connection_[idx].max_iterations == 0) {
           best_connection_[idx].max_iterations =
-              n + GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
-                                          edgelabel_[MATRIX_REV][target].size());
+              n + GetThreshold(mode_,
+                               edgelabel_[MATRIX_FORW][source].size() +
+                                   edgelabel_[MATRIX_REV][target].size(),
+                               max_iterations_, min_iterations_);
         }
 
         // Update status and update threshold if this is the last location
@@ -912,6 +982,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
     EdgeStatusInfo fwd_edgestatus = edgestatus_[MATRIX_FORW][source].Get(fwd_edgeid);
     if (fwd_edgestatus.set() != EdgeSet::kUnreachedOrReset) {
       const auto& fwd_edgelabels = edgelabel_[MATRIX_FORW][source];
+      const auto& rev_edgelabels = edgelabel_[MATRIX_REV][target];
       uint32_t fwd_predidx = fwd_edgelabels[fwd_edgestatus.index()].predecessor();
       const BDEdgeLabel& fwd_label = fwd_edgelabels[fwd_edgestatus.index()];
 
@@ -922,45 +993,79 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
           return;
         }
 
-        if (find_correlated_edge(options.sources(source), fwd_label.edgeid()).percent_along() >
-            find_correlated_edge(options.targets(target), fwd_label.edgeid()).percent_along()) {
+        const auto source_edge = find_correlated_edge(options.sources(source), fwd_label.edgeid());
+        const auto target_edge = find_correlated_edge(options.targets(target), fwd_label.edgeid());
+
+        if (source_edge.percent_along() > target_edge.percent_along()) {
           continue;
         }
+        // how much of the edge is traversed from source to target
+        float traversed_fraction = target_edge.percent_along() - source_edge.percent_along();
+        // remember that transition cost represents the distance penalty on initial labels
+        Cost partial_reverse_cost = rev_pred.cost() - rev_pred.transition_cost();
+        Cost partial_forward_cost = fwd_label.cost() - fwd_label.transition_cost();
 
-        // remember: transition_cost is abused in SetSources/Targets: cost is secs, secs is length
-        float s =
-            std::abs(rev_pred.cost().secs + fwd_label.cost().secs - fwd_label.transition_cost().cost);
+        // the forward and reverse label costs include 1) the partial cost to/from the end/start of
+        // the edge and 2) the distance penalty. We use the distance penalty stored in transition_cost
+        // to scale the costs to the traversed fraction and set the route cost to the average of both
+        // the fractional cost and the distance penalties
+        Cost partial_cost =
+            ((partial_reverse_cost * (1 / target_edge.percent_along()) * traversed_fraction) +
+             (partial_forward_cost * (1 / (1 - source_edge.percent_along())) * traversed_fraction) +
+             fwd_label.transition_cost() + rev_pred.transition_cost()) *
+            0.5;
 
         // Update best connection and set found = true.
         // distance computation only works with the casts.
-        uint32_t d = std::abs(static_cast<int>(rev_pred.path_distance()) +
-                              static_cast<int>(fwd_label.path_distance()) -
-                              static_cast<int>(fwd_label.transition_cost().secs));
-        best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(s, s), d);
-        best_connection_[source_idx].found = true;
+        graph_tile_ptr tile = nullptr;
+        auto* de = graphreader.directededge(GraphId(source_edge.graph_id()), tile);
+        uint32_t d =
+            std::abs(static_cast<int>(rev_pred.path_distance()) +
+                     static_cast<int>(fwd_label.path_distance()) - static_cast<int>(de->length()));
+        best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(),
+                                            traversed_fraction == 0 ? (rev_pred.transition_cost() +
+                                                                       fwd_label.transition_cost()) *
+                                                                          0.5
+                                                                    : partial_cost,
+                                            d);
+        // best_connection_[source_idx].found = true;
+        if (best_connection_[source_idx].max_iterations == 0) {
+          best_connection_[source_idx].max_iterations =
+              n + GetThreshold(mode_,
+                               edgelabel_[MATRIX_FORW][source].size() +
+                                   edgelabel_[MATRIX_REV][target].size(),
+                               max_iterations_, min_iterations_);
+        }
 
         // Update status and update threshold if this is the last location
         // to find for this source or target
         UpdateStatus(source, target);
       } else {
-        float oppcost = (fwd_predidx == kInvalidLabel) ? 0 : fwd_edgelabels[fwd_predidx].cost().cost;
-        float c = rev_pred.cost().cost + oppcost + fwd_label.transition_cost().cost;
+        // at this point, the found connection might still be somewhat trivial:
+        // the connecting edge might be an initial edge for either the given source or target
+        // there are two things we need to take care of in that case: we have to make sure to
+        // (1) only add the partial cost/distance for the connecting edge and (2) use the
+        // correct transition cost
+        auto& opp_label = fwd_predidx == kInvalidLabel ? fwd_label : fwd_edgelabels[fwd_predidx];
+        auto& label =
+            fwd_predidx == kInvalidLabel ? rev_edgelabels[rev_pred.predecessor()] : rev_pred;
+
+        Cost total_cost =
+            label.cost() + opp_label.cost() +
+            (fwd_predidx == kInvalidLabel ? rev_pred.transition_cost() : fwd_label.transition_cost());
 
         // Check if best connection
-        if (c < best_connection_[source_idx].cost.cost) {
-          float fwd_sec =
-              (fwd_predidx == kInvalidLabel) ? 0 : fwd_edgelabels[fwd_predidx].cost().secs;
-          uint32_t fwd_dist =
-              (fwd_predidx == kInvalidLabel) ? 0 : fwd_edgelabels[fwd_predidx].path_distance();
-          float s = rev_pred.cost().secs + fwd_sec + fwd_label.transition_cost().secs;
-          uint32_t d = rev_pred.path_distance() + fwd_dist;
+        if (total_cost < best_connection_[source_idx].cost) {
+          uint32_t total_dist = label.path_distance() + opp_label.path_distance();
 
           // Update best connection and set a threshold
-          best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(c, s), d);
+          best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), total_cost, total_dist);
           if (best_connection_[source_idx].max_iterations == 0) {
             best_connection_[source_idx].max_iterations =
-                n + GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
-                                            edgelabel_[MATRIX_REV][target].size());
+                n + GetThreshold(mode_,
+                                 edgelabel_[MATRIX_FORW][source].size() +
+                                     edgelabel_[MATRIX_REV][target].size(),
+                                 max_iterations_, min_iterations_);
           }
 
           // Update status and update threshold if this is the last location
@@ -995,8 +1100,9 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
       // At least 1 connection has been found to each target for this source.
       // Set a threshold to continue search for a limited number of times.
       locs_status_[MATRIX_FORW][source].threshold =
-          GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
-                                  edgelabel_[MATRIX_REV][target].size());
+          GetThreshold(mode_,
+                       edgelabel_[MATRIX_FORW][source].size() + edgelabel_[MATRIX_REV][target].size(),
+                       max_iterations_, min_iterations_);
     }
   }
 
@@ -1009,8 +1115,9 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
       // At least 1 connection has been found to each source for this target.
       // Set a threshold to continue search for a limited number of times.
       locs_status_[MATRIX_REV][target].threshold =
-          GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
-                                  edgelabel_[MATRIX_REV][target].size());
+          GetThreshold(mode_,
+                       edgelabel_[MATRIX_FORW][source].size() + edgelabel_[MATRIX_REV][target].size(),
+                       max_iterations_, min_iterations_);
     }
   }
 }
@@ -1019,10 +1126,20 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
 // locations.
 void CostMatrix::SetSources(GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                            const std::vector<baldr::TimeInfo>& time_infos) {
+                            const std::vector<baldr::TimeInfo>& time_infos,
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& targets) {
+  std::unordered_multimap<GraphId, double> target_edges;
+  for (const auto& t : targets) {
+    for (const auto& e : t.correlation().edges()) {
+      target_edges.emplace(static_cast<GraphId>(e.graph_id()), e.percent_along());
+    }
+  }
+
   // Go through each source location
   uint32_t index = 0;
   Cost empty_cost;
+  // it's super trivial if both are node snapped to the same end of the same edge
+  // note the check for node snapping is in the if below and not in this lambda
   for (const auto& origin : sources) {
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
@@ -1034,7 +1151,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
     // Iterate through edges and add to adjacency list
     for (const auto& edge : origin.correlation().edges()) {
       // If origin is at a node - skip any inbound edge (dist = 1)
-      if (has_other_edges && edge.end_node()) {
+      if (has_other_edges && edge.end_node() && !is_super_trivial(edge, target_edges)) {
         continue;
       }
 
@@ -1059,20 +1176,27 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.distance();
+      Cost distance_penalty(edge.distance(), 0);
+      cost += distance_penalty;
 
       // 2 adjustments related only to properly handle trivial routes:
-      //   - "transition_cost" is used to store the traversed secs & length
+      //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_, ec, d,
-                             !directededge->not_thru(), !(costing_->IsClosed(directededge, tile)),
+
+      // we call this to find out if we're starting on access restrictions with a local traffic
+      // exemption and push this info into the label
+      auto destonly_restriction_mask =
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_,
+                             distance_penalty, d, !directededge->not_thru(),
+                             !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()),
-                             directededge->forwardaccess() & kTruckAccess);
+                             directededge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
       auto newsortcost =
           GetAstarHeuristic<MatrixExpansionType::forward>(index, opp_tile->get_node_ll(
                                                                      directededge->endnode()));
@@ -1089,7 +1213,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       edgelabel_[MATRIX_FORW][index].push_back(std::move(edge_label));
       adjacency_[MATRIX_FORW][index].add(idx);
       edgestatus_[MATRIX_FORW][index].Set(edgeid, EdgeSet::kTemporary, idx, tile);
-      if (check_reverse_connections_)
+      if (check_reverse_connection_)
         (*sources_)[edgeid].push_back(index);
     }
     index++;
@@ -1099,7 +1223,16 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 // Set the target/destination locations. Search expands backwards from
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
-                            const google::protobuf::RepeatedPtrField<valhalla::Location>& targets) {
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources) {
+
+  std::unordered_multimap<GraphId, double> source_edges;
+  for (const auto& s : sources) {
+    for (const auto& e : s.correlation().edges()) {
+      source_edges.emplace(static_cast<GraphId>(e.graph_id()), e.percent_along());
+    }
+  }
+
   // Go through each target location
   uint32_t index = 0;
   Cost empty_cost;
@@ -1115,7 +1248,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     for (const auto& edge : dest.correlation().edges()) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
-      if (has_other_edges && edge.begin_node()) {
+      if (has_other_edges && edge.begin_node() && !is_super_trivial(edge, source_edges)) {
         continue;
       }
 
@@ -1149,20 +1282,27 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
-      cost.cost += edge.distance();
+      Cost distance_penalty(edge.distance(), 0);
+      cost += distance_penalty;
 
       // 2 adjustments related only to properly handle trivial routes:
-      //   - "transition_cost" is used to store the traversed secs & length
+      //   - "transition_cost" is used to store the distance penalty
       //   - "path_id" is used to store whether the opp edge is even allowed (e.g. no oneway)
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
-      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             !opp_dir_edge->not_thru(), !(costing_->IsClosed(directededge, tile)),
+
+      // we call this to find out if we're starting on access restrictions with a local traffic
+      // exemption and push this info into the label
+      auto destonly_restriction_mask =
+          costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
+                             distance_penalty, d, !opp_dir_edge->not_thru(),
+                             !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()),
-                             directededge->forwardaccess() & kTruckAccess);
+                             directededge->forwardaccess() & kTruckAccess, destonly_restriction_mask);
 
       auto newsortcost =
           GetAstarHeuristic<MatrixExpansionType::reverse>(index,
@@ -1287,8 +1427,8 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
     request.mutable_matrix()->mutable_begin_lat()->Set(connection_idx, source_edge.ll().lat());
     request.mutable_matrix()->mutable_begin_lon()->Set(connection_idx, source_edge.ll().lng());
-    request.mutable_matrix()->mutable_end_lat()->Set(connection_idx, source_edge.ll().lat());
-    request.mutable_matrix()->mutable_end_lon()->Set(connection_idx, source_edge.ll().lng());
+    request.mutable_matrix()->mutable_end_lat()->Set(connection_idx, target_edge.ll().lat());
+    request.mutable_matrix()->mutable_end_lon()->Set(connection_idx, target_edge.ll().lng());
 
     // get begin/end heading using the path's begin/end edge shapes
     const DirectedEdge* start_edge =
@@ -1296,17 +1436,13 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
     std::vector<PointLL> shp = tile->edgeinfo(start_edge).shape();
     if (!start_edge->forward())
       std::reverse(shp.begin(), shp.end());
-    request.mutable_matrix()
-        ->mutable_begin_heading()
-        ->Set(connection_idx, PointLL::HeadingAlongPolyline(shp, start_edge->length() * source_pct));
+    request.mutable_matrix()->mutable_begin_heading()->Set(connection_idx, source_edge.heading());
     const DirectedEdge* end_edge =
         graphreader.directededge(static_cast<GraphId>(target_edge.graph_id()), tile);
     shp = tile->edgeinfo(end_edge).shape();
     if (!end_edge->forward())
       std::reverse(shp.begin(), shp.end());
-    request.mutable_matrix()
-        ->mutable_end_heading()
-        ->Set(connection_idx, PointLL::HeadingAlongPolyline(shp, end_edge->length() * target_pct));
+    request.mutable_matrix()->mutable_end_heading()->Set(connection_idx, target_edge.heading());
   }
 
   // bail if no shape was requested

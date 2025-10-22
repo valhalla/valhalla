@@ -2,12 +2,14 @@
 #include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/graphid.h"
-#include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/edgelabel.h"
+#include "sif/hierarchylimits.h"
 #include "sif/recost.h"
 #include "thor/alternates.h"
-#include "worker.h"
+
+#include <boost/property_tree/ptree.hpp>
+
 #include <algorithm>
 
 using namespace valhalla::midgard;
@@ -239,6 +241,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
   uint8_t restriction_idx = kInvalidRestriction;
+  uint8_t destonly_restriction_mask = pred.destonly_access_restr_mask();
   if (FORWARD) {
     // Why is is_dest false?
     // We have to consider next cases:
@@ -249,14 +252,15 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     // The result path will be correct, because there are cosing.Allowed calls inside recost_forward
     // function in second time.
     if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, localtime,
-                           time_info.timezone_index, restriction_idx) ||
+                           time_info.timezone_index, restriction_idx, destonly_restriction_mask) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,
                              &edgestatus_forward_, localtime, time_info.timezone_index)) {
       return false;
     }
   } else {
     if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, localtime,
-                                  time_info.timezone_index, restriction_idx) ||
+                                  time_info.timezone_index, restriction_idx,
+                                  destonly_restriction_mask) ||
         costing_->Restricted(meta.edge, pred, edgelabels_reverse_, tile, meta.edge_id, false,
                              &edgestatus_reverse_, localtime, time_info.timezone_index)) {
       return false;
@@ -302,13 +306,13 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   if (t2 == nullptr && !get_opp_edge_data())
     return false;
 
+  const auto& end_node_ll = t2->get_node_ll(meta.edge->endnode());
+
   // Find the sort cost (with A* heuristic) using the lat,lng at the
   // end node of the directed edge.
   float dist = 0.0f;
-  float sortcost =
-      newcost.cost + (FORWARD
-                          ? astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist)
-                          : astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist));
+  float sortcost = newcost.cost + (FORWARD ? astarheuristic_forward_.Get(end_node_ll, dist)
+                                           : astarheuristic_reverse_.Get(end_node_ll, dist));
 
   // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
   // We allow settling not_thru edges so we can connect both trees on them.
@@ -323,7 +327,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
         kUnlimitedTransitions) {
       // Override distance to the destination with a distance from the origin.
       // It will be used by hierarchy limits
-      dist = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+      dist = astarheuristic_reverse_.GetDistance(end_node_ll);
     }
     edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, not_thru_pruning,
@@ -333,7 +337,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      restriction_idx, 0,
                                      meta.edge->destonly() ||
                                          (costing_->is_hgv() && meta.edge->destonly_hgv()),
-                                     meta.edge->forwardaccess() & kTruckAccess);
+                                     meta.edge->forwardaccess() & kTruckAccess,
+                                     destonly_restriction_mask);
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
@@ -341,7 +346,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
         kUnlimitedTransitions) {
       // Override distance to the origin with a distance from the destination.
       // It will be used by hierarchy limits
-      dist = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
+      dist = astarheuristic_forward_.GetDistance(end_node_ll);
     }
     edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, not_thru_pruning,
@@ -352,7 +357,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      restriction_idx, 0,
                                      opp_edge->destonly() ||
                                          (costing_->is_hgv() && opp_edge->destonly_hgv()),
-                                     opp_edge->forwardaccess() & kTruckAccess);
+                                     opp_edge->forwardaccess() & kTruckAccess,
+                                     destonly_restriction_mask);
     adjacencylist_reverse_.add(idx);
   }
 
@@ -758,7 +764,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         const auto prev_pred = rev_pred.predecessor() == kInvalidLabel
                                    ? GraphId{}
                                    : edgelabels_reverse_[rev_pred.predecessor()].edgeid();
-        expansion_callback_(graphreader, rev_pred.opp_edgeid(), prev_pred, "bidirectional_astar",
+        expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "bidirectional_astar",
                             Expansion_EdgeStatus_settled, rev_pred.cost().secs,
                             rev_pred.path_distance(), rev_pred.cost().cost,
                             Expansion_ExpansionType_reverse);
@@ -1023,13 +1029,20 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
     }
+
+    // we call this to find out if we're starting on access restrictions with a local traffic
+    // exemption and push this info into the label
+    auto destonly_restriction_mask =
+        costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      kInvalidRestriction, !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      sif::InternalTurn::kNoTurn, 0,
                                      directededge->destonly() ||
                                          (costing_->is_hgv() && directededge->destonly_hgv()),
-                                     directededge->forwardaccess() & kTruckAccess);
+                                     directededge->forwardaccess() & kTruckAccess,
+                                     destonly_restriction_mask);
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1108,7 +1121,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-    float dist = astarheuristic_reverse_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+
+    const auto& end_node_ll = tile->get_node_ll(opp_dir_edge->endnode());
+    float dist = astarheuristic_reverse_.GetDistance(end_node_ll);
     float sortcost = cost.cost + astarheuristic_reverse_.Get(dist);
 
     // Add EdgeLabel to the adjacency list. Set the predecessor edge index
@@ -1120,16 +1135,23 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
         kUnlimitedTransitions) {
       // Override distance to the origin with a distance from the destination.
       // It will be used by hierarchy limits
-      dist = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
+      dist = astarheuristic_forward_.GetDistance(end_node_ll);
     }
+
+    // we call this to find out if we're starting on access restrictions with a local traffic
+    // exemption and push this info into the label
+    auto destonly_restriction_mask =
+        costing_->GetExemptedAccessRestrictions(directededge, tile, edgeid);
+
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, kInvalidRestriction,
+                                     sif::InternalTurn::kNoTurn, kInvalidRestriction, 0,
                                      directededge->destonly() ||
                                          (costing_->is_hgv() && directededge->destonly_hgv()),
-                                     directededge->forwardaccess() & kTruckAccess);
+                                     directededge->forwardaccess() & kTruckAccess,
+                                     destonly_restriction_mask);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as reached, sending the opposing because this is the reverse tree
@@ -1277,8 +1299,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     // bidirectional a* has a bug where it fails trivial routes in which you are on a one way edge and
     // the origin is near the end of the edge and the destination is near the beginning, in other
     // words a route that looks trivial but actually needs to go around the block to complete
-    if (path_edges.size() == 1)
+    if (path_edges.size() == 1) {
       LOG_WARN("Trivial route with bidirectional A* should not be allowed");
+    }
 
     // once we recovered the whole path we should construct list of PathInfo objects
     std::vector<PathInfo> path;
@@ -1336,7 +1359,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
                               std::vector<sif::BDEdgeLabel>& edge_labels_rev,
                               const BDEdgeLabel& fwd_pred,
                               const BDEdgeLabel& rev_pred,
-                              const std::shared_ptr<sif::DynamicCost>& costing) {
+                              const sif::cost_ptr_t& costing) {
 
   const uint8_t M = 10;                 // TODO Look at data to figure this out
   const uint8_t PATCH_PATH_SIZE = M * 2 // Expand M in both directions

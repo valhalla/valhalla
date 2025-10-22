@@ -1,7 +1,7 @@
 #include "thor/isochrone.h"
-#include "baldr/datetime.h"
 #include "midgard/distanceapproximator.h"
 #include "midgard/logging.h"
+
 #include <algorithm>
 
 using namespace valhalla::midgard;

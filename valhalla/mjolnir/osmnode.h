@@ -1,11 +1,11 @@
 #ifndef VALHALLA_MJOLNIR_OSMNODE_H
 #define VALHALLA_MJOLNIR_OSMNODE_H
 
-#include <cstdint>
-#include <cstring>
-
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <cstdint>
+#include <cstring>
 
 namespace valhalla {
 namespace mjolnir {
@@ -54,9 +54,6 @@ struct OSMNode {
   uint32_t private_access_ : 1;
   uint32_t cash_only_toll_ : 1;
   uint32_t spare1_ : 5;
-
-  // bss information
-  uint32_t bss_info_;
 
   // linguistic information
   uint32_t linguistic_info_index_;
@@ -527,25 +524,6 @@ struct OSMNode {
    */
   bool cash_only_toll() const {
     return cash_only_toll_;
-  }
-
-  /**
-   * Sets the index for bss informations.
-   * @param  idx  Index for the bss informations.
-   */
-  void set_bss_info_index(const uint32_t index) {
-    if (index > kMaxNodeNameIndex) {
-      throw std::runtime_error("OSMNode: exceeded maximum bss informations index");
-    }
-    bss_info_ = index;
-  }
-
-  /**
-   * Get the bss informations index.
-   * @return  Returns the index for the bss informations.
-   */
-  uint32_t bss_info_index() const {
-    return bss_info_;
   }
 
   /**

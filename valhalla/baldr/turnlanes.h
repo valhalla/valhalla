@@ -3,10 +3,8 @@
 
 #include <cstdint>
 #include <sstream>
-#include <stdint.h>
 #include <string>
 #include <unordered_map>
-#include <valhalla/midgard/util.h>
 #include <vector>
 
 namespace valhalla {
