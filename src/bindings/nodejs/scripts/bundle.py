@@ -58,6 +58,59 @@ def collect_deps_linux(elf_path: str) -> List[str]:
     return sorted(set(deps))
 
 
+def get_rpaths_macos(macho_path: str) -> List[str]:
+    """Get the rpath entries from a Mach-O binary."""
+    try:
+        result = subprocess.run(
+            ["otool", "-l", macho_path],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+    except subprocess.CalledProcessError:
+        return []
+
+    rpaths = []
+    lines = result.stdout.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if line == "cmd LC_RPATH":
+            # The path is in the next few lines, look for "path"
+            for j in range(i + 1, min(i + 5, len(lines))):
+                if lines[j].strip().startswith("path"):
+                    # Format is usually "path /some/path (offset 12)"
+                    parts = lines[j].strip().split(maxsplit=1)
+                    if len(parts) > 1:
+                        path = parts[1].split("(")[0].strip()
+                        rpaths.append(path)
+                    break
+        i += 1
+
+    return rpaths
+
+
+def resolve_rpath_macos(dep_name: str, macho_path: str, rpaths: List[str]) -> str:
+    """Resolve an @rpath dependency to an actual filesystem path."""
+    if not dep_name.startswith("@rpath/"):
+        return dep_name
+
+    # Extract the library name
+    lib_name = dep_name[7:]  # Remove "@rpath/"
+
+    # Try to resolve using the binary's rpaths
+    for rpath in rpaths:
+        # Handle @loader_path and @executable_path in rpath
+        rpath_resolved = rpath.replace("@loader_path", os.path.dirname(macho_path))
+        rpath_resolved = rpath_resolved.replace("@executable_path", os.path.dirname(macho_path))
+
+        candidate = os.path.join(rpath_resolved, lib_name)
+        if os.path.isfile(candidate):
+            return os.path.realpath(candidate)
+
+    return ""
+
+
 def collect_deps_macos(macho_path: str) -> List[str]:
     """Collect dependencies using otool on macOS."""
     try:
@@ -69,15 +122,41 @@ def collect_deps_macos(macho_path: str) -> List[str]:
         )
     except subprocess.CalledProcessError:
         return []
-    
+
+    # Get rpaths for resolving @rpath dependencies
+    rpaths = get_rpaths_macos(macho_path)
+
     deps = []
     lines = result.stdout.splitlines()
     # Skip first line (it's the file path)
     for line in lines[1:]:
         parts = line.strip().split()
-        if parts and parts[0].startswith("/"):
-            deps.append(parts[0])
-    
+        if not parts:
+            continue
+
+        dep_path = parts[0]
+
+        # Handle absolute paths
+        if dep_path.startswith("/"):
+            deps.append(dep_path)
+        # Handle @rpath dependencies
+        elif dep_path.startswith("@rpath/"):
+            resolved = resolve_rpath_macos(dep_path, macho_path, rpaths)
+            if resolved:
+                deps.append(resolved)
+        # Handle @loader_path dependencies
+        elif dep_path.startswith("@loader_path/"):
+            lib_name = dep_path[13:]  # Remove "@loader_path/"
+            resolved = os.path.join(os.path.dirname(macho_path), lib_name)
+            if os.path.isfile(resolved):
+                deps.append(os.path.realpath(resolved))
+        # Handle @executable_path dependencies
+        elif dep_path.startswith("@executable_path/"):
+            lib_name = dep_path[17:]  # Remove "@executable_path/"
+            resolved = os.path.join(os.path.dirname(macho_path), lib_name)
+            if os.path.isfile(resolved):
+                deps.append(os.path.realpath(resolved))
+
     return sorted(set(deps))
 
 
@@ -169,6 +248,10 @@ def bundle_all_deps(binding_dst: Path, out_dir: Path) -> None:
     # Collect all dependencies first
 
     all_deps = collect_deps_recursively(str(binding_dst))
+
+    print('all_deps:', all_deps)
+    for dep in all_deps:
+        print('dep:', dep)
 
     # Copy all collected dependencies
     for dep in all_deps:
