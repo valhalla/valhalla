@@ -32,7 +32,6 @@ foreach(tgt IN ITEMS _valhalla graph_utils)
 
   target_link_libraries(${tgt} PRIVATE 
     valhalla
-    Python::Python
     Python::SABIModule
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
 endforeach()
