@@ -552,6 +552,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // we use a non varying time for all time dependent routes until we can figure out how to vary the
   // time during the path computation in the bidirectional algorithm
   bool invariant = options.date_time_type() == Options::invariant;
+  bool current = options.date_time_type() == Options::current;
   // Get time information for forward and backward searches
 
   TimeInfo forward_time_info;
@@ -792,7 +793,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // Expand from the end node in forward direction.
       Expand<ExpansionType::forward, depart_at>(graphreader, fwd_pred.endnode(), fwd_pred,
                                                 forward_pred_idx, nullptr, forward_time_info,
-                                                invariant);
+                                                invariant || current);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list on the next pass
       expand_forward = false;
@@ -849,7 +850,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       // Expand from the end node in reverse direction.
       Expand<ExpansionType::reverse, depart_at>(graphreader, rev_pred.endnode(), rev_pred,
                                                 reverse_pred_idx, opp_pred_edge, reverse_time_info,
-                                                invariant);
+                                                invariant || current);
     }
   }
   return {}; // If we are here the route failed

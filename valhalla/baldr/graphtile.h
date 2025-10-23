@@ -875,10 +875,6 @@ protected:
   // indices in the tile header.
   GraphId* edge_bins_{};
 
-  // List of edge bounding circles. The list is broken up in bins which
-  // share the same indices as the edge bins
-  DiscretizedBoundingCircle* bounding_circles_{};
-
   // Lane connectivity data.
   LaneConnectivity* lane_connectivity_{};
 

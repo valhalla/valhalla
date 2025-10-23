@@ -289,8 +289,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
                                                                  valhalla::Location& origin,
                                                                  valhalla::Location& destination,
                                                                  const std::string& costing,
-                                                                 const Options& options,
-                                                                 const bool arrive_by) {
+                                                                 const Options& options) {
   // Find the path.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
 
@@ -301,6 +300,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   cost->set_allow_destination_only(path_algorithm == &bidir_astar ? false : true);
 
   cost->set_pass(0);
+  bool arrive_by = options.date_time_type() == Options::arrive_by;
   auto paths = arrive_by ? path_algorithm->GetBestPathArriveBy(origin, destination, *reader,
                                                                mode_costing, mode, options)
                          : path_algorithm->GetBestPathDepartAt(origin, destination, *reader,

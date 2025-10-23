@@ -78,7 +78,6 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-
   std::vector<std::vector<PathInfo>>
   GetBestPath(valhalla::Location& origin,
               valhalla::Location& dest,
