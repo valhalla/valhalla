@@ -2,8 +2,8 @@ name: Build Node.js bindings
 
 # this workflow:
 # - builds Node.js bindings for Linux (x64, arm64) and macOS (arm64)
-# - verifies the bindings work on each platform
 # - packages all bindings into a single NPM-ready package
+# - verifies the complete package works on each platform by installing and importing it
 
 on:
   push:
@@ -116,72 +116,10 @@ jobs:
           name: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}
           path: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
   
-  verify_nodejs_bindings:
-    name: Verify Node.js bindings (${{ matrix.os }}-${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
-    needs: [build_nodejs_bindings]
-    container: ${{ matrix.container }}
-    strategy:
-      matrix:
-        include:
-          - os: linux
-            arch: x64
-            runner: ubuntu-latest
-            container: node:18
-          - os: linux
-            arch: arm64
-            runner: ubuntu-24.04-arm
-            container: node:18
-          - os: macos
-            arch: arm64
-            runner: macos-14
-            container: null
-    steps:
-      - name: Install Node.js (macOS)
-        if: matrix.os == 'macos'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Download Node.js binding artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}
-      
-      - name: Extract and verify binding
-        run: |
-          echo "[INFO] Extracting artifact..."
-          mkdir -p valhalla_binding
-          tar -xzf valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz -C valhalla_binding
-          
-          echo "[INFO] Contents:"
-          ls -lh valhalla_binding/nodejs_dist/
-          ls -lh valhalla_binding/nodejs_dist/lib/ | head -20
-          
-          echo "[INFO] Checking dependencies..."
-          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} valhalla_binding/nodejs_dist/valhalla_node.node
-          
-          echo "[INFO] Testing Node.js binding..."
-          cat > test.js << 'EOF'
-          try {
-            const valhalla = require('./valhalla_binding/nodejs_dist/valhalla_node.node');
-            console.log('[SUCCESS] Valhalla binding loaded successfully!');
-            console.log('[INFO] VALHALLA_VERSION:', valhalla.VALHALLA_VERSION);
-            console.log('[INFO] Available exports:', Object.keys(valhalla));
-            process.exit(0);
-          } catch (error) {
-            console.error('[ERROR] Failed to load Valhalla binding:', error.message);
-            console.error(error.stack);
-            process.exit(1);
-          }
-          EOF
-          
-          node test.js
-
   package_nodejs_bindings:
     name: Package Node.js bindings for NPM
     runs-on: ubuntu-latest
-    needs: [verify_nodejs_bindings]
+    needs: [build_nodejs_bindings]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -248,3 +186,80 @@ jobs:
         with:
           name: valhalla-npm-package
           path: valhalla-npm-package.tar.gz
+
+  verify_nodejs_package:
+    name: Verify NPM package (${{ matrix.os }}-${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: [package_nodejs_bindings]
+    container: ${{ matrix.container }}
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: x64
+            runner: ubuntu-latest
+            container: node:18
+          - os: linux
+            arch: arm64
+            runner: ubuntu-24.04-arm
+            container: node:18
+          - os: macos
+            arch: arm64
+            runner: macos-14
+            container: null
+    steps:
+      - name: Install Node.js (macOS)
+        if: matrix.os == 'macos'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Download NPM package
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-npm-package
+      
+      - name: Extract and install package
+        run: |
+          echo "[INFO] Extracting NPM package..."
+          tar -xzf valhalla-npm-package.tar.gz
+          
+          echo "[INFO] Package structure:"
+          ls -lh valhalla-npm-package/
+          
+          echo "[INFO] Checking platform-specific binaries..."
+          ls -lh valhalla-npm-package/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch == 'x64' && 'x86_64' || matrix.arch }}/
+          
+          echo "[INFO] Installing package locally..."
+          cd valhalla-npm-package
+          npm pack
+          cd ..
+          npm install ./valhalla-npm-package/*.tgz
+      
+      - name: Test package import
+        run: |
+          echo "[INFO] Testing package import..."
+          cat > test.js << 'EOF'
+          try {
+            const valhalla = require('valhalla');
+            console.log('[SUCCESS] Valhalla package loaded successfully!');
+            console.log('[INFO] VALHALLA_VERSION:', valhalla.VALHALLA_VERSION);
+            console.log('[INFO] Available exports:', Object.keys(valhalla));
+            
+            // Basic functionality test
+            if (typeof valhalla.VALHALLA_VERSION === 'string' && valhalla.VALHALLA_VERSION.length > 0) {
+              console.log('[SUCCESS] Version check passed');
+            } else {
+              console.error('[ERROR] Invalid version');
+              process.exit(1);
+            }
+            
+            process.exit(0);
+          } catch (error) {
+            console.error('[ERROR] Failed to load Valhalla package:', error.message);
+            console.error(error.stack);
+            process.exit(1);
+          }
+          EOF
+          
+          node test.js
