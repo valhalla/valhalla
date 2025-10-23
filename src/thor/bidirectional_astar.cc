@@ -381,7 +381,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
 
-template <const ExpansionType expansion_direction>
+template <const ExpansionType expansion_direction, const bool depart_at>
 void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
                                 const baldr::GraphId& node,
                                 sif::BDEdgeLabel& pred,
@@ -402,10 +402,17 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
   uint32_t shortcuts = 0;
 
   // Update the time information even if time is invariant to account for timezones
-  auto seconds_offset = invariant ? 0.f : pred.cost().secs;
-  auto offset_time = FORWARD
-                         ? time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()))
-                         : time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
+  auto seconds_offset = (invariant || !time_info.valid) ? 0.f : pred.cost().secs;
+  TimeInfo offset_time;
+
+  // either we're expanding the forward tree and the date time type is depart_at,
+  // or we're expanding the reverse tree and the time type is arrive_by,
+  // in either case, we're on the time aware branch and so we need to update the time info
+  if constexpr (FORWARD == depart_at) {
+    offset_time = time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()));
+  } else {
+    offset_time = time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
+  }
 
   auto& edgestatus = FORWARD ? edgestatus_forward_ : edgestatus_reverse_;
 
@@ -495,9 +502,29 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
 
   return;
 }
+std::vector<std::vector<PathInfo>>
+BidirectionalAStar::GetBestPathArriveBy(valhalla::Location& origin,
+                                        valhalla::Location& dest,
+                                        baldr::GraphReader& graphreader,
+                                        const sif::mode_costing_t& mode_costing,
+                                        const sif::TravelMode mode,
+                                        const Options& options) {
+  return GetBestPath<false>(origin, dest, graphreader, mode_costing, mode, options);
+};
+
+std::vector<std::vector<PathInfo>>
+BidirectionalAStar::GetBestPathDepartAt(valhalla::Location& origin,
+                                        valhalla::Location& dest,
+                                        baldr::GraphReader& graphreader,
+                                        const sif::mode_costing_t& mode_costing,
+                                        const sif::TravelMode mode,
+                                        const Options& options) {
+  return GetBestPath<true>(origin, dest, graphreader, mode_costing, mode, options);
+};
 
 // Calculate best path using bi-directional A*. No hierarchies or time
 // dependencies are used. Suitable for pedestrian routes (and bicycle?).
+template <const bool depart_at>
 std::vector<std::vector<PathInfo>>
 BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                                 valhalla::Location& destination,
@@ -524,10 +551,21 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
   // we use a non varying time for all time dependent routes until we can figure out how to vary the
   // time during the path computation in the bidirectional algorithm
-  bool invariant = options.date_time_type() != Options::no_time;
+  bool invariant = options.date_time_type() == Options::invariant;
   // Get time information for forward and backward searches
-  auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
-  auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
+
+  TimeInfo forward_time_info;
+  TimeInfo reverse_time_info;
+
+  if constexpr (depart_at) {
+    forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
+    reverse_time_info =
+        invariant ? TimeInfo::make(destination, graphreader, &tz_cache_) : TimeInfo::invalid();
+  } else {
+    forward_time_info =
+        invariant ? TimeInfo::make(origin, graphreader, &tz_cache_) : TimeInfo::invalid();
+    reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
+  }
 
   // When a timedependent route is too long in distance it gets sent to this algorithm. It used to be
   // the case that this algorithm called EdgeCost without a time component. This would result in
@@ -752,8 +790,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       }
 
       // Expand from the end node in forward direction.
-      Expand<ExpansionType::forward>(graphreader, fwd_pred.endnode(), fwd_pred, forward_pred_idx,
-                                     nullptr, forward_time_info, invariant);
+      Expand<ExpansionType::forward, depart_at>(graphreader, fwd_pred.endnode(), fwd_pred,
+                                                forward_pred_idx, nullptr, forward_time_info,
+                                                invariant);
     } else {
       // Expand reverse - set to get next edge from reverse adj. list on the next pass
       expand_forward = false;
@@ -808,8 +847,9 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       }
 
       // Expand from the end node in reverse direction.
-      Expand<ExpansionType::reverse>(graphreader, rev_pred.endnode(), rev_pred, reverse_pred_idx,
-                                     opp_pred_edge, reverse_time_info, invariant);
+      Expand<ExpansionType::reverse, depart_at>(graphreader, rev_pred.endnode(), rev_pred,
+                                                reverse_pred_idx, opp_pred_edge, reverse_time_info,
+                                                invariant);
     }
   }
   return {}; // If we are here the route failed
@@ -1063,7 +1103,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
   }
 
   // Set the origin timezone
-  if (closest_ni != nullptr && !origin.date_time().empty() && origin.date_time() == "current") {
+  if (closest_ni != nullptr && !origin.date_time().empty()) {
     origin.set_date_time(
         DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }

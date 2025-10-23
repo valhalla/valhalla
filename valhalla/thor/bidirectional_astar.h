@@ -61,12 +61,31 @@ public:
    *          each edge).
    */
   std::vector<std::vector<PathInfo>>
-  GetBestPath(valhalla::Location& origin,
-              valhalla::Location& dest,
-              baldr::GraphReader& graphreader,
-              const sif::mode_costing_t& mode_costing,
-              const sif::TravelMode mode,
-              const Options& options = Options::default_instance()) override;
+  GetBestPathDepartAt(valhalla::Location& origin,
+                      valhalla::Location& dest,
+                      baldr::GraphReader& graphreader,
+                      const sif::mode_costing_t& mode_costing,
+                      const sif::TravelMode mode,
+                      const Options& options = Options::default_instance()) override;
+
+  /**
+   * Form path between and origin and destination location using
+   * the supplied mode and costing method.
+   * @param  origin  Origin location
+   * @param  dest    Destination location
+   * @param  graphreader  Graph reader for accessing routing graph.
+   * @param  mode_costing  An array of costing methods, one per TravelMode.
+   * @param  mode     Travel mode from the origin.
+   * @return  Returns the path edges (and elapsed time/modes at end of
+   *          each edge).
+   */
+  std::vector<std::vector<PathInfo>>
+  GetBestPathArriveBy(valhalla::Location& origin,
+                      valhalla::Location& dest,
+                      baldr::GraphReader& graphreader,
+                      const sif::mode_costing_t& mode_costing,
+                      const sif::TravelMode mode,
+                      const Options& options = Options::default_instance()) override;
 
   /**
    * Returns the name of the algorithm
@@ -130,6 +149,15 @@ protected:
   // edge)
   bool pruning_disabled_at_origin_, pruning_disabled_at_destination_;
 
+  template <const bool depart_at>
+  std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const sif::mode_costing_t& mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance());
+
   /**
    * Initialize the A* heuristic and adjacency lists for both the forward
    * and reverse search.
@@ -149,7 +177,7 @@ protected:
    * @param invariant          static date_time, dont offset the time as the path lengthens
    * @return returns true if the expansion continued from this node
    */
-  template <const ExpansionType expansion_direction>
+  template <const ExpansionType expansion_direction, const bool depart_at>
   void Expand(baldr::GraphReader& graphreader,
               const baldr::GraphId& node,
               sif::BDEdgeLabel& pred,

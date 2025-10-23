@@ -245,6 +245,25 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
   }
 }
 
+std::vector<std::vector<PathInfo>>
+AStarBSSAlgorithm::GetBestPathDepartAt(valhalla::Location& origin,
+                                       valhalla::Location& dest,
+                                       baldr::GraphReader& graphreader,
+                                       const sif::mode_costing_t& mode_costing,
+                                       const sif::TravelMode mode,
+                                       const Options& options) {
+  return GetBestPath(origin, dest, graphreader, mode_costing, mode, options);
+};
+
+std::vector<std::vector<PathInfo>> AStarBSSAlgorithm::GetBestPathArriveBy(valhalla::Location&,
+                                                                          valhalla::Location&,
+                                                                          baldr::GraphReader&,
+                                                                          const sif::mode_costing_t&,
+                                                                          const sif::TravelMode,
+                                                                          const Options&) {
+  throw std::runtime_error("arrive_by not implemented for " + std::string(name()));
+};
+
 // Calculate best path. This method is single mode, not time-dependent.
 std::vector<std::vector<PathInfo>>
 AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,

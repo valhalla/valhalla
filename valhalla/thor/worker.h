@@ -64,7 +64,8 @@ protected:
                                                     Location& origin,
                                                     Location& destination,
                                                     const std::string& costing,
-                                                    const Options& options);
+                                                    const Options& options,
+                                                    const bool arrive_by = false);
   void log_admin(const TripLeg&);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const Location& origin,
@@ -110,8 +111,7 @@ protected:
   BidirectionalAStar bidir_astar;
   AStarBSSAlgorithm bss_astar;
   MultiModalPathAlgorithm multi_modal_astar;
-  TimeDepForward timedep_forward;
-  TimeDepReverse timedep_reverse;
+  UnidirectionalAStar unidir_astar;
 
   // Time distance matrix
   CostMatrix costmatrix_;

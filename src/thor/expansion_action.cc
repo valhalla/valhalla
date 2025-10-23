@@ -157,8 +157,7 @@ std::string thor_worker_t::expansion(Api& request) {
   // tell all the algorithms how to track expansion
   for (auto* alg : std::vector<PathAlgorithm*>{
            &multi_modal_astar,
-           &timedep_forward,
-           &timedep_reverse,
+           &unidir_astar,
            &bidir_astar,
            &bss_astar,
        }) {
@@ -194,8 +193,8 @@ std::string thor_worker_t::expansion(Api& request) {
   }
 
   // tell all the algorithms to stop tracking the expansion
-  for (auto* alg : std::vector<PathAlgorithm*>{&multi_modal_astar, &timedep_forward, &timedep_reverse,
-                                               &bidir_astar, &bss_astar}) {
+  for (auto* alg :
+       std::vector<PathAlgorithm*>{&multi_modal_astar, &unidir_astar, &bidir_astar, &bss_astar}) {
     alg->set_track_expansion(nullptr);
   }
   costmatrix_.set_track_expansion(nullptr);

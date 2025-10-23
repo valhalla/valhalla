@@ -228,8 +228,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
   // make sure they are all cancelable
   for (auto* alg : std::vector<PathAlgorithm*>{
            &multi_modal_astar,
-           &timedep_forward,
-           &timedep_reverse,
+           &unidir_astar,
            &bidir_astar,
            &bss_astar,
        }) {
@@ -253,7 +252,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
-      return &timedep_forward;
+      return &unidir_astar;
     }
   }
 
@@ -263,7 +262,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
-      return &timedep_reverse;
+      return &unidir_astar;
     }
   }
 
@@ -277,7 +276,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
       bool are_connected =
           reader->AreEdgesConnected(GraphId(edge1.graph_id()), GraphId(edge2.graph_id()));
       if (same_graph_id || are_connected) {
-        return &timedep_forward;
+        return &unidir_astar;
       }
     }
   }
@@ -290,7 +289,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
                                                                  valhalla::Location& origin,
                                                                  valhalla::Location& destination,
                                                                  const std::string& costing,
-                                                                 const Options& options) {
+                                                                 const Options& options,
+                                                                 const bool arrive_by) {
   // Find the path.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
 
@@ -301,7 +301,10 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   cost->set_allow_destination_only(path_algorithm == &bidir_astar ? false : true);
 
   cost->set_pass(0);
-  auto paths = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
+  auto paths = arrive_by ? path_algorithm->GetBestPathArriveBy(origin, destination, *reader,
+                                                               mode_costing, mode, options)
+                         : path_algorithm->GetBestPathDepartAt(origin, destination, *reader,
+                                                               mode_costing, mode, options);
 
   // Check if we should run a second pass pedestrian route with different A*
   // (to look for better routes where a ferry is taken)
@@ -333,8 +336,10 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     cost->set_allow_conditional_destination(true);
     path_algorithm->set_not_thru_pruning(false);
     // Get the best path. Return if not empty (else return the original path)
-    auto relaxed_paths =
-        path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
+    auto relaxed_paths = arrive_by ? path_algorithm->GetBestPathArriveBy(origin, destination, *reader,
+                                                                         mode_costing, mode, options)
+                                   : path_algorithm->GetBestPathDepartAt(origin, destination, *reader,
+                                                                         mode_costing, mode, options);
     if (!relaxed_paths.empty()) {
       return relaxed_paths;
     }

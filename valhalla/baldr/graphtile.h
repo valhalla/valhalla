@@ -662,7 +662,9 @@ public:
     float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
-    if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
+    auto invalid_time = seconds == kInvalidSecondsOfWeek;
+    if (!invalid_time && (flow_mask & kCurrentFlowMask) && traffic_tile() &&
+        live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
@@ -698,7 +700,6 @@ public:
 
     // use predicted speed if a time was passed in, the predicted speed layer was requested, and if
     // the edge has predicted speed
-    auto invalid_time = seconds == kInvalidSecondsOfWeek;
     if (!invalid_time && (flow_mask & kPredictedFlowMask) && de->has_predicted_speed()) {
       seconds %= midgard::kSecondsPerWeek;
       uint32_t idx = de - directededges_;
@@ -873,6 +874,10 @@ protected:
   // List of edge graph ids. The list is broken up in bins which have
   // indices in the tile header.
   GraphId* edge_bins_{};
+
+  // List of edge bounding circles. The list is broken up in bins which
+  // share the same indices as the edge bins
+  DiscretizedBoundingCircle* bounding_circles_{};
 
   // Lane connectivity data.
   LaneConnectivity* lane_connectivity_{};

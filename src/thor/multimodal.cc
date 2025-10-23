@@ -89,6 +89,26 @@ void MultiModalPathAlgorithm::Clear() {
   has_ferry_ = false;
 }
 
+std::vector<std::vector<PathInfo>>
+MultiModalPathAlgorithm::GetBestPathDepartAt(valhalla::Location& origin,
+                                             valhalla::Location& dest,
+                                             baldr::GraphReader& graphreader,
+                                             const sif::mode_costing_t& mode_costing,
+                                             const sif::TravelMode mode,
+                                             const Options& options) {
+  return GetBestPath(origin, dest, graphreader, mode_costing, mode, options);
+};
+
+std::vector<std::vector<PathInfo>>
+MultiModalPathAlgorithm::GetBestPathArriveBy(valhalla::Location&,
+                                             valhalla::Location&,
+                                             baldr::GraphReader&,
+                                             const sif::mode_costing_t&,
+                                             const sif::TravelMode,
+                                             const Options&) {
+  throw std::runtime_error("arrive_by not implemented for " + std::string(name()));
+};
+
 // Calculate best path using multiple modes (e.g. transit).
 std::vector<std::vector<PathInfo>>
 MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,

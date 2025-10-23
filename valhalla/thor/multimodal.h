@@ -53,13 +53,20 @@ public:
    *          each edge).
    */
   std::vector<std::vector<PathInfo>>
-  GetBestPath(valhalla::Location& origin,
-              valhalla::Location& dest,
-              baldr::GraphReader& graphreader,
-              const sif::mode_costing_t& mode_costing,
-              const sif::TravelMode mode,
-              const Options& options = Options::default_instance()) override;
+  GetBestPathDepartAt(valhalla::Location& origin,
+                      valhalla::Location& dest,
+                      baldr::GraphReader& graphreader,
+                      const sif::mode_costing_t& mode_costing,
+                      const sif::TravelMode mode,
+                      const Options& options = Options::default_instance()) override;
 
+  std::vector<std::vector<PathInfo>>
+  GetBestPathArriveBy(valhalla::Location& origin,
+                      valhalla::Location& dest,
+                      baldr::GraphReader& graphreader,
+                      const sif::mode_costing_t& mode_costing,
+                      const sif::TravelMode mode,
+                      const Options& options = Options::default_instance()) override;
   /**
    * Returns the name of the algorithm
    * @return the name of the algorithm
@@ -105,6 +112,14 @@ protected:
 
   // Destinations, id and cost
   std::map<uint64_t, sif::Cost> destinations_;
+
+  std::vector<std::vector<PathInfo>>
+  GetBestPath(valhalla::Location& origin,
+              valhalla::Location& dest,
+              baldr::GraphReader& graphreader,
+              const sif::mode_costing_t& mode_costing,
+              const sif::TravelMode mode,
+              const Options& options = Options::default_instance());
 
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
