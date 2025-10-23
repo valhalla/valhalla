@@ -4,6 +4,16 @@
   "description": "NodeJs bindings for Valhalla",
   "main": "index.js",
   "types": "index.d.ts",
+  "bin": {
+    "valhalla": "./bin/valhalla-cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js",
+      "types": "./index.d.ts"
+    }
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

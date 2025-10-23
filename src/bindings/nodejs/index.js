@@ -1,48 +1,12 @@
-const path = require('path');
-const os = require('os');
+const { getBinaryDir } = require('./lib/binary-path');
 
-// Detect platform and architecture
-function getBinaryPath() {
-    const platform = os.platform();
-    const arch = os.arch();
-    
-    // Map Node.js platform names to our directory structure
-    let platformDir;
-    switch (platform) {
-        case 'darwin':
-            platformDir = 'darwin';
-            break;
-        case 'linux':
-            platformDir = 'linux';
-            break;
-        case 'win32':
-            platformDir = 'win32';
-            break;
-        default:
-            throw new Error(`Unsupported platform: ${platform}`);
-    }
-    
-    // Map Node.js arch names to our directory structure
-    let archDir;
-    switch (arch) {
-        case 'x64':
-            archDir = platformDir === 'linux' ? 'x86_64' : 'x64';
-            break;
-        case 'arm64':
-            archDir = 'arm64';
-            break;
-        default:
-            throw new Error(`Unsupported architecture: ${arch}`);
-    }
-    
-    const binaryPath = path.join(__dirname, platformDir, archDir, 'valhalla_node.node');
-    return binaryPath;
+function getBinaryPath(baseDir) {
+    return path.join(getBinaryDir(baseDir), 'valhalla_node.node');
 }
 
-const valhalla = require(getBinaryPath());
+const valhalla = require(getBinaryPath(__dirname));
 
 class Actor {
-    // TODO: handle both file path and string object config
     constructor(config) {
         this.actor = new valhalla.Actor(config);
     }
