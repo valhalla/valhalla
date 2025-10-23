@@ -1,5 +1,10 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2025-10-23 Valhalla 3.6.0
+* **Removed**
    * REMOVED: validity checks for historical speeds [#5087](https://github.com/valhalla/valhalla/pull/5087)
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
@@ -168,6 +173,7 @@
    * CHANGED: Consistent use of `cost_ptr_t` [#5615](https://github.com/valhalla/valhalla/pull/5615)
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
    * CHANGED: Adjust speed penalty and add dimensions length and weight to autocosting [#5627](https://github.com/valhalla/valhalla/pull/5627)
+   * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
