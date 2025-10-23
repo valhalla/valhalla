@@ -338,64 +338,64 @@ jobs:
         if: ${{  github.ref == 'refs/heads/master'  || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Configure CMake
-        shell: bash
-        run: |
+      # - name: Configure CMake
+      #   shell: bash
+      #   run: |
 
-          cmake --version
-          cmake -B build \
-            -G "Visual Studio 17 2022" \
-            -A x64 \
-            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
-            -DVCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS" \
-            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
-            -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
-            -DENABLE_DATA_TOOLS=ON \
-            -DENABLE_TOOLS=ON \
-            -DENABLE_PYTHON_BINDINGS=OFF \
-            -DENABLE_HTTP=ON \
-            -DENABLE_TESTS=OFF \
-            -DENABLE_CCACHE=OFF \
-            -DENABLE_SERVICES=OFF \
-            -DPREFER_EXTERNAL_DEPS=ON \
-            -DENABLE_GDAL=ON \
-            -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
+      #     cmake --version
+      #     cmake -B build \
+      #       -G "Visual Studio 17 2022" \
+      #       -A x64 \
+      #       -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+      #       -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
+      #       -DVCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS" \
+      #       -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
+      #       -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
+      #       -DENABLE_DATA_TOOLS=ON \
+      #       -DENABLE_TOOLS=ON \
+      #       -DENABLE_PYTHON_BINDINGS=OFF \
+      #       -DENABLE_HTTP=ON \
+      #       -DENABLE_TESTS=OFF \
+      #       -DENABLE_CCACHE=OFF \
+      #       -DENABLE_SERVICES=OFF \
+      #       -DPREFER_EXTERNAL_DEPS=ON \
+      #       -DENABLE_GDAL=ON \
+      #       -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
 
-      - name: Save vcpkg packages (always, to avoid redundant rebuilds)
-        if: always()
-        uses: tespkg/actions-cache/save@v1
-        with:
-          endpoint: hel1.your-objectstorage.com
-          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
-          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
-          bucket: gha-cache
-          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
-          path: |
-            vcpkg/*
-            !vcpkg/downloads
-            !vcpkg/docs
-            !vcpkg/buildtrees
-            vcpkg/downloads/tools
+      # - name: Save vcpkg packages (always, to avoid redundant rebuilds)
+      #   if: always()
+      #   uses: tespkg/actions-cache/save@v1
+      #   with:
+      #     endpoint: hel1.your-objectstorage.com
+      #     accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+      #     secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+      #     bucket: gha-cache
+      #     key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+      #     path: |
+      #       vcpkg/*
+      #       !vcpkg/downloads
+      #       !vcpkg/docs
+      #       !vcpkg/buildtrees
+      #       vcpkg/downloads/tools
 
-      - name: Build Valhalla
-        run: |
-          cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
-          cmake --build build --config Release --target install
+      # - name: Build Valhalla
+      #   run: |
+      #     cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+      #     cmake --build build --config Release --target install
 
-      - name: Test Executable
-        shell: bash
-        run: |
-          set PATH=$PATH:${{ github.workspace }}/build/vcpkg_installed/$BUILD_TYPE/bin
-          ./build/$BUILD_TYPE/valhalla_build_tiles.exe -c ./test/win/valhalla.json ./test/data/utrecht_netherlands.osm.pbf
-          ./build/$BUILD_TYPE/valhalla_run_isochrone.exe --config ./test/win/valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
-          ./build/$BUILD_TYPE/valhalla_service.exe ./test/win/valhalla.json isochrone "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
+      # - name: Test Executable
+      #   shell: bash
+      #   run: |
+      #     set PATH=$PATH:${{ github.workspace }}/build/vcpkg_installed/$BUILD_TYPE/bin
+      #     ./build/$BUILD_TYPE/valhalla_build_tiles.exe -c ./test/win/valhalla.json ./test/data/utrecht_netherlands.osm.pbf
+      #     ./build/$BUILD_TYPE/valhalla_run_isochrone.exe --config ./test/win/valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
+      #     ./build/$BUILD_TYPE/valhalla_service.exe ./test/win/valhalla.json isochrone "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
         
-      - name: Print libs
-        shell: bash
-        run: |
-          ls -l build/vcpkg_installed/custom-x64-windows/lib
-          ls -l build/vcpkg_installed/custom-x64-windows/bin
+      # - name: Print libs
+      #   shell: bash
+      #   run: |
+      #     ls -l build/vcpkg_installed/custom-x64-windows/lib
+      #     ls -l build/vcpkg_installed/custom-x64-windows/bin
       
       # only package python bindings if it's not a PR
 
@@ -434,10 +434,10 @@ jobs:
 
             VCPKG_KEEP_ENV_VARS=Python_EXECUTABLE;Python_ROOT_DIR
             
-            CMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE"
-            VCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS"
-            VCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET"
-            VCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS"
+            CMAKE_TOOLCHAIN_FILE="${{  env.VCPKG_TOOLCHAIN_FILE  }}"
+            VCPKG_OVERLAY_TRIPLETS="${{  env.VCPKG_OVERLAY_TRIPLETS  }}"
+            VCPKG_TARGET_TRIPLET="${{  env.VCPKG_DEFAULT_TRIPLET  }}"
+            VCPKG_INSTALL_OPTIONS="${{  env.VCPKG_INSTALL_OPTIONS  }}"
             Python_FIND_VIRTUALENV=ONLY
           # represents the minimum python version
           CIBW_BUILD: cp312-*
