@@ -292,6 +292,7 @@ jobs:
         shell: bash
         run: |
           workspace="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+          echo "VCPKG_INSTALLATION_ROOT=${workspace}/vcpkg" >> $GITHUB_ENV
           echo "VCPKG_TOOLCHAIN_FILE=${workspace}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
           echo "VCPKG_DEFAULT_TRIPLET=x64-windows" >> $GITHUB_ENV
           echo "VCPKG_TRIPLET_PATH=${workspace}/vcpkg/triplets/x64-windows.cmake" >> $GITHUB_ENV
@@ -433,6 +434,7 @@ jobs:
             CMAKE_TOOLCHAIN_FILE="${{  env.VCPKG_TOOLCHAIN_FILE  }}"
             VCPKG_TARGET_TRIPLET="${{  env.VCPKG_DEFAULT_TRIPLET  }}"
             VCPKG_INSTALL_OPTIONS="${{  env.VCPKG_INSTALL_OPTIONS  }}"
+            VCPKG_INSTALLATION_ROOT="${{  env.VCPKG_INSTALLATION_ROOT  }}"
             Python_FIND_VIRTUALENV=ONLY
           # represents the minimum python version
           CIBW_BUILD: cp312-*
