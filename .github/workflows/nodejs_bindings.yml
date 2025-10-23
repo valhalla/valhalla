@@ -104,8 +104,8 @@ jobs:
           OUTPUT_DIR="nodejs_dist"
           
           # Collect all valhalla_* executables from build directory
-          VALHALLA_EXES=$(find build -maxdepth 1 -type f -name 'valhalla_*' -executable | tr '\n' ' ')
-          
+          # VALHALLA_EXES=$(find build -maxdepth 1 -type f -name 'valhalla_build_tiles' -executable | tr '\n' ' ')
+          VALHALLA_EXES="build/valhalla_build_tiles"
           echo "[INFO] Bundling files:"
           echo "  - Node.js addon: $NODE_FILE"
           echo "  - Valhalla executables: $VALHALLA_EXES"
