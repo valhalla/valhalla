@@ -175,17 +175,22 @@ jobs:
           echo "[INFO] Package structure:"
           tree -L 3 valhalla-npm-package/ || find valhalla-npm-package -type f | head -30
           
-          echo "[INFO] Creating tarball..."
-          tar -czf valhalla-npm-package.tar.gz valhalla-npm-package/
+          echo "[INFO] Creating NPM package..."
+          cd valhalla-npm-package
+          npm pack
+          cd ..
+          
+          echo "[INFO] Package created:"
+          ls -lh valhalla-npm-package/*.tgz
           
           echo "[INFO] Package size:"
-          du -h valhalla-npm-package.tar.gz
+          du -h valhalla-npm-package/*.tgz
 
       - name: Upload NPM package
         uses: actions/upload-artifact@v4
         with:
           name: valhalla-npm-package
-          path: valhalla-npm-package.tar.gz
+          path: valhalla-npm-package/*.tgz
 
   verify_nodejs_package:
     name: Verify NPM package (${{ matrix.os }}-${{ matrix.arch }})
@@ -219,22 +224,16 @@ jobs:
         with:
           name: valhalla-npm-package
       
-      - name: Extract and install package
+      - name: Install package
         run: |
-          echo "[INFO] Extracting NPM package..."
-          tar -xzf valhalla-npm-package.tar.gz
+          echo "[INFO] Downloaded package:"
+          ls -lh *.tgz
           
-          echo "[INFO] Package structure:"
-          ls -lh valhalla-npm-package/
+          echo "[INFO] Installing package..."
+          npm install *.tgz
           
-          echo "[INFO] Checking platform-specific binaries..."
-          ls -lh valhalla-npm-package/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch == 'x64' && 'x86_64' || matrix.arch }}/
-          
-          echo "[INFO] Installing package locally..."
-          cd valhalla-npm-package
-          npm pack
-          cd ..
-          npm install ./valhalla-npm-package/*.tgz
+          echo "[INFO] Verifying installation..."
+          npm list valhalla
       
       - name: Test package import
         run: |
