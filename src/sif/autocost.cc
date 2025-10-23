@@ -69,21 +69,11 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
-// Default auto attributes
-constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
-constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
-constexpr float kDefaultAutoLength = 2.7f; // Meters (106,299 inches)
-constexpr float kDefaultAutoWeight = 0.8f; // Metric Tons (1763,7 lbs)
-
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kAlleyFactorRange{kMinFactor, kDefaultAlleyFactor, kMaxFactor};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
-constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
-constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
-constexpr ranged_default_t<float> kAutoLengthRange{0, kDefaultAutoLength, 20.0f};
-constexpr ranged_default_t<float> kAutoWeightRange{0, kDefaultAutoWeight, 40.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
@@ -718,10 +708,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance);
-  JSON_PBF_RANGED_DEFAULT(co, kAutoHeightRange, json, "/height", height);
-  JSON_PBF_RANGED_DEFAULT(co, kAutoWidthRange, json, "/width", width);
-  JSON_PBF_RANGED_DEFAULT(co, kAutoLengthRange, json, "/length", length);
-  JSON_PBF_RANGED_DEFAULT(co, kAutoWeightRange, json, "/weight", weight);
   JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
                           restriction_probability);
   JSON_PBF_DEFAULT_V2(co, false, json, "/include_hot", include_hot);

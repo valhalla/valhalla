@@ -92,11 +92,7 @@ constexpr float kSurfaceFactor[] = {
 
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kLowClassPenaltyRange{0.f, kDefaultLowClassPenalty, kMaxPenalty};
-constexpr ranged_default_t<float> kTruckWeightRange{0.f, kDefaultTruckWeight, 100.0f};
 constexpr ranged_default_t<float> kTruckAxleLoadRange{0.f, kDefaultTruckAxleLoad, 40.0f};
-constexpr ranged_default_t<float> kTruckHeightRange{0.f, kDefaultTruckHeight, 10.0f};
-constexpr ranged_default_t<float> kTruckWidthRange{0.f, kDefaultTruckWidth, 10.0f};
-constexpr ranged_default_t<float> kTruckLengthRange{0.f, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0.f, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<uint32_t> kAxleCountRange{2, kDefaultAxleCount, 20};
 constexpr ranged_default_t<float> kUseHighwaysRange{0.f, kDefaultUseHighways, 1.0f};
@@ -110,6 +106,10 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   cfg.service_penalty_.def = kDefaultServicePenalty;
   cfg.use_tracks_.def = kDefaultUseTracks;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
+  cfg.height_.def = kDefaultTruckHeight;
+  cfg.width_.def = kDefaultTruckWidth;
+  cfg.length_.def = kDefaultTruckLength;
+  cfg.weight_.def = kDefaultTruckWeight;
   return cfg;
 }
 
@@ -737,11 +737,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kLowClassPenaltyRange, json, "/low_class_penalty", low_class_penalty);
   JSON_PBF_DEFAULT_V2(co, false, json, "/hazmat", hazmat);
-  JSON_PBF_RANGED_DEFAULT(co, kTruckWeightRange, json, "/weight", weight);
   JSON_PBF_RANGED_DEFAULT(co, kTruckAxleLoadRange, json, "/axle_load", axle_load);
-  JSON_PBF_RANGED_DEFAULT(co, kTruckHeightRange, json, "/height", height);
-  JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
-  JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT_V2(co, kAxleCountRange, json, "/axle_count", axle_count);

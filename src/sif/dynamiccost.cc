@@ -115,6 +115,12 @@ constexpr ranged_default_t<float> kSpeedPenaltyFactorRange{0.0f, kDefaultSpeedPe
 
 constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
+
+// Default dimension
+constexpr float kDefaultHeight = 1.6f; // Meters (62.9921 inches)
+constexpr float kDefaultWidth = 1.9f;  // Meters (74.8031 inches)
+constexpr float kDefaultLength = 2.7f; // Meters (208,661 inches)
+constexpr float kDefaultWeight = 0.8f; // Metric Tons (6613,87 lbs)
 } // namespace
 
 /*
@@ -144,8 +150,10 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       exclude_unpaved_(false), exclude_bridges_(false),
       exclude_tunnels_(false), exclude_tolls_(false), exclude_highways_(false),
       exclude_ferries_(false), has_excludes_(false),
-      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
-                                                                                      false} {
+      exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
+      include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f},
+      width_{0.f, kDefaultWidth, 10.0f}, length_{0.f, kDefaultLength, 50.0f},
+      weight_{0.f, kDefaultWeight, 100.0f} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -544,6 +552,12 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT_V2(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 
   JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
+
+  // Dimensions
+  JSON_PBF_RANGED_DEFAULT(co, cfg.height_, json, "/height", height);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.width_, json, "/width", width);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.length_, json, "/length", length);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.weight_, json, "/weight", weight);
 }
 
 void ParseCosting(const rapidjson::Document& doc,
