@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * CHANGED: Adjust speed penalty and add dimensions length and weight to auto costing [#5627](https://github.com/valhalla/valhalla/pull/5627)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
@@ -172,7 +173,6 @@
    * CHANGED: Optimise turntype calls in TransitionCost [#5590](https://github.com/valhalla/valhalla/pull/5590)
    * CHANGED: Consistent use of `cost_ptr_t` [#5615](https://github.com/valhalla/valhalla/pull/5615)
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
-   * CHANGED: Adjust speed penalty and add dimensions length and weight to autocosting [#5627](https://github.com/valhalla/valhalla/pull/5627)
    * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
