@@ -293,8 +293,8 @@ jobs:
         run: |
           workspace="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
           echo "VCPKG_TOOLCHAIN_FILE=${workspace}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
-          echo "VCPKG_OVERLAY_TRIPLETS=${workspace}/vcpkg/custom-triplets" >> $GITHUB_ENV
-          echo "VCPKG_DEFAULT_TRIPLET=custom-x64-windows" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=x64-windows" >> $GITHUB_ENV
+          echo "VCPKG_TRIPLET_PATH=${workspace}/vcpkg/triplets/x64-windows.cmake" >> $GITHUB_ENV
           echo "VCPKG_DEFAULT_BINARY_CACHE=${workspace}/vcpkg/archives" >> $GITHUB_ENV
 
       - name: Install GNU make & awk
@@ -307,11 +307,8 @@ jobs:
           cd vcpkg
           git checkout $VCPKG_VERSION
           mkdir archives
-          mkdir "$VCPKG_OVERLAY_TRIPLETS"
-          TRIPLET_FILE="$VCPKG_OVERLAY_TRIPLETS/$VCPKG_DEFAULT_TRIPLET.cmake"
-          cp triplets/x64-windows.cmake "$TRIPLET_FILE"
-          echo "set(VCPKG_BUILD_TYPE release)" >> "$TRIPLET_FILE"
-          echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$TRIPLET_FILE"
+          echo "set(VCPKG_BUILD_TYPE release)" >> "$VCPKG_TRIPLET_PATH"
+          echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$VCPKG_TRIPLET_PATH"
           cmd.exe /c bootstrap-vcpkg.bat
 
       - name: Restore vcpkg packages
@@ -349,7 +346,6 @@ jobs:
       #       -A x64 \
       #       -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
       #       -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
-      #       -DVCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS" \
       #       -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
       #       -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
       #       -DENABLE_DATA_TOOLS=ON \
@@ -425,16 +421,16 @@ jobs:
 
             :: set scikit-build-core defines for cmake:
             :: some to discover python, some valhalla, some for dependencies
-            set "SKBUILD_CMAKE_DEFINE=Python_EXECUTABLE=%py%;Python_ROOT_DIR=%root%;ENABLE_SERVICES=OFF;VALHALLA_VERSION_MODIFIER=%steps.version-modifier.outputs.version_modifier%;CMAKE_TOOLCHAIN_FILE=%VCPKG_TOOLCHAIN_FILE%;VCPKG_TARGET_TRIPLET=%VCPKG_DEFAULT_TRIPLET%;VCPKG_OVERLAY_TRIPLETS=%VCPKG_OVERLAY_TRIPLETS%"
+            set "SKBUILD_CMAKE_DEFINE=Python_EXECUTABLE=%py%;Python_ROOT_DIR=%root%;ENABLE_SERVICES=OFF;VALHALLA_VERSION_MODIFIER=${{  steps.version-modifier.outputs.version_modifier  }};CMAKE_TOOLCHAIN_FILE=%VCPKG_TOOLCHAIN_FILE%;VCPKG_TARGET_TRIPLET=%VCPKG_DEFAULT_TRIPLET%"
             
             echo Python_EXECUTABLE=%Python_EXECUTABLE%
             echo Python_ROOT_DIR=%Python_ROOT_DIR%
             echo SKBUILD_CMAKE_DEFINE=%SKBUILD_CMAKE_DEFINE%
+            echo VCPKG_DEFAULT_TRIPLET=%VCPKG_DEFAULT_TRIPLET%
           CIBW_ENVIRONMENT_WINDOWS: >
             PIP_NO_BUILD_ISOLATION="1"
             VCPKG_KEEP_ENV_VARS="Python_EXECUTABLE;Python_ROOT_DIR"
             CMAKE_TOOLCHAIN_FILE="${{  env.VCPKG_TOOLCHAIN_FILE  }}"
-            VCPKG_OVERLAY_TRIPLETS="${{  env.VCPKG_OVERLAY_TRIPLETS  }}"
             VCPKG_TARGET_TRIPLET="${{  env.VCPKG_DEFAULT_TRIPLET  }}"
             VCPKG_INSTALL_OPTIONS="${{  env.VCPKG_INSTALL_OPTIONS  }}"
             Python_FIND_VIRTUALENV=ONLY
