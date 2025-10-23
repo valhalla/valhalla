@@ -108,6 +108,19 @@ def resolve_rpath_macos(dep_name: str, macho_path: str, rpaths: List[str]) -> st
         if os.path.isfile(candidate):
             return os.path.realpath(candidate)
 
+    # Fallback: try common paths on macOS
+    common_paths = [
+        "/usr/local/lib",
+        "/opt/homebrew/lib",
+        "/usr/local/opt",
+        os.path.dirname(macho_path)
+    ]
+    
+    for base_path in common_paths:
+        candidate = os.path.join(base_path, lib_name)
+        if os.path.isfile(candidate):
+            return os.path.realpath(candidate)
+    
     return ""
 
 
@@ -144,18 +157,24 @@ def collect_deps_macos(macho_path: str) -> List[str]:
             resolved = resolve_rpath_macos(dep_path, macho_path, rpaths)
             if resolved:
                 deps.append(resolved)
+            else:
+                print(f"Warning: Could not resolve @rpath dependency: {dep_path} for {macho_path}", file=sys.stderr)
         # Handle @loader_path dependencies
         elif dep_path.startswith("@loader_path/"):
             lib_name = dep_path[13:]  # Remove "@loader_path/"
             resolved = os.path.join(os.path.dirname(macho_path), lib_name)
             if os.path.isfile(resolved):
                 deps.append(os.path.realpath(resolved))
+            else:
+                print(f"Warning: Could not resolve @loader_path dependency: {dep_path} for {macho_path}", file=sys.stderr)
         # Handle @executable_path dependencies
         elif dep_path.startswith("@executable_path/"):
             lib_name = dep_path[17:]  # Remove "@executable_path/"
             resolved = os.path.join(os.path.dirname(macho_path), lib_name)
             if os.path.isfile(resolved):
                 deps.append(os.path.realpath(resolved))
+            else:
+                print(f"Warning: Could not resolve @executable_path dependency: {dep_path} for {macho_path}", file=sys.stderr)
 
     return sorted(set(deps))
 

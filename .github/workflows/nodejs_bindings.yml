@@ -109,6 +109,13 @@ jobs:
 
           echo "[INFO] Contents of tarball:"
           tar -tzf valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          
+          echo "[INFO] Verifying bundled libraries..."
+          tar -xzf valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          ls -lh $OUTPUT_DIR/lib/ | head -30
+          
+          echo "[INFO] Checking binding after bundling..."
+          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} $OUTPUT_DIR/valhalla_node.node
       
       - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
@@ -234,6 +241,15 @@ jobs:
           
           echo "[INFO] Verifying installation..."
           npm list valhalla
+          
+          echo "[INFO] Checking installed files..."
+          ls -lh node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch == 'x64' && 'x86_64' || matrix.arch }}/
+          
+          echo "[INFO] Checking bundled libraries..."
+          ls -lh node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch == 'x64' && 'x86_64' || matrix.arch }}/lib/ 
+          
+          echo "[INFO] Checking binding dependencies..."
+          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch == 'x64' && 'x86_64' || matrix.arch }}/valhalla_node.node
       
       - name: Test package import
         run: |
