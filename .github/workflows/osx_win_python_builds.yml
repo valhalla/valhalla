@@ -412,9 +412,30 @@ jobs:
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
+          CIBW_BEFORE_BUILD_WINDOWS: |
+            # get the interpreter path cibuildwheel is using; vcpkg & nanobind are a bit hard
+            # to accommodate
+            $py = python -c "import sys; print(sys.executable)"
+            $root = python -c "import pathlib; print(pathlib.Path(`"${py}`").parent)"
+
+            # export for scikit-build-core's cmake config to not pick up vcpkg's python
+            $env:Python_EXECUTABLE = $py
+            $env:Python_ROOT_DIR = $root
+
+            # set scikit-build-core defines for cmake:
+            # some to discover python, some valhalla, some for dependencies
+            $env:SKBUILD_CMAKE_DEFINE = "Python_EXECUTABLE=$py;Python_ROOT_DIR=$root;ENABLE_SERVICES=OFF;VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }};CMAKE_TOOLCHAIN_FILE=$VCPKG_TOOLCHAIN_FILE;VCPKG_TARGET_TRIPLET=$VCPKG_DEFAULT_TRIPLET;VCPKG_OVERLAY_TRIPLETS=$VCPKG_OVERLAY_TRIPLETS"
+            
+            python -c "print(`"Python_EXECUTABLE=$env:Python_EXECUTABLE`")"
+            python -c "print(`"Python_ROOT_DIR=$env:Python_ROOT_DIR`")"
+            python -c "print(`"SKBUILD_CMAKE_DEFINE=$env:SKBUILD_CMAKE_DEFINE`")"
           CIBW_ENVIRONMENT_WINDOWS: >
             PIP_NO_BUILD_ISOLATION="1"
-            SKBUILD_CMAKE_DEFINE="ENABLE_SERVICES=OFF;VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }};CMAKE_TOOLCHAIN_FILE=$VCPKG_TOOLCHAIN_FILE;VCPKG_TARGET_TRIPLET=$VCPKG_DEFAULT_TRIPLET;VCPKG_OVERLAY_TRIPLETS=$VCPKG_OVERLAY_TRIPLETS"
+
+            # ensure vcpkg toolchain preserves these vars
+            VCPKG_KEEP_ENV_VARS=Python_EXECUTABLE;Python_ROOT_DIR
+
+            # SKBUILD_CMAKE_DEFINE="ENABLE_SERVICES=OFF;VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }};CMAKE_TOOLCHAIN_FILE=$VCPKG_TOOLCHAIN_FILE;VCPKG_TARGET_TRIPLET=$VCPKG_DEFAULT_TRIPLET;VCPKG_OVERLAY_TRIPLETS=$VCPKG_OVERLAY_TRIPLETS"
             CMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE"
             VCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS"
             VCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET"
@@ -422,6 +443,8 @@ jobs:
             Python_FIND_VIRTUALENV=ONLY
           # represents the minimum python version
           CIBW_BUILD: cp312-*
+          CIBW_BUILD_VERBOSITY: 3
+          SKBUILD_LOGGING_LEVEL: DEBUG
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
