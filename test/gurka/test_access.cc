@@ -314,7 +314,7 @@ TEST_F(MultipleBarriers, BothClosed) {
       gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_barrier_both_closed");
   try {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
-    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+    gurka::assert::raw::expect_path(result, {}, "Unexpected path found");
   } catch (const std::runtime_error& e) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
   }
@@ -389,7 +389,7 @@ TEST_F(MultipleBarriers, BollardNoAccessInformation) {
       gurka::buildtiles(layout, ways, nodes, {}, "test/data/multiple_bollard_no_access_info");
   try {
     auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
-    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+    gurka::assert::raw::expect_path(result, {}, "Unexpected path found");
   } catch (const std::runtime_error& e) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
   }
@@ -674,7 +674,8 @@ TEST(Standalone, ViaFerrataDefault) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/example");
 
   try {
-    gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "pedestrian");
+    gurka::assert::raw::expect_path(result, {}, "Unexpected path found");
   } catch (const valhalla_exception_t& e) {
     EXPECT_STREQ(e.what(), "No suitable edges near location");
   }
@@ -748,4 +749,40 @@ TEST(Standalone, AccessFerry) {
       EXPECT_ANY_THROW(gurka::do_action(valhalla::Options::route, map, {"D", "H"}, c)) << c;
     }
   }
+}
+
+class CombinedRestrictionTagValues : public ::testing::Test {
+protected:
+  static gurka::nodelayout layout;
+  static gurka::ways ways;
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 100;
+
+    const std::string ascii_map = R"(
+        A---B
+     )";
+
+    layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    ways = {
+        {"AB", {{"highway", "primary"}, {"motor_vehicle", "forestry;agricultural"}}},
+    };
+  }
+
+  void check_auto_path(const gurka::map& map, const std::vector<std::string>& expected_path) {
+    try {
+      auto result = gurka::do_action(valhalla::Options::route, map, {"A", "B"}, "auto");
+      gurka::assert::raw::expect_path(result, expected_path, "Unexpected path found");
+    } catch (const std::runtime_error& e) {
+      EXPECT_STREQ(e.what(), "No suitable edges near location");
+    }
+  }
+};
+
+gurka::nodelayout CombinedRestrictionTagValues::layout = {};
+gurka::ways CombinedRestrictionTagValues::ways = {};
+
+TEST_F(CombinedRestrictionTagValues, DeniedCombinedValueAccess) {
+  const gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/combined_restriction_tag_values");
+  check_auto_path(map, {});
 }
