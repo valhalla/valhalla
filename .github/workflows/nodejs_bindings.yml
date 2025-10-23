@@ -103,7 +103,17 @@ jobs:
           NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
           OUTPUT_DIR="nodejs_dist"
           
-           ${{ matrix.os == 'macos' && 'python' || 'python3.12' }} src/bindings/nodejs/scripts/bundle.py $NODE_FILE $OUTPUT_DIR --strip --tar
+          # Collect all valhalla_* executables from build directory
+          VALHALLA_EXES=$(find build -maxdepth 1 -type f -name 'valhalla_*' -executable | tr '\n' ' ')
+          
+          echo "[INFO] Bundling files:"
+          echo "  - Node.js addon: $NODE_FILE"
+          echo "  - Valhalla executables: $VALHALLA_EXES"
+          
+          # Bundle everything together
+          ${{ matrix.os == 'macos' && 'python' || 'python3.12' }} src/bindings/nodejs/scripts/bundle.py \
+            $NODE_FILE $VALHALLA_EXES \
+            $OUTPUT_DIR --strip --tar
           
           mv valhalla_node-bundle.tar.gz valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
 
@@ -112,10 +122,18 @@ jobs:
           
           echo "[INFO] Verifying bundled libraries..."
           tar -xzf valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          echo "[INFO] Bundled executables:"
+          ls -lh $OUTPUT_DIR/valhalla_* 2>/dev/null || echo "No executables found"
+          echo "[INFO] Shared libraries:"
           ls -lh $OUTPUT_DIR/lib/ | head -30
           
           echo "[INFO] Checking binding after bundling..."
           ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} $OUTPUT_DIR/valhalla_node.node
+          
+          echo "[INFO] Checking one executable after bundling..."
+          if [ -f "$OUTPUT_DIR/valhalla_build_tiles" ]; then
+            ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} $OUTPUT_DIR/valhalla_build_tiles
+          fi
       
       - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
@@ -132,8 +150,12 @@ jobs:
         with:
           sparse-checkout: |
             src/bindings/nodejs/index.js
+            src/bindings/nodejs/index.mjs
             src/bindings/nodejs/index.d.ts
             src/bindings/nodejs/package.json
+            src/bindings/nodejs/.npmignore
+            src/bindings/nodejs/lib/
+            src/bindings/nodejs/bin/
           sparse-checkout-cone-mode: false
 
       - name: Download all binding artifacts
@@ -147,8 +169,12 @@ jobs:
           
           # Copy package files
           cp src/bindings/nodejs/index.js valhalla-npm-package/
+          cp src/bindings/nodejs/index.mjs valhalla-npm-package/
           cp src/bindings/nodejs/index.d.ts valhalla-npm-package/
           cp src/bindings/nodejs/package.json valhalla-npm-package/
+          cp src/bindings/nodejs/.npmignore valhalla-npm-package/
+          cp -r src/bindings/nodejs/lib valhalla-npm-package/
+          cp -r src/bindings/nodejs/bin valhalla-npm-package/
           
           # Extract and organize bindings by platform
           cd artifacts
@@ -158,6 +184,7 @@ jobs:
           mkdir -p ../valhalla-npm-package/linux/x86_64
           tar -xzf valhalla-nodejs-linux-x64/valhalla-nodejs-linux-x64.tar.gz
           mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/linux/x86_64/
+          mv nodejs_dist/valhalla_* ../valhalla-npm-package/linux/x86_64/ 2>/dev/null || true
           mv nodejs_dist/lib ../valhalla-npm-package/linux/x86_64/
           rm -rf nodejs_dist
           
@@ -166,6 +193,7 @@ jobs:
           mkdir -p ../valhalla-npm-package/linux/arm64
           tar -xzf valhalla-nodejs-linux-arm64/valhalla-nodejs-linux-arm64.tar.gz
           mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/linux/arm64/
+          mv nodejs_dist/valhalla_* ../valhalla-npm-package/linux/arm64/ 2>/dev/null || true
           mv nodejs_dist/lib ../valhalla-npm-package/linux/arm64/
           rm -rf nodejs_dist
           
@@ -174,6 +202,7 @@ jobs:
           mkdir -p ../valhalla-npm-package/darwin/arm64
           tar -xzf valhalla-nodejs-macos-arm64/valhalla-nodejs-macos-arm64.tar.gz
           mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/darwin/arm64/
+          mv nodejs_dist/valhalla_* ../valhalla-npm-package/darwin/arm64/ 2>/dev/null || true
           mv nodejs_dist/lib ../valhalla-npm-package/darwin/arm64/
           rm -rf nodejs_dist
           

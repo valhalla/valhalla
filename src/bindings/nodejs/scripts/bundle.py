@@ -429,6 +429,45 @@ def strip_symbols(binding_dst: Path, out_dir: Path) -> None:
             codesign_adhoc(path)
 
 
+def strip_symbols_multi(binary_files: List[Path], out_dir: Path) -> None:
+    """Strip debug symbols from multiple binaries and libraries."""
+    strip_cmd = "strip"
+    strip_args = ["-x"] if is_macos() else ["--strip-unneeded"]
+    stripped_files = []
+    
+    # Strip all binary files
+    for binary_file in binary_files:
+        try:
+            os.chmod(binary_file, 0o755)
+            subprocess.run(
+                [strip_cmd] + strip_args + [str(binary_file)],
+                capture_output=True,
+                check=False
+            )
+            stripped_files.append(binary_file)
+        except Exception:
+            pass
+    
+    # Strip libraries
+    lib_dir = out_dir / "lib"
+    for lib in lib_dir.glob("*.so*" if not is_macos() else "*.dylib"):
+        try:
+            os.chmod(lib, 0o755)
+            subprocess.run(
+                [strip_cmd] + strip_args + [str(lib)],
+                capture_output=True,
+                check=False
+            )
+            stripped_files.append(lib)
+        except Exception:
+            pass
+    
+    # Re-sign stripped files on macOS (strip also invalidates signatures)
+    if is_macos():
+        for path in stripped_files:
+            codesign_adhoc(path)
+
+
 def create_tarball(out_dir: Path, binding_dst: Path) -> str:
     """Create a tarball of the bundle."""
     binding_name = binding_dst.stem  # without .node extension
@@ -441,11 +480,25 @@ def create_tarball(out_dir: Path, binding_dst: Path) -> str:
     return str(tar_path.resolve())
 
 
+def create_tarball_multi(out_dir: Path, binary_files: List[Path]) -> str:
+    """Create a tarball of the bundle with multiple files."""
+    # Use first .node file or first binary for naming
+    node_file = next((f for f in binary_files if f.name.endswith('.node')), binary_files[0])
+    bundle_name = node_file.stem  # without extension
+    tar_name = f"{bundle_name}-bundle.tar.gz"
+    tar_path = out_dir.parent / tar_name
+    
+    with tarfile.open(tar_path, "w:gz") as tar:
+        tar.add(out_dir, arcname=out_dir.name)
+    
+    return str(tar_path.resolve())
+
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Bundle Node.js addon with its dependencies"
+        description="Bundle Node.js addon and executables with their dependencies"
     )
-    parser.add_argument("binding_src", help="Path to the addon.node file")
+    parser.add_argument("files", nargs="+", help="Path to the files to bundle (addon.node and/or executables)")
     parser.add_argument("out_dir", help="Path to the output directory")
     parser.add_argument("--strip", action="store_true", help="Strip symbols from binaries")
     parser.add_argument("--tar", action="store_true", help="Create a tarball of the bundle")
@@ -460,10 +513,17 @@ def main():
         require_cmd("ldd")
         require_cmd("patchelf")
     
-    # Validate input
-    binding_src = Path(args.binding_src)
-    if not binding_src.is_file():
-        print(f"Error: binding not found: {binding_src}", file=sys.stderr)
+    # Validate input files
+    input_files = []
+    for file_path in args.files:
+        src_path = Path(file_path)
+        if not src_path.is_file():
+            print(f"Error: file not found: {src_path}", file=sys.stderr)
+            sys.exit(1)
+        input_files.append(src_path)
+    
+    if not input_files:
+        print("Error: no files specified", file=sys.stderr)
         sys.exit(1)
     
     # Setup output directory
@@ -471,29 +531,44 @@ def main():
     lib_dir = out_dir / "lib"
     lib_dir.mkdir(parents=True, exist_ok=True)
     
-    # Copy binding
-    binding_dst = out_dir / binding_src.name
-    shutil.copy2(binding_src, binding_dst)
+    print(f"[INFO] Bundling {len(input_files)} file(s)...")
+    for src_file in input_files:
+        print(f"  - {src_file.name}")
+    print()
     
-    # Bundle dependencies
-    print("[1/4] Bundling dependencies...")
-    bundle_all_deps(binding_dst, out_dir)
-
-    # Patch RPATHs
-    print("[2/4] Patching RPATHs...")
-    patch_rpaths(binding_dst, out_dir)
+    # Copy all files to output directory
+    dst_files = []
+    for src_file in input_files:
+        dst_file = out_dir / src_file.name
+        shutil.copy2(src_file, dst_file)
+        # Make executable if it wasn't .node addon
+        if not src_file.name.endswith('.node'):
+            os.chmod(dst_file, 0o755)
+        dst_files.append(dst_file)
+    
+    # Bundle dependencies from ALL files into shared lib/ directory
+    print("[1/4] Bundling dependencies from all files...")
+    for dst_file in dst_files:
+        print(f"  Processing: {dst_file.name}")
+        bundle_all_deps(dst_file, out_dir)
+    
+    # Patch RPATHs for all files
+    print("[2/4] Patching RPATHs for all files...")
+    for dst_file in dst_files:
+        print(f"  Patching: {dst_file.name}")
+        patch_rpaths(dst_file, out_dir)
     
     # Strip symbols
     if args.strip:
         print("[3/4] Stripping symbols (optional)...")
-        strip_symbols(binding_dst, out_dir)
+        strip_symbols_multi(dst_files, out_dir)
     else:
         print("[3/4] Skipping strip (use --strip to enable).")
     
     # Create tarball
     if args.tar:
         print("[4/4] Creating tarball...")
-        tar_path = create_tarball(out_dir, binding_dst)
+        tar_path = create_tarball_multi(out_dir, dst_files)
         print(f"Tarball: {tar_path}")
     else:
         print(f"[4/4] Done. Relocatable bundle at: {out_dir}")
@@ -501,14 +576,18 @@ def main():
     # Print summary
     print()
     print("Summary:")
-    print(f"  Binding: {binding_dst}")
+    print(f"  Files bundled: {len(dst_files)}")
+    for dst_file in dst_files:
+        print(f"    - {dst_file.name}")
     print(f"  Lib dir: {lib_dir}")
+    lib_count = len(list(lib_dir.glob("*.so*" if not is_macos() else "*.dylib")))
+    print(f"  Shared libraries: {lib_count}")
     if is_macos():
-        print("  Install names: @loader_path/lib (binding)")
+        print("  Install names: @loader_path/lib (binaries)")
         print("  Install names: @loader_path (libs)")
     else:
-        print("  RPATH(binding): $ORIGIN/lib")
-        print("  RPATH(libs):    $ORIGIN")
+        print("  RPATH(binaries): $ORIGIN/lib")
+        print("  RPATH(libs):     $ORIGIN")
 
 
 if __name__ == "__main__":

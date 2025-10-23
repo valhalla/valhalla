@@ -1,0 +1,33 @@
+# Build artifacts
+build/
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+test/
+*.test.js
+
+# Git
+.git/
+.gitignore
