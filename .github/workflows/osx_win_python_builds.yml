@@ -430,10 +430,9 @@ jobs:
             echo Python_ROOT_DIR=%Python_ROOT_DIR%
             echo SKBUILD_CMAKE_DEFINE=%SKBUILD_CMAKE_DEFINE%
           CIBW_ENVIRONMENT_WINDOWS: >
-            PIP_NO_BUILD_ISOLATION="1::
+            PIP_NO_BUILD_ISOLATION="1"
 
-            :: ensure vcpkg toolchain preserves these vars
-            VCPKG_KEEP_ENV_VARS=Pytho::_EXECUTABLE;Python_ROOT_DIR
+            VCPKG_KEEP_ENV_VARS=Python_EXECUTABLE;Python_ROOT_DIR
             
             CMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE"
             VCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS"

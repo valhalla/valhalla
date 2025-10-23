@@ -1,5 +1,10 @@
 ## UNRELEASED
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2025-10-23 Valhalla 3.6.0
+* **Removed**
    * REMOVED: validity checks for historical speeds [#5087](https://github.com/valhalla/valhalla/pull/5087)
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
@@ -70,7 +75,8 @@
    * FIXED: Stabilize floating point calculations for small or nearly equal values [#5529](https://github.com/valhalla/valhalla/pull/5529)
    * FIXED: Trivial Matrix connections when a source and target share a same correlation point [#5579](https://github.com/valhalla/valhalla/pull/5579)
    * FIXED: Improved Isochrone/Reach performance by removing unnecessary getting of the opp edge [#5602](https://github.com/valhalla/valhalla/pull/5602)
-   * FIXED: Elevation resampling algorithm for 2 points [#5597](https://github.com/valhalla/valhalla/pull/5597) master
+   * FIXED: Elevation resampling algorithm for 2 points [#5597](https://github.com/valhalla/valhalla/pull/5597)
+   * FIXED: wrong openssl library referenced in setup.py [#5637](https://github.com/valhalla/valhalla/pull/5637)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
