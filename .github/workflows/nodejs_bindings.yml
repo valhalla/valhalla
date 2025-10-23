@@ -279,7 +279,7 @@ jobs:
           
           echo "[INFO] Checking binding dependencies..."
           ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch == 'x64' && 'x86_64' || matrix.arch }}/valhalla_node.node
-      
+      - run: ls -R node_modules/valhalla
       - name: Test package import
         run: |
           echo "[INFO] Testing package import..."

@@ -1,4 +1,5 @@
 const { getBinaryDir } = require('./lib/binary-path');
+const path = require('path');
 
 function getBinaryPath(baseDir) {
     return path.join(getBinaryDir(baseDir), 'valhalla_node.node');
