@@ -1,13 +1,13 @@
-#include <cstdint>
-#include <string>
-#include <vector>
-
 #include <valhalla/baldr/boundingcircle.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <cstdint>
+#include <string>
+#include <vector>
 
 namespace valhalla {
 namespace baldr {

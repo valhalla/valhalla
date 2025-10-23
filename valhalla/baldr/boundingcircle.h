@@ -1,10 +1,11 @@
 #pragma once
 
-#include <array>
-#include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/pointll.h>
+
+#include <array>
+#include <cstdint>
 
 namespace valhalla {
 namespace baldr {
