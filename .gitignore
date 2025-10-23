@@ -43,7 +43,6 @@ custom_files/
 
 # documentation
 site/
-*.gph
 
 .DS_Store
 
