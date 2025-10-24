@@ -1079,6 +1079,16 @@ public:
     return use_hierarchy_limits;
   }
 
+  /**
+   * Returns a rough time estimation given a distance in kilometers,
+   * based on costing parameters
+   */
+  uint32_t BeeLineTimeEstimate(double distance_meters, double factor) {
+    return fixed_speed_ == baldr::kDisableFixedSpeed
+               ? (distance_meters / (top_speed_ * midgard::kKPHtoMetersPerSec)) * factor
+               : distance_meters / (fixed_speed_ * midgard::kKPHtoMetersPerSec) * factor * 0.85;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.

@@ -103,9 +103,11 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
   bool has_ferry = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   std::vector<double> recost_times(api.options().recostings_size(), 0);
+  double est = -1;
   for (int leg_index = 0; leg_index < api.directions().routes(route_index).legs_size(); ++leg_index) {
     const auto& leg = api.directions().routes(route_index).legs(leg_index);
     const auto& trip_leg = api.trip().routes(route_index).legs(leg_index);
+    est = std::max(est, trip_leg.estimated_secs());
     route_time += leg.summary().time();
     route_length += leg.summary().length();
     route_cost += trip_leg.node().rbegin()->cost().elapsed_cost().cost();
@@ -142,6 +144,7 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
   writer("max_lon", bbox.maxx());
   writer.set_precision(tyr::kDefaultPrecision);
   writer("time", route_time);
+  writer("estimated_time", est);
   writer.set_precision(api.options().units() == Options::miles ? 4 : 3);
   writer("length", route_length);
   writer.set_precision(tyr::kDefaultPrecision);

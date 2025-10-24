@@ -384,6 +384,11 @@ message Options {
     expansion_type = 6;
   }
 
+  enum ReverseTimeTracking {
+    invalid = 0;
+    heuristic = 1;
+  }
+
   Units units = 1;                                                 // kilometers or miles
   oneof has_language {
     string language = 2;                                           // Based on IETF BCP 47 language tag string [default = "en-US"]
@@ -486,4 +491,6 @@ message Options {
                                                                    // ensuring that each edge appears in the output only once. [default = false]
   bool admin_crossings = 59;                                       // Include administrative boundary crossings
   bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
+  ReverseTimeTracking reverse_time_tracking = 61;                  // Which strategy to use on the reverse tree in time dependent bidirectional routing
+  double heuristic_factor = 62;
 }

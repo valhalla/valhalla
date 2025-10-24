@@ -492,9 +492,12 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
           route->mutable_legs()->Reserve(options.locations_size());
         }
         auto& leg = *route->mutable_legs()->Add();
+        auto p = std::max_element(path.begin(), path.end(), [](const PathInfo a, const PathInfo b) {
+          return a.estimated_seconds > b.estimated_seconds;
+        });
         TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
                               *origin, *destination, leg, algorithms, interrupt, edge_trimming,
-                              intermediates);
+                              intermediates, p->estimated_seconds);
 
         // advance the time for the next destination (i.e. algo origin) by the waiting_secs
         // of this origin (i.e. algo destination)
@@ -697,9 +700,13 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
           route->mutable_legs()->Reserve(options.locations_size());
         }
         auto& leg = *route->mutable_legs()->Add();
+        auto p = std::max_element(path.begin(), path.end(), [](const PathInfo a, const PathInfo b) {
+          return a.estimated_seconds > b.estimated_seconds;
+        });
         thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(),
                                     path.end(), *origin, *destination, leg, algorithms, interrupt,
-                                    edge_trimming, {std::next(origin), destination});
+                                    edge_trimming, {std::next(origin), destination},
+                                    p->estimated_seconds);
 
         path.clear();
         edge_trimming.clear();

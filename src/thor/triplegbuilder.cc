@@ -1773,7 +1773,8 @@ void TripLegBuilder::Build(
     const std::vector<std::string>& algorithms,
     const std::function<void()>* interrupt_callback,
     const std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>& edge_trimming,
-    const std::vector<valhalla::Location>& intermediates) {
+    const std::vector<valhalla::Location>& intermediates,
+    std::optional<double> original_estimation) {
   // Test interrupt prior to building trip path
   if (interrupt_callback) {
     (*interrupt_callback)();
@@ -1781,6 +1782,7 @@ void TripLegBuilder::Build(
 
   // Remember what algorithms were used to create this leg
   *trip_path.mutable_algorithms() = {algorithms.begin(), algorithms.end()};
+  trip_path.set_estimated_secs(original_estimation.value_or(-1.));
 
   // Set origin, any through locations, and destination. Origin and
   // destination are assumed to be breaks.

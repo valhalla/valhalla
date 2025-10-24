@@ -402,10 +402,17 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
   uint32_t shortcuts = 0;
 
   // Update the time information even if time is invariant to account for timezones
-  auto seconds_offset = invariant ? 0.f : pred.cost().secs;
-  auto offset_time = FORWARD
-                         ? time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()))
-                         : time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
+  auto seconds_offset = (invariant || !time_info.valid) ? 0.f : pred.cost().secs;
+  TimeInfo offset_time;
+
+  // either we're expanding the reverse tree and the date time type is arrive_by,
+  // or we're expanding the reverse tree and the time type is not arrive_by,
+  // in either case, we're on the time aware branch and so we need to update the time info
+  if constexpr (FORWARD) {
+    offset_time = time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()));
+  } else {
+    offset_time = time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
+  }
 
   auto& edgestatus = FORWARD ? edgestatus_forward_ : edgestatus_reverse_;
 
@@ -511,6 +518,13 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
 
+  Options::ReverseTimeTracking reverse_time_tracking = options.reverse_time_tracking();
+  LOG_DEBUG("Using tt strategy: " +
+            std::string(reverse_time_tracking ==
+                                Options::ReverseTimeTracking::Options_ReverseTimeTracking_heuristic
+                            ? "heuristic"
+                            : "invalid"));
+
   desired_paths_count_ = 1;
   if (options.has_alternates_case() && options.alternates())
     desired_paths_count_ += options.alternates();
@@ -524,10 +538,35 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
   // we use a non varying time for all time dependent routes until we can figure out how to vary the
   // time during the path computation in the bidirectional algorithm
-  bool invariant = options.date_time_type() != Options::no_time;
+  bool invariant = options.date_time_type() == Options::invariant;
+  bool arrive_by = options.date_time_type() == Options::arrive_by;
+
   // Get time information for forward and backward searches
-  auto forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
-  auto reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
+  // and determine which strategy to use on the far end
+  TimeInfo forward_time_info;
+  TimeInfo reverse_time_info;
+
+  double heuristic_factor =
+      options.heuristic_factor() == 0 ? kReverseTTHeuristicFactor : options.heuristic_factor();
+
+  double estimated_seconds = -1.;
+  if (arrive_by) {
+    reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
+    forward_time_info =
+        reverse_time_tracking == Options_ReverseTimeTracking_heuristic
+            ? EstimateReverseStartTime(graphreader, origin, destination, heuristic_factor,
+                                       reverse_time_info, costing_, arrive_by, estimated_seconds)
+            : TimeInfo::invalid();
+  } else {
+    forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
+    reverse_time_info = invariant
+                            ? TimeInfo::make(destination, graphreader, &tz_cache_)
+                            : (reverse_time_tracking == Options_ReverseTimeTracking_heuristic
+                                   ? EstimateReverseStartTime(graphreader, origin, destination,
+                                                              heuristic_factor, forward_time_info,
+                                                              costing_, arrive_by, estimated_seconds)
+                                   : TimeInfo::invalid());
+  }
 
   // When a timedependent route is too long in distance it gets sent to this algorithm. It used to be
   // the case that this algorithm called EdgeCost without a time component. This would result in
@@ -567,7 +606,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
     // Terminate if the iterations threshold has been exceeded.
     if ((edgelabels_reverse_.size() + edgelabels_forward_.size()) > iterations_threshold_) {
-      return FormPath(graphreader, options, origin, destination, forward_time_info);
+      return FormPath(graphreader, options, origin, destination, forward_time_info,
+                      estimated_seconds);
     }
 
     // Get the next predecessor (based on which direction was expanded in prior step)
@@ -581,7 +621,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > cost_threshold_) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info);
+          return FormPath(graphreader, options, origin, destination, forward_time_info,
+                          estimated_seconds);
         }
 
         // Check if the edge on the forward search connects to a settled edge on the
@@ -599,7 +640,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (!best_connections_.empty()) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info);
+          return FormPath(graphreader, options, origin, destination, forward_time_info,
+                          estimated_seconds);
         }
         LOG_ERROR("Forward search exhausted: n = " + std::to_string(edgelabels_forward_.size()) +
                   "," + std::to_string(edgelabels_reverse_.size()));
@@ -630,7 +672,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > cost_threshold_) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info);
+          return FormPath(graphreader, options, origin, destination, forward_time_info,
+                          estimated_seconds);
         }
 
         // Check if the edge on the reverse search connects to a settled edge on the
@@ -648,7 +691,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (!best_connections_.empty()) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info);
+          return FormPath(graphreader, options, origin, destination, forward_time_info,
+                          estimated_seconds);
         }
         LOG_ERROR("Reverse search exhausted: n = " + std::to_string(edgelabels_reverse_.size()) +
                   "," + std::to_string(edgelabels_forward_.size()));
@@ -1177,7 +1221,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
                                                                 const Options& options,
                                                                 const valhalla::Location& origin,
                                                                 const valhalla::Location& dest,
-                                                                const baldr::TimeInfo& time_info) {
+                                                                const baldr::TimeInfo& time_info,
+                                                                const double estimated_seconds) {
   LOG_DEBUG("Found connections before stretch filter: " + std::to_string(best_connections_.size()));
 
   if (desired_paths_count_ > 1) {
@@ -1312,10 +1357,11 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
     };
 
-    const auto label_cb = [&path, &recovered_inner_edges](const PathEdgeLabel& label) {
+    const auto label_cb = [&path, &recovered_inner_edges,
+                           &estimated_seconds](const PathEdgeLabel& label) {
       path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.path_distance(),
                         label.restriction_idx(), label.transition_cost(),
-                        recovered_inner_edges.count(label.edgeid()));
+                        recovered_inner_edges.count(label.edgeid()), estimated_seconds);
     };
 
     float source_pct;
@@ -1462,6 +1508,57 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
 
   // No restrictions matched our patch path
   return false;
+}
+
+TimeInfo EstimateReverseStartTime(GraphReader& reader,
+                                  valhalla::Location& origin,
+                                  valhalla::Location& destination,
+                                  const double factor,
+                                  const TimeInfo& time_info,
+                                  const sif::cost_ptr_t& costing,
+                                  const bool arrive_by,
+                                  double& estimation) {
+  // correlations are sorted by distance
+  // so we just take the beeline distance between the
+  // origin and destination's first correlated points
+  auto origin_pathedge = origin.correlation().edges().at(0);
+  auto dest_pathedge = destination.correlation().edges().at(0);
+  PointLL origin_pt{origin_pathedge.ll().lng(), origin_pathedge.ll().lat()};
+  PointLL destination_pt{dest_pathedge.ll().lng(), dest_pathedge.ll().lat()};
+  auto dist = origin_pt.Distance(destination_pt);
+  auto seconds = costing->BeeLineTimeEstimate(dist, factor);
+  estimation = seconds;
+  LOG_DEBUG("Estimated seconds: " + std::to_string(seconds));
+
+  graph_tile_ptr tile = nullptr;
+  valhalla::PathEdge& edge = arrive_by ? origin_pathedge : dest_pathedge;
+
+  // we need to get the node info either from the edge's start or end node
+  // for the timezone info
+  GraphId edgeid(edge.graph_id());
+  tile = reader.GetGraphTile(edgeid);
+
+  if (tile == nullptr) {
+    return TimeInfo::invalid();
+  }
+
+  const DirectedEdge* directededge = tile->directededge(edgeid);
+  graph_tile_ptr endtile = reader.GetGraphTile(directededge->endnode());
+
+  if (!endtile) {
+    return TimeInfo::invalid();
+  }
+  const NodeInfo* nodeinfo = nullptr;
+  if (arrive_by) {
+    nodeinfo = endtile->node(directededge->endnode());
+    return time_info.forward(seconds, static_cast<int>(nodeinfo->timezone()));
+  } else {
+    // in case of depart_at, we want the start node of our correlated edge
+    auto opp_edge = endtile->directededge(endtile->node(directededge->endnode())->edge_index() +
+                                          directededge->opp_index());
+    nodeinfo = tile->node(opp_edge->endnode());
+    return time_info.reverse(seconds, static_cast<int>(nodeinfo->timezone()));
+  }
 }
 
 } // namespace thor
