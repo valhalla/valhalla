@@ -307,3 +307,4 @@ jobs:
           EOF
           
           node test.js
+      - run: valhalla build_tiles --help
