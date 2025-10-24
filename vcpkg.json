@@ -29,7 +29,6 @@
       "features": ["rttopo"]
     },
     "pkgconf",
-    "nanobind",
     "rapidjson",
     "spatialite-tools",
     "luajit",
