@@ -15,20 +15,15 @@ version_scheme = "no-guess-dev"
 # PyPI doesn't accept local hashed version strings, important for pyvalhalla-weekly
 local_scheme = "no-local-version"
 
-[tool.black]
+[tool.ruff]
 line-length = 105
-skip-string-normalization = true
-extend-exclude = '''
-/(
-    \\..*
-  | dist
-  | wheelhouse
-  | '*build'
-  | __pycache__
-  | '*.toml'
-  | '*.egg-info'
-)/
-'''
+extend-exclude = [
+    "dist",
+    "wheelhouse",
+    "*build*",
+    "*.egg-info",
+]
+lint.ignore = ["E731", "F811"]
 
 [tool.cibuildwheel]
 # it's enough here to know it's importable, actual test is run on other CI
