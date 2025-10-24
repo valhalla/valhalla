@@ -385,8 +385,8 @@ message Options {
   }
 
   enum ReverseTimeTracking {
-    invalid = 0;
-    heuristic = 1;
+    heuristic = 0;
+    invalid = 1;
   }
 
   Units units = 1;                                                 // kilometers or miles
