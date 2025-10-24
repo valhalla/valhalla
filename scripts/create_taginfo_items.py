@@ -9,7 +9,7 @@ items = []
 for key in keys:
     for value in values:
         items.append(
-            {'key': key, 'value': value, 'object_types': argv[5].split(','), 'description': argv[6]}
+            {"key": key, "value": value, "object_types": argv[5].split(","), "description": argv[6]}
         )
 
 print(json.dumps(items))

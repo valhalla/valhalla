@@ -23,7 +23,7 @@ echo ${python_sources}
 ${py} -m ruff check ${python_sources}
 
 # Python linter
-${py} -m ruff --verbose format ${python_sources}
+${py} -m ruff format ${python_sources}
 
 # clang-format
 echo "Using $(${py} scripts/clang_format_wrapper.py --version)"
