@@ -519,12 +519,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   access_mode_ = costing_->access_mode();
 
   Options::ReverseTimeTracking reverse_time_tracking = options.reverse_time_tracking();
-  LOG_DEBUG("Using tt strategy: " +
-            std::string(reverse_time_tracking ==
-                                Options::ReverseTimeTracking::Options_ReverseTimeTracking_heuristic
-                            ? "heuristic"
-                            : "invalid"));
-
   desired_paths_count_ = 1;
   if (options.has_alternates_case() && options.alternates())
     desired_paths_count_ += options.alternates();
@@ -546,16 +540,12 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   TimeInfo forward_time_info;
   TimeInfo reverse_time_info;
 
-  double heuristic_factor =
-      options.heuristic_factor() == 0 ? kReverseTTHeuristicFactor : options.heuristic_factor();
-
-  double estimated_seconds = -1.;
   if (arrive_by) {
     reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
     forward_time_info =
         reverse_time_tracking == Options_ReverseTimeTracking_heuristic
-            ? EstimateReverseStartTime(graphreader, origin, destination, heuristic_factor,
-                                       reverse_time_info, costing_, arrive_by, estimated_seconds)
+            ? EstimateReverseStartTime(graphreader, origin, destination, kReverseTTHeuristicFactor,
+                                       reverse_time_info, costing_, arrive_by)
             : TimeInfo::invalid();
   } else {
     forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
@@ -563,8 +553,8 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
                             ? TimeInfo::make(destination, graphreader, &tz_cache_)
                             : (reverse_time_tracking == Options_ReverseTimeTracking_heuristic
                                    ? EstimateReverseStartTime(graphreader, origin, destination,
-                                                              heuristic_factor, forward_time_info,
-                                                              costing_, arrive_by, estimated_seconds)
+                                                              kReverseTTHeuristicFactor,
+                                                              forward_time_info, costing_, arrive_by)
                                    : TimeInfo::invalid());
   }
 
@@ -606,8 +596,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
     // Terminate if the iterations threshold has been exceeded.
     if ((edgelabels_reverse_.size() + edgelabels_forward_.size()) > iterations_threshold_) {
-      return FormPath(graphreader, options, origin, destination, forward_time_info,
-                      estimated_seconds);
+      return FormPath(graphreader, options, origin, destination, forward_time_info);
     }
 
     // Get the next predecessor (based on which direction was expanded in prior step)
@@ -621,8 +610,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (fwd_pred.sortcost() + cost_diff_ > cost_threshold_) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info,
-                          estimated_seconds);
+          return FormPath(graphreader, options, origin, destination, forward_time_info);
         }
 
         // Check if the edge on the forward search connects to a settled edge on the
@@ -640,8 +628,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (!best_connections_.empty()) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info,
-                          estimated_seconds);
+          return FormPath(graphreader, options, origin, destination, forward_time_info);
         }
         LOG_ERROR("Forward search exhausted: n = " + std::to_string(edgelabels_forward_.size()) +
                   "," + std::to_string(edgelabels_reverse_.size()));
@@ -672,8 +659,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
         // Terminate if the cost threshold has been exceeded.
         if (rev_pred.sortcost() > cost_threshold_) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info,
-                          estimated_seconds);
+          return FormPath(graphreader, options, origin, destination, forward_time_info);
         }
 
         // Check if the edge on the reverse search connects to a settled edge on the
@@ -691,8 +677,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       } else {
         // Search is exhausted. If a connection has been found, return it
         if (!best_connections_.empty()) {
-          return FormPath(graphreader, options, origin, destination, forward_time_info,
-                          estimated_seconds);
+          return FormPath(graphreader, options, origin, destination, forward_time_info);
         }
         LOG_ERROR("Reverse search exhausted: n = " + std::to_string(edgelabels_reverse_.size()) +
                   "," + std::to_string(edgelabels_forward_.size()));
@@ -1221,8 +1206,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
                                                                 const Options& options,
                                                                 const valhalla::Location& origin,
                                                                 const valhalla::Location& dest,
-                                                                const baldr::TimeInfo& time_info,
-                                                                const double estimated_seconds) {
+                                                                const baldr::TimeInfo& time_info) {
   LOG_DEBUG("Found connections before stretch filter: " + std::to_string(best_connections_.size()));
 
   if (desired_paths_count_ > 1) {
@@ -1357,11 +1341,10 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
     };
 
-    const auto label_cb = [&path, &recovered_inner_edges,
-                           &estimated_seconds](const PathEdgeLabel& label) {
+    const auto label_cb = [&path, &recovered_inner_edges](const PathEdgeLabel& label) {
       path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.path_distance(),
                         label.restriction_idx(), label.transition_cost(),
-                        recovered_inner_edges.count(label.edgeid()), estimated_seconds);
+                        recovered_inner_edges.count(label.edgeid()));
     };
 
     float source_pct;
@@ -1516,8 +1499,7 @@ TimeInfo EstimateReverseStartTime(GraphReader& reader,
                                   const double factor,
                                   const TimeInfo& time_info,
                                   const sif::cost_ptr_t& costing,
-                                  const bool arrive_by,
-                                  double& estimation) {
+                                  const bool arrive_by) {
   // correlations are sorted by distance
   // so we just take the beeline distance between the
   // origin and destination's first correlated points
@@ -1527,7 +1509,6 @@ TimeInfo EstimateReverseStartTime(GraphReader& reader,
   PointLL destination_pt{dest_pathedge.ll().lng(), dest_pathedge.ll().lat()};
   auto dist = origin_pt.Distance(destination_pt);
   auto seconds = costing->BeeLineTimeEstimate(dist, factor);
-  estimation = seconds;
   LOG_DEBUG("Estimated seconds: " + std::to_string(seconds));
 
   graph_tile_ptr tile = nullptr;

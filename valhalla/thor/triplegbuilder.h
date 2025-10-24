@@ -57,8 +57,7 @@ public:
                     const std::function<void()>* interrupt_callback = nullptr,
                     const std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>>&
                         edge_trimming = {},
-                    const std::vector<valhalla::Location>& intermediates = {},
-                    std::optional<double> original_estimation = std::nullopt);
+                    const std::vector<valhalla::Location>& intermediates = {});
 };
 
 } // namespace thor

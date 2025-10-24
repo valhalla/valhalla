@@ -624,11 +624,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_reverse_time_tracking(reverse_tt);
   }
 
-  auto heuristic_factor = rapidjson::get_optional<double>(doc, "/reverse_tt_heuristic_factor");
-  if (heuristic_factor) {
-    options.set_heuristic_factor(*heuristic_factor);
-  }
-
   // costing defaults to none which is only valid for locate
   auto costing_str =
       rapidjson::get<std::string>(doc, "/costing",

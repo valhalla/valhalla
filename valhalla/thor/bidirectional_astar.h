@@ -236,8 +236,7 @@ protected:
                                               const Options& options,
                                               const valhalla::Location& origin,
                                               const valhalla::Location& dest,
-                                              const baldr::TimeInfo& time_info,
-                                              const double estimated_seconds);
+                                              const baldr::TimeInfo& time_info);
 };
 
 // This function checks if the path formed by the two expanding trees
@@ -280,8 +279,7 @@ baldr::TimeInfo EstimateReverseStartTime(baldr::GraphReader& reader,
                                          const double factor,
                                          const baldr::TimeInfo& time_info,
                                          const sif::cost_ptr_t& costing,
-                                         const bool arrive_by,
-                                         double& estimation);
+                                         const bool arrive_by);
 
 } // namespace thor
 } // namespace valhalla

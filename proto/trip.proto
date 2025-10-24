@@ -344,7 +344,6 @@ message TripLeg {
   repeated Closure closures = 13;
   Summary summary = 14;
   repeated LevelChange level_changes = 15;
-  double estimated_secs = 16;
 }
 
 message TripRoute {

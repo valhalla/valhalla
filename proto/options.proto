@@ -492,5 +492,4 @@ message Options {
   bool admin_crossings = 59;                                       // Include administrative boundary crossings
   bool turn_lanes = 60;                                            // Include turn lane information into Valhalla serializer response.
   ReverseTimeTracking reverse_time_tracking = 61;                  // Which strategy to use on the reverse tree in time dependent bidirectional routing
-  double heuristic_factor = 62;
 }
