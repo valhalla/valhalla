@@ -17,7 +17,7 @@ function getBinaryDir(baseDir) {
     }
 
 
-    return path.join(baseDir, platformDir, archDir);
+    return path.join(baseDir, platform, arch);
 }
 
 module.exports = {

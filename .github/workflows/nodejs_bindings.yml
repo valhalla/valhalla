@@ -209,7 +209,7 @@ jobs:
           cd ..
           
           echo "[INFO] Package structure:"
-          tree -L 3 valhalla-npm-package/ || find valhalla-npm-package -type f | head -30
+          tree -L 5 valhalla-npm-package/ || find valhalla-npm-package -type f
           
           echo "[INFO] Creating NPM package..."
           cd valhalla-npm-package
