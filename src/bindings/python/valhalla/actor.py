@@ -49,12 +49,16 @@ class Actor(_Actor):
                 self._config_path = f.name
         elif isinstance(config, str):
             if not Path(config).is_file():
-                raise FileNotFoundError(f"Valhalla JSON config file doesn't exist: {config}")
+                raise FileNotFoundError(
+                    f"Valhalla JSON config file doesn't exist: {config}"
+                )
             self._config_path = config
         elif isinstance(config, Path):
             self._config_path = str(config.resolve())
         else:
-            raise AttributeError(f"Valhalla JSON config can't be of type {type(config)}")
+            raise AttributeError(
+                f"Valhalla JSON config can't be of type {type(config)}"
+            )
 
         # test if there's an extract or tile_dir
         with open(self._config_path) as f:

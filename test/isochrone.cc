@@ -91,7 +91,7 @@ void try_isochrone(loki_worker_t& loki_worker,
     EXPECT_TRUE((actual_properties && expected_properties) ||
                 (!actual_properties && !expected_properties));
     if (expected_properties) {
-      ASSERT_EQ(actual_properties->GetObject(), expected_properties->GetObject());
+      test::json_equality(*actual_properties, *expected_properties);
     }
 
     // same geom type

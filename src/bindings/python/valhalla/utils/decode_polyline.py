@@ -53,7 +53,11 @@ def _decode(expression, precision=5, order="lnglat", is3d=False):
         lng_change, index = _trans(expression, index)
         lat += lat_change
         lng += lng_change
-        coord = (lat / factor, lng / factor) if order == "latlng" else (lng / factor, lat / factor)
+        coord = (
+            (lat / factor, lng / factor)
+            if order == "latlng"
+            else (lng / factor, lat / factor)
+        )
         if not is3d:
             coordinates.append(coord)
         else:

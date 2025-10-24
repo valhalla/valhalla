@@ -43,7 +43,9 @@ class Tiles(object):
         self.bbox = bbox
         self.tilesize = size
 
-        self.ncolumns = int(math.ceil((self.bbox.maxx - self.bbox.minx) / self.tilesize))
+        self.ncolumns = int(
+            math.ceil((self.bbox.maxx - self.bbox.minx) / self.tilesize)
+        )
         self.nrows = int(math.ceil((self.bbox.maxy - self.bbox.miny) / self.tilesize))
         self.max_tile_id = (self.ncolumns * self.nrows) - 1
 
@@ -79,7 +81,6 @@ class Tiles(object):
 
     # get the File based on tile_id and level
     def GetFile(self, tile_id, level):
-
         max_length = self.Digits(self.max_tile_id)
 
         remainder = max_length % 3
@@ -88,33 +89,38 @@ class Tiles(object):
 
         # if it starts with a zero the pow trick doesn't work
         if level == 0:
-            file_suffix = '{:,}'.format(int(pow(10, max_length)) + tile_id).replace(',', '/')
+            file_suffix = "{:,}".format(int(pow(10, max_length)) + tile_id).replace(
+                ",", "/"
+            )
             file_suffix += "."
             file_suffix += suffix
             file_suffix = "0" + file_suffix[1:]
             return file_suffix
 
         # it was something else
-        file_suffix = '{:,}'.format(level * int(pow(10, max_length)) + tile_id).replace(',', '/')
+        file_suffix = "{:,}".format(level * int(pow(10, max_length)) + tile_id).replace(
+            ",", "/"
+        )
         file_suffix += "."
         file_suffix += suffix
         return file_suffix
 
 
 def check_args(argv):
-
     global boundingbox
     global suffix
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "h:b:s:", ["help=", "bbox=", "suffix="])
+        opts, args = getopt.getopt(
+            sys.argv[1:], "h:b:s:", ["help=", "bbox=", "suffix="]
+        )
     except getopt.GetoptError:
-        print('tiles.py -b lower_left_lng_lat, upper_right_lng_lat -s file_suffix')
-        print('tiles.py -b -74.251961,40.512764,-73.755405,40.903125 -s json')
+        print("tiles.py -b lower_left_lng_lat, upper_right_lng_lat -s file_suffix")
+        print("tiles.py -b -74.251961,40.512764,-73.755405,40.903125 -s json")
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print('tiles.py -b lower_left_lng_lat, upper_right_lng_lat -s file_suffix')
-            print('tiles.py -b -74.251961,40.512764,-73.755405,40.903125 -s json')
+            print("tiles.py -b lower_left_lng_lat, upper_right_lng_lat -s file_suffix")
+            print("tiles.py -b -74.251961,40.512764,-73.755405,40.903125 -s json")
             sys.exit()
         elif opt in ("-b", "--bbox"):
             boundingbox = arg
@@ -122,20 +128,19 @@ def check_args(argv):
             suffix = arg
 
     if boundingbox is None or suffix is None:
-        print('tiles.py -b lower_left_lng_lat, upper_right_lng_lat -s file_suffix')
-        print('tiles.py -b -74.251961,40.512764,-73.755405,40.903125 -s json')
+        print("tiles.py -b lower_left_lng_lat, upper_right_lng_lat -s file_suffix")
+        print("tiles.py -b -74.251961,40.512764,-73.755405,40.903125 -s json")
         sys.exit()
 
 
 # this is the entry point to the program
 if __name__ == "__main__":
-
     check_args(sys.argv[1:])
 
     # these are the tiles that should exist in s3
     tile_hierarchy = TileHierarchy()
     if boundingbox:
-        bbox = [float(i) for i in boundingbox.split(',')]
+        bbox = [float(i) for i in boundingbox.split(",")]
 
         bounding_boxes = []
         # check our bb and make sure it does not cross 180/-180, if it does

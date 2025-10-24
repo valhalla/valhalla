@@ -19,7 +19,11 @@ description = "Parses a build log and prints a summary of observed warnings"
 
 parser = ArgumentParser(description=description)
 parser.add_argument(
-    "--log-path", "-p", default=None, help="The full or relative path to the build log", type=Path
+    "--log-path",
+    "-p",
+    default=None,
+    help="The full or relative path to the build log",
+    type=Path,
 )
 # Could probably auto-discover this from the first lines of the build log
 parser.add_argument(
@@ -60,7 +64,9 @@ def main():
     )
     if list_parameters:
         for files_amount, warning_id in list_parameters:
-            print(f"  {warning_id}: max {'all' if files_amount != -1 else files_amount} source paths")
+            print(
+                f"  {warning_id}: max {'all' if files_amount != -1 else files_amount} source paths"
+            )
 
     warnings_counter = Counter()
     warnings_files_requested = defaultdict(int)
@@ -72,7 +78,7 @@ def main():
         if compiler == GCC:
             for line_idx, line in enumerate(log_f.readlines()):
                 # match "[-W" for each line and capture the whole [-W...] block
-                if match := re.search(r'(\[-W[^\]]+\])', line):
+                if match := re.search(r"(\[-W[^\]]+\])", line):
                     # remove the brackets
                     warning_id = match.group(1)[1:-1]
                     warnings_counter[warning_id] += 1
@@ -100,7 +106,10 @@ def main():
 
                 line: str
                 for line_idx, line in enumerate(lines):
-                    if req_warning_amount == -1 or line_idx < warnings_files_requested[warning_id]:
+                    if (
+                        req_warning_amount == -1
+                        or line_idx < warnings_files_requested[warning_id]
+                    ):
                         print(f"  {line.strip()}")
                         continue
                     break
