@@ -210,20 +210,9 @@ def copy_dep(dep_path: str, out_dir: Path) -> None:
     if dest_path.exists():
         return
     
+    print(f"Copying {dep_path} to {dest_path}")
     # Copy the actual file (following symlinks)
     shutil.copy2(dep_path, dest_path, follow_symlinks=True)
-    
-    # If the source was a symlink, also copy with the target name
-    # This ensures both libname.so and libname.so.1 exist
-    if os.path.islink(dep_path):
-        target = os.readlink(dep_path)
-        target_basename = os.path.basename(target)
-        
-        if target and target_basename != basename:
-            target_path = lib_dir / target_basename
-            if not target_path.exists():
-                # Copy the same file content with the target name
-                shutil.copy2(dep_path, target_path, follow_symlinks=True)
 
 
 def collect_deps_recursively(binary_path: str) -> List[str]:
