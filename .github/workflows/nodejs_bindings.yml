@@ -181,11 +181,11 @@ jobs:
           
           # Process Linux x64
           echo "[INFO] Processing Linux x64..."
-          mkdir -p ../valhalla-npm-package/linux/x86_64
+          mkdir -p ../valhalla-npm-package/linux/x64
           tar -xzf valhalla-nodejs-linux-x64/valhalla-nodejs-linux-x64.tar.gz
-          mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/linux/x86_64/
-          mv nodejs_dist/valhalla_* ../valhalla-npm-package/linux/x86_64/ 2>/dev/null || true
-          mv nodejs_dist/lib ../valhalla-npm-package/linux/x86_64/
+          mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/linux/x64/
+          mv nodejs_dist/valhalla_* ../valhalla-npm-package/linux/x64/ 2>/dev/null || true
+          mv nodejs_dist/lib ../valhalla-npm-package/linux/x64/
           rm -rf nodejs_dist
           
           # Process Linux arm64
@@ -272,13 +272,13 @@ jobs:
           npm list valhalla
           
           echo "[INFO] Checking installed files..."
-          ls -lh node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch == 'x64' && 'x86_64' || matrix.arch }}/
+          ls -lh node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/
           
           echo "[INFO] Checking bundled libraries..."
-          ls -lh node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch == 'x64' && 'x86_64' || matrix.arch }}/lib/ 
+          ls -lh node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/lib/ 
           
           echo "[INFO] Checking binding dependencies..."
-          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch == 'x64' && 'x86_64' || matrix.arch }}/valhalla_node.node
+          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/valhalla_node.node
       - run: ls -R node_modules/valhalla
       - name: Test package import
         run: |

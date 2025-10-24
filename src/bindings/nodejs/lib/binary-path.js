@@ -8,7 +8,7 @@ function getBinaryDir(baseDir) {
 
     const SUPPORTED = [
         'darwin/arm64',
-        'linux/x86_64',
+        'linux/x64',
         'linux/arm64',
     ];
 
