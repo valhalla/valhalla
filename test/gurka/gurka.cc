@@ -374,8 +374,9 @@ inline void build_pbf(const nodelayout& node_locations,
   objects.sort(object_order_type_unsigned_id_version{});
 
   // Write out the objects in sorted order
-  auto out = osmium::io::make_output_iterator(writer);
-  std::copy(objects.begin(), objects.end(), out);
+  for (const auto& obj : objects) {
+    writer(obj);
+  }
 
   // Explicitly close the writer. Will throw an exception if there is
   // a problem. If you wait for the destructor to close the writer, you
