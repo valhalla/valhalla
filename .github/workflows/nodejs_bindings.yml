@@ -167,7 +167,7 @@ jobs:
           BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
           
           GIT_HASH=$(git rev-parse --short HEAD)
-          VERSION="weekly-${BASE_VERSION}-${GIT_HASH}"
+          VERSION="${BASE_VERSION}-${GIT_HASH}"
           echo "[INFO] Building version: ${VERSION}"
 
           cd src/bindings/nodejs
@@ -292,16 +292,12 @@ jobs:
       - name: Test package import (ESM)
         run: node --test src/bindings/nodejs/test/test-esm.mjs
 
-      - name: Test CLI - Build config and tiles
+      - name: Integration test
         run: |
           echo "[INFO] Creating Valhalla config..."
-          export VALHALLA_DEBUG=1
           mkdir -p valhalla_tiles
           npx valhalla build_config --mjolnir-tile-dir valhalla_tiles --mjolnir-tile-extract valhalla_tiles.tar > valhalla.json
-          
-          echo "[INFO] Generated config:"
-          cat valhalla.json
-          
+
           echo "[INFO] Building tiles from Utrecht OSM data..."
           npx valhalla build_tiles -c valhalla.json test/data/utrecht_netherlands.osm.pbf
           

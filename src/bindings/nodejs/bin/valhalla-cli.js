@@ -9,14 +9,7 @@ const { getBinaryDir } = require('../lib/binary-path');
 const binaryDir = getBinaryDir(path.join(__dirname, '..'));
 const packageRootDir = path.join(__dirname, '..');
 
-// Enable debug logging if VALHALLA_DEBUG env var is set
-const DEBUG = process.env.VALHALLA_DEBUG === '1' || process.env.VALHALLA_DEBUG === 'true';
-
-function debugLog(...args) {
-    if (DEBUG) {
-        console.error('[DEBUG]', ...args);
-    }
-}
+ 
 
 async function fileExists(filePath) {
     try {
@@ -30,56 +23,47 @@ async function fileExists(filePath) {
 async function ensureExecutable(filePath) {
     try {
         const stats = await fs.stat(filePath);
-        debugLog(`File stats for ${path.basename(filePath)}:`, {
-            mode: stats.mode.toString(8),
-            isExecutable: !!(stats.mode & fsSync.constants.S_IXUSR)
-        });
-        
-        // Check if file has execute permission
         const hasExecutePerm = !!(stats.mode & fsSync.constants.S_IXUSR);
         
         if (!hasExecutePerm) {
-            debugLog(`Adding execute permission to ${filePath}`);
             // Add execute permission for user, group, and others
             await fs.chmod(filePath, stats.mode | 0o111);
-            debugLog(`Execute permission added successfully`);
         }
     } catch (err) {
-        debugLog(`Error ensuring executable for ${filePath}:`, err.message);
         throw err;
     }
 }
 
 async function getAvailableCommands() {
-    try {
-        const files = await fs.readdir(binaryDir);
-        const commands = [];
-        for (const file of files) {
-            const filePath = path.join(binaryDir, file);
-            
-            try {
-                const stats = await fs.stat(filePath);
-                
-                if (!stats.isFile()) {
+    async function listExecutables(dir) {
+        try {
+            const files = await fs.readdir(dir);
+            const commands = [];
+            for (const file of files) {
+                const filePath = path.join(dir, file);
+                try {
+                    const stats = await fs.stat(filePath);
+                    if (!stats.isFile()) {
+                        continue;
+                    }
+                    if (file.endsWith('.node')) {
+                        continue;
+                    }
+                    if (!file.startsWith('valhalla_')) {
+                        continue;
+                    }
+                    commands.push(file);
+                } catch {
                     continue;
                 }
-                
-                if (file.endsWith('.node')) {
-                    continue;
-                }
-                
-                // Check if file is executable (has execute permission)
-                await fs.access(filePath, fsSync.constants.X_OK);
-                commands.push(file);
-            } catch {
-                continue;
             }
+            return commands;
+        } catch {
+            return [];
         }
-        
-        return commands;
-    } catch {
-        return [];
     }
+
+    return [...listExecutables(binaryDir), ...listExecutables(packageRootDir)];
 }
 
 async function printHelp() {
@@ -95,7 +79,7 @@ async function printHelp() {
     }
     
     console.log(`Valhalla Node.js package v${packageJson.version}\n`);
-    console.log('valhalla CLI provides access to Valhalla C++ executables. Arguments are passed through as-is.\n');
+    console.log('valhalla CLI provides access to Valhalla\'s executables. Arguments are passed through as-is.\n');
     console.log('Usage: valhalla <command> [args...]\n');
     console.log('Options:');
     console.log('  --help, -h     Show this help message');
@@ -122,39 +106,26 @@ async function printHelp() {
 }
 
 async function findBinary(command) {
-    debugLog(`Binary directory: ${binaryDir}`);
-    debugLog(`Package root directory: ${packageRootDir}`);
-    debugLog(`Looking for command: ${command}`);
-    
     // Try to find the binary with the given name first
     let binaryPath = path.join(binaryDir, command);
-    let exists = await fileExists(binaryPath);
-    debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
-    if (exists) return binaryPath;
+    if (await fileExists(binaryPath)) { return binaryPath; }
     
     // If not found and doesn't start with 'valhalla_', try with 'valhalla_' prefix
     if (!command.startsWith('valhalla_')) {
         const prefixedCommand = `valhalla_${command}`;
         binaryPath = path.join(binaryDir, prefixedCommand);
-        exists = await fileExists(binaryPath);
-        debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
-        if (exists) return binaryPath;
+        if (await fileExists(binaryPath)) return binaryPath;
     }
     
     // If still not found, try in package root directory
-    debugLog(`Not found in binary directory, trying package root directory`);
     binaryPath = path.join(packageRootDir, command);
-    exists = await fileExists(binaryPath);
-    debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
-    if (exists) return binaryPath;
+    if (await fileExists(binaryPath)) { return binaryPath; }
     
     // Try with prefix in package root
     if (!command.startsWith('valhalla_')) {
         const prefixedCommand = `valhalla_${command}`;
         binaryPath = path.join(packageRootDir, prefixedCommand);
-        exists = await fileExists(binaryPath);
-        debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
-        if (exists) return binaryPath;
+        if (await fileExists(binaryPath)) return binaryPath;
     }
     
     // Not found anywhere
@@ -169,8 +140,6 @@ async function runCommand(command, args) {
         console.error(`Tried: ${command}${!command.startsWith('valhalla_') ? ` and valhalla_${command}` : ''}`);
         console.error(`Searched in: ${binaryDir} and ${packageRootDir}`);
         console.error(`Run 'valhalla --help' to see available commands.`);
-        debugLog(`Binary directory contents:`, await fs.readdir(binaryDir).catch(() => []));
-        debugLog(`Package root directory contents:`, await fs.readdir(packageRootDir).catch(() => []));
         process.exit(1);
     }
     
@@ -183,8 +152,6 @@ async function runCommand(command, args) {
         process.exit(1);
     }
     
-    debugLog(`Spawning: ${binaryPath}`, args);
-    
     // Spawn the binary
     const proc = spawn(binaryPath, args, {
         stdio: 'inherit', // Pass through stdin, stdout, stderr
@@ -193,12 +160,10 @@ async function runCommand(command, args) {
     
     proc.on('error', (err) => {
         console.error(`Error running ${command}:`, err.message);
-        debugLog(`Full error:`, err);
         process.exit(1);
     });
     
     proc.on('close', (code) => {
-        debugLog(`Process exited with code: ${code}`);
         process.exit(code || 0);
     });
 }
