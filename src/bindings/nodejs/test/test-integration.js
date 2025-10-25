@@ -4,16 +4,9 @@ const valhalla = require('@valhallajs/valhallajs');
 
 describe('Valhalla Integration Tests', () => {
   test('should generate routes using built tiles', async () => {
-    console.log('[INFO] Testing route generation with built tiles...');
-    console.log('[INFO] Valhalla version:', valhalla.VALHALLA_VERSION);
-
-    const configFile = process.env.VALHALLA_CONFIG_FILE;
-    console.log('[INFO] Loading config from:', configFile);
-    
+    const configFile = process.env.VALHALLA_CONFIG_FILE;  
     const actor = await valhalla.Actor.fromConfigFile(configFile);
     assert.ok(actor, 'Actor should be initialized');
-    console.log('[SUCCESS] Actor initialized successfully');
-
 
     const routeRequest = {
       locations: [
@@ -27,7 +20,6 @@ describe('Valhalla Integration Tests', () => {
     };
 
     const result = await actor.route(routeRequest);
-    console.log('[INFO] Route result:', JSON.stringify(result, null, 2));
     assert.ok(result, 'Route result should be returned');
     assert.ok(result.trip, 'Route result should contain trip');
     assert.ok(result.trip.legs, 'Trip should contain legs');

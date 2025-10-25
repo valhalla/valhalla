@@ -23,14 +23,12 @@ EXCLUDE_RE_LINUX = re.compile(
 
 
 def require_cmd(cmd: str) -> None:
-    """Check if a command exists in PATH."""
     if shutil.which(cmd) is None:
         print(f"Error: '{cmd}' is required but not found in PATH.", file=sys.stderr)
         sys.exit(1)
 
 
 def is_macos() -> bool:
-    """Check if running on macOS."""
     return platform.system() == "Darwin"
 
 
@@ -205,7 +203,6 @@ def copy_dep(dep_path: str, out_dir: Path) -> None:
     if dest_path.exists():
         return
     
-    print(f"Copying {dep_path} to {dest_path}")
     shutil.copy2(dep_path, dest_path, follow_symlinks=True)
 
 
@@ -226,22 +223,13 @@ def collect_deps_recursively(binary_path: str) -> List[str]:
 
 
 def bundle_all_deps(binding_dst: Path, out_dir: Path) -> None:
-    """Recursively collect and copy dependencies."""
-    # Collect all dependencies first
-
     all_deps = collect_deps_recursively(str(binding_dst))
 
-    print('all_deps:', all_deps)
-    for dep in all_deps:
-        print('dep:', dep)
-
-    # Copy all collected dependencies
     for dep in all_deps:
         copy_dep(dep, out_dir)
 
 
 def patch_rpaths_linux(binding_dst: Path, out_dir: Path) -> None:
-    """Patch RPATHs on Linux using patchelf."""
     # Patch the binding to look into ./lib
     subprocess.run(
         ["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/lib", str(binding_dst)],
@@ -271,22 +259,9 @@ def patch_rpaths_linux(binding_dst: Path, out_dir: Path) -> None:
             continue
 
 
-def codesign_adhoc(path: Path) -> None:
-    """Re-sign a binary with ad-hoc signature to fix invalidated signatures."""
-    try:
-        subprocess.run(
-            ["codesign", "--force", "--sign", "-", str(path)],
-            capture_output=True,
-            check=True
-        )
-    except subprocess.CalledProcessError as e:
-        print(f"Warning: failed to re-sign {path}: {e.stderr.decode()}")
-
-
 def patch_rpaths_macos(binding_dst: Path, out_dir: Path) -> None:
     """Patch install names on macOS using install_name_tool."""
     lib_dir = out_dir / "lib"
-    modified_files = set()
     
     # First, update the library IDs of all bundled libraries
     for dylib in lib_dir.glob("*.dylib"):
@@ -296,13 +271,11 @@ def patch_rpaths_macos(binding_dst: Path, out_dir: Path) -> None:
                 capture_output=True,
                 check=True
             )
-            modified_files.add(dylib)
         except subprocess.CalledProcessError:
             print(f"Warning: failed to set ID for {dylib} (continuing)")
     
     # Update references in the binding
     deps = collect_deps_macos(str(binding_dst))
-    binding_modified = False
     for dep in deps:
         basename = os.path.basename(dep)
         if (lib_dir / basename).exists():
@@ -312,17 +285,12 @@ def patch_rpaths_macos(binding_dst: Path, out_dir: Path) -> None:
                     capture_output=True,
                     check=True
                 )
-                binding_modified = True
             except subprocess.CalledProcessError:
                 pass
-    
-    if binding_modified:
-        modified_files.add(binding_dst)
     
     # Update references in each library
     for dylib in lib_dir.glob("*.dylib"):
         deps = collect_deps_macos(str(dylib))
-        dylib_modified = False
         for dep in deps:
             basename = os.path.basename(dep)
             if (lib_dir / basename).exists():
@@ -332,15 +300,9 @@ def patch_rpaths_macos(binding_dst: Path, out_dir: Path) -> None:
                         capture_output=True,
                         check=True
                     )
-                    dylib_modified = True
                 except subprocess.CalledProcessError:
                     pass
-        
-        if dylib_modified:
-            modified_files.add(dylib)
-    
-    for path in modified_files:
-        codesign_adhoc(path)
+
 
 
 def patch_rpaths(binding_dst: Path, out_dir: Path) -> None:
@@ -365,7 +327,6 @@ def strip_file(file_path: Path, strip_cmd: str, strip_args: List[str]) -> bool:
 
 
 def strip_symbols(binary_files: List[Path], out_dir: Path) -> None:
-    """Strip debug symbols from multiple binaries and libraries."""
     strip_cmd = "strip"
     strip_args = ["-x"] if is_macos() else ["--strip-unneeded"]
     stripped_files = []
@@ -381,11 +342,6 @@ def strip_symbols(binary_files: List[Path], out_dir: Path) -> None:
     for lib in lib_dir.glob(lib_pattern):
         if strip_file(lib, strip_cmd, strip_args):
             stripped_files.append(lib)
-    
-    # Re-sign stripped files on macOS (strip also invalidates signatures)
-    if is_macos():
-        for path in stripped_files:
-            codesign_adhoc(path)
 
 
 
@@ -399,7 +355,6 @@ def main():
     
     args = parser.parse_args()
     
-    # Check required commands
     if is_macos():
         require_cmd("otool")
         require_cmd("install_name_tool")
@@ -440,24 +395,19 @@ def main():
             os.chmod(dst_file, 0o755)
         dst_files.append(dst_file)
     
-    # Bundle dependencies from ALL files into shared lib/ directory
-    print("[1/3] Bundling dependencies from all files...")
+    print("Bundling dependencies from all files...")
     for dst_file in dst_files:
         print(f"  Processing: {dst_file.name}")
         bundle_all_deps(dst_file, out_dir)
     
-    # Patch RPATHs for all files
-    print("[2/3] Patching RPATHs for all files...")
+    print("Patching RPATHs for all files...")
     for dst_file in dst_files:
         print(f"  Patching: {dst_file.name}")
         patch_rpaths(dst_file, out_dir)
     
-    # Strip symbols
-    print("[3/3] Stripping symbols...")
+    print("Stripping symbols...")
     strip_symbols(dst_files, out_dir)
-    
-    print(f"\nDone. Relocatable bundle at: {out_dir}")
-    
+
 
 
 if __name__ == "__main__":
