@@ -105,31 +105,25 @@ async function printHelp() {
     console.log('  valhalla valhalla_service -c config.json  # Full name also works');
 }
 
-async function findBinary(command) {
-    // Try to find the binary with the given name first
-    let binaryPath = path.join(binaryDir, command);
-    if (await fileExists(binaryPath)) { return binaryPath; }
-    
-    // If not found and doesn't start with 'valhalla_', try with 'valhalla_' prefix
+async function findBinaryIn(dir, command) {
+    let binaryPath = path.join(dir, command);
+    if (await fileExists(binaryPath)) {
+        return binaryPath;
+    }
     if (!command.startsWith('valhalla_')) {
         const prefixedCommand = `valhalla_${command}`;
-        binaryPath = path.join(binaryDir, prefixedCommand);
-        if (await fileExists(binaryPath)) return binaryPath;
+        binaryPath = path.join(dir, prefixedCommand);
+        if (await fileExists(binaryPath)) {
+            return binaryPath;
+        }
     }
-    
-    // If still not found, try in package root directory
-    binaryPath = path.join(packageRootDir, command);
-    if (await fileExists(binaryPath)) { return binaryPath; }
-    
-    // Try with prefix in package root
-    if (!command.startsWith('valhalla_')) {
-        const prefixedCommand = `valhalla_${command}`;
-        binaryPath = path.join(packageRootDir, prefixedCommand);
-        if (await fileExists(binaryPath)) return binaryPath;
-    }
-    
-    // Not found anywhere
     return null;
+}
+
+async function findBinary(command) {
+    const binaryPath = await findBinaryIn(binaryDir, command);
+    if (binaryPath) { return binaryPath; }
+    return await findBinaryIn(packageRootDir, command);
 }
 
 async function runCommand(command, args) {
@@ -171,7 +165,6 @@ async function runCommand(command, args) {
 async function main() {
     const args = process.argv.slice(2);
     
-    // Handle no arguments
     if (args.length === 0) {
         await printHelp();
         process.exit(0);

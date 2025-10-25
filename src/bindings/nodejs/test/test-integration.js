@@ -26,8 +26,8 @@ describe('Valhalla Integration Tests', () => {
       }
     };
 
-    const result = actor.route(routeRequest);
-    
+    const result = await actor.route(routeRequest);
+    console.log('[INFO] Route result:', JSON.stringify(result, null, 2));
     assert.ok(result, 'Route result should be returned');
     assert.ok(result.trip, 'Route result should contain trip');
     assert.ok(result.trip.legs, 'Trip should contain legs');
