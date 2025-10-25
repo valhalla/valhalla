@@ -1,0 +1,30 @@
+{
+  "name": "@valhallajs/valhallajs",
+  "version": "0.0.1",
+  "description": "NodeJs bindings for Valhalla",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "bin": {
+    "valhalla": "./bin/valhalla-cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js",
+      "types": "./index.d.ts"
+    }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/valhalla/valhalla.git"
+  },
+  "author": "Valhalla Contributors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/valhalla/valhalla/issues"
+  },
+  "homepage": "https://github.com/valhalla/valhalla#readme"
+}
