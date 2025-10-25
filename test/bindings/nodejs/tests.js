@@ -3,8 +3,8 @@ const assert = require('node:assert').strict;
 const path = require('node:path');
 // NODE_PATH is set to the build directory containing this file
 const valhalla = require('valhalla_node.node');
-
-const configPath = path.join(__dirname, 'valhalla.json');
+const fs = require('node:fs');
+const config = fs.readFileSync(path.join(__dirname, 'valhalla.json'), 'utf8');
 
 
 function hasCyrillic(text) {
@@ -17,7 +17,7 @@ test('variables', () => {
 
 test('actor', async(t) => {
 
-  const actor = new valhalla.Actor(configPath);
+  const actor = new valhalla.Actor(config);
 
   await t.test('route', async () => {
     const query = {

@@ -18,7 +18,8 @@ namespace {
 const boost::property_tree::ptree configure(const std::string& config) {
   boost::property_tree::ptree pt;
   try {
-    rapidjson::read_json(config, pt);
+    std::stringstream stream(config);
+    rapidjson::read_json(stream, pt);
 
     auto logging_subtree = pt.get_child_optional("mjolnir.logging");
     if (logging_subtree) {
