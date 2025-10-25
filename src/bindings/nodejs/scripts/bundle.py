@@ -203,6 +203,7 @@ def copy_dep(dep_path: str, out_dir: Path) -> None:
     if dest_path.exists():
         return
     
+    print(f"Copying dependency: {dep_path} to {dest_path}")
     shutil.copy2(dep_path, dest_path, follow_symlinks=True)
 
 
@@ -216,6 +217,8 @@ def collect_deps_recursively(binary_path: str) -> List[str]:
         deps = collect_deps(cur)
         for dep in deps:
             if os.path.isfile(dep) and not should_exclude(dep) and dep not in all_deps:
+
+                print(f"Adding dependency: {dep} from {cur}")
                 all_deps.add(dep)
                 queue.append(dep)
     
