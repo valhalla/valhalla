@@ -340,4 +340,31 @@ jobs:
           echo "[INFO] Checking generated tiles..."
           ls -lah valhalla_tiles/
 
+  publish_npm:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    needs: [verify_nodejs_package]
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download NPM package
+        uses: actions/download-artifact@v4
+        with:
+          name: valhalla-npm-package
+      
+      - name: Publish to NPM
+        run: |
+          echo "[INFO] Downloaded package:"
+          ls -lh *.tgz
+          
+          echo "[INFO] Publishing to NPM..."
+          npm publish *.tgz --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
 
