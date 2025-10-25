@@ -324,10 +324,20 @@ jobs:
           echo "[INFO] Checking file permissions in binaries directory..."
           ls -lah node_modules/@valhallajs/valhallajs/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/ | head -20
       
-      - name: Test CLI
+      - name: Test CLI - Build config and tiles
         run: |
-          echo "[INFO] Testing CLI with debug mode..."
+          echo "[INFO] Creating Valhalla config..."
           export VALHALLA_DEBUG=1
-          npx valhalla build_tiles --help
+          mkdir -p valhalla_tiles
+          npx valhalla build_config --mjolnir-tile-dir valhalla_tiles --mjolnir-tile-extract valhalla_tiles.tar > valhalla.json
+          
+          echo "[INFO] Generated config:"
+          cat valhalla.json
+          
+          echo "[INFO] Building tiles from Utrecht OSM data..."
+          npx valhalla build_tiles -c valhalla.json test/data/utrecht_netherlands.osm.pbf
+          
+          echo "[INFO] Checking generated tiles..."
+          ls -lah valhalla_tiles/
 
 
