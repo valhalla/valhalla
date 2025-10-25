@@ -72,6 +72,8 @@ jobs:
           restore-keys: |
             ccache-${{ matrix.os }}-${{ matrix.arch }}-
 
+      - run: echo $(git rev-parse --short HEAD)
+
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos'
         run: |
