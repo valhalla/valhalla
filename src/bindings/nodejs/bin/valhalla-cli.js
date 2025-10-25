@@ -8,12 +8,44 @@ const { getBinaryDir } = require('../lib/binary-path');
 
 const binaryDir = getBinaryDir(path.join(__dirname, '..'));
 
+// Enable debug logging if VALHALLA_DEBUG env var is set
+const DEBUG = process.env.VALHALLA_DEBUG === '1' || process.env.VALHALLA_DEBUG === 'true';
+
+function debugLog(...args) {
+    if (DEBUG) {
+        console.error('[DEBUG]', ...args);
+    }
+}
+
 async function fileExists(filePath) {
     try {
         await fs.access(filePath);
         return true;
     } catch {
         return false;
+    }
+}
+
+async function ensureExecutable(filePath) {
+    try {
+        const stats = await fs.stat(filePath);
+        debugLog(`File stats for ${path.basename(filePath)}:`, {
+            mode: stats.mode.toString(8),
+            isExecutable: !!(stats.mode & fsSync.constants.S_IXUSR)
+        });
+        
+        // Check if file has execute permission
+        const hasExecutePerm = !!(stats.mode & fsSync.constants.S_IXUSR);
+        
+        if (!hasExecutePerm) {
+            debugLog(`Adding execute permission to ${filePath}`);
+            // Add execute permission for user, group, and others
+            await fs.chmod(filePath, stats.mode | 0o111);
+            debugLog(`Execute permission added successfully`);
+        }
+    } catch (err) {
+        debugLog(`Error ensuring executable for ${filePath}:`, err.message);
+        throw err;
     }
 }
 
@@ -89,25 +121,42 @@ async function printHelp() {
 }
 
 async function runCommand(command, args) {
+    debugLog(`Binary directory: ${binaryDir}`);
+    debugLog(`Looking for command: ${command}`);
+    
     // Try to find the binary with the given name first
     let binaryPath = path.join(binaryDir, command);
     
     // Check if it exists
     let exists = await fileExists(binaryPath);
+    debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
     
     // If not found and doesn't start with 'valhalla_', try with 'valhalla_' prefix
     if (!exists && !command.startsWith('valhalla_')) {
         const prefixedCommand = `valhalla_${command}`;
         binaryPath = path.join(binaryDir, prefixedCommand);
         exists = await fileExists(binaryPath);
+        debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
     }
     
     if (!exists) {
         console.error(`Error: Command '${command}' not found in ${binaryDir}`);
         console.error(`Tried: ${command}${!command.startsWith('valhalla_') ? ` and valhalla_${command}` : ''}`);
         console.error(`Run 'valhalla --help' to see available commands.`);
+        debugLog(`Binary directory contents:`, await fs.readdir(binaryDir).catch(() => []));
         process.exit(1);
     }
+    
+    // Ensure the binary is executable
+    try {
+        await ensureExecutable(binaryPath);
+    } catch (err) {
+        console.error(`Error ensuring executable permissions for ${binaryPath}:`, err.message);
+        console.error(`Try running: chmod +x ${binaryPath}`);
+        process.exit(1);
+    }
+    
+    debugLog(`Spawning: ${binaryPath}`, args);
     
     // Spawn the binary
     const proc = spawn(binaryPath, args, {
@@ -117,10 +166,12 @@ async function runCommand(command, args) {
     
     proc.on('error', (err) => {
         console.error(`Error running ${command}:`, err.message);
+        debugLog(`Full error:`, err);
         process.exit(1);
     });
     
     proc.on('close', (code) => {
+        debugLog(`Process exited with code: ${code}`);
         process.exit(code || 0);
     });
 }

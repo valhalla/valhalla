@@ -319,7 +319,15 @@ jobs:
           echo "[INFO] Testing ESM import..."
           node src/bindings/nodejs/test/test-esm.mjs
       
+      - name: Check file permissions
+        run: |
+          echo "[INFO] Checking file permissions in binaries directory..."
+          ls -lah node_modules/@valhallajs/valhallajs/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/ | head -20
+      
       - name: Test CLI
-        run: npx valhalla build_tiles --help
+        run: |
+          echo "[INFO] Testing CLI with debug mode..."
+          export VALHALLA_DEBUG=1
+          npx valhalla build_tiles --help
 
 
