@@ -1,13 +1,13 @@
 const { getBinaryDir } = require('./lib/binary-path');
 const path = require('path');
 const fs = require('fs');
+const { spawn } = require('child_process');
 
 function getBinaryPath(baseDir) {
     return path.join(getBinaryDir(baseDir), 'valhalla_node.node');
 }
 
 const valhalla = require(getBinaryPath(__dirname));
-const defaultConfig = require('./config.json');
 
 class Actor {
     constructor(config) {
@@ -108,40 +108,59 @@ class Actor {
     } 
 }
 
-
-function getConfig(options = {}) {
+async function getConfig(options = {}) {
     const {
-        tileExtract = 'valhalla_tiles.tar',
         tileDir = 'valhalla_tiles',
-        verbose = false
+        tileExtract = 'valhalla_tiles.tar',
+        verbose = false,
+        additionalArgs = []
     } = options;
 
-    // Deep clone the config 
-    const config = JSON.parse(JSON.stringify(defaultConfig));
+    const scriptPath = path.join(__dirname, 'valhalla_build_config');
+    const args = [];
 
     if (tileDir) {
-        try {
-            config.mjolnir.tile_dir = path.resolve(tileDir);
-        } catch (error) {
-            config.mjolnir.tile_dir = tileDir;
-        }
-    } else {
-        config.mjolnir.tile_dir = '';
+        args.push('--mjolnir-tile-dir', path.resolve(tileDir));
     }
-
     if (tileExtract) {
-        try {
-            config.mjolnir.tile_extract = path.resolve(tileExtract);
-        } catch (error) {
-            config.mjolnir.tile_extract = tileExtract;
-        }
-    } else {
-        config.mjolnir.tile_extract = '';
+        args.push('--mjolnir-tile-extract', path.resolve(tileExtract));
     }
+    args.push('--mjolnir-logging-type', verbose ? 'std_out' : '');
+    args.push(...additionalArgs);
 
-    config.mjolnir.logging.type = verbose ? 'std_out' : '';
+    return new Promise((resolve, reject) => {
+        const proc = spawn(scriptPath, args);
 
-    return config;
+        let stdout = '';
+        let stderr = '';
+
+        proc.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+
+        proc.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+
+        proc.on('error', (error) => {
+            reject(new Error(`Failed to execute valhalla_build_config: ${error.message}`));
+        });
+
+        proc.on('close', (code) => {
+            if (code !== 0) {
+                const errorMsg = stderr || stdout || 'Unknown error';
+                reject(new Error(`valhalla_build_config failed with exit code ${code}: ${errorMsg}`));
+                return;
+            }
+
+            try {
+                const config = JSON.parse(stdout);
+                resolve(config);
+            } catch (error) {
+                reject(new Error(`Failed to parse Valhalla config JSON: ${error.message}`));
+            }
+        });
+    });
 }
 
 module.exports = { Actor, getConfig, VALHALLA_VERSION: valhalla.VALHALLA_VERSION };

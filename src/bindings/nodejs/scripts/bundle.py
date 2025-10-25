@@ -124,7 +124,6 @@ def resolve_rpath_macos(dep_name: str, macho_path: str, rpaths: List[str]) -> st
 
 
 def collect_deps_macos(macho_path: str) -> List[str]:
-    """Collect dependencies using otool on macOS."""
     try:
         result = subprocess.run(
             ["otool", "-L", macho_path],
@@ -179,7 +178,6 @@ def collect_deps_macos(macho_path: str) -> List[str]:
 
 
 def collect_deps(path: str) -> List[str]:
-    """Collect dependencies based on platform."""
     if is_macos():
         return collect_deps_macos(path)
     else:
@@ -187,7 +185,6 @@ def collect_deps(path: str) -> List[str]:
 
 
 def should_exclude(dep: str) -> bool:
-    """Check if a library should be excluded from bundling."""
     if is_macos():
         if dep.startswith("/System") or dep.startswith("/usr/lib"):
             return True
@@ -198,7 +195,6 @@ def should_exclude(dep: str) -> bool:
 
 
 def copy_dep(dep_path: str, out_dir: Path) -> None:
-    """Copy a dependency to OUT_DIR/lib if allowed and not already present."""
     lib_dir = out_dir / "lib"
     basename = os.path.basename(dep_path)
     
@@ -210,41 +206,23 @@ def copy_dep(dep_path: str, out_dir: Path) -> None:
         return
     
     print(f"Copying {dep_path} to {dest_path}")
-    # Copy the actual file (following symlinks)
     shutil.copy2(dep_path, dest_path, follow_symlinks=True)
 
 
 def collect_deps_recursively(binary_path: str) -> List[str]:
-    """Recursively collect all dependencies of a binary."""
-    all_deps = []
+    all_deps: Set[str] = set()
     queue = [binary_path]
-    seen: Set[str] = set()
     
     while queue:
         cur = queue.pop(0)
         
-        if cur in seen:
-            continue
-        seen.add(cur)
-        
-        # Get deps of current binary
         deps = collect_deps(cur)
         for dep in deps:
-            if not os.path.isfile(dep):
-                continue
-            
-            if should_exclude(dep):
-                continue
-            
-            # Add to result if not already there
-            if dep not in all_deps:
-                all_deps.append(dep)
-            
-            # Queue for recursive processing
-            if dep not in seen:
+            if os.path.isfile(dep) and not should_exclude(dep) and dep not in all_deps:
+                all_deps.add(dep)
                 queue.append(dep)
     
-    return all_deps
+    return list(all_deps)
 
 
 def bundle_all_deps(binding_dst: Path, out_dir: Path) -> None:
@@ -361,7 +339,6 @@ def patch_rpaths_macos(binding_dst: Path, out_dir: Path) -> None:
         if dylib_modified:
             modified_files.add(dylib)
     
-    # Re-sign all modified files with ad-hoc signature
     for path in modified_files:
         codesign_adhoc(path)
 
@@ -375,11 +352,6 @@ def patch_rpaths(binding_dst: Path, out_dir: Path) -> None:
 
 
 def strip_file(file_path: Path, strip_cmd: str, strip_args: List[str]) -> bool:
-    """Strip symbols from a single file.
-    
-    Returns:
-        True if stripping was successful, False otherwise
-    """
     try:
         os.chmod(file_path, 0o755)
         subprocess.run(
@@ -424,7 +396,6 @@ def main():
     )
     parser.add_argument("files", nargs="+", help="Path to the files to bundle (addon.node and/or executables)")
     parser.add_argument("out_dir", help="Path to the output directory")
-    parser.add_argument("--strip", action="store_true", help="Strip symbols from binaries")
     
     args = parser.parse_args()
     
@@ -482,11 +453,8 @@ def main():
         patch_rpaths(dst_file, out_dir)
     
     # Strip symbols
-    if args.strip:
-        print("[3/3] Stripping symbols (optional)...")
-        strip_symbols(dst_files, out_dir)
-    else:
-        print("[3/3] Skipping strip (use --strip to enable).")
+    print("[3/3] Stripping symbols...")
+    strip_symbols(dst_files, out_dir)
     
     print(f"\nDone. Relocatable bundle at: {out_dir}")
     

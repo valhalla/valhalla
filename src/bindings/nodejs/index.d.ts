@@ -108,7 +108,7 @@ export class Actor {
 /**
  * Options for configuring Valhalla
  */
-export interface GetConfigOptions {
+export interface ConfigOptions {
   /**
    * The file path (with .tar extension) of the tile extract (mjolnir.tile_extract)
    * @default 'valhalla_tiles.tar'
@@ -126,14 +126,20 @@ export interface GetConfigOptions {
    * @default false
    */
   verbose?: boolean;
+
+  /**
+   * Additional arguments to pass to valhalla_build_config script
+   * @default []
+   */
+  additionalArgs?: string[];
 }
 
 /**
- * Returns a default Valhalla configuration with optional customizations
+ * Generates Valhalla configuration by executing valhalla_build_config script
  * @param options - Configuration options
- * @returns Valhalla configuration object
+ * @returns Promise that resolves to Valhalla configuration object
  */
-export function getConfig(options?: GetConfigOptions): ValhallaConfig;
+export function getConfig(options?: ConfigOptions): Promise<ValhallaConfig>;
 
 /**
  * Valhalla version string

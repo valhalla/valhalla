@@ -67,7 +67,7 @@ jobs:
       - name: Setup ccache
         uses: actions/cache@v4
         with:
-          path: ${{ matrix.os == 'macos' && '~/Library/Caches/ccache' || '/home/runner/.cache/ccache' }}
+          path: ${{ matrix.os == 'macos' && '~/Library/Caches/ccache' || '/github/runner/.cache/ccache' }}
           key: ccache-${{ matrix.os }}-${{ matrix.arch }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.os }}-${{ matrix.arch }}-
@@ -97,6 +97,8 @@ jobs:
       - name: Show ccache statistics
         run: ccache -s
       
+      - run ccache -p
+      
       - name: Check dependencies
         run: |
           echo "[INFO] Dependencies:"
@@ -117,7 +119,7 @@ jobs:
           # Bundle everything together
           ${{ matrix.os == 'macos' && 'python' || 'python3.12' }} src/bindings/nodejs/scripts/bundle.py \
             $NODE_FILE $VALHALLA_EXES \
-            $OUTPUT_DIR --strip
+            $OUTPUT_DIR
           
           echo "[INFO] Bundled executables:"
           ls -lh $OUTPUT_DIR/valhalla_* 2>/dev/null || echo "No executables found"
@@ -154,6 +156,7 @@ jobs:
             src/bindings/nodejs/config.json
             src/bindings/nodejs/lib/
             src/bindings/nodejs/bin/
+            scripts/valhalla_build_config
           sparse-checkout-cone-mode: false
 
       - name: Download all binding artifacts
@@ -171,9 +174,9 @@ jobs:
           cp src/bindings/nodejs/index.d.ts valhalla-npm-package/
           cp src/bindings/nodejs/package.json valhalla-npm-package/
           cp src/bindings/nodejs/.npmignore valhalla-npm-package/
-          cp src/bindings/nodejs/config.json valhalla-npm-package/
           cp -r src/bindings/nodejs/lib valhalla-npm-package/
           cp -r src/bindings/nodejs/bin valhalla-npm-package/
+          cp scripts/valhalla_build_config valhalla-npm-package/
           
           # Extract and organize bindings by platform
           pushd artifacts
@@ -283,7 +286,7 @@ jobs:
           echo "[INFO] Testing ESM import..."
           node src/bindings/nodejs/test/test-esm.mjs
       
-      # - name: Test CLI
-      #   run: valhalla build_tiles --help
+      - name: Test CLI
+        run: npx valhalla build_tiles --help
 
 
