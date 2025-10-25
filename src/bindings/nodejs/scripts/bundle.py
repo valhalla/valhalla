@@ -379,11 +379,7 @@ def main():
     out_dir = Path(args.out_dir)
     lib_dir = out_dir / "lib"
     lib_dir.mkdir(parents=True, exist_ok=True)
-    
-    print(f"[INFO] Bundling {len(input_files)} file(s)...")
-    for src_file in input_files:
-        print(f"  - {src_file.name}")
-    print()
+
     
     # Copy all files to output directory
     dst_files = []
@@ -397,12 +393,10 @@ def main():
     
     print("Bundling dependencies from all files...")
     for dst_file in dst_files:
-        print(f"  Processing: {dst_file.name}")
         bundle_all_deps(dst_file, out_dir)
     
     print("Patching RPATHs for all files...")
     for dst_file in dst_files:
-        print(f"  Patching: {dst_file.name}")
         patch_rpaths(dst_file, out_dir)
     
     print("Stripping symbols...")

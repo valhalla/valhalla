@@ -121,14 +121,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           sparse-checkout: |
-            src/bindings/nodejs/index.js
-            src/bindings/nodejs/index.mjs
-            src/bindings/nodejs/index.d.ts
-            src/bindings/nodejs/package.json
-            src/bindings/nodejs/.npmignore
-            src/bindings/nodejs/config.json
-            src/bindings/nodejs/lib/
-            src/bindings/nodejs/bin/
+            src/bindings/nodejs/
             scripts/valhalla_build_config
             valhalla/valhalla.h
           sparse-checkout-cone-mode: false
@@ -188,18 +181,12 @@ jobs:
           popd # artifacts
           
           echo "[INFO] Package structure:"
-          tree -L 5 valhalla-npm-package/ || find valhalla-npm-package -type f
+          tree -L 5 valhalla-npm-package/ 
           
           echo "[INFO] Creating NPM package..."
           pushd valhalla-npm-package
           npm pack
           popd # valhalla-npm-package
-          
-          echo "[INFO] Package created:"
-          ls -lh valhalla-npm-package/*.tgz
-          
-          echo "[INFO] Package size:"
-          du -h valhalla-npm-package/*.tgz
 
       - name: Upload NPM package
         uses: actions/upload-artifact@v4
@@ -264,10 +251,7 @@ jobs:
 
           echo "[INFO] Building tiles from Utrecht OSM data..."
           npx valhalla build_tiles -c valhalla.json test/data/utrecht_netherlands.osm.pbf >/dev/null 2>&1
-          
-          echo "[INFO] Checking generated tiles..."
-          ls -lah valhalla_tiles/
-          
+
           echo "[INFO] Testing route generation with built tiles..."
           export VALHALLA_CONFIG_FILE=$(pwd)/valhalla.json
           node --test src/bindings/nodejs/test/test-integration.js
