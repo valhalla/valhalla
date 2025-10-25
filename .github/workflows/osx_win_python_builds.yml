@@ -364,8 +364,7 @@ jobs:
             -DENABLE_GDAL=ON \
             -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
 
-      - name: Save vcpkg packages (always, to avoid redundant rebuilds)
-        if: always()
+      - name: Save vcpkg packages
         uses: tespkg/actions-cache/save@v1
         with:
           endpoint: hel1.your-objectstorage.com
