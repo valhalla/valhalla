@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
@@ -254,21 +254,6 @@ endif ()
 ## libvalhalla
 add_subdirectory(src)
 
-## Python bindings
-if(ENABLE_PYTHON_BINDINGS)
-  # python is fine for cmake as well
-  find_package(Python COMPONENTS Development Interpreter)
-  if (Python_FOUND)
-    add_subdirectory(src/bindings/python)
-    install(FILES COPYING CHANGELOG.md
-      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
-      COMPONENT python)
-  else()
-    set(ENABLE_PYTHON_BINDINGS OFF)
-    message(WARNING "Python development version not found, skipping Python bindings...")
-  endif()
-endif()
-
 ## Executable targets
 
 ## Valhalla programs
@@ -327,6 +312,21 @@ if(ENABLE_SERVICES)
     target_link_libraries(${program} valhalla $<$<BOOL:${ENABLE_COVERAGE}>:gcov>)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
+endif()
+
+## Python bindings
+# needs to be after defining the tool targets above
+if(ENABLE_PYTHON_BINDINGS)
+  set(Python_FIND_STRATEGY LOCATION)
+  set(Python_FIND_REGISTRY NEVER)
+  set(Python_FIND_IMPLEMENTATIONS CPython)
+  set(Python_FIND_VIRTUALENV ONLY)
+  find_package(Python COMPONENTS Interpreter Development Development.Module Development.SABIModule)
+  add_subdirectory(src/bindings/python)
+  if (NOT Python_FOUND)
+    set(ENABLE_PYTHON_BINDINGS OFF)
+    message(WARNING "Python development version not found, skipping Python bindings...")
+  endif()
 endif()
 
 # add the scripts to the build folder as well

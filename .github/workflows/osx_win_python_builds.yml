@@ -56,7 +56,7 @@ concurrency:
 env:
   # only run tmate if manually invoked and debug_enabled == true or a previous step failed
   SETUP_TMATE: ${{ ((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) && (github.repository_owner == 'valhalla') }}
-  PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
+  PUBLISH_PYPI: ${{ (github.event_name == 'pull_request') || (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
 
 jobs:
   # only publish to PyPI on tags, schedule or workflow_dispatch (only on master!)
@@ -95,16 +95,19 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: github.ref == 'refs/heads/master'
+        if: ${{  github.ref == 'refs/heads/master'  || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Determine package to publish
+      - name: Write pyproject.toml
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
             VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
-          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
+
+          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          echo "VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}" >> $GITHUB_ENV
 
       - name: Restore ccache
         uses: tespkg/actions-cache/restore@v1
@@ -123,11 +126,13 @@ jobs:
           # the host system's "/" is mounted to "/host" in the manylinux container
           CIBW_ENVIRONMENT: >
             CCACHE_DIR=/host/home/runner/.cache/ccache
-            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
-            VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}
-            VALHALLA_BUILD_BIN_DIR="build_manylinux"
-          # uncomment when testing
-          # CIBW_BUILD: cp313-*
+            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }}"
+            LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64"
+            CIBW_BUILD_VERBOSITY=3
+            SKBUILD_LOGGING_LEVEL=DEBUG
+
+          # represents the minimum python version we release for
+          CIBW_BUILD: cp312-*
       
       # TODO: probably need to delete the key first, since it's just a single key
 
@@ -168,15 +173,11 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Install dependencies
         run: |
           HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
           export PATH="$(brew --prefix python)/libexec/bin:$PATH"
-          sudo python -m pip install --break-system-packages requests shapely
+          python -m pip install --break-system-packages requests shapely
           git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j$(sysctl -n hw.logicalcpu) && sudo make install
 
       - name: Get branch name
@@ -184,7 +185,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: github.ref == 'refs/heads/master'
+        if: ${{  github.ref == 'refs/heads/master'  || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Restore ccache
@@ -203,7 +204,9 @@ jobs:
           path: ~/Library/Caches/ccache
 
       - name: Configure CMake
-        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
+        run: |
+          export PATH="$(brew --prefix python)/libexec/bin:$PATH"
+          cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
 
       - name: Build & install Valhalla (for python bindings)
         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
@@ -233,26 +236,29 @@ jobs:
       
       # only package python bindings if it's not a PR
 
-      - name: Determine package to publish
+      - name: Write pyproject.toml
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
             VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
-          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
+
+          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          echo "VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           CIBW_ENVIRONMENT: >
-            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
-            VALHALLA_BUILD_BIN_DIR="build"
-            VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}
+            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }}"
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
+            # try to use the existing build folder
+            PIP_NO_BUILD_ISOLATION="1"
           MACOSX_DEPLOYMENT_TARGET: 14
-          # uncomment when testing
-          # CIBW_BUILD: cp313-*
+        # represents the minimum python version we release for
+          CIBW_BUILD: cp312-*
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -291,10 +297,12 @@ jobs:
       - name: Configure vckpg
         shell: bash
         run: |
-          echo "VCPKG_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
-          echo "VCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg/custom-triplets" >> $GITHUB_ENV
-          echo "VCPKG_DEFAULT_TRIPLET=custom-x64-windows" >> $GITHUB_ENV
-          echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg/archives" >> $GITHUB_ENV
+          workspace="$(printf '%s' '${{ github.workspace }}' | tr '\\' '/')"
+          echo "VCPKG_INSTALLATION_ROOT=${workspace}/vcpkg" >> $GITHUB_ENV
+          echo "VCPKG_TOOLCHAIN_FILE=${workspace}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=x64-windows" >> $GITHUB_ENV
+          echo "VCPKG_TRIPLET_PATH=${workspace}/vcpkg/triplets/x64-windows.cmake" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_BINARY_CACHE=${workspace}/vcpkg/archives" >> $GITHUB_ENV
 
       - name: Install GNU make & awk
         run: choco install gawk make
@@ -306,11 +314,8 @@ jobs:
           cd vcpkg
           git checkout $VCPKG_VERSION
           mkdir archives
-          mkdir "$VCPKG_OVERLAY_TRIPLETS"
-          TRIPLET_FILE="$VCPKG_OVERLAY_TRIPLETS/$VCPKG_DEFAULT_TRIPLET.cmake"
-          cp triplets/x64-windows.cmake "$TRIPLET_FILE"
-          echo "set(VCPKG_BUILD_TYPE release)" >> "$TRIPLET_FILE"
-          echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$TRIPLET_FILE"
+          echo "set(VCPKG_BUILD_TYPE release)" >> "$VCPKG_TRIPLET_PATH"
+          echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$VCPKG_TRIPLET_PATH"
           cmd.exe /c bootstrap-vcpkg.bat
 
       - name: Restore vcpkg packages
@@ -335,7 +340,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: github.ref == 'refs/heads/master'
+        if: ${{  github.ref == 'refs/heads/master'  || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Configure CMake
@@ -348,7 +353,6 @@ jobs:
             -A x64 \
             -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
             -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
-            -DVCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS" \
             -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
             -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
             -DENABLE_DATA_TOOLS=ON \
@@ -362,8 +366,7 @@ jobs:
             -DENABLE_GDAL=ON \
             -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
 
-      - name: Save vcpkg packages (always, to avoid redundant rebuilds)
-        if: always()
+      - name: Save vcpkg packages
         uses: tespkg/actions-cache/save@v1
         with:
           endpoint: hel1.your-objectstorage.com
@@ -394,31 +397,37 @@ jobs:
       - name: Print libs
         shell: bash
         run: |
-          ls -l build/vcpkg_installed/custom-x64-windows/lib
-          ls -l build/vcpkg_installed/custom-x64-windows/bin
+          ls -l build/vcpkg_installed/x64-windows/lib
+          ls -l build/vcpkg_installed/x64-windows/bin
       
-      - name: Determine package to publish
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+      # only package python bindings if it's not a PR
+
+      - name: Write pyproject.toml
         shell: bash
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         run: |
           VALHALLA_RELEASE_PKG="pyvalhalla"
           if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
             VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
-          echo "VALHALLA_RELEASE_PKG=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
+
+          # make sure they really land in the python builde
+          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          echo 'VCPKG_ROOT=${{ github.workspace }}\vcpkg' >> $GITHUB_ENV
+          echo "VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
-          # used in setup.py
-          CIBW_ENVIRONMENT: >
-            VALHALLA_RELEASE_PKG=${{ env.VALHALLA_RELEASE_PKG }}
-          CIBW_ENVIRONMENT_WINDOWS: >
-            VCPKG_ARCH_ROOT=build/vcpkg_installed/custom-x64-windows
-            VALHALLA_BUILD_BIN_DIR=build/Release
-            VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}
-          # uncomment when testing
-          # CIBW_BUILD: cp313-*
+          CIBW_ENVIRONMENT_WINDOWS: >-
+            CMAKE_ARGS="-DENABLE_SERVICES=OFF -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }} -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
+            PIP_NO_BUILD_ISOLATION=1
+          # represents the minimum python version we release for
+          CIBW_BUILD: cp312-*
+          # enable when debugging
+          # CIBW_BUILD_VERBOSITY: 3
+          # SKBUILD_LOGGING_LEVEL: DEBUG
 
       - name: Upload wheels
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -451,7 +460,7 @@ jobs:
         run: |
           apt-get update -y
           apt-get install -y file
-          python -m pip install dist/*cp313-manylinux*.whl
+          python -m pip install dist/*cp312-abi3-manylinux*.whl
           ./src/bindings/python/test/test_pyvalhalla_package.sh
 
   verify_wheels_osx:
@@ -473,7 +482,7 @@ jobs:
       - name: Run test
         shell: bash
         run: |
-          python -m pip install dist/*cp313-macosx_*_arm64.whl
+          python -m pip install dist/*cp312-abi3-macosx_*_arm64.whl
           python -m valhalla valhalla_service -h
           python -m valhalla valhalla_build_tiles -h
   
@@ -496,7 +505,7 @@ jobs:
       - name: Run test
         shell: bash
         run: |
-          python -m pip install dist/*cp313-win_amd64.whl
+          python -m pip install dist/*cp312-abi3-win_amd64.whl
           python -m valhalla valhalla_service -h
           python -m valhalla valhalla_build_tiles -h
 
@@ -525,4 +534,4 @@ jobs:
         with:
           verbose: true
           # uncomment when testing!
-          # repository-url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/

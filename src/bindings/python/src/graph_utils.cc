@@ -1,7 +1,7 @@
 #include "graph_utils_module.h"
 
-#include <pybind11/detail/common.h>
+#include <nanobind/nanobind.h>
 
-PYBIND11_MODULE(graph_utils, m) {
+NB_MODULE(graph_utils, m) {
   pyvalhalla::init_graphid(m);
 }
