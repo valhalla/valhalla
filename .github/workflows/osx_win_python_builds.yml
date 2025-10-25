@@ -363,6 +363,7 @@ jobs:
             -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
 
       - name: Save vcpkg packages (always, to avoid redundant rebuilds)
+        if: always()
         uses: tespkg/actions-cache/save@v1
         with:
           endpoint: hel1.your-objectstorage.com
