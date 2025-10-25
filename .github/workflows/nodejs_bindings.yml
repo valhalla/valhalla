@@ -339,6 +339,9 @@ jobs:
           
           echo "[INFO] Checking generated tiles..."
           ls -lah valhalla_tiles/
+          
+          echo "[INFO] Testing route generation with built tiles..."
+          node src/bindings/nodejs/test/smoke_test.js valhalla.json
 
   publish_npm:
     name: Publish to NPM
