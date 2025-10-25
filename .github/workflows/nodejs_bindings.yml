@@ -67,7 +67,7 @@ jobs:
       - name: Setup ccache
         uses: actions/cache@v4
         with:
-          path: ${{ matrix.os == 'macos' && '~/Library/Caches/ccache' || '/github/runner/.cache/ccache' }}
+          path: ${{ matrix.os == 'macos' && '/Users/runner/Library/Caches/ccache' || '/github/runner/.ccache' }}
           key: ccache-${{ matrix.os }}-${{ matrix.arch }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.os }}-${{ matrix.arch }}-
@@ -90,7 +90,7 @@ jobs:
           -DENABLE_NODE_BINDINGS=ON \
           -DENABLE_GDAL=ON \
           -DENABLE_TESTS=OFF \
-          -DVALHALLA_VERSION_MODIFIFER=1 \
+          -DVALHALLA_VERSION_MODIFIFER=$(git rev-parse --short HEAD) \
           -DENABLE_SINGLE_FILES_WERROR=OFF
           cmake --build build -j${{ matrix.os == 'macos' && '$(sysctl -n hw.logicalcpu)' || '$(nproc)' }}
       
