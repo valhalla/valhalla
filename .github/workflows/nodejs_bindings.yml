@@ -72,8 +72,6 @@ jobs:
           restore-keys: |
             ccache-${{ matrix.os }}-${{ matrix.arch }}-
 
-      - run: echo $(git rev-parse --short HEAD)
-
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos'
         run: |
@@ -96,20 +94,6 @@ jobs:
           -DVALHALLA_VERSION_MODIFIFER=$(git rev-parse --short HEAD) \
           -DENABLE_SINGLE_FILES_WERROR=OFF
           cmake --build build -j${{ matrix.os == 'macos' && '$(sysctl -n hw.logicalcpu)' || '$(nproc)' }}
-      
-      - name: Show ccache statistics
-        run: |
-          ${{ matrix.os == 'linux' && 'export CCACHE_DIR=$GITHUB_WORKSPACE/.ccache' || '' }}
-          ccache -s
-      
-      - run: |
-          ${{ matrix.os == 'linux' && 'export CCACHE_DIR=$GITHUB_WORKSPACE/.ccache' || '' }}
-          ccache -p
-
-      - name: Check dependencies
-        run: |
-          echo "[INFO] Dependencies:"
-          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} build/src/bindings/nodejs/lib/valhalla_node.node
       
       - name: Make relocatable
         run: |
@@ -182,17 +166,10 @@ jobs:
           PATCH=$(grep -oP '#define VALHALLA_VERSION_PATCH \K\d+' valhalla/valhalla.h)
           BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
           
-          # For tags: use clean version (e.g., "3.5.1")
-          # For non-tags: append git hash (e.g., "3.5.1-abc1234")
-          if git describe --exact-match --tags HEAD 2>/dev/null; then
-            VERSION="${BASE_VERSION}"
-            echo "[INFO] Building tagged release version: ${VERSION}"
-          else
-            GIT_HASH=$(git rev-parse --short HEAD)
-            VERSION="${BASE_VERSION}-${GIT_HASH}"
-            echo "[INFO] Building development version: ${VERSION}"
-          fi
-          
+          GIT_HASH=$(git rev-parse --short HEAD)
+          VERSION="weekly-${BASE_VERSION}-${GIT_HASH}"
+          echo "[INFO] Building version: ${VERSION}"
+
           cd src/bindings/nodejs
           npm version "${VERSION}" --no-git-tag-version --allow-same-version
 
@@ -332,7 +309,8 @@ jobs:
           ls -lah valhalla_tiles/
           
           echo "[INFO] Testing route generation with built tiles..."
-          node --test src/bindings/nodejs/test/test-integration.js valhalla.json
+          export VALHALLA_CONFIG_FILE=$(pwd)/valhalla.json
+          node --test src/bindings/nodejs/test/test-integration.js
 
   publish_npm:
     name: Publish to NPM

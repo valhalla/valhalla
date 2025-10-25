@@ -7,8 +7,7 @@ describe('Valhalla Integration Tests', () => {
     console.log('[INFO] Testing route generation with built tiles...');
     console.log('[INFO] Valhalla version:', valhalla.VALHALLA_VERSION);
 
-    // Load config from file
-    const configFile = process.argv[process.argv.length - 1];
+    const configFile = process.env.VALHALLA_CONFIG_FILE;
     console.log('[INFO] Loading config from:', configFile);
     
     const actor = await valhalla.Actor.fromConfigFile(configFile);
