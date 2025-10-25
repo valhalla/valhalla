@@ -30,6 +30,7 @@
     },
     "pkgconf",
     "rapidjson",
+    "nanobind",
     "spatialite-tools",
     "luajit",
     "lz4",
