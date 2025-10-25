@@ -5,7 +5,7 @@ Node.js bindings for [Valhalla](https://github.com/valhalla/valhalla), an open-s
 ## Installation
 
 ```bash
-npm install @valhalla/valhalla
+npm install @valhallajs/valhallajs
 ```
 
 ## Quick Start
@@ -28,7 +28,7 @@ npx valhalla build_tiles -c config.json berlin-latest.osm.pbf
 ### 2. Use Valhalla for Routing
 
 ```javascript
-import { Actor, getConfig } from '@valhalla/valhalla';
+import { Actor, getConfig } from '@valhallajs/valhallajs';
 
 async function main() {
   // Create an actor with config generated on previous step

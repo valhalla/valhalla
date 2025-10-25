@@ -297,17 +297,17 @@ jobs:
           npm install *.tgz
           
           echo "[INFO] Verifying installation..."
-          npm list @valhalla/valhalla
+          npm list @valhallajs/valhallajs
           
           echo "[INFO] Checking installed files..."
-          ls -lh node_modules/@valhalla/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/
+          ls -lh node_modules/@valhallajs/valhallajs/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/
           
           echo "[INFO] Checking bundled libraries..."
-          ls -lh node_modules/@valhalla/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/lib/ 
+          ls -lh node_modules/@valhallajs/valhallajs/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/lib/ 
           
           echo "[INFO] Checking binding dependencies..."
-          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} node_modules/@valhalla/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/valhalla_node.node
-      - run: ls -R node_modules/@valhalla/valhalla
+          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} node_modules/@valhallajs/valhallajs/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/valhalla_node.node
+      - run: ls -R node_modules/@valhallajs/valhallajs
       
       - name: Test package import (CommonJS)
         run: |

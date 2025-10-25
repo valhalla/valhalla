@@ -1,5 +1,5 @@
 {
-  "name": "@valhalla/valhalla",
+  "name": "@valhallajs/valhallajs",
   "version": "0.0.1",
   "description": "NodeJs bindings for Valhalla",
   "main": "index.js",
