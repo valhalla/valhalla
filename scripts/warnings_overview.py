@@ -64,9 +64,7 @@ def main():
     )
     if list_parameters:
         for files_amount, warning_id in list_parameters:
-            print(
-                f"  {warning_id}: max {'all' if files_amount != -1 else files_amount} source paths"
-            )
+            print(f"  {warning_id}: max {'all' if files_amount != -1 else files_amount} source paths")
 
     warnings_counter = Counter()
     warnings_files_requested = defaultdict(int)
@@ -106,10 +104,7 @@ def main():
 
                 line: str
                 for line_idx, line in enumerate(lines):
-                    if (
-                        req_warning_amount == -1
-                        or line_idx < warnings_files_requested[warning_id]
-                    ):
+                    if req_warning_amount == -1 or line_idx < warnings_files_requested[warning_id]:
                         print(f"  {line.strip()}")
                         continue
                     break

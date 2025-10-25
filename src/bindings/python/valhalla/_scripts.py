@@ -30,9 +30,7 @@ def run(from_main=False) -> None:
 
     if not which(prog):
         raise FileNotFoundError(f"Can't find executable at {prog}")
-    prog_path = PYVALHALLA_BIN_DIR.joinpath(
-        prog + (".exe" if IS_WIN and from_main else "")
-    ).resolve()
+    prog_path = PYVALHALLA_BIN_DIR.joinpath(prog + (".exe" if IS_WIN and from_main else "")).resolve()
 
     print(f"[INFO] Running {prog_path} with args: {prog_args}...")
 

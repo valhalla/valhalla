@@ -23,21 +23,15 @@ except ImportError:
     sys.exit(1)
 
 # does the required JSON exist?
-AUDITWHEEL_POLICY_JSON = Path(auditwheel.__file__).parent.joinpath(
-    "policy", "manylinux-policy.json"
-)
+AUDITWHEEL_POLICY_JSON = Path(auditwheel.__file__).parent.joinpath("policy", "manylinux-policy.json")
 if not AUDITWHEEL_POLICY_JSON.exists():
-    print(
-        f"[FATAL] Can't find source to patch: {AUDITWHEEL_POLICY_JSON}", file=sys.stderr
-    )
+    print(f"[FATAL] Can't find source to patch: {AUDITWHEEL_POLICY_JSON}", file=sys.stderr)
     sys.exit(1)
 
 description = "Patches auditwheel so it mangles the SONAME of all required dependencies for vendoring."
 
 parser = ArgumentParser(description=description)
-parser.add_argument(
-    "SONAMES", help="The .so names to remove from all auditwheel policies.", nargs="+"
-)
+parser.add_argument("SONAMES", help="The .so names to remove from all auditwheel policies.", nargs="+")
 
 
 def main():

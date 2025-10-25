@@ -203,20 +203,11 @@ def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
     try:
         bbox = min_x, min_y, max_x, max_y = [float(x) for x in bbox_str.split(",")]
     except ValueError:
-        LOGGER.critical(
-            f"BBOX {bbox_str} is not a comma-separated string of coordinates."
-        )
+        LOGGER.critical(f"BBOX {bbox_str} is not a comma-separated string of coordinates.")
         sys.exit(1)
 
     # validate bbox
-    if (
-        min_x > max_x
-        or min_x < -180
-        or max_x > 180
-        or min_y > max_y
-        or min_y < -90
-        or max_y > 90
-    ):
+    if min_x > max_x or min_x < -180 or max_x > 180 or min_y > max_y or min_y < -90 or max_y > 90:
         LOGGER.critical(f"Bbox invalid: {bbox}")
         sys.exit(1)
 
@@ -241,9 +232,7 @@ def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
     for tile_fp in local_dir.rglob("*.gph"):
         # turn the path into a tile ID
         tile_id = int(
-            str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(
-                os.sep, ""
-            )
+            str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, "")
         )
         tile_x, tile_y = (
             floor(int(tile_id % tile_width) * LOCAL_SIZE - 180),
@@ -310,9 +299,7 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
             LOGGER.debug(f"Successfully downloaded tile {tile.dir}/{tile.name}")
             break
         except HTTPError as e:
-            LOGGER.error(
-                f"Download failed with HTTP error {e.code}: {e.reason}.\nTrying again..."
-            )
+            LOGGER.error(f"Download failed with HTTP error {e.code}: {e.reason}.\nTrying again...")
             continue
         except URLError as e:
             LOGGER.error(

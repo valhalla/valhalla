@@ -758,9 +758,7 @@ def add_leaf_args(
     if isinstance(tree, dict):
         for k in tree:
             v = tree[k]
-            add_leaf_args(
-                "\0".join([path, k]) if len(path) else k, v, leaves_, parser_, help
-            )
+            add_leaf_args("\0".join([path, k]) if len(path) else k, v, leaves_, parser_, help)
     # we've reached a leaf
     else:
         keys = path.split("\0")

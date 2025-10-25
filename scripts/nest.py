@@ -21,9 +21,7 @@ def t(x, y, l, d):
     if l == 5:
         return ("./" if x == d else "../" + str(x) + "/") + str(y) + ".tif"
     else:
-        return (
-            ("./" if x == d else "../" + str(x) + "/") + str(y) + "_" + str(l) + ".vrt"
-        )
+        return ("./" if x == d else "../" + str(x) + "/") + str(y) + "_" + str(l) + ".vrt"
 
 
 for dim in dims:
