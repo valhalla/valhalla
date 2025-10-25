@@ -97,8 +97,8 @@ jobs:
       - name: Show ccache statistics
         run: ccache -s
       
-      - run ccache -p
-      
+      - run: ccache -p
+
       - name: Check dependencies
         run: |
           echo "[INFO] Dependencies:"
@@ -248,6 +248,7 @@ jobs:
         with:
           sparse-checkout: |
             src/bindings/nodejs/test/
+            test/data/utrecht_netherlands.osm.pbf
           sparse-checkout-cone-mode: false
 
       - name: Download NPM package
