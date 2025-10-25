@@ -106,7 +106,8 @@ jobs:
           fi
           cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
 
-          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> GITHUB_ENV
+          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          echo "VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}" >> $GITHUB_ENV
 
       - name: Restore ccache
         uses: tespkg/actions-cache/restore@v1
@@ -125,7 +126,7 @@ jobs:
           # the host system's "/" is mounted to "/host" in the manylinux container
           CIBW_ENVIRONMENT: >
             CCACHE_DIR=/host/home/runner/.cache/ccache
-            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }} -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }}"
+            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }}"
             LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64"
             CIBW_BUILD_VERBOSITY=3
             SKBUILD_LOGGING_LEVEL=DEBUG
@@ -244,13 +245,14 @@ jobs:
           fi
           cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
 
-          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> GITHUB_ENV
+          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
+          echo "VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           CIBW_ENVIRONMENT: >
-            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }} -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }}"
+            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }}"
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
             # try to use the existing build folder
             PIP_NO_BUILD_ISOLATION="1"
@@ -411,7 +413,7 @@ jobs:
           cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
 
           # make sure they really land in the python builde
-          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> GITHUB_ENV
+          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
           echo 'VCPKG_ROOT=${{ github.workspace }}\vcpkg' >> $GITHUB_ENV
           echo "VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}" >> $GITHUB_ENV
       
