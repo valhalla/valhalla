@@ -1,15 +1,22 @@
 const { getBinaryDir } = require('./lib/binary-path');
 const path = require('path');
+const fs = require('fs');
 
 function getBinaryPath(baseDir) {
     return path.join(getBinaryDir(baseDir), 'valhalla_node.node');
 }
 
 const valhalla = require(getBinaryPath(__dirname));
+const defaultConfig = require('./config.json');
 
 class Actor {
     constructor(config) {
         this.actor = new valhalla.Actor(config);
+    }
+
+    static async fromConfigFile(configFile) {
+        const config = await fs.promises.readFile(configFile, 'utf8');
+        return new Actor(config);
     }
 
     route(query) {
@@ -98,4 +105,40 @@ class Actor {
     } 
 }
 
-module.exports = { Actor, VALHALLA_VERSION: valhalla.VALHALLA_VERSION };
+
+function getConfig(options = {}) {
+    const {
+        tileExtract = 'valhalla_tiles.tar',
+        tileDir = 'valhalla_tiles',
+        verbose = false
+    } = options;
+
+    // Deep clone the config 
+    const config = JSON.parse(JSON.stringify(defaultConfig));
+
+    if (tileDir) {
+        try {
+            config.mjolnir.tile_dir = path.resolve(tileDir);
+        } catch (error) {
+            config.mjolnir.tile_dir = tileDir;
+        }
+    } else {
+        config.mjolnir.tile_dir = '';
+    }
+
+    if (tileExtract) {
+        try {
+            config.mjolnir.tile_extract = path.resolve(tileExtract);
+        } catch (error) {
+            config.mjolnir.tile_extract = tileExtract;
+        }
+    } else {
+        config.mjolnir.tile_extract = '';
+    }
+
+    config.mjolnir.logging.type = verbose ? 'std_out' : '';
+
+    return config;
+}
+
+module.exports = { Actor, getConfig, VALHALLA_VERSION: valhalla.VALHALLA_VERSION };

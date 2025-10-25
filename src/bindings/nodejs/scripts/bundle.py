@@ -375,47 +375,25 @@ def patch_rpaths(binding_dst: Path, out_dir: Path) -> None:
         patch_rpaths_linux(binding_dst, out_dir)
 
 
-def strip_symbols(binding_dst: Path, out_dir: Path) -> None:
-    """Strip symbols from binaries."""
-    strip_cmd = "strip"
-    strip_args = ["-x"] if is_macos() else ["--strip-unneeded"]
-    stripped_files = []
+def strip_file(file_path: Path, strip_cmd: str, strip_args: List[str]) -> bool:
+    """Strip symbols from a single file.
     
-    # Strip the binding
+    Returns:
+        True if stripping was successful, False otherwise
+    """
     try:
-        # Make writable first
-        os.chmod(binding_dst, 0o755)
+        os.chmod(file_path, 0o755)
         subprocess.run(
-            [strip_cmd] + strip_args + [str(binding_dst)],
+            [strip_cmd] + strip_args + [str(file_path)],
             capture_output=True,
             check=False
         )
-        stripped_files.append(binding_dst)
+        return True
     except Exception:
-        pass
-    
-    # Strip libraries
-    lib_dir = out_dir / "lib"
-    for lib in lib_dir.glob("*.so*" if not is_macos() else "*.dylib"):
-        try:
-            # Make writable first
-            os.chmod(lib, 0o755)
-            subprocess.run(
-                [strip_cmd] + strip_args + [str(lib)],
-                capture_output=True,
-                check=False
-            )
-            stripped_files.append(lib)
-        except Exception:
-            pass
-    
-    # Re-sign stripped files on macOS (strip also invalidates signatures)
-    if is_macos():
-        for path in stripped_files:
-            codesign_adhoc(path)
+        return False
 
 
-def strip_symbols_multi(binary_files: List[Path], out_dir: Path) -> None:
+def strip_symbols(binary_files: List[Path], out_dir: Path) -> None:
     """Strip debug symbols from multiple binaries and libraries."""
     strip_cmd = "strip"
     strip_args = ["-x"] if is_macos() else ["--strip-unneeded"]
@@ -423,30 +401,15 @@ def strip_symbols_multi(binary_files: List[Path], out_dir: Path) -> None:
     
     # Strip all binary files
     for binary_file in binary_files:
-        try:
-            os.chmod(binary_file, 0o755)
-            subprocess.run(
-                [strip_cmd] + strip_args + [str(binary_file)],
-                capture_output=True,
-                check=False
-            )
+        if strip_file(binary_file, strip_cmd, strip_args):
             stripped_files.append(binary_file)
-        except Exception:
-            pass
     
     # Strip libraries
     lib_dir = out_dir / "lib"
-    for lib in lib_dir.glob("*.so*" if not is_macos() else "*.dylib"):
-        try:
-            os.chmod(lib, 0o755)
-            subprocess.run(
-                [strip_cmd] + strip_args + [str(lib)],
-                capture_output=True,
-                check=False
-            )
+    lib_pattern = "*.dylib" if is_macos() else "*.so*"
+    for lib in lib_dir.glob(lib_pattern):
+        if strip_file(lib, strip_cmd, strip_args):
             stripped_files.append(lib)
-        except Exception:
-            pass
     
     # Re-sign stripped files on macOS (strip also invalidates signatures)
     if is_macos():
@@ -547,7 +510,7 @@ def main():
     # Strip symbols
     if args.strip:
         print("[3/4] Stripping symbols (optional)...")
-        strip_symbols_multi(dst_files, out_dir)
+        strip_symbols(dst_files, out_dir)
     else:
         print("[3/4] Skipping strip (use --strip to enable).")
     

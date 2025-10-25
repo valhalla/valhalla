@@ -26,6 +26,13 @@ export class Actor {
   constructor(config: ValhallaConfig | string);
 
   /**
+   * Create an Actor instance from a config file
+   * @param configFile - Path to the config file
+   * @returns Promise that resolves to an Actor instance
+   */
+  static fromConfigFile(configFile: string): Promise<Actor>;
+
+  /**
    * Calculate a route between locations
    */
   route(query: Query): Response;
@@ -97,6 +104,36 @@ export class Actor {
   status(query: Query): Response;
   status(query: string): string;
 }
+
+/**
+ * Options for configuring Valhalla
+ */
+export interface GetConfigOptions {
+  /**
+   * The file path (with .tar extension) of the tile extract (mjolnir.tile_extract)
+   * @default 'valhalla_tiles.tar'
+   */
+  tileExtract?: string;
+  
+  /**
+   * The directory path where the graph tiles are stored (mjolnir.tile_dir)
+   * @default 'valhalla_tiles'
+   */
+  tileDir?: string;
+  
+  /**
+   * Whether you want to see Valhalla's logs on stdout (mjolnir.logging)
+   * @default false
+   */
+  verbose?: boolean;
+}
+
+/**
+ * Returns a default Valhalla configuration with optional customizations
+ * @param options - Configuration options
+ * @returns Valhalla configuration object
+ */
+export function getConfig(options?: GetConfigOptions): ValhallaConfig;
 
 /**
  * Valhalla version string

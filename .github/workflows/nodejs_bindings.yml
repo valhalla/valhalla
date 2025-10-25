@@ -1,10 +1,4 @@
 name: Build Node.js bindings
-
-# this workflow:
-# - builds Node.js bindings for Linux (x64, arm64) and macOS (arm64)
-# - packages all bindings into a single NPM-ready package
-# - verifies the complete package works on each platform by installing and importing it
-
 on:
   push:
     paths-ignore:
@@ -104,8 +98,7 @@ jobs:
           OUTPUT_DIR="nodejs_dist"
           
           # Collect all valhalla_* executables from build directory
-          # VALHALLA_EXES=$(find build -maxdepth 1 -type f -name 'valhalla_build_tiles' -executable | tr '\n' ' ')
-          VALHALLA_EXES="build/valhalla_build_tiles"
+          VALHALLA_EXES="build/valhalla_service build/valhalla_build_tiles build/valhalla_build_admins build/valhalla_add_predicted_traffic build/valhalla_add_landmarks build/valhalla_ingest_transit build/valhalla_convert_transit"
           echo "[INFO] Bundling files:"
           echo "  - Node.js addon: $NODE_FILE"
           echo "  - Valhalla executables: $VALHALLA_EXES"
@@ -154,6 +147,7 @@ jobs:
             src/bindings/nodejs/index.d.ts
             src/bindings/nodejs/package.json
             src/bindings/nodejs/.npmignore
+            src/bindings/nodejs/config.json
             src/bindings/nodejs/lib/
             src/bindings/nodejs/bin/
           sparse-checkout-cone-mode: false
@@ -173,6 +167,7 @@ jobs:
           cp src/bindings/nodejs/index.d.ts valhalla-npm-package/
           cp src/bindings/nodejs/package.json valhalla-npm-package/
           cp src/bindings/nodejs/.npmignore valhalla-npm-package/
+          cp src/bindings/nodejs/config.json valhalla-npm-package/
           cp -r src/bindings/nodejs/lib valhalla-npm-package/
           cp -r src/bindings/nodejs/bin valhalla-npm-package/
           
