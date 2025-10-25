@@ -406,7 +406,7 @@ jobs:
             VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
           fi
           cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
-          echo 'VCPKG_ROOT=${{ github.workspace }}\\vcpkg' >> $GITHUB_ENV
+          echo 'VCPKG_ROOT=${{ github.workspace }}\vcpkg' >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -416,7 +416,7 @@ jobs:
             $env:PY_ROOT = Split-Path -Parent $env:PY_EXE
 
           CIBW_ENVIRONMENT_WINDOWS: >-
-            CMAKE_ARGS="-DPython_EXECUTABLE=$PY_EXE -DPython_ROOT_DIR=$PY_ROOT -DENABLE_SERVICES=OFF -DVALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
+            CMAKE_ARGS="-DPython_EXECUTABLE=$env:PY_EXE -DPython_ROOT_DIR=$PY_ROOT -DENABLE_SERVICES=OFF -DVALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
             PIP_NO_BUILD_ISOLATION=1
           # represents the minimum python version we release for
           CIBW_BUILD: cp312-*
