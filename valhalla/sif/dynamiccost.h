@@ -1080,13 +1080,14 @@ public:
   }
 
   /**
-   * Returns a rough time estimation given a distance in kilometers,
-   * based on costing parameters
+   * Returns a rough time estimation in seconds given a distance in kilometers,
+   * based on the top speed and fixed speed.
    */
   uint32_t BeeLineTimeEstimate(double distance_meters, double factor) {
     return fixed_speed_ == baldr::kDisableFixedSpeed
                ? (distance_meters / (top_speed_ * midgard::kKPHtoMetersPerSec)) * factor
-               : distance_meters / (fixed_speed_ * midgard::kKPHtoMetersPerSec) * factor * 0.85;
+               : distance_meters / (fixed_speed_ * midgard::kKPHtoMetersPerSec) * factor *
+                     0.85; // if fixed speed, the factor should be lowered
   }
 
 protected:

@@ -403,16 +403,13 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
 
   // Update the time information even if time is invariant to account for timezones
   auto seconds_offset = (invariant || !time_info.valid) ? 0.f : pred.cost().secs;
-  TimeInfo offset_time;
 
   // either we're expanding the reverse tree and the date time type is arrive_by,
   // or we're expanding the reverse tree and the time type is not arrive_by,
   // in either case, we're on the time aware branch and so we need to update the time info
-  if constexpr (FORWARD) {
-    offset_time = time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()));
-  } else {
-    offset_time = time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
-  }
+  auto offset_time = FORWARD
+                         ? time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()))
+                         : time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
 
   auto& edgestatus = FORWARD ? edgestatus_forward_ : edgestatus_reverse_;
 
@@ -518,7 +515,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   travel_type_ = costing_->travel_type();
   access_mode_ = costing_->access_mode();
 
-  Options::ReverseTimeTracking reverse_time_tracking = options.reverse_time_tracking();
   desired_paths_count_ = 1;
   if (options.has_alternates_case() && options.alternates())
     desired_paths_count_ += options.alternates();
@@ -539,6 +535,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // and determine which strategy to use on the far end
   TimeInfo forward_time_info;
   TimeInfo reverse_time_info;
+  Options::ReverseTimeTracking reverse_time_tracking = options.reverse_time_tracking();
 
   if (arrive_by) {
     reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
