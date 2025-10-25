@@ -35,74 +35,74 @@ export class Actor {
   /**
    * Calculate a route between locations
    */
-  route(query: Query): Response;
-  route(query: string): string;
+  route(query: Query): Promise<Response>;
+  route(query: string): Promise<string>;
 
   /**
    * Locate coordinates on the road network
    */
-  locate(query: Query): Response;
-  locate(query: string): string;
+  locate(query: Query): Promise<Response>;
+  locate(query: string): Promise<string>;
 
   /**
    * Calculate time-distance matrix
    */
-  matrix(query: Query): Response;
-  matrix(query: string): string;
+  matrix(query: Query): Promise<Response>;
+  matrix(query: string): Promise<string>;
 
   /**
    * Calculate optimized route (traveling salesman problem)
    */
-  optimizedRoute(query: Query): Response;
-  optimizedRoute(query: string): string;
+  optimizedRoute(query: Query): Promise<Response>;
+  optimizedRoute(query: string): Promise<string>;
 
   /**
    * Calculate isochrones (time/distance contours)
    */
-  isochrone(query: Query): Response;
-  isochrone(query: string): string;
+  isochrone(query: Query): Promise<Response>;
+  isochrone(query: string): Promise<string>;
 
   /**
    * Match GPS trace to road network
    */
-  traceRoute(query: Query): Response;
-  traceRoute(query: string): string;
+  traceRoute(query: Query): Promise<Response>;
+  traceRoute(query: string): Promise<string>;
 
   /**
    * Get detailed attributes for a GPS trace
    */
-  traceAttributes(query: Query): Response;
-  traceAttributes(query: string): string;
+  traceAttributes(query: Query): Promise<Response>;
+  traceAttributes(query: string): Promise<string>;
 
   /**
    * Get elevation data for coordinates
    */
-  height(query: Query): Response;
-  height(query: string): string;
+  height(query: Query): Promise<Response>;
+  height(query: string): Promise<string>;
 
   /**
    * Check transit availability at locations
    */
-  transitAvailable(query: Query): Response;
-  transitAvailable(query: string): string;
+  transitAvailable(query: Query): Promise<Response>;
+  transitAvailable(query: string): Promise<string>;
 
   /**
    * Get route expansion visualization data
    */
-  expansion(query: Query): Response;
-  expansion(query: string): string;
+  expansion(query: Query): Promise<Response>;
+  expansion(query: string): Promise<string>;
 
   /**
    * Calculate centroid of locations
    */
-  centroid(query: Query): Response;
-  centroid(query: string): string;
+  centroid(query: Query): Promise<Response>;
+  centroid(query: string): Promise<string>;
 
   /**
    * Get Valhalla service status
    */
-  status(query: Query): Response;
-  status(query: string): string;
+  status(query: Query): Promise<Response>;
+  status(query: string): Promise<string>;
 }
 
 /**

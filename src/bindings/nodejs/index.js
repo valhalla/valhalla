@@ -23,91 +23,89 @@ class Actor {
         return new Actor(config);
     }
 
-    route(query) {
+    async route(query) {
         if (typeof query === 'string') {
             return this.actor.route(query);
         }
-        const result = this.actor.route(JSON.stringify(query));
-        console.log('result', result);
-        return JSON.parse(result);
+        return JSON.parse(await this.actor.route(JSON.stringify(query)));
     }
 
-    locate(query) {
+    async locate(query) {
         if (typeof query === 'string') {
             return this.actor.locate(query);
         }
-        return JSON.parse(this.actor.locate(JSON.stringify(query)));
+        return JSON.parse(await this.actor.locate(JSON.stringify(query)));
     }
 
-    matrix(query) {
+    async matrix(query) {
         if (typeof query === 'string') {
             return this.actor.matrix(query);
         }
-        return JSON.parse(this.actor.matrix(JSON.stringify(query)));
+        return JSON.parse(await this.actor.matrix(JSON.stringify(query)));
     }
 
-    optimizedRoute(query) {
+    async optimizedRoute(query) {
         if (typeof query === 'string') {
             return this.actor.optimizedRoute(query);
         }
-        return JSON.parse(this.actor.optimizedRoute(JSON.stringify(query)));
+        return JSON.parse(await this.actor.optimizedRoute(JSON.stringify(query)));
     }
     
-    isochrone(query) {
+    async isochrone(query) {
         if (typeof query === 'string') {
             return this.actor.isochrone(query);
         }
-        return JSON.parse(this.actor.isochrone(JSON.stringify(query)));
+        return JSON.parse(await this.actor.isochrone(JSON.stringify(query)));
     }
 
-    traceRoute(query) {
+    async traceRoute(query) {
         if (typeof query === 'string') {
             return this.actor.traceRoute(query);
         }
-        return JSON.parse(this.actor.traceRoute(JSON.stringify(query)));
+        return JSON.parse(await this.actor.traceRoute(JSON.stringify(query)));
     }
     
-    traceAttributes(query) {
+    async traceAttributes(query) {
         if (typeof query === 'string') {
             return this.actor.traceAttributes(query);
         }
-        return JSON.parse(this.actor.traceAttributes(JSON.stringify(query)));
+        return JSON.parse(await this.actor.traceAttributes(JSON.stringify(query)));
     }
 
-    height(query) {
+    async height(query) {
         if (typeof query === 'string') {
             return this.actor.height(query);
         }
-        return JSON.parse(this.actor.height(JSON.stringify(query)));
+        return JSON.parse(await this.actor.height(JSON.stringify(query)));
     }
 
-    transitAvailable(query) {
+    async transitAvailable(query) {
         if (typeof query === 'string') {
             return this.actor.transitAvailable(query);
         }
-        return JSON.parse(this.actor.transitAvailable(JSON.stringify(query)));
+        return JSON.parse(await this.actor.transitAvailable(JSON.stringify(query)));
     }
 
-    expansion(query) {
+    async expansion(query) {
         if (typeof query === 'string') {
             return this.actor.expansion(query);
         }
-        return JSON.parse(this.actor.expansion(JSON.stringify(query)));
+        return JSON.parse(await this.actor.expansion(JSON.stringify(query)));
     }
 
-    centroid(query) {
+    async centroid(query) {
         if (typeof query === 'string') {
             return this.actor.centroid(query);
         }
-        return JSON.parse(this.actor.centroid(JSON.stringify(query)));
+        return JSON.parse(await this.actor.centroid(JSON.stringify(query)));
     }
     
     
-    status(query) {
+    async status(query) {
         if (typeof query === 'string') {
             return this.actor.status(query);
         }
-        return JSON.parse(this.actor.status(JSON.stringify(query)));
+        return JSON.parse(await this.actor.status(JSON.stringify(query)));
     } 
 }
 
