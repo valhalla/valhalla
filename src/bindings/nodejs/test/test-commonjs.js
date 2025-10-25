@@ -18,7 +18,7 @@ try {
     
     // Test Actor with config object
     try {
-      const config = valhalla.getConfig({ tileDir: './test_tiles' });
+      const config = await valhalla.getConfig({ tileDir: './test_tiles' });
       const actor = new valhalla.Actor(config);
       
       if (actor && actor.actor) {

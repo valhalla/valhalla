@@ -11,6 +11,7 @@ const valhalla = require(getBinaryPath(__dirname));
 
 class Actor {
     constructor(config) {
+        console.log('config', JSON.stringify(config, null, 2));
         if (typeof config !== 'string') {
             config = JSON.stringify(config);
         } 
