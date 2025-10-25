@@ -447,4 +447,17 @@ const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus sta
   auto i = statuses.find(status);
   return i == statuses.cend() ? empty_str : i->second;
 }
+
+bool Options_ReverseTimeTracking_Enum_Parse(const std::string& strategy,
+                                            Options::ReverseTimeTracking* f) {
+  static const std::unordered_map<std::string, Options::ReverseTimeTracking> strategies{
+      {"invalid", Options_ReverseTimeTracking_invalid},
+      {"heuristic", Options_ReverseTimeTracking_heuristic},
+  };
+  auto i = strategies.find(strategy);
+  if (i == strategies.cend())
+    return false;
+  *f = i->second;
+  return true;
+}
 } // namespace valhalla

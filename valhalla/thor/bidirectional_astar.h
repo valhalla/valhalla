@@ -17,6 +17,8 @@
 namespace valhalla {
 namespace thor {
 
+constexpr double kReverseTTHeuristicFactor = 2.1;
+
 /**
  * Candidate connections - a directed edge and its opposing directed edge
  * are both temporarily labeled. Store the edge Ids and its cost.
@@ -270,6 +272,14 @@ bool IsBridgingEdgeRestricted(baldr::GraphReader& graphreader,
                               const sif::BDEdgeLabel& fwd_pred,
                               const sif::BDEdgeLabel& rev_pred,
                               const sif::cost_ptr_t& costing);
+
+baldr::TimeInfo EstimateReverseStartTime(baldr::GraphReader& reader,
+                                         valhalla::Location& origin,
+                                         valhalla::Location& destination,
+                                         const double factor,
+                                         const baldr::TimeInfo& time_info,
+                                         const sif::cost_ptr_t& costing,
+                                         const bool arrive_by);
 
 } // namespace thor
 } // namespace valhalla
