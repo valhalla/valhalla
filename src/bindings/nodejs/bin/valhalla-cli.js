@@ -7,6 +7,7 @@ const fsSync = require('fs');
 const { getBinaryDir } = require('../lib/binary-path');
 
 const binaryDir = getBinaryDir(path.join(__dirname, '..'));
+const packageRootDir = path.join(__dirname, '..');
 
 // Enable debug logging if VALHALLA_DEBUG env var is set
 const DEBUG = process.env.VALHALLA_DEBUG === '1' || process.env.VALHALLA_DEBUG === 'true';
@@ -120,30 +121,56 @@ async function printHelp() {
     console.log('  valhalla valhalla_service -c config.json  # Full name also works');
 }
 
-async function runCommand(command, args) {
+async function findBinary(command) {
     debugLog(`Binary directory: ${binaryDir}`);
+    debugLog(`Package root directory: ${packageRootDir}`);
     debugLog(`Looking for command: ${command}`);
     
     // Try to find the binary with the given name first
     let binaryPath = path.join(binaryDir, command);
-    
-    // Check if it exists
     let exists = await fileExists(binaryPath);
     debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
+    if (exists) return binaryPath;
     
     // If not found and doesn't start with 'valhalla_', try with 'valhalla_' prefix
-    if (!exists && !command.startsWith('valhalla_')) {
+    if (!command.startsWith('valhalla_')) {
         const prefixedCommand = `valhalla_${command}`;
         binaryPath = path.join(binaryDir, prefixedCommand);
         exists = await fileExists(binaryPath);
         debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
+        if (exists) return binaryPath;
     }
     
-    if (!exists) {
-        console.error(`Error: Command '${command}' not found in ${binaryDir}`);
+    // If still not found, try in package root directory
+    debugLog(`Not found in binary directory, trying package root directory`);
+    binaryPath = path.join(packageRootDir, command);
+    exists = await fileExists(binaryPath);
+    debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
+    if (exists) return binaryPath;
+    
+    // Try with prefix in package root
+    if (!command.startsWith('valhalla_')) {
+        const prefixedCommand = `valhalla_${command}`;
+        binaryPath = path.join(packageRootDir, prefixedCommand);
+        exists = await fileExists(binaryPath);
+        debugLog(`Checking ${binaryPath}: ${exists ? 'found' : 'not found'}`);
+        if (exists) return binaryPath;
+    }
+    
+    // Not found anywhere
+    return null;
+}
+
+async function runCommand(command, args) {
+    const binaryPath = await findBinary(command);
+    
+    if (!binaryPath) {
+        console.error(`Error: Command '${command}' not found`);
         console.error(`Tried: ${command}${!command.startsWith('valhalla_') ? ` and valhalla_${command}` : ''}`);
+        console.error(`Searched in: ${binaryDir} and ${packageRootDir}`);
         console.error(`Run 'valhalla --help' to see available commands.`);
         debugLog(`Binary directory contents:`, await fs.readdir(binaryDir).catch(() => []));
+        debugLog(`Package root directory contents:`, await fs.readdir(packageRootDir).catch(() => []));
         process.exit(1);
     }
     
