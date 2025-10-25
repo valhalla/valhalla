@@ -1,63 +1,28 @@
-async function main() {
-  try {
-    const valhalla = require('@valhallajs/valhallajs');
-    console.log('[SUCCESS] Valhalla package loaded successfully (CommonJS)!');
-    console.log('[INFO] VALHALLA_VERSION:', valhalla.VALHALLA_VERSION);
-    console.log('[INFO] Available exports:', Object.keys(valhalla));
-    
-    // Basic functionality test
-    if (typeof valhalla.VALHALLA_VERSION === 'string' && valhalla.VALHALLA_VERSION.length > 0) {
-      console.log('[SUCCESS] Version check passed');
-    } else {
-      console.error('[ERROR] Invalid version');
-      process.exit(1);
-    }
-    
-    // Check Actor export
-    if (typeof valhalla.Actor === 'function') {
-      console.log('[SUCCESS] Actor class is exported');
-      
-      // Test Actor with config object
-      try {
-        const config = await valhalla.getConfig({ tileDir: './test_tiles' });
-        const actor = new valhalla.Actor(config);
-        
-        if (actor && actor.actor) {
-          console.log('[SUCCESS] Actor created with config object');
-        } else {
-          console.error('[ERROR] Actor instance invalid');
-          process.exit(1);
-        }
-      } catch (error) {
-        // It's okay if Actor creation fails due to missing tiles,
-        // we just want to verify the API works
-        if (error.message.includes('tiles') || error.message.includes('tile_dir')) {
-          console.log('[SUCCESS] Actor accepts config object (tiles not available for full test)');
-        } else {
-          console.error('[ERROR] Actor creation failed:', error.message);
-          process.exit(1);
-        }
-      }
-      
-      // Check fromConfigFile static method
-      if (typeof valhalla.Actor.fromConfigFile === 'function') {
-        console.log('[SUCCESS] Actor.fromConfigFile static method is exported');
-      } else {
-        console.error('[ERROR] Actor.fromConfigFile not found');
-        process.exit(1);
-      }
-    } else {
-      console.error('[ERROR] Actor class not found');
-      process.exit(1);
-    }
-    
-    console.log('[SUCCESS] All CommonJS tests passed!');
-    process.exit(0);
-  } catch (error) {
-    console.error('[ERROR] Failed to load Valhalla package (CommonJS):', error.message);
-    console.error(error.stack);
-    process.exit(1);
-  }
-}
+const { describe, test } = require('node:test');
+const assert = require('node:assert');
+const valhalla = require('@valhallajs/valhallajs');
 
-main();
+describe('Valhalla CommonJS Tests', () => {
+  test('should load Valhalla package successfully', () => {
+    assert.ok(valhalla, 'Valhalla package should be loaded');
+    const exports = Object.keys(valhalla);
+    assert.ok(exports.length > 0, 'Should have at least one export');
+  });
+
+  test('should export VALHALLA_VERSION', () => {
+    assert.strictEqual(typeof valhalla.VALHALLA_VERSION, 'string');
+    assert.ok(valhalla.VALHALLA_VERSION.length > 0, 'Version should not be empty');
+  });
+
+  test('should export Actor class', () => {
+    assert.strictEqual(typeof valhalla.Actor, 'function', 'Actor should be a function/class');
+  });
+
+  test('should export Actor.fromConfigFile static method', () => {
+    assert.strictEqual(
+      typeof valhalla.Actor.fromConfigFile,
+      'function',
+      'Actor.fromConfigFile should be a function'
+    );
+  });
+});

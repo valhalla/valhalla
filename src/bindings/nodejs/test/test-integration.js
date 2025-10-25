@@ -1,19 +1,18 @@
-/**
- * Test script to verify route generation using tiles built by CLI
- * This script loads a Valhalla config and tests that routing works.
- */
+const { describe, test } = require('node:test');
+const assert = require('node:assert');
+const valhalla = require('@valhallajs/valhallajs');
 
-async function testRoute() {
-  try {
-    const valhalla = require('@valhallajs/valhallajs');
+describe('Valhalla Integration Tests', () => {
+  test('should generate routes using built tiles', async () => {
     console.log('[INFO] Testing route generation with built tiles...');
     console.log('[INFO] Valhalla version:', valhalla.VALHALLA_VERSION);
 
     // Load config from file
-    const configFile = process.argv[2] || 'valhalla.json';
+    const configFile = process.argv[process.argv.length - 1];
     console.log('[INFO] Loading config from:', configFile);
     
     const actor = await valhalla.Actor.fromConfigFile(configFile);
+    assert.ok(actor, 'Actor should be initialized');
     console.log('[SUCCESS] Actor initialized successfully');
 
     // Utrecht, Netherlands coordinates (within the test data area)
@@ -36,20 +35,10 @@ async function testRoute() {
     const result = actor.route(routeRequest);
     
     // Verify result
-    if (!result) {
-      console.error('[ERROR] No route result returned');
-      process.exit(1);
-    }
-
-    if (!result.trip) {
-      console.error('[ERROR] No trip in route result:', JSON.stringify(result));
-      process.exit(1);
-    }
-
-    if (!result.trip.legs || result.trip.legs.length === 0) {
-      console.error('[ERROR] No legs in route result');
-      process.exit(1);
-    }
+    assert.ok(result, 'Route result should be returned');
+    assert.ok(result.trip, 'Route result should contain trip');
+    assert.ok(result.trip.legs, 'Trip should contain legs');
+    assert.ok(result.trip.legs.length > 0, 'Trip should have at least one leg');
 
     const trip = result.trip;
     const leg = trip.legs[0];
@@ -60,20 +49,8 @@ async function testRoute() {
     console.log('  - Time:', (leg.summary.time / 60).toFixed(2), 'minutes');
     console.log('  - Maneuvers:', leg.maneuvers ? leg.maneuvers.length : 'N/A');
     
-    if (leg.summary.length <= 0) {
-      console.error('[ERROR] Invalid route distance');
-      process.exit(1);
-    }
-
+    assert.ok(leg.summary.length > 0, 'Route distance should be greater than 0');
     console.log('[SUCCESS] All route tests passed!');
-    process.exit(0);
-
-  } catch (error) {
-    console.error('[ERROR] Route test failed:', error.message);
-    console.error(error.stack);
-    process.exit(1);
-  }
-}
-
-testRoute();
+  });
+});
 

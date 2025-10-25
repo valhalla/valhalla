@@ -27,7 +27,9 @@ class Actor {
         if (typeof query === 'string') {
             return this.actor.route(query);
         }
-        return JSON.parse(this.actor.route(JSON.stringify(query)));
+        const result = this.actor.route(JSON.stringify(query));
+        console.log('result', result);
+        return JSON.parse(result);
     }
 
     locate(query) {

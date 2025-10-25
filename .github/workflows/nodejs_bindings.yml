@@ -310,20 +310,11 @@ jobs:
       - run: ls -R node_modules/@valhallajs/valhallajs
       
       - name: Test package import (CommonJS)
-        run: |
-          echo "[INFO] Testing CommonJS import..."
-          node src/bindings/nodejs/test/test-commonjs.js
+        run: node --test src/bindings/nodejs/test/test-commonjs.js
       
       - name: Test package import (ESM)
-        run: |
-          echo "[INFO] Testing ESM import..."
-          node src/bindings/nodejs/test/test-esm.mjs
-      
-      - name: Check file permissions
-        run: |
-          echo "[INFO] Checking file permissions in binaries directory..."
-          ls -lah node_modules/@valhallajs/valhallajs/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/ | head -20
-      
+        run: node --test src/bindings/nodejs/test/test-esm.mjs
+
       - name: Test CLI - Build config and tiles
         run: |
           echo "[INFO] Creating Valhalla config..."
@@ -341,7 +332,7 @@ jobs:
           ls -lah valhalla_tiles/
           
           echo "[INFO] Testing route generation with built tiles..."
-          node src/bindings/nodejs/test/smoke_test.js valhalla.json
+          node --test src/bindings/nodejs/test/test-integration.js valhalla.json
 
   publish_npm:
     name: Publish to NPM
