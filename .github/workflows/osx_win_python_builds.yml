@@ -412,11 +412,8 @@ jobs:
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
         env:
           CIBW_BEFORE_BUILD_WINDOWS: |
-            for /f "usebackq delims=" %%i in (`python -c "import sys; print(sys.executable)"`) do set "PY_EXE=%%i"
-            for /f "usebackq delims=" %%i in (`python -c "import pathlib, sys; print(pathlib.Path(sys.executable).parent)"`) do set "PY_ROOT=%%i"
-
-            setx PY_EXE2 %PY_EXE%
-            setx PY_ROOT2 %PY_ROOT%
+            $env:PY_EXE  = & python -c "import sys; print(sys.executable)"
+            $env:PY_ROOT = Split-Path -Parent $env:PY_EXE
 
           CIBW_ENVIRONMENT_WINDOWS: >-
             CMAKE_ARGS="-DPython_EXECUTABLE=$PY_EXE -DPython_ROOT_DIR=$PY_ROOT -DENABLE_SERVICES=OFF -DVALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
