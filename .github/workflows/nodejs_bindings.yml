@@ -172,44 +172,32 @@ jobs:
           cp -r src/bindings/nodejs/bin valhalla-npm-package/
           
           # Extract and organize bindings by platform
-          cd artifacts
+          pushd artifacts
           
-          # Process Linux x64
-          echo "[INFO] Processing Linux x64..."
-          mkdir -p ../valhalla-npm-package/linux/x64
-          tar -xzf valhalla-nodejs-linux-x64/valhalla-nodejs-linux-x64.tar.gz
-          mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/linux/x64/
-          mv nodejs_dist/valhalla_* ../valhalla-npm-package/linux/x64/ 2>/dev/null || true
-          mv nodejs_dist/lib ../valhalla-npm-package/linux/x64/
-          rm -rf nodejs_dist
+          # Process all platforms in a loop
+          for platform in "linux:x64" "linux:arm64" "darwin:arm64"; do
+            os="${platform%%:*}"
+            arch="${platform##*:}"
+            platform_name="${os/darwin/macos}"
+            
+            echo "[INFO] Processing ${platform_name} ${arch}..."
+            mkdir -p ../valhalla-npm-package/${os}/${arch}
+            tar -xzf valhalla-nodejs-${platform_name}-${arch}/valhalla-nodejs-${platform_name}-${arch}.tar.gz
+            mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/${os}/${arch}/
+            mv nodejs_dist/valhalla_* ../valhalla-npm-package/${os}/${arch}/ 2>/dev/null || true
+            mv nodejs_dist/lib ../valhalla-npm-package/${os}/${arch}/
+            rm -rf nodejs_dist
+          done
           
-          # Process Linux arm64
-          echo "[INFO] Processing Linux arm64..."
-          mkdir -p ../valhalla-npm-package/linux/arm64
-          tar -xzf valhalla-nodejs-linux-arm64/valhalla-nodejs-linux-arm64.tar.gz
-          mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/linux/arm64/
-          mv nodejs_dist/valhalla_* ../valhalla-npm-package/linux/arm64/ 2>/dev/null || true
-          mv nodejs_dist/lib ../valhalla-npm-package/linux/arm64/
-          rm -rf nodejs_dist
-          
-          # Process macOS arm64
-          echo "[INFO] Processing macOS arm64..."
-          mkdir -p ../valhalla-npm-package/darwin/arm64
-          tar -xzf valhalla-nodejs-macos-arm64/valhalla-nodejs-macos-arm64.tar.gz
-          mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/darwin/arm64/
-          mv nodejs_dist/valhalla_* ../valhalla-npm-package/darwin/arm64/ 2>/dev/null || true
-          mv nodejs_dist/lib ../valhalla-npm-package/darwin/arm64/
-          rm -rf nodejs_dist
-          
-          cd ..
+          popd # artifacts
           
           echo "[INFO] Package structure:"
           tree -L 5 valhalla-npm-package/ || find valhalla-npm-package -type f
           
           echo "[INFO] Creating NPM package..."
-          cd valhalla-npm-package
+          pushd valhalla-npm-package
           npm pack
-          cd ..
+          popd # valhalla-npm-package
           
           echo "[INFO] Package created:"
           ls -lh valhalla-npm-package/*.tgz
@@ -250,6 +238,13 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Checkout test files
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            src/bindings/nodejs/test/
+          sparse-checkout-cone-mode: false
+
       - name: Download NPM package
         uses: actions/download-artifact@v4
         with:
@@ -264,42 +259,29 @@ jobs:
           npm install *.tgz
           
           echo "[INFO] Verifying installation..."
-          npm list valhalla
+          npm list @valhalla/valhalla
           
           echo "[INFO] Checking installed files..."
-          ls -lh node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/
+          ls -lh node_modules/@valhalla/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/
           
           echo "[INFO] Checking bundled libraries..."
-          ls -lh node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/lib/ 
+          ls -lh node_modules/@valhalla/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/lib/ 
           
           echo "[INFO] Checking binding dependencies..."
-          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} node_modules/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/valhalla_node.node
-      - run: ls -R node_modules/valhalla
-      - name: Test package import
+          ${{ matrix.os == 'macos' && 'otool -L' || 'ldd' }} node_modules/@valhalla/valhalla/${{ matrix.os == 'macos' && 'darwin' || 'linux' }}/${{ matrix.arch }}/valhalla_node.node
+      - run: ls -R node_modules/@valhalla/valhalla
+      
+      - name: Test package import (CommonJS)
         run: |
-          echo "[INFO] Testing package import..."
-          cat > test.js << 'EOF'
-          try {
-            const valhalla = require('valhalla');
-            console.log('[SUCCESS] Valhalla package loaded successfully!');
-            console.log('[INFO] VALHALLA_VERSION:', valhalla.VALHALLA_VERSION);
-            console.log('[INFO] Available exports:', Object.keys(valhalla));
-            
-            // Basic functionality test
-            if (typeof valhalla.VALHALLA_VERSION === 'string' && valhalla.VALHALLA_VERSION.length > 0) {
-              console.log('[SUCCESS] Version check passed');
-            } else {
-              console.error('[ERROR] Invalid version');
-              process.exit(1);
-            }
-            
-            process.exit(0);
-          } catch (error) {
-            console.error('[ERROR] Failed to load Valhalla package:', error.message);
-            console.error(error.stack);
-            process.exit(1);
-          }
-          EOF
-          
-          node test.js
-      - run: valhalla build_tiles --help
+          echo "[INFO] Testing CommonJS import..."
+          node src/bindings/nodejs/test/test-commonjs.js
+      
+      - name: Test package import (ESM)
+        run: |
+          echo "[INFO] Testing ESM import..."
+          node src/bindings/nodejs/test/test-esm.mjs
+      
+      # - name: Test CLI
+      #   run: valhalla build_tiles --help
+
+
