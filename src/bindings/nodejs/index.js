@@ -11,6 +11,9 @@ const defaultConfig = require('./config.json');
 
 class Actor {
     constructor(config) {
+        if (typeof config !== 'string') {
+            config = JSON.stringify(config);
+        } 
         this.actor = new valhalla.Actor(config);
     }
 

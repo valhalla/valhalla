@@ -64,6 +64,14 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
       
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.os == 'macos' && '~/Library/Caches/ccache' || '/home/runner/.cache/ccache' }}
+          key: ccache-${{ matrix.os }}-${{ matrix.arch }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.os }}-${{ matrix.arch }}-
+
       - name: Install dependencies (macOS)
         if: matrix.os == 'macos'
         run: |
@@ -84,7 +92,10 @@ jobs:
           -DENABLE_TESTS=OFF \
           -DVALHALLA_VERSION_MODIFIFER=1 \
           -DENABLE_SINGLE_FILES_WERROR=OFF
-          cmake --build build -j$(nproc)
+          cmake --build build -j${{ matrix.os == 'macos' && '$(sysctl -n hw.logicalcpu)' || '$(nproc)' }}
+      
+      - name: Show ccache statistics
+        run: ccache -s
       
       - name: Check dependencies
         run: |
@@ -106,15 +117,8 @@ jobs:
           # Bundle everything together
           ${{ matrix.os == 'macos' && 'python' || 'python3.12' }} src/bindings/nodejs/scripts/bundle.py \
             $NODE_FILE $VALHALLA_EXES \
-            $OUTPUT_DIR --strip --tar
+            $OUTPUT_DIR --strip
           
-          mv valhalla_node-bundle.tar.gz valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
-
-          echo "[INFO] Contents of tarball:"
-          tar -tzf valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
-          
-          echo "[INFO] Verifying bundled libraries..."
-          tar -xzf valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
           echo "[INFO] Bundled executables:"
           ls -lh $OUTPUT_DIR/valhalla_* 2>/dev/null || echo "No executables found"
           echo "[INFO] Shared libraries:"
@@ -132,7 +136,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}
-          path: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          path: nodejs_dist/
   
   package_nodejs_bindings:
     name: Package Node.js bindings for NPM
@@ -182,11 +186,9 @@ jobs:
             
             echo "[INFO] Processing ${platform_name} ${arch}..."
             mkdir -p ../valhalla-npm-package/${os}/${arch}
-            tar -xzf valhalla-nodejs-${platform_name}-${arch}/valhalla-nodejs-${platform_name}-${arch}.tar.gz
-            mv nodejs_dist/valhalla_node.node ../valhalla-npm-package/${os}/${arch}/
-            mv nodejs_dist/valhalla_* ../valhalla-npm-package/${os}/${arch}/ 2>/dev/null || true
-            mv nodejs_dist/lib ../valhalla-npm-package/${os}/${arch}/
-            rm -rf nodejs_dist
+            mv valhalla-nodejs-${platform_name}-${arch}/valhalla_node.node ../valhalla-npm-package/${os}/${arch}/
+            mv valhalla-nodejs-${platform_name}-${arch}/valhalla_* ../valhalla-npm-package/${os}/${arch}/ 2>/dev/null || true
+            mv valhalla-nodejs-${platform_name}-${arch}/lib ../valhalla-npm-package/${os}/${arch}/
           done
           
           popd # artifacts

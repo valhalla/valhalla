@@ -7,7 +7,6 @@ import re
 import shutil
 import subprocess
 import sys
-import tarfile
 from pathlib import Path
 from typing import Set, List
 
@@ -417,30 +416,6 @@ def strip_symbols(binary_files: List[Path], out_dir: Path) -> None:
             codesign_adhoc(path)
 
 
-def create_tarball(out_dir: Path, binding_dst: Path) -> str:
-    """Create a tarball of the bundle."""
-    binding_name = binding_dst.stem  # without .node extension
-    tar_name = f"{binding_name}-bundle.tar.gz"
-    tar_path = out_dir.parent / tar_name
-    
-    with tarfile.open(tar_path, "w:gz") as tar:
-        tar.add(out_dir, arcname=out_dir.name)
-    
-    return str(tar_path.resolve())
-
-
-def create_tarball_multi(out_dir: Path, binary_files: List[Path]) -> str:
-    """Create a tarball of the bundle with multiple files."""
-    # Use first .node file or first binary for naming
-    node_file = next((f for f in binary_files if f.name.endswith('.node')), binary_files[0])
-    bundle_name = node_file.stem  # without extension
-    tar_name = f"{bundle_name}-bundle.tar.gz"
-    tar_path = out_dir.parent / tar_name
-    
-    with tarfile.open(tar_path, "w:gz") as tar:
-        tar.add(out_dir, arcname=out_dir.name)
-    
-    return str(tar_path.resolve())
 
 
 def main():
@@ -450,7 +425,6 @@ def main():
     parser.add_argument("files", nargs="+", help="Path to the files to bundle (addon.node and/or executables)")
     parser.add_argument("out_dir", help="Path to the output directory")
     parser.add_argument("--strip", action="store_true", help="Strip symbols from binaries")
-    parser.add_argument("--tar", action="store_true", help="Create a tarball of the bundle")
     
     args = parser.parse_args()
     
@@ -496,47 +470,26 @@ def main():
         dst_files.append(dst_file)
     
     # Bundle dependencies from ALL files into shared lib/ directory
-    print("[1/4] Bundling dependencies from all files...")
+    print("[1/3] Bundling dependencies from all files...")
     for dst_file in dst_files:
         print(f"  Processing: {dst_file.name}")
         bundle_all_deps(dst_file, out_dir)
     
     # Patch RPATHs for all files
-    print("[2/4] Patching RPATHs for all files...")
+    print("[2/3] Patching RPATHs for all files...")
     for dst_file in dst_files:
         print(f"  Patching: {dst_file.name}")
         patch_rpaths(dst_file, out_dir)
     
     # Strip symbols
     if args.strip:
-        print("[3/4] Stripping symbols (optional)...")
+        print("[3/3] Stripping symbols (optional)...")
         strip_symbols(dst_files, out_dir)
     else:
-        print("[3/4] Skipping strip (use --strip to enable).")
+        print("[3/3] Skipping strip (use --strip to enable).")
     
-    # Create tarball
-    if args.tar:
-        print("[4/4] Creating tarball...")
-        tar_path = create_tarball_multi(out_dir, dst_files)
-        print(f"Tarball: {tar_path}")
-    else:
-        print(f"[4/4] Done. Relocatable bundle at: {out_dir}")
+    print(f"\nDone. Relocatable bundle at: {out_dir}")
     
-    # Print summary
-    print()
-    print("Summary:")
-    print(f"  Files bundled: {len(dst_files)}")
-    for dst_file in dst_files:
-        print(f"    - {dst_file.name}")
-    print(f"  Lib dir: {lib_dir}")
-    lib_count = len(list(lib_dir.glob("*.so*" if not is_macos() else "*.dylib")))
-    print(f"  Shared libraries: {lib_count}")
-    if is_macos():
-        print("  Install names: @loader_path/lib (binaries)")
-        print("  Install names: @loader_path (libs)")
-    else:
-        print("  RPATH(binaries): $ORIGIN/lib")
-        print("  RPATH(libs):     $ORIGIN")
 
 
 if __name__ == "__main__":
