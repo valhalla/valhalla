@@ -32,7 +32,7 @@ bool parse_common_args(const std::string& program,
                        boost::property_tree::ptree* conf,
                        const std::string& log,
                        const bool use_threads = false,
-                       std::function<void()> extra_help = nullptr) {
+                       const std::function<void()>& extra_help = nullptr) {
 
   if (result.count("help")) {
     std::cout << opts.help() << "\n";

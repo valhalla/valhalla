@@ -45,10 +45,10 @@ protected:
   std::thread watcher;
 
   // prototype for the watch function. we need this so unit tests can safely test all functionality
-  using watch_function_t = std::function<void(boost::property_tree::ptree,
-                                              std::unordered_set<valhalla::baldr::GraphId>,
-                                              std::shared_ptr<state_t>,
-                                              std::function<bool(size_t)>)>;
+  using watch_function_t = std::function<void(const boost::property_tree::ptree&,
+                                              const std::unordered_set<valhalla::baldr::GraphId>&,
+                                              const std::shared_ptr<state_t>&,
+                                              const std::function<bool(size_t)>&)>;
 
   /**
    * Singleton private constructor that static function uses to instantiate the singleton
@@ -190,10 +190,10 @@ protected:
    * @param state      inter thread communication object (mainly tile cache)
    * @param interrupt  functor that, if set and returns true, stops the main loop of this function
    */
-  static void watch(boost::property_tree::ptree config,
-                    std::unordered_set<valhalla::baldr::GraphId> tileset,
-                    std::shared_ptr<state_t> state,
-                    std::function<bool(size_t)> interrupt) {
+  static void watch(const boost::property_tree::ptree& config,
+                    const std::unordered_set<valhalla::baldr::GraphId>& tileset,
+                    const std::shared_ptr<state_t>& state,
+                    const std::function<bool(size_t)>& interrupt) {
     LOG_INFO("Incident watcher started");
     // try to configure for changelog mode
     std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;

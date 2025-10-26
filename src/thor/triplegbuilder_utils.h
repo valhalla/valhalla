@@ -32,15 +32,14 @@ struct MultimodalBuilder {
              const valhalla::baldr::GraphId& startnode,
              const valhalla::baldr::DirectedEdge* directededge,
              const valhalla::baldr::GraphId& edge,
-             valhalla::baldr::graph_tile_ptr start_tile,
-             valhalla::baldr::graph_tile_ptr graphtile,
+             const valhalla::baldr::graph_tile_ptr& start_tile,
+             const valhalla::baldr::graph_tile_ptr& graphtile,
              const valhalla::sif::mode_costing_t& mode_costing,
              const valhalla::baldr::AttributesController& controller,
              valhalla::baldr::GraphReader& graphreader) {
 
     AddBssNode(trip_node, node, directededge, start_tile, mode_costing, controller);
-    AddTransitNodes(trip_node, node, startnode, std::move(start_tile), std::move(graphtile),
-                    controller);
+    AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
     AddTransitInfo(trip_node, trip_id, node, startnode, directededge, edge, start_tile, graphtile,
                    mode_costing, controller, graphreader);
   }
