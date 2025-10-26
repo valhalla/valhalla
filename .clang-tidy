@@ -1,7 +1,7 @@
 ---
 # https://clang.llvm.org/extra/clang-tidy/checks/list.html
 Checks: >
-    bugprone-throw-keyword-missing,
+    bugprone-*,
     clang-*,
     -clang-analyzer-*,
     clang-analyzer-deadcode.DeadStores,
