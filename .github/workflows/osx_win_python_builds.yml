@@ -96,7 +96,7 @@ jobs:
       - name: Get version modifier
         id: version-modifier
         if: ${{  github.ref == 'refs/heads/master'  }}
-        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Write pyproject.toml
         run: |
@@ -107,7 +107,6 @@ jobs:
           cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
 
           echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
-          echo "VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}" >> $GITHUB_ENV
 
       - name: Restore ccache
         uses: tespkg/actions-cache/restore@v1
@@ -186,7 +185,7 @@ jobs:
       - name: Get version modifier
         id: version-modifier
         if: ${{  github.ref == 'refs/heads/master'  }}
-        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Restore ccache
         uses: tespkg/actions-cache/restore@v1
@@ -206,7 +205,7 @@ jobs:
       - name: Configure CMake
         run: |
           export PATH="$(brew --prefix python)/libexec/bin:$PATH"
-          cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
+          cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
 
       - name: Build & install Valhalla (for python bindings)
         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
@@ -246,7 +245,6 @@ jobs:
           cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
 
           echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
-          echo "VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
@@ -341,7 +339,7 @@ jobs:
       - name: Get version modifier
         id: version-modifier
         if: ${{  github.ref == 'refs/heads/master'  }}
-        run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Configure CMake
         shell: bash
@@ -364,7 +362,7 @@ jobs:
             -DENABLE_SERVICES=OFF \
             -DPREFER_EXTERNAL_DEPS=ON \
             -DENABLE_GDAL=ON \
-            -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
+            -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
 
       - name: Save vcpkg packages
         uses: tespkg/actions-cache/save@v1
@@ -415,7 +413,6 @@ jobs:
           # make sure they really land in the python builde
           echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
           echo 'VCPKG_ROOT=${{ github.workspace }}\vcpkg' >> $GITHUB_ENV
-          echo "VALHALLA_VERSION_MODIFIER=${{ steps.version-modifier.outputs.version_modifier }}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
