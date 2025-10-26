@@ -14,8 +14,7 @@ Checks: >
     modernize-make-shared,
     modernize-make-unique,
 WarningsAsErrors: ''
-HeaderFilterRegex: '/valhalla/'
-ExcludeHeaderFilterRegex: '/third_party/|/valhalla/proto/'
+HeaderFilterRegex: '^(?!.*(third_party|/valhalla/proto/)).*valhalla/.*'
 CheckOptions:
   - key:             google-readability-braces-around-statements.ShortStatementLines
     value:           '1'
