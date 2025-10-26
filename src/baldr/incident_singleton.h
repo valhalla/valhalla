@@ -201,7 +201,8 @@ protected:
     std::filesystem::path inc_dir;
     bool inc_dir_exists = false;
     try {
-      changelog = std::make_unique<decltype(changelog)::element_type>(inc_log_path.string(), false, 0);
+      changelog =
+          std::make_unique<decltype(changelog)::element_type>(inc_log_path.string(), false, 0);
       LOG_INFO("Incident watcher configured for mmap changelog mode");
     } // check for a directory scan mode config
     catch (...) {
@@ -250,7 +251,8 @@ protected:
         // reload the log if the tileset isnt static
         try {
           if (!state->lock_free.load())
-            changelog = std::make_unique<decltype(changelog)::element_type>(inc_log_path.string(), false, 0);
+            changelog =
+                std::make_unique<decltype(changelog)::element_type>(inc_log_path.string(), false, 0);
         } catch (...) {
           LOG_ERROR("Incident watcher could not map incident_log: " + inc_log_path.string());
           break;

@@ -4077,7 +4077,7 @@ std::unique_ptr<tzdb>
 init_tzdb_strings()
 {
     using namespace date;
-    const std::string install = get_install();
+    const std::string &install = get_install();
     const std::string path = install + folder_delimiter;
     std::string line;
     bool continue_zone = false;
