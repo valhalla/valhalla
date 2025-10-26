@@ -165,7 +165,7 @@ jobs:
           restore-keys: |
             ccache-debug-linux-x86_64-master
             ccache-debug-linux-x86_64
-      
+      - run: clang-tidy --version
       - name: Build Valhalla
         run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
