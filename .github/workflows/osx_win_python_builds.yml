@@ -56,7 +56,7 @@ concurrency:
 env:
   # only run tmate if manually invoked and debug_enabled == true or a previous step failed
   SETUP_TMATE: ${{ ((github.event_name == 'workflow_dispatch') && (github.event.inputs.debug_enabled == 'true')) && (github.repository_owner == 'valhalla') }}
-  PUBLISH_PYPI: ${{ (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
+  PUBLISH_PYPI: ${{  (github.event_name == 'pull_request') || (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule') || ((github.event_name == 'workflow_dispatch') && (github.ref == 'refs/heads/master'))) && (github.repository_owner == 'valhalla') }}
 
 jobs:
   # only publish to PyPI on tags, schedule or workflow_dispatch (only on master!)
@@ -95,7 +95,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: github.ref == 'refs/heads/master'
+        if: ${{  github.ref == 'refs/heads/master' || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Determine package to publish
@@ -184,7 +184,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: github.ref == 'refs/heads/master'
+        if: ${{  github.ref == 'refs/heads/master' || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Restore ccache
@@ -341,7 +341,7 @@ jobs:
 
       - name: Get version modifier
         id: version-modifier
-        if: github.ref == 'refs/heads/master'
+        if: ${{  github.ref == 'refs/heads/master' || github.event_name == 'pull_request'  }}
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Configure CMake
@@ -509,29 +509,29 @@ jobs:
           python -m valhalla valhalla_service -h
           python -m valhalla valhalla_build_tiles -h
 
-  upload_all:
-    name: Upload if release
-    needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
-    runs-on: ubuntu-latest
-    # if: ${{ always() }}
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+  # upload_all:
+  #   name: Upload if release
+  #   needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
+  #   runs-on: ubuntu-latest
+  #   # if: ${{ always() }}
+  #   if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
 
-    permissions:
-      id-token: write # This is required for requesting the JWT from Github for PyPI
+  #   permissions:
+  #     id-token: write # This is required for requesting the JWT from Github for PyPI
 
-    steps:
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.13'
+  #   steps:
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.13'
 
-      - uses: actions/download-artifact@v4
-        with:
-          path: dist
-          merge-multiple: true
+  #     - uses: actions/download-artifact@v4
+  #       with:
+  #         path: dist
+  #         merge-multiple: true
 
-      - name: Publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
-        with:
-          verbose: true
-          # uncomment when testing!
-          # repository-url: https://test.pypi.org/legacy/
+  #     - name: Publish to Test PyPI
+  #       uses: pypa/gh-action-pypi-publish@v1.13.0
+  #       with:
+  #         verbose: true
+  #         # uncomment when testing!
+  #         # repository-url: https://test.pypi.org/legacy/

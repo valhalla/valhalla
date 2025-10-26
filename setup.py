@@ -93,7 +93,7 @@ include_dirs = [
 library_dirs = ["/usr/local/lib", "/usr/local/lib64"]
 libraries = list()
 extra_link_args = list()
-extra_compile_args = [f"-DVALHALLA_PYTHON_PACKAGE={pkg}", "-DENABLE_GDAL=OFF"]
+extra_compile_args = [f"-DVALHALLA_PYTHON_PACKAGE={pkg}"]
 if version_modifier := os.environ.get("VALHALLA_VERSION_MODIFIER"):
     print(f"[INFO] Building with version modifier: {version_modifier}")
     extra_compile_args.append(f"-DVALHALLA_VERSION_MODIFIER={version_modifier}")
