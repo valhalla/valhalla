@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
     // because we want the program output to go only to stdout we force any logging to be stderr
     valhalla::midgard::logging::Configure({{"type", "std_err"}});
 
-    const std::string &action_arg = pos_args[1], request_arg = pos_args[2];
+    const std::string &action_arg = pos_args[1], &request_arg = pos_args[2];
 
     // setup an object that can answer the request
     valhalla::tyr::actor_t actor(config);

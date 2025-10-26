@@ -61,9 +61,9 @@ private:
                   const valhalla::sif::mode_costing_t& mode_costing,
                   const valhalla::baldr::AttributesController&) {
 
-    auto pedestrian_costing =
+    const auto& pedestrian_costing =
         mode_costing[static_cast<size_t>(valhalla::sif::travel_mode_t::kPedestrian)];
-    auto bicycle_costing = mode_costing[static_cast<size_t>(valhalla::sif::travel_mode_t::kBicycle)];
+    const auto& bicycle_costing = mode_costing[static_cast<size_t>(valhalla::sif::travel_mode_t::kBicycle)];
 
     if (node->type() == valhalla::baldr::NodeType::kBikeShare && pedestrian_costing &&
         bicycle_costing) {

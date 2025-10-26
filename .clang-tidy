@@ -5,18 +5,16 @@ Checks: >
     clang-*,
     -clang-analyzer-*,
     performance*,
-    -performance-noexcept-swap,
     -performance-enum-size,
     -performance-move-const-arg,
     -performance-avoid-endl,
-    -performance-unnecessary-copy-initialization,
     -performance-inefficient-string-concatenation,
     misc-unused-parameters,
-    -modernize-make-shared,
-    -modernize-make-unique,
+    modernize-make-shared,
+    modernize-make-unique,
 WarningsAsErrors: ''
 HeaderFilterRegex: '/valhalla/'
-ExcludeHeaderFilterRegex: '/third_party/'
+ExcludeHeaderFilterRegex: '/third_party/|/valhalla/proto/'
 CheckOptions:
   - key:             google-readability-braces-around-statements.ShortStatementLines
     value:           '1'

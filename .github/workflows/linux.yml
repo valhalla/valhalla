@@ -172,7 +172,7 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
             -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
             -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On \
-            -DBUILD_SHARED_LIBS=On
+            -DBUILD_SHARED_LIBS=On \
             -DENABLE_CLANG_TIDY=On
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
