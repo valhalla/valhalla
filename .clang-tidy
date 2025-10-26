@@ -4,6 +4,7 @@ Checks: >
     bugprone-throw-keyword-missing,
     clang-*,
     -clang-analyzer-*,
+    clang-analyzer-deadcode.DeadStores,
     performance*,
     -performance-enum-size,
     -performance-move-const-arg,
