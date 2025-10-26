@@ -50,7 +50,7 @@ if(ENABLE_DATA_TOOLS)
 
     ## Test run targets
     add_custom_command(OUTPUT ${TESTNAME}.log
-      COMMAND ${CMAKE_COMMAND} -E env LOCPATH=${VALHALLA_SOURCE_DIR}/locales ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}
+      COMMAND ${VALHALLA_SOURCE_DIR}/scripts/run_single_test.sh ${CMAKE_CURRENT_BINARY_DIR}/${TESTNAME}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       DEPENDS ${TESTNAME}
       VERBATIM)
