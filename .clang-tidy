@@ -4,8 +4,7 @@ Checks: >
     bugprone-*
     -bugprone-narrowing-conversions,
     clang-*,
-    -clang-analyzer-*,
-    clang-analyzer-deadcode.DeadStores,
+    -clang-diagnostic-unused-command-line-argument,
     performance*,
     -performance-enum-size,
     -performance-move-const-arg,
