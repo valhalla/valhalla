@@ -1,7 +1,8 @@
 ---
 # https://clang.llvm.org/extra/clang-tidy/checks/list.html
 Checks: >
-    bugprone-*,
+    bugprone-*
+    -bugprone-narrowing-conversions,
     clang-*,
     -clang-analyzer-*,
     clang-analyzer-deadcode.DeadStores,

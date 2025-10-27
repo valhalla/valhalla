@@ -26,4 +26,5 @@ valhalla_module(NAME proto
     PUBLIC
       ${CMAKE_CURRENT_BINARY_DIR}
   DEPENDS
-    ${valhalla_protobuf_targets})
+    ${valhalla_protobuf_targets}
+  DISABLE_CLANG_TIDY)

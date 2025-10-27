@@ -234,17 +234,6 @@ if(ENABLE_SERVICES)
   endif()
 endif()
 
-if (ENABLE_CLANG_TIDY)
-  find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
-  if(NOT CLANG_TIDY_COMMAND)
-    message(FATAL_ERROR "ENABLE_CLANG_TIDY is ON but clang-tidy is not found!")
-  else()
-    message(STATUS "Found clang-tidy at ${CLANG_TIDY_COMMAND}")
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};--warnings-as-errors=*")
-  endif()
-endif()
-
-
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
   add_compile_definitions(DATA_TOOLS)
