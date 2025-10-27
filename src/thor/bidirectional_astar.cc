@@ -196,6 +196,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     // Skip shortcuts if hierarchy limits are disabled
     if (ignore_hierarchy_limits_ || !get_opp_edge_data())
       return false;
+    // Skip shortcuts if bridges or tunnels are excluded
+    if (costing_->has_excludes() && (costing_->exclude_bridges() || costing_->exclude_tunnels()))
+      return false;
 
     const auto& opp_edgestatus = FORWARD ? edgestatus_reverse_ : edgestatus_forward_;
     const auto opp_edge_set = opp_edgestatus.Get(opp_edge_id).set();

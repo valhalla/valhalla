@@ -237,6 +237,18 @@ public:
     pass_ = pass;
   }
 
+  bool has_excludes() const {
+    return has_excludes_;
+  }
+
+  bool exclude_bridges() const {
+    return exclude_bridges_;
+  }
+
+  bool exclude_tunnels() const {
+    return exclude_tunnels_;
+  }
+
   /**
    * Returns the maximum transfer distance between stops that you are willing
    * to travel for this mode.  It is the max distance you are willing to
@@ -335,8 +347,7 @@ public:
              edge->classification() == baldr::RoadClass::kMotorway) ||
             (exclude_ferries_ &&
              !(pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry) &&
-             (edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry)) ||
-            (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_)));
+             (edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry)));
   }
 
   /**
