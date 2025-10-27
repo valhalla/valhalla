@@ -17,14 +17,14 @@ from typing import List, Tuple, Optional
 
 # "<" prefix means little-endian and no alignment
 # order is important! if uint64_t is not first, c++ will use padding bytes to unpack
-INDEX_BIN_FORMAT = '<QLL'
+INDEX_BIN_FORMAT = "<QLL"
 INDEX_BIN_SIZE = struct.calcsize(INDEX_BIN_FORMAT)
 INDEX_FILE = "index.bin"
 # skip the first 40 bytes of the tile header
-GRAPHTILE_SKIP_BYTES = struct.calcsize('<Q2f16cQ')
-TRAFFIC_HEADER_FORMAT = '<2Q4I'
+GRAPHTILE_SKIP_BYTES = struct.calcsize("<Q2f16cQ")
+TRAFFIC_HEADER_FORMAT = "<2Q4I"
 TRAFFIC_HEADER_SIZE = struct.calcsize(TRAFFIC_HEADER_FORMAT)
-TRAFFIC_SPEED_SIZE = struct.calcsize('<Q')
+TRAFFIC_SPEED_SIZE = struct.calcsize("<Q")
 TRAFFIC_VERSION = 3
 
 Bbox = namedtuple("Bbox", "min_x min_y max_x max_y")
@@ -35,8 +35,8 @@ TILE_SIZES = {0: 4, 1: 1, 2: 0.25, 3: 0.25}
 for i, arg in enumerate(sys.argv):
     if not len(arg) > 1:
         continue
-    if (arg[0] == '-') and arg[1].isdigit():
-        sys.argv[i] = ' ' + arg
+    if (arg[0] == "-") and arg[1].isdigit():
+        sys.argv[i] = " " + arg
 
 
 class TileHeader(ctypes.Structure):
@@ -70,11 +70,11 @@ class TileResolver:
         # pre-populate the available paths
         if self._is_tar:
             self.normalized_tile_paths = sorted(
-                [Path(m.name) for m in self._tar_obj.getmembers() if m.name.endswith('.gph')]
+                [Path(m.name) for m in self._tar_obj.getmembers() if m.name.endswith(".gph")]
             )
         else:
             self.normalized_tile_paths = sorted(
-                p.relative_to(self.path) for p in self.path.rglob('*.gph')
+                p.relative_to(self.path) for p in self.path.rglob("*.gph")
             )
 
     def __del__(self):
@@ -111,7 +111,7 @@ parser.add_argument(
     "--inline-config",
     help="Inline JSON config, will override --config JSON if present",
     type=str,
-    default='{}',
+    default="{}",
 )
 parser.add_argument(
     "-e",
@@ -143,7 +143,7 @@ parser.add_argument(
     "-v",
     "--verbosity",
     help="Accumulative verbosity flags; -v: INFO, -vv: DEBUG",
-    action='count',
+    action="count",
     default=0,
 )
 
@@ -182,7 +182,7 @@ def get_tiles_with_geojson(tile_resolver_: TileResolver, geojson_dir: Path):
         )
         sys.exit(1)
 
-    if not geojson_dir.is_dir() or not len(list(geojson_dir.glob('*.geojson'))) > 0:
+    if not geojson_dir.is_dir() or not len(list(geojson_dir.glob("*.geojson"))) > 0:
         LOGGER.critical(
             f"Geojson directory does not exist or contains no GeoJSON files: {geojson_dir.resolve()}"
         )
@@ -240,14 +240,14 @@ def get_tiles_with_bbox(tile_resolver_: TileResolver, bbox_str: str):
 
 def get_tile_level_id(path: str) -> List[str]:
     """Returns both level and tile ID"""
-    return path[:-4].split('/', 1)
+    return path[:-4].split("/", 1)
 
 
 def get_tile_id(path: str) -> int:
     """Turns a tile path into a numeric GraphId, including the level"""
     level, idx = get_tile_level_id(path)
 
-    return int(level) | (int(idx.replace('/', '')) << 3)
+    return int(level) | (int(idx.replace("/", "")) << 3)
 
 
 def get_tar_info(name: str, size: int) -> tarfile.TarInfo:
@@ -264,9 +264,9 @@ def write_index_to_tar(tar_fp_: Path):
     """Loop through all tiles and write the correct index.bin file to the tar"""
     # get the offset and size from the tarred tile members
     index: List[Tuple[int, int, int]] = list()
-    with tarfile.open(tar_fp_, 'r|') as tar:
+    with tarfile.open(tar_fp_, "r|") as tar:
         for member in tar.getmembers():
-            if member.name.endswith('.gph'):
+            if member.name.endswith(".gph"):
                 LOGGER.debug(
                     f"Tile {member.name} with offset: {member.offset_data}, size: {member.size}"
                 )
@@ -274,7 +274,7 @@ def write_index_to_tar(tar_fp_: Path):
                 index.append((member.offset_data, get_tile_id(member.name), member.size))
 
     # write back the actual index info
-    with open(tar_fp_, 'r+b') as tar:
+    with open(tar_fp_, "r+b") as tar:
         # jump to the data block, index.bin is the first file
         tar.seek(BLOCKSIZE)
         for entry in index:
@@ -290,13 +290,13 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
 
     # write the in-memory index file
     index_size = INDEX_BIN_SIZE * tiles_count
-    index_fd = BytesIO(b'0' * index_size)
+    index_fd = BytesIO(b"0" * index_size)
     index_fd.seek(0)
 
     # first add the index file, then the sorted tiles to the tarfile
     # TODO: come up with a smarter strategy to cluster the tiles in the tar
     extract_fp.parent.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(extract_fp, 'w') as tar:
+    with tarfile.open(extract_fp, "w") as tar:
         tar.addfile(get_tar_info(INDEX_FILE, index_size), index_fd)
         tile_resolver_.add_to_tar(tar)
 
@@ -316,7 +316,7 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
 
     # we already have the right size of the index file, simply reset it
     index_fd.seek(0)
-    with tarfile.open(extract_fp) as tar_in, tarfile.open(traffic_fp, 'w') as tar_traffic:
+    with tarfile.open(extract_fp) as tar_in, tarfile.open(traffic_fp, "w") as tar_traffic:
         # this will let us do seeks
         in_fileobj = tar_in.fileobj
 
@@ -327,7 +327,7 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
         # loop over all routing tiles and create fixed-size traffic tiles
         # based on the directed edge count
         for tile_in in tar_in.getmembers():
-            if not tile_in.name.endswith('.gph'):
+            if not tile_in.name.endswith(".gph"):
                 continue
             # jump to the data's offset and skip the uninteresting bytes
             in_fileobj.seek(tile_in.offset_data + GRAPHTILE_SKIP_BYTES)
@@ -353,7 +353,7 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
             traffic_size = TRAFFIC_SPEED_SIZE * tile_header.directededgecount_
             tar_traffic.addfile(
                 get_tar_info(tile_in.name, len(header_bytes) + traffic_size),
-                BytesIO(header_bytes + b'\0' * traffic_size),
+                BytesIO(header_bytes + b"\0" * traffic_size),
             )
 
             LOGGER.debug(
@@ -365,7 +365,7 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
     LOGGER.info(f"Finished creating the traffic extract at {traffic_fp}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parser.parse_args()
 
     # set the right logger level
@@ -402,7 +402,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     # prefer the tar file to extract from, fall back to the tile dir
-    tiles_dir: Path = Path(config["mjolnir"].get("tile_dir", '/dev/null'))
+    tiles_dir: Path = Path(config["mjolnir"].get("tile_dir", "/dev/null"))
     # optionally use the tile extract to find the tiles
     if args.extract_tar and (tiles_extract_in := Path(config["mjolnir"].get("tile_extract"))).is_file():
         tile_resolver = TileResolver(tiles_extract_in)

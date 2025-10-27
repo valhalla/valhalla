@@ -177,20 +177,6 @@ protected:
                   const valhalla::Matrix& matrix);
 
   /**
-   * Iterate the forward search from the source/origin location.
-   * @param  index        Index of the source location.
-   * @param  n            Iteration counter.
-   * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  time_info    The origin's timeinfo object
-   * @param  invariant    Whether time should be treated as invariant
-   */
-  void ForwardSearch(const uint32_t index,
-                     const uint32_t n,
-                     baldr::GraphReader& graphreader,
-                     const baldr::TimeInfo& time_info,
-                     const bool invariant);
-
-  /**
    * Check if the edge on the forward search connects to a reached edge
    * on the reverse search tree.
    * @param  source  Source index.
@@ -252,14 +238,6 @@ protected:
   void UpdateStatus(const uint32_t source, const uint32_t target);
 
   /**
-   * Iterate the backward search from the target/destination location.
-   * @param  index        Index of the target location.
-   * @param  graphreader  Graph reader for accessing routing graph.
-   * @param  n            Iteration counter.
-   */
-  void BackwardSearch(const uint32_t index, baldr::GraphReader& graphreader, const uint32_t n);
-
-  /**
    * Sets the source/origin locations. Search expands forward from these
    * locations.
    * @param  graphreader   Graph reader for accessing routing graph.
@@ -282,24 +260,6 @@ protected:
   void SetTargets(baldr::GraphReader& graphreader,
                   const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
                   const google::protobuf::RepeatedPtrField<valhalla::Location>& sources);
-
-  /**
-   * Update destinations along an edge that has been settled (lowest cost path
-   * found to the end of edge).
-   * @param   origin_index  Index of the origin location.
-   * @param   locations     List of locations.
-   * @param   destinations  Vector of destination indexes along this edge.
-   * @param   edge          Directed edge
-   * @param   pred          Predecessor information in shortest path.
-   * @param   predindex     Predecessor index in EdgeLabels vector.
-   * @return  Returns true if all destinations have been settled.
-   */
-  bool UpdateDestinations(const uint32_t origin_index,
-                          const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                          std::vector<uint32_t>& destinations,
-                          const baldr::DirectedEdge* edge,
-                          const sif::BDEdgeLabel& pred,
-                          const uint32_t predindex);
 
   /**
    * If time awareness was requested for the CostMatrix algorithm, we need

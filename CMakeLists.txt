@@ -8,7 +8,7 @@ set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(VALHALLA_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ language version to use (default is 17)")
+set(CMAKE_CXX_STANDARD 20 CACHE STRING "C++ language version to use (default is 20)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
@@ -98,7 +98,7 @@ pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
 
 # cURL
 set(curl_target "")
-if (ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+if (ENABLE_HTTP)
   pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
   if (CURL_FOUND)
     target_compile_definitions(PkgConfig::CURL INTERFACE ENABLE_HTTP)
