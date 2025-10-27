@@ -1062,7 +1062,7 @@ public:
           tile->GetSpeed(edge, flow_mask_ & (~baldr::kCurrentFlowMask), time_info.second_of_week);
     }
     float speed_penalty =
-        (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
+        (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * speed_penalty_factor_ : 0.0f;
 
     return speed_penalty;
   }
@@ -1130,6 +1130,7 @@ protected:
   float service_factor_;       // Avoid service roads factor.
   float closure_factor_;       // Avoid closed edges factor.
   float unlit_factor_;         // Avoid unlit edges factor.
+  float speed_penalty_factor_; // Avoid faster edges than top speed factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1278,6 +1279,8 @@ protected:
     service_factor_ = costing_options.service_factor();
     // Closure factor to use for closed edges
     closure_factor_ = costing_options.closure_factor();
+    // Speed penalty factor to use for edges that are faster than the top speed
+    speed_penalty_factor_ = costing_options.speed_penalty_factor();
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
@@ -1395,12 +1398,15 @@ struct BaseCostingOptionsConfig {
 
   midgard::ranged_default_t<float> height_;
   midgard::ranged_default_t<float> width_;
+  midgard::ranged_default_t<float> length_;
+  midgard::ranged_default_t<float> weight_;
 
   midgard::ranged_default_t<float> use_tracks_;
   midgard::ranged_default_t<float> use_living_streets_;
   midgard::ranged_default_t<float> use_lit_;
 
   midgard::ranged_default_t<float> closure_factor_;
+  midgard::ranged_default_t<float> speed_penalty_factor_;
 
   bool exclude_unpaved_;
   bool exclude_bridges_;
