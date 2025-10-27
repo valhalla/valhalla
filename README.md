@@ -104,6 +104,18 @@ The Python packages don't only contain the Python bindings, they also provide ac
 
 To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the desired wheel from [PyPI](https://pypi.org/project/pyvalhalla-weekly), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
 
+### Via NodeJS bindings
+
+[![npm version](https://img.shields.io/npm/v/@valhallajs/valhallajs/latest?label=@valhallajs/valhallajs@latest)](https://www.npmjs.com/package/@valhallajs/valhallajs) [![npm version](https://img.shields.io/npm/v/@valhallajs/valhallajs/weekly?label=@valhallajs/valhallajs@weekly)](https://www.npmjs.com/package/@valhallajs/valhallajs)
+
+We provide high-level NodeJS binding:
+
+```bash
+npm install @valhallajs/valhallajs
+```
+
+For more details, see the [NodeJS README](./src/bindings/nodejs/README.md).
+
 ## Contributing
 
 We :heart: contributions to Valhalla. They could be non-technical, e.g. translations into other languages via [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) or documentation improvements, or technical ones like bug fixes or feature implementations. It's important to open an issue before setting out to work on a PR.

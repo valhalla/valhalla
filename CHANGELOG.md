@@ -166,6 +166,7 @@
    * CHANGED: Replace `oneof bool` to `bool` for default false options [#5541](https://github.com/valhalla/valhalla/pull/5541)
    * CHANGED: Optimise stopimpact calls in TransitionCost [#5545](https://github.com/valhalla/valhalla/pull/5545)
    * CHANGED: Optimise best_transition_cost function [#5537](https://github.com/valhalla/valhalla/pull/5537)
+   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
    * ADDED `thor.costmatrix.min_iterations` config param [#5559](https://github.com/valhalla/valhalla/pull/5559)
    * CHANGED: Broke out exceptions.h from worker.h [#5571](https://github.com/valhalla/valhalla/pull/5571)
    * ADDED: `checksum` to GraphTileHeader, a 64bit MD5 hash of the OSM PBFs [#5542](https://github.com/valhalla/valhalla/pull/5542)
