@@ -40,11 +40,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-env:
-  # only publish to NPM on tags or schedule
-  PUBLISH_NPM: ${{ (startsWith(github.ref, 'refs/tags') || (github.event_name == 'schedule')) && (github.repository_owner == 'valhalla') }}
-
-
 jobs:
   build_nodejs_bindings:
     name: Build Node.js bindings (${{ matrix.os }}-${{ matrix.arch }})
