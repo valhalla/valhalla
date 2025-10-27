@@ -273,6 +273,22 @@ bool IsBridgingEdgeRestricted(baldr::GraphReader& graphreader,
                               const sif::BDEdgeLabel& rev_pred,
                               const sif::cost_ptr_t& costing);
 
+/**
+ * Estimate the start time for the non-time aware expansion (i.e. reverse for depart_at/current,
+ * forward for arrive_by).
+ *
+ * @param reader a graph reader instance
+ * @param origin the origin location
+ * @param destination the destination location
+ * @param factor the factor to multiply with the
+ *               with the optimal duration to get closer to
+ *               a more realistic estimate
+ * @param time_info the time info object at the start of the opposing expansion
+ * @param costing per mode costing
+ * @param arrive_by whether the date time type is arrive_by
+ *
+ * @returns a time info object to use at the start of the non-time aware expansion
+ */
 baldr::TimeInfo EstimateReverseStartTime(baldr::GraphReader& reader,
                                          valhalla::Location& origin,
                                          valhalla::Location& destination,

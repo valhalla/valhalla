@@ -451,7 +451,7 @@ const std::string& Expansion_EdgeStatus_Enum_Name(const Expansion_EdgeStatus sta
 bool Options_ReverseTimeTracking_Enum_Parse(const std::string& strategy,
                                             Options::ReverseTimeTracking* f) {
   static const std::unordered_map<std::string, Options::ReverseTimeTracking> strategies{
-      {"invalid", Options_ReverseTimeTracking_invalid},
+      {"disabled", Options_ReverseTimeTracking_disabled},
       {"heuristic", Options_ReverseTimeTracking_heuristic},
   };
   auto i = strategies.find(strategy);

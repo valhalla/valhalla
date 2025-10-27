@@ -368,7 +368,7 @@ For example a bus request with the result in Spanish using the OSRM (Open Source
 | `roundabout_exits` | A boolean indicating whether exit instructions at roundabouts should be added to the output or not. Default is true. |
 | `admin_crossings` | When present and `true`, the successful route summary will include the two keys `admins` and `admin_crossings`. `admins` is an array of administrative regions the route lies within. `admin_crossings` is an array of objects that contain `from_admin_index` and `to_admin_index`, which are indices into the `admins` array. They also contain `from_shape_index` and `to_shape_index`, which are start and end indices of the edge along which an administrative boundary is crossed. |
 | `turn_lanes` | When present and `true`, each maneuver in the route response can include a `lanes` array describing lane-level guidance. The lanes array details possible `directions`, as well as which lanes are `valid` or `active` for following the maneuver. |
-| `reverse_time_tracking` | Which time tracking strategy to use on the non-time aware expansion in the bidirectional routing algorithm: `invalid` will assume no time, `heuristic` will try a best guess based on the bee line distance between origin and destination. Default `heuristic` |
+| `reverse_time_tracking` | Which time tracking strategy to use on the non-time aware expansion in the bidirectional routing algorithm: `disabled` will assume no time, `heuristic` will try a best guess based on the bee line distance between origin and destination. Default `heuristic` |
 
 [openlr]: https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 

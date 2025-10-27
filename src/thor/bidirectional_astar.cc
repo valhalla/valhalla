@@ -402,11 +402,8 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
   uint32_t shortcuts = 0;
 
   // Update the time information even if time is invariant to account for timezones
-  auto seconds_offset = (invariant || !time_info.valid) ? 0.f : pred.cost().secs;
+  auto seconds_offset = invariant ? 0.f : pred.cost().secs;
 
-  // either we're expanding the reverse tree and the date time type is arrive_by,
-  // or we're expanding the reverse tree and the time type is not arrive_by,
-  // in either case, we're on the time aware branch and so we need to update the time info
   auto offset_time = FORWARD
                          ? time_info.forward(seconds_offset, static_cast<int>(nodeinfo->timezone()))
                          : time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
@@ -1508,15 +1505,14 @@ TimeInfo EstimateReverseStartTime(GraphReader& reader,
   auto seconds = costing->BeeLineTimeEstimate(dist, factor);
   LOG_DEBUG("Estimated seconds: " + std::to_string(seconds));
 
-  graph_tile_ptr tile = nullptr;
   valhalla::PathEdge& edge = arrive_by ? origin_pathedge : dest_pathedge;
 
   // we need to get the node info either from the edge's start or end node
   // for the timezone info
   GraphId edgeid(edge.graph_id());
-  tile = reader.GetGraphTile(edgeid);
+  graph_tile_ptr tile = reader.GetGraphTile(edgeid);
 
-  if (tile == nullptr) {
+  if (!tile) {
     return TimeInfo::invalid();
   }
 
@@ -1526,17 +1522,19 @@ TimeInfo EstimateReverseStartTime(GraphReader& reader,
   if (!endtile) {
     return TimeInfo::invalid();
   }
+
   const NodeInfo* nodeinfo = nullptr;
-  if (arrive_by) {
+  if (edge.percent_along() > .5) {
     nodeinfo = endtile->node(directededge->endnode());
-    return time_info.forward(seconds, static_cast<int>(nodeinfo->timezone()));
   } else {
-    // in case of depart_at, we want the start node of our correlated edge
+    // get the start node if that one's closer
     auto opp_edge = endtile->directededge(endtile->node(directededge->endnode())->edge_index() +
                                           directededge->opp_index());
     nodeinfo = tile->node(opp_edge->endnode());
-    return time_info.reverse(seconds, static_cast<int>(nodeinfo->timezone()));
   }
+
+  return arrive_by ? time_info.forward(seconds, static_cast<int>(nodeinfo->timezone()))
+                   : time_info.reverse(seconds, static_cast<int>(nodeinfo->timezone()));
 }
 
 } // namespace thor
