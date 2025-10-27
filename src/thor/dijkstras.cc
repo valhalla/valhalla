@@ -1002,7 +1002,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
       // Get cost
       Cost cost = costing->EdgeCost(directededge, GraphId(kInvalidGraphId), endtile) *
                   (1.0f - edge.percent_along()) *
-                  costing_->PartialEdgeFactor(edgeid, (1.0f - edge.percent_along()));
+                  costing->PartialEdgeFactor(edgeid, (1.0f - edge.percent_along()));
 
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
