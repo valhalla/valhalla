@@ -123,7 +123,7 @@ protected:
                                       [](baldr::GraphReader& reader, baldr::TrafficTile& tile,
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
                                         (void)reader, (void)tile, (void)index;
-                                        SetLiveSpeed(current, UNKNOWN_TRAFFIC_SPEED_RAW);
+                                        SetLiveSpeed(current, baldr::UNKNOWN_TRAFFIC_SPEED_RAW);
                                       });
   }
 

@@ -21,7 +21,7 @@ void check_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& s
   if (shape.size() < 2) {
     throw valhalla_exception_t{123};
     // Validate shape is not larger than the configured max
-  } else if (shape.size() > max_shape) {
+  } else if (shape.size() > static_cast<int>(max_shape)) {
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) + "). The limit is " +
                                         std::to_string(max_shape)};
   };
@@ -59,28 +59,12 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
   }
 }
 
-void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
-
-  // Validate the best paths count is not less than 1
-  if (best_paths < 1) {
-    throw valhalla_exception_t{158, "(" + std::to_string(best_paths) +
-                                        "). The best_paths lower limit is 1"};
-  };
-
-  // Validate the best paths count is not larger than the configured best paths max
-  if (best_paths > max_best_paths) {
-    throw valhalla_exception_t{158, "(" + std::to_string(best_paths) +
-                                        "). The best_paths upper limit is " +
-                                        std::to_string(max_best_paths)};
-  }
-}
-
 void check_alternates_shape(unsigned int alternates,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                             size_t max_alternates_shape) {
 
   // Validate shape is not larger than the configured best paths shape max
-  if ((alternates > 1) && (shape.size() > max_alternates_shape)) {
+  if ((alternates > 1) && (shape.size() > static_cast<int>(max_alternates_shape))) {
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) +
                                         "). The best paths shape limit is " +
                                         std::to_string(max_alternates_shape)};

@@ -13,11 +13,15 @@ on:
     - cron: "0 0 * * 0"
   push:
     paths-ignore:
-      - "*.md"
+      - "**.md"
       - .circleci/
       - docs/
       - run_route_scripts/
       - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
     branches:
       - master
     tags:
@@ -29,6 +33,10 @@ on:
       - docs/
       - run_route_scripts/
       - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
+      - ".tx"
+      - ".git*"
     branches:
       - master
   workflow_dispatch:
@@ -166,9 +174,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # see https://github.com/actions/runner-images/issues/12912
-          brew uninstall cmake
-          brew untap local/pinned
           HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
           export PATH="$(brew --prefix python)/libexec/bin:$PATH"
           sudo python -m pip install --break-system-packages requests shapely

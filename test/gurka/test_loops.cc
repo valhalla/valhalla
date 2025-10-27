@@ -4,6 +4,7 @@
 #include <gtest/gtest.h>
 
 using namespace valhalla;
+using namespace valhalla::baldr;
 
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
 

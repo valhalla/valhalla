@@ -61,7 +61,7 @@ if(ENABLE_DATA_TOOLS)
     graphtilebuilder graphreader hierarchylimits isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
     names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban tar_index
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
-  if(ENABLE_HTTP)
+  if(ENABLE_HTTP AND ENABLE_SERVICES)
     list(APPEND tests http_tiles)
     # TODO: fix https://github.com/valhalla/valhalla/issues/3740
     # list(APPEND tests http_tiles elevation_builder)
@@ -363,7 +363,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
   add_dependencies(run-graphbuilder build_timezones)
-  if(ENABLE_HTTP)
+  if(ENABLE_HTTP AND ENABLE_SERVICES)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
 endif()
@@ -372,6 +372,7 @@ if(ENABLE_SERVICES)
   add_dependencies(run-skadi_service test_directories)
 endif()
 
+# ENABLE_DATA_TOOLS is needed for utrecht_tiles
 if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   find_package(Python COMPONENTS Interpreter)
   add_custom_command(OUTPUT python_valhalla.log

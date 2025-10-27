@@ -1,3 +1,4 @@
+#include "route_serializer_valhalla.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
@@ -13,8 +14,6 @@ using namespace valhalla::odin;
 using namespace valhalla::baldr;
 
 namespace {
-
-namespace valhalla_serializers {
 /*
 valhalla output looks like this:
 {
@@ -226,7 +225,8 @@ void turn_lanes(const TripLeg& leg,
                 rapidjson::writer_wrapper_t& writer) {
 
   // Read edge from a trip leg
-  if (maneuver.begin_path_index() == 0 || maneuver.begin_path_index() >= leg.node_size())
+  if (maneuver.begin_path_index() == 0 ||
+      maneuver.begin_path_index() >= static_cast<uint32_t>(leg.node_size()))
     return;
 
   auto prev_index = maneuver.begin_path_index() - 1;
@@ -673,7 +673,9 @@ void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writ
   }
   writer.end_array(); // legs
 }
+} // namespace
 
+namespace valhalla_serializers {
 std::string serialize(Api& api) {
   // build up the json object, reserve 4k bytes
   rapidjson::writer_wrapper_t writer(4096);
@@ -726,4 +728,3 @@ std::string serialize(Api& api) {
   return writer.get_buffer();
 }
 } // namespace valhalla_serializers
-} // namespace

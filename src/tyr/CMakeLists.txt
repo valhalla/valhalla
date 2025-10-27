@@ -9,9 +9,7 @@ set(sources
   route_summary_cache.cc
   serializers.cc
   transit_available_serializer.cc
-  expansion_serializer.cc)
-
-set(sources_with_warnings
+  expansion_serializer.cc
   locate_serializer.cc
   route_serializer.cc
   route_serializer_valhalla.cc

@@ -374,8 +374,9 @@ inline void build_pbf(const nodelayout& node_locations,
   objects.sort(object_order_type_unsigned_id_version{});
 
   // Write out the objects in sorted order
-  auto out = osmium::io::make_output_iterator(writer);
-  std::copy(objects.begin(), objects.end(), out);
+  for (const auto& obj : objects) {
+    writer(obj);
+  }
 
   // Explicitly close the writer. Will throw an exception if there is
   // a problem. If you wait for the destructor to close the writer, you
@@ -500,7 +501,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
       }
       // Now, see if the endnode for this edge is our end_node
       auto de_endnode = forward_directed_edge->endnode();
-      graph_tile_ptr reverse_tile = tile;
+      baldr::graph_tile_ptr reverse_tile = tile;
       auto de_endnode_coordinates =
           reader.GetGraphTile(de_endnode, reverse_tile)->get_node_ll(de_endnode);
 
@@ -513,13 +514,14 @@ findEdge(valhalla::baldr::GraphReader& reader,
             if (tile->edgeinfo(forward_directed_edge).wayid() == way_id) {
 
               // Skip any edges that are not drivable inbound.
-              if (!(forward_directed_edge->forwardaccess() & kVehicularAccess))
+              if (!(forward_directed_edge->forwardaccess() & baldr::kVehicularAccess))
                 continue;
 
               auto forward_edge_id = tile_id;
               forward_edge_id.set_id(i);
-              graph_tile_ptr reverse_tile = nullptr;
-              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              baldr::graph_tile_ptr reverse_tile = nullptr;
+              baldr::GraphId reverse_edge_id =
+                  reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
               auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
               return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                      reverse_directed_edge);
@@ -531,8 +533,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
             if (name == way_name) {
               auto forward_edge_id = tile_id;
               forward_edge_id.set_id(i);
-              graph_tile_ptr reverse_tile = nullptr;
-              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              baldr::graph_tile_ptr reverse_tile = nullptr;
+              baldr::GraphId reverse_edge_id =
+                  reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
               auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
               return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                      reverse_directed_edge);

@@ -34,8 +34,10 @@ if [[ "${build_elevation}" == "True" ]] || [[ "${build_elevation}" == "Force" ]]
 fi
 # if there's no transit tiles yet, but it should build transit, then do that; or force and remove
 if [[ "${build_transit}" == "Force" ]] || (! [[ -d ${TRANSIT_DIR} ]] && [[ "${build_transit}" == "True" ]]) || ([[ $(find ${TRANSIT_DIR} -maxdepth 1 -type d | wc -l) -eq 1 ]] && [[ "${build_transit}" == "True" ]]); then
-  rm -r ${TRANSIT_DIR} 2> /dev/null
   do_transit="True"
+  if [[ -d ${TRANSIT_DIR} ]]; then
+    rm -r ${TRANSIT_DIR}
+  fi
   if ! [[ -d ${GTFS_DIR} ]]; then
     echo "WARNING: Transit build requested, but no GTFS datasets found at ${GTFS_DIR}, skipping transit.."
     do_transit="False"
@@ -115,7 +117,7 @@ files=$(echo $files | xargs)
 # be careful how to write the config (mostly for restart scenarios where env vars are true all of a sudden)
 if test -f "${CONFIG_FILE}"; then
 
-  if [[ "${update_existing_config}" == "True" ]]; then 
+  if [[ "${update_existing_config}" == "True" ]]; then
     echo "INFO: Found existing valhalla.json. Updating possibly missing entries."
 
     # create temporary default config
@@ -252,8 +254,12 @@ if [[ "${do_build}" == "True" ]] || [[ $updated_default_speed_config == "True" ]
   echo "==============================="
   echo "= Enhancing the initial graph ="
   echo "==============================="
-  valhalla_build_tiles -c ${CONFIG_FILE} -s enhance ${files} ||
 
-  echo "INFO: Successfully built files: ${files}"
-  add_hashes "${files}"
+  if valhalla_build_tiles -c "${CONFIG_FILE}" -s enhance ${files}; then
+    echo "INFO: Successfully built files: ${files}"
+    add_hashes "${files}"
+  else
+    echo "ERROR: valhalla_build_tiles failed; not hashing." >&2
+    exit 1
+  fi
 fi

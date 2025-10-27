@@ -92,7 +92,7 @@ protected:
   uint8_t travel_type_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  sif::cost_ptr_t costing_;
 
   // Hierarchy limits
   std::vector<HierarchyLimits> hierarchy_limits_forward_;
@@ -176,7 +176,7 @@ protected:
                           const uint32_t pred_idx,
                           const EdgeMetadata& meta,
                           uint32_t& shortcuts,
-                          const graph_tile_ptr& tile,
+                          const baldr::graph_tile_ptr& tile,
                           const baldr::TimeInfo& time_info);
   /**
    * Add edges at the origin to the forward adjacency list.
@@ -264,12 +264,12 @@ protected:
 // |<-------   PATCH_PATH -------------->|
 //
 // If no restriction triggers, it returns true and the edge is allowed
-bool IsBridgingEdgeRestricted(valhalla::baldr::GraphReader& graphreader,
+bool IsBridgingEdgeRestricted(baldr::GraphReader& graphreader,
                               std::vector<sif::BDEdgeLabel>& edge_labels_fwd,
                               std::vector<sif::BDEdgeLabel>& edge_labels_rev,
                               const sif::BDEdgeLabel& fwd_pred,
                               const sif::BDEdgeLabel& rev_pred,
-                              const std::shared_ptr<sif::DynamicCost>& costing);
+                              const sif::cost_ptr_t& costing);
 
 } // namespace thor
 } // namespace valhalla
