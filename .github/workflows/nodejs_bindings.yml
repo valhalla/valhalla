@@ -79,17 +79,25 @@ jobs:
         if: matrix.os == 'macos'
         run: |
           HOMEBREW_NO_AUTO_UPDATE=1 brew install boost protobuf libspatialite luajit spatialite-tools dylibbundler
+      
+      # TODO: move to manylinux image
+      - name: Setup Python alias (Linux)
+        if: matrix.os == 'linux'
+        run: ln -s $(which python3.12) /usr/local/bin/python
+
       - name: Build Valhalla with Node.js bindings
         run: |
-          ${{ matrix.os == 'linux' && 'export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"' || '' }}
-          # since we are running in a container, we need to set the ccache directory to folder accessible from GHA runner
-          ${{ matrix.os == 'linux' && 'export CCACHE_DIR=$GITHUB_WORKSPACE/.ccache' || '' }}
-          mkdir -p build
+          if [ "${{ matrix.os }}" = "linux" ]; then
+            # we have a few packages installed to the system as well as built from source
+            # we need to prioritize the ones built from source
+            export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
+            # since we are running in a container, we need to set the ccache directory to folder accessible from GHA runner
+            export CCACHE_DIR=$GITHUB_WORKSPACE/.ccache
+          fi
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
           -DENABLE_NODE_BINDINGS=ON \
-          -DENABLE_HTTP=OFF \
           -DENABLE_SERVICES=OFF \
           -DENABLE_GDAL=OFF \
           -DENABLE_TESTS=OFF \
@@ -99,17 +107,16 @@ jobs:
       
       - name: Bundle
         run: |
-          ${{ matrix.os == 'linux' && 'export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"' || '' }}
           NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
           OUTPUT_DIR="nodejs_dist"
 
-          python3.12 -m venv venv
+          python -m venv venv
           source venv/bin/activate
           pip install macholib==1.16.3
           
-          VALHALLA_EXES="build/valhalla_build_tiles build/valhalla_build_admins build/valhalla_add_predicted_traffic build/valhalla_add_landmarks build/valhalla_ingest_transit build/valhalla_convert_transit"
+          VALHALLA_EXES="build/valhalla_build_tiles build/valhalla_build_extract build/valhalla_build_admins build/valhalla_add_predicted_traffic build/valhalla_add_landmarks build/valhalla_ingest_transit build/valhalla_convert_transit"
 
-          python3.12 src/bindings/nodejs/scripts/bundle.py \
+          python src/bindings/nodejs/scripts/bundle.py \
             $NODE_FILE $VALHALLA_EXES \
             $OUTPUT_DIR
       
@@ -139,74 +146,8 @@ jobs:
         with:
           path: artifacts
 
-      - name: Set package version
-        run: |
-          # Parse version from valhalla/valhalla.h (e.g., 3.5.1)
-          MAJOR=$(grep -oP '#define VALHALLA_VERSION_MAJOR \K\d+' valhalla/valhalla.h)
-          MINOR=$(grep -oP '#define VALHALLA_VERSION_MINOR \K\d+' valhalla/valhalla.h)
-          PATCH=$(grep -oP '#define VALHALLA_VERSION_PATCH \K\d+' valhalla/valhalla.h)
-          BASE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          
-          # Determine version based on event type
-          if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]]; then
-            # For tag releases, use the tag version (strip 'v' prefix if present)
-            TAG_VERSION="${GITHUB_REF#refs/tags/}"
-            TAG_VERSION="${TAG_VERSION#v}"
-            VERSION="${TAG_VERSION}"
-            echo "[INFO] Building RELEASE version: ${VERSION}"
-          else
-            # For weekly/scheduled builds, append date and git hash
-            GIT_HASH=$(git rev-parse --short HEAD)
-            VERSION="${BASE_VERSION}-$(date +%Y%m%d).${GIT_HASH}"
-            echo "[INFO] Building WEEKLY version: ${VERSION}"
-          fi
-          
-          # Update package.json version (package name stays as @valhallajs/valhallajs)
-          cd src/bindings/nodejs
-          npm version "${VERSION}" --no-git-tag-version --allow-same-version
-          
-          echo "[INFO] Updated package.json:"
-          cat package.json | grep -E '"name"|"version"'
-
-      - name: Create NPM package structure
-        run: |
-          mkdir -p valhalla-npm-package
-          
-          # Copy package files
-          cp src/bindings/nodejs/index.js valhalla-npm-package/
-          cp src/bindings/nodejs/index.mjs valhalla-npm-package/
-          cp src/bindings/nodejs/index.d.ts valhalla-npm-package/
-          cp src/bindings/nodejs/package.json valhalla-npm-package/
-          cp src/bindings/nodejs/.npmignore valhalla-npm-package/
-          cp -r src/bindings/nodejs/lib valhalla-npm-package/
-          cp -r src/bindings/nodejs/bin valhalla-npm-package/
-          cp scripts/valhalla_build_config valhalla-npm-package/
-          
-          # Extract and organize bindings by platform
-          pushd artifacts
-          
-          # Process all platforms in a loop
-          for platform in "linux:x64" "linux:arm64" "darwin:arm64"; do
-            os="${platform%%:*}"
-            arch="${platform##*:}"
-            platform_name="${os/darwin/macos}"
-            
-            echo "[INFO] Processing ${platform_name} ${arch}..."
-            mkdir -p ../valhalla-npm-package/${os}/${arch}
-            mv valhalla-nodejs-${platform_name}-${arch}/valhalla_node.node ../valhalla-npm-package/${os}/${arch}/
-            mv valhalla-nodejs-${platform_name}-${arch}/valhalla_* ../valhalla-npm-package/${os}/${arch}/ 2>/dev/null || true
-            mv valhalla-nodejs-${platform_name}-${arch}/lib ../valhalla-npm-package/${os}/${arch}/
-          done
-          
-          popd # artifacts
-          
-          echo "[INFO] Package structure:"
-          tree -L 5 valhalla-npm-package/ 
-          
-          echo "[INFO] Creating NPM package..."
-          pushd valhalla-npm-package
-          npm pack
-          popd # valhalla-npm-package
+      - name: Create NPM package
+        run: ./src/bindings/nodejs/scripts/create-package.sh
 
       - name: Upload NPM package
         uses: actions/upload-artifact@v4

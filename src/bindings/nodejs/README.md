@@ -48,3 +48,15 @@ async function main() {
 
 main();
 ```
+
+## Compatibility
+
+### Node.js Versions
+- Node.js v16.0.0 and all later versions
+- Node.js v15.12.0+
+- Node.js v14.17.0+
+- Node.js v12.22.0+
+
+### Platforms
+- Linux (arm64, x64)
+- macOS (arm64)

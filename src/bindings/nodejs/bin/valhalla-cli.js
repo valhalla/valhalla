@@ -87,7 +87,7 @@ async function printHelp() {
     console.log('Options:');
     console.log('  --help, -h     Show this help message');
     console.log('  --version, -v  Show package version');
-    console.log('  print-bin-path Print the absolute path to the binaries directory\n');
+    console.log('  print_bin_path Print the absolute path to the binaries directory\n');
     
     if (commands.length > 0) {
         console.log(`Available commands (in ${binaryDir}):`);
@@ -183,6 +183,11 @@ async function main() {
     if (command === '--version' || command === '-v') {
         const packageJson = require('../package.json');
         console.log(packageJson.version);
+        process.exit(0);
+    }
+    
+    if (command === 'print_bin_path') {
+        console.log(binaryDir);
         process.exit(0);
     }
     
