@@ -14,10 +14,18 @@ On top of the (very) high-level Python bindings, we package some data-building V
 
 ### Installation
 
-We distribute all currently maintained CPython versions as **binary wheels** for Win64, MacOS (`arm64`) and Linux (`x86_64`) distributions with `glibc>=2.28`. We **do not** offer a source distribution on PyPI.
+We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. We **do not** offer a source distribution on PyPI.
 
 `pip install pyvalhalla` to install the most recent Valhalla **release**.  
 `pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
+
+Or manually in the current Python environment with e.g.
+
+```shell
+git clone https://github.com/valhalla/valhalla
+cd valhalla
+pip install .
+```
 
 > [!TIP]
 > **For developers**: `pip install -e` (editable build) will by default build into a temp directory, so everytime it's invoked it'll rebuild all of libvalhalla. Use the following command to enable real incremental builds:
@@ -50,10 +58,11 @@ We distribute all currently maintained CPython versions as **binary wheels** for
 
 Find a more extended notebook in `./examples`, e.g. how to [use the actor](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/examples/actor_examples.ipynb).
 
-Before using the Python bindings you need to have access to a routable Valhalla graph. Either install Valhalla from source and built the graph from OSM compatible data or use our [Valhalla docker image](https://github.com/valhalla/valhalla/docker/README.md) for a painless experience, e.g. this will build the routing graph for Andorra in `./custom_files`:
+Before using the Python bindings you need to have access to a routable Valhalla graph. Once you installed the `pyvalhalla` package you can create one with
 
 ```shell
-docker run --rm --name valhalla -p 8002:8002 -v $PWD/custom_files:/custom_files -e tile_urls=https://download.geofabrik.de/europe/andorra-latest.osm.pbf ghcr.io/valhalla/valhalla-scripted:latest
+wget https://download.geofabrik.de/europe/andorra-latest.osm.pbf
+python -m valhalla valhalla_build_tiles -c <valhalla.json> andorra-latest.osm.pbf
 ```
 
 Once you have created a graph locally, you can use it like this:
@@ -143,7 +152,7 @@ docker run -dt -v $PWD:/valhalla-py --name valhalla-py --workdir /valhalla-py gh
 docker exec -t valhalla-py /valhalla-py/src/bindings/python/scripts/build_manylinux.sh build_manylinux 3.13
 ```
 
-This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.12 installations.
+This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.13 installations.
 
 ### Testing (**`linux-x86_x64` only**)
 
