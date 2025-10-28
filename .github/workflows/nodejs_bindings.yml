@@ -135,7 +135,7 @@ jobs:
         with:
           sparse-checkout: |
             src/bindings/nodejs/
-            scripts/valhalla_build_*
+            scripts/valhalla_*
             valhalla/valhalla.h
           sparse-checkout-cone-mode: false
           fetch-depth: 0
