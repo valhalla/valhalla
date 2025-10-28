@@ -70,7 +70,7 @@ done
 popd # artifacts
 
 echo "[INFO] Package structure:"
-tree -L 5 valhalla-npm-package/ 
+tree -L 5 -p valhalla-npm-package/ 
 
 echo "[INFO] Creating NPM package..."
 pushd valhalla-npm-package
