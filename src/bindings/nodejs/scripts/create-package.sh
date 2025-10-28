@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # Step 1: Set version
 
 # Parse version from valhalla/valhalla.h (e.g., 3.5.1)
@@ -42,7 +44,11 @@ cp src/bindings/nodejs/README.md valhalla-npm-package/
 cp src/bindings/nodejs/.npmignore valhalla-npm-package/
 cp -r src/bindings/nodejs/lib valhalla-npm-package/
 cp -r src/bindings/nodejs/bin valhalla-npm-package/
-cp scripts/valhalla_build_config valhalla-npm-package/
+
+for exe in valhalla_build_config valhalla_build_elevation valhalla_build_extract valhalla_build_timezones valhalla_get_elevation; do
+  cp scripts/${exe} valhalla-npm-package/
+done
+
 
 # Extract and organize bindings by platform
 pushd artifacts

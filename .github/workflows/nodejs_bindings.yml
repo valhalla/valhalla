@@ -1,10 +1,10 @@
 name: Build Node.js bindings
 
 on:
-  # We run this once a week so we regularly publish weekly builds
+  # We run this once a quarter so we regularly publish quarterly builds
   # but not on _every_ master commit
   schedule:
-    - cron: "0 0 * * 0"
+    - cron: "0 0 1 1,4,7,10 *"
   push:
     paths-ignore:
       - "**.md"
@@ -80,7 +80,7 @@ jobs:
         run: |
           HOMEBREW_NO_AUTO_UPDATE=1 brew install boost protobuf libspatialite luajit spatialite-tools dylibbundler
       
-      # TODO: move to manylinux image
+      # TODO: can we move this to manylinux image?
       - name: Setup Python alias (Linux)
         if: matrix.os == 'linux'
         run: ln -s $(which python3.12) /usr/local/bin/python
@@ -114,7 +114,7 @@ jobs:
           source venv/bin/activate
           pip install macholib==1.16.3
           
-          VALHALLA_EXES="build/valhalla_build_tiles build/valhalla_build_extract build/valhalla_build_admins build/valhalla_add_predicted_traffic build/valhalla_add_landmarks build/valhalla_ingest_transit build/valhalla_convert_transit"
+          VALHALLA_EXES="build/valhalla_build_tiles build/valhalla_build_admins build/valhalla_add_predicted_traffic build/valhalla_add_landmarks build/valhalla_ingest_transit build/valhalla_convert_transit"
 
           python src/bindings/nodejs/scripts/bundle.py \
             $NODE_FILE $VALHALLA_EXES \
@@ -135,7 +135,7 @@ jobs:
         with:
           sparse-checkout: |
             src/bindings/nodejs/
-            scripts/valhalla_build_config
+            scripts/valhalla_build_*
             valhalla/valhalla.h
           sparse-checkout-cone-mode: false
           fetch-depth: 0
