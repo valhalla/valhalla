@@ -158,7 +158,6 @@ def copy_dep(dep_path: str, out_dir: Path) -> None:
     if dest_path.exists():
         return
     
-    print(f"Copying dependency: {dep_path} to {dest_path}")
     shutil.copy2(dep_path, dest_path, follow_symlinks=True)
 
 

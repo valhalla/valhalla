@@ -20,21 +20,6 @@ async function fileExists(filePath) {
     }
 }
 
-// when we publish the package, we lose the executable permissions, so we need to ensure they are set
-async function ensureExecutable(filePath) {
-    try {
-        const stats = await fs.stat(filePath);
-        const hasExecutePerm = !!(stats.mode & fsSync.constants.S_IXUSR);
-        
-        if (!hasExecutePerm) {
-            // Add execute permission for user, group, and others
-            await fs.chmod(filePath, stats.mode | 0o111);
-        }
-    } catch (err) {
-        throw err;
-    }
-}
-
 async function getAvailableCommands() {
     async function listExecutables(dir) {
         try {
@@ -136,15 +121,6 @@ async function runCommand(command, args) {
         console.error(`Tried: ${command}${!command.startsWith('valhalla_') ? ` and valhalla_${command}` : ''}`);
         console.error(`Searched in: ${binaryDir} and ${packageRootDir}`);
         console.error(`Run 'valhalla --help' to see available commands.`);
-        process.exit(1);
-    }
-    
-    // Ensure the binary is executable
-    try {
-        await ensureExecutable(binaryPath);
-    } catch (err) {
-        console.error(`Error ensuring executable permissions for ${binaryPath}:`, err.message);
-        console.error(`Try running: chmod +x ${binaryPath}`);
         process.exit(1);
     }
     
