@@ -237,18 +237,6 @@ public:
     pass_ = pass;
   }
 
-  bool has_excludes() const {
-    return has_excludes_;
-  }
-
-  bool exclude_bridges() const {
-    return exclude_bridges_;
-  }
-
-  bool exclude_tunnels() const {
-    return exclude_tunnels_;
-  }
-
   /**
    * Returns the maximum transfer distance between stops that you are willing
    * to travel for this mode.  It is the max distance you are willing to
