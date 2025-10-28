@@ -21,10 +21,12 @@
 #include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <openssl/evp.h>
 
 #include <filesystem>
 #include <regex>
 
+using boost::property_tree::ptree;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
@@ -38,15 +40,64 @@ const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string tile_manifest_file = "tile_manifest.json";
 const std::string access_file = "access.bin";
-const std::string pronunciation_file = "pronunciation.bin";
 const std::string bss_nodes_file = "bss_nodes.bin";
 const std::string linguistic_node_file = "linguistics_node.bin";
 const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
-const std::string intersections_file = "intersections.bin";
-const std::string shapes_file = "shapes.bin";
+
+uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& tile_dir) {
+  std::sort(paths.begin(), paths.end());
+
+  // uses openssl's API which can build the digest from byte chunks to save memory
+  EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+  std::array<unsigned char, 16> digest{};
+  try {
+    EVP_DigestInit_ex(ctx, EVP_md5(), nullptr);
+
+    std::vector<char> buffer(1 << 26); // 64 MiB
+
+    for (const auto& p : paths) {
+      std::ifstream in(p, std::ios::binary);
+      if (!in) {
+        throw std::runtime_error("Failed to open: " + p);
+      }
+
+      while (in) {
+        in.read(buffer.data(), static_cast<std::streamsize>(buffer.size()));
+        std::streamsize got = in.gcount();
+        if (got > 0) {
+          if (EVP_DigestUpdate(ctx, buffer.data(), static_cast<size_t>(got)) != 1) {
+            throw std::runtime_error("EVP_DigestUpdate failed");
+          }
+        }
+      }
+    }
+
+    unsigned int out_len = 0;
+    if (EVP_DigestFinal_ex(ctx, digest.data(), &out_len) != 1 || out_len != digest.size()) {
+      throw std::runtime_error("EVP_DigestFinal_ex failed");
+    }
+  } catch (...) {
+    EVP_MD_CTX_free(ctx);
+    throw;
+  }
+
+  EVP_MD_CTX_free(ctx);
+
+  // roll the 128 bit digest into a uint64
+  uint64_t lo = 0, hi = 0;
+  for (int i = 0; i < 8; ++i) {
+    lo = (lo << 8) | digest[i];
+    hi = (hi << 8) | digest[8 + i];
+  }
+
+  std::hash<uint64_t> hasher;
+  uint64_t checksum = lo ^ (hasher(hi) + 0x9e3779b97f4a7c15ull + (lo << 12) + (lo >> 4));
+
+  return checksum;
+}
 
 /**
  * Returns true if edge transition is a pencil point u-turn, false otherwise.
@@ -633,6 +684,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
                                          way_nodes_bin, access_bin);
+    osm_data.pbf_checksum_ = get_pbf_checksum(input_files, tile_dir);
 
     // Write the OSMData to files if the end stage is less than enhancing
     if (end_stage <= BuildStage::kEnhance) {

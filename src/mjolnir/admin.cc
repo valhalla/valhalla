@@ -7,6 +7,9 @@
 
 #include <unordered_map>
 
+using namespace valhalla::baldr;
+using namespace valhalla::midgard;
+
 namespace valhalla {
 namespace mjolnir {
 

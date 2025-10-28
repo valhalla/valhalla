@@ -2,10 +2,10 @@
 #include "baldr/graphconstants.h"
 #include "baldr/rapidjson_utils.h"
 #include "proto_conversions.h"
-#include "worker.h"
 
 #ifdef INLINE_TEST
 #include "test.h"
+#include "worker.h"
 
 #include <random>
 #endif
@@ -648,8 +648,8 @@ void ParseTransitCostOptions(const rapidjson::Document& doc,
   // TODO: no base costing parsing because transit doesnt care about any of those options?
 
   JSON_PBF_RANGED_DEFAULT(co, kModeFactorRange, json, "/mode_factor", mode_factor);
-  JSON_PBF_DEFAULT(co, false, json, "/wheelchair", wheelchair);
-  JSON_PBF_DEFAULT(co, false, json, "/bicycle", bicycle);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/wheelchair", wheelchair);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/bicycle", bicycle);
   JSON_PBF_RANGED_DEFAULT(co, kUseBusRange, json, "/use_bus", use_bus);
   JSON_PBF_RANGED_DEFAULT(co, kUseRailRange, json, "/use_rail", use_rail);
   JSON_PBF_RANGED_DEFAULT(co, kUseTransfersRange, json, "/use_transfers", use_transfers);

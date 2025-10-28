@@ -509,6 +509,7 @@ void BuildTileSet(const std::string& ways_file,
       // Information about tile creation
       graphtile.AddTileCreationDate(tile_creation_date);
       graphtile.header_builder().set_dataset_id(osmdata.max_changeset_id_);
+      graphtile.header_builder().set_checksum(osmdata.pbf_checksum_);
 
       // Set the base lat,lon of the tile
       uint32_t id = tile_id.tileid();

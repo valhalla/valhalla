@@ -16,6 +16,7 @@
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::gurka;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 // config for the first three tests

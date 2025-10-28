@@ -20,10 +20,10 @@ python_sources=$(LANG=C find scripts src/bindings/python -type f ! -name "*.md" 
 
 # Python formatter
 echo ${python_sources}
-${py} -m black --config pyproject.toml ${python_sources}
+${py} -m ruff check ${python_sources}
 
 # Python linter
-${py} -m flake8 --config setup.cfg ${python_sources}
+${py} -m ruff format ${python_sources}
 
 # clang-format
 echo "Using $(${py} scripts/clang_format_wrapper.py --version)"

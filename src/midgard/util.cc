@@ -399,10 +399,13 @@ resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double,
 std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<PointLL>& polyline,
                                                          const double length,
                                                          const uint32_t n) {
-  if (polyline.size() == 0) {
+  if (polyline.empty()) {
     return {};
   }
 
+  if (n == 2) {
+    return {polyline.front(), polyline.back()};
+  }
   // Compute sample distance that splits the polyline equally to create n vertices.
   // Divisor is n-1 since there is 1 more vertex than edge on the subdivided polyline.
   double sample_distance = length / (n - 1);
@@ -432,7 +435,7 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
       auto sd = sin(d);
       auto a = sin(d - remaining) / sd;
       auto acs1 = a * cos(lat1);
-      auto b = sin(sample_distance) / sd;
+      auto b = sin(remaining) / sd;
       auto bcs2 = b * cos(lat2);
 
       // find the interpolated point along the arc
@@ -456,6 +459,9 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
     // Append the last polyline point
     resampled.push_back(std::move(polyline.back()));
   } else if (resampled.size() == n) {
+    resampled.back() = polyline.back();
+  } else {
+    resampled.resize(n);
     resampled.back() = polyline.back();
   }
 
