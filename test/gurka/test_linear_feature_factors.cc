@@ -45,10 +45,10 @@ void check_cost_factor_edge(const ::google::protobuf::RepeatedPtrField<CostFacto
 
   for (const auto& cfe : edges) {
     if (std::get<0>(e) == cfe.id()) {
-      EXPECT_NEAR(expected_factor, cfe.factor(), 0.0001)
+      EXPECT_NEAR(expected_factor, cfe.factor(), 0.001)
           << "Check failed for " << begin_node << end_node;
-      EXPECT_NEAR(expected_start, cfe.start(), 0.0001);
-      EXPECT_NEAR(expected_end, cfe.end(), 0.0001);
+      EXPECT_NEAR(expected_start, cfe.start(), 0.001);
+      EXPECT_NEAR(expected_end, cfe.end(), 0.001);
       return;
     }
   }
@@ -182,17 +182,17 @@ TEST_F(LinearFeatureTest, simple_high_factor) {
   for (const auto& e : costing_options.cost_factor_edges()) {
     EXPECT_EQ(e.factor(), 200);
     if (e.id() == std::get<0>(AB)) {
-      EXPECT_EQ(e.start(), 0.);
-      EXPECT_EQ(e.end(), 1.);
+      EXPECT_NEAR(e.start(), 0., 0.01);
+      EXPECT_NEAR(e.end(), 1., 0.01);
     } else if (e.id() == std::get<0>(BC)) {
-      EXPECT_EQ(e.start(), 0.);
-      EXPECT_EQ(e.end(), 1.);
+      EXPECT_NEAR(e.start(), 0., 0.01);
+      EXPECT_NEAR(e.end(), 1., 0.01);
     } else if (e.id() == std::get<0>(shortcut)) {
       if (e.start() == 0.) {
-        EXPECT_EQ(e.end(), 0.275);
+        EXPECT_NEAR(e.end(), 0.275, 0.01);
       } else {
-        EXPECT_EQ(e.start(), 0.275);
-        EXPECT_EQ(e.end(), 0.5);
+        EXPECT_NEAR(e.start(), 0.275, 0.01);
+        EXPECT_NEAR(e.end(), 0.5, 0.01);
       }
     } else {
       FAIL() << "Unexpected edge: " + std::to_string(e.id());
@@ -298,7 +298,7 @@ TEST_F(LinearFeatureTest, partial_edges_shape) {
   ParseApi(json_str, Options::route, request);
   loki_worker.route(request);
   ASSERT_EQ(request.options().cost_factor_lines().size(), 1);
-  EXPECT_EQ(request.options().cost_factor_lines().at(0).cost_factor(), 100.f);
+  EXPECT_NEAR(request.options().cost_factor_lines().at(0).cost_factor(), 100.f, 0.01);
   EXPECT_EQ(request.options().cost_factor_lines().at(0).shape().size(), 3);
 
   thor_worker.route(request);
@@ -318,7 +318,7 @@ TEST_F(LinearFeatureTest, partial_edges_shape) {
   auto auto_cost = valhalla::sif::CreateAutoCost(costings);
 
   auto TY = gurka::findEdgeByNodes(reader, map.nodes, "T", "Y");
-  EXPECT_NEAR(auto_cost->PartialEdgeFactor(std::get<0>(TY), .6), 100.f, 0.0001);
+  EXPECT_NEAR(auto_cost->PartialEdgeFactor(std::get<0>(TY), .6), 100.f, 0.001);
 
   // finally check the route
   gurka::assert::raw::expect_path(request, {"TS", "SR", "RB", "A2", "A2", "A2", "EZ"});

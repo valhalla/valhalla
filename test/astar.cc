@@ -284,7 +284,9 @@ void assert_is_trivial_path(vt::PathAlgorithm& astar,
     case TrivialPathTest::MatchesEdge:
       // Grab time from an edge index
       const DirectedEdge* expected_edge = tile->directededge(assert_type_value);
-      auto expected_cost = mode_costing[int(mode)]->EdgeCost(expected_edge, tile);
+      auto edgeid = tile->header()->graphid();
+      edgeid.set_id(assert_type_value);
+      auto expected_cost = mode_costing[int(mode)]->EdgeCost(expected_edge, edgeid, tile);
       expected_time = expected_cost.secs;
       break;
   };

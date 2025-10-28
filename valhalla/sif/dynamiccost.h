@@ -1177,10 +1177,6 @@ protected:
   // User specified edges to avoid with percent along (for avoiding PathEdges of locations)
   std::unordered_map<baldr::GraphId, float> user_exclude_edges_;
 
-  // User specified edges to cost based on user provided factors
-  std::unordered_map<baldr::GraphId, custom_cost_t> linear_cost_edges_;
-  double min_linear_cost_factor_;
-
   // Weighting to apply to ferry edges
   float ferry_factor_, rail_ferry_factor_;
   float track_factor_;         // Avoid tracks factor.
@@ -1253,6 +1249,10 @@ protected:
 
   // Is it truck?
   bool is_hgv_{false};
+
+  // User specified edges to cost based on user provided factors
+  std::unordered_map<baldr::GraphId, custom_cost_t> linear_cost_edges_;
+  double min_linear_cost_factor_;
 
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
