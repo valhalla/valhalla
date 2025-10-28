@@ -25,12 +25,13 @@ else
 fi
 
 # Update package.json version (package name stays as @valhallajs/valhallajs)
-cd src/bindings/nodejs
+pushd src/bindings/nodejs
 npm version "${VERSION}" --no-git-tag-version --allow-same-version
 
 echo "[INFO] Updated package.json:"
 cat package.json | grep -E '"name"|"version"'
 
+popd # src/bindings/nodejs
 
 # Step 2: Create NPM package structure
 mkdir -p valhalla-npm-package
