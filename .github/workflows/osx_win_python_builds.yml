@@ -162,9 +162,20 @@ jobs:
           name: sdist
           path: dist
 
+      - name: Locate sdist
+        id: sdist
+        shell: bash
+        run: |
+          sdist_path=$(find dist -maxdepth 1 -type f)
+          if ! [ "$(echo "$sdist_path" | wc -l)" -eq 1 ]; then
+            echo "Expected exactly 1 sdist, found ${sdist_path}" >&2
+            exit 1
+          fi
+          echo "sdist_path=$(find dist -maxdepth 1 -type f -print -quit)" >> $GITHUB_OUTPUT
+
       - uses: pypa/cibuildwheel@v2.23.3
         with:
-          package-dir: dist/*.tar.gz   # build wheels from the sdist
+          package-dir: ${{ steps.sdist.outputs.sdist_path }}   # build wheels from the sdist
         env:
           # the host system's "/" is mounted to "/host" in the manylinux container
           CIBW_ENVIRONMENT: >
