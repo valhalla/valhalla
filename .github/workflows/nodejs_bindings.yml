@@ -101,6 +101,7 @@ jobs:
       
       - name: Bundle
         run: |
+          ${{ matrix.os == 'linux' && 'export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"' || '' }}
           NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
           OUTPUT_DIR="nodejs_dist"
 
