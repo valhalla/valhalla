@@ -108,11 +108,9 @@ jobs:
           pip install macholib==1.16.3
           
           VALHALLA_EXES="build/valhalla_build_tiles build/valhalla_build_admins build/valhalla_add_predicted_traffic build/valhalla_add_landmarks build/valhalla_ingest_transit build/valhalla_convert_transit"
-          ls -lR build/
           python src/bindings/nodejs/scripts/bundle.py \
             $NODE_FILE $VALHALLA_EXES \
             $OUTPUT_DIR
-          ls -lR $OUTPUT_DIR
       
       # we do this to preserve the executable permissions of the binaries (they are lost when we use `actions/upload-artifact`)
       - name: Tar artifacts
@@ -234,7 +232,7 @@ jobs:
     name: Publish to NPM
     runs-on: ubuntu-latest
     needs: [verify_nodejs_package]
-    if: ${{ (startsWith(github.ref, 'refs/tags/') || (github.event_name == 'schedule')) && (github.repository_owner == 'valhalla') }}
+    #if: ${{ (startsWith(github.ref, 'refs/tags/') || (github.event_name == 'schedule')) && (github.repository_owner == 'valhalla') }}
     steps:
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -255,7 +253,7 @@ jobs:
           if [[ "${{ startsWith(github.ref, 'refs/tags/') }}" == "true" ]]; then
             NPM_TAG="latest"
           else
-            NPM_TAG="weekly"
+            NPM_TAG="periodic"
           fi
           
           echo "[INFO] Publishing to NPM with tag: ${NPM_TAG}..."
