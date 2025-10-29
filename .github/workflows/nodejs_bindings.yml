@@ -113,11 +113,15 @@ jobs:
             $OUTPUT_DIR
           ls -lR $OUTPUT_DIR
       
+      # we do this to preserve the executable permissions of the binaries (they are lost when we use `actions/upload-artifact`)
+      - name: Tar artifacts
+        run: tar -cvf nodejs_dist.tar nodejs_dist/
+      
       - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
         with:
           name: valhalla-nodejs-${{ matrix.os }}-${{ matrix.arch }}
-          path: nodejs_dist/
+          path: nodejs_dist.tar
   
   package_nodejs_bindings:
     name: Package Node.js bindings for NPM
@@ -138,6 +142,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+
+      - name: Untar artifacts
+        run: |
+          for tar_file in artifacts/valhalla-nodejs-*/*.tar; do
+            echo "Extracting $tar_file..."
+            tar -xvf "$tar_file" -C "$(dirname "$tar_file")"
+            rm "$tar_file"
+          done
 
       - name: Create NPM package
         run: ./src/bindings/nodejs/scripts/create-package.sh
