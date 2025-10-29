@@ -275,7 +275,7 @@ jobs:
     env:
       BUILD_TYPE: Release
       MSVC_VERSION: "2022"
-      VCPKG_VERSION: "5e5d0e1"
+      VCPKG_VERSION: "0e39c10"
       VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
       VCPKG_DISABLE_COMPILER_TRACKING: ON
     steps:
