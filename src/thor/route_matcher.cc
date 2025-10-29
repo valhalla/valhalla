@@ -423,12 +423,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
         // Get the cost of traversing the edge
         uint8_t flow_sources;
         elapsed +=
-            mode_costing[static_cast<int>(mode)]->EdgeCost(de, GraphId(kInvalidGraphId),
-                                                           begin_edge_tile, offset_time_info,
-                                                           flow_sources) *
-            (1.f - edge.percent_along()) *
-            mode_costing[static_cast<int>(mode)]->PartialEdgeFactor(graphid,
-                                                                    1.f - edge.percent_along());
+            mode_costing[static_cast<int>(mode)]->PartialEdgeCost(de, graphid, begin_edge_tile,
+                                                                  offset_time_info, flow_sources,
+                                                                  edge.percent_along(), 1.0f);
         // overwrite time with timestamps
         if (use_timestamps)
           elapsed.secs = options.shape(index).time() - options.shape(0).time();
@@ -514,11 +511,10 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label,
                                                          end_edge_tile, reader_getter);
           uint8_t flow_sources;
-          elapsed += transition_cost +
-                     costing->EdgeCost(end_de, GraphId(kInvalidGraphId), end_edge_tile,
-                                       offset_time_info, flow_sources) *
-                         end_edge.percent_along() *
-                         costing->PartialEdgeFactor(end_edge_graphid, end_edge.percent_along());
+          elapsed +=
+              transition_cost + costing->PartialEdgeCost(end_de, end_edge_graphid, end_edge_tile,
+                                                         offset_time_info, flow_sources, 0.f,
+                                                         end_edge.percent_along());
           // overwrite time with timestamps
           if (use_timestamps)
             elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
@@ -542,13 +538,11 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           // Update the elapsed time based on edge cost
           uint8_t flow_sources;
           elapsed +=
-              mode_costing[static_cast<int>(mode)]->EdgeCost(de, GraphId(kInvalidGraphId),
-                                                             begin_edge_tile, time_info,
-                                                             flow_sources) *
-              (end.second.first.percent_along() - edge.percent_along()) *
-              mode_costing[static_cast<int>(mode)]
-                  ->PartialEdgeFactor(GraphId(edge.graph_id()),
-                                      (end.second.first.percent_along() - edge.percent_along()));
+              mode_costing[static_cast<int>(mode)]->PartialEdgeCost(de, GraphId(edge.graph_id()),
+                                                                    begin_edge_tile, time_info,
+                                                                    flow_sources,
+                                                                    edge.percent_along(),
+                                                                    end.second.first.percent_along());
           if (use_timestamps)
             elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 

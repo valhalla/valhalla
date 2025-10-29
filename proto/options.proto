@@ -346,7 +346,7 @@ message Costing {
 message LinearFeatureCost {
   repeated Location locations = 1;                               // In here we just store the first and last location correlation
   repeated Location shape = 2;                                   // This is where the actual line geometry goes
-  float cost_factor = 3;
+  double cost_factor = 3;
 }
 
 message Options {

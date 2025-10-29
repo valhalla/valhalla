@@ -219,7 +219,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_exclude_polygons_length" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
         kv.first == "status" || kv.first == "allow_hard_exclusions" ||
-        kv.first == "hierarchy_limits") {
+        kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor") {
       continue;
     }
     if (kv.first != "trace") {

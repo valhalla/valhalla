@@ -784,22 +784,22 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     }
 
     uint8_t flow_sources;
-    auto edge_cost = costing_->EdgeCost(directededge, edgeid, tile, time_info, flow_sources);
-
     auto add_label = [&](const valhalla::PathEdge* dest_path_edge) {
-      auto percent_traversed = !dest_path_edge ? 1.0f
-                                               : (FORWARD ? dest_path_edge->percent_along()
-                                                          : 1.0f - dest_path_edge->percent_along());
+      auto start =
+          FORWARD ? edge.percent_along() : (dest_path_edge ? dest_path_edge->percent_along() : 0.0f);
+      auto end =
+          FORWARD ? (dest_path_edge ? dest_path_edge->percent_along() : 1.0f) : edge.percent_along();
 
-      percent_traversed -= FORWARD ? percent_along : 1.0f - percent_along;
+      auto percent_traversed = end - start;
 
       if (percent_traversed < 0) {
         // not trivial
         return;
       }
 
-      auto cost =
-          edge_cost * percent_traversed * costing_->PartialEdgeFactor(edgeid, percent_traversed);
+      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, TimeInfo::invalid(),
+                                            flow_sources, start, end);
+
       cost.cost += edge.distance() + (dest_path_edge ? dest_path_edge->distance() : 0.0f);
 
       auto dist = 0.0f;

@@ -129,7 +129,8 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/linear_feature_factors", {});
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/linear_feature_factors",
+                            {{"service_limits.min_linear_cost_factor", "0.00001"}});
   }
 };
 gurka::map LinearFeatureTest::map = {};
@@ -259,9 +260,6 @@ TEST_F(LinearFeatureTest, simple_low_factor) {
   auto costings = request.options().costings().find(request.options().costing_type())->second;
   auto auto_cost = valhalla::sif::CreateAutoCost(costings);
 
-  auto UV = gurka::findEdgeByNodes(reader, map.nodes, "U", "V");
-  EXPECT_NEAR(auto_cost->PartialEdgeFactor(std::get<0>(UV), 0.), 0.01, 0.0001);
-
   // make sure there is no shortcut here
   auto shortcut = get_shortcut(reader, map.nodes, "U", "V");
   EXPECT_FALSE(std::get<0>(shortcut).Is_Valid());
@@ -316,9 +314,6 @@ TEST_F(LinearFeatureTest, partial_edges_shape) {
   sif::mode_costing_t mode_costing;
   auto costings = request.options().costings().find(request.options().costing_type())->second;
   auto auto_cost = valhalla::sif::CreateAutoCost(costings);
-
-  auto TY = gurka::findEdgeByNodes(reader, map.nodes, "T", "Y");
-  EXPECT_NEAR(auto_cost->PartialEdgeFactor(std::get<0>(TY), .6), 100.f, 0.001);
 
   // finally check the route
   gurka::assert::raw::expect_path(request, {"TS", "SR", "RB", "A2", "A2", "A2", "EZ"});
@@ -392,11 +387,6 @@ TEST_F(LinearFeatureTest, multi_shape_geojson) {
   sif::mode_costing_t mode_costing;
   auto costings = request.options().costings().find(request.options().costing_type())->second;
   auto auto_cost = valhalla::sif::CreateAutoCost(costings);
-
-  auto DE = gurka::findEdgeByNodes(reader, map.nodes, "D", "E");
-  EXPECT_NEAR(auto_cost->PartialEdgeFactor(std::get<0>(DE), 0.), 17.51f, 0.01);
-  auto shortcut = get_shortcut(reader, map.nodes, "D", "E");
-  EXPECT_NEAR(auto_cost->PartialEdgeFactor(std::get<0>(shortcut), 0.), 3.477f, 0.01);
 
   // finally check the route
   gurka::assert::raw::expect_path(request, {"A2", "Fb", "Zb"});

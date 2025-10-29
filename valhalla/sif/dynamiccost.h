@@ -1047,40 +1047,56 @@ public:
   }
 
   /**
-   * Returns the averaged factor for an edge fraction based on user provided custom factors
-   * along linear features. If no custom factors are present for an edge, returns 1.
+   * Get the partial cost along a fraction of the edge. Calls `EdgeCost`, scales it accordingly
+   * and applies the edge factors that apply along the portion of the edge.
+   *
+   * @param   edge          Pointer to a directed edge
+   * @param   edgeid        GraphId of the directed edge
+   * @param   tile          Pointer to the tile which contains the directed edge for speed lookup
+   * @param   time_info     Time info about edge passing, uses second_of_week for historical speed
+   * lookup and seconds_from_now for live-traffic smoothing
+   * @param   flow_sources  Which speed sources were used in this speed calculation
+   * @param   start         Start of the fraction along the edge
+   * @param   end           End of the fraction along the edge
+   *
+   * @return  Returns the cost and time (seconds).
+   *
    */
-  double PartialEdgeFactor(const baldr::GraphId& edgeid, const float percent_along) const {
-    if (linear_cost_edges_.empty())
-      return 1.;
+  Cost PartialEdgeCost(const baldr::DirectedEdge* edge,
+                       const baldr::GraphId& edgeid,
+                       const baldr::graph_tile_ptr& tile,
+                       const baldr::TimeInfo& time_info,
+                       uint8_t& flow_sources,
+                       const float start,
+                       const float end) const {
+    // pass an invalid edge id to EdgeCost to avoid applying an average factor along the whole edge
+    return EdgeCost(edge, baldr::GraphId(baldr::kInvalidGraphId), tile, time_info, flow_sources) *
+           std::max(end - start, std::numeric_limits<float>::epsilon()) *
+           PartialEdgeFactor(edgeid, start, end);
+  };
 
-    if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end()) {
-      double partial_factor = 0.;
-      double uncovered = 1.;
-      for (const auto& factor : it->second.ranges) {
-        if (factor.end <= percent_along)
-          continue;
-        double fraction = (factor.end - std::max(static_cast<double>(percent_along), factor.start)) /
-                          (1. - static_cast<double>(percent_along));
-        partial_factor += fraction * factor.factor;
-        uncovered -= fraction;
-      }
-      partial_factor += uncovered;
-      return partial_factor;
-    }
-
-    return 1.;
-  }
-
-  double EdgeFactor(const baldr::GraphId& edgeid) const {
-    if (linear_cost_edges_.empty() || edgeid == baldr::kInvalidGraphId)
-      return 1.;
-
-    if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end())
-      return it->second.avg_factor;
-
-    return 1.;
-  }
+  /**
+   * Get the cost to traverse the specified directed edge. Cost includes
+   * the time (seconds) to traverse the edge. This is the overload that can be called by non-time
+   * aware algorithms.
+   *
+   * @param   edge    Pointer to a directed edge.
+   * @param   edgeid        GraphId of the directed edge
+   * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
+   * @param   start         Start of the fraction along the edge
+   * @param   end           End of the fraction along the edge
+   *
+   * @return  Returns the cost and time (seconds).
+   */
+  Cost PartialEdgeCost(const baldr::DirectedEdge* edge,
+                       const baldr::GraphId& edgeid,
+                       const baldr::graph_tile_ptr& tile,
+                       const float start,
+                       const float end) const {
+    return EdgeCost(edge, baldr::GraphId(baldr::kInvalidGraphId), tile) *
+           std::max(end - start, std::numeric_limits<float>::epsilon()) *
+           PartialEdgeFactor(edgeid, start, end);
+  };
 
   /**
    * Get the flow mask used for accessing traffic flow data from the tile
@@ -1134,6 +1150,42 @@ public:
   }
 
 protected:
+  /**
+   * Returns the averaged factor for an edge fraction based on user provided custom factors
+   * along linear features. If no custom factors are present for an edge, returns 1.
+   */
+  double PartialEdgeFactor(const baldr::GraphId& edgeid, const float start, const float end) const {
+    if (linear_cost_edges_.empty() || start == end)
+      return 1.;
+
+    if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end()) {
+      double partial_factor = 0.;
+      double uncovered = 1.;
+      for (const auto& range : it->second.ranges) {
+        if (range.end <= start || range.start >= end)
+          continue;
+        double fraction = (range.end - std::max(static_cast<double>(start), range.start)) /
+                          (static_cast<double>(end - start));
+        partial_factor += fraction * range.factor;
+        uncovered -= fraction;
+      }
+      partial_factor += uncovered;
+      return partial_factor;
+    }
+
+    return 1.;
+  }
+
+  double EdgeFactor(const baldr::GraphId& edgeid) const {
+    if (linear_cost_edges_.empty() || edgeid == baldr::kInvalidGraphId)
+      return 1.;
+
+    if (auto it = linear_cost_edges_.find(edgeid); it != linear_cost_edges_.end())
+      return it->second.avg_factor;
+
+    return 1.;
+  }
+
   /**
    * Calculate `track` costs based on tracks preference.
    * @param use_tracks value of tracks preference in range [0; 1]

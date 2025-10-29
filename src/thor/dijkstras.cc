@@ -820,10 +820,9 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, GraphId(kInvalidGraphId), tile, TimeInfo::invalid(),
-                                    flow_sources) *
-                  (1.0f - edge.percent_along()) *
-                  costing_->PartialEdgeFactor(edgeid, 1.0f - edge.percent_along());
+      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, TimeInfo::invalid(),
+                                            flow_sources, edge.percent_along(), 1.f);
+
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
 
@@ -909,9 +908,8 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, GraphId(kInvalidGraphId), tile, TimeInfo::invalid(),
-                                    flow_sources) *
-                  edge.percent_along() * costing_->PartialEdgeFactor(edgeid, edge.percent_along());
+      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, TimeInfo::invalid(),
+                                            flow_sources, 0.f, edge.percent_along());
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();
 
@@ -1000,10 +998,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
       }
 
       // Get cost
-      Cost cost = costing->EdgeCost(directededge, GraphId(kInvalidGraphId), endtile) *
-                  (1.0f - edge.percent_along()) *
-                  costing->PartialEdgeFactor(edgeid, (1.0f - edge.percent_along()));
-
+      Cost cost = costing->PartialEdgeCost(directededge, edgeid, tile, edge.percent_along(), 1.0f);
       // We need to penalize this location based on its score (distance in meters from input)
       // We assume the slowest speed you could travel to cover that distance to start/end the route
       cost.cost += edge.distance();

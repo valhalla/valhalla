@@ -214,7 +214,8 @@ void add_shortcut(baldr::GraphReader& reader,
 void add_cost_factor_edges(const sif::mode_costing_t& costing,
                            const sif::TravelMode& mode,
                            baldr::GraphReader& reader,
-                           valhalla::Options& options) {
+                           valhalla::Options& options,
+                           double min_allowed_factor) {
   Costing_Options* costing_options =
       options.mutable_costings()->find(options.costing_type())->second.mutable_options();
   for (auto& line : *options.mutable_cost_factor_lines()) {
@@ -252,7 +253,8 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             if (path_info.edgeid == edge.graph_id()) {
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(path_info.edgeid);
-              e->set_factor(line.cost_factor());
+              // apply the minimum allowed value specified in the config
+              e->set_factor(std::max(line.cost_factor(), min_allowed_factor));
               e->set_start(is_first ? edge.percent_along() : 0.);
               e->set_end(is_last ? edge.percent_along() : 1.);
               auto shortcut = reader.GetShortcut(path_info.edgeid);
@@ -344,7 +346,8 @@ void thor_worker_t::route(Api& request) {
 
   if (!request.options().cost_factor_lines().empty()) {
     parse_costing(request);
-    add_cost_factor_edges(mode_costing, mode, *reader, *request.mutable_options());
+    add_cost_factor_edges(mode_costing, mode, *reader, *request.mutable_options(),
+                          min_linear_cost_factor);
   }
 
   auto costing = parse_costing(request);

@@ -317,9 +317,8 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
     const auto time_info = TimeInfo::invalid();
     if (FORWARD) {
       const auto percent_along = 1.0f - edge.percent_along();
-      cost = pedestrian_costing_->EdgeCost(directededge, GraphId(kInvalidGraphId), tile, time_info,
-                                           flow_sources) *
-             percent_along * pedestrian_costing_->PartialEdgeFactor(edgeid, percent_along);
+      cost = pedestrian_costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                                  edge.percent_along(), 1.0f);
       dist = static_cast<uint32_t>(directededge->length() * percent_along);
 
     } else {
@@ -328,10 +327,8 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid, endtile);
-      cost = pedestrian_costing_->EdgeCost(opp_dir_edge, GraphId(kInvalidGraphId), endtile, time_info,
-                                           flow_sources) *
-             edge.percent_along() *
-             pedestrian_costing_->PartialEdgeFactor(opp_edge_id, edge.percent_along());
+      cost = pedestrian_costing_->PartialEdgeCost(opp_dir_edge, opp_edge_id, endtile, time_info,
+                                                  flow_sources, edge.percent_along(), 1.0f);
       dist = static_cast<uint32_t>(directededge->length() * edge.percent_along());
     }
 
@@ -465,9 +462,8 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
     float remainder = dest_edge->second;
-    Cost newcost =
-        pred.cost() - (pedestrian_costing_->EdgeCost(edge, GraphId(kInvalidGraphId), tile) *
-                       remainder * pedestrian_costing_->PartialEdgeFactor(pred.edgeid(), remainder));
+    Cost newcost = pred.cost() -
+                   (pedestrian_costing_->PartialEdgeCost(edge, pred.edgeid(), tile, remainder, 1.0f));
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);

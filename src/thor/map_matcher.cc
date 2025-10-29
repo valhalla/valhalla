@@ -251,10 +251,8 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
     uint8_t flow_sources;
     // Get time along the edge, handling partial distance along the first and last edge.
-    elapsed += costing->EdgeCost(directededge, GraphId(kInvalidGraphId), tile, offset_time_info,
-                                 flow_sources) *
-               (edge_segment.target - edge_segment.source) *
-               costing->PartialEdgeFactor(edge_id, (edge_segment.target - edge_segment.source));
+    elapsed += costing->PartialEdgeCost(directededge, edge_id, tile, offset_time_info, flow_sources,
+                                        edge_segment.source, edge_segment.target);
 
     // Use timestamps to update elapsed time. Use the timestamp at the interpolation
     // that no longer matches the edge_id (or the last interpolation if the edge id

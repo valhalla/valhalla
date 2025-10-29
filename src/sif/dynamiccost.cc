@@ -20,7 +20,7 @@ using namespace valhalla::midgard;
 
 namespace {
 
-constexpr double kMinCustomFactor = 1e-6;
+constexpr double kMinCustomFactor = std::numeric_limits<double>::epsilon();
 
 uint8_t SpeedMask_Parse(const boost::optional<const rapidjson::Value&>& speed_types) {
   static const std::unordered_map<std::string, uint8_t> types{
@@ -115,6 +115,10 @@ constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpe
                                                       baldr::kMaxSpeedKph};
 } // namespace
 
+/**
+ * When all ranges for a given edge are added, sort by range start
+ * and return the smallest factor found for this edge.
+ */
 double custom_cost_t::finalize() {
   if (ranges.empty())
     return 1.;

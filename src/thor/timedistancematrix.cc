@@ -353,9 +353,9 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     const DirectedEdge* opp_dir_edge;
     if (FORWARD) {
       const auto percent_along = 1.0f - edge.percent_along();
-      cost =
-          costing_->EdgeCost(directededge, GraphId(kInvalidGraphId), tile, time_info, flow_sources) *
-          percent_along * costing_->PartialEdgeFactor(edgeid, percent_along);
+      cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                       edge.percent_along(), 1.0f);
+
       dist = static_cast<uint32_t>(directededge->length() * percent_along);
 
     } else {
@@ -364,9 +364,8 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-      cost = costing_->EdgeCost(opp_dir_edge, GraphId(kInvalidGraphId), endtile, time_info,
-                                flow_sources) *
-             edge.percent_along() * costing_->PartialEdgeFactor(opp_edge_id, edge.percent_along());
+      cost = costing_->PartialEdgeCost(opp_dir_edge, opp_edge_id, endtile, time_info, flow_sources,
+                                       0.0f, edge.percent_along());
       dist = static_cast<uint32_t>(directededge->length() * edge.percent_along());
     }
 
