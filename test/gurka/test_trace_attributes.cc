@@ -296,7 +296,7 @@ TEST(Standalone, AdditionalSpeedAttributes) {
   for (rapidjson::SizeType i = 0; i < edges.Size(); i++) {
     EXPECT_FALSE(edges[i].HasMember("speeds_faded"));
     EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("predicted_flow"));
-    EXPECT_FALSE(edges[i]["speeds_non_faded"].HasMember("current_flow"));
+    EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("current_flow"));
     EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("constrained_flow"));
     EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("free_flow"));
     EXPECT_TRUE(edges[i]["speeds_non_faded"].HasMember("no_flow"));
