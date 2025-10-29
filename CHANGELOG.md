@@ -1,5 +1,6 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: ENABLE_GDAL define for **Linux-only** Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
 * **Bug Fix**
 * **Enhancement**
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
@@ -13,7 +14,6 @@
    * REMOVED: `use`/`using` statements from public headers [#5568](https://github.com/valhalla/valhalla/pull/5568)
    * REMOVED: Extra synchronization in elevation cache [#5598](https://github.com/valhalla/valhalla/pull/5598)
    * REMOVED: Unused method declarations in `CostMatrix` [#5623](https://github.com/valhalla/valhalla/pull/5623)
-   * REMOVED: ENABLE_GDAL define for Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
 * **Bug Fix**
    * FIXED: `incremental_build_tiles` script works again [#4909](https://github.com/valhalla/valhalla/pull/4909)
    * FIXED: Fix ability to use Valhalla via cmake `add_subdirectory` [#4930](https://github.com/valhalla/valhalla/pull/4930)
