@@ -28,7 +28,7 @@ const boost::property_tree::ptree configure(const std::string& config) {
           logging_subtree.get());
       valhalla::midgard::logging::Configure(logging_config);
     }
-  } catch (...) { throw std::runtime_error("Failed to load config from: " + config); }
+  } catch (...) { throw std::runtime_error("Failed to load config"); }
 
   return pt;
 }
