@@ -14,10 +14,43 @@ On top of the (very) high-level Python bindings, we package some data-building V
 
 ### Installation
 
-We distribute all currently maintained CPython versions as **binary wheels** for Win64, MacOS (`arm64`) and Linux (`x86_64`) distributions with `glibc>=2.28`. We **do not** offer a source distribution on PyPI.
+We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. We **do not** offer a source distribution on PyPI.
 
 `pip install pyvalhalla` to install the most recent Valhalla **release**.  
 `pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
+
+Or manually in the current Python environment with e.g.
+
+```shell
+git clone https://github.com/valhalla/valhalla
+cd valhalla
+pip install .
+```
+
+> [!TIP]
+> **For developers**: `pip install -e` (editable build) will by default build into a temp directory, so everytime it's invoked it'll rebuild all of libvalhalla. Use the following command to enable real incremental builds:
+> 
+> ```shell
+> # produces pyproject.toml, optionally specify the package name
+> cmake -DPYVALHALLA_NAME=pyvalhalla-weekly -P cmake/ValhallaConfigPyProject.cmake
+> pip install -e . --no-build-isolation \
+>   -Cbuild-dir=build_python (or other build dir) \
+>   -Ccmake.build-type=Release \
+>   -Ccmake.define.VALHALLA_VERSION_MODIFIER="$(git rev-parse --short HEAD)"
+> ```
+> 
+> Similarly for building a wheel:
+> 
+> ```shell
+> # produces pyproject.toml, optionally specify the package name
+> cmake -DPYVALHALLA_NAME=pyvalhalla -P cmake/ValhallaConfigPyProject.cmake
+> pip wheel . -w dist --no-build-isolation \
+>   -Cbuild-dir=build_python (or other build dir) \
+>   -Ccmake.build-type=Release \
+>   -Ccmake.define.VALHALLA_VERSION_MODIFIER="$(git rev-parse --short HEAD)"
+> ```
+>
+> Both commands have to repeated for each build.
 
 ### Usage
 
@@ -25,10 +58,11 @@ We distribute all currently maintained CPython versions as **binary wheels** for
 
 Find a more extended notebook in `./examples`, e.g. how to [use the actor](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/examples/actor_examples.ipynb).
 
-Before using the Python bindings you need to have access to a routable Valhalla graph. Either install Valhalla from source and built the graph from OSM compatible data or use our [Valhalla docker image](https://github.com/valhalla/valhalla/docker/README.md) for a painless experience, e.g. this will build the routing graph for Andorra in `./custom_files`:
+Before using the Python bindings you need to have access to a routable Valhalla graph. Once you installed the `pyvalhalla` package you can create one with
 
 ```shell
-docker run --rm --name valhalla -p 8002:8002 -v $PWD/custom_files:/custom_files -e tile_urls=https://download.geofabrik.de/europe/andorra-latest.osm.pbf ghcr.io/valhalla/valhalla-scripted:latest
+wget https://download.geofabrik.de/europe/andorra-latest.osm.pbf
+python -m valhalla valhalla_build_tiles -c <valhalla.json> andorra-latest.osm.pbf
 ```
 
 Once you have created a graph locally, you can use it like this:
@@ -71,6 +105,10 @@ To find out which Valhalla executables are currently included, run `python -m va
 
 Note, building the bindings from source is usually best done by building Valhalla with `cmake -B build -DENABLE_PYTHON_BINDING=ON ...`. However, if you want to package your own `pyvalhalla` bindings for some reason (e.g. fork in a bigger team), you can follow the below instructions, which are also executed by our CI.
 
+The Python build respects a few CMake configuration variables:
+
+- `VALHALLA_VERSION_MODIFIER` (optional): Will append a string to the actual Valhalla version string, e.g. `$(git rev-parse --short HEAD)` will append the current branch's commit hash.
+
 #### `cibuildwheel`
 
 On our CI, this orchestrates the packaging of all `pyvalhalla` wheels for every supported, minor Python version and every platform. It can also be run locally (obviously only being able to build wheels for _your_ platform), e.g.
@@ -84,14 +122,8 @@ cibuildwheel --only cp313-manylinux_x86_64
 VCPKG_ARCH_ROOT="build/vcpkg_installed/custom-x64-windows" cibuildwheel --only cp313-win_amd64
 ```
 
-> [!NOTE]
-> On Windows & OSX we expect Valhalla to be built _before_ running `cibuildwheel`. On Linux we use a `manylinux` image to orchestrate the build of both Valhalla and the bindings, see [below](#linux).
+The build looks at a few environment variables:
 
-The build looks at a few environment variables, some optional, some mandatory:
-
-- `VALHALLA_BUILD_BIN_DIR` (optional): Specify the relative/absolute path to the build artifacts of Valhalla, e.g. `./build`, if you want to package the C++ executables
-- `VALHALLA_VERSION_MODIFIER` (optional): Will append a string to the actual Valhalla version string, e.g. `$(git rev-parse --short HEAD)` will append the current branch's commit hash.
-- `VALHALLA_RELEASE_PKG`: To determine the package name, mostly useful for packaging, expects one of `pyvalhalla` or `pyvalhalla-weekly`.
 - `VCPKG_ARCH_ROOT` (required for Win): The relative/absolute directory of the `vcpkg` root.
 
 In the end, you'll find the wheel in `./wheelhouse`.
@@ -120,7 +152,7 @@ docker run -dt -v $PWD:/valhalla-py --name valhalla-py --workdir /valhalla-py gh
 docker exec -t valhalla-py /valhalla-py/src/bindings/python/scripts/build_manylinux.sh build_manylinux 3.13
 ```
 
-This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.12 installations.
+This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.13 installations.
 
 ### Testing (**`linux-x86_x64` only**)
 

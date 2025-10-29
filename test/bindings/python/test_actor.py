@@ -36,7 +36,7 @@ class TestBindings(unittest.TestCase):
         try:
             from valhalla import __version__
             from valhalla.__version__ import __version_tuple__
-        except ModuleNotFoundError:
+        except (ModuleNotFoundError, ImportError):
             return
         
         self.assertEqual(".".join([str(x) for x in __version_tuple__[:3]]), VALHALLA_PRINT_VERSION)
