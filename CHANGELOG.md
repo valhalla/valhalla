@@ -4,6 +4,8 @@
 * **Bug Fix**
 * **Enhancement**
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
+   * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647) 
+   * UPGRADED: vcpkg to 0e39c10736341cc8135b560438229bbda3d3219a [#5654](https://github.com/valhalla/valhalla/pull/5654)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
