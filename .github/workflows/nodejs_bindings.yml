@@ -20,9 +20,11 @@ on:
       - master
     tags:
       - '*'
+  # on PRs we only build it if we touch the bindings themselves or the actor.h file (i.e. if we change the API used by bindings)
   pull_request:
     paths:
       - "src/bindings/nodejs/**"
+      - valhalla/tyr/actor.h
     branches:
       - master
 
@@ -147,7 +149,7 @@ jobs:
         run: |
           for tar_file in artifacts/valhalla-nodejs-*/*.tar; do
             echo "Extracting $tar_file..."
-            tar -xvf "$tar_file" -C "$(dirname "$tar_file")"
+            tar -xvf "$tar_file" -C "$(dirname "$tar_file")" --strip-components=1
             rm "$tar_file"
           done
 
