@@ -54,6 +54,12 @@ jobs:
             arch: arm64
             runner: macos-14
             container: null
+    env:
+      # we have a few packages installed to the system as well as built from source
+      # we need to prioritize the ones built from source
+      LD_LIBRARY_PATH: ${{ matrix.os == 'linux' && '/usr/local/lib64:/usr/local/lib' || '' }}
+      # since we are running in a container, we need to set the ccache directory to folder accessible from GHA runner
+      CCACHE_DIR: ${{ matrix.os == 'linux' && '.ccache' || '' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -81,13 +87,6 @@ jobs:
 
       - name: Build Valhalla with Node.js bindings
         run: |
-          if [ "${{ matrix.os }}" = "linux" ]; then
-            # we have a few packages installed to the system as well as built from source
-            # we need to prioritize the ones built from source
-            export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"
-            # since we are running in a container, we need to set the ccache directory to folder accessible from GHA runner
-            export CCACHE_DIR=$GITHUB_WORKSPACE/.ccache
-          fi
           cmake -B build -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=OFF \
@@ -101,7 +100,6 @@ jobs:
       
       - name: Bundle
         run: |
-          ${{ matrix.os == 'linux' && 'export LD_LIBRARY_PATH="/usr/local/lib64:/usr/local/lib"' || '' }}
           NODE_FILE="build/src/bindings/nodejs/lib/valhalla_node.node"
           OUTPUT_DIR="nodejs_dist"
 
