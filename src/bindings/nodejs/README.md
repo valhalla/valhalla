@@ -35,7 +35,7 @@ async function main() {
   const actor = await Actor.fromConfigFile('config.json');
 
   // Calculate a route
-  const result = actor.route({
+  const result = await actor.route({
     locations: [
       { lat: 52.5200, lon: 13.4050 },
       { lat: 52.5300, lon: 13.4150 }
