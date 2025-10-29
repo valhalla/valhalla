@@ -1231,9 +1231,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         }
         flow_mask |= kCurrentFlowMask;
       }
-      if (initial_flow_mask & kConstrainedFlowMask) {
+      if (initial_flow_mask == kConstrainedFlowMask) {
         second_of_week = 28800; // arbitrary time to land us within the constrained time window
-      } else if (initial_flow_mask & kFreeFlowMask) {
+      } else if (initial_flow_mask == kFreeFlowMask) {
         second_of_week = 0; // ... or within the free flow window
       }
       uint32_t speed = graphtile->GetSpeed(directededge, flow_mask, second_of_week, false,
