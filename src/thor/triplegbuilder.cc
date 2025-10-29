@@ -1219,7 +1219,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   if (controller(kEdgeSpeedsFaded) || controller(kEdgeSpeedsNonFaded)) {
     // helper function to only get the speed from GetSpeed that we are interested in
     auto get_speed = [&](uint8_t flow_mask, bool faded,
-                         uint64_t second_of_week = kInvalidSecondsOfWeek) -> std::optional<uint32_t> {
+                         uint64_t second_of_week) -> std::optional<uint32_t> {
       uint8_t flow_sources = 0;
       uint64_t seconds_from_now = 0;
       uint8_t initial_flow_mask = flow_mask;
@@ -1230,6 +1230,16 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
           flow_mask = costing->flow_mask();
         }
         flow_mask |= kCurrentFlowMask;
+
+        if (initial_flow_mask & kConstrainedFlowMask) {
+          second_of_week = 28800; // arbitrary time to land us within the constrained time window
+        } else if (initial_flow_mask & kFreeFlowMask) {
+          second_of_week = 0; // ... or within the free flow window
+        }
+      } else if (!faded &&
+                 (initial_flow_mask == kFreeFlowMask || initial_flow_mask == kConstrainedFlowMask)) {
+        // pass an invalid time to force non-faded free flow/constrained flow
+        second_of_week = kInvalidSecondsOfWeek;
       }
       uint32_t speed = graphtile->GetSpeed(directededge, flow_mask, second_of_week, false,
                                            &flow_sources, seconds_from_now);
@@ -1252,17 +1262,17 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         speeds->set_predicted_flow(speed.value());
       }
 
-      speed = get_speed(kConstrainedFlowMask, faded);
+      speed = get_speed(kConstrainedFlowMask, faded, time_info.second_of_week);
       if (speed.has_value() && directededge->constrained_flow_speed() > 0) {
         speeds->set_constrained_flow(speed.value());
       }
 
-      speed = get_speed(kFreeFlowMask, faded);
+      speed = get_speed(kFreeFlowMask, faded, time_info.second_of_week);
       if (speed.has_value() && directededge->free_flow_speed() > 0) {
         speeds->set_free_flow(speed.value());
       }
 
-      speed = get_speed(kNoFlowMask, faded);
+      speed = get_speed(kNoFlowMask, faded, time_info.second_of_week);
       if (speed.has_value()) {
         speeds->set_no_flow(speed.value());
       }
