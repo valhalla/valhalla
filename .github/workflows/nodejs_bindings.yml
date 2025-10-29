@@ -111,7 +111,7 @@ jobs:
           python src/bindings/nodejs/scripts/bundle.py \
             $NODE_FILE $VALHALLA_EXES \
             $OUTPUT_DIR
-          ls -lR build/
+          ls -lR $OUTPUT_DIR
       
       - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
