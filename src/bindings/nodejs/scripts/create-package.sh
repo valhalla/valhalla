@@ -61,6 +61,8 @@ for platform in "linux:x64" "linux:arm64" "darwin:arm64"; do
     platform_name="${os/darwin/macos}"
 
     echo "[INFO] Processing ${platform_name} ${arch}..."
+    tree -L 5 -p valhalla-nodejs-${platform_name}-${arch}/
+
     mkdir -p ../valhalla-npm-package/${os}/${arch}
     mv valhalla-nodejs-${platform_name}-${arch}/valhalla_node.node ../valhalla-npm-package/${os}/${arch}/
     mv valhalla-nodejs-${platform_name}-${arch}/valhalla_* ../valhalla-npm-package/${os}/${arch}/ 2>/dev/null || true
