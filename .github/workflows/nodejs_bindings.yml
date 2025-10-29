@@ -115,10 +115,15 @@ jobs:
           pip install macholib==1.16.3
           
           VALHALLA_EXES="build/valhalla_build_tiles build/valhalla_build_admins build/valhalla_add_predicted_traffic build/valhalla_add_landmarks build/valhalla_ingest_transit build/valhalla_convert_transit"
-
+          if [[ "${{ matrix.os }}" = "linux" ]]; then
+            tree -L 5 -p build/
+          fi
           python src/bindings/nodejs/scripts/bundle.py \
             $NODE_FILE $VALHALLA_EXES \
             $OUTPUT_DIR
+          if [[ "${{ matrix.os }}" = "linux" ]]; then
+            tree -L 5 -p $OUTPUT_DIR
+          fi
       
       - name: Upload Node.js binding artifact
         uses: actions/upload-artifact@v4
