@@ -215,9 +215,14 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
                            const sif::TravelMode& mode,
                            baldr::GraphReader& reader,
                            valhalla::Options& options,
-                           double min_allowed_factor) {
+                           double min_allowed_factor,
+                           uint64_t max_allowed_edges) {
   Costing_Options* costing_options =
       options.mutable_costings()->find(options.costing_type())->second.mutable_options();
+
+  // keep track of how many edges we're adding
+  uint64_t edge_count = 0;
+
   for (auto& line : *options.mutable_cost_factor_lines()) {
     std::vector<std::vector<PathInfo>> legs;
     if (!RouteMatcher::FormPath(costing, mode, reader, line, false, /* use_shortcuts=*/true, legs)) {
@@ -225,10 +230,13 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
     }
     for (const auto& leg : legs) {
       for (size_t i = 0; i < leg.size(); ++i) {
+        if (edge_count > max_allowed_edges)
+          throw valhalla_exception_t{175};
         auto& path_info = leg[i];
         bool is_first = i == 0;
         bool is_last = i == leg.size() - 1;
         if (is_first && is_last) { // trivial path
+          edge_count++;
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(line.cost_factor());
@@ -251,6 +259,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
         } else if (is_first || is_last) { // beginning or end edge
           for (auto& edge : line.locations(static_cast<size_t>(is_last)).correlation().edges()) {
             if (path_info.edgeid == edge.graph_id()) {
+              edge_count++;
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(path_info.edgeid);
               // apply the minimum allowed value specified in the config
@@ -265,6 +274,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
             }
           }
         } else { // intermediate edges
+          edge_count++;
           auto* e = costing_options->add_cost_factor_edges();
           e->set_id(path_info.edgeid);
           e->set_factor(line.cost_factor());
@@ -275,6 +285,7 @@ void add_cost_factor_edges(const sif::mode_costing_t& costing,
           if (path_info.is_shortcut) {
             auto constituents = reader.RecoverShortcut(path_info.edgeid);
             for (const auto& constituent : constituents) {
+              edge_count++;
               auto* e = costing_options->add_cost_factor_edges();
               e->set_id(constituent);
               e->set_factor(line.cost_factor());
@@ -347,7 +358,7 @@ void thor_worker_t::route(Api& request) {
   if (!request.options().cost_factor_lines().empty()) {
     parse_costing(request);
     add_cost_factor_edges(mode_costing, mode, *reader, *request.mutable_options(),
-                          min_linear_cost_factor);
+                          min_linear_cost_factor, max_linear_cost_edges);
   }
 
   auto costing = parse_costing(request);

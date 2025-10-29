@@ -70,7 +70,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       matcher_factory(config, reader), controller{},
       allow_hierarchy_limits_modifications(
           config.get<bool>("service_limits.hierarchy_limits.allow_modification", false)),
-      min_linear_cost_factor(config.get<double>("service_limits.min_linear_cost_factor", 1.0)) {
+      min_linear_cost_factor(config.get<double>("service_limits.min_linear_cost_factor", 1.0)),
+      max_linear_cost_edges(config.get<uint64_t>("service_limits.max_linear_cost_edges", 50000)) {
 
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
@@ -82,7 +83,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_exclude_polygons_length" || kv.first == "skadi" || kv.first == "trace" ||
         kv.first == "isochrone" || kv.first == "centroid" || kv.first == "status" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "allow_hard_exclusions" ||
-        kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor") {
+        kv.first == "hierarchy_limits" || kv.first == "min_linear_cost_factor" ||
+        kv.first == "max_linear_cost_edges") {
       continue;
     }
 
