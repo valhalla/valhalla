@@ -193,11 +193,13 @@ TEST(UtilOdin, test_supported_locales) {
         std::smatch m;
         std::regex e("(<[A-Z_0-9]+>)");
         auto str = phrase.second.get_value<std::string>();
-        if (std::regex_search(str, m, e))
-          for (const auto& tag : m)
+        if (std::regex_search(str, m, e)) {
+          for (const auto& tag : m) {
             EXPECT_NE(other_phrase.find(tag.str()), std::string::npos)
                 << "Couldn't find " + tag.str() + " in " + locale.first + "::" + instruction.first +
                        ".phrases." + phrase.first;
+          }
+        }
       }
     }
   }

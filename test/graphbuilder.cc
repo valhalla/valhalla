@@ -48,7 +48,7 @@ TEST(GraphBuilder, TestConstructEdges) {
   ptree config;
   config.put("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
-  OSMData osm_data{0, 0};
+  OSMData osm_data{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
@@ -73,7 +73,7 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   ptree config;
   config.put<std::string>("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
-  OSMData osm_data{0, 0};
+  OSMData osm_data{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
   osm_data.read_from_temp_files(tile_dir);
   std::map<baldr::GraphId, size_t> tiles =
       GraphBuilder::BuildEdges(config, ways_file, way_nodes_file, nodes_file, edges_file);
