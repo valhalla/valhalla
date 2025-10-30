@@ -16,8 +16,8 @@ namespace vt = valhalla::tyr;
 
 namespace {
 
-// these bindings may be used from NodeJS's thread pool, so we need to guarantee that each actor is
-// used exclusively in its own thread since user is free creating as many actors as they want, we use
+// These bindings may be used from NodeJS's thread pool, so we need to guarantee that each actor is
+// used exclusively in its own thread. Since user is free creating as many actors as they want, we use
 // pointer to config object to distinguish between concrete actors
 vt::actor_t* GetThreadLocalActor(const boost::property_tree::ptree* config) {
   using ActorMap = std::unordered_map<const void*, std::shared_ptr<vt::actor_t>>;
