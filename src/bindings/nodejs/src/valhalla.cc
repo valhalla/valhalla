@@ -10,10 +10,26 @@
 #include <functional>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 
 namespace vt = valhalla::tyr;
 
 namespace {
+
+// these bindings may be used from NodeJS's thread pool, so we need to guarantee that each actor is used exclusively in its own thread
+// since user is free creating as many actors as they want, we use pointer to config object to distinguish between concrete actors
+vt::actor_t* GetThreadLocalActor(const boost::property_tree::ptree* config) {
+  using ActorMap = std::unordered_map<const void*, std::shared_ptr<vt::actor_t>>;
+  static thread_local ActorMap actors;
+
+  auto it = actors.find(config);
+  if (it == actors.end()) {
+    auto actor = std::make_shared<vt::actor_t>(*config, true);
+    actors[config] = actor;
+    return actor.get();
+  }
+  return it->second.get();
+}
 
 const boost::property_tree::ptree configure(const std::string& config) {
   boost::property_tree::ptree pt;
@@ -40,11 +56,11 @@ public:
   using ActorMethodFunction = std::function<std::string(vt::actor_t*, const std::string&)>;
 
   ValhallaAsyncWorker(const Napi::Env& env,
-                      std::shared_ptr<vt::actor_t> actor,
+                      const boost::property_tree::ptree* config,
                       ActorMethodFunction method,
                       const std::string& request,
                       const std::string& method_name)
-      : Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), actor_(actor),
+      : Napi::AsyncWorker(env), deferred_(Napi::Promise::Deferred::New(env)), config_(config),
         method_(method), request_(request), method_name_(method_name) {
   }
 
@@ -55,7 +71,8 @@ public:
 protected:
   void Execute() override {
     try {
-      result_ = method_(actor_.get(), request_);
+      auto* actor = GetThreadLocalActor(config_);
+      result_ = method_(actor, request_);
     } catch (const std::exception& e) {
       SetError(std::string(method_name_) + " error: " + e.what());
     } catch (...) { SetError(std::string(method_name_) + " error: unknown exception"); }
@@ -71,7 +88,7 @@ protected:
 
 private:
   Napi::Promise::Deferred deferred_;
-  std::shared_ptr<vt::actor_t> actor_;
+  const boost::property_tree::ptree* config_;
   ActorMethodFunction method_;
   std::string request_;
   std::string method_name_;
@@ -115,17 +132,17 @@ public:
     std::string config = info[0].As<Napi::String>().Utf8Value();
 
     try {
-      actor_ = std::make_shared<vt::actor_t>(configure(config), true);
+      config_ = configure(config);
     } catch (const std::exception& e) {
-      Napi::Error::New(env, std::string("Failed to create actor: ") + e.what())
+      Napi::Error::New(env, std::string("Failed to parse config: ") + e.what())
           .ThrowAsJavaScriptException();
     } catch (...) {
-      Napi::Error::New(env, "Failed to create actor: unknown exception").ThrowAsJavaScriptException();
+      Napi::Error::New(env, "Failed to parse config: unknown exception").ThrowAsJavaScriptException();
     }
   }
 
 private:
-  std::shared_ptr<vt::actor_t> actor_;
+  boost::property_tree::ptree config_;
 
   Napi::Value CreateAsyncRequest(const Napi::CallbackInfo& info,
                                  ValhallaAsyncWorker::ActorMethodFunction method,
@@ -140,7 +157,7 @@ private:
     std::string request = info[0].As<Napi::String>().Utf8Value();
 
     // we don't need to delete it, it will be handled by Node
-    auto* worker = new ValhallaAsyncWorker(env, actor_, method, request, method_name);
+    auto* worker = new ValhallaAsyncWorker(env, &config_, method, request, method_name);
     worker->Queue();
     return worker->GetPromise();
   }
