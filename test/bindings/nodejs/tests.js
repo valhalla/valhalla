@@ -67,4 +67,36 @@ test('actor', async(t) => {
     // 4 isochrones and 2 point layers
     assert.equal(iso.features.length, 6);
   });
+
+  // we utilize NodeJS's thread pool to process requests in paralle, this test verifies there are no race conditions
+  await t.test('100 parallel identical route requests', async () => {
+    const query = {
+      locations: [
+        { lat: 52.08813, lon: 5.03231 },
+        { lat: 52.09987, lon: 5.14913 }
+      ],
+      costing: "bicycle",
+      directions_options: { language: "en-US" }
+    };
+
+    const queryString = JSON.stringify(query);
+    
+    // Send 100 identical requests in parallel
+    const promises = Array.from({ length: 100 }, () => actor.route(queryString));
+    const results = await Promise.all(promises);
+
+    // Parse all results
+    const parsedResults = results.map(result => JSON.parse(result));
+
+    // Verify all results are the same by comparing with the first result
+    const firstResult = parsedResults[0];
+    
+    for (let i = 1; i < parsedResults.length; i++) {
+      // Compare the entire result as JSON string for strict equality
+      assert.equal(JSON.stringify(parsedResults[i]), JSON.stringify(firstResult),
+        `Result ${i} differs from first result`);
+    }
+
+    console.log(`✓ All 1000 parallel route requests returned identical results`);
+  });
 });
