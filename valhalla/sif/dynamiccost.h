@@ -342,8 +342,7 @@ public:
                          pred.classification() == baldr::RoadClass::kMotorway)) ||
             (exclude_ferries_ &&
              isDriveOnto(edge->use() == baldr::Use::kFerry || edge->use() == baldr::Use::kRailFerry,
-                         pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry)) ||
-            (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_)));
+                         pred.use() == baldr::Use::kFerry || pred.use() == baldr::Use::kRailFerry)));
   }
 
   /**
