@@ -12,12 +12,6 @@
 
 using namespace valhalla::odin;
 
-#ifdef __APPLE__
-#define IS_MACOS 1
-#else
-#define IS_MACOS 0
-#endif
-
 namespace {
 
 TEST(UtilOdin, test_get_locales) {
@@ -57,7 +51,7 @@ TEST(UtilOdin, test_time) {
   std::locale locale("en_US.UTF-8");
   try_get_formatted_time("20140101", "", locale);
   try_get_formatted_time("Blah", "", locale);
-#if IS_MACOS
+#ifdef __APPLE__
   // macOS uses 24-hour format by default for en_US.UTF-8
   try_get_formatted_time("2014-01-02T23:59-05:00", "23:59", locale);
   try_get_formatted_time("2014-01-01T07:01-05:00", "07:01", locale);
@@ -130,7 +124,7 @@ TEST(UtilOdin, test_date) {
   locale = std::locale("cs_CZ.UTF-8");
   try_get_formatted_date("20140101", "", locale);
   try_get_formatted_date("Blah", "", locale);
-#if IS_MACOS
+#ifdef __APPLE__
   // macOS formats cs_CZ dates differently
   try_get_formatted_date("2014-01-01T07:01+01:00", "2014/01/01", locale);
   try_get_formatted_date("2015-07-05T15:00+01:00", "2015/07/05", locale);
@@ -144,7 +138,7 @@ TEST(UtilOdin, test_date) {
   locale = std::locale("it_IT.UTF-8");
   try_get_formatted_date("20140101", "", locale);
   try_get_formatted_date("Blah", "", locale);
-#if IS_MACOS
+#ifdef __APPLE__
   // macOS formats it_IT dates differently
   try_get_formatted_date("2014-01-01T07:01+01:00", "01.01.2014", locale);
   try_get_formatted_date("2015-07-05T15:00+01:00", "05.07.2015", locale);
@@ -189,7 +183,7 @@ TEST(UtilOdin, test_supported_locales) {
     try {
       l = std::locale(posix_locale.c_str());
     } catch (std::runtime_error& rte) {
-#if IS_MACOS
+#ifdef __APPLE__
       // Some locales are not available on macOS by default (e.g., vi_VN.UTF-8)
       // Just log a warning instead of failing the test
       LOG_WARN("Locale not available on macOS: " + posix_locale);

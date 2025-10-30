@@ -15,12 +15,6 @@
 
 #include <cstdint>
 
-#ifdef __APPLE__
-#define IS_MACOS 1
-#else
-#define IS_MACOS 0
-#endif
-
 using namespace std;
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -7549,7 +7543,7 @@ TEST(NarrativeBuilder, TestBuildTransit_0_train_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_0_train(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the train. (4 stops)", "", "",
                                   "Take the train.", "Travel 4 stops.",
                                   "Depart: 08:02 from 8 St - NYU.",
@@ -7589,7 +7583,7 @@ TEST(NarrativeBuilder, TestBuildTransit_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_0(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers, "Take the R. (4 stops)", "", "", "Take the R.",
                                   "Travel 4 stops.", "Depart: 08:02 from 8 St - NYU.",
                                   "Depart at 08:02 from 8 St - NYU.",
@@ -7627,7 +7621,7 @@ TEST(NarrativeBuilder, TestBuildTransit_1_cable_car_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_1_cable_car(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take the cable car toward Powell & Market. (7 stops)", "", "",
                                   "Take the cable car toward Powell & Market.", "Travel 7 stops.",
@@ -7669,7 +7663,7 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_1_stop_count_1(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take the R toward FOREST HILLS - 71 AV. (1 stop)", "", "",
                                   "Take the R toward FOREST HILLS - 71 AV.", "Travel 1 stop.",
@@ -7710,7 +7704,7 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_2_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_1_stop_count_2(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take the R toward BAY RIDGE - 95 ST. (2 stops)", "", "",
                                   "Take the R toward BAY RIDGE - 95 ST.", "Travel 2 stops.",
@@ -7750,7 +7744,7 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_4_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_1_stop_count_4(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take the R toward FOREST HILLS - 71 AV. (4 stops)", "", "",
                                   "Take the R toward FOREST HILLS - 71 AV.", "Travel 4 stops.",
@@ -7792,7 +7786,7 @@ TEST(NarrativeBuilder, TestBuildTransit_1_stop_count_8_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitManeuverList_1_stop_count_8(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Take the M toward FOREST HILLS - 71 AV. (8 stops)", "", "",
                                   "Take the M toward FOREST HILLS - 71 AV.", "Travel 8 stops.",
@@ -7955,7 +7949,7 @@ TEST(NarrativeBuilder, TestBuildTransitTransfer_0_no_name_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitTransferManeuverList_0_no_name(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers, "Transfer to take the train. (4 stops)", "", "",
                                   "Transfer to take the train.", "Travel 4 stops.",
                                   "Depart: 08:02 from 8 St - NYU.",
@@ -7995,7 +7989,7 @@ TEST(NarrativeBuilder, TestBuildTransitTransfer_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitTransferManeuverList_0(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers, "Transfer to take the R. (4 stops)", "", "",
                                   "Transfer to take the R.", "Travel 4 stops.",
                                   "Depart: 08:02 from 8 St - NYU.",
@@ -8035,7 +8029,7 @@ TEST(NarrativeBuilder, TestBuildTransitTransfer_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitTransferManeuverList_1(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Transfer to take the R toward FOREST HILLS - 71 AV. (4 stops)", "",
                                   "", "Transfer to take the R toward FOREST HILLS - 71 AV.",
@@ -8077,7 +8071,7 @@ TEST(NarrativeBuilder, TestBuildTransitRemainOn_0_no_name_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitRemainOnManeuverList_0_no_name(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers, "Remain on the train. (4 stops)", "", "",
                                   "Remain on the train.", "Travel 4 stops.",
                                   "Depart: 08:02 from 8 St - NYU.",
@@ -8117,7 +8111,7 @@ TEST(NarrativeBuilder, TestBuildTransitRemainOn_0_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitRemainOnManeuverList_0(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers, "Remain on the R. (4 stops)", "", "",
                                   "Remain on the R.", "Travel 4 stops.",
                                   "Depart: 08:02 from 8 St - NYU.",
@@ -8157,7 +8151,7 @@ TEST(NarrativeBuilder, TestBuildTransitRemainOn_1_miles_en_US) {
   // Configure expected maneuvers based on directions options
   std::list<Maneuver> expected_maneuvers;
   PopulateTransitRemainOnManeuverList_1(expected_maneuvers, country_code, state_code);
-#if IS_MACOS
+#ifdef __APPLE__
   SetExpectedManeuverInstructions(expected_maneuvers,
                                   "Remain on the R toward FOREST HILLS - 71 AV. (4 stops)", "", "",
                                   "Remain on the R toward FOREST HILLS - 71 AV.", "Travel 4 stops.",
