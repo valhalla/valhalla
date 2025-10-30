@@ -96,7 +96,5 @@ test('actor', async(t) => {
       assert.equal(JSON.stringify(parsedResults[i]), JSON.stringify(firstResult),
         `Result ${i} differs from first result`);
     }
-
-    console.log(`✓ All 1000 parallel route requests returned identical results`);
   });
 });

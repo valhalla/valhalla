@@ -21,6 +21,7 @@ on:
     paths:
       - "src/bindings/nodejs/**"
       - valhalla/tyr/actor.h
+      - "**/CMakeLists.txt"
     branches:
       - master
 
