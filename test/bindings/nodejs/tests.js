@@ -68,7 +68,7 @@ test('actor', async(t) => {
     assert.equal(iso.features.length, 6);
   });
 
-  // we utilize NodeJS's thread pool to process requests in paralle, this test verifies there are no race conditions
+  // we utilize NodeJS's thread pool to process requests in parallel, this test verifies there are no race conditions
   await t.test('100 parallel identical route requests', async () => {
     const query = {
       locations: [
