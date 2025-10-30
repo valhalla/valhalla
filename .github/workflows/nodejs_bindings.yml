@@ -1,10 +1,6 @@
 name: Build Node.js bindings
 
 on:
-  # We run this once a quarter so we regularly publish quarterly builds
-  # but not on _every_ master commit
-  schedule:
-    - cron: "0 0 1 1,4,7,10 *"
   push:
     paths-ignore:
       - "**.md"
