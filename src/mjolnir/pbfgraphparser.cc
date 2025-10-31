@@ -15,7 +15,9 @@
 #include "proto/common.pb.h"
 #include "scoped_timer.h"
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <osmium/io/pbf_input.hpp>
 
@@ -2224,12 +2226,12 @@ struct graph_parser {
       } else if (tag.first == "private") {
         n.set_private_access(tag.second == "true");
       } else if (!is_lang_pronunciation) {
-        if (boost::algorithm::starts_with(tag.first, "name:") &&
+        if (tag.first.starts_with("name:") &&
             (is_highway_junction || maybe_named_junction || is_toll_node) && hasTag) {
           ProcessNameTag(tag_, name_w_lang_, language_);
           ++osmdata_.node_name_count;
           named_junction = maybe_named_junction;
-        } else if (boost::algorithm::starts_with(tag.first, "ref:")) {
+        } else if (tag.first.starts_with("ref:")) {
           ProcessNameTag(tag_, ref_w_lang_, ref_language_);
           ++osmdata_.node_ref_count;
         }
@@ -2249,9 +2251,9 @@ struct graph_parser {
               alphabet = PronunciationAlphabet::kJeita;
           }
         }
-        if (boost::algorithm::starts_with(t, "name:")) {
+        if (t.starts_with("name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kNodeName, alphabet, &linguistics);
-        } else if (boost::algorithm::starts_with(t, "ref:")) {
+        } else if (t.starts_with("ref:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kNodeRef, alphabet, &linguistics);
         }
       }
@@ -2584,21 +2586,21 @@ struct graph_parser {
 
       }
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (boost::algorithm::starts_with(tag_.first, "access:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "bicycle:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "motorcycle:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "pedestrian:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "hgv:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "moped:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "mofa:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "psv:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "taxi:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "bus:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "hov:conditional") ||
-               boost::algorithm::starts_with(tag_.first, "emergency:conditional")) {
+      else if (tag_.first.starts_with("access:conditional") ||
+               tag_.first.starts_with("motorcar:conditional") ||
+               tag_.first.starts_with("motor_vehicle:conditional") ||
+               tag_.first.starts_with("bicycle:conditional") ||
+               tag_.first.starts_with("motorcycle:conditional") ||
+               tag_.first.starts_with("foot:conditional") ||
+               tag_.first.starts_with("pedestrian:conditional") ||
+               tag_.first.starts_with("hgv:conditional") ||
+               tag_.first.starts_with("moped:conditional") ||
+               tag_.first.starts_with("mofa:conditional") ||
+               tag_.first.starts_with("psv:conditional") ||
+               tag_.first.starts_with("taxi:conditional") ||
+               tag_.first.starts_with("bus:conditional") ||
+               tag_.first.starts_with("hov:conditional") ||
+               tag_.first.starts_with("emergency:conditional")) {
 
         std::vector<std::string> tokens = GetTagTokens(tag_.second, '@');
         std::string tmp = tokens.at(0);
@@ -2616,39 +2618,39 @@ struct graph_parser {
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (boost::algorithm::starts_with(tag_.first, "access:conditional")) {
+          if (tag_.first.starts_with("access:conditional")) {
             mode = kAllAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
+          } else if (tag_.first.starts_with("motor_vehicle:conditional")) {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          } else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional")) {
+          } else if (tag_.first.starts_with("motorcar:conditional")) {
             if (type == AccessType::kTimedAllowed) {
               mode = kAutoAccess | kHOVAccess | kTaxiAccess;
             } else {
               mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                       kHOVAccess);
             }
-          } else if (boost::algorithm::starts_with(tag_.first, "bicycle:conditional")) {
+          } else if (tag_.first.starts_with("bicycle:conditional")) {
             mode = kBicycleAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
-                     boost::algorithm::starts_with(tag_.first, "pedestrian:conditional")) {
+          } else if (tag_.first.starts_with("foot:conditional") ||
+                     tag_.first.starts_with("pedestrian:conditional")) {
             mode = (kPedestrianAccess | kWheelchairAccess);
-          } else if (boost::algorithm::starts_with(tag_.first, "hgv:conditional")) {
+          } else if (tag_.first.starts_with("hgv:conditional")) {
             mode = kTruckAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "moped:conditional") ||
-                     boost::algorithm::starts_with(tag_.first, "mofa:conditional")) {
+          } else if (tag_.first.starts_with("moped:conditional") ||
+                     tag_.first.starts_with("mofa:conditional")) {
             mode = kMopedAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "motorcycle:conditional")) {
+          } else if (tag_.first.starts_with("motorcycle:conditional")) {
             mode = kMotorcycleAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "psv:conditional")) {
+          } else if (tag_.first.starts_with("psv:conditional")) {
             mode = (kTaxiAccess | kBusAccess);
-          } else if (boost::algorithm::starts_with(tag_.first, "taxi:conditional")) {
+          } else if (tag_.first.starts_with("taxi:conditional")) {
             mode = kTaxiAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "bus:conditional")) {
+          } else if (tag_.first.starts_with("bus:conditional")) {
             mode = kBusAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "hov:conditional")) {
+          } else if (tag_.first.starts_with("hov:conditional")) {
             mode = kHOVAccess;
-          } else if (boost::algorithm::starts_with(tag_.first, "emergency:conditional")) {
+          } else if (tag_.first.starts_with("emergency:conditional")) {
             mode = kEmergencyAccess;
           }
           std::string tmp = tokens.at(1);
@@ -2668,63 +2670,63 @@ struct graph_parser {
           }
         }
       } else if (!is_lang_pronunciation) {
-        if (boost::algorithm::starts_with(tag_.first, "name:left:")) {
+        if (tag_.first.starts_with("name:left:")) {
           ProcessLeftRightNameTag(tag_, name_left_w_lang_, lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "name:right:")) {
+        } else if (tag_.first.starts_with("name:right:")) {
           ProcessLeftRightNameTag(tag_, name_right_w_lang_, lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "name:forward:")) {
+        } else if (tag_.first.starts_with("name:forward:")) {
           ProcessLeftRightNameTag(tag_, name_forward_w_lang_, lang_forward_);
-        } else if (boost::algorithm::starts_with(tag_.first, "name:backward:")) {
+        } else if (tag_.first.starts_with("name:backward:")) {
           ProcessLeftRightNameTag(tag_, name_backward_w_lang_, lang_backward_);
-        } else if (boost::algorithm::starts_with(tag_.first, "name:")) {
+        } else if (tag_.first.starts_with("name:")) {
           ProcessNameTag(tag_, name_w_lang_, language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "official_name:left:")) {
+        } else if (tag_.first.starts_with("official_name:left:")) {
           ProcessLeftRightNameTag(tag_, official_name_left_w_lang_, official_lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "official_name:right:")) {
+        } else if (tag_.first.starts_with("official_name:right:")) {
           ProcessLeftRightNameTag(tag_, official_name_right_w_lang_, official_lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "official_name:")) {
+        } else if (tag_.first.starts_with("official_name:")) {
           ProcessNameTag(tag_, official_name_w_lang_, official_language_);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(tag_.first, "alt_name:left:")) {
+        } else if (allow_alt_name_ && tag_.first.starts_with("alt_name:left:")) {
           ProcessLeftRightNameTag(tag_, alt_name_left_w_lang_, alt_lang_left_);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(tag_.first, "alt_name:right:")) {
+        } else if (allow_alt_name_ && tag_.first.starts_with("alt_name:right:")) {
           ProcessLeftRightNameTag(tag_, alt_name_right_w_lang_, alt_lang_right_);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(tag_.first, "alt_name:")) {
+        } else if (allow_alt_name_ && tag_.first.starts_with("alt_name:")) {
           ProcessNameTag(tag_, alt_name_w_lang_, alt_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "ref:left:")) {
+        } else if (tag_.first.starts_with("ref:left:")) {
           ProcessLeftRightNameTag(tag_, ref_left_w_lang_, ref_lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "ref:right:")) {
+        } else if (tag_.first.starts_with("ref:right:")) {
           ProcessLeftRightNameTag(tag_, ref_right_w_lang_, ref_lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "ref:")) {
+        } else if (tag_.first.starts_with("ref:")) {
           ProcessNameTag(tag_, ref_w_lang_, ref_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "int_ref:left:")) {
+        } else if (tag_.first.starts_with("int_ref:left:")) {
           ProcessLeftRightNameTag(tag_, int_ref_left_w_lang_, int_ref_lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "int_ref:right:")) {
+        } else if (tag_.first.starts_with("int_ref:right:")) {
           ProcessLeftRightNameTag(tag_, int_ref_right_w_lang_, int_ref_lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "int_ref:")) {
+        } else if (tag_.first.starts_with("int_ref:")) {
           ProcessNameTag(tag_, int_ref_w_lang_, int_ref_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "tunnel:name:left:")) {
+        } else if (tag_.first.starts_with("tunnel:name:left:")) {
           ProcessLeftRightNameTag(tag_, tunnel_name_left_w_lang_, tunnel_lang_left_);
-        } else if (boost::algorithm::starts_with(tag_.first, "tunnel:name:right:")) {
+        } else if (tag_.first.starts_with("tunnel:name:right:")) {
           ProcessLeftRightNameTag(tag_, tunnel_name_right_w_lang_, tunnel_lang_right_);
-        } else if (boost::algorithm::starts_with(tag_.first, "tunnel:name:")) {
+        } else if (tag_.first.starts_with("tunnel:name:")) {
           ProcessNameTag(tag_, tunnel_name_w_lang_, tunnel_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:backward:")) {
+        } else if (tag_.first.starts_with("destination:backward:")) {
           ProcessNameTag(tag_, destination_backward_w_lang_, destination_backward_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:forward:")) {
+        } else if (tag_.first.starts_with("destination:forward:")) {
           ProcessNameTag(tag_, destination_forward_w_lang_, destination_forward_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:to:")) {
+        } else if (tag_.first.starts_with("destination:ref:to:")) {
           ProcessNameTag(tag_, destination_ref_to_w_lang_, destination_ref_to_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:")) {
+        } else if (tag_.first.starts_with("destination:ref:")) {
           ProcessNameTag(tag_, destination_ref_w_lang_, destination_ref_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:to:")) {
+        } else if (tag_.first.starts_with("destination:street:to:")) {
           ProcessNameTag(tag_, destination_street_to_w_lang_, destination_street_to_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:")) {
+        } else if (tag_.first.starts_with("destination:street:")) {
           ProcessNameTag(tag_, destination_street_w_lang_, destination_street_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:")) {
+        } else if (tag_.first.starts_with("destination:")) {
           ProcessNameTag(tag_, destination_w_lang_, destination_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "junction:ref:")) {
+        } else if (tag_.first.starts_with("junction:ref:")) {
           ProcessNameTag(tag_, junction_ref_w_lang_, junction_ref_language_);
-        } else if (boost::algorithm::starts_with(tag_.first, "junction:name:")) {
+        } else if (tag_.first.starts_with("junction:name:")) {
           ProcessNameTag(tag_, junction_name_w_lang_, junction_name_language_);
         }
       } else { // is_lang_pronunciation = true
@@ -2744,63 +2746,63 @@ struct graph_parser {
           }
         }
 
-        if (boost::algorithm::starts_with(t, "name:left:")) {
+        if (t.starts_with("name:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "name:right:")) {
+        } else if (t.starts_with("name:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "name:forward:")) {
+        } else if (t.starts_with("name:forward:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameForward, alphabet);
-        } else if (boost::algorithm::starts_with(t, "name:backward:")) {
+        } else if (t.starts_with("name:backward:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameBackward, alphabet);
-        } else if (boost::algorithm::starts_with(t, "name:")) {
+        } else if (t.starts_with("name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kName, alphabet);
-        } else if (boost::algorithm::starts_with(t, "official_name:left:")) {
+        } else if (t.starts_with("official_name:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kOfficialNameLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "official_name:right:")) {
+        } else if (t.starts_with("official_name:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kOfficialNameRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "official_name:")) {
+        } else if (t.starts_with("official_name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kOfficialName, alphabet);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:left:")) {
+        } else if (allow_alt_name_ && t.starts_with("alt_name:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kAltNameLeft, alphabet);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:right:")) {
+        } else if (allow_alt_name_ && t.starts_with("alt_name:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kAltNameRight, alphabet);
-        } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:")) {
+        } else if (allow_alt_name_ && t.starts_with("alt_name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kAltName, alphabet);
-        } else if (boost::algorithm::starts_with(t, "ref:left:")) {
+        } else if (t.starts_with("ref:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kRefLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "ref:right:")) {
+        } else if (t.starts_with("ref:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kRefRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "ref:")) {
+        } else if (t.starts_with("ref:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kRef, alphabet);
-        } else if (boost::algorithm::starts_with(t, "int_ref:left:")) {
+        } else if (t.starts_with("int_ref:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kIntRefLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "int_ref:right:")) {
+        } else if (t.starts_with("int_ref:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kIntRefRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "int_ref:")) {
+        } else if (t.starts_with("int_ref:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kIntRef, alphabet);
-        } else if (boost::algorithm::starts_with(t, "tunnel:name:left:")) {
+        } else if (t.starts_with("tunnel:name:left:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kTunnelNameLeft, alphabet);
-        } else if (boost::algorithm::starts_with(t, "tunnel:name:right:")) {
+        } else if (t.starts_with("tunnel:name:right:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kTunnelNameRight, alphabet);
-        } else if (boost::algorithm::starts_with(t, "tunnel:name:")) {
+        } else if (t.starts_with("tunnel:name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kTunnelName, alphabet);
-        } else if (boost::algorithm::starts_with(t, "destination:forward:")) {
+        } else if (t.starts_with("destination:forward:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationForward, alphabet);
-        } else if (boost::algorithm::starts_with(t, "destination:backward:")) {
+        } else if (t.starts_with("destination:backward:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationBackward, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:to:")) {
+        } else if (tag_.first.starts_with("destination:ref:to:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationRefTo, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:")) {
+        } else if (tag_.first.starts_with("destination:ref:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationRef, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:to:")) {
+        } else if (tag_.first.starts_with("destination:street:to:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationStreetTo, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:")) {
+        } else if (tag_.first.starts_with("destination:street:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationStreet, alphabet);
-        } else if (boost::algorithm::starts_with(t, "destination:")) {
+        } else if (t.starts_with("destination:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kDestination, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "junction:ref:")) {
+        } else if (tag_.first.starts_with("junction:ref:")) {
           ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kJunctionRef, alphabet);
-        } else if (boost::algorithm::starts_with(tag_.first, "junction:name:")) {
+        } else if (tag_.first.starts_with("junction:name:")) {
           ProcessPronunciationTag(OSMLinguistic::Type::kJunctionName, alphabet);
         }
       }
@@ -4478,10 +4480,9 @@ struct graph_parser {
       }
     }
 
-    if (boost::algorithm::starts_with(t, "tunnel:name:"))
+    if (t.starts_with("tunnel:name:"))
       t = t.substr(7);
-    else if (boost::algorithm::starts_with(t, "junction:name:") ||
-             boost::algorithm::starts_with(t, "junction:ref:"))
+    else if (t.starts_with("junction:name:") || t.starts_with("junction:ref:"))
       t = t.substr(9);
     else {
       found = t.find(":lang:");
@@ -4538,7 +4539,7 @@ struct graph_parser {
         has_pronunciation_tags_ = true;
       }
 
-      if (boost::algorithm::starts_with(t, "tunnel:name:"))
+      if (t.starts_with("tunnel:name:"))
         t = t.substr(7);
     }
 
