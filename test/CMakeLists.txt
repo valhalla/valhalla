@@ -54,7 +54,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller configurati
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression traffictile
-  incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils)
+  incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils narrativebuilder util_odin)
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
@@ -71,12 +71,6 @@ endif()
 if(ENABLE_SERVICES)
   list(APPEND tests loki_service skadi_service)
 endif()
-
-## TODO: fix apple tests!
-if(NOT APPLE)
-  list(APPEND tests narrativebuilder util_odin)
-endif()
-
 
 ## Add executable targets
 foreach(test ${tests})
