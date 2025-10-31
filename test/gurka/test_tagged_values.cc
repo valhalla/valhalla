@@ -227,11 +227,9 @@ TEST(TaggedValuesStandalone, test_osm_node_ids) {
       {"U", {{"osm_id", "700"}}},
       {"V", {{"osm_id", "987665"}}},
       {"W", {{"osm_id", "800000"}}},
-      // the max osm id in October 2025 is ~11_000_000_000, here we have 1000x more
-      // TODO: it still doesn't work with int64_max for some reason, need to investigate
-      {"X", {{"osm_id", "11000000000000"}}},
-      {"Y", {{"osm_id", "11000000001000"}}},
-      {"Z", {{"osm_id", "11000000002000"}}},
+      {"X", {{"osm_id", std::to_string(UINT64_MAX - 1)}}},
+      {"Y", {{"osm_id", std::to_string(UINT64_MAX)}}},
+      {"Z", {{"osm_id", "0"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);

@@ -76,22 +76,29 @@ public:
 private:
   const char* begin;
   const char* end;
-  int64_t value = 0;
+  value_type value = 0;
 
-  value_type next(const int64_t previous) noexcept(false) {
-    int64_t byte, shift = 0, result = 0;
+  value_type next(const value_type previous) noexcept(false) {
+    using uvalue_t = typename std::make_unsigned<value_type>::type;
+    using svalue_t = typename std::make_signed<value_type>::type;
+    
+    uvalue_t byte, shift = 0, result = 0;
     do {
       if (empty()) {
         throw std::runtime_error("Bad varint offset encoding");
       }
       // take the least significant 7 bits shifted into place
-      byte = int64_t(*begin++);
+      byte = static_cast<uvalue_t>(static_cast<unsigned char>(*begin++));
       result |= (byte & 0x7f) << shift;
       shift += 7;
       // if the most significant bit is set there is more to this number
     } while (byte & 0x80);
-    // handle the bit flipping and add to previous since its an offset
-    return previous + ((result & 1 ? ~result : result) >> 1);
+    
+    // Decode zigzag encoding back to signed difference
+    svalue_t diff = (result & 1) ? ~(result >> 1) : (result >> 1);
+    
+    // Add offset to previous value
+    return previous + static_cast<value_type>(diff);
   }
 };
 
@@ -322,18 +329,28 @@ template <class container_t> std::string encode7int(const container_t& values) {
   output.reserve(values.size() * 8);
 
   // handy lambda to turn an integer into an encoded string
-  auto serialize = [&output](int64_t number) {
-    number = number < 0 ? ~(*reinterpret_cast<uvalue_t*>(&number) << 1) : number << 1;
-    while (number > 0x7f) {
-      auto nextValue = static_cast<std::string::value_type>(0x80 | (number & 0x7f));
-      output.push_back(nextValue);
-      number >>= 7;
+  auto serialize = [&output](value_t number) {
+    // Convert to unsigned for bitwise operations
+    uvalue_t unumber;
+    if constexpr (std::is_signed<value_t>::value) {
+      // For signed types, use zigzag encoding
+      unumber = number < 0 ? ~(static_cast<uvalue_t>(number) << 1) : static_cast<uvalue_t>(number) << 1;
+    } else {
+      // For unsigned types, use zigzag encoding on the difference
+      // which could be negative when interpreted as signed
+      auto signed_number = static_cast<typename std::make_signed<value_t>::type>(number);
+      unumber = signed_number < 0 ? ~(static_cast<uvalue_t>(signed_number) << 1) : static_cast<uvalue_t>(signed_number) << 1;
     }
-    output.push_back(static_cast<std::string::value_type>(number & 0x7f));
+    while (unumber > 0x7f) {
+      auto nextValue = static_cast<std::string::value_type>(0x80 | (unumber & 0x7f));
+      output.push_back(nextValue);
+      unumber >>= 7;
+    }
+    output.push_back(static_cast<std::string::value_type>(unumber & 0x7f));
   };
 
   // this is an offset encoding so we remember the last value we saw
-  int64_t last_value = 0;
+  value_t last_value = 0;
   for (const auto& value : values) {
     serialize(value - last_value);
     last_value = value;
