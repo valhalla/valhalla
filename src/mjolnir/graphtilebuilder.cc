@@ -218,9 +218,6 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
   // Text list
   for (auto ni = name_info.begin(); ni != name_info.end(); ++ni) {
-    // TODO: this is a bug. the last entry will include the padding with it, for a non tagged value
-    // this probably isnt
-    //  a big deal, but for tagged values this means the value can be compromised
     // compute the width of the entry by looking at the next offset or the end if its the last one
     auto next = std::next(ni);
 
