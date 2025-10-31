@@ -26,6 +26,7 @@ struct PathInfo {
   bool start_node_is_recovered; // Indicates if the start node of the edge is an inner node
                                 // of a shortcut that was recovered. Pay attention this flag
                                 // is 'false' for the first and the last shortcut nodes.
+  bool is_shortcut;             // whether or not the edge is a shortcut edge
 
   // TODO: drop this superfluous constructor
   PathInfo(const sif::TravelMode m,
@@ -35,10 +36,11 @@ struct PathInfo {
            const float path_distance,
            const uint8_t restriction_idx = baldr::kInvalidRestriction,
            const sif::Cost tc = {},
-           bool start_node_is_recovered = false)
+           bool start_node_is_recovered = false,
+           bool is_shortcut = false)
       : mode(m), elapsed_cost(c), trip_id(tripid), edgeid(edge), path_distance(path_distance),
         restriction_index(restriction_idx), transition_cost(tc),
-        start_node_is_recovered(start_node_is_recovered) {
+        start_node_is_recovered(start_node_is_recovered), is_shortcut(is_shortcut) {
   }
 
   // Stream output

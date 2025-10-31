@@ -374,6 +374,7 @@ public:
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
+                        const baldr::GraphId& edgeid,
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
@@ -460,9 +461,9 @@ public:
         factor *= service_factor_;
       }
 
-      return (speedfactor_ * factor);
+      return (speedfactor_ * factor * min_linear_cost_factor_);
     } else {
-      return (kSecPerHour * 0.001f) / static_cast<float>(kMaxFerrySpeedKph);
+      return (kSecPerHour * 0.001f) / static_cast<float>(kMaxFerrySpeedKph) * min_linear_cost_factor_;
     }
   }
 
@@ -724,6 +725,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Returns the cost to traverse the edge and an estimate of the actual time
 // (in seconds) to traverse the edge.
 Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
+                              const baldr::GraphId& edgeid,
                               const graph_tile_ptr& tile,
                               const baldr::TimeInfo& time_info,
                               uint8_t& flow_sources) const {
@@ -765,6 +767,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   factor *= edge->lit() + (!edge->lit() * unlit_factor_);
+  factor *= EdgeFactor(edgeid);
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
   return {sec * factor, sec};
