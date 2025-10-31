@@ -72,35 +72,11 @@ if(ENABLE_SERVICES)
   list(APPEND tests loki_service skadi_service)
 endif()
 
-# tests files that have warning,
-# any other file not int this list will be processed with the
-# "-Werror" flag
-# Avoid adding a test to this list
-set(tests_with_warnings
-  graphbuilder
-  graphtilebuilder
-  gridded_data
-  maneuversbuilder
-  narrativebuilder
-  parse_request
-  sample
-  sequence
-  statsd
-  traffictile
-  util_odin
-  timedep_paths
-  worker
-  )
-
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
   if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-    if (${test} IN_LIST tests_with_warnings)
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall")
-    else()
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-    endif()
+    set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
   endif()
 
 
