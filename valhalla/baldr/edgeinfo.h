@@ -119,6 +119,15 @@ public:
   virtual ~EdgeInfo();
 
   /**
+   * Calculate the size of a tagged value in bytes (including the tag byte and null terminator).
+   * This is used to properly determine the size of the last entry in the text list without
+   * including padding bytes.
+   * @param  ptr  Pointer to the start of the tagged value (including the tag byte)
+   * @return  Returns the size of the tagged value in bytes
+   */
+  static size_t TaggedValueSize(const char* ptr);
+
+  /**
    * Gets the OSM way Id.
    * @return  Returns the OSM way Id.
    */

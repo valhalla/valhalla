@@ -888,7 +888,8 @@ void BuildTileSet(const std::string& ways_file,
 
             // Append osm node ids as tagged values
             if (!osm_node_ids.empty()) {
-              tagged_values.push_back(std::move(encoded_node_ids));
+              // not moving here because we want to re-use the string on the next iteration
+              tagged_values.push_back(encoded_node_ids);
             }
 
             // Update bike_network type
