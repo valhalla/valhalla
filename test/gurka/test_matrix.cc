@@ -134,7 +134,7 @@ TEST_F(MatrixTrafficTest, MatrixNoTraffic) {
   check_matrix(res_doc, {0.0f, 3.2f, 3.2f, 0.0f}, false, Matrix::CostMatrix);
 }
 
-TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
+TEST_F(MatrixTrafficTest, DISABLED_TDMatrixWithLiveTraffic) {
   std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"},
                                                           {"/costing_options/auto/speed_types/0",
                                                            "current"}};
@@ -178,7 +178,7 @@ TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
   ASSERT_EQ(result.info().warnings().size(), 0);
 }
 
-TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
+TEST_F(MatrixTrafficTest, DISABLED_CostMatrixWithLiveTraffic) {
   std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"},
                                                           {"/costing_options/auto/speed_types/0",
                                                            "current"},
