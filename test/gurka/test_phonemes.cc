@@ -375,7 +375,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(index_linguistic_map.size(), 1);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -412,15 +412,17 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(index_linguistic_map.size(), 4);
 
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
       if (iter == index_linguistic_map.end()) {
-        if (sign_index == 1)
+        if (sign_index == 1) {
           EXPECT_EQ(signs.at(sign_index).text(), "destination1");
-        if (sign_index == 2)
+        }
+        if (sign_index == 2) {
           EXPECT_EQ(signs.at(sign_index).text(), "destination2");
+        }
       } else {
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
             "node ref:pronunciation:katakana") {
@@ -501,7 +503,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -588,7 +590,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -683,7 +685,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
 
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -781,7 +783,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -878,7 +880,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -931,7 +933,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -980,7 +982,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1029,7 +1031,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1157,7 +1159,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(index_linguistic_map.size(), 6);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1210,7 +1212,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(index_linguistic_map.size(), 6);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1264,7 +1266,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(index_linguistic_map.size(), 6);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1374,7 +1376,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(index_linguistic_map.size(), 2);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1453,7 +1455,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(index_linguistic_map.size(), 2);
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);

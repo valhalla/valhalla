@@ -804,7 +804,7 @@ TEST_P(PhonemesWithLangsTest, Destinations) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -862,7 +862,7 @@ TEST_P(PhonemesWithLangsTest, DestinationStreet) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -920,7 +920,7 @@ TEST_P(PhonemesWithLangsTest, DestinationStreetTo) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
@@ -984,7 +984,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(linguistics.size(), 1);
 
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1015,7 +1015,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
       ASSERT_EQ(signs.size(), 1);
       ASSERT_EQ(linguistics.size(), 1);
 
-      for (const auto& _ : signs) {
+      for ([[maybe_unused]] const auto& _ : signs) {
         std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
             linguistics.find(sign_index);
         ASSERT_NE(iter, linguistics.end());
@@ -1077,7 +1077,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(linguistics.size(), 2);
 
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1116,7 +1116,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
       ASSERT_EQ(signs.size(), 2);
       ASSERT_EQ(linguistics.size(), 2);
 
-      for (const auto& _ : signs) {
+      for ([[maybe_unused]] const auto& _ : signs) {
         std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
             linguistics.find(sign_index);
         ASSERT_NE(iter, linguistics.end());
@@ -1194,7 +1194,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(linguistics.size(), 1);
 
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1225,7 +1225,7 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
       ASSERT_EQ(signs.size(), 1);
       ASSERT_EQ(linguistics.size(), 1);
 
-      for (const auto& _ : signs) {
+      for ([[maybe_unused]] const auto& _ : signs) {
 
         std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
             linguistics.find(sign_index);
@@ -1286,7 +1286,7 @@ TEST_P(PhonemesWithLangsTest, DestinationRef) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1344,7 +1344,7 @@ TEST_P(PhonemesWithLangsTest, DestinationRefTo) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1401,7 +1401,7 @@ TEST_P(PhonemesWithLangsTest, DestinationJunctionRef) {
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1457,7 +1457,7 @@ TEST_P(PhonemesWithLangsTest, NodeRef) {
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
 
@@ -1518,7 +1518,7 @@ TEST_P(PhonemesWithLangsTest, NodeName) {
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 2);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1702,7 +1702,7 @@ TEST_P(PhonemesWithLangsTest, OldDataDestination) {
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 2);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1762,7 +1762,7 @@ TEST_P(PhonemesWithLangsTest, ForwardDestination) {
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(linguistics.size(), 2);
 
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1836,7 +1836,7 @@ TEST_P(PhonemesWithLangsTest, Junction) {
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 2);
 
-  for (const auto& _ : signs) {
+  for ([[maybe_unused]] const auto& _ : signs) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -2075,7 +2075,7 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(linguistics.size(), 4);
 
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -2128,7 +2128,7 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(linguistics.size(), 4);
 
-    for (const auto& _ : signs) {
+    for ([[maybe_unused]] const auto& _ : signs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
