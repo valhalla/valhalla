@@ -294,7 +294,7 @@ public:
 
     auto ei_size = sizeof(EdgeInfo::EdgeInfoInner) + e.size();
     edgeinfo_ = new char[ei_size];
-    EdgeInfo::EdgeInfoInner pi{0, 0, 0, 0, 0, 0, static_cast<uint32_t>(e.size())};
+    EdgeInfo::EdgeInfoInner pi{0, 0, 0, 0, 0, 0, static_cast<uint32_t>(e.size()), 0, 0, 0, 0};
     std::memcpy(static_cast<void*>(edgeinfo_), static_cast<void*>(&pi),
                 sizeof(EdgeInfo::EdgeInfoInner));
     textlist_ = edgeinfo_;

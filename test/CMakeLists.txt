@@ -54,7 +54,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller configurati
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression traffictile
-  incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils)
+  incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils narrativebuilder util_odin)
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
@@ -72,40 +72,11 @@ if(ENABLE_SERVICES)
   list(APPEND tests loki_service skadi_service)
 endif()
 
-## TODO: fix apple tests!
-if(NOT APPLE)
-  list(APPEND tests narrativebuilder util_odin)
-endif()
-
-# tests files that have warning,
-# any other file not int this list will be processed with the
-# "-Werror" flag
-# Avoid adding a test to this list
-set(tests_with_warnings
-  graphbuilder
-  graphtilebuilder
-  gridded_data
-  maneuversbuilder
-  narrativebuilder
-  parse_request
-  sample
-  sequence
-  statsd
-  traffictile
-  util_odin
-  timedep_paths
-  worker
-  )
-
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
   if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-    if (${test} IN_LIST tests_with_warnings)
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall")
-    else()
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-    endif()
+    set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
   endif()
 
 
