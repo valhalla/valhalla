@@ -20,7 +20,7 @@
 #include "mjolnir/util.h"
 #include "scoped_timer.h"
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -2116,13 +2116,13 @@ bool GraphBuilder::CreateSignInfoList(
         boost::algorithm::to_lower(tmp);
 
         // remove the "To" For example:  US 11;To I 81;Carlisle;Harrisburg
-        if (boost::starts_with(tmp, "to ")) {
+        if (tmp.starts_with("to ")) {
           exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0,
                                  exit_to.substr(3));
           continue;
         }
         // remove the "Toward" For example:  US 11;Toward I 81;Carlisle;Harrisburg
-        if (boost::starts_with(tmp, "toward ")) {
+        if (tmp.starts_with("toward ")) {
           exit_list.emplace_back(Sign::Type::kExitToward, false, false, false, 0, 0,
                                  exit_to.substr(7));
           continue;
