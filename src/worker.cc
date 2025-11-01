@@ -27,6 +27,19 @@ using namespace prime_server;
 
 namespace {
 
+const worker::content_type& get_mime(const Options::Format& fmt) {
+  switch (fmt) {
+    case Options::gpx:
+      return worker::GPX_MIME;
+    case Options::pbf:
+      return worker::PBF_MIME;
+    case Options::geotiff:
+      return worker::TIFF_MIME;
+    default:
+      return worker::JSON_MIME;
+  }
+};
+
 bool is_format_supported(Options::Action action, Options::Format format) {
   constexpr uint16_t kFormatActionSupport[] = {
       // json
@@ -1422,19 +1435,7 @@ to_response(const std::string& data, http_request_info_t& request_info, const Ap
   // try to get all the proper headers
   auto fmt = request.options().format();
 
-  const auto& get_mime = [&fmt]() {
-    switch (fmt) {
-      case Options::gpx:
-        return worker::GPX_MIME;
-      case Options::pbf:
-        return worker::PBF_MIME;
-      case Options::geotiff:
-        return worker::TIFF_MIME;
-      default:
-        return worker::JSON_MIME;
-    }
-  };
-  headers_t headers{CORS, get_mime()};
+  headers_t headers{CORS, get_mime(fmt)};
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
 
