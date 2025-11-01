@@ -6,6 +6,7 @@ Checks: >
     clang-*,
     -clang-diagnostic-unused-command-line-argument,
     -clang-analyzer-*,
+    -clang-diagnostic-deprecated-declarations,
     performance*,
     -performance-enum-size,
     -performance-move-const-arg,
