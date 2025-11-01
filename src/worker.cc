@@ -1421,10 +1421,20 @@ worker_t::result_t
 to_response(const std::string& data, http_request_info_t& request_info, const Api& request) {
   // try to get all the proper headers
   auto fmt = request.options().format();
-  const auto& mime = fmt == Options::json || fmt == Options::osrm
-                         ? worker::JSON_MIME
-                         : (fmt == Options::pbf ? worker::PBF_MIME : worker::GPX_MIME);
-  headers_t headers{CORS, mime};
+
+  const auto& get_mime = [&fmt]() {
+    switch (fmt) {
+      case Options::gpx:
+        return worker::GPX_MIME;
+      case Options::pbf:
+        return worker::PBF_MIME;
+      case Options::geotiff:
+        return worker::TIFF_MIME;
+      default:
+        return worker::JSON_MIME;
+    }
+  };
+  headers_t headers{CORS, get_mime()};
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
 
