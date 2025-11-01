@@ -681,17 +681,7 @@ TEST(GtfsExample, MakeProto) {
   std::vector<float> first_origin_dist_traveled;
   std::vector<float> last_dest_dist_traveled;
 
-  // get the full shape length
-  float shape_length = 0;
-
   auto layout = create_layout();
-  const std::vector<PointLL> transit_lls{layout["1"], layout["a"], layout["b"],
-                                         layout["2"], layout["c"], layout["3"]};
-  for (uint32_t segment = 0; segment < transit_lls.size() - 1; segment++) {
-    auto currOrigin = transit_lls[segment];
-    auto currDest = transit_lls[segment + 1];
-    shape_length += currOrigin.Distance(currDest);
-  }
 
   size_t shapes = 0;
   // for each pbf.
