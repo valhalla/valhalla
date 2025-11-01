@@ -173,8 +173,7 @@ jobs:
           cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
             -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
             -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On \
-            -DBUILD_SHARED_LIBS=On \
-            -DENABLE_CLANG_TIDY=On
+            -DBUILD_SHARED_LIBS=On
           export VERBOSE=1
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
@@ -192,7 +191,7 @@ jobs:
           key: ccache-debug-linux-x86_64-${{ env.BRANCH_NAME }}
       
       - name: Run clang-tidy
-        run: scripts/clang-tidy-only-diff.sh $(nproc)
+        run: scripts/clang-tidy-only-diff.sh --all $(nproc)
 
       - name: Run tests
         run: make -C build -j$(nproc) check
