@@ -1,10 +1,10 @@
 #include "tile/worker.h"
-#include "tile/util.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
+#include "tile/util.h"
 #include "valhalla/exceptions.h"
 
 #include <boost/geometry.hpp>
@@ -15,6 +15,7 @@
 #include <vtzero/builder.hpp>
 
 #include <algorithm>
+#include <array>
 #include <climits>
 #include <cmath>
 #include <unordered_set>
@@ -26,12 +27,38 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace tile {
 
+void tile_worker_t::ReadZoomConfig(const boost::property_tree::ptree& config) {
+  min_zoom_road_class_ = kDefaultMinZoomRoadClass;
+
+  auto tile_config = config.get_child_optional("tile");
+  if (tile_config) {
+    auto zoom_array = tile_config->get_child_optional("min_zoom_road_class");
+    if (zoom_array) {
+      size_t i = 0;
+      for (const auto& item : *zoom_array) {
+        if (i < kNumRoadClasses) {
+          min_zoom_road_class_[i] = item.second.get_value<uint32_t>();
+          ++i;
+        }
+      }
+      // Fill remaining values with defaults if array is too short
+      for (; i < kNumRoadClasses; ++i) {
+        min_zoom_road_class_[i] = kDefaultMinZoomRoadClass[i];
+      }
+    }
+  }
+
+  // Compute overall minimum zoom level (minimum of all road class zooms)
+  min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
+}
+
 tile_worker_t::tile_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : config_(config), reader_(graph_reader),
       candidate_query_(*graph_reader,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
+  ReadZoomConfig(config_);
 }
 
 std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
@@ -47,32 +74,17 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
   // Create vector tile
   vtzero::tile_builder tile;
 
-  if (z < 8) { // TODO: move to config
+  // Don't render anything below minimum zoom level
+  if (z < min_zoom_) {
     return tile.serialize();
   }
-
-  // Helper function to determine minimum zoom level for a road class
-  auto get_min_zoom_for_road_class = [](baldr::RoadClass road_class) -> uint32_t {
-    switch (road_class) {
-    case baldr::RoadClass::kMotorway:
-      return 8;
-    case baldr::RoadClass::kTrunk:
-      return 9;
-    case baldr::RoadClass::kPrimary:
-      return 10;
-    case baldr:: RoadClass::kSecondary:
-      return 11;
-    default:
-      return 12;
-    }
-  };
 
   // Query edges within the tile bounding box
   auto edge_ids = candidate_query_.RangeQuery(bounds);
 
   // Pre-compute Web Mercator projection tile bounds (once for all edges)
   const int32_t TILE_EXTENT = 4096;
-  const int32_t TILE_BUFFER = 128; 
+  const int32_t TILE_BUFFER = 128;
 
   const double tile_merc_minx = lon_to_merc_x(bounds.minx());
   const double tile_merc_maxx = lon_to_merc_x(bounds.maxx());
@@ -122,8 +134,9 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
 
     // Filter by road class and zoom level
     auto road_class = edge->classification();
-    uint32_t min_zoom = get_min_zoom_for_road_class(road_class);
-    if (z < min_zoom) {
+    uint32_t road_class_idx = static_cast<uint32_t>(road_class);
+    assert(road_class_idx < min_zoom_road_class_.size());
+    if (z < min_zoom_road_class_[road_class_idx]) {
       continue;
     }
 
@@ -229,7 +242,7 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
 
       feature.add_property(key_edge_id, vtzero::encoded_property_value(edge_id_str));
       feature.add_property(key_road_class, vtzero::encoded_property_value(
-                                                static_cast<uint32_t>(edge->classification())));
+                                               static_cast<uint32_t>(edge->classification())));
       feature.add_property(key_use,
                            vtzero::encoded_property_value(static_cast<uint32_t>(edge->use())));
       feature.add_property(key_speed, vtzero::encoded_property_value(edge->speed()));

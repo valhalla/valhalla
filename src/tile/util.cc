@@ -33,4 +33,3 @@ double lat_to_merc_y(double lat) {
 
 } // namespace tile
 } // namespace valhalla
-

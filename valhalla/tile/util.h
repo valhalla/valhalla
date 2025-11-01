@@ -47,4 +47,3 @@ double lat_to_merc_y(double lat);
 } // namespace valhalla
 
 #endif // __VALHALLA_TILE_UTIL_H__
-

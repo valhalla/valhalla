@@ -8,6 +8,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -39,9 +40,24 @@ public:
   std::string render_tile(uint32_t z, uint32_t x, uint32_t y);
 
 private:
+  // Default minimum zoom levels for each road class:
+  // Motorway=8, Trunk=9, Primary=10, Secondary=11, Tertiary=12,
+  // Unclassified=12, Residential=12, Service/Other=12
+  static constexpr std::array kDefaultMinZoomRoadClass = {8u, 9u, 10u, 11u, 12u, 12u, 12u, 12u};
+  static constexpr size_t kNumRoadClasses = kDefaultMinZoomRoadClass.size();
+  using ZoomConfig = std::array<uint32_t, kNumRoadClasses>;
+
+  void ReadZoomConfig(const boost::property_tree::ptree& config);
+
   boost::property_tree::ptree config_;
   std::shared_ptr<baldr::GraphReader> reader_;
   meili::CandidateGridQuery candidate_query_;
+
+  // Minimum zoom level for each road class (indexed by RoadClass enum value)
+  ZoomConfig min_zoom_road_class_;
+
+  // Overall minimum zoom level (computed from min_zoom_road_class_)
+  uint32_t min_zoom_;
 };
 
 } // namespace tile
