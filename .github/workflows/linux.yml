@@ -166,6 +166,7 @@ jobs:
             ccache-debug-linux-x86_64-master
             ccache-debug-linux-x86_64
       - run: clang-tidy --version
+      - run: echo $CC $CXX
       - name: Build Valhalla
         run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
