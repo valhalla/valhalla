@@ -19,8 +19,7 @@
     },
     {
       "name": "gdal",
-      "default-features": false,
-      "features": ["recommended-features"]
+      "default-features": false
     },
     "geos",
     {

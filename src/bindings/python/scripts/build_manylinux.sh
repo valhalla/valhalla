@@ -18,7 +18,7 @@ cmake -B ${BUILD_DIR} -G Ninja \
   -DENABLE_PYTHON_BINDINGS=OFF `# setuptools will build the bindings` \
   -DENABLE_TESTS=OFF \
   -DENABLE_SINGLE_FILES_WERROR=OFF \
-  -DENABLE_GDAL=ON \
+  -DENABLE_GDAL=OFF `# way too many huge dependencies` \
   -DCMAKE_BUILD_TYPE=Release \
   -DVALHALLA_VERSION_MODIFIER=${VALHALLA_VERSION_MODIFIER:-}
 
