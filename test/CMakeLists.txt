@@ -75,8 +75,8 @@ endif()
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
-  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-    set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+  if(ENABLE_COMPILER_WARNINGS)
+    cxx_add_warning_flags(${test})
   endif()
 
 
