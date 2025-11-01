@@ -58,9 +58,25 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
   // Create vector tile
   vtzero::tile_builder tile;
 
-  if (z < 12) { // TODO: move to config
+  if (z < 8) { // TODO: move to config
     return tile.serialize();
   }
+
+  // Helper function to determine minimum zoom level for a road class
+  auto get_min_zoom_for_road_class = [](baldr::RoadClass road_class) -> uint32_t {
+    switch (road_class) {
+    case baldr::RoadClass::kMotorway:
+      return 8;
+    case baldr::RoadClass::kTrunk:
+      return 9;
+    case baldr::RoadClass::kPrimary:
+      return 10;
+    case baldr:: RoadClass::kSecondary:
+      return 11;
+    default:
+      return 12;
+    }
+  };
 
   // Query edges within the tile bounding box
   const auto& hierarchy_levels = TileHierarchy::levels();
@@ -110,6 +126,8 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
   auto key_road_class_rev = layer_roads.add_key_without_dup_check("road_class:reverse");
   auto key_use_fwd = layer_roads.add_key_without_dup_check("use:forward");
   auto key_use_rev = layer_roads.add_key_without_dup_check("use:reverse");
+  auto key_speed_fwd = layer_roads.add_key_without_dup_check("speed:forward");
+  auto key_speed_rev = layer_roads.add_key_without_dup_check("speed:reverse");
   auto key_tunnel_fwd = layer_roads.add_key_without_dup_check("tunnel:forward");
   auto key_tunnel_rev = layer_roads.add_key_without_dup_check("tunnel:reverse");
   auto key_bridge_fwd = layer_roads.add_key_without_dup_check("bridge:forward");
@@ -124,6 +142,13 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
     baldr::graph_tile_ptr edge_tile;
     const auto* edge = reader_->directededge(edge_id, edge_tile);
     if (!edge || !edge_tile) {
+      continue;
+    }
+
+    // Filter by road class and zoom level
+    auto road_class = edge->classification();
+    uint32_t min_zoom = get_min_zoom_for_road_class(road_class);
+    if (z < min_zoom) {
       continue;
     }
 
@@ -222,15 +247,17 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
       auto key_edge_id = edge->forward() ? key_edge_id_fwd : key_edge_id_rev;
       auto key_road_class = edge->forward() ? key_road_class_fwd : key_road_class_rev;
       auto key_use = edge->forward() ? key_use_fwd : key_use_rev;
+      auto key_speed = edge->forward() ? key_speed_fwd : key_speed_rev;
       auto key_tunnel = edge->forward() ? key_tunnel_fwd : key_tunnel_rev;
       auto key_bridge = edge->forward() ? key_bridge_fwd : key_bridge_rev;
       auto key_roundabout = edge->forward() ? key_roundabout_fwd : key_roundabout_rev;
 
       feature.add_property(key_edge_id, vtzero::encoded_property_value(edge_id_str));
       feature.add_property(key_road_class, vtzero::encoded_property_value(
-                                               static_cast<uint32_t>(edge->classification())));
+                                                static_cast<uint32_t>(edge->classification())));
       feature.add_property(key_use,
                            vtzero::encoded_property_value(static_cast<uint32_t>(edge->use())));
+      feature.add_property(key_speed, vtzero::encoded_property_value(edge->speed()));
       feature.add_property(key_tunnel, vtzero::encoded_property_value(edge->tunnel()));
       feature.add_property(key_bridge, vtzero::encoded_property_value(edge->bridge()));
       feature.add_property(key_roundabout, vtzero::encoded_property_value(edge->roundabout()));
@@ -245,6 +272,7 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
         auto key_opp_edge_id = edge->forward() ? key_edge_id_rev : key_edge_id_fwd;
         auto key_opp_road_class = edge->forward() ? key_road_class_rev : key_road_class_fwd;
         auto key_opp_use = edge->forward() ? key_use_rev : key_use_fwd;
+        auto key_opp_speed = edge->forward() ? key_speed_rev : key_speed_fwd;
         auto key_opp_tunnel = edge->forward() ? key_tunnel_rev : key_tunnel_fwd;
         auto key_opp_bridge = edge->forward() ? key_bridge_rev : key_bridge_fwd;
         auto key_opp_roundabout = edge->forward() ? key_roundabout_rev : key_roundabout_fwd;
@@ -255,6 +283,7 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
                                                      opp_edge->classification())));
         feature.add_property(key_opp_use,
                              vtzero::encoded_property_value(static_cast<uint32_t>(opp_edge->use())));
+        feature.add_property(key_opp_speed, vtzero::encoded_property_value(opp_edge->speed()));
         feature.add_property(key_opp_tunnel, vtzero::encoded_property_value(opp_edge->tunnel()));
         feature.add_property(key_opp_bridge, vtzero::encoded_property_value(opp_edge->bridge()));
         feature.add_property(key_opp_roundabout,

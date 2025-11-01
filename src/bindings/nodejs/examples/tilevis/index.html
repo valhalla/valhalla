@@ -90,7 +90,7 @@
                     type: 'line',
                     source: 'valhalla',
                     'source-layer': 'roads',
-                    minzoom: 12,  // Match the C++ code threshold
+                    minzoom: 8,  // Match the C++ code threshold
                     maxzoom: 22,  // Allow rendering even at max zoom (with overzoomed tiles)
                     paint: {
                         'line-color': [
@@ -115,6 +115,60 @@
                         'line-opacity': 0.8
                     }
                 }); 
+                
+                // Add speed labels on roads
+                map.addLayer({
+                    id: 'valhalla-road-speeds',
+                    type: 'symbol',
+                    source: 'valhalla',
+                    'source-layer': 'roads',
+                    minzoom: 15,  // Only show labels at high zoom levels
+                    maxzoom: 22,
+                    layout: {
+                        'text-field': [
+                            'concat',
+                            [
+                                'case',
+                                ['has', 'speed:forward'],
+                                ['concat', 'FWD ', ['get', 'speed:forward'], ' KPH'],
+                                ''
+                            ],
+                            [
+                                'case',
+                                ['all', ['has', 'speed:forward'], ['has', 'speed:reverse']],
+                                '\n',
+                                ''
+                            ],
+                            [
+                                'case',
+                                ['has', 'speed:reverse'],
+                                ['concat', 'BWD ', ['get', 'speed:reverse'], ' KPH'],
+                                ''
+                            ]
+                        ],
+                        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                        'text-size': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            15, 9,
+                            18, 12,
+                            20, 14
+                        ],
+                        'symbol-placement': 'line',
+                        'text-rotation-alignment': 'map',
+                        'text-pitch-alignment': 'viewport',
+                        'text-max-angle': 30,
+                        'symbol-spacing': 200
+                    },
+                    paint: {
+                        'text-color': '#000000',
+                        'text-halo-color': '#ffffff',
+                        'text-halo-width': 2,
+                        'text-halo-blur': 1,
+                        'text-opacity': 0.9
+                    }
+                });
                 
                 map.addLayer({
                     id: 'valhalla-nodes',
@@ -170,7 +224,7 @@
                             'x: ', ['get', 'x'], '\n',
                             'y: ', ['get', 'y']
                         ],
-                        'text-font': ['Noto Sans Regular'],
+                        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
                         'text-size': 12
                     },
                     paint: {
@@ -213,6 +267,7 @@
                             html += `  <strong>Edge ID:</strong> ${props['edge_id:forward']}<br/>`;
                             html += `  <strong>Road Class:</strong> ${roadClassNames[props['road_class:forward']] || props['road_class:forward']}<br/>`;
                             html += `  <strong>Use:</strong> ${useNames[props['use:forward']] || props['use:forward']}<br/>`;
+                            html += `  <strong>Speed:</strong> ${props['speed:forward']} KPH<br/>`;
                             html += `  <strong>Tunnel:</strong> ${props['tunnel:forward'] ? '✅' : '❌'} `;
                             html += `<strong>Bridge:</strong> ${props['bridge:forward'] ? '✅' : '❌'} `;
                             html += `<strong>Roundabout:</strong> ${props['roundabout:forward'] ? '✅' : '❌'}<br/>`;
@@ -224,6 +279,7 @@
                             html += `  <strong>Edge ID:</strong> ${props['edge_id:reverse']}<br/>`;
                             html += `  <strong>Road Class:</strong> ${roadClassNames[props['road_class:reverse']] || props['road_class:reverse']}<br/>`;
                             html += `  <strong>Use:</strong> ${useNames[props['use:reverse']] || props['use:reverse']}<br/>`;
+                            html += `  <strong>Speed:</strong> ${props['speed:reverse']} KPH<br/>`;
                             html += `  <strong>Tunnel:</strong> ${props['tunnel:reverse'] ? '✅' : '❌'} `;
                             html += `<strong>Bridge:</strong> ${props['bridge:reverse'] ? '✅' : '❌'} `;
                             html += `<strong>Roundabout:</strong> ${props['roundabout:reverse'] ? '✅' : '❌'}<br/>`;
