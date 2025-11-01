@@ -76,7 +76,7 @@ jobs:
     name: Build sdist
     runs-on: ubuntu-latest
     needs: [publish_pypi]
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event_name == "pull_request" }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -111,7 +111,7 @@ jobs:
     name: Build Linux Python wheels
     runs-on: ubuntu-latest
     needs: [build_sdist]
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event_name == "pull_request" }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -499,7 +499,7 @@ jobs:
     needs: [build_python_wheels_linux]
     runs-on: ubuntu-latest
     container: python:3.13-slim-bookworm
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event_name == "pull_request" }}
     steps:
       - uses: actions/checkout@v4
 
