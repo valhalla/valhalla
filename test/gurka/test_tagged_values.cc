@@ -189,3 +189,68 @@ TEST_F(TaggedValues, test_bypass_tunnel) {
     }
   }
 }
+
+// Test that we can create tiles that store osm node ids for all nodes used
+TEST(TaggedValuesStandalone, test_osm_node_ids) {
+  constexpr double gridsize = 50;
+
+  const std::string ascii_map = R"(
+      ABCDEFG---HIJKLMNOP---QRSTUV---WXYZ
+  )";
+  const gurka::ways ways = {
+      {"ABCDEFG", {{"highway", "primary"}}},   {"GH", {{"highway", "primary"}}},
+      {"HIJKLMNOP", {{"highway", "primary"}}}, {"PQ", {{"highway", "primary"}}},
+      {"QRSTUV", {{"highway", "primary"}}},    {"VW", {{"highway", "primary"}}},
+      {"WXYZ", {{"highway", "primary"}}},
+  };
+  const gurka::nodes nodes = {
+      {"A", {{"osm_id", "987653"}}},
+      {"B", {{"osm_id", "987654"}}},
+      {"C", {{"osm_id", "987655"}}},
+      {"D", {{"osm_id", "987656"}}},
+      {"E", {{"osm_id", "987657"}}},
+      {"F", {{"osm_id", "3"}}},
+      {"G", {{"osm_id", "789"}}},
+      {"H", {{"osm_id", "98765432"}}},
+      {"I", {{"osm_id", "98765431"}}},
+      {"J", {{"osm_id", "98765430"}}},
+      {"K", {{"osm_id", "98765429"}}},
+      {"L", {{"osm_id", "98765428"}}},
+      {"M", {{"osm_id", "300"}}},
+      {"N", {{"osm_id", "987661"}}},
+      {"O", {{"osm_id", "400"}}},
+      {"P", {{"osm_id", "987662"}}},
+      {"Q", {{"osm_id", "500000"}}},
+      {"R", {{"osm_id", "987663"}}},
+      {"S", {{"osm_id", "600"}}},
+      {"T", {{"osm_id", "987664"}}},
+      {"U", {{"osm_id", "700"}}},
+      {"V", {{"osm_id", "987665"}}},
+      {"W", {{"osm_id", "800000"}}},
+      {"X", {{"osm_id", std::to_string(UINT64_MAX - 1)}}},
+      {"Y", {{"osm_id", std::to_string(UINT64_MAX)}}},
+      {"Z", {{"osm_id", "0"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_tagged_value_osm_node_ids",
+                               {{"mjolnir.keep_all_osm_node_ids", "true"}});
+
+  // check that all nodes have correct ids
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+  for (const auto& w : ways) {
+    auto edge_id = std::get<0>(
+        gurka::findEdgeByNodes(graph_reader, layout, {w.first.front()}, {w.first.back()}));
+    auto ei = graph_reader.edgeinfo(edge_id);
+    auto ids = ei.osm_node_ids();
+    ASSERT_TRUE(ids.size() == w.first.size())
+        << "way " << w.first << " has " << ids.size() << " OSM node ids, expected " << w.first.size();
+    auto id = ids.begin();
+    for (const auto& n : w.first) {
+      auto osm_id = nodes.find({n})->second.find("osm_id")->second;
+      EXPECT_TRUE(osm_id == std::to_string(*id)) << "way " << w.first << " has OSM node id " << *id
+                                                 << " which does not match expected " << osm_id;
+      ++id;
+    }
+  }
+}
