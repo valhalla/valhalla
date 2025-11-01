@@ -47,7 +47,7 @@ const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
 const std::string old_to_new_file = "old_nodes_to_new_nodes.bin";
 
-uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& tile_dir) {
+uint64_t get_pbf_checksum(std::vector<std::string> paths, const std::string& /*tile_dir*/) {
   std::sort(paths.begin(), paths.end());
 
   // uses openssl's API which can build the digest from byte chunks to save memory

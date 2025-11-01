@@ -1,16 +1,18 @@
 ---
 # https://clang.llvm.org/extra/clang-tidy/checks/list.html
 Checks: >
-    bugprone-throw-keyword-missing,
-    clang-*,
-    clang-analyzer-*,
+    bugprone-*
+    -bugprone-narrowing-conversions,
+    -clang-*,
     performance*,
+    -performance-enum-size,
     -performance-move-const-arg,
     -performance-avoid-endl,
+    -performance-inefficient-string-concatenation,
     misc-unused-parameters,
     modernize-make-shared,
-    modernize-make-unique,
-WarningsAsErrors: ''
+    modernize-make-unique
+WarningsAsErrors: '*'
 CheckOptions:
   - key:             google-readability-braces-around-statements.ShortStatementLines
     value:           '1'

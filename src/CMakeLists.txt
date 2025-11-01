@@ -23,6 +23,7 @@ set(libvalhalla_link_libraries "" CACHE INTERNAL  "")
 ## Define libvalhalla sub-modules as OBJECT libraries
 
 function(valhalla_module)
+  set(options DISABLE_CLANG_TIDY)
   set(oneValueArgs NAME)
   set(multiValueArgs SOURCES SOURCES_WITH_WARNINGS HEADERS DEPENDS INCLUDE_DIRECTORIES SYSTEM_INCLUDE_DIRECTORIES)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -86,6 +87,17 @@ function(valhalla_module)
 
   if(ENABLE_COMPILER_WARNINGS)
     cxx_add_warning_flags(${library})
+  endif()
+
+  if(ENABLE_CLANG_TIDY AND NOT MODULE_DISABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
+    if(NOT CLANG_TIDY_COMMAND)
+      message(FATAL_ERROR "ENABLE_CLANG_TIDY is ON but clang-tidy is not found!")
+    else()
+      message(STATUS "Enabling clang tidy for ${MODULE_NAME}")
+      set_target_properties(${library} PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};--config-file=${VALHALLA_SOURCE_DIR}/.clang-tidy;--extra-arg=-Wno-deprecated-declarations")
+    endif()
+  
   endif()
 
   install(FILES ${MODULE_HEADERS}

@@ -830,7 +830,6 @@ void AddTripIntersectingEdge(const AttributesController& controller,
     intersecting_edge->set_walkability(GetTripLegTraversability(traversability));
   }
 
-  traversability = Traversability::kNone;
   // Determine cyclability
   if (intersecting_de->forwardaccess() & kBicycleAccess) {
     traversability = (intersecting_de->reverseaccess() & kBicycleAccess) ? Traversability::kBoth

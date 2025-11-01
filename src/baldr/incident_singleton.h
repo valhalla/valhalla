@@ -45,10 +45,10 @@ protected:
   std::thread watcher;
 
   // prototype for the watch function. we need this so unit tests can safely test all functionality
-  using watch_function_t = std::function<void(boost::property_tree::ptree,
-                                              std::unordered_set<valhalla::baldr::GraphId>,
-                                              std::shared_ptr<state_t>,
-                                              std::function<bool(size_t)>)>;
+  using watch_function_t = std::function<void(const boost::property_tree::ptree&,
+                                              const std::unordered_set<valhalla::baldr::GraphId>&,
+                                              const std::shared_ptr<state_t>&,
+                                              const std::function<bool(size_t)>&)>;
 
   /**
    * Singleton private constructor that static function uses to instantiate the singleton
@@ -190,10 +190,10 @@ protected:
    * @param state      inter thread communication object (mainly tile cache)
    * @param interrupt  functor that, if set and returns true, stops the main loop of this function
    */
-  static void watch(boost::property_tree::ptree config,
-                    std::unordered_set<valhalla::baldr::GraphId> tileset,
-                    std::shared_ptr<state_t> state,
-                    std::function<bool(size_t)> interrupt) {
+  static void watch(const boost::property_tree::ptree& config,
+                    const std::unordered_set<valhalla::baldr::GraphId>& tileset,
+                    const std::shared_ptr<state_t>& state,
+                    const std::function<bool(size_t)>& interrupt) {
     LOG_INFO("Incident watcher started");
     // try to configure for changelog mode
     std::unique_ptr<valhalla::midgard::sequence<uint64_t>> changelog;
@@ -201,7 +201,8 @@ protected:
     std::filesystem::path inc_dir;
     bool inc_dir_exists = false;
     try {
-      changelog.reset(new decltype(changelog)::element_type(inc_log_path.string(), false, 0));
+      changelog =
+          std::make_unique<decltype(changelog)::element_type>(inc_log_path.string(), false, 0);
       LOG_INFO("Incident watcher configured for mmap changelog mode");
     } // check for a directory scan mode config
     catch (...) {
@@ -250,7 +251,8 @@ protected:
         // reload the log if the tileset isnt static
         try {
           if (!state->lock_free.load())
-            changelog.reset(new decltype(changelog)::element_type(inc_log_path.string(), false, 0));
+            changelog =
+                std::make_unique<decltype(changelog)::element_type>(inc_log_path.string(), false, 0);
         } catch (...) {
           LOG_ERROR("Incident watcher could not map incident_log: " + inc_log_path.string());
           break;

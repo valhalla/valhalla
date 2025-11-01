@@ -144,7 +144,8 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
                         loc_bounds.maxy() + dlat);
 
   // Create isotile (gridded data)
-  isotile_.reset(new GriddedData<2>(bounds, grid_size, {max_minutes, max_km}));
+  isotile_ = std::make_shared<GriddedData<2>>(bounds, grid_size,
+                                              std::array<float, 2>{{max_minutes, max_km}});
 
   // Find the center of the grid that the location lies within. Shift the
   // tilebounds so the location lies in the center of a tile.

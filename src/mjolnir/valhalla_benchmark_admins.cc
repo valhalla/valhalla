@@ -72,7 +72,6 @@ GetAdminInfo(valhalla::mjolnir::Sqlite3& db,
       stmt = 0;
       ret = sqlite3_prepare_v2(db.get(), sql.c_str(), sql.length(), &stmt, 0);
       if (ret == SQLITE_OK) {
-        result = 0;
         result = sqlite3_step(stmt);
       }
     }
@@ -80,7 +79,6 @@ GetAdminInfo(valhalla::mjolnir::Sqlite3& db,
     uint32_t index = 1;
     while (result == SQLITE_ROW) {
 
-      uint32_t id = sqlite3_column_int(stmt, 0);
       std::string country_name = "";
       std::string state_name = "";
       std::string country_iso = "";

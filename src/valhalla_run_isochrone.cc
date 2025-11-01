@@ -90,18 +90,6 @@ int main(int argc, char* argv[]) {
     LOG_WARN("denoise parameter was out of range. Being clamped to " + std::to_string(denoise));
   }
 
-  // Get generalize parameter
-  float generalize = kOptimalGeneralization;
-  if (options.has_generalize_case()) {
-    generalize = options.generalize();
-  }
-
-  // Get the polygons parameters
-  bool polygons = options.polygons();
-
-  // Show locations
-  bool show_locations = options.show_locations();
-
   // reverse or time dependent (arrive-by) isochrone
   bool reverse = options.reverse() || options.date_time_type() == valhalla::Options::arrive_by;
 
