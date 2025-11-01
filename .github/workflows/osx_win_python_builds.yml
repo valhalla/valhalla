@@ -563,7 +563,7 @@ jobs:
 
   upload_all:
     name: Upload if release
-    needs: [verify_wheels_linux]
+    needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
     runs-on: ubuntu-latest
     # if: ${{ always() }}
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
