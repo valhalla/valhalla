@@ -1,4 +1,5 @@
 #include "tile/worker.h"
+#include "tile/util.h"
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "meili/candidate_search.h"
@@ -28,21 +29,6 @@ namespace tile {
 tile_worker_t::tile_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : config_(config), reader_(graph_reader) {
-}
-
-midgard::AABB2<midgard::PointLL> tile_worker_t::tile_to_bbox(uint32_t z, uint32_t x, uint32_t y) {
-  const double n = std::pow(2.0, z);
-
-  double min_lon = x / n * 360.0 - 180.0;
-  double max_lon = (x + 1) / n * 360.0 - 180.0;
-
-  double min_lat_rad = std::atan(std::sinh(kPiD * (1 - 2 * (y + 1) / n)));
-  double max_lat_rad = std::atan(std::sinh(kPiD * (1 - 2 * y / n)));
-
-  double min_lat = min_lat_rad * 180.0 / kPiD;
-  double max_lat = max_lat_rad * 180.0 / kPiD;
-
-  return AABB2<PointLL>(PointLL(min_lon, min_lat), PointLL(max_lon, max_lat));
 }
 
 std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
@@ -88,16 +74,9 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
 
   auto edge_ids = candidate_query.RangeQuery(bounds);
 
-  // Pre-compute Web Mercator projection functions and tile bounds (once for all edges)
-  const double earth_radius = 6378137.0; // EPSG:3857
+  // Pre-compute Web Mercator projection tile bounds (once for all edges)
   const int32_t TILE_EXTENT = 4096;
   const int32_t TILE_BUFFER = 128; // Match OSRM's buffer size
-
-  auto lon_to_merc_x = [earth_radius](double lon) { return earth_radius * lon * kPiD / 180.0; };
-
-  auto lat_to_merc_y = [earth_radius](double lat) {
-    return earth_radius * std::log(std::tan(kPiD / 4.0 + lat * kPiD / 360.0));
-  };
 
   const double tile_merc_minx = lon_to_merc_x(bounds.minx());
   const double tile_merc_maxx = lon_to_merc_x(bounds.maxx());

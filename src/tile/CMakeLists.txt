@@ -1,6 +1,7 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/tile/*.h)
 
 set(sources
+  util.cc
   worker.cc)
 
 set(system_includes

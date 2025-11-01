@@ -40,11 +40,6 @@ public:
 private:
   boost::property_tree::ptree config_;
   std::shared_ptr<baldr::GraphReader> reader_;
-
-  /**
-   * Convert tile coordinates (z/x/y) to WGS84 bounding box
-   */
-  static midgard::AABB2<midgard::PointLL> tile_to_bbox(uint32_t z, uint32_t x, uint32_t y);
 };
 
 } // namespace tile
