@@ -226,11 +226,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     if (next != name_info.end()) {
       // Non-last entry: use the next entry's offset
       width = next->name_offset_ - ni->name_offset_;
-    // Last entry: for tagged values, use TaggedValueSize to avoid including padding bytes
-    // that were added for alignment. For non-tagged values just read to the end.
+      // Last entry: for tagged values, use TaggedValueSize to avoid including padding bytes
+      // that were added for alignment. For non-tagged values just read to the end.
     } else if (ni->tagged_) {
       width = EdgeInfo::TaggedValueSize(textlist_ + ni->name_offset_);
-    // Last entry is just text so use the text list ptr as its the next thing in the tile
+      // Last entry is just text so use the text list ptr as its the next thing in the tile
     } else {
       width = textlist_size_ - ni->name_offset_;
     }

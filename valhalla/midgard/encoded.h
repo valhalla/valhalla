@@ -81,7 +81,7 @@ private:
   value_type next(const value_type previous) noexcept(false) {
     using uvalue_t = typename std::make_unsigned<value_type>::type;
     using svalue_t = typename std::make_signed<value_type>::type;
-    
+
     uvalue_t byte, shift = 0, result = 0;
     do {
       if (empty()) {
@@ -93,10 +93,10 @@ private:
       shift += 7;
       // if the most significant bit is set there is more to this number
     } while (byte & 0x80);
-    
+
     // Decode zigzag encoding back to signed difference
     svalue_t diff = (result & 1) ? ~(result >> 1) : (result >> 1);
-    
+
     // Add offset to previous value
     return previous + static_cast<value_type>(diff);
   }
@@ -334,12 +334,14 @@ template <class container_t> std::string encode7int(const container_t& values) {
     uvalue_t unumber;
     if constexpr (std::is_signed<value_t>::value) {
       // For signed types, use zigzag encoding
-      unumber = number < 0 ? ~(static_cast<uvalue_t>(number) << 1) : static_cast<uvalue_t>(number) << 1;
+      unumber =
+          number < 0 ? ~(static_cast<uvalue_t>(number) << 1) : static_cast<uvalue_t>(number) << 1;
     } else {
       // For unsigned types, use zigzag encoding on the difference
       // which could be negative when interpreted as signed
       auto signed_number = static_cast<typename std::make_signed<value_t>::type>(number);
-      unumber = signed_number < 0 ? ~(static_cast<uvalue_t>(signed_number) << 1) : static_cast<uvalue_t>(signed_number) << 1;
+      unumber = signed_number < 0 ? ~(static_cast<uvalue_t>(signed_number) << 1)
+                                  : static_cast<uvalue_t>(signed_number) << 1;
     }
     while (unumber > 0x7f) {
       auto nextValue = static_cast<std::string::value_type>(0x80 | (unumber & 0x7f));

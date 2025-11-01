@@ -614,7 +614,7 @@ void test_int7_roundtrip(const std::vector<T>& test_case, const std::string& des
   auto encoded = encode7int(test_case);
   auto decoded = decode7int<std::vector<T>>(encoded);
   ASSERT_EQ(test_case, decoded) << "Failed for: " << description;
-  
+
   auto encoded2 = encode7int(decoded);
   ASSERT_EQ(encoded, encoded2) << "Encoding not stable for: " << description;
 }
@@ -627,9 +627,9 @@ TEST(Encode, Int7_Unsigned) {
   test_int7_roundtrip<uint64_t>({0, 1, 2, 3, 4, 42, 4, 3, 2, 1}, "mixed forward/backward");
   test_int7_roundtrip<uint64_t>({0, 0, 0, 0, 0}, "all zeros");
   test_int7_roundtrip<uint64_t>({0}, "single zero");
-  test_int7_roundtrip<uint64_t>(
-      {1ull << 63, 0, 1ull << 63, 567, 65496849841, 8949846546349684, 123, 3, 234123412},
-      "large values with big deltas");
+  test_int7_roundtrip<uint64_t>({1ull << 63, 0, 1ull << 63, 567, 65496849841, 8949846546349684, 123,
+                                 3, 234123412},
+                                "large values with big deltas");
   test_int7_roundtrip<uint64_t>({UINT64_MAX}, "max uint64");
   test_int7_roundtrip<uint64_t>({0, UINT64_MAX}, "zero to max");
   test_int7_roundtrip<uint64_t>({UINT64_MAX, 0}, "max to zero");
