@@ -213,6 +213,8 @@ public:
                      const std::function<void()>* interrupt = nullptr,
                      Api* api = nullptr);
 
+  std::string tile(const std::string& request_str);
+
 protected:
   struct pimpl_t;
   std::shared_ptr<pimpl_t> pimpl;

@@ -40,3 +40,6 @@
 [submodule "third_party/unordered_dense"]
 	path = third_party/unordered_dense
 	url = https://github.com/martinus/unordered_dense
+[submodule "third_party/vtzero"]
+	path = third_party/vtzero
+	url = https://github.com/mapbox/vtzero.git

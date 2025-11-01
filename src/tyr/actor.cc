@@ -1,10 +1,15 @@
 #include "tyr/actor.h"
 #include "loki/worker.h"
+#include "midgard/logging.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
+#include "tile/worker.h"
 #include "tyr/serializers.h"
 
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+
+#include <sstream>
 
 using namespace valhalla;
 using namespace valhalla::loki;
@@ -18,11 +23,11 @@ namespace tyr {
 struct actor_t::pimpl_t {
   pimpl_t(const boost::property_tree::ptree& config)
       : reader(new baldr::GraphReader(config.get_child("mjolnir"))), loki_worker(config, reader),
-        thor_worker(config, reader), odin_worker(config) {
+        thor_worker(config, reader), odin_worker(config), tile_worker(config, reader) {
   }
   pimpl_t(const boost::property_tree::ptree& config, baldr::GraphReader& graph_reader)
       : reader(&graph_reader, [](baldr::GraphReader*) {}), loki_worker(config, reader),
-        thor_worker(config, reader), odin_worker(config) {
+        thor_worker(config, reader), odin_worker(config), tile_worker(config, reader) {
   }
   void set_interrupts(const std::function<void()>* interrupt_function) {
     loki_worker.set_interrupt(interrupt_function);
@@ -38,6 +43,7 @@ struct actor_t::pimpl_t {
   loki::loki_worker_t loki_worker;
   thor::thor_worker_t thor_worker;
   odin_worker_t odin_worker;
+  tile::tile_worker_t tile_worker;
 };
 
 actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup)
@@ -365,6 +371,27 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   // get the json
   auto json = tyr::serializeStatus(*api);
   return json;
+}
+
+std::string actor_t::tile(const std::string& request_str) {
+  // Parse z/x/y from request string
+  // Expected format: {"z": 10, "x": 123, "y": 456}
+  uint32_t z = 0, x = 0, y = 0;
+
+  try {
+    std::stringstream ss(request_str);
+    boost::property_tree::ptree pt;
+    boost::property_tree::read_json(ss, pt);
+
+    z = pt.get<uint32_t>("z");
+    x = pt.get<uint32_t>("x");
+    y = pt.get<uint32_t>("y");
+  } catch (const std::exception& e) {
+    throw valhalla_exception_t{400, "Invalid tile request: " + std::string(e.what())};
+  }
+
+  // Delegate to tile worker
+  return pimpl->tile_worker.render_tile(z, x, y);
 }
 
 } // namespace tyr
