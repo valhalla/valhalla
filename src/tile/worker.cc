@@ -28,7 +28,10 @@ namespace tile {
 
 tile_worker_t::tile_worker_t(const boost::property_tree::ptree& config,
                              const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : config_(config), reader_(graph_reader) {
+    : config_(config), reader_(graph_reader),
+      candidate_query_(*graph_reader,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
 }
 
 std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
@@ -65,18 +68,11 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
   };
 
   // Query edges within the tile bounding box
-  const auto& hierarchy_levels = TileHierarchy::levels();
-  const auto& tiles = hierarchy_levels.back().tiles;
-  LOG_INFO("  Using Valhalla hierarchy level: " + std::to_string(hierarchy_levels.back().level) +
-           " (tile size: " + std::to_string(tiles.TileSize()) + " degrees)");
-  float cell_size = tiles.TileSize() / 10.0f;
-  meili::CandidateGridQuery candidate_query(*reader_, cell_size, cell_size);
-
-  auto edge_ids = candidate_query.RangeQuery(bounds);
+  auto edge_ids = candidate_query_.RangeQuery(bounds);
 
   // Pre-compute Web Mercator projection tile bounds (once for all edges)
   const int32_t TILE_EXTENT = 4096;
-  const int32_t TILE_BUFFER = 128; // Match OSRM's buffer size
+  const int32_t TILE_BUFFER = 128; 
 
   const double tile_merc_minx = lon_to_merc_x(bounds.minx());
   const double tile_merc_maxx = lon_to_merc_x(bounds.maxx());

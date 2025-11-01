@@ -2,6 +2,7 @@
 #define __VALHALLA_TILE_WORKER_H__
 
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/meili/candidate_search.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
 
@@ -40,6 +41,7 @@ public:
 private:
   boost::property_tree::ptree config_;
   std::shared_ptr<baldr::GraphReader> reader_;
+  meili::CandidateGridQuery candidate_query_;
 };
 
 } // namespace tile
