@@ -3,7 +3,7 @@
 Checks: >
     bugprone-*
     -bugprone-narrowing-conversions,
-    clang-*,
+    -clang-*,
     -clang-diagnostic-unused-command-line-argument,
     -clang-analyzer-*,
     -clang-diagnostic-deprecated-declarations,
@@ -14,7 +14,7 @@ Checks: >
     -performance-inefficient-string-concatenation,
     misc-unused-parameters,
     modernize-make-shared,
-    modernize-make-unique,
+    modernize-make-unique
 WarningsAsErrors: ''
 HeaderFilterRegex: 'valhalla/sif|valhalla/thor|valhalla/odin|valhalla/mjolnir|valhalla/tyr|valhalla/loki|valhalla/meili'
 CheckOptions:
