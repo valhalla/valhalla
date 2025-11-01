@@ -227,8 +227,8 @@ TEST(TaggedValuesStandalone, test_osm_node_ids) {
       {"U", {{"osm_id", "700"}}},
       {"V", {{"osm_id", "987665"}}},
       {"W", {{"osm_id", "800000"}}},
-      {"X", {{"osm_id", "9223372036854775807"}}},
-      {"Y", {{"osm_id", "9223372036854775808"}}},
+      {"X", {{"osm_id", std::to_string(UINT64_MAX - 1)}}},
+      {"Y", {{"osm_id", std::to_string(UINT64_MAX)}}},
       {"Z", {{"osm_id", "0"}}},
   };
 
@@ -250,6 +250,7 @@ TEST(TaggedValuesStandalone, test_osm_node_ids) {
       auto osm_id = nodes.find({n})->second.find("osm_id")->second;
       EXPECT_TRUE(osm_id == std::to_string(*id)) << "way " << w.first << " has OSM node id " << *id
                                                  << " which does not match expected " << osm_id;
+      ++id;
     }
   }
 }
