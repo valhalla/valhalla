@@ -366,8 +366,43 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   set(python_tests python_valhalla)
 endif()
 
+if(ENABLE_NODE_BINDINGS AND ENABLE_DATA_TOOLS)
+  find_program(NODE_EXECUTABLE NAMES node nodejs)
+  if(NOT NODE_EXECUTABLE)
+    message(WARNING "Node.js executable not found, Node.js tests will be skipped")
+  else()
+    # Dynamically find the ASan library path if sanitizer is enabled
+    # it is important to preload ASan this way when running `node`, so that ASan is able to set its interceptors even before any code was able to run
+    if(ENABLE_ADDRESS_SANITIZER)
+      execute_process(
+        COMMAND ${CMAKE_C_COMPILER} -print-file-name=libasan.so
+        OUTPUT_VARIABLE LIBASAN_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      set(ASAN_PRELOAD "LD_PRELOAD=${LIBASAN_PATH}")
+    else()
+      set(ASAN_PRELOAD "")
+    endif()
+    add_custom_command(OUTPUT nodejs_valhalla.log
+      COMMAND
+        ${ASAN_PRELOAD}
+        NODE_PATH=${CMAKE_BINARY_DIR}/src/bindings/nodejs/lib
+        /bin/bash -cx "${NODE_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/tests.js > ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log && exit 1)"
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      DEPENDS
+        ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/tests.js
+        ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/valhalla.json
+        utrecht_tiles
+        valhalla_node
+      VERBATIM)
+    add_custom_target(run-nodejs_valhalla DEPENDS nodejs_valhalla.log)
+    set_target_properties(run-nodejs_valhalla PROPERTIES FOLDER "Node.js Bindings")
+    set(nodejs_tests nodejs_valhalla)
+  endif()
+endif()
+
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${tyr_tests};${python_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${tyr_tests};${python_tests};${nodejs_tests}")
 
 add_custom_target(check DEPENDS ${test_targets})
 set_target_properties(check PROPERTIES FOLDER "Tests")
