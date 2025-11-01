@@ -27,6 +27,13 @@ function(valhalla_module)
   set(multiValueArgs SOURCES SOURCES_WITH_WARNINGS HEADERS DEPENDS INCLUDE_DIRECTORIES SYSTEM_INCLUDE_DIRECTORIES)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+    set_source_files_properties(
+            ${MODULE_SOURCES}
+            PROPERTIES
+            COMPILE_FLAGS
+            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp")
+  endif()
   list(APPEND MODULE_SOURCES ${MODULE_SOURCES_WITH_WARNINGS})
 
   # add object or static library
@@ -38,15 +45,6 @@ function(valhalla_module)
   endif()
   add_library(valhalla::${MODULE_NAME} ALIAS ${library})
   set_target_properties(${library} PROPERTIES FOLDER "Modules")
-
-  if (UNIX)
-    if (ENABLE_COMPILER_WARNINGS)
-      target_compile_options(${library} PRIVATE -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp)
-    endif()
-    if (ENABLE_WERROR)
-      target_compile_options(${library} PRIVATE -Werror)
-    endif()
-  endif()
 
   # Generate source groups so the files are properly sorted in IDEs like Xcode.
   create_source_groups("Header Files" ${MODULE_HEADERS})
@@ -154,6 +152,12 @@ set(valhalla_src
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
 
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+  # Enables stricter compiler checks on a file-by-file basis
+  # which allows us to migrate piecemeal
+  set_source_files_properties(proto_conversions.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+endif()
+
 if (ENABLE_SERVICES)
   set(valhalla_hdrs ${valhalla_hdrs} ${VALHALLA_SOURCE_DIR}/valhalla/tile_server.h)
   set(valhalla_src ${valhalla_src} tile_server.cc)
@@ -162,15 +166,6 @@ endif()
 add_library(valhalla ${valhalla_src})
 set_target_properties(valhalla PROPERTIES FOLDER "Library")
 create_source_groups("Source Files" ${valhalla_src})
-
-if (UNIX)
-  if (ENABLE_COMPILER_WARNINGS)
-    target_compile_options(valhalla PRIVATE -Wall)
-  endif()
-  if (ENABLE_WERROR)
-    target_compile_options(valhalla PRIVATE -Werror)
-  endif()
-endif()
 
 target_compile_definitions(valhalla
   PUBLIC

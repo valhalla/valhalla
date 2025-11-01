@@ -34,7 +34,7 @@ ARG ADDITIONAL_TARGETS
 # but we only build the docker image in GHA if relevant files changed (extensive paths-ignore in GHA workflow)
 ARG VERSION_MODIFIER=""
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
-RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=Off -DENABLE_WERROR=Off -DVALHALLA_VERSION_MODIFIER=${VERSION_MODIFIER} && \
+RUN cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_TESTS=Off -DENABLE_SINGLE_FILES_WERROR=Off -DVALHALLA_VERSION_MODIFIER=${VERSION_MODIFIER} && \
   make -C build all ${ADDITIONAL_TARGETS} -j${CONCURRENCY:-$(nproc)} && \
   make -C build install
 

@@ -75,20 +75,17 @@ endif()
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
+  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+    set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+  endif()
+
+
   set_target_properties(${test} PROPERTIES FOLDER "Tests")
   target_compile_definitions(${test} PRIVATE
       VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
       VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
   target_link_libraries(${test} valhalla_test)
-  if (UNIX)
-    if (ENABLE_COMPILER_WARNINGS)
-      target_compile_options(${test} PRIVATE -Wall)
-    endif()
-    if (ENABLE_WERROR)
-      target_compile_options(${test} PRIVATE -Werror)
-    endif()
-  endif()
   if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
     # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
     # Any tool that needs interact with Lua will need these flags on macOS
