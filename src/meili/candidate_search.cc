@@ -44,7 +44,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
 
   for (auto it = edgeid_begin; it != edgeid_end; it++) {
     const auto& edgeid = *it;
-    if (!edgeid.Is_Valid()) {
+    if (!edgeid.is_valid()) {
       continue;
     }
 
@@ -58,7 +58,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     auto opp_tile = tile;
     const baldr::DirectedEdge* opp_edge = nullptr;
     const auto opp_edgeid = reader_.GetOpposingEdgeId(edgeid, opp_edge, opp_tile);
-    if (!opp_edgeid.Is_Valid()) {
+    if (!opp_edgeid.is_valid()) {
       continue;
     }
 

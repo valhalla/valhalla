@@ -491,11 +491,11 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdge& directed
     const GraphId expandnode = *expandset.cbegin();
     expandset.erase(expandset.begin());
     visitedset.insert(expandnode);
-    if (expandnode.Tile_Base() != prior_tile) {
+    if (expandnode.tile_base() != prior_tile) {
       lock.lock();
       tile = reader.GetGraphTile(expandnode);
       lock.unlock();
-      prior_tile = expandnode.Tile_Base();
+      prior_tile = expandnode.tile_base();
     }
     const NodeInfo* nodeinfo = tile->node(expandnode);
     const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());

@@ -116,7 +116,7 @@ bool MergeRoute(const State& source,
   // TODO: why doesnt routing.cc return trivial routes? move this logic there
   // This is route where the source and target are the same location so we make a trivial route
   if (segments.empty()) {
-    assert(target_result.edgeid.Is_Valid());
+    assert(target_result.edgeid.is_valid());
     segments.emplace_back(target_result.edgeid, target_result.distance_along,
                           target_result.distance_along);
   }
