@@ -3,7 +3,7 @@
 Checks: >
     bugprone-*
     -bugprone-narrowing-conversions,
-    clang-*,
+    -clang-*,
     performance*,
     -performance-enum-size,
     -performance-move-const-arg,
