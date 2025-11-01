@@ -79,17 +79,17 @@
                     scheme: 'xyz'
                 });
                 
-                // Render roads layer (zoom >= 12)
+                // Render edges layer (zoom >= 12)
                 // Tiles are generated up to z18, beyond that Mapbox will overzoom (scale up) z18 tiles
                 // Color roads by hierarchy level:
                 //   Level 0: Red (highways/motorways)
                 //   Level 1: Orange (major roads)
                 //   Level 2: Yellow (local streets)
                 map.addLayer({
-                    id: 'valhalla-roads',
+                    id: 'valhalla-edges',
                     type: 'line',
                     source: 'valhalla',
-                    'source-layer': 'roads',
+                    'source-layer': 'edges',
                     minzoom: 8,  // Match the C++ code threshold
                     maxzoom: 22,  // Allow rendering even at max zoom (with overzoomed tiles)
                     paint: {
@@ -116,12 +116,12 @@
                     }
                 }); 
                 
-                // Add speed labels on roads
+                // Add speed labels on edges
                 map.addLayer({
-                    id: 'valhalla-road-speeds',
+                    id: 'valhalla-edge-speeds',
                     type: 'symbol',
                     source: 'valhalla',
-                    'source-layer': 'roads',
+                    'source-layer': 'edges',
                     minzoom: 15,  // Only show labels at high zoom levels
                     maxzoom: 22,
                     layout: {
@@ -235,7 +235,7 @@
                 });
                 
                 // Add click handler to show feature properties
-                map.on('click', 'valhalla-roads', (e) => {
+                map.on('click', 'valhalla-edges', (e) => {
                     if (e.features.length > 0) {
                         const feature = e.features[0];
                         const props = feature.properties;
@@ -257,7 +257,7 @@
                         };
                         
                         let html = '<div style="font-family: monospace; font-size: 12px;">';
-                        html += `<strong>Valhalla Road</strong><br/>`;
+                        html += `<strong>Valhalla Edge</strong><br/>`;
                         html += `<strong>Feature ID:</strong> ${feature.id}<br/>`;
                         html += `<strong>Level:</strong> ${props.level}<br/><br/>`;
                         
@@ -325,11 +325,11 @@
                 });
                 
                 // Change cursor on hover
-                map.on('mouseenter', 'valhalla-roads', () => {
+                map.on('mouseenter', 'valhalla-edges', () => {
                     map.getCanvas().style.cursor = 'pointer';
                 });
                 
-                map.on('mouseleave', 'valhalla-roads', () => {
+                map.on('mouseleave', 'valhalla-edges', () => {
                     map.getCanvas().style.cursor = '';
                 });
                 

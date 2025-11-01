@@ -90,25 +90,25 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
   const box_t clip_box(point_t(-TILE_BUFFER, -TILE_BUFFER),
                        point_t(TILE_EXTENT + TILE_BUFFER, TILE_EXTENT + TILE_BUFFER));
 
-  // Create roads layer for edges
-  vtzero::layer_builder layer_roads{tile, "roads"};
+  // Create edges layer
+  vtzero::layer_builder layer_edges{tile, "edges"};
 
   // Pre-add keys for properties with forward/reverse suffixes
-  auto key_level = layer_roads.add_key_without_dup_check("level");
-  auto key_edge_id_fwd = layer_roads.add_key_without_dup_check("edge_id:forward");
-  auto key_edge_id_rev = layer_roads.add_key_without_dup_check("edge_id:reverse");
-  auto key_road_class_fwd = layer_roads.add_key_without_dup_check("road_class:forward");
-  auto key_road_class_rev = layer_roads.add_key_without_dup_check("road_class:reverse");
-  auto key_use_fwd = layer_roads.add_key_without_dup_check("use:forward");
-  auto key_use_rev = layer_roads.add_key_without_dup_check("use:reverse");
-  auto key_speed_fwd = layer_roads.add_key_without_dup_check("speed:forward");
-  auto key_speed_rev = layer_roads.add_key_without_dup_check("speed:reverse");
-  auto key_tunnel_fwd = layer_roads.add_key_without_dup_check("tunnel:forward");
-  auto key_tunnel_rev = layer_roads.add_key_without_dup_check("tunnel:reverse");
-  auto key_bridge_fwd = layer_roads.add_key_without_dup_check("bridge:forward");
-  auto key_bridge_rev = layer_roads.add_key_without_dup_check("bridge:reverse");
-  auto key_roundabout_fwd = layer_roads.add_key_without_dup_check("roundabout:forward");
-  auto key_roundabout_rev = layer_roads.add_key_without_dup_check("roundabout:reverse");
+  auto key_level = layer_edges.add_key_without_dup_check("level");
+  auto key_edge_id_fwd = layer_edges.add_key_without_dup_check("edge_id:forward");
+  auto key_edge_id_rev = layer_edges.add_key_without_dup_check("edge_id:reverse");
+  auto key_road_class_fwd = layer_edges.add_key_without_dup_check("road_class:forward");
+  auto key_road_class_rev = layer_edges.add_key_without_dup_check("road_class:reverse");
+  auto key_use_fwd = layer_edges.add_key_without_dup_check("use:forward");
+  auto key_use_rev = layer_edges.add_key_without_dup_check("use:reverse");
+  auto key_speed_fwd = layer_edges.add_key_without_dup_check("speed:forward");
+  auto key_speed_rev = layer_edges.add_key_without_dup_check("speed:reverse");
+  auto key_tunnel_fwd = layer_edges.add_key_without_dup_check("tunnel:forward");
+  auto key_tunnel_rev = layer_edges.add_key_without_dup_check("tunnel:reverse");
+  auto key_bridge_fwd = layer_edges.add_key_without_dup_check("bridge:forward");
+  auto key_bridge_rev = layer_edges.add_key_without_dup_check("bridge:reverse");
+  auto key_roundabout_fwd = layer_edges.add_key_without_dup_check("roundabout:forward");
+  auto key_roundabout_rev = layer_edges.add_key_without_dup_check("roundabout:reverse");
 
   // Collect unique nodes for the nodes layer
   std::unordered_set<GraphId> unique_nodes;
@@ -205,7 +205,7 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
 
       // Create linestring feature for this clipped segment
       // Use GraphId as feature ID for global uniqueness and debugging
-      vtzero::linestring_feature_builder feature{layer_roads};
+      vtzero::linestring_feature_builder feature{layer_edges};
       feature.set_id(static_cast<uint64_t>(edge_id));
       feature.add_linestring_from_container(tile_coords);
 
