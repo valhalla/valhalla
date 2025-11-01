@@ -179,7 +179,7 @@
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
    * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
    * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
-
+   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
 * **Bug Fix**

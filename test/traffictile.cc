@@ -112,7 +112,8 @@ TEST(Traffic, SpeedValid) {
   EXPECT_TRUE(speed.closed());
 
   // Test wraparound
-  speed.encoded_speed1 = UNKNOWN_TRAFFIC_SPEED_RAW + 1;
+  auto OVERFLOW_VALUE = UNKNOWN_TRAFFIC_SPEED_RAW + 1;
+  speed.encoded_speed1 = OVERFLOW_VALUE;
   EXPECT_EQ(speed.encoded_speed1, 0);
 }
 
