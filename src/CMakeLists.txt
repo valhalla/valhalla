@@ -95,7 +95,7 @@ function(valhalla_module)
       message(FATAL_ERROR "ENABLE_CLANG_TIDY is ON but clang-tidy is not found!")
     else()
       message(STATUS "Enabling clang tidy for ${MODULE_NAME}")
-      set_target_properties(${library} PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+      set_target_properties(${library} PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};--config-file=${VALHALLA_SOURCE_DIR}/.clang-tidy")
     endif()
   
   endif()
