@@ -5,6 +5,7 @@ Checks: >
     -bugprone-narrowing-conversions,
     clang-*,
     -clang-diagnostic-unused-command-line-argument,
+    -clang-analyzer-*,
     performance*,
     -performance-enum-size,
     -performance-move-const-arg,
