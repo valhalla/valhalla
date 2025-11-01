@@ -7,7 +7,7 @@ readonly RUFF_VERSION=0.14.1
 # see https://pypi.org/project/clang-format/#history
 readonly CLANG_FORMAT_VERSION=11.0.1
 # see https://pypi.org/project/clang-tidy/#history
-readonly CLANG_TIDY_VERSION=20.1.0
+readonly CLANG_TIDY_VERSION=21.1.1
 
 function setup_python {
   local python_bin=""
