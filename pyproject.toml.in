@@ -50,6 +50,7 @@ wheel.install-dir = "valhalla"
 # only installs the python cmake COMPONENT
 install.components = ["python"]
 sdist.include = ["pyproject.toml"]
+sdist.exclude = ["test", "test_requests"]
 
 # a few standard build flags for a scikit-build-core build
 [tool.scikit-build.cmake.define]
