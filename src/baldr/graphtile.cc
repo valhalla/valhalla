@@ -90,7 +90,7 @@ graph_tile_ptr GraphTile::DecompressTile(const GraphId& graphid,
 graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
                                  const GraphId& graphid,
                                  std::unique_ptr<const GraphMemory>&& traffic_memory) {
-  if (!graphid.Is_Valid()) {
+  if (!graphid.is_valid()) {
     LOG_ERROR("Failed to build GraphTile. Error: GraphId is invalid");
     return nullptr;
   }
@@ -107,7 +107,7 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
 
   // Open to the end of the file so we can immediately get size
   std::filesystem::path file_location{tile_dir};
-  file_location /= FileSuffix(graphid.Tile_Base());
+  file_location /= FileSuffix(graphid.tile_base());
 
   // first try to open uncompressed, then try compressed file
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
@@ -210,7 +210,7 @@ void store(const std::string& cache_location,
            const std::vector<char>& raw_data) {
   if (!cache_location.empty()) {
     auto suffix =
-        valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
+        valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
                                                (tile_getter->gzipped()
                                                     ? valhalla::baldr::SUFFIX_COMPRESSED
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
@@ -226,11 +226,11 @@ graph_tile_ptr GraphTile::CacheTileURL(const std::string& tile_url,
                                        tile_getter_t* tile_getter,
                                        const std::string& cache_location) {
   // Don't bother with invalid ids
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
+  if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level() || !tile_getter) {
     return nullptr;
   }
 
-  auto fname = valhalla::baldr::GraphTile::FileSuffix(graphid.Tile_Base(),
+  auto fname = valhalla::baldr::GraphTile::FileSuffix(graphid.tile_base(),
                                                       valhalla::baldr::SUFFIX_NON_COMPRESSED, false);
   auto result = tile_getter->get(baldr::make_single_point_url(tile_url, fname));
   if (result.status_ != tile_getter_t::status_code_t::SUCCESS) {
@@ -612,7 +612,7 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const NodeInfo* node)
 }
 
 iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const GraphId& node) const {
-  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
+  if (node.tile_base() != header_->graphid() || node.id() >= header_->nodecount()) {
     throw std::logic_error(
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +
         " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
@@ -647,7 +647,7 @@ iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const NodeInfo*
 }
 
 iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& node) const {
-  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
+  if (node.tile_base() != header_->graphid() || node.id() >= header_->nodecount()) {
     throw std::logic_error(
         std::string(__FILE__) + ":" + std::to_string(__LINE__) +
         " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +

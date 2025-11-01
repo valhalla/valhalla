@@ -65,7 +65,7 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
     : edgeid(the_edgeid), source(the_source), target(the_target),
       first_match_idx(the_first_match_idx), last_match_idx(the_last_match_idx),
       restriction_idx(the_restriction_idx), discontinuity(disconnect) {
-  if (!edgeid.Is_Valid()) {
+  if (!edgeid.is_valid()) {
     throw std::invalid_argument("Invalid edgeid");
   }
 
@@ -220,7 +220,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
     const MatchResult& match = match_results[curr_idx];
 
     // unmatched or interpolated
-    if (!match.edgeid.Is_Valid() || !match.HasState()) {
+    if (!match.edgeid.is_valid() || !match.HasState()) {
       continue;
     }
 

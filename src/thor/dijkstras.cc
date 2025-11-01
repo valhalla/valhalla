@@ -468,7 +468,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
   uint32_t operator_id = pred.transit_operator();
   if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
     // Get the transfer penalty when changing stations
-    if (mode_ == travel_mode_t::kPedestrian && prior_stop.Is_Valid() && has_transit) {
+    if (mode_ == travel_mode_t::kPedestrian && prior_stop.is_valid() && has_transit) {
       transfer_cost = tc->TransferCost();
     }
 
@@ -653,7 +653,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
     // Test if exceeding maximum transfer walking distance
     // TODO: transfer distance != walking distance! (one more label member?)
-    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().Is_Valid() &&
+    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().is_valid() &&
         walking_distance > max_transfer_distance_) {
       continue;
     }
@@ -813,7 +813,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Get the opposing directed edge, continue if we cannot get it
       graph_tile_ptr opp_tile = nullptr;
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
-      if (!opp_edge_id.Is_Valid()) {
+      if (!opp_edge_id.is_valid()) {
         continue;
       }
 

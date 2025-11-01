@@ -203,7 +203,7 @@ thor_worker_t::map_match(Api& request) {
       for (size_t i = 0; i < result.results.size(); ++i) {
         // Get the match
         const auto& match = result.results[i];
-        if (!match.edgeid.Is_Valid()) {
+        if (!match.edgeid.is_valid()) {
           continue;
         }
 

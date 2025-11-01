@@ -149,7 +149,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
         }
         // TODO: optimize the tile switching by enqueuing edges
         // from other levels & tiles and process them after this big loop
-        if (edge_id.Tile_Base() != tile->header()->graphid().Tile_Base() &&
+        if (edge_id.tile_base() != tile->header()->graphid().tile_base() &&
             !reader.GetGraphTile(edge_id, tile)) {
           continue;
         }
@@ -160,7 +160,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
 
         // bail if we wouldnt be allowed on this edge anyway (or its opposing)
         if (!costing->Allowed(edge, tile) &&
-            (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).Is_Valid() ||
+            (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).is_valid() ||
              !costing->Allowed(opp_edge, opp_tile))) {
           continue;
         }
@@ -179,7 +179,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
         if (intersects) {
           avoid_edge_ids.emplace(edge_id);
           avoid_edge_ids.emplace(
-              opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
+              opp_id.is_valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
         }
       }
     }

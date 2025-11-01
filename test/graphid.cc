@@ -19,7 +19,7 @@ TEST(GraphId, TestValues) {
   EXPECT_EQ(target2.id(), 1234567);
 
   // Test the tile_value
-  EXPECT_EQ(target2.Tile_Base().value, target2.tile_value());
+  EXPECT_EQ(target2.tile_base().value, target2.tile_value());
 
   target.set_id(5678);
   EXPECT_EQ(target.id(), 5678);
@@ -35,7 +35,7 @@ TEST(GraphId, TestInvalidValues) {
 
 TEST(GraphId, TestCtorDefault) {
   GraphId target;
-  EXPECT_FALSE(target.Is_Valid());
+  EXPECT_FALSE(target.is_valid());
 }
 
 void TryCtorUintUintUint(const unsigned int tileid,
@@ -90,10 +90,10 @@ TEST(GraphIdGet, Id) {
 
 TEST(GraphId, TestIsValid) {
   GraphId id(1, 2, 3);
-  EXPECT_TRUE(id.Is_Valid());
+  EXPECT_TRUE(id.is_valid());
 
   id = GraphId();
-  EXPECT_FALSE(id.Is_Valid()) << "Default constructor should never return valid graphid";
+  EXPECT_FALSE(id.is_valid()) << "Default constructor should never return valid graphid";
 }
 
 void TryOpPostIncrement(GraphId& gid, const unsigned int expected) {

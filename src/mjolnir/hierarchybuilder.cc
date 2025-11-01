@@ -53,7 +53,7 @@ uint8_t get_hierarchy_level(const DirectedEdge* de) {
 
 // Add a downward transition edge if the node is valid.
 bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
-  if (node.Is_Valid()) {
+  if (node.is_valid()) {
     tilebuilder->transitions().emplace_back(node, false);
     return true;
   } else {
@@ -63,7 +63,7 @@ bool AddDownwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
 
 // Add an upward transition edge if the node is valid.
 bool AddUpwardTransition(const GraphId& node, GraphTileBuilder* tilebuilder) {
-  if (node.Is_Valid()) {
+  if (node.is_valid()) {
     tilebuilder->transitions().emplace_back(node, true);
     return true;
   } else {
@@ -126,11 +126,11 @@ void FormTilesInNewLevel(GraphReader& reader,
       // where a new node exists
       auto f = find_nodes(old_to_new, base_node);
       uint8_t lowest_level;
-      if (f.local_node.Is_Valid())
+      if (f.local_node.is_valid())
         lowest_level = 2;
-      else if (f.arterial_node.Is_Valid())
+      else if (f.arterial_node.is_valid())
         lowest_level = 1;
-      else if (f.highway_node.Is_Valid())
+      else if (f.highway_node.is_valid())
         lowest_level = 0;
       else
         throw std::logic_error("Could not find valid node level");
@@ -155,7 +155,7 @@ void FormTilesInNewLevel(GraphReader& reader,
   for (auto new_node = new_to_old.begin(); new_node != new_to_old.end(); new_node++) {
     // Get the node - check if a new tile
     GraphId nodea = (*new_node).first;
-    if (nodea.Tile_Base() != tile_id) {
+    if (nodea.tile_base() != tile_id) {
       // Store the prior tile
       if (tilebuilder != nullptr) {
         tilebuilder->StoreTileData();
@@ -163,7 +163,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       }
 
       // New tilebuilder for the next tile. Update current level.
-      tile_id = nodea.Tile_Base();
+      tile_id = nodea.tile_base();
       tilebuilder = new GraphTileBuilder(reader.tile_dir(), tile_id, false);
       current_level = nodea.level();
 
@@ -240,7 +240,7 @@ void FormTilesInNewLevel(GraphReader& reader,
         }
         density2 = new_nodes.density;
       }
-      if (!nodeb.Is_Valid()) {
+      if (!nodeb.is_valid()) {
         LOG_ERROR("Invalid end node - not found in old_to_new map");
       }
       newedge.set_endnode(nodeb);
@@ -512,11 +512,11 @@ void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new
           // Get the updated end node
           auto f = find_nodes(old_to_new, directededge.endnode());
           GraphId new_end_node;
-          if (f.local_node.Is_Valid()) {
+          if (f.local_node.is_valid()) {
             new_end_node = f.local_node;
-          } else if (f.arterial_node.Is_Valid()) {
+          } else if (f.arterial_node.is_valid()) {
             new_end_node = f.arterial_node;
-          } else if (f.highway_node.Is_Valid()) {
+          } else if (f.highway_node.is_valid()) {
             new_end_node = f.highway_node;
           } else {
             LOG_ERROR("Transit Connection does not connect to valid node");
@@ -543,11 +543,11 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_
   std::unordered_map<GraphId, bool> tile_map;
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
   for (auto itr = old_to_new.begin(); itr != old_to_new.end(); itr++) {
-    auto f = tile_map.find((*itr).node_id.Tile_Base());
+    auto f = tile_map.find((*itr).node_id.tile_base());
     if (f == tile_map.end()) {
-      tile_map[(*itr).node_id.Tile_Base()] = (*itr).local_node.Is_Valid();
+      tile_map[(*itr).node_id.tile_base()] = (*itr).local_node.is_valid();
     } else {
-      if ((*itr).local_node.Is_Valid()) {
+      if ((*itr).local_node.is_valid()) {
         f->second = true;
       }
     }
@@ -557,7 +557,7 @@ void RemoveUnusedLocalTiles(const std::string& tile_dir, const std::string& old_
       // Remove the file
       GraphId empty_tile = itr->first;
       std::filesystem::path file_location{tile_dir};
-      file_location.append(GraphTile::FileSuffix(empty_tile.Tile_Base()));
+      file_location.append(GraphTile::FileSuffix(empty_tile.tile_base()));
       std::filesystem::remove(file_location);
       LOG_DEBUG("Remove file: " + file_location.string());
     }

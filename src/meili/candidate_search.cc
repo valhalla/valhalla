@@ -125,7 +125,7 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
       // 2. in routing.cc we will find a route to the node, ie not the candidate edge, which means
       //    the route may not end or begin with the candidates we store here, we will need to
       //    handle this case inside of FindMatchResult which expects a candidate to be used
-      if (!snapped_node.Is_Valid() || visited_nodes.insert(snapped_node).second) {
+      if (!snapped_node.is_valid() || visited_nodes.insert(snapped_node).second) {
         candidates.emplace_back(std::move(correlated));
       }
     }

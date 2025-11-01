@@ -376,7 +376,7 @@ void validate(
 
         // Check if end node is in a different tile
         graph_tile_ptr endnode_tile = tile;
-        if (tile_id != directededge.endnode().Tile_Base()) {
+        if (tile_id != directededge.endnode().tile_base()) {
           directededge.set_leaves_tile(true);
 
           // Get the end node tile

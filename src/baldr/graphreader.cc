@@ -36,7 +36,7 @@ tile_gone_error_t::tile_gone_error_t(const std::string& errormessage)
 
 tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
     : std::runtime_error(std::move(prefix) + ", tile no longer available " +
-                         std::to_string(edgeid.Tile_Base())) {
+                         std::to_string(edgeid.tile_base())) {
 }
 
 GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt,
@@ -514,7 +514,7 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
 
 // Method to test if tile exists
 bool GraphReader::DoesTileExist(const GraphId& graphid) const {
-  if (!graphid.Is_Valid() || graphid.level() > TileHierarchy::get_max_level()) {
+  if (!graphid.is_valid() || graphid.level() > TileHierarchy::get_max_level()) {
     return false;
   }
   // if you are using an extract only check that
@@ -529,7 +529,7 @@ bool GraphReader::DoesTileExist(const GraphId& graphid) const {
     return false;
   std::string file_location = tile_dir_;
   file_location += std::filesystem::path::preferred_separator;
-  file_location += GraphTile::FileSuffix(graphid.Tile_Base());
+  file_location += GraphTile::FileSuffix(graphid.tile_base());
   struct stat buffer;
   return stat(file_location.c_str(), &buffer) == 0 ||
          stat((file_location + ".gz").c_str(), &buffer) == 0;
@@ -551,12 +551,12 @@ private:
 // if the tile is not found/empty
 graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
   // Return nullptr if not a valid tile
-  if (!graphid.Is_Valid()) {
+  if (!graphid.is_valid()) {
     return nullptr;
   }
 
   // Check if the level/tileid combination is in the cache
-  auto base = graphid.Tile_Base();
+  auto base = graphid.tile_base();
   if (const auto& cached = cache_->Get(base)) {
     // LOG_DEBUG("Memory cache hit " + GraphTile::FileSuffix(base));
     return cached;
@@ -714,7 +714,7 @@ bool GraphReader::AreEdgesConnectedForward(const GraphId& edge1,
                                            graph_tile_ptr& tile) {
   // Get end node of edge1
   GraphId endnode = edge_endnode(edge1, tile);
-  if (endnode.Tile_Base() != edge1.Tile_Base()) {
+  if (endnode.tile_base() != edge1.tile_base()) {
     tile = GetGraphTile(endnode);
     if (tile == nullptr) {
       return false;
@@ -807,7 +807,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     // Get the end node and end node tile
     GraphId endnode = cont_de->endnode();
     if (cont_de->leaves_tile()) {
-      tile = GetGraphTile(endnode.Tile_Base());
+      tile = GetGraphTile(endnode.tile_base());
     }
     node = tile->node(endnode);
 
@@ -1003,7 +1003,7 @@ int GraphReader::GetTimezoneFromEdge(const baldr::GraphId& edge, graph_tile_ptr&
 
 std::shared_ptr<const valhalla::IncidentsTile>
 GraphReader::GetIncidentTile(const GraphId& tile_id) const {
-  return enable_incidents_ ? incident_singleton_t::get(tile_id.Tile_Base())
+  return enable_incidents_ ? incident_singleton_t::get(tile_id.tile_base())
                            : std::shared_ptr<valhalla::IncidentsTile>{};
 }
 

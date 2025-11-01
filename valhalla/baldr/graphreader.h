@@ -483,7 +483,7 @@ public:
    * @return graph_tile_ptr& reference to the tile parameter
    */
   graph_tile_ptr& GetGraphTile(const GraphId& graphid, graph_tile_ptr& tile) {
-    return !tile || tile->id() != graphid.Tile_Base() ? tile = GetGraphTile(graphid) : tile;
+    return !tile || tile->id() != graphid.tile_base() ? tile = GetGraphTile(graphid) : tile;
   }
 
   /**
@@ -494,7 +494,7 @@ public:
    */
   graph_tile_ptr GetGraphTile(const midgard::PointLL& pointll, const uint8_t level) {
     GraphId id = TileHierarchy::GetGraphId(pointll, level);
-    return id.Is_Valid() ? GetGraphTile(id) : nullptr;
+    return id.is_valid() ? GetGraphTile(id) : nullptr;
   }
 
   /**
@@ -606,7 +606,7 @@ public:
    */
   const DirectedEdge* GetOpposingEdge(const GraphId& edgeid, graph_tile_ptr& opp_tile) {
     GraphId oppedgeid = GetOpposingEdgeId(edgeid, opp_tile);
-    return oppedgeid.Is_Valid() ? opp_tile->directededge(oppedgeid) : nullptr;
+    return oppedgeid.is_valid() ? opp_tile->directededge(oppedgeid) : nullptr;
   }
 
   /**
@@ -783,7 +783,7 @@ public:
    *         the one containing edgeid
    */
   std::pair<GraphId, GraphId> GetDirectedEdgeNodes(const GraphId& edgeid, graph_tile_ptr& edge_tile) {
-    if (edge_tile && edge_tile->id().Tile_Base() == edgeid.Tile_Base()) {
+    if (edge_tile && edge_tile->id().tile_base() == edgeid.tile_base()) {
       return GetDirectedEdgeNodes(edge_tile, edge_tile->directededge(edgeid));
     } else {
       edge_tile = GetGraphTile(edgeid);
@@ -828,7 +828,7 @@ public:
    */
   GraphId edge_startnode(const GraphId& edgeid, graph_tile_ptr& tile) {
     GraphId opp_edgeid = GetOpposingEdgeId(edgeid, tile);
-    if (opp_edgeid.Is_Valid()) {
+    if (opp_edgeid.is_valid()) {
       const auto de = directededge(opp_edgeid, tile);
       if (de) {
         return de->endnode();

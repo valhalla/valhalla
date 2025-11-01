@@ -486,7 +486,7 @@ void BuildTileSet(const std::string& ways_file,
 
     try {
       // What actually writes the tile
-      GraphId tile_id = tile.first.Tile_Base();
+      GraphId tile_id = tile.first.tile_base();
       GraphTileBuilder graphtile(tile_dir, tile_id, false);
 
       // Information about tile creation
@@ -528,7 +528,7 @@ void BuildTileSet(const std::string& ways_file,
       //                                      ? nodes.end() - node_itr
       //                                      : std::next(tile_start)->second - tile_start->second));
 
-      while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_id) {
+      while (node_itr != nodes.end() && (*node_itr).graph_id.tile_base() == tile_id) {
         // amalgamate all the node duplicates into one and the edges that connect to it
         // this moves the iterator for you
         auto bundle = collect_node_edges(node_itr, nodes, edges);

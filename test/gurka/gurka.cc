@@ -485,7 +485,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
          const bool is_shortcut) {
   // if the tile was specified use it otherwise scan everything
   auto tileset =
-      tile_id.Is_Valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
+      tile_id.is_valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
 
   // Iterate over all the tiles, there wont be many in unit tests..
   const auto& end_node_coordinates = nodes.at(end_node);

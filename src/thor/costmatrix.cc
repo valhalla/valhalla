@@ -1266,7 +1266,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Get the opposing directed edge, continue if we cannot get it
       graph_tile_ptr opp_tile = tile;
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
-      if (!opp_edge_id.Is_Valid()) {
+      if (!opp_edge_id.is_valid()) {
         continue;
       }
       const DirectedEdge* opp_dir_edge = graphreader.GetOpposingEdge(edgeid, opp_tile);

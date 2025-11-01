@@ -272,7 +272,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
   if (nodeinfo->type() == NodeType::kMultiUseTransitPlatform) {
 
     // Get the transfer penalty when changing stations
-    if (mode_ == travel_mode_t::kPedestrian && prior_stop.Is_Valid() && has_transit) {
+    if (mode_ == travel_mode_t::kPedestrian && prior_stop.is_valid() && has_transit) {
       transfer_cost = tc->TransferCost();
     }
 
@@ -481,7 +481,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     }
 
     // Test if exceeding maximum transfer walking distance
-    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().Is_Valid() &&
+    if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().is_valid() &&
         walking_distance > max_transfer_distance_) {
       continue;
     }

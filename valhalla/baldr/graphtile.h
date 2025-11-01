@@ -159,7 +159,7 @@ public:
    * @return  Returns a pointer to the node.
    */
   const NodeInfo* node(const GraphId& node) const {
-    assert(node.Tile_Base() == header_->graphid().Tile_Base());
+    assert(node.tile_base() == header_->graphid().tile_base());
     if (node.id() < header_->nodecount()) {
       return &nodes_[node.id()];
     }
@@ -191,7 +191,7 @@ public:
    * @param  nodeid  GraphId of the node.
    */
   midgard::PointLL get_node_ll(const GraphId& nodeid) const {
-    assert(nodeid.Tile_Base() == header_->graphid().Tile_Base());
+    assert(nodeid.tile_base() == header_->graphid().tile_base());
     return node(nodeid)->latlng(base_ll_);
   }
 
@@ -201,7 +201,7 @@ public:
    * @return  Returns a pointer to the edge.
    */
   const DirectedEdge* directededge(const GraphId& edge) const {
-    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
+    assert(edge.tile_base() == header_->graphid().tile_base());
     if (edge.id() < header_->directededgecount()) {
       return &directededges_[edge.id()];
     }
@@ -232,7 +232,7 @@ public:
    * @return  Returns a pointer to the edge extension.
    */
   const DirectedEdgeExt* ext_directededge(const GraphId& edge) const {
-    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
+    assert(edge.tile_base() == header_->graphid().tile_base());
 
     // Testing against directededgecount since the number of directed edges
     // should be the same as the number of directed edge extensions
