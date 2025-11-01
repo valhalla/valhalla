@@ -92,7 +92,7 @@ jobs:
           -DENABLE_GDAL=OFF \
           -DENABLE_TESTS=OFF \
           -DVALHALLA_VERSION_MODIFIFER=$(git rev-parse --short HEAD) \
-          -DENABLE_SINGLE_FILES_WERROR=OFF
+          -DENABLE_WERROR=OFF
           cmake --build build -j${{ matrix.os == 'macos' && '$(sysctl -n hw.logicalcpu)' || '$(nproc)' }}
       
       - name: Bundle
