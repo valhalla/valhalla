@@ -72,7 +72,7 @@ def main():
         if compiler == GCC:
             for line_idx, line in enumerate(log_f.readlines()):
                 # match "[-W" for each line and capture the whole [-W...] block
-                if match := re.search(r'(\[-W[^\]]+\])', line):
+                if match := re.search(r"(\[-W[^\]]+\])", line):
                     # remove the brackets
                     warning_id = match.group(1)[1:-1]
                     warnings_counter[warning_id] += 1

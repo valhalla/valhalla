@@ -23,8 +23,8 @@ from urllib.error import URLError, HTTPError
 for i, arg in enumerate(sys.argv):
     if not len(arg) > 1:
         continue
-    if (arg[0] == '-') and arg[1].isdigit():
-        sys.argv[i] = ' ' + arg
+    if (arg[0] == "-") and arg[1].isdigit():
+        sys.argv[i] = " " + arg
 
 description = """Downloads Tilezen's elevation tiles that either intersect with features in all .geojson files in
               --input-geojson-dir or that intersect with --bbox. NOTE: geojson method requires shapely.
@@ -93,7 +93,7 @@ parser.add_argument(
     "--inline-config",
     help="Inline JSON config, will override --config JSON if present",
     type=str,
-    default='{}',
+    default="{}",
 )
 parser.add_argument(
     "-o",
@@ -168,7 +168,7 @@ def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
         )
         sys.exit(1)
 
-    if not input_dir.is_dir() or not len(list(input_dir.glob('*.geojson'))) > 0:
+    if not input_dir.is_dir() or not len(list(input_dir.glob("*.geojson"))) > 0:
         LOGGER.critical(
             f"Geojson directory does not exist or contains no GeoJSON files: {input_dir.resolve()}"
         )
@@ -223,15 +223,16 @@ def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
         sys.exit(1)
 
     tile_infos = set()
-    local_dir = graph_dir.joinpath('2')
+    local_dir = graph_dir.joinpath("2")
     tile_width = int(360 / LOCAL_SIZE)
-    for tile_fp in local_dir.rglob('*.gph'):
+    for tile_fp in local_dir.rglob("*.gph"):
         # turn the path into a tile ID
         tile_id = int(
-            str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, '')
+            str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, "")
         )
-        tile_x, tile_y = floor(int(tile_id % tile_width) * LOCAL_SIZE - 180), floor(
-            int(tile_id / tile_width) * LOCAL_SIZE - 90
+        tile_x, tile_y = (
+            floor(int(tile_id % tile_width) * LOCAL_SIZE - 180),
+            floor(int(tile_id / tile_width) * LOCAL_SIZE - 90),
         )
 
         tile_infos.add(get_tile_info(tile_x, tile_y))
@@ -260,7 +261,6 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
             # tries up to 24 mins with exponentially increasing sleeps in between, starting with 5 seconds
             sleep((i**2) / 2 * 30)
             with request.urlopen(url) as res, open(filepath, "wb") as f:
-
                 if compression is TileCompression.GZIP:
                     f.write(res.read())
                 else:

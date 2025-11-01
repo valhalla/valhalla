@@ -60,7 +60,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller configurati
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression traffictile
-  incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils)
+  incident_loading worker_nullptr_tiles curl_tilegetter filesystem_utils narrativebuilder util_odin)
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
@@ -78,40 +78,11 @@ if(ENABLE_SERVICES)
   list(APPEND tests loki_service skadi_service)
 endif()
 
-## TODO: fix apple tests!
-if(NOT APPLE)
-  list(APPEND tests narrativebuilder util_odin)
-endif()
-
-# tests files that have warning,
-# any other file not int this list will be processed with the
-# "-Werror" flag
-# Avoid adding a test to this list
-set(tests_with_warnings
-  graphbuilder
-  graphtilebuilder
-  gridded_data
-  maneuversbuilder
-  narrativebuilder
-  parse_request
-  sample
-  sequence
-  statsd
-  traffictile
-  util_odin
-  timedep_paths
-  worker
-  )
-
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
   if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-    if (${test} IN_LIST tests_with_warnings)
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall")
-    else()
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-    endif()
+    set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
   endif()
 
 
@@ -377,6 +348,7 @@ if(ENABLE_SERVICES)
   add_dependencies(run-skadi_service test_directories)
 endif()
 
+# ENABLE_DATA_TOOLS is needed for utrecht_tiles
 if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   find_package(Python COMPONENTS Interpreter)
   add_custom_command(OUTPUT python_valhalla.log
@@ -399,8 +371,43 @@ if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
   set(python_tests python_valhalla)
 endif()
 
+if(ENABLE_NODE_BINDINGS AND ENABLE_DATA_TOOLS)
+  find_program(NODE_EXECUTABLE NAMES node nodejs)
+  if(NOT NODE_EXECUTABLE)
+    message(WARNING "Node.js executable not found, Node.js tests will be skipped")
+  else()
+    # Dynamically find the ASan library path if sanitizer is enabled
+    # it is important to preload ASan this way when running `node`, so that ASan is able to set its interceptors even before any code was able to run
+    if(ENABLE_ADDRESS_SANITIZER)
+      execute_process(
+        COMMAND ${CMAKE_C_COMPILER} -print-file-name=libasan.so
+        OUTPUT_VARIABLE LIBASAN_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      set(ASAN_PRELOAD "LD_PRELOAD=${LIBASAN_PATH}")
+    else()
+      set(ASAN_PRELOAD "")
+    endif()
+    add_custom_command(OUTPUT nodejs_valhalla.log
+      COMMAND
+        ${ASAN_PRELOAD}
+        NODE_PATH=${CMAKE_BINARY_DIR}/src/bindings/nodejs/lib
+        /bin/bash -cx "${NODE_EXECUTABLE} ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/tests.js > ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log 2>&1 || (cat ${CMAKE_BINARY_DIR}/test/nodejs_valhalla.log && exit 1)"
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      DEPENDS
+        ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/tests.js
+        ${VALHALLA_SOURCE_DIR}/test/bindings/nodejs/valhalla.json
+        utrecht_tiles
+        valhalla_node
+      VERBATIM)
+    add_custom_target(run-nodejs_valhalla DEPENDS nodejs_valhalla.log)
+    set_target_properties(run-nodejs_valhalla PROPERTIES FOLDER "Node.js Bindings")
+    set(nodejs_tests nodejs_valhalla)
+  endif()
+endif()
+
 ## High-level targets
-string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${tyr_tests};${python_tests}")
+string(REGEX REPLACE "([^;]+)" "run-\\1" test_targets "${tests};${cost_tests};${tyr_tests};${python_tests};${nodejs_tests}")
 
 add_custom_target(check DEPENDS ${test_targets})
 set_target_properties(check PROPERTIES FOLDER "Tests")
