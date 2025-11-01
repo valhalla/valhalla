@@ -6,6 +6,7 @@ on:
       - master
   pull_request:
     paths:
+      - '**.md'
       - 'docs/**'
       - 'mkdocs.yml'
       - '.github/workflows/gh-pages.yml'
