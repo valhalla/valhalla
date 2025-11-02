@@ -5,6 +5,7 @@ Checks: >
     -bugprone-narrowing-conversions,
     clang-*,
     -clang-analyzer-optin.core.EnumCastOutOfRange,
+    -clang-analyzer-optin.cplusplus.VirtualCall,
     performance*,
     -performance-enum-size,
     -performance-move-const-arg,
