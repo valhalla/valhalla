@@ -208,6 +208,7 @@
 #       - name: Build & install Valhalla (for python bindings)
 #         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
 
+<<<<<<< HEAD
 #       - name: Build Tests
 #         run: make -C build -j$(sysctl -n hw.logicalcpu) tests
 
@@ -230,6 +231,34 @@
 
 #       - name: Run Tests
 #         run: make -C build -j$(sysctl -n hw.logicalcpu) check
+=======
+      - name: Build Tests
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
+        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
+
+      - name: Delete cache to save the latest
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
+        run: |
+          KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
+          gh cache delete ${KEY} || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save ccache
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
+          path: ~/Library/Caches/ccache
+
+      - name: Run Tests
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
+        run: make -C build -j$(sysctl -n hw.logicalcpu) check
+>>>>>>> master
       
 #       # only package python bindings if it's not a PR
 
@@ -362,6 +391,7 @@
 #             -DENABLE_GDAL=ON \
 #             -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
 
+<<<<<<< HEAD
 #       - name: Save vcpkg packages (always, to avoid redundant rebuilds)
 #         if: always()
 #         uses: tespkg/actions-cache/save@v1
@@ -377,6 +407,23 @@
 #             !vcpkg/docs
 #             !vcpkg/buildtrees
 #             vcpkg/downloads/tools
+=======
+      - name: Save vcpkg packages (always, to avoid redundant rebuilds)
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
+        uses: tespkg/actions-cache/save@v1
+        with:
+          endpoint: hel1.your-objectstorage.com
+          accessKey: ${{ secrets.HETZNER_S3_ACCESS_KEY }}
+          secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
+          bucket: gha-cache
+          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+          path: |
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
+>>>>>>> master
 
 #       - name: Build Valhalla
 #         run: |
