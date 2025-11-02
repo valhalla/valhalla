@@ -117,13 +117,35 @@ public:
     key_access_wheelchair_rev_ = layer_.add_key_without_dup_check("access:wheelchair:reverse");
     key_access_moped_rev_ = layer_.add_key_without_dup_check("access:moped:reverse");
     key_access_motorcycle_rev_ = layer_.add_key_without_dup_check("access:motorcycle:reverse");
+    // Traffic speed properties (forward)
+    key_live_speed_fwd_ = layer_.add_key_without_dup_check("live_speed:forward");
+    key_live_speed1_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:speed1");
+    key_live_speed2_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:speed2");
+    key_live_speed3_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:speed3");
+    key_live_breakpoint1_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:breakpoint1");
+    key_live_breakpoint2_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:breakpoint2");
+    key_live_congestion1_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion1");
+    key_live_congestion2_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion2");
+    key_live_congestion3_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion3");
+    // Traffic speed properties (reverse)
+    key_live_speed_rev_ = layer_.add_key_without_dup_check("live_speed:reverse");
+    key_live_speed1_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:speed1");
+    key_live_speed2_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:speed2");
+    key_live_speed3_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:speed3");
+    key_live_breakpoint1_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:breakpoint1");
+    key_live_breakpoint2_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:breakpoint2");
+    key_live_congestion1_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:congestion1");
+    key_live_congestion2_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:congestion2");
+    key_live_congestion3_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:congestion3");
   }
 
   void add_feature(const std::vector<vtzero::point>& geometry,
                    baldr::GraphId forward_edge_id,
                    const baldr::DirectedEdge* forward_edge,
                    baldr::GraphId reverse_edge_id,
-                   const baldr::DirectedEdge* reverse_edge) {
+                   const baldr::DirectedEdge* reverse_edge,
+                   const volatile baldr::TrafficSpeed* forward_traffic,
+                   const volatile baldr::TrafficSpeed* reverse_traffic) {
     // Must have at least one edge and valid geometry
     if (geometry.size() < 2) {
       return;
@@ -242,6 +264,33 @@ public:
       feature.add_property(key_access_motorcycle_fwd_,
                            vtzero::encoded_property_value(
                                static_cast<bool>(fwd_access & kMotorcycleAccess)));
+
+      // Add live traffic data if available
+      if (forward_traffic) {
+        feature.add_property(key_live_speed_fwd_,
+                             vtzero::encoded_property_value(forward_traffic->get_overall_speed()));
+        feature.add_property(key_live_speed1_fwd_,
+                             vtzero::encoded_property_value(forward_traffic->get_speed(0)));
+        feature.add_property(key_live_speed2_fwd_,
+                             vtzero::encoded_property_value(forward_traffic->get_speed(1)));
+        feature.add_property(key_live_speed3_fwd_,
+                             vtzero::encoded_property_value(forward_traffic->get_speed(2)));
+        feature.add_property(
+            key_live_breakpoint1_fwd_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->breakpoint1)));
+        feature.add_property(
+            key_live_breakpoint2_fwd_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->breakpoint2)));
+        feature.add_property(
+            key_live_congestion1_fwd_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->congestion1)));
+        feature.add_property(
+            key_live_congestion2_fwd_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->congestion2)));
+        feature.add_property(
+            key_live_congestion3_fwd_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->congestion3)));
+      }
     }
 
     if (reverse_edge && reverse_edge_id.Is_Valid()) {
@@ -284,6 +333,33 @@ public:
       feature.add_property(key_access_motorcycle_rev_,
                            vtzero::encoded_property_value(
                                static_cast<bool>(rev_access & kMotorcycleAccess)));
+
+      // Add live traffic data if available
+      if (reverse_traffic) {
+        feature.add_property(key_live_speed_rev_,
+                             vtzero::encoded_property_value(reverse_traffic->get_overall_speed()));
+        feature.add_property(key_live_speed1_rev_,
+                             vtzero::encoded_property_value(reverse_traffic->get_speed(0)));
+        feature.add_property(key_live_speed2_rev_,
+                             vtzero::encoded_property_value(reverse_traffic->get_speed(1)));
+        feature.add_property(key_live_speed3_rev_,
+                             vtzero::encoded_property_value(reverse_traffic->get_speed(2)));
+        feature.add_property(
+            key_live_breakpoint1_rev_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->breakpoint1)));
+        feature.add_property(
+            key_live_breakpoint2_rev_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->breakpoint2)));
+        feature.add_property(
+            key_live_congestion1_rev_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->congestion1)));
+        feature.add_property(
+            key_live_congestion2_rev_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->congestion2)));
+        feature.add_property(
+            key_live_congestion3_rev_,
+            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->congestion3)));
+      }
     }
 
     feature.commit();
@@ -371,6 +447,26 @@ private:
   vtzero::index_value key_access_wheelchair_rev_;
   vtzero::index_value key_access_moped_rev_;
   vtzero::index_value key_access_motorcycle_rev_;
+  // Traffic speed keys (forward)
+  vtzero::index_value key_live_speed_fwd_;
+  vtzero::index_value key_live_speed1_fwd_;
+  vtzero::index_value key_live_speed2_fwd_;
+  vtzero::index_value key_live_speed3_fwd_;
+  vtzero::index_value key_live_breakpoint1_fwd_;
+  vtzero::index_value key_live_breakpoint2_fwd_;
+  vtzero::index_value key_live_congestion1_fwd_;
+  vtzero::index_value key_live_congestion2_fwd_;
+  vtzero::index_value key_live_congestion3_fwd_;
+  // Traffic speed keys (reverse)
+  vtzero::index_value key_live_speed_rev_;
+  vtzero::index_value key_live_speed1_rev_;
+  vtzero::index_value key_live_speed2_rev_;
+  vtzero::index_value key_live_speed3_rev_;
+  vtzero::index_value key_live_breakpoint1_rev_;
+  vtzero::index_value key_live_breakpoint2_rev_;
+  vtzero::index_value key_live_congestion1_rev_;
+  vtzero::index_value key_live_congestion2_rev_;
+  vtzero::index_value key_live_congestion3_rev_;
 };
 
 /**
@@ -683,9 +779,17 @@ tile_worker_t::build_edges_layer(vtzero::tile_builder& tile,
       const auto* forward_edge = edge->forward() ? edge : opp_edge;
       const GraphId& reverse_edge_id = edge->forward() ? opp_edge_id : edge_id;
       const auto* reverse_edge = edge->forward() ? opp_edge : edge;
+      const baldr::graph_tile_ptr& forward_tile = edge->forward() ? edge_tile : opp_tile;
+      const baldr::graph_tile_ptr& reverse_tile = edge->forward() ? opp_tile : edge_tile;
+
+      // Get traffic speeds (returns INVALID_SPEED if no traffic tile)
+      const volatile baldr::TrafficSpeed* forward_traffic =
+          forward_edge ? &forward_tile->trafficspeed(forward_edge) : nullptr;
+      const volatile baldr::TrafficSpeed* reverse_traffic =
+          reverse_edge ? &reverse_tile->trafficspeed(reverse_edge) : nullptr;
 
       edges_builder.add_feature(tile_coords, forward_edge_id, forward_edge, reverse_edge_id,
-                                reverse_edge);
+                                reverse_edge, forward_traffic, reverse_traffic);
 
       // Collect the end node of this edge for the nodes layer
       unique_nodes.insert(edge->endnode());

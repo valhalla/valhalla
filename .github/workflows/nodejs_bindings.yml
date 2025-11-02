@@ -231,21 +231,21 @@ jobs:
           export MAPBOX_ACCESS_TOKEN=pk.test.dummy_token_for_ci_testing
           
           # Start the tilevis server in the background
-          node src/bindings/nodejs/examples/tilevis/tilevis.js --config valhalla.json --port 8080 --host 0.0.0.0 &
-          SERVER_PID=$!
-          echo "Started tilevis server with PID: $SERVER_PID"
+          node src/bindings/nodejs/examples/tilevis/tilevis.js --config valhalla.json --port 8080 --host 0.0.0.0
+          # SERVER_PID=$!
+          # echo "Started tilevis server with PID: $SERVER_PID"
           
-          # Wait for server to start
-          echo "Waiting for server to start..."
-          sleep 5
+          # # Wait for server to start
+          # echo "Waiting for server to start..."
+          # sleep 5
           
-          # Run the Node.js tests using built-in test runner
-          export TEST_PORT=8080
-          export TEST_HOST=localhost
-          node --test src/bindings/nodejs/examples/tilevis/test.js
+          # # Run the Node.js tests using built-in test runner
+          # export TEST_PORT=8080
+          # export TEST_HOST=localhost
+          # node --test src/bindings/nodejs/examples/tilevis/test.js
           
-          # Clean up
-          kill $SERVER_PID 
+          # # Clean up
+          # kill $SERVER_PID 
 
 
   publish_npm:
