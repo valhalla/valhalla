@@ -1,9 +1,9 @@
 #include "tyr/actor.h"
+#include "heimdall/worker.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
-#include "heimdall/worker.h"
 #include "tyr/serializers.h"
 
 #include <boost/property_tree/json_parser.hpp>

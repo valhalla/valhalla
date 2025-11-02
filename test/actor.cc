@@ -82,28 +82,28 @@ TEST(Actor, Tile) {
   // Use Utrecht tiles for this test
   const auto utrecht_conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
   tyr::actor_t actor(utrecht_conf);
-  
+
   // Request a tile for Utrecht center (52.08778°N, 5.13142°E)
   // At zoom 14, this is tile 14/8425/5405
   std::string request = R"({"z":14,"x":8425,"y":5405})";
-  
+
   auto tile_data = actor.tile(request);
   actor.cleanup();
-  
+
   // Verify we got data back
   ASSERT_FALSE(tile_data.empty()) << "Tile data should not be empty";
   ASSERT_GT(tile_data.size(), 100) << "Tile data should be at least 100 bytes";
-  
+
   // Parse the MVT tile
   vtzero::vector_tile tile{tile_data};
-  
+
   // Verify the tile contains expected layers
   bool has_edges = false;
   bool has_nodes = false;
-  
+
   while (auto layer = tile.next_layer()) {
     std::string layer_name = std::string(layer.name());
-    
+
     if (layer_name == "edges") {
       has_edges = true;
       // Verify the edges layer has at least one feature
@@ -114,7 +114,7 @@ TEST(Actor, Tile) {
       ASSERT_GT(layer.num_features(), 0) << "Nodes layer should have features";
     }
   }
-  
+
   // Verify both expected layers exist
   ASSERT_TRUE(has_edges) << "Tile should contain 'edges' layer";
   ASSERT_TRUE(has_nodes) << "Tile should contain 'nodes' layer";

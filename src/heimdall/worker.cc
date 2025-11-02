@@ -3,10 +3,10 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
+#include "heimdall/util.h"
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "heimdall/util.h"
 #include "valhalla/exceptions.h"
 
 #include <boost/geometry.hpp>
@@ -275,21 +275,21 @@ public:
                              vtzero::encoded_property_value(forward_traffic->get_speed(1)));
         feature.add_property(key_live_speed3_fwd_,
                              vtzero::encoded_property_value(forward_traffic->get_speed(2)));
-        feature.add_property(
-            key_live_breakpoint1_fwd_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->breakpoint1)));
-        feature.add_property(
-            key_live_breakpoint2_fwd_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->breakpoint2)));
-        feature.add_property(
-            key_live_congestion1_fwd_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->congestion1)));
-        feature.add_property(
-            key_live_congestion2_fwd_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->congestion2)));
-        feature.add_property(
-            key_live_congestion3_fwd_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(forward_traffic->congestion3)));
+        feature.add_property(key_live_breakpoint1_fwd_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(forward_traffic->breakpoint1)));
+        feature.add_property(key_live_breakpoint2_fwd_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(forward_traffic->breakpoint2)));
+        feature.add_property(key_live_congestion1_fwd_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(forward_traffic->congestion1)));
+        feature.add_property(key_live_congestion2_fwd_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(forward_traffic->congestion2)));
+        feature.add_property(key_live_congestion3_fwd_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(forward_traffic->congestion3)));
       }
     }
 
@@ -344,21 +344,21 @@ public:
                              vtzero::encoded_property_value(reverse_traffic->get_speed(1)));
         feature.add_property(key_live_speed3_rev_,
                              vtzero::encoded_property_value(reverse_traffic->get_speed(2)));
-        feature.add_property(
-            key_live_breakpoint1_rev_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->breakpoint1)));
-        feature.add_property(
-            key_live_breakpoint2_rev_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->breakpoint2)));
-        feature.add_property(
-            key_live_congestion1_rev_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->congestion1)));
-        feature.add_property(
-            key_live_congestion2_rev_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->congestion2)));
-        feature.add_property(
-            key_live_congestion3_rev_,
-            vtzero::encoded_property_value(static_cast<uint32_t>(reverse_traffic->congestion3)));
+        feature.add_property(key_live_breakpoint1_rev_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(reverse_traffic->breakpoint1)));
+        feature.add_property(key_live_breakpoint2_rev_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(reverse_traffic->breakpoint2)));
+        feature.add_property(key_live_congestion1_rev_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(reverse_traffic->congestion1)));
+        feature.add_property(key_live_congestion2_rev_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(reverse_traffic->congestion2)));
+        feature.add_property(key_live_congestion3_rev_,
+                             vtzero::encoded_property_value(
+                                 static_cast<uint32_t>(reverse_traffic->congestion3)));
       }
     }
 
@@ -523,7 +523,7 @@ public:
     node_feature.add_property(key_tile_level_, vtzero::encoded_property_value(node_id.level()));
     node_feature.add_property(key_tile_id_, vtzero::encoded_property_value(node_id.tileid()));
     node_feature.add_property(key_node_id_, vtzero::encoded_property_value(node_id.id()));
-    
+
     // Add node properties
     node_feature.add_property(key_node_type_,
                               vtzero::encoded_property_value(static_cast<uint32_t>(node->type())));
