@@ -23,7 +23,7 @@ namespace {
 const std::string test_tile_dir = "test/node_search_tiles";
 
 struct graph_writer {
-  graph_writer(uint8_t level);
+  graph_writer();
 
   vj::GraphTileBuilder& builder(vb::GraphId tile_id);
 
@@ -35,11 +35,10 @@ struct graph_writer {
   void write_tiles();
 
 private:
-  [[maybe_unused]] const uint8_t m_level;
   std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder>> m_builders;
 };
 
-graph_writer::graph_writer(uint8_t level) : m_level(level) {
+graph_writer::graph_writer() {
 }
 
 vj::GraphTileBuilder& graph_writer::builder(vb::GraphId tile_id) {
@@ -159,7 +158,7 @@ void graph_builder::write_tiles(uint8_t level) const {
   const size_t num_nodes = nodes.size();
   const size_t num_edges = edges.size();
 
-  graph_writer writer(level);
+  graph_writer writer;
   edge_count_tracker edge_counts;
 
   // count the number of edges originating at a node
