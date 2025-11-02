@@ -43,7 +43,7 @@ struct actor_t::pimpl_t {
   loki::loki_worker_t loki_worker;
   thor::thor_worker_t thor_worker;
   odin_worker_t odin_worker;
-  heimdall::tile_worker_t tile_worker;
+  heimdall::heimdall_worker_t tile_worker;
 };
 
 actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup)
@@ -375,8 +375,9 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
 
 std::string actor_t::tile(const std::string& request_str) {
   // Parse z/x/y from request string
-  // Expected format: {"z": 10, "x": 123, "y": 456}
+  // Expected format: {"z": 10, "x": 123, "y": 456, "return_shortcuts": false}
   uint32_t z = 0, x = 0, y = 0;
+  bool return_shortcuts = false;
 
   try {
     std::stringstream ss(request_str);
@@ -386,12 +387,13 @@ std::string actor_t::tile(const std::string& request_str) {
     z = pt.get<uint32_t>("z");
     x = pt.get<uint32_t>("x");
     y = pt.get<uint32_t>("y");
+    return_shortcuts = pt.get<bool>("return_shortcuts", false);
   } catch (const std::exception& e) {
     throw valhalla_exception_t{400, "Invalid tile request: " + std::string(e.what())};
   }
 
   // Delegate to tile worker
-  return pimpl->tile_worker.render_tile(z, x, y);
+  return pimpl->tile_worker.render_tile(z, x, y, return_shortcuts);
 }
 
 } // namespace tyr

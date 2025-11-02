@@ -628,7 +628,7 @@ private:
 
 } // anonymous namespace
 
-void tile_worker_t::ReadZoomConfig(const boost::property_tree::ptree& config) {
+void heimdall_worker_t::ReadZoomConfig(const boost::property_tree::ptree& config) {
   min_zoom_road_class_ = kDefaultMinZoomRoadClass;
 
   auto tile_config = config.get_child_optional("tile");
@@ -653,8 +653,8 @@ void tile_worker_t::ReadZoomConfig(const boost::property_tree::ptree& config) {
   min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
 }
 
-tile_worker_t::tile_worker_t(const boost::property_tree::ptree& config,
-                             const std::shared_ptr<baldr::GraphReader>& graph_reader)
+heimdall_worker_t::heimdall_worker_t(const boost::property_tree::ptree& config,
+                                     const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : config_(config), reader_(graph_reader),
       candidate_query_(*graph_reader,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
@@ -663,11 +663,12 @@ tile_worker_t::tile_worker_t(const boost::property_tree::ptree& config,
 }
 
 std::unordered_set<GraphId>
-tile_worker_t::build_edges_layer(vtzero::tile_builder& tile,
-                                 const midgard::AABB2<midgard::PointLL>& bounds,
-                                 const std::unordered_set<baldr::GraphId>& edge_ids,
-                                 uint32_t z,
-                                 const TileProjection& projection) {
+heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
+                                     const midgard::AABB2<midgard::PointLL>& bounds,
+                                     const std::unordered_set<baldr::GraphId>& edge_ids,
+                                     uint32_t z,
+                                     const TileProjection& projection,
+                                     bool return_shortcuts) {
   using point_t = boost::geometry::model::d2::point_xy<double>;
   using linestring_t = boost::geometry::model::linestring<point_t>;
   using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
@@ -688,6 +689,11 @@ tile_worker_t::build_edges_layer(vtzero::tile_builder& tile,
     baldr::graph_tile_ptr edge_tile;
     const auto* edge = reader_->directededge(edge_id, edge_tile);
     if (!edge || !edge_tile) {
+      continue;
+    }
+
+    // Filter out shortcut edges if return_shortcuts is false
+    if (!return_shortcuts && edge->is_shortcut()) {
       continue;
     }
 
@@ -799,9 +805,9 @@ tile_worker_t::build_edges_layer(vtzero::tile_builder& tile,
   return unique_nodes;
 }
 
-void tile_worker_t::build_nodes_layer(vtzero::tile_builder& tile,
-                                      const std::unordered_set<baldr::GraphId>& unique_nodes,
-                                      const TileProjection& projection) {
+void heimdall_worker_t::build_nodes_layer(vtzero::tile_builder& tile,
+                                          const std::unordered_set<baldr::GraphId>& unique_nodes,
+                                          const TileProjection& projection) {
   // Create nodes layer builder
   NodesLayerBuilder nodes_builder(tile);
 
@@ -839,7 +845,8 @@ void tile_worker_t::build_nodes_layer(vtzero::tile_builder& tile,
   }
 }
 
-std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
+std::string
+heimdall_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y, bool return_shortcuts) {
   // Validate tile coordinates
   uint32_t max_coord = (1u << z);
   if (x >= max_coord || y >= max_coord || z > 30) {
@@ -874,7 +881,7 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
                             TILE_BUFFER};
 
   // Build edges layer and collect unique nodes
-  auto unique_nodes = build_edges_layer(tile, bounds, edge_ids, z, projection);
+  auto unique_nodes = build_edges_layer(tile, bounds, edge_ids, z, projection, return_shortcuts);
 
   // Build nodes layer
   build_nodes_layer(tile, unique_nodes, projection);

@@ -26,24 +26,25 @@ namespace heimdall {
  * Heimdall worker for rendering vector tiles from Valhalla graph data.
  * Generates Mapbox Vector Tiles (MVT) compatible output.
  */
-class tile_worker_t {
+class heimdall_worker_t {
 public:
   /**
    * Constructor
    * @param config  Configuration property tree
    * @param graph_reader  Shared pointer to graph reader
    */
-  tile_worker_t(const boost::property_tree::ptree& config,
-                const std::shared_ptr<baldr::GraphReader>& graph_reader);
+  heimdall_worker_t(const boost::property_tree::ptree& config,
+                    const std::shared_ptr<baldr::GraphReader>& graph_reader);
 
   /**
    * Render a vector tile for the specified tile coordinates
    * @param z  Zoom level
    * @param x  Tile X coordinate
    * @param y  Tile Y coordinate
+   * @param return_shortcuts  If false (default), filter out shortcut edges
    * @return  Serialized MVT tile data as a string
    */
-  std::string render_tile(uint32_t z, uint32_t x, uint32_t y);
+  std::string render_tile(uint32_t z, uint32_t x, uint32_t y, bool return_shortcuts = false);
 
 private:
   /**
@@ -71,6 +72,7 @@ private:
 
   /**
    * Build the edges layer for the vector tile
+   * @param return_shortcuts  If false, filter out shortcut edges
    * @return Set of unique nodes encountered while building edges
    */
   std::unordered_set<baldr::GraphId>
@@ -78,7 +80,8 @@ private:
                     const midgard::AABB2<midgard::PointLL>& bounds,
                     const std::unordered_set<baldr::GraphId>& edge_ids,
                     uint32_t z,
-                    const TileProjection& projection);
+                    const TileProjection& projection,
+                    bool return_shortcuts);
 
   /**
    * Build the nodes layer for the vector tile
