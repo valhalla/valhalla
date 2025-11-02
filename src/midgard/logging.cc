@@ -38,10 +38,13 @@ std::string TimeStamp() {
       (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);
   // format the string
   std::string buffer("year/mo/dy hr:mn:sc.xxxxxx0");
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
   [[maybe_unused]] int ret =
       snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f",
                gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
                fractional_seconds.count());
+#pragma GCC diagnostic pop
   assert(ret == static_cast<int>(buffer.length()) - 1);
 
   // Remove trailing null terminator added by snprintf.
