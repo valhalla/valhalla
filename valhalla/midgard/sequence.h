@@ -617,6 +617,7 @@ struct tar {
       const unsigned char* check = ptr; // This is used to check where the last NUL/space char is
       // NOLINTNEXTLINE(clang-analyzer-security.ArrayBound)
       for (; check >= (unsigned char*)data; check--) {
+        // NOLINTNEXTLINE(clang-analyzer-security.ArrayBound)
         if ((*check) == 0 || (*check) == ' ') {
           ptr = check - 1;
         }
