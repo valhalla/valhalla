@@ -2,6 +2,7 @@
 #include "test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <vtzero/vector_tile.hpp>
 
 #include <functional>
 #include <string>
@@ -75,6 +76,46 @@ TEST(Actor, TraceAttributes) {
         {"lat":40.544232,"lon":-76.385752}],"costing":"auto","shape_match":"map_snap"})";
   std::function<void()> interrupt = [] { throw test_exception_t{}; };
   EXPECT_THROW(actor.trace_attributes(request, &interrupt), test_exception_t);
+}
+
+TEST(Actor, Tile) {
+  tyr::actor_t actor(conf);
+  
+  // Request a tile for the Pine Grove area (lat: 40.546115, lon: -76.385076)
+  // At zoom 14, this is approximately tile 14/4714/6092
+  std::string request = R"({"z":14,"x":4714,"y":6092})";
+  
+  auto tile_data = actor.tile(request);
+  actor.cleanup();
+  
+  // Verify we got data back
+  ASSERT_FALSE(tile_data.empty()) << "Tile data should not be empty";
+  ASSERT_GT(tile_data.size(), 100) << "Tile data should be at least 100 bytes";
+  
+  // Parse the MVT tile
+  vtzero::vector_tile tile{tile_data};
+  
+  // Verify the tile contains expected layers
+  bool has_edges = false;
+  bool has_nodes = false;
+  
+  while (auto layer = tile.next_layer()) {
+    std::string layer_name = std::string(layer.name());
+    
+    if (layer_name == "edges") {
+      has_edges = true;
+      // Verify the edges layer has at least one feature
+      ASSERT_GT(layer.num_features(), 0) << "Edges layer should have features";
+    } else if (layer_name == "nodes") {
+      has_nodes = true;
+      // Verify the nodes layer has at least one feature
+      ASSERT_GT(layer.num_features(), 0) << "Nodes layer should have features";
+    }
+  }
+  
+  // Verify both expected layers exist
+  ASSERT_TRUE(has_edges) << "Tile should contain 'edges' layer";
+  ASSERT_TRUE(has_nodes) << "Tile should contain 'nodes' layer";
 }
 
 // TODO: test the rest of them
