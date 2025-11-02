@@ -312,7 +312,6 @@ void statistics::insert_tile_data(Sqlite3& db, sqlite3_stmt* stmt) {
     ++index;
     // Individual Road Class Lengths
     for (auto rclass : rclasses) {
-      const std::string& roadStr = roadClassToString.at(rclass);
       sqlite3_bind_double(stmt, index, tile_lengths[tileid][rclass]);
       ++index;
     }
@@ -498,7 +497,6 @@ void statistics::insert_country_data(Sqlite3& db, sqlite3_stmt* stmt) {
     ++index;
     // Individual Road Class Lengths
     for (auto rclass : rclasses) {
-      const std::string& roadStr = roadClassToString.at(rclass);
       sqlite3_bind_double(stmt, index, country_lengths[country][rclass]);
       ++index;
     }
