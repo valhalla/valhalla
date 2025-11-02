@@ -88,10 +88,14 @@ get_optional(V&& v, const char* source) {
   // if we dont have this key bail
   auto* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
   if (!ptr) {
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
     return boost::none;
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
+#endif
   }
   // if its the exact right type give it back
   if (ptr->template Is<T>()) {
