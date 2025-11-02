@@ -1,5 +1,5 @@
-#ifndef __VALHALLA_TILE_WORKER_H__
-#define __VALHALLA_TILE_WORKER_H__
+#ifndef __VALHALLA_HEIMDALL_WORKER_H__
+#define __VALHALLA_HEIMDALL_WORKER_H__
 
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/meili/candidate_search.h>
@@ -20,10 +20,10 @@ class tile_builder;
 }
 
 namespace valhalla {
-namespace tile {
+namespace heimdall {
 
 /**
- * Tile worker for rendering vector tiles from Valhalla graph data.
+ * Heimdall worker for rendering vector tiles from Valhalla graph data.
  * Generates Mapbox Vector Tiles (MVT) compatible output.
  */
 class tile_worker_t {
@@ -98,7 +98,7 @@ private:
   uint32_t min_zoom_;
 };
 
-} // namespace tile
+} // namespace heimdall
 } // namespace valhalla
 
-#endif // __VALHALLA_TILE_WORKER_H__
+#endif // __VALHALLA_HEIMDALL_WORKER_H__

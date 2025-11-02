@@ -1,4 +1,4 @@
-file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/tile/*.h)
+file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/heimdall/*.h)
 
 set(sources
   util.cc
@@ -8,7 +8,7 @@ set(system_includes
   ${date_include_dir}
   $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
-valhalla_module(NAME tile
+valhalla_module(NAME heimdall
   SOURCES ${sources}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES

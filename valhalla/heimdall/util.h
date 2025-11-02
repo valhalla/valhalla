@@ -1,5 +1,5 @@
-#ifndef __VALHALLA_TILE_UTIL_H__
-#define __VALHALLA_TILE_UTIL_H__
+#ifndef __VALHALLA_HEIMDALL_UTIL_H__
+#define __VALHALLA_HEIMDALL_UTIL_H__
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/pointll.h>
@@ -7,7 +7,7 @@
 #include <cstdint>
 
 namespace valhalla {
-namespace tile {
+namespace heimdall {
 
 /**
  * Earth radius in meters for EPSG:3857 Web Mercator projection.
@@ -43,7 +43,7 @@ double lon_to_merc_x(double lon);
  */
 double lat_to_merc_y(double lat);
 
-} // namespace tile
+} // namespace heimdall
 } // namespace valhalla
 
-#endif // __VALHALLA_TILE_UTIL_H__
+#endif // __VALHALLA_HEIMDALL_UTIL_H__

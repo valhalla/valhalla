@@ -1,4 +1,4 @@
-#include "tile/worker.h"
+#include "heimdall/worker.h"
 #include "baldr/directededge.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
@@ -6,7 +6,7 @@
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
-#include "tile/util.h"
+#include "heimdall/util.h"
 #include "valhalla/exceptions.h"
 
 #include <boost/geometry.hpp>
@@ -27,7 +27,7 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace valhalla {
-namespace tile {
+namespace heimdall {
 
 namespace {
 
@@ -882,5 +882,5 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
   return tile.serialize();
 }
 
-} // namespace tile
+} // namespace heimdall
 } // namespace valhalla

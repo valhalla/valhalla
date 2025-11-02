@@ -3,7 +3,7 @@
 #include "midgard/logging.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
-#include "tile/worker.h"
+#include "heimdall/worker.h"
 #include "tyr/serializers.h"
 
 #include <boost/property_tree/json_parser.hpp>
@@ -43,7 +43,7 @@ struct actor_t::pimpl_t {
   loki::loki_worker_t loki_worker;
   thor::thor_worker_t thor_worker;
   odin_worker_t odin_worker;
-  tile::tile_worker_t tile_worker;
+  heimdall::tile_worker_t tile_worker;
 };
 
 actor_t::actor_t(const boost::property_tree::ptree& config, bool auto_cleanup)

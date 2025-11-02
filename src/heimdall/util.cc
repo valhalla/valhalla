@@ -1,4 +1,4 @@
-#include "tile/util.h"
+#include "heimdall/util.h"
 #include "midgard/constants.h"
 
 #include <cmath>
@@ -6,7 +6,7 @@
 using namespace valhalla::midgard;
 
 namespace valhalla {
-namespace tile {
+namespace heimdall {
 
 midgard::AABB2<midgard::PointLL> tile_to_bbox(uint32_t z, uint32_t x, uint32_t y) {
   const double n = std::pow(2.0, z);
@@ -31,5 +31,5 @@ double lat_to_merc_y(double lat) {
   return kEarthRadiusMeters * std::log(std::tan(kPiD / 4.0 + lat * kPiD / 360.0));
 }
 
-} // namespace tile
+} // namespace heimdall
 } // namespace valhalla
