@@ -4,6 +4,7 @@ Checks: >
     bugprone-*
     -bugprone-narrowing-conversions,
     clang-*,
+    -clang-analyzer-optin.core.EnumCastOutOfRange,
     performance*,
     -performance-enum-size,
     -performance-move-const-arg,
