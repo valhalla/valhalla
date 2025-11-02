@@ -1,10 +1,12 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: ENABLE_GDAL define for **Linux-only** Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
 * **Bug Fix**
 * **Enhancement**
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
    * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647) 
    * UPGRADED: vcpkg to 0e39c10736341cc8135b560438229bbda3d3219a [#5654](https://github.com/valhalla/valhalla/pull/5654)
+   * FIXED: returns GeoTIFF with Content-Type image/tiff header [#5665](https://github.com/valhalla/valhalla/pull/5665)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
