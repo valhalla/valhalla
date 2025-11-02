@@ -152,19 +152,9 @@ public:
     }
 
     assert(forward_edge || reverse_edge);
-    // assert(!forward_edge || forward_edge->forward());
-    // assert(!reverse_edge || !reverse_edge->forward());
 
     const auto* edge = forward_edge ? forward_edge : reverse_edge;
     const GraphId& edge_id = forward_edge ? forward_edge_id : reverse_edge_id;
-
-    // TODO: some of them fail for soem reason
-    // assert((!forward_edge || !reverse_edge) || (forward_edge->roundabout() ==
-    // reverse_edge->roundabout())); assert((!forward_edge || !reverse_edge) || (forward_edge->use()
-    // == reverse_edge->use())); assert((!forward_edge || !reverse_edge) ||
-    // (forward_edge->classification() == reverse_edge->classification())); assert((!forward_edge ||
-    // !reverse_edge) || (forward_edge->tunnel() == reverse_edge->tunnel())); assert((!forward_edge ||
-    // !reverse_edge) || (forward_edge->bridge() == reverse_edge->bridge()));
 
     // Create linestring feature for this edge
     vtzero::linestring_feature_builder feature{layer_};
@@ -775,21 +765,14 @@ tile_worker_t::build_edges_layer(vtzero::tile_builder& tile,
       GraphId opp_edge_id = reader_->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
 
       // Add feature using the builder
-      const GraphId& forward_edge_id = edge->forward() ? edge_id : opp_edge_id;
-      const auto* forward_edge = edge->forward() ? edge : opp_edge;
-      const GraphId& reverse_edge_id = edge->forward() ? opp_edge_id : edge_id;
-      const auto* reverse_edge = edge->forward() ? opp_edge : edge;
-      const baldr::graph_tile_ptr& forward_tile = edge->forward() ? edge_tile : opp_tile;
-      const baldr::graph_tile_ptr& reverse_tile = edge->forward() ? opp_tile : edge_tile;
 
-      // Get traffic speeds (returns INVALID_SPEED if no traffic tile)
       const volatile baldr::TrafficSpeed* forward_traffic =
-          forward_edge ? &forward_tile->trafficspeed(forward_edge) : nullptr;
+          edge ? &opp_tile->trafficspeed(edge) : nullptr;
       const volatile baldr::TrafficSpeed* reverse_traffic =
-          reverse_edge ? &reverse_tile->trafficspeed(reverse_edge) : nullptr;
+          opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
-      edges_builder.add_feature(tile_coords, forward_edge_id, forward_edge, reverse_edge_id,
-                                reverse_edge, forward_traffic, reverse_traffic);
+      edges_builder.add_feature(tile_coords, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
+                                reverse_traffic);
 
       // Collect the end node of this edge for the nodes layer
       unique_nodes.insert(edge->endnode());
