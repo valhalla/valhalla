@@ -58,11 +58,16 @@ public:
   void add_feature(const std::vector<vtzero::point>& geometry,
                    baldr::GraphId edge_id,
                    const baldr::DirectedEdge* forward_edge,
-                   const baldr::DirectedEdge* reverse_edge,
-                   baldr::GraphId reverse_edge_id) {
-    if (!forward_edge || geometry.size() < 2) {
+                   baldr::GraphId reverse_edge_id,
+                   const baldr::DirectedEdge* reverse_edge) {
+    // Must have at least one edge and valid geometry
+    if (geometry.size() < 2) {
       return;
     }
+
+    assert(forward_edge || reverse_edge);
+    assert(!forward_edge || forward_edge->forward());
+    assert(!reverse_edge || !reverse_edge->forward());
 
     // Create linestring feature for this edge
     vtzero::linestring_feature_builder feature{layer_};
@@ -73,46 +78,33 @@ public:
     uint32_t level = edge_id.level();
     feature.add_property(key_level_, vtzero::encoded_property_value(level));
 
-    // Add forward edge properties
-    std::string edge_id_str = std::to_string(static_cast<uint64_t>(edge_id));
-    auto key_edge_id = forward_edge->forward() ? key_edge_id_fwd_ : key_edge_id_rev_;
-    auto key_road_class = forward_edge->forward() ? key_road_class_fwd_ : key_road_class_rev_;
-    auto key_use = forward_edge->forward() ? key_use_fwd_ : key_use_rev_;
-    auto key_speed = forward_edge->forward() ? key_speed_fwd_ : key_speed_rev_;
-    auto key_tunnel = forward_edge->forward() ? key_tunnel_fwd_ : key_tunnel_rev_;
-    auto key_bridge = forward_edge->forward() ? key_bridge_fwd_ : key_bridge_rev_;
-    auto key_roundabout = forward_edge->forward() ? key_roundabout_fwd_ : key_roundabout_rev_;
+    // Add forward edge properties if present
+    if (forward_edge) {
+      std::string edge_id_str = std::to_string(static_cast<uint64_t>(edge_id));
+      feature.add_property(key_edge_id_fwd_, vtzero::encoded_property_value(edge_id_str));
+      feature.add_property(key_road_class_fwd_, vtzero::encoded_property_value(static_cast<uint32_t>(
+                                                    forward_edge->classification())));
+      feature.add_property(key_use_fwd_, vtzero::encoded_property_value(
+                                             static_cast<uint32_t>(forward_edge->use())));
+      feature.add_property(key_speed_fwd_, vtzero::encoded_property_value(forward_edge->speed()));
+      feature.add_property(key_tunnel_fwd_, vtzero::encoded_property_value(forward_edge->tunnel()));
+      feature.add_property(key_bridge_fwd_, vtzero::encoded_property_value(forward_edge->bridge()));
+      feature.add_property(key_roundabout_fwd_,
+                           vtzero::encoded_property_value(forward_edge->roundabout()));
+    }
 
-    feature.add_property(key_edge_id, vtzero::encoded_property_value(edge_id_str));
-    feature.add_property(key_road_class, vtzero::encoded_property_value(
-                                             static_cast<uint32_t>(forward_edge->classification())));
-    feature.add_property(key_use,
-                         vtzero::encoded_property_value(static_cast<uint32_t>(forward_edge->use())));
-    feature.add_property(key_speed, vtzero::encoded_property_value(forward_edge->speed()));
-    feature.add_property(key_tunnel, vtzero::encoded_property_value(forward_edge->tunnel()));
-    feature.add_property(key_bridge, vtzero::encoded_property_value(forward_edge->bridge()));
-    feature.add_property(key_roundabout, vtzero::encoded_property_value(forward_edge->roundabout()));
-
-    // Add reverse edge properties if provided
+    // Add reverse edge properties if present
     if (reverse_edge && reverse_edge_id.Is_Valid()) {
-      auto key_opp_edge_id = forward_edge->forward() ? key_edge_id_rev_ : key_edge_id_fwd_;
-      auto key_opp_road_class = forward_edge->forward() ? key_road_class_rev_ : key_road_class_fwd_;
-      auto key_opp_use = forward_edge->forward() ? key_use_rev_ : key_use_fwd_;
-      auto key_opp_speed = forward_edge->forward() ? key_speed_rev_ : key_speed_fwd_;
-      auto key_opp_tunnel = forward_edge->forward() ? key_tunnel_rev_ : key_tunnel_fwd_;
-      auto key_opp_bridge = forward_edge->forward() ? key_bridge_rev_ : key_bridge_fwd_;
-      auto key_opp_roundabout = forward_edge->forward() ? key_roundabout_rev_ : key_roundabout_fwd_;
-
       std::string opp_edge_id_str = std::to_string(static_cast<uint64_t>(reverse_edge_id));
-      feature.add_property(key_opp_edge_id, vtzero::encoded_property_value(opp_edge_id_str));
-      feature.add_property(key_opp_road_class, vtzero::encoded_property_value(static_cast<uint32_t>(
-                                                   reverse_edge->classification())));
-      feature.add_property(key_opp_use, vtzero::encoded_property_value(
-                                            static_cast<uint32_t>(reverse_edge->use())));
-      feature.add_property(key_opp_speed, vtzero::encoded_property_value(reverse_edge->speed()));
-      feature.add_property(key_opp_tunnel, vtzero::encoded_property_value(reverse_edge->tunnel()));
-      feature.add_property(key_opp_bridge, vtzero::encoded_property_value(reverse_edge->bridge()));
-      feature.add_property(key_opp_roundabout,
+      feature.add_property(key_edge_id_rev_, vtzero::encoded_property_value(opp_edge_id_str));
+      feature.add_property(key_road_class_rev_, vtzero::encoded_property_value(static_cast<uint32_t>(
+                                                    reverse_edge->classification())));
+      feature.add_property(key_use_rev_, vtzero::encoded_property_value(
+                                             static_cast<uint32_t>(reverse_edge->use())));
+      feature.add_property(key_speed_rev_, vtzero::encoded_property_value(reverse_edge->speed()));
+      feature.add_property(key_tunnel_rev_, vtzero::encoded_property_value(reverse_edge->tunnel()));
+      feature.add_property(key_bridge_rev_, vtzero::encoded_property_value(reverse_edge->bridge()));
+      feature.add_property(key_roundabout_rev_,
                            vtzero::encoded_property_value(reverse_edge->roundabout()));
     }
 
@@ -343,7 +335,13 @@ tile_worker_t::build_edges_layer(vtzero::tile_builder& tile,
       GraphId opp_edge_id = reader_->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
 
       // Add feature using the builder
-      edges_builder.add_feature(tile_coords, edge_id, edge, opp_edge, opp_edge_id);
+      const GraphId& forward_edge_id = edge->forward() ? edge_id : opp_edge_id;
+      const auto* forward_edge = edge->forward() ? edge : opp_edge;
+      const GraphId& reverse_edge_id = edge->forward() ? opp_edge_id : edge_id;
+      const auto* reverse_edge = edge->forward() ? opp_edge : edge;
+
+      edges_builder.add_feature(tile_coords, forward_edge_id, forward_edge, reverse_edge_id,
+                                reverse_edge);
 
       // Collect the end node of this edge for the nodes layer
       unique_nodes.insert(edge->endnode());
