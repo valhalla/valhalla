@@ -155,7 +155,8 @@ public:
 
     assert(forward_edge || reverse_edge);
 
-    if (forward_edge && reverse_edge && !(forward_edge->is_shortcut() || reverse_edge->is_shortcut())) {
+    if (forward_edge && reverse_edge &&
+        !(forward_edge->is_shortcut() || reverse_edge->is_shortcut())) {
       assert(forward_edge->bridge() == reverse_edge->bridge());
       assert(forward_edge->tunnel() == reverse_edge->tunnel());
       assert(forward_edge->roundabout() == reverse_edge->roundabout());
