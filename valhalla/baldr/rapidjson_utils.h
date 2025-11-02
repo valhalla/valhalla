@@ -57,14 +57,20 @@ get_optional(V&& v, const char* source) {
   // if we dont have this key bail
   auto* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
   if (!ptr) {
-    return boost::optional<T>{};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+    return boost::none;
+#pragma GCC diagnostic pop
   }
   // if its the exact right type give it back
   if (ptr->template Is<T>()) {
     return ptr->template Get<T>();
   }
   // give up
-  return boost::optional<T>{};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return boost::none;
+#pragma GCC diagnostic pop
 }
 
 // if you do want an arithmetic type dont try lexical casting as a last resort
@@ -74,7 +80,10 @@ get_optional(V&& v, const char* source) {
   // if we dont have this key bail
   auto* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
   if (!ptr) {
-    return boost::optional<T>{};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+    return boost::none;
+#pragma GCC diagnostic pop
   }
   // if its the exact right type give it back
   if (ptr->template Is<T>()) {
@@ -107,7 +116,10 @@ get_optional(V&& v, const char* source) {
     return static_cast<T>(ptr->GetDouble());
   }
   // give up
-  return boost::optional<T>{};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  return boost::none;
+#pragma GCC diagnostic pop
 }
 
 template <typename T, typename V> inline T get(V&& v, const char* source, const T& t) {

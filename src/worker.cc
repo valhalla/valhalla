@@ -274,7 +274,7 @@ void parse_location(valhalla::Location* location,
     }
   }
 
-  boost::optional<bool> exclude_closures{};
+  boost::optional<bool> exclude_closures;
   // is it json?
   auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
   if (search_filter) {
@@ -328,8 +328,11 @@ void parse_location(valhalla::Location* location,
   }
   // do we actually want to filter closures on THIS location
   // NOTE: that ignore_closures takes precedence
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
   location->mutable_search_filter()->set_exclude_closures(
       ignore_closures ? !(*ignore_closures) : (exclude_closures ? *exclude_closures : true));
+#pragma GCC diagnostic pop
   if (!location->search_filter().has_min_road_class_case()) {
     location->mutable_search_filter()->set_min_road_class(valhalla::kServiceOther);
   }
