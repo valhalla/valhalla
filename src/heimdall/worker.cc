@@ -49,6 +49,8 @@ public:
     key_tunnel_ = layer_.add_key_without_dup_check("tunnel");
     key_bridge_ = layer_.add_key_without_dup_check("bridge");
     key_roundabout_ = layer_.add_key_without_dup_check("roundabout");
+    key_is_shortcut_ = layer_.add_key_without_dup_check("is_shortcut");
+    key_leaves_tile_ = layer_.add_key_without_dup_check("leaves_tile");
     // Shared edge properties
     key_length_ = layer_.add_key_without_dup_check("length");
     key_weighted_grade_ = layer_.add_key_without_dup_check("weighted_grade");
@@ -153,6 +155,16 @@ public:
 
     assert(forward_edge || reverse_edge);
 
+    if (forward_edge && reverse_edge && !(forward_edge->is_shortcut() || reverse_edge->is_shortcut())) {
+      assert(forward_edge->bridge() == reverse_edge->bridge());
+      assert(forward_edge->tunnel() == reverse_edge->tunnel());
+      assert(forward_edge->roundabout() == reverse_edge->roundabout());
+      assert(forward_edge->use() == reverse_edge->use());
+      assert(forward_edge->classification() == reverse_edge->classification());
+      assert(forward_edge->is_shortcut() == reverse_edge->is_shortcut());
+      assert(forward_edge->leaves_tile() == reverse_edge->leaves_tile());
+    }
+
     const auto* edge = forward_edge ? forward_edge : reverse_edge;
     const GraphId& edge_id = forward_edge ? forward_edge_id : reverse_edge_id;
 
@@ -173,6 +185,8 @@ public:
     feature.add_property(key_tunnel_, vtzero::encoded_property_value(edge->tunnel()));
     feature.add_property(key_bridge_, vtzero::encoded_property_value(edge->bridge()));
     feature.add_property(key_roundabout_, vtzero::encoded_property_value(edge->roundabout()));
+    feature.add_property(key_is_shortcut_, vtzero::encoded_property_value(edge->is_shortcut()));
+    feature.add_property(key_leaves_tile_, vtzero::encoded_property_value(edge->leaves_tile()));
     feature.add_property(key_length_, vtzero::encoded_property_value(edge->length()));
     feature.add_property(key_weighted_grade_, vtzero::encoded_property_value(edge->weighted_grade()));
     feature.add_property(key_max_up_slope_, vtzero::encoded_property_value(edge->max_up_slope()));
@@ -370,6 +384,8 @@ private:
   vtzero::index_value key_tunnel_;
   vtzero::index_value key_bridge_;
   vtzero::index_value key_roundabout_;
+  vtzero::index_value key_is_shortcut_;
+  vtzero::index_value key_leaves_tile_;
   // Shared edge properties
   vtzero::index_value key_length_;
   vtzero::index_value key_weighted_grade_;
