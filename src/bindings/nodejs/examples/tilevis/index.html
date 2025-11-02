@@ -256,40 +256,79 @@
                             20: 'Rail-Ferry', 21: 'Construction', 22: 'Transit Connection'
                         };
                         
-                        let html = '<div style="font-family: monospace; font-size: 12px;">';
-                        html += `<strong>Valhalla Edge</strong><br/>`;
-                        html += `<strong>Feature ID:</strong> ${feature.id}<br/>`;
-                        html += `<strong>Tile Level:</strong> ${props.tile_level}<br/>`;
-                        html += `<strong>Tile ID:</strong> ${props.tile_id}<br/><br/>`;
+                        const hovTypeNames = {
+                            0: 'None', 1: 'HOV2', 2: 'HOV3', 3: 'HOV2+'
+                        };
                         
-                        // Show shared properties
-                        html += `<strong>Road Class:</strong> ${roadClassNames[props.road_class] || props.road_class}<br/>`;
-                        html += `<strong>Use:</strong> ${useNames[props.use] || props.use}<br/>`;
-                        html += `<strong>Tunnel:</strong> ${props.tunnel ? '✅' : '❌'} `;
-                        html += `<strong>Bridge:</strong> ${props.bridge ? '✅' : '❌'} `;
-                        html += `<strong>Roundabout:</strong> ${props.roundabout ? '✅' : '❌'}<br/><br/>`;
+                        const speedTypeNames = {
+                            0: 'Tagged', 1: 'Classified', 2: 'Average'
+                        };
                         
-                        // Show edge IDs and speeds for both directions if available
-                        if (props['edge_id:forward'] !== undefined || props['edge_id:reverse'] !== undefined) {
-                            if (props['edge_id:forward'] !== undefined) {
-                                html += `<strong style="color: #00aa00;">➡️ Forward</strong><br/>`;
-                                html += `  Edge ID: ${props['edge_id:forward']}<br/>`;
-                                if (props['speed:forward'] !== undefined) {
-                                    html += `  Speed: ${props['speed:forward']} KPH<br/>`;
-                                }
+                        const surfaceNames = {
+                            0: 'Paved Smooth', 1: 'Paved', 2: 'Paved Rough', 3: 'Compacted', 4: 'Dirt',
+                            5: 'Gravel', 6: 'Path', 7: 'Impassable'
+                        };
+                        
+                        const cyclelaneNames = {
+                            0: 'None', 1: 'Shared', 2: 'Dedicated', 3: 'Separated'
+                        };
+                        
+                        const sacScaleNames = {
+                            0: 'None', 1: 'Hiking', 2: 'Mountain Hiking', 3: 'Demanding Mountain Hiking',
+                            4: 'Alpine Hiking', 5: 'Demanding Alpine Hiking', 6: 'Difficult Alpine Hiking'
+                        };
+                        
+                        // Create a table with all properties
+                        let html = '<div style="font-family: sans-serif; font-size: 12px; max-height: 400px; overflow-y: auto;">';
+                        html += '<strong style="font-size: 14px;">Edge Properties</strong><br/>';
+                        html += '<table style="border-collapse: collapse; margin-top: 8px; width: 100%;">';
+                        html += '<thead><tr style="background-color: #f0f0f0;">';
+                        html += '<th style="padding: 4px 8px; text-align: left; border: 1px solid #ccc;">Property</th>';
+                        html += '<th style="padding: 4px 8px; text-align: left; border: 1px solid #ccc;">Value</th>';
+                        html += '</tr></thead><tbody>';
+                        
+                        // Sort properties alphabetically for easier reading
+                        const sortedKeys = Object.keys(props).sort();
+                        
+                        for (const key of sortedKeys) {
+                            let value = props[key];
+                            
+                            // Format the value based on property name
+                            if (key === 'road_class') {
+                                value = `${roadClassNames[value] || 'Unknown'} (${value})`;
+                            } else if (key === 'use') {
+                                value = `${useNames[value] || 'Unknown'} (${value})`;
+                            } else if (key === 'hov_type') {
+                                value = `${hovTypeNames[value] || 'Unknown'} (${value})`;
+                            } else if (key === 'speed_type') {
+                                value = `${speedTypeNames[value] || 'Unknown'} (${value})`;
+                            } else if (key === 'surface') {
+                                value = `${surfaceNames[value] || 'Unknown'} (${value})`;
+                            } else if (key === 'cyclelane') {
+                                value = `${cyclelaneNames[value] || 'Unknown'} (${value})`;
+                            } else if (key === 'sac_scale') {
+                                value = `${sacScaleNames[value] || 'Unknown'} (${value})`;
+                            } else if (typeof value === 'boolean') {
+                                value = value ? '✅ Yes' : '❌ No';
+                            } else if (key.startsWith('access:')) {
+                                value = value ? '✅' : '❌';
+                            } else if (key === 'length') {
+                                value = `${value} m`;
+                            } else if (key.includes('speed')) {
+                                value = `${value} KPH`;
+                            } else if (key.includes('slope')) {
+                                value = `${value}°`;
                             }
-                            if (props['edge_id:reverse'] !== undefined) {
-                                html += `<strong style="color: #aa0000;">⬅️ Reverse</strong><br/>`;
-                                html += `  Edge ID: ${props['edge_id:reverse']}<br/>`;
-                                if (props['speed:reverse'] !== undefined) {
-                                    html += `  Speed: ${props['speed:reverse']} KPH<br/>`;
-                                }
-                            }
+                            
+                            html += '<tr>';
+                            html += `<td style="padding: 4px 8px; border: 1px solid #ccc; font-weight: 500;">${key}</td>`;
+                            html += `<td style="padding: 4px 8px; border: 1px solid #ccc;">${value}</td>`;
+                            html += '</tr>';
                         }
                         
-                        html += '</div>';
+                        html += '</tbody></table></div>';
                         
-                        new mapboxgl.Popup()
+                        new mapboxgl.Popup({maxWidth: '500px'})
                             .setLngLat(e.lngLat)
                             .setHTML(html)
                             .addTo(map);
