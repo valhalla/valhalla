@@ -203,7 +203,7 @@ jobs:
           path: ~/Library/Caches/ccache
 
       - name: Configure CMake
-        run: cmake -B build -DENABLE_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
+        run: cmake -B build -DENABLE_COMPILER_WARNINGS=ON -DENABLE_WERROR=ON -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
 
       - name: Build & install Valhalla (for python bindings)
         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
