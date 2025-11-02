@@ -12,6 +12,12 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <unordered_set>
+#include <vector>
+
+namespace vtzero {
+class tile_builder;
+}
 
 namespace valhalla {
 namespace tile {
@@ -40,6 +46,20 @@ public:
   std::string render_tile(uint32_t z, uint32_t x, uint32_t y);
 
 private:
+  /**
+   * Encapsulates tile projection parameters for Web Mercator coordinate conversion
+   */
+  struct TileProjection {
+    double tile_merc_minx;
+    double tile_merc_maxx;
+    double tile_merc_miny;
+    double tile_merc_maxy;
+    double tile_merc_width;
+    double tile_merc_height;
+    int32_t tile_extent;
+    int32_t tile_buffer;
+  };
+
   // Default minimum zoom levels for each road class:
   // Motorway=8, Trunk=9, Primary=10, Secondary=11, Tertiary=12,
   // Unclassified=12, Residential=12, Service/Other=12
@@ -48,6 +68,24 @@ private:
   using ZoomConfig = std::array<uint32_t, kNumRoadClasses>;
 
   void ReadZoomConfig(const boost::property_tree::ptree& config);
+
+  /**
+   * Build the edges layer for the vector tile
+   * @return Set of unique nodes encountered while building edges
+   */
+  std::unordered_set<baldr::GraphId>
+  build_edges_layer(vtzero::tile_builder& tile,
+                    const midgard::AABB2<midgard::PointLL>& bounds,
+                    const std::unordered_set<baldr::GraphId>& edge_ids,
+                    uint32_t z,
+                    const TileProjection& projection);
+
+  /**
+   * Build the nodes layer for the vector tile
+   */
+  void build_nodes_layer(vtzero::tile_builder& tile,
+                         const std::unordered_set<baldr::GraphId>& unique_nodes,
+                         const TileProjection& projection);
 
   boost::property_tree::ptree config_;
   std::shared_ptr<baldr::GraphReader> reader_;

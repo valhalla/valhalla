@@ -61,46 +61,21 @@ tile_worker_t::tile_worker_t(const boost::property_tree::ptree& config,
   ReadZoomConfig(config_);
 }
 
-std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
-  // Validate tile coordinates
-  uint32_t max_coord = (1u << z);
-  if (x >= max_coord || y >= max_coord || z > 30) {
-    throw valhalla_exception_t{400, "Invalid tile coordinates"};
-  }
-
-  // Calculate tile bounding box
-  auto bounds = tile_to_bbox(z, x, y);
-
-  // Create vector tile
-  vtzero::tile_builder tile;
-
-  // Don't render anything below minimum zoom level
-  if (z < min_zoom_) {
-    return tile.serialize();
-  }
-
-  // Query edges within the tile bounding box
-  auto edge_ids = candidate_query_.RangeQuery(bounds);
-
-  // Pre-compute Web Mercator projection tile bounds (once for all edges)
-  const int32_t TILE_EXTENT = 4096;
-  const int32_t TILE_BUFFER = 128;
-
-  const double tile_merc_minx = lon_to_merc_x(bounds.minx());
-  const double tile_merc_maxx = lon_to_merc_x(bounds.maxx());
-  const double tile_merc_miny = lat_to_merc_y(bounds.miny());
-  const double tile_merc_maxy = lat_to_merc_y(bounds.maxy());
-  const double tile_merc_width = tile_merc_maxx - tile_merc_minx;
-  const double tile_merc_height = tile_merc_maxy - tile_merc_miny;
-
+std::unordered_set<GraphId>
+tile_worker_t::build_edges_layer(vtzero::tile_builder& tile,
+                                 const midgard::AABB2<midgard::PointLL>& bounds,
+                                 const std::unordered_set<baldr::GraphId>& edge_ids,
+                                 uint32_t z,
+                                 const TileProjection& projection) {
   using point_t = boost::geometry::model::d2::point_xy<double>;
   using linestring_t = boost::geometry::model::linestring<point_t>;
   using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
   using box_t = boost::geometry::model::box<point_t>;
 
-  // Create clip box with buffer (like OSRM does) to handle edges that cross boundaries
-  const box_t clip_box(point_t(-TILE_BUFFER, -TILE_BUFFER),
-                       point_t(TILE_EXTENT + TILE_BUFFER, TILE_EXTENT + TILE_BUFFER));
+  // Create clip box with buffer to handle edges that cross boundaries
+  const box_t clip_box(point_t(-projection.tile_buffer, -projection.tile_buffer),
+                       point_t(projection.tile_extent + projection.tile_buffer,
+                               projection.tile_extent + projection.tile_buffer));
 
   // Create edges layer
   vtzero::layer_builder layer_edges{tile, "edges"};
@@ -162,12 +137,13 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
       double merc_y = lat_to_merc_y(ll.lat());
 
       // Normalize to 0-1 within tile's mercator bounds
-      double norm_x = (merc_x - tile_merc_minx) / tile_merc_width;
-      double norm_y = (tile_merc_maxy - merc_y) / tile_merc_height; // Y is inverted in tiles
+      double norm_x = (merc_x - projection.tile_merc_minx) / projection.tile_merc_width;
+      double norm_y = (projection.tile_merc_maxy - merc_y) /
+                      projection.tile_merc_height; // Y is inverted in tiles
 
       // Scale to tile extent and convert to tile coordinates
-      double tile_x = norm_x * TILE_EXTENT;
-      double tile_y = norm_y * TILE_EXTENT;
+      double tile_x = norm_x * projection.tile_extent;
+      double tile_y = norm_y * projection.tile_extent;
 
       boost::geometry::append(unclipped_line, point_t(tile_x, tile_y));
     }
@@ -285,6 +261,12 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
     }
   }
 
+  return unique_nodes;
+}
+
+void tile_worker_t::build_nodes_layer(vtzero::tile_builder& tile,
+                                      const std::unordered_set<baldr::GraphId>& unique_nodes,
+                                      const TileProjection& projection) {
   // Create nodes layer
   vtzero::layer_builder layer_nodes{tile, "nodes"};
 
@@ -309,15 +291,17 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
     double merc_x = lon_to_merc_x(node_ll.lng());
     double merc_y = lat_to_merc_y(node_ll.lat());
 
-    double norm_x = (merc_x - tile_merc_minx) / tile_merc_width;
-    double norm_y = (tile_merc_maxy - merc_y) / tile_merc_height;
+    double norm_x = (merc_x - projection.tile_merc_minx) / projection.tile_merc_width;
+    double norm_y = (projection.tile_merc_maxy - merc_y) / projection.tile_merc_height;
 
-    int32_t tile_x = static_cast<int32_t>(std::round(norm_x * TILE_EXTENT));
-    int32_t tile_y = static_cast<int32_t>(std::round(norm_y * TILE_EXTENT));
+    int32_t tile_x = static_cast<int32_t>(std::round(norm_x * projection.tile_extent));
+    int32_t tile_y = static_cast<int32_t>(std::round(norm_y * projection.tile_extent));
 
     // Only render nodes that are within the tile (including buffer)
-    if (tile_x < -TILE_BUFFER || tile_x > TILE_EXTENT + TILE_BUFFER || tile_y < -TILE_BUFFER ||
-        tile_y > TILE_EXTENT + TILE_BUFFER) {
+    if (tile_x < -projection.tile_buffer ||
+        tile_x > projection.tile_extent + projection.tile_buffer ||
+        tile_y < -projection.tile_buffer ||
+        tile_y > projection.tile_extent + projection.tile_buffer) {
       continue;
     }
 
@@ -338,8 +322,47 @@ std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
 
     node_feature.commit();
   }
+}
 
-  LOG_INFO("  Rendered " + std::to_string(unique_nodes.size()) + " unique nodes");
+std::string tile_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y) {
+  // Validate tile coordinates
+  uint32_t max_coord = (1u << z);
+  if (x >= max_coord || y >= max_coord || z > 30) {
+    throw valhalla_exception_t{400, "Invalid tile coordinates"};
+  }
+
+  // Calculate tile bounding box
+  auto bounds = tile_to_bbox(z, x, y);
+
+  // Create vector tile
+  vtzero::tile_builder tile;
+
+  // Don't render anything below minimum zoom level
+  if (z < min_zoom_) {
+    return tile.serialize();
+  }
+
+  // Query edges within the tile bounding box
+  auto edge_ids = candidate_query_.RangeQuery(bounds);
+
+  // Pre-compute Web Mercator projection tile bounds (once for all edges)
+  const int32_t TILE_EXTENT = 4096;
+  const int32_t TILE_BUFFER = 128;
+
+  TileProjection projection{lon_to_merc_x(bounds.minx()),
+                            lon_to_merc_x(bounds.maxx()),
+                            lat_to_merc_y(bounds.miny()),
+                            lat_to_merc_y(bounds.maxy()),
+                            lon_to_merc_x(bounds.maxx()) - lon_to_merc_x(bounds.minx()),
+                            lat_to_merc_y(bounds.maxy()) - lat_to_merc_y(bounds.miny()),
+                            TILE_EXTENT,
+                            TILE_BUFFER};
+
+  // Build edges layer and collect unique nodes
+  auto unique_nodes = build_edges_layer(tile, bounds, edge_ids, z, projection);
+
+  // Build nodes layer
+  build_nodes_layer(tile, unique_nodes, projection);
 
   return tile.serialize();
 }
