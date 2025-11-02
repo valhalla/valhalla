@@ -311,15 +311,47 @@
                             12: 'Elevator'
                         };
                         
-                        let html = '<div style="font-family: monospace; font-size: 12px;">';
-                        html += `<strong>Node</strong><br/>`;
-                        html += `<strong>Node ID:</strong> ${props.node_id || feature.id}<br/>`;
-                        html += `<strong>Type:</strong> ${nodeTypeNames[props.type] || props.type}<br/>`;
-                        html += `<strong>Traffic Signal:</strong> ${props.traffic_signal ? '🚦 Yes' : '❌ No'}<br/>`;
-                        html += `<strong>Access:</strong> ${props.access}<br/>`;
-                        html += '</div>';
+                        const intersectionTypeNames = {
+                            0: 'Regular', 1: 'Fork', 2: 'Dead End', 3: 'True/False'
+                        };
                         
-                        new mapboxgl.Popup()
+                        // Create a table with all properties
+                        let html = '<div style="font-family: sans-serif; font-size: 12px; max-height: 400px; overflow-y: auto;">';
+                        html += '<strong style="font-size: 14px;">Node Properties</strong><br/>';
+                        html += '<table style="border-collapse: collapse; margin-top: 8px; width: 100%;">';
+                        html += '<thead><tr style="background-color: #f0f0f0;">';
+                        html += '<th style="padding: 4px 8px; text-align: left; border: 1px solid #ccc;">Property</th>';
+                        html += '<th style="padding: 4px 8px; text-align: left; border: 1px solid #ccc;">Value</th>';
+                        html += '</tr></thead><tbody>';
+                        
+                        // Sort properties alphabetically for easier reading
+                        const sortedKeys = Object.keys(props).sort();
+                        
+                        for (const key of sortedKeys) {
+                            let value = props[key];
+                            
+                            // Format the value based on property name
+                            if (key === 'type') {
+                                value = `${nodeTypeNames[value] || 'Unknown'} (${value})`;
+                            } else if (key === 'intersection') {
+                                value = `${intersectionTypeNames[value] || 'Unknown'} (${value})`;
+                            } else if (typeof value === 'boolean') {
+                                value = value ? '✅ Yes' : '❌ No';
+                            } else if (key.startsWith('access:')) {
+                                value = value ? '✅' : '❌';
+                            } else if (key === 'elevation') {
+                                value = `${value} m`;
+                            }
+                            
+                            html += '<tr>';
+                            html += `<td style="padding: 4px 8px; border: 1px solid #ccc; font-weight: 500;">${key}</td>`;
+                            html += `<td style="padding: 4px 8px; border: 1px solid #ccc;">${value}</td>`;
+                            html += '</tr>';
+                        }
+                        
+                        html += '</tbody></table></div>';
+                        
+                        new mapboxgl.Popup({maxWidth: '400px'})
                             .setLngLat(e.lngLat)
                             .setHTML(html)
                             .addTo(map);

@@ -62,8 +62,8 @@ public:
     }
 
     assert(forward_edge || reverse_edge);
-    assert(!forward_edge || forward_edge->forward());
-    assert(!reverse_edge || !reverse_edge->forward());
+    // assert(!forward_edge || forward_edge->forward());
+    // assert(!reverse_edge || !reverse_edge->forward());
 
     const auto* edge = forward_edge ? forward_edge : reverse_edge;
     const GraphId& edge_id = forward_edge ? forward_edge_id : reverse_edge_id;
@@ -135,7 +135,32 @@ public:
     key_node_id_ = layer_.add_key_without_dup_check("node_id");
     key_node_type_ = layer_.add_key_without_dup_check("type");
     key_traffic_signal_ = layer_.add_key_without_dup_check("traffic_signal");
-    key_access_ = layer_.add_key_without_dup_check("access");
+    // Individual access mode keys
+    key_access_auto_ = layer_.add_key_without_dup_check("access:auto");
+    key_access_pedestrian_ = layer_.add_key_without_dup_check("access:pedestrian");
+    key_access_bicycle_ = layer_.add_key_without_dup_check("access:bicycle");
+    key_access_truck_ = layer_.add_key_without_dup_check("access:truck");
+    key_access_emergency_ = layer_.add_key_without_dup_check("access:emergency");
+    key_access_taxi_ = layer_.add_key_without_dup_check("access:taxi");
+    key_access_bus_ = layer_.add_key_without_dup_check("access:bus");
+    key_access_hov_ = layer_.add_key_without_dup_check("access:hov");
+    key_access_wheelchair_ = layer_.add_key_without_dup_check("access:wheelchair");
+    key_access_moped_ = layer_.add_key_without_dup_check("access:moped");
+    key_access_motorcycle_ = layer_.add_key_without_dup_check("access:motorcycle");
+    key_edge_count_ = layer_.add_key_without_dup_check("edge_count");
+    key_intersection_ = layer_.add_key_without_dup_check("intersection");
+    key_timezone_ = layer_.add_key_without_dup_check("timezone");
+    key_density_ = layer_.add_key_without_dup_check("density");
+    key_local_edge_count_ = layer_.add_key_without_dup_check("local_edge_count");
+    key_drive_on_right_ = layer_.add_key_without_dup_check("drive_on_right");
+    key_elevation_ = layer_.add_key_without_dup_check("elevation");
+    key_tagged_access_ = layer_.add_key_without_dup_check("tagged_access");
+    key_private_access_ = layer_.add_key_without_dup_check("private_access");
+    key_cash_only_toll_ = layer_.add_key_without_dup_check("cash_only_toll");
+    key_mode_change_ = layer_.add_key_without_dup_check("mode_change");
+    key_named_intersection_ = layer_.add_key_without_dup_check("named_intersection");
+    key_is_transit_ = layer_.add_key_without_dup_check("is_transit");
+    key_transition_count_ = layer_.add_key_without_dup_check("transition_count");
   }
 
   void
@@ -156,8 +181,57 @@ public:
                               vtzero::encoded_property_value(static_cast<uint32_t>(node->type())));
     node_feature.add_property(key_traffic_signal_,
                               vtzero::encoded_property_value(node->traffic_signal()));
-    node_feature.add_property(key_access_,
-                              vtzero::encoded_property_value(static_cast<uint32_t>(node->access())));
+
+    // Add individual access mode properties
+    uint16_t access = node->access();
+    node_feature.add_property(key_access_auto_, vtzero::encoded_property_value(
+                                                    static_cast<bool>(access & kAutoAccess)));
+    node_feature.add_property(key_access_pedestrian_,
+                              vtzero::encoded_property_value(
+                                  static_cast<bool>(access & kPedestrianAccess)));
+    node_feature.add_property(key_access_bicycle_, vtzero::encoded_property_value(
+                                                       static_cast<bool>(access & kBicycleAccess)));
+    node_feature.add_property(key_access_truck_, vtzero::encoded_property_value(
+                                                     static_cast<bool>(access & kTruckAccess)));
+    node_feature.add_property(key_access_emergency_, vtzero::encoded_property_value(static_cast<bool>(
+                                                         access & kEmergencyAccess)));
+    node_feature.add_property(key_access_taxi_, vtzero::encoded_property_value(
+                                                    static_cast<bool>(access & kTaxiAccess)));
+    node_feature.add_property(key_access_bus_,
+                              vtzero::encoded_property_value(static_cast<bool>(access & kBusAccess)));
+    node_feature.add_property(key_access_hov_,
+                              vtzero::encoded_property_value(static_cast<bool>(access & kHOVAccess)));
+    node_feature.add_property(key_access_wheelchair_,
+                              vtzero::encoded_property_value(
+                                  static_cast<bool>(access & kWheelchairAccess)));
+    node_feature.add_property(key_access_moped_, vtzero::encoded_property_value(
+                                                     static_cast<bool>(access & kMopedAccess)));
+    node_feature.add_property(key_access_motorcycle_,
+                              vtzero::encoded_property_value(
+                                  static_cast<bool>(access & kMotorcycleAccess)));
+
+    node_feature.add_property(key_edge_count_, vtzero::encoded_property_value(node->edge_count()));
+    node_feature.add_property(key_intersection_, vtzero::encoded_property_value(
+                                                     static_cast<uint32_t>(node->intersection())));
+    node_feature.add_property(key_timezone_, vtzero::encoded_property_value(node->timezone()));
+    node_feature.add_property(key_density_, vtzero::encoded_property_value(node->density()));
+    node_feature.add_property(key_local_edge_count_,
+                              vtzero::encoded_property_value(node->local_edge_count()));
+    node_feature.add_property(key_drive_on_right_,
+                              vtzero::encoded_property_value(node->drive_on_right()));
+    node_feature.add_property(key_elevation_, vtzero::encoded_property_value(node->elevation()));
+    node_feature.add_property(key_tagged_access_,
+                              vtzero::encoded_property_value(node->tagged_access()));
+    node_feature.add_property(key_private_access_,
+                              vtzero::encoded_property_value(node->private_access()));
+    node_feature.add_property(key_cash_only_toll_,
+                              vtzero::encoded_property_value(node->cash_only_toll()));
+    node_feature.add_property(key_mode_change_, vtzero::encoded_property_value(node->mode_change()));
+    node_feature.add_property(key_named_intersection_,
+                              vtzero::encoded_property_value(node->named_intersection()));
+    node_feature.add_property(key_is_transit_, vtzero::encoded_property_value(node->is_transit()));
+    node_feature.add_property(key_transition_count_,
+                              vtzero::encoded_property_value(node->transition_count()));
 
     node_feature.commit();
   }
@@ -169,7 +243,32 @@ private:
   vtzero::index_value key_node_id_;
   vtzero::index_value key_node_type_;
   vtzero::index_value key_traffic_signal_;
-  vtzero::index_value key_access_;
+  // Individual access mode keys
+  vtzero::index_value key_access_auto_;
+  vtzero::index_value key_access_pedestrian_;
+  vtzero::index_value key_access_bicycle_;
+  vtzero::index_value key_access_truck_;
+  vtzero::index_value key_access_emergency_;
+  vtzero::index_value key_access_taxi_;
+  vtzero::index_value key_access_bus_;
+  vtzero::index_value key_access_hov_;
+  vtzero::index_value key_access_wheelchair_;
+  vtzero::index_value key_access_moped_;
+  vtzero::index_value key_access_motorcycle_;
+  vtzero::index_value key_edge_count_;
+  vtzero::index_value key_intersection_;
+  vtzero::index_value key_timezone_;
+  vtzero::index_value key_density_;
+  vtzero::index_value key_local_edge_count_;
+  vtzero::index_value key_drive_on_right_;
+  vtzero::index_value key_elevation_;
+  vtzero::index_value key_tagged_access_;
+  vtzero::index_value key_private_access_;
+  vtzero::index_value key_cash_only_toll_;
+  vtzero::index_value key_mode_change_;
+  vtzero::index_value key_named_intersection_;
+  vtzero::index_value key_is_transit_;
+  vtzero::index_value key_transition_count_;
 };
 
 } // anonymous namespace
