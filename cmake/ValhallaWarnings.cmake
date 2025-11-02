@@ -11,7 +11,7 @@ set(LIBCXX_LIBRARIES "")
 include(HandleLibcxxFlags)
 
 function (cxx_add_warning_flags target)
-  target_add_compile_flags_if_supported(${target} PRIVATE -Wall -Wextra)
+  target_add_compile_flags_if_supported(${target} PRIVATE -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp)
   if (ENABLE_WERROR)
    target_add_compile_flags_if_supported(${target} PRIVATE -Werror)
   endif()
