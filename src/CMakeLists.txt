@@ -78,7 +78,7 @@ function(valhalla_module)
   endif()
 
   if(ENABLE_COMPILER_WARNINGS)
-    cxx_add_warning_flags(${library})
+    cxx_add_warning_flags(${library} EXTRA_FLAGS -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp)
   endif()
 
   install(FILES ${MODULE_HEADERS}
@@ -168,7 +168,7 @@ target_compile_definitions(valhalla
 target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 
 if(ENABLE_COMPILER_WARNINGS)
-  cxx_add_warning_flags(valhalla)
+  cxx_add_warning_flags(valhalla EXTRA_FLAGS -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp)
 endif()
 
 target_include_directories(valhalla
