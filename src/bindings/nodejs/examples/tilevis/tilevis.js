@@ -132,9 +132,7 @@ function createRequestHandler(actor) {
       res.end(`Invalid tile coordinates: z=${z}, x=${x}, y=${y}`);
       return;
     }
-    
-    console.log(`Tile request: z=${z}, x=${x}, y=${y}`);
-    
+       
     try {
       const tileData = await actor.tile(JSON.stringify({ z, x, y }));
       const buf = Buffer.isBuffer(tileData) ? tileData : Buffer.from(tileData, 'binary');
