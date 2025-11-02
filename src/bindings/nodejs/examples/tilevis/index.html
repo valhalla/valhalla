@@ -95,7 +95,7 @@
                     paint: {
                         'line-color': [
                             'match',
-                            ['get', 'level'],
+                            ['get', 'tile_level'],
                             0, '#ff0000',  // Level 0: Red (highways)
                             1, '#ff8800',  // Level 1: Orange (major roads)
                             2, '#ffdd00',  // Level 2: Yellow (local streets)
@@ -105,12 +105,12 @@
                             'interpolate',
                             ['exponential', 1.5],
                             ['zoom'],
-                            12, ['match', ['get', 'level'], 0, 3, 1, 2, 2, 1, 2],  // Level 0=3px, 1=2px, 2=1px
-                            14, ['match', ['get', 'level'], 0, 4, 1, 3, 2, 2, 3],  // Wider at z14
-                            16, ['match', ['get', 'level'], 0, 6, 1, 4, 2, 3, 4],  // Wider at z16
-                            18, ['match', ['get', 'level'], 0, 8, 1, 6, 2, 4, 6],  // Wider at z18
-                            20, ['match', ['get', 'level'], 0, 10, 1, 8, 2, 6, 8], // Wider at z20
-                            22, ['match', ['get', 'level'], 0, 12, 1, 10, 2, 8, 10] // Wider at z22
+                            12, ['match', ['get', 'tile_level'], 0, 3, 1, 2, 2, 1, 2],
+                            14, ['match', ['get', 'tile_level'], 0, 4, 1, 3, 2, 2, 3],
+                            16, ['match', ['get', 'tile_level'], 0, 6, 1, 4, 2, 3, 4],
+                            18, ['match', ['get', 'tile_level'], 0, 8, 1, 6, 2, 4, 6],
+                            20, ['match', ['get', 'tile_level'], 0, 10, 1, 8, 2, 6, 8],
+                            22, ['match', ['get', 'tile_level'], 0, 12, 1, 10, 2, 8, 10]
                         ],
                         'line-opacity': 0.8
                     }
@@ -259,30 +259,32 @@
                         let html = '<div style="font-family: monospace; font-size: 12px;">';
                         html += `<strong>Valhalla Edge</strong><br/>`;
                         html += `<strong>Feature ID:</strong> ${feature.id}<br/>`;
-                        html += `<strong>Level:</strong> ${props.level}<br/><br/>`;
+                        html += `<strong>Tile Level:</strong> ${props.tile_level}<br/>`;
+                        html += `<strong>Tile ID:</strong> ${props.tile_id}<br/><br/>`;
                         
-                        // Show forward direction if exists
-                        if (props['edge_id:forward']) {
-                            html += `<strong style="color: #00aa00;">➡️ Forward Direction</strong><br/>`;
-                            html += `  <strong>Edge ID:</strong> ${props['edge_id:forward']}<br/>`;
-                            html += `  <strong>Road Class:</strong> ${roadClassNames[props['road_class:forward']] || props['road_class:forward']}<br/>`;
-                            html += `  <strong>Use:</strong> ${useNames[props['use:forward']] || props['use:forward']}<br/>`;
-                            html += `  <strong>Speed:</strong> ${props['speed:forward']} KPH<br/>`;
-                            html += `  <strong>Tunnel:</strong> ${props['tunnel:forward'] ? '✅' : '❌'} `;
-                            html += `<strong>Bridge:</strong> ${props['bridge:forward'] ? '✅' : '❌'} `;
-                            html += `<strong>Roundabout:</strong> ${props['roundabout:forward'] ? '✅' : '❌'}<br/>`;
-                        }
+                        // Show shared properties
+                        html += `<strong>Road Class:</strong> ${roadClassNames[props.road_class] || props.road_class}<br/>`;
+                        html += `<strong>Use:</strong> ${useNames[props.use] || props.use}<br/>`;
+                        html += `<strong>Tunnel:</strong> ${props.tunnel ? '✅' : '❌'} `;
+                        html += `<strong>Bridge:</strong> ${props.bridge ? '✅' : '❌'} `;
+                        html += `<strong>Roundabout:</strong> ${props.roundabout ? '✅' : '❌'}<br/><br/>`;
                         
-                        // Show reverse direction if exists
-                        if (props['edge_id:reverse']) {
-                            html += `<br/><strong style="color: #aa0000;">⬅️ Reverse Direction</strong><br/>`;
-                            html += `  <strong>Edge ID:</strong> ${props['edge_id:reverse']}<br/>`;
-                            html += `  <strong>Road Class:</strong> ${roadClassNames[props['road_class:reverse']] || props['road_class:reverse']}<br/>`;
-                            html += `  <strong>Use:</strong> ${useNames[props['use:reverse']] || props['use:reverse']}<br/>`;
-                            html += `  <strong>Speed:</strong> ${props['speed:reverse']} KPH<br/>`;
-                            html += `  <strong>Tunnel:</strong> ${props['tunnel:reverse'] ? '✅' : '❌'} `;
-                            html += `<strong>Bridge:</strong> ${props['bridge:reverse'] ? '✅' : '❌'} `;
-                            html += `<strong>Roundabout:</strong> ${props['roundabout:reverse'] ? '✅' : '❌'}<br/>`;
+                        // Show edge IDs and speeds for both directions if available
+                        if (props['edge_id:forward'] !== undefined || props['edge_id:reverse'] !== undefined) {
+                            if (props['edge_id:forward'] !== undefined) {
+                                html += `<strong style="color: #00aa00;">➡️ Forward</strong><br/>`;
+                                html += `  Edge ID: ${props['edge_id:forward']}<br/>`;
+                                if (props['speed:forward'] !== undefined) {
+                                    html += `  Speed: ${props['speed:forward']} KPH<br/>`;
+                                }
+                            }
+                            if (props['edge_id:reverse'] !== undefined) {
+                                html += `<strong style="color: #aa0000;">⬅️ Reverse</strong><br/>`;
+                                html += `  Edge ID: ${props['edge_id:reverse']}<br/>`;
+                                if (props['speed:reverse'] !== undefined) {
+                                    html += `  Speed: ${props['speed:reverse']} KPH<br/>`;
+                                }
+                            }
                         }
                         
                         html += '</div>';
