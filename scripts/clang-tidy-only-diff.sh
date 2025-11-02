@@ -94,6 +94,7 @@ parallel \
   "${CLANG_TIDY_CMD}" \
   -p $tidy_dir \
   -header-filter "^$(pwd)/valhalla/[^/]+$" \
+  -exclude-header-filter "^$(pwd)/valhalla/proto/[^/]+$" \
   ${FIX_ERRORS} \
   -format-style=file \
   {} ::: "${modified_filepaths[@]}"
