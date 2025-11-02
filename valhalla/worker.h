@@ -88,6 +88,7 @@ const content_type JSON_MIME{"Content-type", "application/json;charset=utf-8"};
 const content_type JS_MIME{"Content-type", "application/javascript;charset=utf-8"};
 const content_type PBF_MIME{"Content-type", "application/x-protobuf"};
 const content_type GPX_MIME{"Content-type", "application/gpx+xml;charset=utf-8"};
+const content_type TIFF_MIME("Content-type", "image/tiff");
 } // namespace worker
 
 prime_server::worker_t::result_t to_response(const std::string& data,
