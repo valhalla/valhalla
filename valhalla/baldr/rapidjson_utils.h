@@ -57,20 +57,28 @@ get_optional(V&& v, const char* source) {
   // if we dont have this key bail
   auto* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
   if (!ptr) {
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
     return boost::none;
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
+#endif
   }
   // if its the exact right type give it back
   if (ptr->template Is<T>()) {
     return ptr->template Get<T>();
   }
   // give up
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
   return boost::none;
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
+#endif
 }
 
 // if you do want an arithmetic type dont try lexical casting as a last resort
@@ -116,10 +124,14 @@ get_optional(V&& v, const char* source) {
     return static_cast<T>(ptr->GetDouble());
   }
   // give up
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
   return boost::none;
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
+#endif
 }
 
 template <typename T, typename V> inline T get(V&& v, const char* source, const T& t) {
