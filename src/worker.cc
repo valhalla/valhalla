@@ -274,7 +274,7 @@ void parse_location(valhalla::Location* location,
     }
   }
 
-  boost::optional<bool> exclude_closures;
+  boost::optional<bool> exclude_closures{};
   // is it json?
   auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
   if (search_filter) {
