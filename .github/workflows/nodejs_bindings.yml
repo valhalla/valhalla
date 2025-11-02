@@ -238,7 +238,10 @@ jobs:
           
           # Wait for server to start
           echo "Waiting for server to start..."
-          sleep 5
+          curl --retry 60 --retry-delay 1 --retry-all-errors --retry-connrefused \
+               --max-time 2 --fail -s http://localhost:8080 || \
+               { echo "Server failed to start"; kill $SERVER_PID 2>/dev/null || true; exit 1; }
+          echo "Server is ready!"
           
           # Run the Node.js tests using built-in test runner
           export TEST_PORT=8080
