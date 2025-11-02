@@ -314,6 +314,7 @@ endif()
 
 add_dependencies(run-sample test_directories)
 if(ENABLE_DATA_TOOLS)
+  add_dependencies(run-actor utrecht_tiles)
   add_dependencies(run-mapmatch utrecht_tiles)
   add_dependencies(run-hierarchylimits utrecht_tiles)
   add_dependencies(run-isochrone utrecht_tiles)

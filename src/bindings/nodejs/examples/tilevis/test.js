@@ -7,11 +7,10 @@ const http = require('node:http');
 const PORT = process.env.TEST_PORT || 8080;
 const HOST = process.env.TEST_HOST || 'localhost';
 
-// Utrecht area tile coordinates (52.0907°N, 5.1214°E at zoom 14)
-// TODO: verify it is correct
+// Utrecht center tile coordinates (52.08778°N, 5.13142°E at zoom 14)
 const TILE_Z = 14;
-const TILE_X = 8424;
-const TILE_Y = 5445;
+const TILE_X = 8425;
+const TILE_Y = 5405;
 
 function httpRequest(path) {
   return new Promise((resolve, reject) => {

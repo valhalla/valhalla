@@ -69,11 +69,11 @@ test('actor', async(t) => {
   });
 
   await t.test('tile', async () => {
-    // Utrecht area tile coordinates (52.0907°N, 5.1214°E at zoom 14)
+    // Utrecht center tile coordinates (52.08778°N, 5.13142°E at zoom 14)
     const query = {
       z: 14,
-      x: 8424,
-      y: 5445
+      x: 8425,
+      y: 5405
     };
 
     const buf = await actor.tile(JSON.stringify(query));

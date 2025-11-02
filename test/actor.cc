@@ -79,11 +79,13 @@ TEST(Actor, TraceAttributes) {
 }
 
 TEST(Actor, Tile) {
-  tyr::actor_t actor(conf);
+  // Use Utrecht tiles for this test
+  const auto utrecht_conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+  tyr::actor_t actor(utrecht_conf);
   
-  // Request a tile for the Pine Grove area (lat: 40.546115, lon: -76.385076)
-  // At zoom 14, this is approximately tile 14/4714/6092
-  std::string request = R"({"z":14,"x":4714,"y":6092})";
+  // Request a tile for Utrecht center (52.08778°N, 5.13142°E)
+  // At zoom 14, this is tile 14/8425/5405
+  std::string request = R"({"z":14,"x":8425,"y":5405})";
   
   auto tile_data = actor.tile(request);
   actor.cleanup();
