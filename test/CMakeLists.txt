@@ -34,7 +34,8 @@ target_include_directories(valhalla_test SYSTEM PUBLIC
   ${unordered_dense_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${libosmium_include_dirs}
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
+  ${vtzero_include_dir})
 target_link_libraries(valhalla_test
   valhalla gtest gtest_main gmock
   $<$<BOOL:${ENABLE_COVERAGE}>:gcov> 

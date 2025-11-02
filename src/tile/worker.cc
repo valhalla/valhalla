@@ -380,6 +380,8 @@ class NodesLayerBuilder {
 public:
   NodesLayerBuilder(vtzero::tile_builder& tile) : layer_(tile, "nodes") {
     // Pre-add keys for node properties
+    key_tile_level_ = layer_.add_key_without_dup_check("tile_level");
+    key_tile_id_ = layer_.add_key_without_dup_check("tile_id");
     key_node_id_ = layer_.add_key_without_dup_check("node_id");
     key_node_type_ = layer_.add_key_without_dup_check("type");
     key_traffic_signal_ = layer_.add_key_without_dup_check("traffic_signal");
@@ -397,7 +399,6 @@ public:
     key_access_motorcycle_ = layer_.add_key_without_dup_check("access:motorcycle");
     key_edge_count_ = layer_.add_key_without_dup_check("edge_count");
     key_intersection_ = layer_.add_key_without_dup_check("intersection");
-    key_timezone_ = layer_.add_key_without_dup_check("timezone");
     key_density_ = layer_.add_key_without_dup_check("density");
     key_local_edge_count_ = layer_.add_key_without_dup_check("local_edge_count");
     key_drive_on_right_ = layer_.add_key_without_dup_check("drive_on_right");
@@ -422,9 +423,12 @@ public:
     node_feature.set_id(static_cast<uint64_t>(node_id));
     node_feature.add_point(position);
 
+    // Add tile properties (same structure as edges layer)
+    node_feature.add_property(key_tile_level_, vtzero::encoded_property_value(node_id.level()));
+    node_feature.add_property(key_tile_id_, vtzero::encoded_property_value(node_id.tileid()));
+    node_feature.add_property(key_node_id_, vtzero::encoded_property_value(node_id.id()));
+    
     // Add node properties
-    std::string node_id_str = std::to_string(static_cast<uint64_t>(node_id));
-    node_feature.add_property(key_node_id_, vtzero::encoded_property_value(node_id_str));
     node_feature.add_property(key_node_type_,
                               vtzero::encoded_property_value(static_cast<uint32_t>(node->type())));
     node_feature.add_property(key_traffic_signal_,
@@ -461,7 +465,6 @@ public:
     node_feature.add_property(key_edge_count_, vtzero::encoded_property_value(node->edge_count()));
     node_feature.add_property(key_intersection_, vtzero::encoded_property_value(
                                                      static_cast<uint32_t>(node->intersection())));
-    node_feature.add_property(key_timezone_, vtzero::encoded_property_value(node->timezone()));
     node_feature.add_property(key_density_, vtzero::encoded_property_value(node->density()));
     node_feature.add_property(key_local_edge_count_,
                               vtzero::encoded_property_value(node->local_edge_count()));
@@ -488,6 +491,8 @@ private:
   vtzero::layer_builder layer_;
 
   // Pre-registered keys
+  vtzero::index_value key_tile_level_;
+  vtzero::index_value key_tile_id_;
   vtzero::index_value key_node_id_;
   vtzero::index_value key_node_type_;
   vtzero::index_value key_traffic_signal_;
@@ -505,7 +510,6 @@ private:
   vtzero::index_value key_access_motorcycle_;
   vtzero::index_value key_edge_count_;
   vtzero::index_value key_intersection_;
-  vtzero::index_value key_timezone_;
   vtzero::index_value key_density_;
   vtzero::index_value key_local_edge_count_;
   vtzero::index_value key_drive_on_right_;
