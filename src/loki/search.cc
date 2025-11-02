@@ -687,6 +687,7 @@ struct bin_handler_t {
 
       // iterate along this edges segments projecting each of the points
       for (size_t i = 0; !shape.empty(); ++i) {
+        bool keep = false;
         auto u = v;
         v = shape.pop();
         // for each input point
@@ -701,6 +702,7 @@ struct bin_handler_t {
           auto sq_distance = p_itr->project.approx.DistanceSquared(point);
           // do we want to keep it
           if (sq_distance < c_itr->sq_distance) {
+            keep = true; // this shape is interesting to at least one candidate
             c_itr->sq_distance = sq_distance;
             c_itr->distance = std::sqrt(sq_distance);
             c_itr->point = std::move(point);
@@ -805,7 +807,7 @@ struct bin_handler_t {
   find_best_range(std::vector<projector_wrapper>& pps) const {
     auto best = std::make_pair(pps.begin(), pps.begin());
     auto cur = best;
-    while (cur.second != pps.end()) {
+    while (cur.second != pps.end() && cur.first->has_bin()) {
       cur.first = cur.second;
       cur.second = std::find_if_not(cur.first, pps.end(), [&cur](const projector_wrapper& pp) {
         return cur.first->has_same_bin(pp);
@@ -824,7 +826,8 @@ struct bin_handler_t {
     while (pps.front().has_bin()) {
       auto range = find_best_range(pps);
       handle_bin(range.first, range.second);
-      std::sort(pps.begin(), pps.end());
+      auto it = std::partition(pps.begin(), pps.end(), [](auto& pp) { return pp.has_bin(); });
+      std::sort(pps.begin(), it);
     }
   }
 
