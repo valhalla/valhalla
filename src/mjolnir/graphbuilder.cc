@@ -451,7 +451,7 @@ void BuildTileSet(const std::string& ways_file,
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
   auto keep_all_nodes = pt.get<bool>("keep_all_osm_node_ids", false);
-  auto graph_nodes_only = pt.get<bool>("keep_graph_osm_node_ids", false);
+  auto graph_nodes_only = pt.get<bool>("keep_osm_node_ids", false);
   std::vector<PointLL> shape;
   std::vector<uint64_t> osm_node_ids;
   std::string encoded_node_ids(1, static_cast<std::string::value_type>(TaggedValue::kOSMNodeIds));
