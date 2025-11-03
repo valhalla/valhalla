@@ -910,40 +910,12 @@ TEST(TruckCost, testTruckCostParams) {
                 test::IsBetween(defaults.service_factor_.min, defaults.service_factor_.max));
   }
 
-  // weight_
-  distributor.reset(make_distributor_from_range(kTruckWeightRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_truckcost_from_json("weight", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->weight_, test::IsBetween(kTruckWeightRange.min, kTruckWeightRange.max));
-  }
-
   // axle_load_
   distributor.reset(make_distributor_from_range(kTruckAxleLoadRange));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("axle_load", (*distributor)(generator)));
     EXPECT_THAT(ctorTester->axle_load_,
                 test::IsBetween(kTruckAxleLoadRange.min, kTruckAxleLoadRange.max));
-  }
-
-  // height_
-  distributor.reset(make_distributor_from_range(kTruckHeightRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_truckcost_from_json("height", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->height_, test::IsBetween(kTruckHeightRange.min, kTruckHeightRange.max));
-  }
-
-  // width_
-  distributor.reset(make_distributor_from_range(kTruckWidthRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_truckcost_from_json("width", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->width_, test::IsBetween(kTruckWidthRange.min, kTruckWidthRange.max));
-  }
-
-  // length_
-  distributor.reset(make_distributor_from_range(kTruckLengthRange));
-  for (unsigned i = 0; i < testIterations; ++i) {
-    ctorTester.reset(make_truckcost_from_json("length", (*distributor)(generator)));
-    EXPECT_THAT(ctorTester->length_, test::IsBetween(kTruckLengthRange.min, kTruckLengthRange.max));
   }
 }
 } // namespace

@@ -1150,6 +1150,12 @@ protected:
   float track_penalty_;            // Penalty (seconds) to use tracks
   float service_penalty_;          // Penalty (seconds) to use a generic service road
 
+  // Vehicle dimensions
+  float height_;
+  float width_;
+  float length_;
+  float weight_;
+
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
 
