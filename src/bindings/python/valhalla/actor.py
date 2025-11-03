@@ -125,4 +125,3 @@ class Actor(_Actor):
         elif not isinstance(req, str):
             raise ValueError("Request must be either of type str or dict")
         return super.tile(req)
-
