@@ -790,7 +790,7 @@ heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
       // Add feature using the builder
 
       const volatile baldr::TrafficSpeed* forward_traffic =
-          edge ? &opp_tile->trafficspeed(edge) : nullptr;
+          edge ? &edge_tile->trafficspeed(edge) : nullptr;
       const volatile baldr::TrafficSpeed* reverse_traffic =
           opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
