@@ -63,6 +63,7 @@ nav:
   - Build from Source: building.md
   - Terminology: terminology.md
   - Python bindings: README_python.md
+  - Node.js bindings: README_nodejs.md
   - Public APIs:
       - API Overview: api/index.md
       - Protocol Buffers: api/protocol-buffers.md
