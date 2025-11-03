@@ -119,6 +119,10 @@ class Actor(_Actor):
     def status(self, req: Union[str, dict] = "") -> Union[str, dict]:
         return super().status(req)
 
-    @dict_or_str
     def tile(self, req: Union[str, dict]) -> bytes:
-        return super().tile(req)
+        if isinstance(req, dict):
+            return super.tile(json.dumps(req))
+        elif not isinstance(req, str):
+            raise ValueError("Request must be either of type str or dict")
+        return super.tile(req)
+
