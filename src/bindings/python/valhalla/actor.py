@@ -118,3 +118,7 @@ class Actor(_Actor):
     @dict_or_str
     def status(self, req: Union[str, dict] = "") -> Union[str, dict]:
         return super().status(req)
+
+    @dict_or_str
+    def tile(self, req: Union[str, dict]) -> bytes:
+        return super().tile(req)
