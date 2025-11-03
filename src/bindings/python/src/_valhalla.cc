@@ -83,6 +83,7 @@ PYBIND11_MODULE(_valhalla, m) {
           "status", [](vt::actor_t& self, std::string& req) { return self.status(req); },
           "Returns nothing or optionally details about Valhalla's configuration.")
       .def(
-          "tile", [](vt::actor_t& self, std::string& req) { return self.tile(req); },
-          "Returns a vector tile with a bounding box feature for the given z/x/y tile coordinates.");
+          "tile",
+          [](vt::actor_t& self, std::string& req) -> py::bytes { return py::bytes(self.tile(req)); },
+          "Returns a vector tile (MVT binary data) with a bounding box feature for the given z/x/y tile coordinates.");
 }

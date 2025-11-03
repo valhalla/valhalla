@@ -120,6 +120,32 @@ class TestBindings(unittest.TestCase):
         iso = self.actor.isochrone(query)
         self.assertEqual(len(iso['features']), 6)  # 4 isochrones and the 2 point layers
 
+    def test_tile(self):
+        # Utrecht center tile coordinates (52.08778°N, 5.13142°E at zoom 14)
+        query = {
+            "z": 14,
+            "x": 8425,
+            "y": 5405
+        }
+
+        tile_data = self.actor.tile(query)
+        
+        # Verify it's bytes (MVT binary data)
+        self.assertIsInstance(tile_data, bytes, 'tile() should return bytes')
+        
+        # Verify reasonable size (at least 100 bytes, typically KB range for MVT)
+        self.assertGreaterEqual(
+            len(tile_data), 
+            100,
+            f'Tile data should be at least 100 bytes, got {len(tile_data)}'
+        )
+
+        # Test the str API (JSON string input)
+        tile_data_str = self.actor.tile(json.dumps(query))
+        self.assertIsInstance(tile_data_str, bytes)
+        # Both should return the same data
+        self.assertEqual(tile_data, tile_data_str)
+
     def test_change_config(self):
         with NamedTemporaryFile('w+') as tmp:
             config = get_config(self.extract_path, self.tiles_path)
