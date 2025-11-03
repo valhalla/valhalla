@@ -194,15 +194,6 @@ void validate(const std::string& key,
 }
 
 void validate(const std::string& key,
-              const std::string& expected_value,
-              const bool has_pbf_value,
-              const std::string& pbf_value) {
-
-  ASSERT_TRUE(has_pbf_value) << "string value not found in pbf for key=" + key;
-  EXPECT_EQ(pbf_value, expected_value) << "incorrect " << key;
-}
-
-void validate(const std::string& key,
               const ShapeMatch expected_value,
               const bool has_pbf_value,
               const ShapeMatch pbf_value) {

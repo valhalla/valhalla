@@ -6,32 +6,11 @@ if(ENABLE_DATA_TOOLS)
   add_custom_target(run-gurka)
   set_target_properties(run-gurka PROPERTIES FOLDER "Tests")
 
-  # source files that have warning,
-  # any other file not int this list will be processed with the
-  # "-Werror" flag
-  # Avoid adding a filename to this list
-  set(TESTS_WITH_WARNINGS
-    test_gtfs.cc
-    test_languages.cc
-    test_locate.cc
-    test_multi_level_loki.cc
-    test_osrm_serializer.cc
-    test_pbf_api.cc
-    test_phonemes.cc
-    test_phonemes_w_langs.cc
-    test_recost.cc
-    test_time_tracking.cc
-    )
-
   ## Add executable targets
   foreach(FULLFILENAME IN ITEMS ${TEST_FILES})
     file(RELATIVE_PATH FILENAME "${CMAKE_CURRENT_LIST_DIR}" ${FULLFILENAME})
     if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-      if (${FILENAME} IN_LIST TESTS_WITH_WARNINGS)
-        set_source_files_properties(${FILENAME} PROPERTIES COMPILE_FLAGS "-Wall")
-      else()
         set_source_files_properties(${FILENAME} PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-      endif()
     endif()
 
     string(REGEX REPLACE "test_(.*).cc" "gurka_\\1" TESTNAME ${FILENAME})

@@ -209,9 +209,11 @@ jobs:
         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
 
       - name: Build Tests
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
         run: make -C build -j$(sysctl -n hw.logicalcpu) tests
 
       - name: Delete cache to save the latest
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
         run: |
           KEY="${{ steps.cache-ccache-restore.outputs.cache-primary-key }}"
           gh cache delete ${KEY} || true
@@ -219,6 +221,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Save ccache
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
         uses: tespkg/actions-cache/save@v1
         with:
           endpoint: hel1.your-objectstorage.com
@@ -229,6 +232,7 @@ jobs:
           path: ~/Library/Caches/ccache
 
       - name: Run Tests
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
         run: make -C build -j$(sysctl -n hw.logicalcpu) check
       
       # only package python bindings if it's not a PR
@@ -275,7 +279,7 @@ jobs:
     env:
       BUILD_TYPE: Release
       MSVC_VERSION: "2022"
-      VCPKG_VERSION: "5e5d0e1"
+      VCPKG_VERSION: "0e39c10"
       VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
       VCPKG_DISABLE_COMPILER_TRACKING: ON
     steps:
@@ -363,7 +367,7 @@ jobs:
             -DVALHALLA_VERSION_MODIFIFER=${{ steps.version-modifier.outputs.version_modifier }}
 
       - name: Save vcpkg packages (always, to avoid redundant rebuilds)
-        if: always()
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
         uses: tespkg/actions-cache/save@v1
         with:
           endpoint: hel1.your-objectstorage.com
