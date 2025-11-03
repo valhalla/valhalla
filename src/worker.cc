@@ -342,15 +342,8 @@ void parse_location(valhalla::Location* location,
   }
   // do we actually want to filter closures on THIS location
   // NOTE: that ignore_closures takes precedence
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
   location->mutable_search_filter()->set_exclude_closures(
       ignore_closures ? !(*ignore_closures) : (exclude_closures ? *exclude_closures : true));
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
   if (!location->search_filter().has_min_road_class_case()) {
     location->mutable_search_filter()->set_min_road_class(valhalla::kServiceOther);
   }
