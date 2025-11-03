@@ -241,7 +241,6 @@ void build(const boost::property_tree::ptree& pt,
     graph_tile_ptr tile = graph_reader.GetGraphTile(tile_id);
 
     // Iterate through the nodes and the directed edges
-    float roadlength = 0.0f;
     uint32_t nodecount = tile->header()->nodecount();
     GraphId node = tile_id;
     for (uint64_t i = 0; i < nodecount; i++, ++node) {
@@ -309,7 +308,6 @@ void build(const boost::property_tree::ptree& pt,
         bool valid_length = false;
         if (!directededge->shortcut()) {
           edge_length = directededge->length();
-          roadlength += edge_length;
           valid_length = true;
         }
 
