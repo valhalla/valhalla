@@ -245,7 +245,7 @@ jobs:
       
       - name: Build Valhalla
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On -DENABLE_COMPILER_WARNINGS=ON -DENABLE_WERROR=ON
           make -C build -j$(nproc)
           # make -C build -j$(nproc) utrecht_tiles
           make -C build -j$(nproc) gurka
