@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const http = require('node:http');
 
 const PORT = process.env.TEST_PORT || 8080;
-const HOST = process.env.TEST_HOST || 'localhost';
+const HOST = process.env.TEST_HOST || '127.0.0.1';
 
 // Utrecht center tile coordinates (52.08778°N, 5.13142°E at zoom 14)
 const TILE_Z = 14;
