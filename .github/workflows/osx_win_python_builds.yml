@@ -76,7 +76,7 @@ jobs:
       PUBLISH_PYPI: ${{ env.PUBLISH_PYPI }}
 
   build_python_wheels_linux:
-    name: Build Linux Python wheels ({{  matrix.arch  }})
+    name: Build Linux Python wheels
     runs-on: ${{ matrix.runner }}
     needs: [publish_pypi]
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || true }}
