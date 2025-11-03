@@ -304,10 +304,8 @@ void build(const boost::property_tree::ptree& pt,
         const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index() + j);
 
         // Road Length and some variables for statistics
-        float edge_length;
         bool valid_length = false;
         if (!directededge->shortcut()) {
-          edge_length = directededge->length();
           valid_length = true;
         }
 
