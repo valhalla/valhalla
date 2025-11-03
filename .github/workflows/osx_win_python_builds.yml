@@ -85,7 +85,7 @@ jobs:
         include:
           - arch: x86_64
             runner: ubuntu-latest
-          - arch: arm64
+          - arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
@@ -161,7 +161,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux-x64
+          name: wheels-linux-${{  matrix.arch  }}
           path: wheelhouse/*.whl
 
       - name: Setup tmate session
@@ -469,7 +469,7 @@ jobs:
         include:
           - arch: x86_64
             runner: ubuntu-latest
-          - arch: arm64
+          - arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
