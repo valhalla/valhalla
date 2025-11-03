@@ -32,6 +32,4 @@ function install_py_packages {
   if [[ $(${py} -m pip list | grep -c "ruff\|clang-format\|clang-tidy") -ne 4 ]]; then
     ${py} -m pip install ${deps}
   fi
-
-  deactivate
 }
