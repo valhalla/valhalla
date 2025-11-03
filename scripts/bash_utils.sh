@@ -23,13 +23,15 @@ function setup_python {
 }
 
 function install_py_packages {
-  python3 -m venv .venv
-  source .venv/bin/activate
-
   local deps="ruff==$RUFF_VERSION clang-format==$CLANG_FORMAT_VERSION clang-tidy==$CLANG_TIDY_VERSION"
 
   local py=$1
   if [[ $(${py} -m pip list | grep -c "ruff\|clang-format\|clang-tidy") -ne 4 ]]; then
-    ${py} -m pip install ${deps}
+    # if the python is in a virtual environment, install the packages locally
+    if [[ $(${py} -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
+      ${py} -m pip install ${deps}
+    else
+      sudo PIP_BREAK_SYSTEM_PACKAGES=1 ${py} -m pip install ${deps}
+    fi
   fi
 }
