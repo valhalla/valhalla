@@ -90,7 +90,7 @@ TEST(Actor, Tile) {
   actor.cleanup();
 
   // should be 600-700kb
-  EXCEPT_GT(tile_data.size(), 600000);
+  EXPECT_GT(tile_data.size(), 600000);
   EXPECT_LT(tile_data.size(), 700000);
 
   vtzero::vector_tile tile{tile_data};
