@@ -87,6 +87,8 @@ public:
     key_part_of_complex_restriction_ =
         layer_.add_key_without_dup_check("part_of_complex_restriction");
     key_osm_way_id_ = layer_.add_key_without_dup_check("osm_way_id");
+    key_speed_limit_ = layer_.add_key_without_dup_check("speed_limit");
+    key_layer_ = layer_.add_key_without_dup_check("layer");
     // Direction-specific properties
     key_truck_speed_fwd_ = layer_.add_key_without_dup_check("truck_speed:forward");
     key_truck_speed_rev_ = layer_.add_key_without_dup_check("truck_speed:reverse");
@@ -230,6 +232,8 @@ public:
     feature.add_property(key_part_of_complex_restriction_,
                          vtzero::encoded_property_value(edge->part_of_complex_restriction()));
     feature.add_property(key_osm_way_id_, vtzero::encoded_property_value(edge_info.wayid()));
+    feature.add_property(key_speed_limit_, vtzero::encoded_property_value(edge_info.speed_limit()));
+    feature.add_property(key_layer_, vtzero::encoded_property_value(edge_info.layer()));
 
     // Add direction-specific properties
     if (forward_edge) {
@@ -425,6 +429,8 @@ private:
   vtzero::index_value key_not_thru_;
   vtzero::index_value key_part_of_complex_restriction_;
   vtzero::index_value key_osm_way_id_;
+  vtzero::index_value key_speed_limit_;
+  vtzero::index_value key_layer_;
   // Direction-specific properties
   vtzero::index_value key_truck_speed_fwd_;
   vtzero::index_value key_truck_speed_rev_;
