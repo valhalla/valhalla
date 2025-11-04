@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Valhalla Vector Tiles Demo</title>
     
-    <!-- Mapbox GL JS -->
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
-    
+    <!-- MapLibre GL JS -->
+    <script src='https://unpkg.com/maplibre-gl@5.11.0/dist/maplibre-gl.js'></script>
+    <link href='https://unpkg.com/maplibre-gl@5.11.0/dist/maplibre-gl.css' rel='stylesheet' />
+     
     <style>
         * {
             margin: 0;
@@ -52,22 +52,18 @@
     <script>
         // Configuration
         const TILE_SERVER_URL = 'http://localhost:8080';
-        const MAPBOX_TOKEN = 'YOUR_MAPBOX_TOKEN_HERE'; // Replace with your token
         
-        // Set Mapbox access token
-        mapboxgl.accessToken = MAPBOX_TOKEN;
-        
-        // Initialize the map
-        const map = new mapboxgl.Map({
+        // Initialize the map with VersaTiles
+        const map = new maplibregl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/streets-v12', // Use Mapbox streets style
+            style: 'https://tiles.versatiles.org/assets/styles/colorful/style.json', // VersaTiles colorful style
             center: [24.7536, 59.4372], // Default to Tallinn
             zoom: 10
         });
         
         // Add navigation controls
-        map.addControl(new mapboxgl.NavigationControl(), 'top-left');
-        map.addControl(new mapboxgl.ScaleControl(), 'bottom-right');
+        map.addControl(new maplibregl.NavigationControl(), 'top-left');
+        map.addControl(new maplibregl.ScaleControl(), 'bottom-right');
         
         // Add Valhalla tile source and layers when map loads
         map.on('load', () => {
@@ -328,7 +324,7 @@
                         
                         html += '</tbody></table></div>';
                         
-                        new mapboxgl.Popup({maxWidth: '500px'})
+                        new maplibregl.Popup({maxWidth: '500px'})
                             .setLngLat(e.lngLat)
                             .setHTML(html)
                             .addTo(map);
@@ -390,7 +386,7 @@
                         
                         html += '</tbody></table></div>';
                         
-                        new mapboxgl.Popup({maxWidth: '400px'})
+                        new maplibregl.Popup({maxWidth: '400px'})
                             .setLngLat(e.lngLat)
                             .setHTML(html)
                             .addTo(map);

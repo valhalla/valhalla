@@ -55,7 +55,7 @@ test('HTML endpoint returns map page', async () => {
   
   const html = response.body.toString('utf8');
   assert.ok(html.includes('map'), 'HTML should contain "map"');
-  assert.ok(html.includes('mapbox'), 'HTML should contain "mapbox"');
+  assert.ok(html.includes('maplibre'), 'HTML should contain "maplibre"');
 });
 
 test('Vector tile endpoint returns valid MVT for Utrecht', async () => {

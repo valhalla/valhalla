@@ -26,15 +26,14 @@ Options:
 
 Environment Variables:
   VALHALLA_NODE          Path to custom valhalla_node.node binary
-  MAPBOX_ACCESS_TOKEN    Your Mapbox access token (required)
 
 Examples:
   # Use local build
-  VALHALLA_NODE=../../build/lib/valhalla_node.node MAPBOX_ACCESS_TOKEN=your_token node tilevis.js
+  VALHALLA_NODE=../../build/lib/valhalla_node.node node tilevis.js
   
   # Use npm package
   npm install @valhallajs/valhallajs
-  MAPBOX_ACCESS_TOKEN=your_token node tilevis.js --config ./valhalla.json
+  node tilevis.js --config ./valhalla.json
 `);
 }
 
@@ -93,12 +92,11 @@ function createRequestHandler(actor) {
   return async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     
-    // Serve index.html with injected token
+    // Serve index.html
     if (url.pathname === '/' || url.pathname === '') {
       const indexPath = path.join(__dirname, 'index.html');
       try {
-        let indexHtml = fs.readFileSync(indexPath, 'utf8');
-        indexHtml = indexHtml.replace('YOUR_MAPBOX_TOKEN_HERE', process.env.MAPBOX_ACCESS_TOKEN);
+        const indexHtml = fs.readFileSync(indexPath, 'utf8');
         
         res.writeHead(200, { 
           'Content-Type': 'text/html',
@@ -179,12 +177,6 @@ Press Ctrl+C to stop
 }
 
 function main() {
-  if (!process.env.MAPBOX_ACCESS_TOKEN) {
-    console.error('Error: MAPBOX_ACCESS_TOKEN environment variable is required');
-    console.error('\nSet it with: export MAPBOX_ACCESS_TOKEN=your_token_here');
-    process.exit(1);
-  }
-
   const options = parseArgs();
   const valhalla = require(process.env.VALHALLA_NODE ?? '@valhallajs/valhallajs');
 
