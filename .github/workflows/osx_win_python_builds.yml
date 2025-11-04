@@ -429,6 +429,7 @@ jobs:
             -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
 
       - name: Save vcpkg packages
+        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI != 'true' }}
         uses: tespkg/actions-cache/save@v1
         with:
           endpoint: hel1.your-objectstorage.com

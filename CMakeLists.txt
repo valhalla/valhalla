@@ -255,6 +255,10 @@ endif ()
 ## libvalhalla
 add_subdirectory(src)
 
+if(ENABLE_NODE_BINDINGS)
+  add_subdirectory(src/bindings/nodejs)
+endif()
+
 ## Executable targets
 
 ## Valhalla programs
