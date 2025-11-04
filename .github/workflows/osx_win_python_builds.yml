@@ -114,9 +114,16 @@ jobs:
 
   build_python_wheels_linux:
     name: Build Linux Python wheels
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     needs: [publish_pypi]
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
         with:
@@ -160,7 +167,7 @@ jobs:
           bucket: gha-cache
           # actions/cache compatible properties: https://github.com/actions/cache
           path: /home/runner/.cache/ccache
-          key: ccache-manylinux_2_28_x86_64
+          key: ccache-manylinux_2_28_${{  matrix.arch  }}
 
       - uses: actions/download-artifact@v4
         with:
@@ -204,12 +211,12 @@ jobs:
           secretKey: ${{ secrets.HETZNER_S3_ACCESS_SECRET }}
           bucket: gha-cache
           path: /home/runner/.cache/ccache
-          key: ccache-manylinux_2_28_x86_64
+          key: ccache-manylinux_2_28_${{  matrix.arch  }}
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux-x64
+          name: wheels-linux-${{  matrix.arch  }}
           path: wheelhouse/*.whl
 
       - name: Setup tmate session
@@ -509,9 +516,16 @@ jobs:
 
   verify_wheels_linux:
     needs: [build_python_wheels_linux]
-    runs-on: ubuntu-latest
+    runs-on: ${{  matrix.runner  }}
     container: python:3.13-slim-bookworm
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@v4
 
@@ -524,7 +538,7 @@ jobs:
         run: |
           apt-get update -y
           apt-get install -y file
-          python -m pip install dist/*cp312-abi3-manylinux*.whl
+          python -m pip install dist/*cp312-abi3-manylinux*_${{  matrix.arch  }}.whl
           ./src/bindings/python/test/test_pyvalhalla_package.sh
 
   verify_wheels_osx:
