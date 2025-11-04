@@ -226,11 +226,14 @@ protected:
    *                           so that all supplied locations must be settled.
    * @return  Returns true if all destinations have been settled.
    */
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
   bool UpdateDestinations(const valhalla::Location& origin,
                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const baldr::graph_tile_ptr& tile,
+                          baldr::GraphReader& reader,
                           const sif::EdgeLabel& pred,
                           const baldr::TimeInfo& time_info,
                           const uint32_t matrix_locations);

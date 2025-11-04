@@ -537,7 +537,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   if (arrive_by) {
     reverse_time_info = TimeInfo::make(destination, graphreader, &tz_cache_);
     forward_time_info =
-        reverse_time_tracking == Options_ReverseTimeTracking_heuristic
+        reverse_time_tracking == Options::rtt_heuristic
             ? EstimateReverseStartTime(graphreader, origin, destination, kReverseTTHeuristicFactor,
                                        reverse_time_info, costing_, arrive_by)
             : TimeInfo::invalid();
@@ -545,7 +545,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
     forward_time_info = TimeInfo::make(origin, graphreader, &tz_cache_);
     reverse_time_info = invariant
                             ? TimeInfo::make(destination, graphreader, &tz_cache_)
-                            : (reverse_time_tracking == Options_ReverseTimeTracking_heuristic
+                            : (reverse_time_tracking == Options::rtt_heuristic
                                    ? EstimateReverseStartTime(graphreader, origin, destination,
                                                               kReverseTTHeuristicFactor,
                                                               forward_time_info, costing_, arrive_by)
@@ -1533,8 +1533,8 @@ TimeInfo EstimateReverseStartTime(GraphReader& reader,
     nodeinfo = tile->node(opp_edge->endnode());
   }
 
-  return arrive_by ? time_info.forward(seconds, static_cast<int>(nodeinfo->timezone()))
-                   : time_info.reverse(seconds, static_cast<int>(nodeinfo->timezone()));
+  return arrive_by ? time_info.reverse(seconds, static_cast<int>(nodeinfo->timezone()))
+                   : time_info.forward(seconds, static_cast<int>(nodeinfo->timezone()));
 }
 
 } // namespace thor
