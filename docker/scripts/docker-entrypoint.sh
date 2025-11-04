@@ -35,9 +35,15 @@ if [[ $1 == "build_tiles" ]]; then
     echo "WARNING: Skipping tar building. Expect degraded performance while using Valhalla."
   fi
 
-  # set 775/664 permissions on all created files
-  find "${CUSTOM_FILES}" -type d -exec chmod 775 {} \;
-  find "${CUSTOM_FILES}" -type f -exec chmod 664 {} \;
+  # are we on a read-only filesystem?
+  if findmnt -no OPTIONS -T "$CUSTOM_FILES" | grep -qw ro; then
+    echo "INFO: Skipping chmod: ${CUSTOM_FILES} is on a read-only mount."
+  else
+    # set 775/664 permissions on all created files
+    echo "INFO: Setting host permissions on ${CUSTOM_FILES}."
+    find "${CUSTOM_FILES}" -type d -exec chmod 775 {} \;
+    find "${CUSTOM_FILES}" -type f -exec chmod 664 {} \;
+  fi
 
   if [[ ${serve_tiles} == "True" ]]; then
     if test -f ${CONFIG_FILE}; then

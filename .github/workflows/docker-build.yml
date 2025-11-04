@@ -54,7 +54,7 @@ jobs:
         id: extract_tag
 
       - name: Get version modifier
-        if: github.ref == 'refs/heads/master'
+        # if: github.ref == 'refs/heads/master'
         run: echo "version_modifier=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         id: extract_gitsha
 
@@ -71,7 +71,7 @@ jobs:
       # the following has to be done sequentially so the "base" image is available 
       # for the "scripted" image
       - name: Build and push latest - plain image
-        if: github.ref == 'refs/heads/master'
+        # if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -86,7 +86,7 @@ jobs:
             VERSION_MODIFIER=${{ steps.extract_gitsha.outputs.version_modifier }}
 
       - name: Build and push latest - scripted image
-        if: github.ref == 'refs/heads/master'
+        # if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -155,17 +155,17 @@ jobs:
           docker manifest push ghcr.io/valhalla/${{ matrix.image }}:${{ needs.build_and_publish.outputs.tag }}
 
       - name: Create and push latest manifest
-        if: github.ref == 'refs/heads/master'
+        # if: github.ref == 'refs/heads/master'
         run: |
           docker manifest create \
-            ghcr.io/valhalla/${{ matrix.image }}:latest \
+            ghcr.io/valhalla/${{ matrix.image }}:issue5672 \
             --amend ghcr.io/valhalla/${{ matrix.image }}:issue5672-amd64 \
             --amend ghcr.io/valhalla/${{ matrix.image }}:issue5672-arm64 
           docker manifest push ghcr.io/valhalla/${{ matrix.image }}:issue5672
       
 
   test-image:
-    if: github.ref == 'refs/heads/master'
+    # if: github.ref == 'refs/heads/master'
     strategy:
       matrix:
         include:

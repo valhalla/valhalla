@@ -116,9 +116,9 @@ files=$(echo $files | xargs)
 
 # be careful how to write the config (mostly for restart scenarios where env vars are true all of a sudden)
 if test -f "${CONFIG_FILE}"; then
-
+  echo "INFO: Found existing valhalla.json at $CONFIG_FILE"
   if [[ "${update_existing_config}" == "True" ]]; then
-    echo "INFO: Found existing valhalla.json. Updating possibly missing entries."
+    echo "INFO: Updating possibly missing entries."
 
     # create temporary default config
     valhalla_build_config > ${TMP_CONFIG_FILE}
