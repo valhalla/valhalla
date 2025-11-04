@@ -2,6 +2,7 @@
 * **Removed**
    * REMOVED: ENABLE_GDAL define for **Linux-only** Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
 * **Bug Fix**
+   * FIXED: usage of read-only filesystems to host the valhalla-scripted docker image as a service [#5675](https://github.com/valhalla/valhalla/pull/5675)
 * **Enhancement**
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
    * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647) 
