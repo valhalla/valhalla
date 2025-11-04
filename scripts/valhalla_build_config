@@ -772,9 +772,9 @@ def add_leaf_args(
         if isinstance(tree, Optional):
             t = tree.type
         elif isinstance(tree, list):
-            t = lambda arg: arg.split(",")
+            t = lambda arg: arg.split(",")  # noqa: E731
         elif isinstance(tree, bool):
-            t = lambda arg: bool(strtobool(arg))
+            t = lambda arg: bool(strtobool(arg))  # noqa: E731
         else:
             t = type(tree)
 
