@@ -2,7 +2,6 @@
 #define VALHALLA_MIDGARD_LOGGING_H_
 
 #include <format>
-
 #include <mutex>
 #include <string>
 #include <type_traits>
