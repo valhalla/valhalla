@@ -7,10 +7,6 @@ set -o errexit -o pipefail -o nounset
 #  - 1 there are files to be formatted
 #  - 0 everything looks fine
 
-if [[ $(uname -i) == 'aarch64' ]]; then
-  echo 'Formatting is disabled on arm for the time being'
-  exit
-fi
 source scripts/bash_utils.sh
 
 # Python setup

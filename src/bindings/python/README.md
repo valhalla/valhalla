@@ -15,7 +15,7 @@ On top of the (very) high-level Python bindings, we package some data-building V
 
 ### Installation
 
-We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`/`aarch64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. We **do not** offer a source distribution on PyPI, however, the bindings build cleanly with a normal Valhalla source installation.
+We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`/`aarch64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. To install on Python < 3.12, make sure to install the system dependencies as described in [the docs](https://valhalla.github.io/valhalla/building/#platform-specific-builds) before trying a `pip install pyvalhalla`.
 
 `pip install pyvalhalla` to install the most recent Valhalla **release**.  
 `pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
@@ -63,7 +63,6 @@ Before using the Python bindings you need to have access to a routable Valhalla 
 
 ```shell
 wget https://download.geofabrik.de/europe/andorra-latest.osm.pbf
-python -c "from valhalla import get_config; conf = get_config()"
 python -m valhalla valhalla_build_tiles -c <valhalla.json> andorra-latest.osm.pbf
 ```
 
