@@ -86,6 +86,7 @@ public:
     key_not_thru_ = layer_.add_key_without_dup_check("not_thru");
     key_part_of_complex_restriction_ =
         layer_.add_key_without_dup_check("part_of_complex_restriction");
+    key_osm_way_id_ = layer_.add_key_without_dup_check("osm_way_id");
     // Direction-specific properties
     key_truck_speed_fwd_ = layer_.add_key_without_dup_check("truck_speed:forward");
     key_truck_speed_rev_ = layer_.add_key_without_dup_check("truck_speed:reverse");
@@ -147,7 +148,8 @@ public:
                    baldr::GraphId reverse_edge_id,
                    const baldr::DirectedEdge* reverse_edge,
                    const volatile baldr::TrafficSpeed* forward_traffic,
-                   const volatile baldr::TrafficSpeed* reverse_traffic) {
+                   const volatile baldr::TrafficSpeed* reverse_traffic,
+                   const baldr::EdgeInfo& edge_info) {
     // Must have at least one edge and valid geometry
     if (geometry.size() < 2) {
       return;
@@ -227,6 +229,7 @@ public:
     feature.add_property(key_not_thru_, vtzero::encoded_property_value(edge->not_thru()));
     feature.add_property(key_part_of_complex_restriction_,
                          vtzero::encoded_property_value(edge->part_of_complex_restriction()));
+    feature.add_property(key_osm_way_id_, vtzero::encoded_property_value(edge_info.wayid()));
 
     // Add direction-specific properties
     if (forward_edge) {
@@ -421,6 +424,7 @@ private:
   vtzero::index_value key_lit_;
   vtzero::index_value key_not_thru_;
   vtzero::index_value key_part_of_complex_restriction_;
+  vtzero::index_value key_osm_way_id_;
   // Direction-specific properties
   vtzero::index_value key_truck_speed_fwd_;
   vtzero::index_value key_truck_speed_rev_;
@@ -795,7 +799,7 @@ heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
           opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
       edges_builder.add_feature(tile_coords, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
-                                reverse_traffic);
+                                reverse_traffic, edge_info);
 
       // Collect the end node of this edge for the nodes layer
       unique_nodes.insert(edge->endnode());
