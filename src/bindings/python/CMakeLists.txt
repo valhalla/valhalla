@@ -50,13 +50,6 @@ set_target_properties(_valhalla PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURR
 set_target_properties(graph_utils PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla/utils)
 set_target_properties(valhalla PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# the package we're building, pyvalhalla or pyvalhalla-weekly
-if(NOT VALHALLA_PYTHON_PACKAGE)
-  set(VALHALLA_PYTHON_PACKAGE "pyvalhalla-weekly")
-endif()
-
-target_compile_definitions(_valhalla PRIVATE -DVALHALLA_PYTHON_PACKAGE=${VALHALLA_PYTHON_PACKAGE})
-
 set(py_srcs 
   valhalla/__init__.py
   valhalla/__version__.py

@@ -35,8 +35,6 @@ In case you need to do a source installation (from `sdist`), follow the [build i
 > **For developers**: `pip install -e` (editable build) will by default build into a temp directory, so everytime it's invoked it'll rebuild all of libvalhalla. Use the following command to enable real incremental builds:
 > 
 > ```shell
-> # produces pyproject.toml, optionally specify the package name
-> cmake -DPYVALHALLA_NAME=pyvalhalla-weekly -P cmake/ValhallaConfigPyProject.cmake
 > pip install -e . --no-build-isolation \
 >   -Cbuild-dir=build_python (or other build dir) \
 >   -Ccmake.build-type=Release \
@@ -50,8 +48,6 @@ In case you need to do a source installation (from `sdist`), follow the [build i
 > Similarly for building a wheel:
 > 
 > ```shell
-> # produces pyproject.toml, optionally specify the package name
-> cmake -DPYVALHALLA_NAME=pyvalhalla -P cmake/ValhallaConfigPyProject.cmake
 > pip wheel . -w dist --no-build-isolation \
 >   -Cbuild-dir=build_python (or other build dir) \
 >   -Ccmake.build-type=Release \

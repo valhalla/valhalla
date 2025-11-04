@@ -2,15 +2,9 @@ name: Build OSX, Win & Python bindings
 
 # this workflow:
 # - runs master & PR pushes for OSX & Win
-# - publishes Python bindings for all platforms and minor Python versions to:
-#   - https://pypi.org/project/pyvalhalla/ for tag pushes
-#   - https://pypi.org/project/pyvalhalla-weekly/ for master pushes
+# - publishes Python bindings for all platforms/archs as "stable ABI" wheels
 
 on:
-  # We run this once a week so we regularly publish pyvalhalla-weekly
-  # but not on _every_ master commit
-  schedule:
-    - cron: "0 0 * * 0"
   push:
     paths-ignore:
       - "**.md"
@@ -147,16 +141,6 @@ jobs:
         if: ${{  github.ref == 'refs/heads/master'  }}
         run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Write pyproject.toml
-        run: |
-          VALHALLA_RELEASE_PKG="pyvalhalla"
-          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
-          fi
-          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
-
-          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
-
       - name: Restore ccache
         uses: tespkg/actions-cache/restore@v1
         id: cache-ccache-restore
@@ -192,7 +176,7 @@ jobs:
           # the host system's "/" is mounted to "/host" in the manylinux container
           CIBW_ENVIRONMENT: >
             CCACHE_DIR=/host/home/runner/.cache/ccache
-            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }}"
+            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }}"
             LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64"
             CIBW_BUILD_VERBOSITY=3
             SKBUILD_LOGGING_LEVEL=DEBUG
@@ -305,23 +289,12 @@ jobs:
         run: make -C build -j$(sysctl -n hw.logicalcpu) check
       
       # only package python bindings if it's not a PR
-
-      - name: Write pyproject.toml
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
-        run: |
-          VALHALLA_RELEASE_PKG="pyvalhalla"
-          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
-          fi
-          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
-
-          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
           CIBW_ENVIRONMENT: >
-            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }}"
+            CMAKE_ARGS="-DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }}"
             LIBRARY_PATH="/opt/homebrew/lib:$LIBRARY_PATH"
             # try to use the existing build folder
             PIP_NO_BUILD_ISOLATION="1"
@@ -351,8 +324,9 @@ jobs:
       BUILD_TYPE: Release
       MSVC_VERSION: "2022"
       VCPKG_VERSION: "0e39c10"
-      VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
+      VCPKG_INSTALL_OPTIONS: "--x-abi-tools-use-exact-versions"
       VCPKG_DISABLE_COMPILER_TRACKING: ON
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - uses: actions/checkout@v4
         with:
@@ -473,26 +447,12 @@ jobs:
           ls -l build/vcpkg_installed/x64-windows/bin
       
       # only package python bindings if it's not a PR
-
-      - name: Write pyproject.toml
-        shell: bash
-        if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
-        run: |
-          VALHALLA_RELEASE_PKG="pyvalhalla"
-          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
-          fi
-          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
-
-          # make sure they really land in the python build
-          echo "VALHALLA_PYTHON_PACKAGE=${VALHALLA_RELEASE_PKG}" >> $GITHUB_ENV
-          echo 'VCPKG_ROOT=${{ github.workspace }}\vcpkg' >> $GITHUB_ENV
       
       - uses: pypa/cibuildwheel@v2.23.3
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
           CIBW_ENVIRONMENT_WINDOWS: >-
-            CMAKE_ARGS="-DENABLE_SERVICES=OFF -DENABLE_TESTS=OFF -DENABLE_GDAL=OFF -DVALHALLA_PYTHON_PACKAGE=${{  env.VALHALLA_PYTHON_PACKAGE  }} -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
+            CMAKE_ARGS="-DENABLE_SERVICES=OFF -DENABLE_TESTS=OFF -DENABLE_GDAL=OFF -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
             PIP_NO_BUILD_ISOLATION=1
           # represents the minimum python version we release for
           CIBW_BUILD: cp312-*

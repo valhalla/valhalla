@@ -1,8 +1,5 @@
-# this will be turned into pyproject.toml by cmake/ValhallaPyProjectToml.cmake
-# there's no other way to have different "project.name"s
-
 [project]
-name = "@PYVALHALLA_NAME@"
+name = "pyvalhalla"
 dynamic = ["version"]
 requires-python = ">=3.9.0"
 authors = [{ name = "Nils Nolde" }, {name = "Kevin Kreiser"}]
@@ -66,6 +63,16 @@ version_file = "src/bindings/python/valhalla/__version__.py"
 version_scheme = "no-guess-dev"
 # PyPI doesn't accept local hashed version strings, important for pyvalhalla-weekly
 local_scheme = "no-local-version"
+
+[tool.ruff]
+line-length = 105
+extend-exclude = [
+    "dist",
+    "wheelhouse",
+    "*build*",
+    "*.egg-info",
+]
+lint.ignore = ["E731", "F811"]
 
 [tool.cibuildwheel]
 # it's enough here to know it's importable, actual test is run on other CI
