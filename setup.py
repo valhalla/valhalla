@@ -121,10 +121,10 @@ if IS_WIN:
         "libcurl",
         "libssl",
         "zlib",
-        "gdal",
         "spatialite",
         "sqlite3",
         "lz4",
+        "gdal",
         "geos",
         "lua51",
         "Ws2_32",
@@ -133,7 +133,7 @@ if IS_WIN:
         "abseil_dll",
     ])
     extra_compile_args.extend(["-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN", "-DNOGDI"])
-else: 
+else:
     extra_link_args.extend([
         "-lvalhalla",
         "-lprotobuf-lite",
@@ -143,13 +143,15 @@ else:
         "-lprime_server",
         "-lzmq",
         "-lzmq",
-        "-lgdal",
         "-lspatialite",
         "-lsqlite3",
         "-llz4",
         "-lgeos_c",
         "-lluajit-5.1",
     ])
+    # this is just temp, with nanobind we won't build with gdal support at all
+    if IS_OSX:
+        extra_link_args.append("-lgdal")
 
 # config the C++ extension build
 ext_modules = list()

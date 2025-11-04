@@ -23,7 +23,21 @@
 using namespace valhalla;
 #ifdef ENABLE_SERVICES
 using namespace prime_server;
-#endif
+
+// returns the correct MIME type for a given format
+static const worker::content_type& fmt_to_mime(const Options::Format& fmt) noexcept {
+  switch (fmt) {
+    case Options::gpx:
+      return worker::GPX_MIME;
+    case Options::pbf:
+      return worker::PBF_MIME;
+    case Options::geotiff:
+      return worker::TIFF_MIME;
+    default:
+      return worker::JSON_MIME;
+  }
+};
+#endif // ENABLE_SERVICES
 
 namespace {
 
@@ -1421,10 +1435,8 @@ worker_t::result_t
 to_response(const std::string& data, http_request_info_t& request_info, const Api& request) {
   // try to get all the proper headers
   auto fmt = request.options().format();
-  const auto& mime = fmt == Options::json || fmt == Options::osrm
-                         ? worker::JSON_MIME
-                         : (fmt == Options::pbf ? worker::PBF_MIME : worker::GPX_MIME);
-  headers_t headers{CORS, mime};
+
+  headers_t headers{CORS, fmt_to_mime(fmt)};
   if (fmt == Options::gpx)
     headers.insert(ATTACHMENT);
 
