@@ -1060,8 +1060,9 @@ public:
       average_edge_speed =
           tile->GetSpeed(edge, flow_mask_ & (~baldr::kCurrentFlowMask), time_info.second_of_week);
     }
-    float speed_penalty =
-        (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * speed_penalty_factor_ : 0.0f;
+    float speed_penalty = (average_edge_speed > top_speed_)
+                              ? (average_edge_speed - top_speed_) * speed_penalty_factor_
+                              : 0.0f;
 
     return speed_penalty;
   }

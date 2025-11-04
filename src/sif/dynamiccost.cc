@@ -109,7 +109,8 @@ constexpr float kDefaultClosureFactor = 9.0f;
 // non-closure end
 constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFactor, 10.0f};
 
-// Default speed penalty factor (increase the cost of an edge if the edge speed is faster than the top speed)
+// Default speed penalty factor (increase the cost of an edge if the edge speed is faster than the top
+// speed)
 constexpr float kDefaultSpeedPenaltyFactor = 0.05f;
 constexpr ranged_default_t<float> kSpeedPenaltyFactorRange{0.0f, kDefaultSpeedPenaltyFactor, 1.0f};
 
@@ -147,13 +148,11 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
       closure_factor_{kClosureFactorRange}, speed_penalty_factor_{kSpeedPenaltyFactorRange},
-      exclude_unpaved_(false), exclude_bridges_(false),
-      exclude_tunnels_(false), exclude_tolls_(false), exclude_highways_(false),
-      exclude_ferries_(false), has_excludes_(false),
+      exclude_unpaved_(false), exclude_bridges_(false), exclude_tunnels_(false),
+      exclude_tolls_(false), exclude_highways_(false), exclude_ferries_(false), has_excludes_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false},
-      include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f},
-      width_{0.f, kDefaultWidth, 10.0f}, length_{0.f, kDefaultLength, 50.0f},
-      weight_{0.f, kDefaultWeight, 100.0f} {
+      include_hov3_{false}, height_{0.f, kDefaultHeight, 10.0f}, width_{0.f, kDefaultWidth, 10.0f},
+      length_{0.f, kDefaultLength, 50.0f}, weight_{0.f, kDefaultWeight, 100.0f} {
 }
 
 DynamicCost::DynamicCost(const Costing& costing,
@@ -163,8 +162,7 @@ DynamicCost::DynamicCost(const Costing& costing,
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
       allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
       closure_factor_(kDefaultClosureFactor), speed_penalty_factor_(kDefaultSpeedPenaltyFactor),
-      flow_mask_(kDefaultFlowMask),
-      shortest_(costing.options().shortest()),
+      flow_mask_(kDefaultFlowMask), shortest_(costing.options().shortest()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
       ignore_non_vehicular_restrictions_(costing.options().ignore_non_vehicular_restrictions()),
       ignore_turn_restrictions_(costing.options().ignore_restrictions() ||
@@ -544,7 +542,8 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor);
 
   // speed_penalty_factor
-  JSON_PBF_RANGED_DEFAULT(co, cfg.speed_penalty_factor_, json, "/speed_penalty_factor", speed_penalty_factor);
+  JSON_PBF_RANGED_DEFAULT(co, cfg.speed_penalty_factor_, json, "/speed_penalty_factor",
+                          speed_penalty_factor);
 
   // HOT/HOV
   JSON_PBF_DEFAULT_V2(co, cfg.include_hot_, json, "/include_hot", include_hot);

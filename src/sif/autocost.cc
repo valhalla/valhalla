@@ -354,8 +354,8 @@ public:
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
   float width_;  // Vehicle width in meters
-  float length_;  // Vehicle width in meters
-  float weight_;  // Vehicle weight in metric tons
+  float length_; // Vehicle width in meters
+  float weight_; // Vehicle weight in metric tons
 };
 
 // Constructor
@@ -1085,13 +1085,13 @@ public:
   using AutoCost::flow_mask_;
   using AutoCost::gate_cost_;
   using AutoCost::height_;
+  using AutoCost::length_;
   using AutoCost::maneuver_penalty_;
   using AutoCost::service_factor_;
   using AutoCost::service_penalty_;
   using AutoCost::toll_booth_cost_;
-  using AutoCost::width_;
-  using AutoCost::length_;
   using AutoCost::weight_;
+  using AutoCost::width_;
 };
 
 template <class T>
