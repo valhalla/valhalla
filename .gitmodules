@@ -22,9 +22,6 @@
 [submodule "third_party/fastcov"]
 	path = third_party/fastcov
 	url = https://github.com/RPGillespie6/fastcov.git
-[submodule "third_party/pybind11"]
-	path = third_party/pybind11
-	url = https://github.com/pybind/pybind11.git
 [submodule "third_party/cpp-statsd-client"]
 	path = third_party/cpp-statsd-client
 	url = https://github.com/vthiery/cpp-statsd-client
@@ -43,3 +40,6 @@
 [submodule "third_party/vtzero"]
 	path = third_party/vtzero
 	url = https://github.com/mapbox/vtzero.git
+[submodule "third_party/nanobind"]
+	path = third_party/nanobind
+	url = https://github.com/wjakob/nanobind
