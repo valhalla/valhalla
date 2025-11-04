@@ -71,6 +71,7 @@ build = "cp*"
 skip = "*musllinux*"
 archs = "native"
 manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
+manylinux-aarch64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
 
 [tool.cibuildwheel.windows]
 # this is v1.11.2

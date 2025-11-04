@@ -7,6 +7,7 @@ This folder contains the Python bindings to [Valhalla routing engine](https://gi
 > [!NOTE]
 > `pyvalhalla(-weekly)` packages are currently only published for:
 > - `linux-x86_x64`
+> - `linux-aarch64`
 > - `win-amd64`
 > - `macos-arm64`
 
@@ -14,7 +15,7 @@ On top of the (very) high-level Python bindings, we package some data-building V
 
 ### Installation
 
-We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. We **do not** offer a source distribution on PyPI.
+We publish CPython packages as **binary wheels** for Win (`amd64`), MacOS (`arm64`) and Linux (`x86_64`/`aarch64`) distributions with `glibc>=2.28`. To decrease disk footprint of the PyPI releases, we only publish a single `abi3` wheel per platform, which **requires Python >= 3.12**. To install on Python < 3.12, make sure to install the system dependencies as described in [the docs](https://valhalla.github.io/valhalla/building/#platform-specific-builds) before trying a `pip install pyvalhalla`.
 
 `pip install pyvalhalla` to install the most recent Valhalla **release**.  
 `pip install pyvalhalla-weekly` to install the weekly published Valhalla **master commit**.
@@ -154,6 +155,6 @@ docker exec -t valhalla-py /valhalla-py/src/bindings/python/scripts/build_manyli
 
 This will also build & install `libvalhalla` before building the bindings. At this point there should be a `wheelhouse` folder with the fixed python wheel, ready to be installed or distributed to arbitrary python 3.13 installations.
 
-### Testing (**`linux-x86_x64` only**)
+### Testing (**`linux` only**)
 
 We have a small [test script](https://github.com/valhalla/valhalla/blob/master/src/bindings/python/test/test_pyvalhalla_package.sh) which makes sure that all the executables are working properly. If run locally for some reason, install a `pyvalhalla` wheel first. We run this in CI in a fresh Docker container with no dependencies installed, mostly to verify dynamic linking of the vendored dependencies.

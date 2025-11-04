@@ -97,9 +97,6 @@ We publish our (very) high-level Python bindings to PyPI:
 - [`pyvalhalla`](https://pypi.org/project/pyvalhalla/): follows Github releases
 - [`pyvalhalla-weekly`](https://pypi.org/project/pyvalhalla-weekly/): follows Github master branch and is released on a weekly schedule
 
-> [!NOTE]
-> The below is only valid for `linux-x86_x64` so far.
-
 The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](https://valhalla.github.io/valhalla/README_python).
 
 To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the desired wheel from [PyPI](https://pypi.org/project/pyvalhalla-weekly), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
