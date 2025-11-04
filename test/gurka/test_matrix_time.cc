@@ -72,12 +72,12 @@ protected:
     )";
 
     const gurka::ways ways = {
-        {"AB", {{"highway", "primary"}, {"maxspeed", "100"}}},
-        {"BC", {{"highway", "primary"}, {"maxspeed", "100"}}},
-        {"CD", {{"highway", "primary"}, {"maxspeed", "100"}}},
-        {"DE", {{"highway", "primary"}, {"maxspeed", "100"}}},
-        {"EF", {{"highway", "primary"}, {"maxspeed", "100"}}},
-        {"FG", {{"highway", "primary"}, {"maxspeed", "100"}}},
+        {"AB", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "yes"}}},
+        {"BC", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "no"}}},
+        {"CD", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "yes"}}},
+        {"DE", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "no"}}},
+        {"EF", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "yes"}}},
+        {"FG", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "no"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -87,7 +87,8 @@ protected:
                              {"mjolnir.traffic_extract",
                               "test/data/matrix_traffic_allowed/traffic.tar"},
                              {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
-                             {"thor.costmatrix_check_reverse_connection", "1"}});
+                             {"thor.costmatrix_check_reverse_connection", "1"},
+                             {"mjolnir.shortcuts", "0"}});
 
     test::build_live_traffic_data(map.config);
     test::LiveTrafficCustomize edges_with_traffic = [&](baldr::GraphReader& reader,
@@ -100,8 +101,8 @@ protected:
         auto rev = fwd;
         std::reverse(rev.begin(), rev.end());
 
-        update_traffic_on_edges(reader, tile, index, current, fwd, map, 5);
-        update_traffic_on_edges(reader, tile, index, current, rev, map, 5);
+        update_traffic_on_edges(reader, tile, index, current, fwd, map, 4);
+        update_traffic_on_edges(reader, tile, index, current, rev, map, 4);
       };
     };
     test::customize_live_traffic_data(map.config, edges_with_traffic);
@@ -117,11 +118,11 @@ TEST_F(MatrixTrafficTest, LiveTraffic) {
 
   // forward tree
   std::string res;
-  auto result = gurka::do_action(Options::sources_to_targets, map, {"A", "G"}, {"A", "G"}, "auto",
+  auto result = gurka::do_action(Options::sources_to_targets, map, {"1", "2"}, {"1", "2"}, "auto",
                                  options, nullptr, &res);
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 592.0f, 592.0f, 0.0f}, true, "time", Matrix::TimeDistanceMatrix);
+  check_matrix(res_doc, {0.0f, 234.0f, 548.0f, 0.0f}, true, "time", Matrix::TimeDistanceMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // forward search, date_time on the locations, 2nd location has pointless date_time
@@ -129,11 +130,11 @@ TEST_F(MatrixTrafficTest, LiveTraffic) {
              {"/sources/1/date_time", "2016-07-03T08:06"},
              {"/costing_options/auto/speed_types/0", "current"}};
   res.erase();
-  result = gurka::do_action(Options::sources_to_targets, map, {"A", "G"}, {"A", "G"}, "auto", options,
+  result = gurka::do_action(Options::sources_to_targets, map, {"1", "2"}, {"1", "2"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   // the second origin can't respect time (no historical data)
-  check_matrix(res_doc, {0.0f, 592.0f, 136.0f, 0.0f}, false, "time", Matrix::TimeDistanceMatrix);
+  check_matrix(res_doc, {0.0f, 234.0f, 122.0f, 0.0f}, false, "time", Matrix::TimeDistanceMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   res.erase();
@@ -147,5 +148,5 @@ TEST_F(MatrixTrafficTest, LiveTraffic) {
   result = gurka::do_action(Options::sources_to_targets, map, {"1", "2"}, {"1", "2"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 978.0f, 122.0f, 0.0f}, false, "time", Matrix::CostMatrix);
+  check_matrix(res_doc, {0.0f, 924.0f, 122.0f, 0.0f}, false, "time", Matrix::CostMatrix);
 }
