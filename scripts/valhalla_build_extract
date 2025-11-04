@@ -104,7 +104,10 @@ description = "Builds a tar extract from the tiles in mjolnir.tile_dir to the pa
 
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument(
-    "-c", "--config", help="Absolute or relative path to the Valhalla config JSON.", type=Path
+    "-c",
+    "--config",
+    help="Absolute or relative path to the Valhalla config JSON.",
+    type=Path,
 )
 parser.add_argument(
     "-i",
@@ -122,7 +125,11 @@ parser.add_argument(
 )
 parser.add_argument("-O", "--overwrite", help="Overwrites an output tar file", action="store_true")
 parser.add_argument(
-    "-t", "--with-traffic", help="Flag to add a traffic.tar skeleton", action="store_true", default=False
+    "-t",
+    "--with-traffic",
+    help="Flag to add a traffic.tar skeleton",
+    action="store_true",
+    default=False,
 )
 geom_type = parser.add_mutually_exclusive_group()
 geom_type.add_argument(
@@ -316,7 +323,10 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
 
     # we already have the right size of the index file, simply reset it
     index_fd.seek(0)
-    with tarfile.open(extract_fp) as tar_in, tarfile.open(traffic_fp, "w") as tar_traffic:
+    with (
+        tarfile.open(extract_fp) as tar_in,
+        tarfile.open(traffic_fp, "w") as tar_traffic,
+    ):
         # this will let us do seeks
         in_fileobj = tar_in.fileobj
 
