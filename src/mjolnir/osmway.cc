@@ -865,7 +865,6 @@ void OSMWay::GetNames(const std::string& ref,
 
     ProcessNamesPronunciations(name_offset_map, default_languages, alt_name_index,
                                alt_name_lang_index, tokens, token_langs, diff_names);
-    location += tokens.size();
 
     names.insert(names.end(), tokens.begin(), tokens.end());
 
@@ -932,7 +931,6 @@ void OSMWay::GetNames(const std::string& ref,
 
     ProcessNamesPronunciations(name_offset_map, default_languages, official_name_index,
                                official_name_lang_index, tokens, token_langs, diff_names);
-    location += tokens.size();
 
     names.insert(names.end(), tokens.begin(), tokens.end());
 

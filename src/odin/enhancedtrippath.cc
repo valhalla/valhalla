@@ -924,7 +924,6 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
         if (prior_item)
           str += ";";
         str += indication_to_str(kTurnLaneReverse);
-        prior_item = true;
       }
     }
 

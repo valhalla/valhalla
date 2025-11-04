@@ -32,6 +32,10 @@ public:
     nodeid_ = baldr::GraphId();
     edgeid_ = baldr::GraphId();
     predecessor_ = baldr::kInvalidLabel;
+    dest_ = kInvalidDestination;
+    source_ = 0.0f;
+    target_ = 0.0f;
+    turn_cost_ = 0.0f;
   }
 
   /**

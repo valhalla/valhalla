@@ -55,7 +55,7 @@ void init_graphid(pybind11::module& m) {
           // get_state
           [](const vb::GraphId& gid) { return py::make_tuple(gid.value); },
           // set_state
-          [](py::tuple t) {
+          [](const py::tuple& t) {
             vb::GraphId gid(t[0].cast<uint64_t>());
             return gid;
           }));

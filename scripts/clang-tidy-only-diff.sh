@@ -1,11 +1,42 @@
 #!/usr/bin/env bash
-# Runs clang-tidy only on changed files
+# Runs clang-tidy only on changed files (or all files with --all flag)
+#
+# Usage:
+#   ./clang-tidy-only-diff.sh [--all] [concurrency] [build_dir]
+#
+# Options:
+#   --all         Run clang-tidy on all .cc files instead of only changed files
+#   concurrency   Number of parallel jobs (default: nproc)
+#   build_dir     Build directory containing compile_commands.json (default: build)
+#
+# Examples:
+#   ./clang-tidy-only-diff.sh              # Run on changed files with default settings
+#   ./clang-tidy-only-diff.sh --all        # Run on all files
+#   ./clang-tidy-only-diff.sh 8 build      # Run on changed files with 8 jobs
+#   ./clang-tidy-only-diff.sh --all 8 build # Run on all files with 8 jobs
 
 set -o errexit -o pipefail -o nounset
 
+# Parse arguments
+all_files=false
+positional_args=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --all)
+      all_files=true
+      shift
+      ;;
+    *)
+      positional_args+=("$1")
+      shift
+      ;;
+  esac
+done
+
 readonly base=$(git merge-base refs/remotes/origin/master HEAD)
-readonly concurrency=${1:-$(nproc)}
-readonly build_dir=${2:-build}
+readonly concurrency=${positional_args[0]:-$(nproc)}
+readonly build_dir=${positional_args[1]:-build}
 
 source scripts/bash_utils.sh
 
@@ -18,20 +49,32 @@ cat $build_dir/compile_commands.json \
 
 modified_filepaths=()
 
-# To properly handle file names with spaces, we have to do some bash magic.
-# We set the Internal Field Separator to nothing and read line by line.
-while IFS='' read -r line
-do
-  absolute_filepath=$(realpath "$line")
-  if [[ ${absolute_filepath: -2} == "cc" || ${absolute_filepath: -2} == "." ]]; then
-    echo "Detected changes in $absolute_filepath"
+if [ "$all_files" = true ]; then
+  echo "Running clang-tidy on all files..."
+  # Get all .cc files from src/ directory, excluding .pb.cc files
+  while IFS='' read -r line
+  do
+    absolute_filepath=$(realpath "$line")
+    echo "Found $absolute_filepath"
     modified_filepaths+=("$absolute_filepath")
-  fi
+  done < <(find src -name "*.cc" ! -name "*.pb.cc" -type f)
+else
+  echo "Running clang-tidy on changed files only..."
+  # To properly handle file names with spaces, we have to do some bash magic.
+  # We set the Internal Field Separator to nothing and read line by line.
+  while IFS='' read -r line
+  do
+    absolute_filepath=$(realpath "$line")
+    if [[ ${absolute_filepath: -2} == "cc" || ${absolute_filepath: -2} == "." ]]; then
+      echo "Detected changes in $absolute_filepath"
+      modified_filepaths+=("$absolute_filepath")
+    fi
 
-done < <(git diff-tree --no-commit-id --diff-filter=d --name-only -r "$base" HEAD)
+  done < <(git diff-tree --no-commit-id --diff-filter=d --name-only -r "$base" HEAD)
+fi
 
 if [ ${#modified_filepaths[@]} = 0 ]; then
-  echo "No paths modified"
+  echo "No files to process"
   exit 0
 fi
 
@@ -51,6 +94,7 @@ parallel \
   "${CLANG_TIDY_CMD}" \
   -p $tidy_dir \
   -header-filter "^$(pwd)/valhalla/[^/]+$" \
+  -exclude-header-filter "^$(pwd)/valhalla/proto/[^/]+$" \
   ${FIX_ERRORS} \
   -format-style=file \
   {} ::: "${modified_filepaths[@]}"

@@ -29,7 +29,7 @@ option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find 
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 option(ENABLE_GDAL "Whether to include GDAL; currently only used for raster serialization of isotile grid" ON)
-
+option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -234,7 +234,6 @@ if(ENABLE_SERVICES)
     message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
   endif()
 endif()
-
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)

@@ -381,7 +381,6 @@ void build(const boost::property_tree::ptree& pt,
     }
 
     const auto& tiles = TileHierarchy::levels()[level].tiles;
-    level = tile_id.level();
     auto tileid = tile_id.tileid();
 
     // Update nodes and directed edges as needed

@@ -238,6 +238,7 @@ public:
 
     // values
     double adjust = 0;
+    // NOLINTNEXTLINE(clang-analyzer-core.NullDereference)
     auto a = flip(data[y * HGT_DIM + x]);
     auto b = flip(data[y * HGT_DIM + x + 1]);
     if (out_of_range(a)) {
@@ -386,6 +387,7 @@ tile_data cache_t::source(uint16_t index) {
     rv = tile_data();
   }
 
+  // NOLINTNEXTLINE(clang-analyzer-unix.Malloc)
   mutex.lock();
   promise.set_value(rv);
   pending_tiles.erase(it);
