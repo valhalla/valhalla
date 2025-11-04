@@ -10,6 +10,7 @@
    * FIXED: returns GeoTIFF with Content-Type image/tiff header [#5665](https://github.com/valhalla/valhalla/pull/5665)
    * CHANGED: Migrated from pybind11 to nanobind to release `abi3` wheels (Python version agnostic), also changes minimum version of PyPI packages to 3.12 [#5628](https://github.com/valhalla/valhalla/pull/5628)
    * ADDED: linux-aarch64 wheel for Python releases [#5670](https://github.com/valhalla/valhalla/pull/5670)
+   * ADDED: PyPI `sdist` for python to install the bindings from source [#5649](https://github.com/valhalla/valhalla/pull/5649)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
