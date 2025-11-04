@@ -81,7 +81,7 @@ jobs:
     name: Build sdist
     runs-on: ubuntu-latest
     needs: [publish_pypi]
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event_name == "pull_request" }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -609,5 +609,6 @@ jobs:
       - name: Publish to Test PyPI
         uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
+          verbose: true
           # uncomment when testing!
           # repository-url: https://test.pypi.org/legacy/
