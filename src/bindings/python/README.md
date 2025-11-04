@@ -28,6 +28,9 @@ cd valhalla
 pip install .
 ```
 
+
+In case you need to do a source installation (from `sdist`), follow the [build instructions](https://valhalla.github.io/valhalla/building/) for your platform to install the needed dependencies. Then a simple `pip install pyvalhalla` should work fine for Linux/OSX. On Windows one needs to install C++ developer tools, see also below in the developer notes for external `vcpkg` usage to resolve dependencies.
+
 > [!TIP]
 > **For developers**: `pip install -e` (editable build) will by default build into a temp directory, so everytime it's invoked it'll rebuild all of libvalhalla. Use the following command to enable real incremental builds:
 > 
@@ -38,6 +41,10 @@ pip install .
 >   -Cbuild-dir=build_python (or other build dir) \
 >   -Ccmake.build-type=Release \
 >   -Ccmake.define.VALHALLA_VERSION_MODIFIER="$(git rev-parse --short HEAD)"
+>   # optionally for vcpkg package management
+>   -Ccmake.define.CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+>   -Ccmake.define.VCPKG_TARGET_TRIPLET=x64-windows
+>   -Ccmake.define.VCPKG_OVERLAY_PORTS=overlay-ports-vcpkg
 > ```
 > 
 > Similarly for building a wheel:
@@ -49,6 +56,10 @@ pip install .
 >   -Cbuild-dir=build_python (or other build dir) \
 >   -Ccmake.build-type=Release \
 >   -Ccmake.define.VALHALLA_VERSION_MODIFIER="$(git rev-parse --short HEAD)"
+>   # optionally for vcpkg package management
+>   -Ccmake.define.CMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+>   -Ccmake.define.VCPKG_TARGET_TRIPLET=x64-windows
+>   -Ccmake.define.VCPKG_OVERLAY_PORTS=overlay-ports-vcpkg
 > ```
 >
 > Both commands have to repeated for each build.

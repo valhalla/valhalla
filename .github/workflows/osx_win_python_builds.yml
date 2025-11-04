@@ -75,6 +75,43 @@ jobs:
     outputs:
       PUBLISH_PYPI: ${{ env.PUBLISH_PYPI }}
 
+  # we build the sdist (source distribution) first, so cibuildwheel below can build the wheel
+  # from that; ensures the sdist is really self-contained (minus system dependencies)
+  build_sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    needs: [publish_pypi]
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Get version modifier
+        if: ${{ github.ref == 'refs/heads/master' }}
+        run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Write pyproject.toml
+        run: |
+          VALHALLA_RELEASE_PKG="pyvalhalla"
+          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
+            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
+          fi
+          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
+
+      - name: Build sdist
+        run: |
+          python3 -m pip install build
+          python3 -m build --sdist  # -> dist/<name>-<version>.tar.gz
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
   build_python_wheels_linux:
     name: Build Linux Python wheels
     runs-on: ${{ matrix.runner }}
@@ -132,7 +169,25 @@ jobs:
           path: /home/runner/.cache/ccache
           key: ccache-manylinux_2_28_${{  matrix.arch  }}
 
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+
+      - name: Locate sdist
+        id: sdist
+        shell: bash
+        run: |
+          sdist_path=$(find dist -maxdepth 1 -type f)
+          if ! [ "$(echo "$sdist_path" | wc -l)" -eq 1 ]; then
+            echo "Expected exactly 1 sdist, found ${sdist_path}" >&2
+            exit 1
+          fi
+          echo "sdist_path=$(find dist -maxdepth 1 -type f -print -quit)" >> $GITHUB_OUTPUT
+
       - uses: pypa/cibuildwheel@v2.23.3
+        with:
+          package-dir: ${{ steps.sdist.outputs.sdist_path }}   # build wheels from the sdist
         env:
           # the host system's "/" is mounted to "/host" in the manylinux container
           CIBW_ENVIRONMENT: >

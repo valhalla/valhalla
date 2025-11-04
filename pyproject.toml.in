@@ -33,8 +33,11 @@ requires = [
     "wheel",
     "setuptools_scm>=6.2",
     "setuptools_scm_git_archive",
+    # instead of relying on system tools
+    "cmake",
+    "ninja",
     "nanobind>=2.9.0",
-    "auditwheel",
+    "auditwheel"
 ]
 build-backend = "scikit_build_core.build"
 
@@ -47,6 +50,8 @@ metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 wheel.install-dir = "valhalla"
 # only installs the python cmake COMPONENT
 install.components = ["python"]
+sdist.include = ["pyproject.toml"]
+sdist.exclude = ["test", "test_requests"]
 
 # a few standard build flags for a scikit-build-core build
 [tool.scikit-build.cmake.define]
