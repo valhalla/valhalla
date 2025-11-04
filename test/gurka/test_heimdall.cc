@@ -44,111 +44,79 @@ TEST(Heimdall, BasicTileRendering) {
   // Render the tile
   auto tile_data = worker.render_tile(z, x, y);
 
-  // Verify we got data back
-  ASSERT_FALSE(tile_data.empty()) << "Tile data should not be empty";
-  ASSERT_GT(tile_data.size(), 100) << "Tile data should be at least 100 bytes";
+  ASSERT_EQ(tile_data.size(), 2589);
 
-  // Parse the MVT tile
   vtzero::vector_tile tile{tile_data};
 
   bool has_edges = false;
   bool has_nodes = false;
-  uint32_t edge_feature_count = 0;
-  uint32_t node_feature_count = 0;
 
   while (auto layer = tile.next_layer()) {
     std::string layer_name = std::string(layer.name());
 
     if (layer_name == "edges") {
       has_edges = true;
-      edge_feature_count = layer.num_features();
 
-      // Verify layer metadata
-      EXPECT_EQ(layer.version(), 2) << "Layer version should be 2";
-      EXPECT_EQ(layer.extent(), 4096) << "Layer extent should be 4096";
+      EXPECT_EQ(layer.version(), 2);
+      EXPECT_EQ(layer.extent(), 4096);
 
-      // Verify edge features
-      uint32_t feature_idx = 0;
-      while (auto feature = layer.next_feature()) {
-        if (feature_idx == 0) {
-          // Check ID
-          EXPECT_TRUE(feature.has_id()) << "Edge feature should have an ID";
-          EXPECT_GT(feature.id(), 0) << "Edge feature ID should be positive";
+      EXPECT_EQ(layer.num_features(), 1);
 
-          // Check geometry type
-          EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::LINESTRING)
-              << "Edge should be a linestring";
+      auto feature = layer.next_feature();
+      EXPECT_TRUE(feature.has_id());
+      EXPECT_GT(feature.id(), 0);
 
-          // Verify expected edge properties exist
-          std::set<std::string> expected_props =
-              {"tile_level",      "tile_id",         "road_class",         "use",
-               "length",          "edge_id:forward", "speed:forward",      "access:auto:forward",
-               "edge_id:reverse", "speed:reverse",   "access:auto:reverse"};
-          std::set<std::string> found_props;
+      EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::LINESTRING);
 
-          while (auto property = feature.next_property()) {
-            std::string key = std::string(property.key());
-            found_props.insert(key);
-          }
-
-          // Check that all expected properties are present
-          for (const auto& prop : expected_props) {
-            EXPECT_TRUE(found_props.count(prop) > 0) << "Edge should have property: " << prop;
-          }
-        }
-        feature_idx++;
+      std::set<std::string> expected_props =
+          {"tile_level",      "tile_id",         "road_class",         "use",
+           "length",          "edge_id:forward", "speed:forward",      "access:auto:forward",
+           "edge_id:reverse", "speed:reverse",   "access:auto:reverse"};
+      std::set<std::string> found_props;
+      while (auto property = feature.next_property()) {
+        std::string key = std::string(property.key());
+        found_props.insert(key);
       }
 
-      // Expect at least 1 edge feature (depending on tile boundaries, not all edges may be visible)
-      EXPECT_EQ(edge_feature_count, 1) << "Should have exactly 1 edge feature in this tile";
+      // Check that all expected properties are present
+      for (const auto& prop : expected_props) {
+        EXPECT_TRUE(found_props.count(prop) > 0) << "Edge should have property: " << prop;
+      }
 
     } else if (layer_name == "nodes") {
       has_nodes = true;
-      node_feature_count = layer.num_features();
 
-      // Verify layer metadata
-      EXPECT_EQ(layer.version(), 2) << "Layer version should be 2";
-      EXPECT_EQ(layer.extent(), 4096) << "Layer extent should be 4096";
+      EXPECT_EQ(layer.version(), 2);
+      EXPECT_EQ(layer.extent(), 4096);
 
-      // Verify node features
-      uint32_t feature_idx = 0;
-      while (auto feature = layer.next_feature()) {
-        if (feature_idx == 0) {
-          // Check ID
-          EXPECT_TRUE(feature.has_id()) << "Node feature should have an ID";
-          EXPECT_GT(feature.id(), 0) << "Node feature ID should be positive";
+      EXPECT_EQ(layer.num_features(), 1);
 
-          // Check geometry type
-          EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::POINT) << "Node should be a point";
+      auto feature = layer.next_feature();
 
-          // Verify expected node properties exist
-          std::set<std::string> expected_props = {"tile_level",        "tile_id",
-                                                  "node_id",           "type",
-                                                  "edge_count",        "access:auto",
-                                                  "access:pedestrian", "access:bicycle"};
-          std::set<std::string> found_props;
+      EXPECT_TRUE(feature.has_id()) << "Node feature should have an ID";
+      EXPECT_GT(feature.id(), 0) << "Node feature ID should be positive";
+      EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::POINT) << "Node should be a point";
 
-          while (auto property = feature.next_property()) {
-            std::string key = std::string(property.key());
-            found_props.insert(key);
-          }
+      std::set<std::string> expected_props = {"tile_level",        "tile_id",
+                                              "node_id",           "type",
+                                              "edge_count",        "access:auto",
+                                              "access:pedestrian", "access:bicycle"};
+      std::set<std::string> found_props;
 
-          // Check that all expected properties are present
-          for (const auto& prop : expected_props) {
-            EXPECT_TRUE(found_props.count(prop) > 0) << "Node should have property: " << prop;
-          }
-        }
-        feature_idx++;
+      while (auto property = feature.next_property()) {
+        std::string key = std::string(property.key());
+        found_props.insert(key);
       }
 
-      // Expect exactly 1 node feature in this tile (only end nodes are included)
-      EXPECT_EQ(node_feature_count, 1) << "Should have exactly 1 node feature in this tile";
+      for (const auto& prop : expected_props) {
+        EXPECT_TRUE(found_props.count(prop) > 0) << "Node should have property: " << prop;
+      }
+    } else {
+      FAIL() << "Unexpected layer: " << layer_name;
     }
   }
-
-  // Verify both expected layers exist
-  EXPECT_TRUE(has_edges) << "Tile should contain 'edges' layer";
-  EXPECT_TRUE(has_nodes) << "Tile should contain 'nodes' layer";
+  EXPECT_TRUE(has_edges);
+  EXPECT_TRUE(has_nodes);
 }
 
 TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
@@ -207,11 +175,12 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
 
   // Render tile at zoom 10
   auto tile_data_z10 = worker.render_tile(z10, x10, y10);
-  ASSERT_FALSE(tile_data_z10.empty()) << "Z10 tile data should not be empty";
+  EXPECT_EQ(tile_data_z10.size(), 4433);
 
   // Render tile at zoom 12
   auto tile_data_z12 = worker.render_tile(z12, x12, y12);
-  ASSERT_FALSE(tile_data_z12.empty()) << "Z12 tile data should not be empty";
+  ASSERT_FALSE(tile_data_z12.empty());
+  EXPECT_EQ(tile_data_z12.size(), 6310);
 
   // Parse Z10 tile
   vtzero::vector_tile tile_z10{tile_data_z10};
@@ -222,10 +191,12 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
     std::string layer_name = std::string(layer.name());
     if (layer_name == "edges") {
       edges_z10 = layer.num_features();
-      EXPECT_EQ(layer.version(), 2) << "Z10 layer version should be 2";
-      EXPECT_EQ(layer.extent(), 4096) << "Z10 layer extent should be 4096";
+      EXPECT_EQ(layer.version(), 2);
+      EXPECT_EQ(layer.extent(), 4096);
     } else if (layer_name == "nodes") {
       nodes_z10 = layer.num_features();
+    } else {
+      FAIL() << "Unexpected layer: " << layer_name;
     }
   }
 
@@ -238,10 +209,12 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
     std::string layer_name = std::string(layer.name());
     if (layer_name == "edges") {
       edges_z12 = layer.num_features();
-      EXPECT_EQ(layer.version(), 2) << "Z12 layer version should be 2";
-      EXPECT_EQ(layer.extent(), 4096) << "Z12 layer extent should be 4096";
+      EXPECT_EQ(layer.version(), 2);
+      EXPECT_EQ(layer.extent(), 4096);
     } else if (layer_name == "nodes") {
       nodes_z12 = layer.num_features();
+    } else {
+      FAIL() << "Unexpected layer: " << layer_name;
     }
   }
 

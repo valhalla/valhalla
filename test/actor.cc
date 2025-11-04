@@ -79,7 +79,6 @@ TEST(Actor, TraceAttributes) {
 }
 
 TEST(Actor, Tile) {
-  // Use Utrecht tiles for this test
   const auto utrecht_conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
   tyr::actor_t actor(utrecht_conf);
 
@@ -90,14 +89,10 @@ TEST(Actor, Tile) {
   auto tile_data = actor.tile(request);
   actor.cleanup();
 
-  // Verify we got data back
-  ASSERT_FALSE(tile_data.empty()) << "Tile data should not be empty";
-  ASSERT_GT(tile_data.size(), 100) << "Tile data should be at least 100 bytes";
+  ASSERT_EQ(tile_data.size(), 664758);
 
-  // Parse the MVT tile
   vtzero::vector_tile tile{tile_data};
 
-  // Verify the tile contains expected layers
   bool has_edges = false;
   bool has_nodes = false;
 
@@ -106,18 +101,17 @@ TEST(Actor, Tile) {
 
     if (layer_name == "edges") {
       has_edges = true;
-      // Verify the edges layer has at least one feature
-      ASSERT_GT(layer.num_features(), 0) << "Edges layer should have features";
+      ASSERT_EQ(layer.num_features(), 2280);
     } else if (layer_name == "nodes") {
       has_nodes = true;
-      // Verify the nodes layer has at least one feature
-      ASSERT_GT(layer.num_features(), 0) << "Nodes layer should have features";
+      ASSERT_EQ(layer.num_features(), 1384);
+    } else {
+      FAIL() << "Unexpected layer: " << layer_name;
     }
   }
 
-  // Verify both expected layers exist
-  ASSERT_TRUE(has_edges) << "Tile should contain 'edges' layer";
-  ASSERT_TRUE(has_nodes) << "Tile should contain 'nodes' layer";
+  ASSERT_TRUE(has_edges);
+  ASSERT_TRUE(has_nodes);
 }
 
 TEST(Actor, TileReturnShortcuts) {
