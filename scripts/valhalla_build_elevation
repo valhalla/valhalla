@@ -102,7 +102,11 @@ parser.add_argument(
     type=Path,
 )
 parser.add_argument(
-    "-p", "--parallelism", help="Number of processing units to use.", type=int, default=cpu_count()
+    "-p",
+    "--parallelism",
+    help="Number of processing units to use.",
+    type=int,
+    default=cpu_count(),
 )
 parser.add_argument(
     "-v",
@@ -283,7 +287,8 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
                             import lz4.frame
 
                             with lz4.frame.LZ4FrameCompressor(
-                                block_size=lz4.frame.BLOCKSIZE_MAX4MB, compression_level=6
+                                block_size=lz4.frame.BLOCKSIZE_MAX4MB,
+                                compression_level=6,
                             ) as compressor:
                                 # Optimization: we know the exact size of every uncompressed hgt file
                                 f.write(compressor.begin(25934402))

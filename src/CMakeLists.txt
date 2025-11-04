@@ -220,7 +220,7 @@ if(PKG_CONFIG_FOUND)
   configure_valhalla_pc()
 
   install(FILES
-    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    ${VALHALLA_BUILD_DIR}/libvalhalla.pc
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
 
