@@ -501,9 +501,9 @@ void legs(valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writ
 
             // type
             if (transit_stop.type() == TransitPlatformInfo_Type_kStation) {
-              writer("type", std::string("station"));
+              writer("type", "station");
             } else {
-              writer("type", std::string("stop"));
+              writer("type", "stop");
             }
 
             // onestop_id - using the station onestop_id
