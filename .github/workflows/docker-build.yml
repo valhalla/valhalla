@@ -189,7 +189,7 @@ jobs:
 
       - name: Test latest scripted image
         run: |
-          docker pull ghcr.io/valhalla/valhalla-scripted::issue5672
+          docker pull ghcr.io/valhalla/valhalla-scripted:issue5672
           sudo apt-get update > /dev/null
           sudo apt-get install -y moreutils tree > /dev/null
           sudo /bin/bash -c "./docker/test.sh ghcr.io/valhalla/valhalla-scripted:issue5672"
