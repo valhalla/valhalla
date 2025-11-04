@@ -89,6 +89,9 @@ NB_MODULE(_valhalla, m) {
           "Returns nothing or optionally details about Valhalla's configuration.")
       .def(
           "tile",
-          [](vt::actor_t& self, std::string& req) -> py::bytes { return py::bytes(self.tile(req)); },
+          [](vt::actor_t& self, std::string& req) -> nb::bytes {
+            auto result = self.tile(req);
+            return nb::bytes(result.c_str(), result.size());
+          },
           "Returns a vector tile (MVT binary data) with a bounding box feature for the given z/x/y tile coordinates.");
 }
