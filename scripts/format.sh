@@ -16,10 +16,10 @@ python_sources=$(LANG=C find scripts src/bindings/python -type f ! -name "*.md" 
 
 # Python formatter
 echo ${python_sources}
-${py} -m ruff check ${python_sources}
+${py} -m ruff check --config .ruff.toml ${python_sources}
 
 # Python linter
-${py} -m ruff format ${python_sources}
+${py} -m ruff format --config .ruff.toml ${python_sources}
 
 # clang-format
 echo "Using $(${py} scripts/clang_format_wrapper.py --version)"

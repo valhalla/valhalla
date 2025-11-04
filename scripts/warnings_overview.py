@@ -19,7 +19,11 @@ description = "Parses a build log and prints a summary of observed warnings"
 
 parser = ArgumentParser(description=description)
 parser.add_argument(
-    "--log-path", "-p", default=None, help="The full or relative path to the build log", type=Path
+    "--log-path",
+    "-p",
+    default=None,
+    help="The full or relative path to the build log",
+    type=Path,
 )
 # Could probably auto-discover this from the first lines of the build log
 parser.add_argument(
