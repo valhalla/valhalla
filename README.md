@@ -90,16 +90,13 @@ To run Valhalla locally or your own server, we recommend using one of our [Docke
 
 ### Via Python bindings
 
-[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/) [![pyvalhalla-weekly version](https://img.shields.io/pypi/v/pyvalhalla-weekly?label=pyvalhalla-weekly)](https://pypi.org/project/pyvalhalla-weekly/)
+[![pyvalhalla version](https://img.shields.io/pypi/v/pyvalhalla?label=pyvalhalla)](https://pypi.org/project/pyvalhalla/)
 
-We publish our (very) high-level Python bindings to PyPI:
-
-- [`pyvalhalla`](https://pypi.org/project/pyvalhalla/): follows Github releases
-- [`pyvalhalla-weekly`](https://pypi.org/project/pyvalhalla-weekly/): follows Github master branch and is released on a weekly schedule
+We publish our (very) high-level Python bindings to PyPI with [`pyvalhalla`](https://pypi.org/project/pyvalhalla/).
 
 The Python packages don't only contain the Python bindings, they also provide access to the C++ executables, e.g. in the form of `python -m valhalla valhalla_build_tiles -h`. For more details, see the [Python README](https://valhalla.github.io/valhalla/README_python).
 
-To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the desired wheel from [PyPI](https://pypi.org/project/pyvalhalla-weekly), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
+To install the native C++ executables one doesn't even need to have root permissions or even have Python installed. Simply download the desired wheel from [PyPI](https://pypi.org/project/pyvalhalla), extract it with e.g. `unzip` and run the included `valhalla/bin/<binary>` directly.
 
 ### Via NodeJS bindings
 

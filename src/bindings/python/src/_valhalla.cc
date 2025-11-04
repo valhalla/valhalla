@@ -39,7 +39,6 @@ NB_MODULE(_valhalla, m) {
   // Add these constants in C++ to avoid creating another shim python module, as they
   // are needed at runtime of the python library and need to be set during the build
   m.attr("VALHALLA_PRINT_VERSION") = VALHALLA_PRINT_VERSION;
-  m.attr("VALHALLA_PYTHON_PACKAGE") = VALHALLA_STRINGIZE(VALHALLA_PYTHON_PACKAGE);
 
   nb::class_<vt::actor_t>(m, "_Actor", "Valhalla Actor class")
       .def(
