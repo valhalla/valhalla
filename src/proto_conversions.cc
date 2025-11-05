@@ -66,7 +66,7 @@ std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& 
 }
 
 // Get the string representing the incident-Impact
-const char* incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact) {
+std::string_view incidentImpactToString(const valhalla::IncidentsTile::Metadata::Impact& impact) {
   switch (impact) {
     case valhalla::IncidentsTile::Metadata::UNKNOWN:
       return "unknown";

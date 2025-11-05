@@ -7,10 +7,6 @@ set -o errexit -o pipefail -o nounset
 #  - 1 there are files to be formatted
 #  - 0 everything looks fine
 
-if [[ $(uname -i) == 'aarch64' ]]; then
-  echo 'Formatting is disabled on arm for the time being'
-  exit
-fi
 source scripts/bash_utils.sh
 
 # Python setup
@@ -20,10 +16,10 @@ python_sources=$(LANG=C find scripts src/bindings/python -type f ! -name "*.md" 
 
 # Python formatter
 echo ${python_sources}
-${py} -m ruff check ${python_sources}
+${py} -m ruff check --config pyproject.toml ${python_sources}
 
 # Python linter
-${py} -m ruff format ${python_sources}
+${py} -m ruff format --config pyproject.toml ${python_sources}
 
 # clang-format
 echo "Using $(${py} scripts/clang_format_wrapper.py --version)"
