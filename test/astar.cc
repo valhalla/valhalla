@@ -1944,18 +1944,6 @@ TEST(StandAlone, AstarReverseTimeTrackingTest) {
                          {"mjolnir.shortcuts", "0"}});
 
   test::build_live_traffic_data(map.config);
-  test::LiveTrafficCustomize edges_with_traffic = [&](baldr::GraphReader& reader,
-                                                      baldr::TrafficTile& tile, uint32_t index,
-                                                      baldr::TrafficSpeed* current) -> void {
-    // update traffic speeds, set them to some low value
-    for (const auto& way : ways) {
-
-      auto fwd = way.first;
-      auto rev = fwd;
-      std::reverse(rev.begin(), rev.end());
-    };
-  };
-  test::customize_live_traffic_data(map.config, edges_with_traffic);
   valhalla::loki::loki_worker_t loki_worker(map.config);
   vt::BidirectionalAStar astar;
   GraphReader reader(map.config.get_child("mjolnir"));
