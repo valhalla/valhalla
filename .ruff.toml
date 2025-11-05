@@ -1,8 +1,0 @@
-line-length = 105
-extend-exclude = [
-    "dist",
-    "wheelhouse",
-    "*build*",
-    "*.egg-info",
-]
-lint.ignore = ["E731", "F811"]
