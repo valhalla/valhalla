@@ -74,7 +74,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create and push branch manifest 
+      - name: Create and push branch manifest
         run: |
           docker manifest create \
             ghcr.io/valhalla/valhalla:${{ github.ref_name }} \

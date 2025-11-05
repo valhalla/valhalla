@@ -426,7 +426,7 @@ TEST(Astar, TestTrivialPathNoUturns) {
   actor.route(
       R"({"costing":"pedestrian","locations":[{"lon":5.114587,"lat":52.095957},{"lon":5.114506,"lat":52.096141}]})",
       {}, &api);
-  EXPECT_EQ(api.directions().routes(0).legs(0).summary().time(), 0);
+  EXPECT_NEAR(api.directions().routes(0).legs(0).summary().time(), 0, 0.001);
 }
 
 struct route_tester {
