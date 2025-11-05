@@ -2,7 +2,7 @@
 #include "midgard/logging.h"
 #include "scoped_timer.h"
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 #include <cctype>
 #include <cstdint>
@@ -585,6 +585,7 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
     return false;
   }
   SCOPED_TIMER();
+  file.write(reinterpret_cast<const char*>(&pbf_checksum_), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&max_changeset_id_), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&osm_node_count), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&osm_way_count), sizeof(uint64_t));
@@ -632,6 +633,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
     return false;
   }
   SCOPED_TIMER();
+  file.read(reinterpret_cast<char*>(&pbf_checksum_), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&max_changeset_id_), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&osm_node_count), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&osm_way_count), sizeof(uint64_t));
@@ -685,8 +687,8 @@ void OSMData::add_to_name_map(const uint64_t member_id,
   dir[0] = std::toupper(dir[0]);
 
   // TODO:  network=e-road with int_ref=E #
-  if ((boost::starts_with(dir, "North (") || boost::starts_with(dir, "South (") ||
-       boost::starts_with(dir, "East (") || boost::starts_with(dir, "West (")) ||
+  if ((dir.starts_with("North (") || dir.starts_with("South (") || dir.starts_with("East (") ||
+       dir.starts_with("West (")) ||
       dir == "North" || dir == "South" || dir == "East" || dir == "West") {
 
     if (forward) {

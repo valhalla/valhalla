@@ -8,6 +8,8 @@ on:
       - docs/
       - run_route_scripts/
       - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
       - "**vcpkg**"
       - ".tx"
       - ".git*"
@@ -20,6 +22,8 @@ on:
       - docs/
       - run_route_scripts/
       - test_requests/
+      - test/check_compilers/
+      - .github/workflows/check_compilers.yml
       - "**vcpkg**"
       - ".tx"
       - ".git*"
@@ -62,16 +66,22 @@ jobs:
 
   release_build:
     name: Release build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [lint_format]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh >& /dev/null
+        run: |
+          ./scripts/install-linux-deps.sh
+          python -m pip install requests shapely
       
       - name: Get timestamp & ccache dir
         run: |
@@ -95,7 +105,7 @@ jobs:
       - name: Build Valhalla
         run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE \
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DENABLE_NODE_BINDINGS=On -DLOGGING_LEVEL=TRACE \
             -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON \
             -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
           make -C build -j$(nproc)
@@ -114,7 +124,10 @@ jobs:
           key: ccache-release-linux-x86_64-${{ env.BRANCH_NAME }}
 
       - name: Run tests
-        run: ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
+        run: |
+          ASAN_OPTIONS="detect_leaks=0" make -C build -j$(nproc) check
+          # remove the huge trace logs
+          rm -f build/test/*.log
       
       - name: Install Valhalla
         run: |
@@ -136,9 +149,15 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh
+        run: |
+          ./scripts/install-linux-deps.sh
+          python -m pip install requests shapely
 
       - name: Get timestamp & ccache dir
         run: |
@@ -164,7 +183,7 @@ jobs:
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
             -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On \
+            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_NODE_BINDINGS=On -DENABLE_GDAL=On \
             -DBUILD_SHARED_LIBS=On
           make -C build -j$(nproc)
           make -C build -j$(nproc) utrecht_tiles
@@ -208,16 +227,22 @@ jobs:
 
   arm_build:
     name: ARM build
-    runs-on: ubuntu-22.04-arm
+    runs-on: ubuntu-24.04-arm
     needs: [lint_format]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12' 
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh
+        run: |
+          ./scripts/install-linux-deps.sh
+          python -m pip install requests shapely
 
       - name: Get timestamp & ccache dir
         run: |

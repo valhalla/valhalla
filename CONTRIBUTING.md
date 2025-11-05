@@ -15,7 +15,7 @@ There are many ways to make meaningful contributions to the project:
 
 We appreciate the community picking up and fixing bugs or even implementing new features. There are a few things to follow/be aware of when working on Valhalla:
 
-- we currently use the C++17 standard
+- we currently use the C++20 standard
 - we use [`pre-commit`](https://pre-commit.com/) to make sure commits are formatted & linted: run `./scripts/format.sh` once and it'll be installed
 - [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html)/[`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/) is used to format/lint the C++ code, [`black`](https://black.readthedocs.io/en/stable/index.html) & [`flake8`](https://flake8.pycqa.org/en/latest/) format/lint Python code
 - [`ASan`](https://clang.llvm.org/docs/AddressSanitizer.html) is run in CI, but without its integrated leak sanitizer due to platform issues
@@ -78,6 +78,12 @@ We can alter the logic for the requests inside that script, depending on what we
     --concurrency 20 \
     --format 'csv'
 ```
+
+### Compiler tests
+
+We add a placeholder CMake project at [`test/compiler_checks`](https://github.com/valhalla/valhalla/blob/master/test/compiler_checks), which can be used to make assertions about non-standard behavior to be able to quickly judge compatibility across a range of compilers.
+
+To use this, add your executable(s) code, they will be picked up automatically by CMake. Then push to a branch and use the manual trigger of the `check_compilers.yml` GHA workflow to run it.
 
 ## Translation contributions
 

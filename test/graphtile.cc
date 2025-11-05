@@ -1,4 +1,5 @@
 #include "baldr/graphtile.h"
+#include "config.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
 #include "mjolnir/complexrestrictionbuilder.h"
@@ -138,8 +139,7 @@ size_t SerializeRestriction(const ComplexRestrictionBuilder& builder,
                             size_t offset,
                             const std::vector<GraphId>& vias) {
   // Write the ComplexRestriction structure
-  const ComplexRestriction* restriction =
-      reinterpret_cast<const ComplexRestriction*>(&builder);
+  const ComplexRestriction* restriction = reinterpret_cast<const ComplexRestriction*>(&builder);
   size_t restriction_size = restriction->SizeOf();
 
   if (offset + restriction_size > buffer.size()) {
@@ -495,6 +495,18 @@ TEST(RestrictionView, MixedModesAndDirections) {
     count4++;
   }
   EXPECT_EQ(count4, 1) << "Should find 1 forward restriction with all modes";
+}
+
+TEST(GraphTileVersion, VersionChecksum) {
+  std::string tile_dir = VALHALLA_BUILD_DIR "test/data/utrecht_tiles";
+
+  auto tile = GraphTile::Create(tile_dir, {3196, 0, 0});
+
+  std::string expected_version = VALHALLA_VERSION;
+  EXPECT_TRUE(tile->header()->version().compare(0, expected_version.size(), expected_version) == 0);
+
+  auto checksum = tile->header()->checksum();
+  EXPECT_GT(checksum, 0);
 }
 
 } // namespace
