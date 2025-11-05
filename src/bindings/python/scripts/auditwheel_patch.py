@@ -55,7 +55,10 @@ def main():
                 print(f"[INFO] Removed {lib_name} from {policy['name']}.lib_whitelist")
 
     if not libs_removed:
-        print(f"[WARN] Didn't remove any libraries from {AUDITWHEEL_POLICY_JSON}", file=sys.stderr)
+        print(
+            f"[WARN] Didn't remove any libraries from {AUDITWHEEL_POLICY_JSON}",
+            file=sys.stderr,
+        )
 
     with AUDITWHEEL_POLICY_JSON.open("w") as f:
         json.dump(policy_source, f)
