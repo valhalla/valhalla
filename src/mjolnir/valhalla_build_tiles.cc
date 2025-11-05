@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
         throw cxxopts::exceptions::exception("Invalid end stage, see above");
       }
     }
-    LOG_INFO("Start stage = " + to_string(start_stage) + " End stage = " + to_string(end_stage));
+    LOG_INFO("Start stage = {} End stage = {}", to_string(start_stage), to_string(end_stage));
 
     // Make sure start stage < end stage
     if (static_cast<int>(start_stage) > static_cast<int>(end_stage)) {

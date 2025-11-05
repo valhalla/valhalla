@@ -66,7 +66,7 @@ jobs:
 
   release_build:
     name: Release build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [lint_format]
     env:
       CC: gcc-12
@@ -76,9 +76,15 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh >& /dev/null
+        run: |
+          ./scripts/install-linux-deps.sh
+          python -m pip install requests shapely
       
       - name: Get timestamp & ccache dir
         run: |
@@ -145,9 +151,15 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh
+        run: |
+          ./scripts/install-linux-deps.sh
+          python -m pip install requests shapely
 
       - name: Get timestamp & ccache dir
         run: |
@@ -219,16 +231,22 @@ jobs:
       CC: gcc-12
       CXX: g++-12
     name: ARM build
-    runs-on: ubuntu-22.04-arm
+    runs-on: ubuntu-24.04-arm
     needs: [lint_format]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
           fetch-depth: 1
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12' 
       
       - name: Install deps
-        run: ./scripts/install-linux-deps.sh
+        run: |
+          ./scripts/install-linux-deps.sh
+          python -m pip install requests shapely
 
       - name: Get timestamp & ccache dir
         run: |
