@@ -271,7 +271,7 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
   int32_t ext_y = box[3] - box[1];
 
   // collect data from isogrid
-  std::vector<std::vector<uint16_t>> planes(valid_bands);
+  std::vector<std::vector<uint16_t>> planes(metrics.size());
   for (const auto metric_idx : std::views::iota(0U, metrics.size())) {
     if (!metrics[metric_idx]) {
       continue;
@@ -378,9 +378,7 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
     }
     for (uint32_t row = 0; row < ext_y; ++row) {
       uint16_t* rowptr = &planes[metric_idx][static_cast<size_t>(row * ext_x)];
-      if (TIFFWriteScanline(tif, reinterpret_cast<void*>(rowptr), row,
-
-                            metric_idx) < 0) {
+      if (TIFFWriteScanline(tif, reinterpret_cast<void*>(rowptr), row, metric_idx) < 0) {
         throw valhalla_exception_t{599, "Failed to write GeoTIFF."};
       }
     }
