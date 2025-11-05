@@ -91,6 +91,13 @@ std::string build_valhalla_request(const std::vector<std::string>& location_type
                                    const std::string& costing = "auto",
                                    const std::unordered_map<std::string, std::string>& options = {},
                                    const std::string& stop_type = "break");
+/**
+ *
+ * convert a list of node names to lat/lons.
+ */
+std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
+                                     const std::vector<std::string>& node_names);
+
 } // namespace detail
 
 /**

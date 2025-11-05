@@ -1,8 +1,10 @@
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
+#include "loki/worker.h"
 #include "midgard/encoded.h"
 #include "proto/api.pb.h"
 #include "test.h"
+#include "thor/worker.h"
 #include "valhalla/proto_conversions.h"
 #include "valhalla/worker.h"
 
@@ -11,6 +13,8 @@
 using namespace valhalla;
 using namespace valhalla::thor;
 using namespace valhalla::midgard;
+using namespace valhalla::sif;
+using namespace valhalla::baldr;
 
 namespace {
 void update_traffic_on_edges(baldr::GraphReader& reader,
@@ -71,12 +75,12 @@ protected:
     )";
 
     const gurka::ways ways = {
-        {"AB", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "yes"}}},
-        {"BC", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "no"}}},
-        {"CD", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "yes"}}},
-        {"DE", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "no"}}},
-        {"EF", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "yes"}}},
-        {"FG", {{"highway", "primary"}, {"maxspeed", "100"}, {"bicycle", "no"}}},
+        {"AB", {{"highway", "primary"}, {"maxspeed", "100"}}},
+        {"BC", {{"highway", "primary"}, {"maxspeed", "100"}}},
+        {"CD", {{"highway", "primary"}, {"maxspeed", "100"}}},
+        {"DE", {{"highway", "primary"}, {"maxspeed", "100"}}},
+        {"EF", {{"highway", "primary"}, {"maxspeed", "100"}}},
+        {"FG", {{"highway", "primary"}, {"maxspeed", "100"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -109,6 +113,115 @@ protected:
 };
 
 gurka::map MatrixTrafficTest::map = {};
+
+class SimpleCost final : public valhalla::sif::DynamicCost {
+public:
+  // keep track of the time information with which edge cost was called
+  mutable std::vector<baldr::TimeInfo> time_infos;
+
+  /**
+   * Constructor.
+   * @param  options Request options in a pbf
+   */
+  SimpleCost(const Costing& options) : DynamicCost(options, sif::TravelMode::kDrive, kAutoAccess) {
+  }
+
+  ~SimpleCost() {
+  }
+
+  bool Allowed(const DirectedEdge* edge,
+               const bool /*is_dest*/,
+               const EdgeLabel& pred,
+               const graph_tile_ptr& /*tile*/,
+               const GraphId& edgeid,
+               const uint64_t /*current_time*/,
+               const uint32_t /*tz_index*/,
+               uint8_t& /*restriction_idx*/,
+               uint8_t& /*destonly_access_restr_mask*/) const override {
+    if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+        (pred.restrictions() & (1 << edge->localedgeidx())) ||
+        edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
+        (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+      return false;
+    }
+    return true;
+  }
+
+  bool AllowedReverse(const DirectedEdge* edge,
+                      const EdgeLabel& pred,
+                      const DirectedEdge* opp_edge,
+                      const graph_tile_ptr& /*tile*/,
+                      const GraphId& opp_edgeid,
+                      const uint64_t /*current_time*/,
+                      const uint32_t /*tz_index*/,
+                      uint8_t& /*restriction_idx*/,
+                      uint8_t& /*destonly_access_restr_mask*/) const override {
+    if (!IsAccessible(opp_edge) ||
+        (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+        (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
+        opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
+        (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+      return false;
+    }
+    return true;
+  }
+
+  Cost EdgeCost(const baldr::DirectedEdge* /*edge*/,
+                const baldr::TransitDeparture* /*departure*/,
+                const uint32_t /*curr_time*/) const override {
+    throw std::runtime_error("We shouldnt be testing transit edges");
+  }
+
+  Cost EdgeCost(const DirectedEdge* edge,
+                const graph_tile_ptr& /*tile*/,
+                const baldr::TimeInfo& time_info,
+                uint8_t& /*flow_sources*/) const override {
+    time_infos.push_back(time_info);
+    float sec = static_cast<float>(edge->length());
+    return {sec / 10.0f, sec};
+  }
+
+  Cost TransitionCost(const DirectedEdge* /*edge*/,
+                      const NodeInfo* /*node*/,
+                      const EdgeLabel& /*pred*/,
+                      const graph_tile_ptr& /*tile*/,
+                      const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/
+  ) const override {
+    return {5.0f, 5.0f};
+  }
+
+  Cost TransitionCostReverse(const uint32_t /*idx*/,
+                             const NodeInfo* /*node*/,
+                             const DirectedEdge* /*opp_edge*/,
+                             const DirectedEdge* /*opp_pred_edge*/,
+                             const graph_tile_ptr& /*tile*/,
+                             const baldr::GraphId& /*edge_id*/,
+                             const std::function<baldr::LimitedGraphReader()>& /*reader_getter*/,
+                             const bool /*has_measured_speed*/,
+                             const InternalTurn /*internal_turn*/) const override {
+    return {5.0f, 5.0f};
+  }
+
+  float AStarCostFactor() const override {
+    return 0.1f;
+  }
+
+  bool Allowed(const baldr::DirectedEdge* edge, const graph_tile_ptr&, uint16_t) const override {
+    auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
+    bool accessible = (edge->forwardaccess() & access_mask) ||
+                      (ignore_oneways_ && (edge->reverseaccess() & access_mask));
+    if (edge->is_shortcut() || !accessible)
+      return 0.0f;
+    else {
+      return 1.0f;
+    }
+  }
+};
+
+std::pair<cost_ptr_t, std::shared_ptr<SimpleCost>> CreateSimpleCost(const Costing& options) {
+  auto dcost = std::make_shared<SimpleCost>(options);
+  return std::make_pair(dcost, dcost);
+}
 
 TEST_F(MatrixTrafficTest, MatrixNoTraffic) {
   // no traffic, so this is CostMatrix
@@ -287,6 +400,76 @@ TEST_F(MatrixTrafficTest, TDTargets) {
   check_matrix(res_doc, {0.0f, 115.0f}, false, "time", Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 1);
   ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
+}
+
+// hierarchy limits are managed by thor's worker, since we call the algorithms directly here,
+// we have to do this manually
+void set_hierarchy_limits(sif::cost_ptr_t& cost, boost::property_tree::ptree& pt) {
+  Costing_Options opts;
+  const auto hl_config = parse_hierarchy_limits_from_config(pt, "costmatrix", true);
+  check_hierarchy_limits(cost->GetHierarchyLimits(), cost, opts, hl_config, false, true);
+}
+
+std::string build_matrix_request(const std::vector<std::string>& sources,
+                                 const std::vector<std::string>& targets,
+                                 const std::string& costing,
+                                 const std::unordered_map<std::string, std::string>& options,
+                                 const gurka::map& map) {
+  auto sources_lls = gurka::detail::to_lls(map.nodes, sources);
+  auto targets_lls = gurka::detail::to_lls(map.nodes, targets);
+  return gurka::detail::build_valhalla_request({"sources", "targets"}, {sources_lls, targets_lls},
+                                               costing, options);
+}
+
+/**
+ * This test goes a little deeper in making sure that CostMatrix is actually pushing forward time on
+ * one search tree and using invalid times on the reverse tree. We construct our own little costing
+ * class that keeps track of the time info objects with which its EdgeCost method is called.
+ *
+ * We expect there to be similar counts of invalid and valid time info objects, and the maximum value
+ * for "seconds_from_now" should be some non-zero value
+ */
+TEST_F(MatrixTrafficTest, CostMatrixPathfinding) {
+  valhalla::loki::loki_worker_t loki_worker(map.config);
+
+  auto test_request =
+      build_matrix_request({"1", "2"}, {"1", "2"}, "auto", {{"/date_time/type", "0"}}, map);
+  Api request;
+  ParseApi(test_request, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_scores(*request.mutable_options());
+
+  GraphReader reader(map.config.get_child("mjolnir"));
+
+  const auto hl_config = parse_hierarchy_limits_from_config(map.config, "costmatrix", true);
+  sif::mode_costing_t mode_costing;
+  auto cost =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+
+  mode_costing[0] = cost.first;
+  set_hierarchy_limits(mode_costing[0], map.config);
+  CostMatrix cost_matrix;
+  cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  uint64_t invalid_count =
+      std::accumulate(cost.second->time_infos.begin(), cost.second->time_infos.end(), 0,
+                      [](uint64_t acc, const TimeInfo& a) {
+                        return acc + static_cast<uint64_t>(!a.valid);
+                      });
+  uint64_t valid_count =
+      std::accumulate(cost.second->time_infos.begin(), cost.second->time_infos.end(), 0,
+                      [](uint64_t acc, const TimeInfo& a) {
+                        return acc + static_cast<uint64_t>(a.valid);
+                      });
+
+  auto max_seconds_from_now =
+      std::max_element(cost.second->time_infos.begin(), cost.second->time_infos.end(),
+                       [](const TimeInfo& a, const TimeInfo& b) {
+                         return a.seconds_from_now < b.seconds_from_now;
+                       });
+
+  EXPECT_EQ(24, invalid_count);
+  EXPECT_EQ(24, valid_count);
+  EXPECT_EQ(7045, max_seconds_from_now->seconds_from_now);
 }
 
 TEST(StandAlone, CostMatrixDeadends) {
