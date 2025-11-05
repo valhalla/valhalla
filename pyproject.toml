@@ -1,8 +1,5 @@
-# this will be turned into pyproject.toml by cmake/ValhallaPyProjectToml.cmake
-# there's no other way to have different "project.name"s
-
 [project]
-name = "@PYVALHALLA_NAME@"
+name = "pyvalhalla"
 dynamic = ["version"]
 requires-python = ">=3.9.0"
 authors = [{ name = "Nils Nolde" }, {name = "Kevin Kreiser"}]
@@ -33,8 +30,11 @@ requires = [
     "wheel",
     "setuptools_scm>=6.2",
     "setuptools_scm_git_archive",
+    # instead of relying on system tools
+    "cmake",
+    "ninja",
     "nanobind>=2.9.0",
-    "auditwheel",
+    "auditwheel"
 ]
 build-backend = "scikit_build_core.build"
 
@@ -47,6 +47,8 @@ metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 wheel.install-dir = "valhalla"
 # only installs the python cmake COMPONENT
 install.components = ["python"]
+sdist.include = ["pyproject.toml"]
+sdist.exclude = ["test", "test_requests"]
 
 # a few standard build flags for a scikit-build-core build
 [tool.scikit-build.cmake.define]
@@ -62,6 +64,16 @@ version_scheme = "no-guess-dev"
 # PyPI doesn't accept local hashed version strings, important for pyvalhalla-weekly
 local_scheme = "no-local-version"
 
+[tool.ruff]
+line-length = 105
+extend-exclude = [
+    "dist",
+    "wheelhouse",
+    "*build*",
+    "*.egg-info",
+]
+lint.ignore = ["E731", "F811"]
+
 [tool.cibuildwheel]
 # it's enough here to know it's importable, actual test is run on other CI
 # mostly to avoid building utrecht tiles within the bindings build
@@ -71,6 +83,7 @@ build = "cp*"
 skip = "*musllinux*"
 archs = "native"
 manylinux-x86_64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
+manylinux-aarch64-image = "ghcr.io/valhalla/manylinux:2_28_valhalla_python"
 
 [tool.cibuildwheel.windows]
 # this is v1.11.2
