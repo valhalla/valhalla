@@ -77,7 +77,7 @@ function(valhalla_module)
     target_add_compile_flags_if_supported(${library} PRIVATE -mfpmath=sse -msse2)
   endif()
 
-  if(ENABLE_COMPILER_WARNINGS)
+  if(ENABLE_COMPILER_WARNINGS AND NOT MODULE_NAME STREQUAL "proto")
     cxx_add_warning_flags(${library} EXTRA_FLAGS -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp)
   endif()
 
