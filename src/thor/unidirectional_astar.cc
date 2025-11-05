@@ -797,8 +797,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
         return;
       }
 
-      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, TimeInfo::invalid(),
-                                            flow_sources, start, end);
+      Cost cost =
+          costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources, start, end);
 
       cost.cost += edge.distance() + (dest_path_edge ? dest_path_edge->distance() : 0.0f);
 
