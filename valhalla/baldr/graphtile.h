@@ -52,8 +52,6 @@ public:
     using iterator_category = std::forward_iterator_tag;
     using value_type = ComplexRestriction*;
     using difference_type = std::ptrdiff_t;
-    using pointer = ComplexRestriction**;
-    using reference = ComplexRestriction*&;
 
     iterator(char* data, size_t size, GraphId id, uint64_t modes, bool forward)
         : data_(data), end_(data + size), id_(id), modes_(modes), forward_(forward), offset_(0) {
@@ -85,12 +83,8 @@ public:
       return tmp;
     }
 
-    bool operator==(const iterator& other) const {
-      return (data_ + offset_) == (other.data_ + other.offset_);
-    }
-
-    bool operator!=(const iterator& other) const {
-      return !(*this == other);
+    friend bool operator==(const iterator& lhs, const iterator& rhs) {
+      return (lhs.data_ + lhs.offset_) == (rhs.data_ + rhs.offset_);
     }
 
   private:
