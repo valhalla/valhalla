@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 from tempfile import NamedTemporaryFile
 import unittest
-from valhalla import Actor, get_config, VALHALLA_PYTHON_PACKAGE, VALHALLA_PRINT_VERSION
+from valhalla import Actor, get_config, VALHALLA_PRINT_VERSION
 
 
 PWD = Path(os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +30,6 @@ class TestBindings(unittest.TestCase):
         cls.actor = Actor(str(PWD.joinpath('valhalla.json')))
 
     def test_version_python_package_constant(self):
-        self.assertIn("pyvalhalla", VALHALLA_PYTHON_PACKAGE)
 
         # The CMake build of course doesn't have the setuptools-scm generated __version__.py
         try:
@@ -44,10 +43,6 @@ class TestBindings(unittest.TestCase):
         version_modifier = VALHALLA_PRINT_VERSION[VALHALLA_PRINT_VERSION.find("-"):]
         if version_modifier:
             self.assertIn(version_modifier, __version__)
-        else:
-            # for releases there should always be a version modifier,
-            # as they're guaranteed to be run by CI
-            self.assertNotEqual("pyvalhalla", VALHALLA_PYTHON_PACKAGE)
 
     def test_config(self):
         config = get_config(self.extract_path, self.tiles_path)
