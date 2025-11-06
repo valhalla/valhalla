@@ -975,9 +975,7 @@ std::span<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx) c
   while (found < count && lane_connectivity_[found].to() == idx) {
     ++found;
   }
-  const auto end = found;
-
-  return std::span<LaneConnectivity>(lane_connectivity_ + start, lane_connectivity_ + end);
+  return std::span<LaneConnectivity>(lane_connectivity_ + start, lane_connectivity_ + found);
 }
 
 // Get the next departure given the directed line Id and the current
