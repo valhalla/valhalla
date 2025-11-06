@@ -312,7 +312,9 @@ void ConnectEdges(GraphReader& reader,
                   float& average_density,
                   float& total_duration,
                   float& total_truck_duration,
-                  ShortcutAccessRestriction& access_restrictions) {
+                  ShortcutAccessRestriction& access_restrictions,
+                  bool& has_bridge,
+                  bool& has_tunnel) {
   // Get the tile and directed edge.
   auto tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -358,6 +360,10 @@ void ConnectEdges(GraphReader& reader,
 
   // Update the end node
   endnode = directededge->endnode();
+
+  // Update has_bridge / has_tunnel flags
+  has_bridge |= directededge->bridge();
+  has_tunnel |= directededge->tunnel();
 }
 
 // Check if the edge is entering a contracted node
@@ -447,6 +453,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // For turn duration calculation during contraction
       uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
+      bool has_bridge = directededge->bridge();
+      bool has_tunnel = directededge->tunnel();
       while (true) {
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
@@ -474,7 +482,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                     average_density, total_duration, total_truck_duration, access_restrictions);
+                     average_density, total_duration, total_truck_duration, access_restrictions,
+                     has_bridge, has_tunnel);
         total_edge_count++;
       }
 
@@ -573,6 +582,10 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
 
       // Make sure shortcut edge is not marked as internal edge
       newedge.set_internal(false);
+
+      // Set bridge / tunnel flags
+      newedge.set_bridge(has_bridge);
+      newedge.set_tunnel(has_tunnel);
 
       // Add new directed edge to tile builder
       tilebuilder.directededges().emplace_back(std::move(newedge));

@@ -232,8 +232,7 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     boost::algorithm::trim(condition);
 
     // Holidays and school hours skip for now
-    if (boost::algorithm::starts_with(condition, "PH") ||
-        boost::algorithm::starts_with(condition, "SH")) {
+    if (condition.starts_with("PH") || condition.starts_with("SH")) {
       return time_domains;
     }
 

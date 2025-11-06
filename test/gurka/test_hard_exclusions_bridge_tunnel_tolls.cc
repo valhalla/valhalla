@@ -115,6 +115,26 @@ TEST_P(ExclusionTest, InTheEndNotAllowed) {
   };
 }
 
+TEST_P(ExclusionTest, Shortcut) {
+  const std::string ascii_map = R"(
+  A----B====C====D----E
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "secondary"}}},
+      {"CD", {{"highway", "secondary"}}},
+      {"DE", {{"highway", "residential"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude_bridge_tunnel_tolls",
+                               {{"service_limits.allow_hard_exclusions", "true"}});
+  auto& hierarchy_limits = map.config.get_child("thor.bidirectional_astar.hierarchy_limits");
+  hierarchy_limits.get_child("max_up_transitions.2").put_value(0);
+  hierarchy_limits.get_child("expand_within_distance.2").put_value(200);
+  check_result("0", {"A", "E"}, {"AB", "BC", "CD", "DE"}, map, GetParam());
+  check_result("1", {"A", "E"}, {"AB", "BC", "CD", "DE"}, map, GetParam());
+}
+
 INSTANTIATE_TEST_SUITE_P(ExcludePropsTest, ExclusionTest, ::testing::ValuesIn([]() {
                            std::vector<std::vector<std::string>> values;
                            for (const auto& costing : kSupportedCostingModels) {

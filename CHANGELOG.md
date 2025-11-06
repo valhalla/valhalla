@@ -1,5 +1,22 @@
 ## UNRELEASED
 * **Removed**
+   * REMOVED: ENABLE_GDAL define for **Linux-only** Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
+   * REMOVED: pyvalhalla-weekly PyPI package [#5673](https://github.com/valhalla/valhalla/pull/5673)
+* **Bug Fix**
+   * FIXED: Handle access restriction tag values separated by semicolon [#5560](https://github.com/valhalla/valhalla/pull/5560)
+* **Enhancement**
+   * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
+   * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647)
+   * UPGRADED: vcpkg to 0e39c10736341cc8135b560438229bbda3d3219a [#5654](https://github.com/valhalla/valhalla/pull/5654)
+   * FIXED: returns GeoTIFF with Content-Type image/tiff header [#5665](https://github.com/valhalla/valhalla/pull/5665)
+   * CHANGED: Improve logging using std::format [#5666](https://github.com/valhalla/valhalla/pull/5666)
+   * CHANGED: Migrated from pybind11 to nanobind to release `abi3` wheels (Python version agnostic), also changes minimum version of PyPI packages to 3.12 [#5628](https://github.com/valhalla/valhalla/pull/5628)
+   * CHANGED: Avoid temporary std::string in some places in serializers [#5674](https://github.com/valhalla/valhalla/pull/5674)
+   * ADDED: linux-aarch64 wheel for Python releases [#5670](https://github.com/valhalla/valhalla/pull/5670)
+   * ADDED: PyPI `sdist` for python to install the bindings from source [#5649](https://github.com/valhalla/valhalla/pull/5649)
+
+## Release Date: 2025-10-23 Valhalla 3.6.0
+* **Removed**
    * REMOVED: validity checks for historical speeds [#5087](https://github.com/valhalla/valhalla/pull/5087)
    * REMOVED: `seasonal` bit from OSMWay & DirectedEdge [#5156](https://github.com/valhalla/valhalla/pull/5156)
    * REMOVED: hard-coded tz alias map and associated logic [#5164](https://github.com/valhalla/valhalla/pull/5164)
@@ -71,7 +88,8 @@
    * FIXED: Trivial Matrix connections when a source and target share a same correlation point [#5579](https://github.com/valhalla/valhalla/pull/5579)
    * FIXED: Improved Isochrone/Reach performance by removing unnecessary getting of the opp edge [#5602](https://github.com/valhalla/valhalla/pull/5602)
    * FIXED: Elevation resampling algorithm for 2 points [#5597](https://github.com/valhalla/valhalla/pull/5597) master
-   * FIXED: Handle access restriction tag values separated by semicolon [#5560](https://github.com/valhalla/valhalla/pull/5560)
+   * FIXED: Elevation resampling algorithm for 2 points [#5597](https://github.com/valhalla/valhalla/pull/5597)
+   * FIXED: wrong openssl library referenced in setup.py [#5637](https://github.com/valhalla/valhalla/pull/5637)
 * **Enhancement**
    * ADDED: Consider smoothness in all profiles that use surface [#4949](https://github.com/valhalla/valhalla/pull/4949)
    * ADDED: costing parameters to exclude certain edges `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways`, `exclude_ferries`. They need to be enabled in the config with `service_limits.allow_hard_exclusions`. Also added location search filters `exclude_ferry` and `exclude_toll` to complement these changes. [#4524](https://github.com/valhalla/valhalla/pull/4524)
@@ -168,6 +186,9 @@
    * CHANGED: Optimise turntype calls in TransitionCost [#5590](https://github.com/valhalla/valhalla/pull/5590)
    * CHANGED: Consistent use of `cost_ptr_t` [#5615](https://github.com/valhalla/valhalla/pull/5615)
    * ADDED: Add scripted image build to manual per-branch docker CI build [#5614](https://github.com/valhalla/valhalla/pull/5614)
+   * CHANGED: added openssl as a linked library to all build configs when `ENABLE_DATA_TOOLS=ON` [#5626](https://github.com/valhalla/valhalla/pull/5626)
+   * UPGRADED: C++17 to C++20 [#5575](https://github.com/valhalla/valhalla/pull/5575)
+   * ADDED: Add NodeJs bindings [#5621](https://github.com/valhalla/valhalla/pull/5621)
 
 ## Release Date: 2024-10-10 Valhalla 3.5.1
 * **Removed**
