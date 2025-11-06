@@ -122,6 +122,12 @@ protected:
   uint32_t desired_paths_count_;
   std::vector<CandidateConnection> best_connections_;
 
+  // Maximum number of additional iterations allowed once the first connection has been found.
+  // For alternative routes we use bigger cost extension than in the case with one route. This
+  // may lead to a significant increase in the number of iterations (~time). So, we should limit
+  // iterations in order no to drop performance too much.
+  uint32_t k_alternative_iterations_delta_;
+
   // Extends search in one direction if the other direction exhausted, but only if the non-exhausted
   // end started on a not_thru or closed (due to live-traffic) edge
   bool extended_search_;

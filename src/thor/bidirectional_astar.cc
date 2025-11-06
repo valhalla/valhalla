@@ -30,11 +30,6 @@ constexpr float kThresholdDelta = 420.0f;
 // we can't estimate route cost that goes through some particular edge very precisely, we
 // can find alternatives with costs greater than the threshold.
 constexpr float kAlternativeCostExtend = 1.2f;
-// Maximum number of additional iterations allowed once the first connection has been found.
-// For alternative routes we use bigger cost extension than in the case with one route. This
-// may lead to a significant increase in the number of iterations (~time). So, we should limit
-// iterations in order no to drop performance too much.
-constexpr uint32_t kAlternativeIterationsDelta = 100000;
 
 inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
   for (const auto& e : location.correlation().edges()) {
@@ -65,6 +60,7 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
+  k_alternative_iterations_delta_ = config.get<uint32_t>("k_alternative_iterations_delta");
 }
 
 // Destructor
@@ -866,7 +862,7 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
       // TODO: use different constants to extend the search based on route distance.
       cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
       iterations_threshold_ =
-          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + k_alternative_iterations_delta_;
     }
   }
 
@@ -939,7 +935,7 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
       // TODO: use different constants to extend the search based on route distance.
       cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
       iterations_threshold_ =
-          edgelabels_forward_.size() + edgelabels_reverse_.size() + kAlternativeIterationsDelta;
+          edgelabels_forward_.size() + edgelabels_reverse_.size() + k_alternative_iterations_delta_;
     }
   }
 
