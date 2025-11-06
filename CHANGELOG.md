@@ -3,6 +3,7 @@
    * REMOVED: ENABLE_GDAL define for **Linux-only** Python binding releases [#5642](https://github.com/valhalla/valhalla/pull/5642)
    * REMOVED: pyvalhalla-weekly PyPI package [#5673](https://github.com/valhalla/valhalla/pull/5673)
 * **Bug Fix**
+   * FIXED: Pass time to `EdgeCost` for initial edges in Dijkstra [#5677](https://github.com/valhalla/valhalla/pull/5677)
 * **Enhancement**
    * CHANGED: Removed black and flake8 with ruff [#5639](https://github.com/valhalla/valhalla/pull/5639)
    * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647) 
