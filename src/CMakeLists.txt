@@ -168,7 +168,7 @@ target_compile_definitions(valhalla
 target_compile_options(valhalla PUBLIC ${libvalhalla_compile_options})
 
 if(ENABLE_COMPILER_WARNINGS)
-  cxx_add_warning_flags(valhalla EXTRA_FLAGS -Wno-maybe-unitialized  -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp)
+  cxx_add_warning_flags(valhalla EXTRA_FLAGS -Wno-maybe-unitialized -Wno-stringop-overflow  -Wno-unused-parameter -Wno-missing-field-initializers -Wno-cpp)
 endif()
 
 target_include_directories(valhalla
