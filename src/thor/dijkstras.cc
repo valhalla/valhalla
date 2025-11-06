@@ -824,8 +824,8 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       uint8_t flow_sources;
-      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info,
-                                            flow_sources, edge.percent_along(), 1.f);
+      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources,
+                                            edge.percent_along(), 1.f);
 
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
@@ -915,8 +915,8 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info,
-                                            flow_sources, 0.f, edge.percent_along());
+      Cost cost = costing_->PartialEdgeCost(directededge, edgeid, tile, time_info, flow_sources, 0.f,
+                                            edge.percent_along());
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();
 
