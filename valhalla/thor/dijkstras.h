@@ -244,6 +244,7 @@ protected:
    */
   void SetOriginLocations(baldr::GraphReader& graphreader,
                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                          const std::vector<baldr::TimeInfo>& time_infos,
                           const sif::cost_ptr_t& costing);
 
   /**
@@ -265,6 +266,7 @@ protected:
    */
   void SetDestinationLocations(baldr::GraphReader& graphreader,
                                google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                               const std::vector<baldr::TimeInfo>& time_infos,
                                const sif::cost_ptr_t& costing);
 
   /**
