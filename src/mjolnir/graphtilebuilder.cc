@@ -584,9 +584,25 @@ void GraphTileBuilder::AddSigns(const uint32_t idx, const std::vector<SignInfo>&
 }
 
 // Add lane connectivity
-void GraphTileBuilder::AddLaneConnectivity(const std::vector<baldr::LaneConnectivity>& lc) {
-  lane_connectivity_builder_.insert(lane_connectivity_builder_.end(), lc.begin(), lc.end());
-  lane_connectivity_offset_ += sizeof(baldr::LaneConnectivity) * lc.size();
+void GraphTileBuilder::AddLaneConnectivity(std::vector<baldr::LaneConnectivity>&& lc) {
+  auto lane_connectivity = std::move(lc);
+  lane_connectivity_builder_.insert(lane_connectivity_builder_.end(), lane_connectivity.begin(),
+                                    lane_connectivity.end());
+  lane_connectivity_offset_ += sizeof(baldr::LaneConnectivity) * lane_connectivity.size();
+}
+
+void GraphTileBuilder::CopyLaneConnectivityFromTile(const baldr::graph_tile_ptr& tile,
+                                                    uint32_t edge_id) {
+  auto laneconnectivity_span = tile->GetLaneConnectivity(edge_id);
+  auto laneconnectivity = std::vector<baldr::LaneConnectivity>(laneconnectivity_span.begin(),
+                                                               laneconnectivity_span.end());
+  if (laneconnectivity.size() == 0) {
+    LOG_ERROR("Base edge should have lane connectivity, but none found");
+  }
+  for (auto& lc : laneconnectivity) {
+    lc.set_to(directededges().size());
+  }
+  AddLaneConnectivity(std::move(laneconnectivity));
 }
 
 // Add forward complex restriction.
