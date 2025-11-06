@@ -92,7 +92,7 @@ function(valhalla_module)
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${MODULE_NAME}"
     COMPONENT development)
 
-  if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
+  if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS OR ENABLE_NODE_BINDINGS)
     set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
   endif()
 
@@ -220,7 +220,7 @@ if(PKG_CONFIG_FOUND)
   configure_valhalla_pc()
 
   install(FILES
-    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    ${VALHALLA_BUILD_DIR}/libvalhalla.pc
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 endif()
 
