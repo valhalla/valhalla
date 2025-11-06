@@ -121,12 +121,25 @@ protected:
   uint32_t iterations_threshold_;
   uint32_t desired_paths_count_;
   std::vector<CandidateConnection> best_connections_;
+  
+  // Threshold (seconds) to extend search once the first connection has been found.
+  // TODO - this is currently set based on some exceptional cases (e.g. routes taking
+  // the PA Turnpike which have very long edges). Using a metric based on maximum edge
+  // cost creates large performance drops - so perhaps some other metric can be found?
+  float threshold_delta_;
+
+  // Relative cost extension to find alternative routes. It's a multiplier that we apply
+  // to the optimal route cost in order to get a new cost threshold. This threshold indicates
+  // an upper bound value cost for alternative routes we're looking for. Due to the fact that
+  // we can't estimate route cost that goes through some particular edge very precisely, we
+  // can find alternatives with costs greater than the threshold.
+  float alternative_cost_extend_;
 
   // Maximum number of additional iterations allowed once the first connection has been found.
   // For alternative routes we use bigger cost extension than in the case with one route. This
   // may lead to a significant increase in the number of iterations (~time). So, we should limit
   // iterations in order no to drop performance too much.
-  uint32_t k_alternative_iterations_delta_;
+  uint32_t alternative_iterations_delta_;
 
   // Extends search in one direction if the other direction exhausted, but only if the non-exhausted
   // end started on a not_thru or closed (due to live-traffic) edge
