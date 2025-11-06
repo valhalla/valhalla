@@ -19,7 +19,6 @@ on:
       - ".*"
       - "pyproject.toml"
       - "setup.cfg"
-      - "setup.py"
       - "taginfo.json"
 jobs:
   build_and_publish:

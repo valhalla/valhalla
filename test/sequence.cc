@@ -42,7 +42,7 @@ void read_nodes(const std::string& file_name, const uint64_t count) {
     // write it back
     element = node;
     // find the same element with binary search (far slower)
-    osm_node target{i};
+    osm_node target{i, 0.f, 0.f, 0};
     ASSERT_NE(sequence.find(target, less_than), sequence.end())
         << "Didn't find node " + std::to_string(i);
   }
