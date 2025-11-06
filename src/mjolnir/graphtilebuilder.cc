@@ -585,10 +585,13 @@ void GraphTileBuilder::AddSigns(const uint32_t idx, const std::vector<SignInfo>&
 
 // Add lane connectivity
 void GraphTileBuilder::AddLaneConnectivity(std::vector<baldr::LaneConnectivity>&& lc) {
-  auto lane_connectivity = std::move(lc);
-  lane_connectivity_builder_.insert(lane_connectivity_builder_.end(), lane_connectivity.begin(),
-                                    lane_connectivity.end());
-  lane_connectivity_offset_ += sizeof(baldr::LaneConnectivity) * lane_connectivity.size();
+  size_t size = lc.size();
+
+  lane_connectivity_builder_.reserve(lane_connectivity_builder_.size() + size);
+  lane_connectivity_builder_.insert(lane_connectivity_builder_.end(),
+                                    std::make_move_iterator(lc.begin()),
+                                    std::make_move_iterator(lc.end()));
+  lane_connectivity_offset_ += sizeof(baldr::LaneConnectivity) * size;
 }
 
 void GraphTileBuilder::CopyLaneConnectivityFromTile(const baldr::graph_tile_ptr& tile,
