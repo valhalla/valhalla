@@ -36,7 +36,7 @@ if [[ $1 == "build_tiles" ]]; then
   fi
 
   # are we on a read-only filesystem?
-  if findmnt -no OPTIONS -T "$CUSTOM_FILES" | grep -qw ro; then
+  if [[ $FS_READONLY == "True" ]]; then
     echo "INFO: Skipping chmod: ${CUSTOM_FILES} is on a read-only mount."
   else
     # set 775/664 permissions on all created files
