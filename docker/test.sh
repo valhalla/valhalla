@@ -58,7 +58,7 @@ tileset_name="utrecht_tiles"
 docker run -d --name valhalla_full -p 8002:8002 -v $custom_file_folder:/custom_files \
         -e tileset_name=$tileset_name -e use_tiles_ignore_pbf=False -e build_elevation=False \
         -e build_admins=True -e build_time_zones=True -e build_tar=False \
-        -e server_threads=1 -e use_default_speeds_config=True ${valhalla_image}
+        -e server_threads=1 -e use_default_speeds_config=True -e update_existing_config=True ${valhalla_image}
 wait_for_docker
 
 # Make sure all files are there!
