@@ -213,7 +213,7 @@ if (ENABLE_GEOTIFF AND (ENABLE_SERVICES OR ENABLE_TOOLS OR ENABLE_PYTHON_BINDING
   find_package(GeoTIFF REQUIRED)
   add_compile_definitions(ENABLE_GEOTIFF)
   if (GeoTIFF_FOUND AND TIFF_FOUND)
-    set(GTIFF_TARGETS TIFF::TIFF GeoTIFF::GeoTIFF)
+    set(GTIFF_TARGETS TIFF::TIFF geotiff_library)
     message(STATUS "libgeotiff support is enabled")
   else()
     message(WARNING "Unable to enable libgeotiff support")
