@@ -87,14 +87,6 @@ jobs:
         if: ${{ github.ref == 'refs/heads/master' }}
         run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Write pyproject.toml
-        run: |
-          VALHALLA_RELEASE_PKG="pyvalhalla"
-          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
-          fi
-          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
-
       - name: Build sdist
         run: |
           python3 -m pip install build
