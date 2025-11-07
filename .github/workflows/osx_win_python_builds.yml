@@ -93,7 +93,7 @@ jobs:
           python3 -m build --sdist  # -> dist/<name>-<version>.tar.gz
 
       - name: Upload sdist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -145,7 +145,7 @@ jobs:
           path: /home/runner/.cache/ccache
           key: ccache-manylinux_2_28_${{  matrix.arch  }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: sdist
           path: dist
