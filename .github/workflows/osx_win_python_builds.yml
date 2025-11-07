@@ -101,7 +101,7 @@ jobs:
   build_python_wheels_linux:
     name: Build Linux Python wheels
     runs-on: ${{ matrix.runner }}
-    needs: [publish_pypi]
+    needs: [build_sdist]
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     strategy:
       matrix:
