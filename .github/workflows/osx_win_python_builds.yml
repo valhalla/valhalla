@@ -444,7 +444,6 @@ jobs:
         env:
           CIBW_ENVIRONMENT_WINDOWS: >-
             CMAKE_ARGS="-DENABLE_SERVICES=OFF -DENABLE_TESTS=OFF -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
-            PIP_NO_BUILD_ISOLATION=1
           # represents the minimum python version we release for
           CIBW_BUILD: cp312-*
           # enable when debugging
