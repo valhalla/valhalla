@@ -942,12 +942,11 @@ std::vector<SignInfo> GraphTile::GetSigns(
 }
 
 // Get lane connections ending on this edge.
-std::vector<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx) const {
+std::span<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx) const {
   uint32_t count = lane_connectivity_size_ / sizeof(LaneConnectivity);
-  std::vector<LaneConnectivity> lcs;
   if (count == 0) {
     LOG_ERROR("No lane connections found for idx = " + std::to_string(idx));
-    return lcs;
+    return {};
   }
 
   // Lane connections are sorted by edge index.
@@ -972,14 +971,11 @@ std::vector<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx)
     }
   }
 
-  // Add Lane connections
-  for (; found < count && lane_connectivity_[found].to() == idx; ++found) {
-    lcs.emplace_back(lane_connectivity_[found]);
+  const auto start = found;
+  while (found < count && lane_connectivity_[found].to() == idx) {
+    ++found;
   }
-  if (lcs.size() == 0) {
-    LOG_ERROR("No lane connections found for idx = " + std::to_string(idx));
-  }
-  return lcs;
+  return std::span<LaneConnectivity>(lane_connectivity_ + start, lane_connectivity_ + found);
 }
 
 // Get the next departure given the directed line Id and the current
