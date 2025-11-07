@@ -4,11 +4,12 @@
 #include "midgard/pointll.h"
 #include "tyr/serializers.h"
 
-#include <gdal_priv.h>
+#ifdef ENABLE_GEOTIFF
 #include <geotiff.h>
 #include <geotiffio.h>
 #include <tiffio.h>
 #include <xtiffio.h>
+#endif
 
 #include <cmath>
 #include <cstring>
@@ -238,6 +239,7 @@ void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
   }
 }
 
+#ifdef ENABLE_GEOTIFF
 // Serialize GeoTIFF via lib(geo)tiff
 std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedData<2>>& isogrid) {
 
@@ -259,9 +261,8 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
     if (!metrics[metric_idx]) {
       continue;
     }
-    auto current_plane = planes[metric_idx];
-    current_plane.reserve(static_cast<size_t>(ext_x) * static_cast<size_t>(ext_y));
-    std::vector<uint16_t> data(static_cast<size_t>(ext_x) * static_cast<size_t>(ext_y));
+    auto& current_plane = planes[metric_idx];
+    current_plane.resize(static_cast<size_t>(ext_x) * static_cast<size_t>(ext_y));
 
     // seconds or 10 meter steps
     const float scale_factor = (metric_idx == 0) ? 60.f : 100.f;
@@ -269,11 +270,10 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
       for (const auto j : std::views::iota(0, ext_x)) {
         auto tileid = isogrid->TileId(j + box[0], i + box[1]);
         // flip Y so first row is top
-        data[(ext_y - 1 - i) * ext_x + j] =
+        current_plane[(ext_y - 1 - i) * ext_x + j] =
             static_cast<uint16_t>(isogrid->DataAt(tileid, metric_idx) * scale_factor);
       }
     }
-    planes[metric_idx] = std::move(data);
   }
 
   // in-memory TIFF
@@ -384,6 +384,7 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
   // Return memory buffer
   return mem.str();
 }
+#endif
 
 std::string serializeIsochroneJson(Api& request,
                                    std::vector<contour_interval_t>& intervals,
@@ -538,8 +539,10 @@ std::string serializeIsochrones(Api& request,
                                           request.options().show_locations(),
                                           request.options().polygons())
                  : serializeIsochronePbf(request, intervals, contours);
+#ifdef ENABLE_GEOTIFF
     case Options_Format_geotiff:
       return serializeGeoTIFF(request, isogrid);
+#endif
     default:
       throw;
   }

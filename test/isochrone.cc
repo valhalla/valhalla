@@ -535,8 +535,10 @@ TEST(Isochrones, test_geotiff_vertical_orientation) {
 } // namespace
 
 int main(int argc, char* argv[]) {
-  GDALRegister_GTiff();
 
+#ifdef ENABLE_GEOTIFF
+  GDALRegister_GTiff();
+#endif
   // user wants to try it
   if (argc > 1) {
     loki_worker_t loki_worker(cfg);
