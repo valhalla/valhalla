@@ -26,7 +26,6 @@
 #include <valhalla/baldr/turnlanes.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
 
 #ifndef ENABLE_THREAD_SAFE_TILE_REF_COUNT
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
@@ -35,6 +34,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <iterator>
+#include <list>
 #include <memory>
 #include <span>
 
