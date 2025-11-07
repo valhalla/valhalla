@@ -13,6 +13,7 @@
    * CHANGED: Avoid temporary std::string in some places in serializers [#5674](https://github.com/valhalla/valhalla/pull/5674)
    * ADDED: linux-aarch64 wheel for Python releases [#5670](https://github.com/valhalla/valhalla/pull/5670)
    * ADDED: PyPI `sdist` for python to install the bindings from source [#5649](https://github.com/valhalla/valhalla/pull/5649)
+   * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**

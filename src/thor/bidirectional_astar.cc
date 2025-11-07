@@ -66,9 +66,9 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
-  threshold_delta_ = config.get<float>("threshold_delta");
-  alternative_cost_extend_ = config.get<float>("alternative_cost_extend");
-  alternative_iterations_delta_ = config.get<uint32_t>("alternative_iterations_delta");
+  threshold_delta_ = config.get<float>("threshold_delta", kThresholdDelta);
+  alternative_cost_extend_ = config.get<float>("alternative_cost_extend", kAlternativeCostExtend);
+  alternative_iterations_delta_ = config.get<uint32_t>("alternative_iterations_delta", kAlternativeIterationsDelta);
 }
 
 // Destructor
@@ -863,12 +863,12 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   // Set thresholds to extend search
   if (cost_threshold_ == std::numeric_limits<float>::max() || c < best_connections_.front().cost) {
     if (desired_paths_count_ == 1) {
-      cost_threshold_ = c + kThresholdDelta;
+      cost_threshold_ = c + threshold_delta_;
     } else {
       // For short routes it may be not enough to use just scale to extend the cost threshold.
       // So, we also add the delta to find more alternatives.
       // TODO: use different constants to extend the search based on route distance.
-      cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
+      cost_threshold_ = alternative_cost_extend_ * c + threshold_delta_;
       iterations_threshold_ =
           edgelabels_forward_.size() + edgelabels_reverse_.size() + alternative_iterations_delta_;
     }
@@ -936,12 +936,12 @@ bool BidirectionalAStar::SetReverseConnection(GraphReader& graphreader, const BD
   // Set thresholds to extend search
   if (cost_threshold_ == std::numeric_limits<float>::max() || c < best_connections_.front().cost) {
     if (desired_paths_count_ == 1) {
-      cost_threshold_ = c + kThresholdDelta;
+      cost_threshold_ = c + threshold_delta_;
     } else {
       // For short routes it may be not enough to use just scale to extend the cost threshold.
       // So, we also add the delta to find more alternatives.
       // TODO: use different constants to extend the search based on route distance.
-      cost_threshold_ = kAlternativeCostExtend * c + kThresholdDelta;
+      cost_threshold_ = alternative_cost_extend_ * c + threshold_delta_;
       iterations_threshold_ =
           edgelabels_forward_.size() + edgelabels_reverse_.size() + alternative_iterations_delta_;
     }
