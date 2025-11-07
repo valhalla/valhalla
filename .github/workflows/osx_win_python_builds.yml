@@ -256,7 +256,7 @@ jobs:
       - name: Configure CMake
         run: |
           export PATH="$(brew --prefix python)/libexec/bin:$PATH"
-          cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
+          cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
 
       - name: Build & install Valhalla (for python bindings)
         run: make -C build -j$(sysctl -n hw.logicalcpu) && sudo make -C build install
@@ -406,7 +406,6 @@ jobs:
             -DENABLE_CCACHE=OFF \
             -DENABLE_SERVICES=OFF \
             -DPREFER_EXTERNAL_DEPS=ON \
-            -DENABLE_GDAL=ON \
             -DVALHALLA_VERSION_MODIFIFER=${{ env.VALHALLA_VERSION_MODIFIER }}
 
       - name: Save vcpkg packages
@@ -452,7 +451,7 @@ jobs:
         if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
         env:
           CIBW_ENVIRONMENT_WINDOWS: >-
-            CMAKE_ARGS="-DENABLE_SERVICES=OFF -DENABLE_TESTS=OFF -DENABLE_GDAL=OFF -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
+            CMAKE_ARGS="-DENABLE_SERVICES=OFF -DENABLE_TESTS=OFF -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
             PIP_NO_BUILD_ISOLATION=1
           # represents the minimum python version we release for
           CIBW_BUILD: cp312-*

@@ -55,7 +55,6 @@ sdist.exclude = ["test", "test_requests"]
 ENABLE_PYTHON_BINDINGS = "ON"
 ENABLE_TESTS = "OFF"
 ENABLE_SINGLE_FILES_WERROR = "OFF"
-ENABLE_GDAL = "OFF"
 CMAKE_BUILD_TYPE = "Release"
 
 [tool.setuptools_scm]

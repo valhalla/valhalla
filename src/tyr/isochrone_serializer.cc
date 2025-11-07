@@ -37,22 +37,6 @@ constexpr TIFFFieldInfo TIFF_GDAL_INFO[] = {{TIFFTAG_GDAL_METADATA, -1, -1, TIFF
                                             {TIFFTAG_GDAL_NODATA, -1, -1, TIFF_ASCII, FIELD_CUSTOM, 1,
                                              0, const_cast<char*>("GDAL_NODATA")}};
 
-// allows us to only ever register the driver once per process without having to put it
-// in every executable that might call into this code
-struct gdal_singleton_t {
-  static const gdal_singleton_t& get() {
-    static const gdal_singleton_t instance;
-    return instance;
-  }
-
-private:
-  gdal_singleton_t() {
-#ifdef ENABLE_GDAL
-    GDALRegister_GTiff();
-#endif
-  }
-};
-
 using rgba_t = std::tuple<float, float, float>;
 
 using namespace valhalla;
@@ -257,7 +241,6 @@ void addLocations(Api& request, rapidjson::writer_wrapper_t& writer) {
 // Serialize GeoTIFF via lib(geo)tiff
 std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedData<2>>& isogrid) {
 
-  gdal_singleton_t::get();
   // time, distance
   std::vector<bool> metrics{false, false};
   for (auto& contour : request.options().contours()) {
@@ -318,7 +301,7 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
     rowsperstrip = static_cast<uint32_t>(ext_y);
   TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, rowsperstrip);
 
-  // it seems geotiff as we defined/know them have some gdal custom tags
+  // it seems geotiff as we know them have some gdal custom tags
   // TODO: write NODATA values:
   //   - it _should_ be possible with the metadata xml below, e.g.
   //     <Item name="NODATA_VALUES">{} {}</Item> </GDALMetadata>)", isogrid->MaxValue(0),
@@ -326,11 +309,16 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
   //   - or initialize the iso_grid with max uint16_t and set TIFFSetField(tif, TIFFTAG_GDAL_NODATA,
   //   "65535");
   register_gdal_custom_tags(tif);
-  const char* xml = "<GDALMetadata>"
-                    "  <Item name=\"time_seconds\" sample=\"0\">Time (seconds)</Item>"
-                    "  <Item name=\"distance_decameters\" sample=\"1\">Distance (10m)</Item>"
-                    "</GDALMetadata>";
-  TIFFSetField(tif, TIFFTAG_GDAL_METADATA, xml);
+  std::ostringstream gdal_xml;
+  gdal_xml << "<GDALMetadata>\n";
+  if (metrics[0])
+    gdal_xml << "  <Item name=\"time_seconds\" sample=\"0\">Time (seconds)</Item>\n";
+  if (metrics[1])
+    gdal_xml << "  <Item name=\"distance_decameters\" sample=\""
+             << (metrics[0] ? 1 : 0) // distance band index in the written order
+             << "\">Distance (10m)</Item>\n";
+  gdal_xml << "</GDALMetadata>";
+  TIFFSetField(tif, TIFFTAG_GDAL_METADATA, gdal_xml.str().c_str());
 
   std::string desc;
   if (valid_bands == 2) {
@@ -372,16 +360,18 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
   TIFFSetField(tif, TIFFTAG_GEOTIEPOINTS, 6, tiepoints.data());
 
   // write each band
+  uint32_t band_idx = 0;
   for (const auto metric_idx : std::views::iota(0U, metrics.size())) {
     if (!metrics[metric_idx]) {
       continue;
     }
     for (uint32_t row = 0; row < ext_y; ++row) {
       uint16_t* rowptr = &planes[metric_idx][static_cast<size_t>(row * ext_x)];
-      if (TIFFWriteScanline(tif, reinterpret_cast<void*>(rowptr), row, metric_idx) < 0) {
+      if (TIFFWriteScanline(tif, reinterpret_cast<void*>(rowptr), row, band_idx) < 0) {
         throw valhalla_exception_t{599, "Failed to write GeoTIFF."};
       }
     }
+    band_idx++;
   }
 
   // Finalize

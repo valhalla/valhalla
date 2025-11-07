@@ -44,5 +44,5 @@ valhalla_module(NAME tyr
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    ${GDAL_TARGET}
+    ${GTIFF_TARGETS}
     )
