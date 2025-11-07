@@ -412,48 +412,6 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
                                                          const uint32_t n);
 
 /**
- * A class to wrap a primitive array in something iterable which is useful for loops mostly
- * Basically if you dont have a vector or list, this makes your array a bit more usable in
- * that it fakes up a container for the purpose of ripping through the array
- *
- * TODO: reverse iteration
- */
-template <class T> struct iterable_t {
-public:
-  using iterator = T*;
-  iterable_t(T* first, size_t size) : head(first), tail(first + size), count(size) {
-  }
-  iterable_t(T* first, T* end) : head(first), tail(end), count(tail - head) {
-  }
-  T* begin() {
-    return head;
-  }
-  T* end() {
-    return tail;
-  }
-  const T* begin() const {
-    return head;
-  }
-  const T* end() const {
-    return tail;
-  }
-  T& operator[](size_t index) {
-    return *(head + index);
-  }
-  const T& operator[](size_t index) const {
-    return *(head + index);
-  }
-  size_t size() const {
-    return count;
-  }
-
-protected:
-  T* head;
-  T* tail;
-  size_t count;
-};
-
-/**
  * Return the intersection of two infinite lines if any
  * @param u  first point on first line
  * @param v  second point on first line
