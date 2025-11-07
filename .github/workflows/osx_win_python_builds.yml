@@ -87,21 +87,13 @@ jobs:
         if: ${{ github.ref == 'refs/heads/master' }}
         run: echo "VALHALLA_VERSION_MODIFIER=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
-      - name: Write pyproject.toml
-        run: |
-          VALHALLA_RELEASE_PKG="pyvalhalla"
-          if [[ ${{ startsWith(github.ref, 'refs/tags') }} == "false" ]]; then
-            VALHALLA_RELEASE_PKG="${VALHALLA_RELEASE_PKG}-weekly"
-          fi
-          cmake -DPYVALHALLA_NAME="${VALHALLA_RELEASE_PKG}" -P cmake/ValhallaConfigPyProject.cmake
-
       - name: Build sdist
         run: |
           python3 -m pip install build
           python3 -m build --sdist  # -> dist/<name>-<version>.tar.gz
 
       - name: Upload sdist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: sdist
           path: dist/*.tar.gz
@@ -109,7 +101,7 @@ jobs:
   build_python_wheels_linux:
     name: Build Linux Python wheels
     runs-on: ${{ matrix.runner }}
-    needs: [publish_pypi]
+    needs: [build_sdist]
     if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' || github.event.inputs.python_test_publish == 'true' }}
     strategy:
       matrix:
@@ -153,7 +145,7 @@ jobs:
           path: /home/runner/.cache/ccache
           key: ccache-manylinux_2_28_${{  matrix.arch  }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: sdist
           path: dist
@@ -225,7 +217,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install python autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal libtiff libgeotiff
           export PATH="$(brew --prefix python)/libexec/bin:$PATH"
           python -m pip install --break-system-packages requests shapely
           git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j$(sysctl -n hw.logicalcpu) && sudo make install
@@ -452,7 +444,6 @@ jobs:
         env:
           CIBW_ENVIRONMENT_WINDOWS: >-
             CMAKE_ARGS="-DENABLE_SERVICES=OFF -DENABLE_TESTS=OFF -DVALHALLA_VERSION_MODIFIER=${{ env.VALHALLA_VERSION_MODIFIER }} -DCMAKE_TOOLCHAIN_FILE=${{  env.VCPKG_TOOLCHAIN_FILE  }} -DVCPKG_TARGET_TRIPLET=${{  env.VCPKG_DEFAULT_TRIPLET  }}"
-            PIP_NO_BUILD_ISOLATION=1
           # represents the minimum python version we release for
           CIBW_BUILD: cp312-*
           # enable when debugging
@@ -550,7 +541,7 @@ jobs:
     name: Upload if release
     needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
     runs-on: ubuntu-latest
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' && github.event.inputs.python_test_publish != 'true' }}
 
     permissions:
       id-token: write # This is required for requesting the JWT from Github for PyPI

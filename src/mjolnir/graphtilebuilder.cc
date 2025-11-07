@@ -1179,14 +1179,15 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
     file.write(reinterpret_cast<const char*>(&header), sizeof(GraphTileHeader));
     // a bunch of stuff between header and bins
     const auto* begin = reinterpret_cast<const char*>(tile->header()) + sizeof(GraphTileHeader);
-    const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).begin());
+    const auto* end = reinterpret_cast<const char*>(tile->GetBin(0, 0).data());
     file.write(begin, end - begin);
     // the updated bins
     for (const auto& bin : bins) {
       file.write(reinterpret_cast<const char*>(bin.data()), bin.size() * sizeof(GraphId));
     }
     // the rest of the stuff after bins
-    begin = reinterpret_cast<const char*>(tile->GetBin(kBinsDim - 1, kBinsDim - 1).end());
+    auto last_bin = tile->GetBin(kBinsDim - 1, kBinsDim - 1);
+    begin = reinterpret_cast<const char*>(last_bin.data() + last_bin.size());
     end = reinterpret_cast<const char*>(tile->header()) + tile->header()->end_offset();
     file.write(begin, end - begin);
   } // failed
