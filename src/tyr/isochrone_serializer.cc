@@ -81,8 +81,6 @@ public:
       newpos += off;
     else if (whence == SEEK_END)
       newpos = static_cast<toff_t>(self->buffer_.size()) + off;
-    if (newpos < 0)
-      return static_cast<toff_t>(-1);
     self->pos_ = newpos;
     return self->pos_;
   }
@@ -362,9 +360,10 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
     if (!metrics[metric_idx]) {
       continue;
     }
-    for (uint32_t row = 0; row < ext_y; ++row) {
+    for (int32_t row = 0; row < ext_y; ++row) {
       uint16_t* rowptr = &planes[metric_idx][static_cast<size_t>(row * ext_x)];
-      if (TIFFWriteScanline(tif, reinterpret_cast<void*>(rowptr), row, band_idx) < 0) {
+      if (TIFFWriteScanline(tif, reinterpret_cast<void*>(rowptr), static_cast<uint32_t>(row),
+                            band_idx) < 0) {
         throw valhalla_exception_t{599, "Failed to write GeoTIFF."};
       }
     }
