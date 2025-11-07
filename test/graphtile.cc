@@ -80,7 +80,7 @@ TEST(Graphtile, Bin) {
   }
   testable_graphtile t(offsets, bins);
   for (size_t i = 0; i < kBinCount; ++i) {
-    valhalla::midgard::iterable_t<GraphId> itr(bins.data() + offs[i], bins.data() + offs[i + 1]);
+    std::span<GraphId> itr(bins.data() + offs[i], bins.data() + offs[i + 1]);
     auto idx_itr = t.GetBin(i);
     auto rc_itr = t.GetBin(i % kBinsDim, i / kBinsDim);
 

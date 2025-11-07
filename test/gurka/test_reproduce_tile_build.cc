@@ -21,7 +21,7 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
   // check the first chunk after the header
   ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + sizeof(GraphTileHeader),
                    reinterpret_cast<const char*>(b.header()) + sizeof(GraphTileHeader),
-                   (reinterpret_cast<const char*>(b.GetBin(0, 0).begin()) -
+                   (reinterpret_cast<const char*>(b.GetBin(0, 0).data()) -
                     reinterpret_cast<const char*>(b.header())) -
                        sizeof(GraphTileHeader)),
             0);
@@ -31,8 +31,8 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
     ASSERT_EQ(ah->bin_offset(bin_index), bh->bin_offset(bin_index));
     auto a_bin = a.GetBin(bin_index);
     auto b_bin = b.GetBin(bin_index);
-    GraphId* a_pos = a_bin.begin();
-    GraphId* b_pos = b_bin.begin();
+    auto a_pos = a_bin.begin();
+    auto b_pos = b_bin.begin();
 
     while (true) {
       const auto diff = std::mismatch(a_pos, a_bin.end(), b_pos, b_bin.end());

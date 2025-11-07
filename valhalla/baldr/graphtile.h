@@ -36,6 +36,7 @@
 #include <filesystem>
 #include <iterator>
 #include <memory>
+#include <span>
 
 namespace valhalla {
 namespace baldr {
@@ -268,14 +269,14 @@ public:
    * @param  node  Node from which the edges leave
    * @return returns an iterable collection of directed edges
    */
-  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const NodeInfo* node) const;
+  std::span<const DirectedEdge> GetDirectedEdges(const NodeInfo* node) const;
 
   /**
    * Get an iterable set of directed edges from a node in this tile
    * @param  node  GraphId of the node from which the edges leave
    * @return returns an iterable collection of directed edges
    */
-  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const GraphId& node) const;
+  std::span<const DirectedEdge> GetDirectedEdges(const GraphId& node) const;
 
   /**
    * Get an iterable set of directed edges from a node in this tile
@@ -285,21 +286,21 @@ public:
    * @param  idx  Index of the node within the current tile
    * @return returns an iterable collection of directed edges
    */
-  midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
+  std::span<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
 
   /**
    * Get an iterable set of directed edges extensions from a node in this tile
    * @param  node  Node from which the edges leave
    * @return returns an iterable collection of directed edges extensions
    */
-  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const NodeInfo* node) const;
+  std::span<const DirectedEdgeExt> GetDirectedEdgeExts(const NodeInfo* node) const;
 
   /**
    * Get an iterable set of directed edges extensions from a node in this tile
    * @param  node  GraphId of the node from which the edges leave
    * @return returns an iterable collection of directed edges extensions
    */
-  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const GraphId& node) const;
+  std::span<const DirectedEdgeExt> GetDirectedEdgeExts(const GraphId& node) const;
 
   /**
    * Get an iterable set of directed edges extensions from a node in this tile
@@ -309,7 +310,7 @@ public:
    * @param  idx  Index of the node within the current tile
    * @return returns an iterable collection of directed edges extensions
    */
-  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const size_t idx) const;
+  std::span<const DirectedEdgeExt> GetDirectedEdgeExts(const size_t idx) const;
 
   /**
    * Convenience method to get opposing edge Id given a directed edge.
@@ -341,14 +342,14 @@ public:
    * @param  node  Node from which the transitions leave
    * @return returns an iterable collection of node transitions
    */
-  midgard::iterable_t<const NodeTransition> GetNodeTransitions(const NodeInfo* node) const {
+  std::span<const NodeTransition> GetNodeTransitions(const NodeInfo* node) const {
     if (node < nodes_ || node >= nodes_ + header_->nodecount()) {
       throw std::logic_error(
           std::string(__FILE__) + ":" + std::to_string(__LINE__) +
           " GraphTile NodeInfo out of bounds: " + std::to_string(header_->graphid()));
     }
     const auto* trans = transitions_ + node->transition_index();
-    return midgard::iterable_t<const NodeTransition>{trans, node->transition_count()};
+    return std::span<const NodeTransition>{trans, node->transition_count()};
   }
 
   /**
@@ -356,7 +357,7 @@ public:
    * @param  node  GraphId of the node from which the transitions leave
    * @return returns an iterable collection of node transitions
    */
-  midgard::iterable_t<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
+  std::span<const NodeTransition> GetNodeTransitions(const GraphId& node) const {
     if (node.id() >= header_->nodecount()) {
       throw std::logic_error(
           std::string(__FILE__) + ":" + std::to_string(__LINE__) +
@@ -372,25 +373,24 @@ public:
    * Get an iterable set of nodes in this tile
    * @return returns an iterable collection of nodes
    */
-  midgard::iterable_t<const NodeInfo> GetNodes() const {
-    return midgard::iterable_t<const NodeInfo>{nodes_, header_->nodecount()};
+  std::span<const NodeInfo> GetNodes() const {
+    return std::span<const NodeInfo>{nodes_, header_->nodecount()};
   }
 
   /**
    * Get an iterable set of edges in this tile
    * @return returns an iterable collection of edges
    */
-  midgard::iterable_t<const DirectedEdge> GetDirectedEdges() const {
-    return midgard::iterable_t<const DirectedEdge>{directededges_, header_->directededgecount()};
+  std::span<const DirectedEdge> GetDirectedEdges() const {
+    return std::span<const DirectedEdge>{directededges_, header_->directededgecount()};
   }
 
   /**
    * Get an iterable set of edge extensions in this tile
    * @return returns an iterable collection of edge extensions
    */
-  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts() const {
-    return midgard::iterable_t<const DirectedEdgeExt>{ext_directededges_,
-                                                      header_->directededgecount()};
+  std::span<const DirectedEdgeExt> GetDirectedEdgeExts() const {
+    return std::span<const DirectedEdgeExt>{ext_directededges_, header_->directededgecount()};
   }
 
   /**
@@ -603,14 +603,14 @@ public:
    * @param  row the bin's row
    * @return iterable container of graphids contained in the bin
    */
-  midgard::iterable_t<GraphId> GetBin(size_t column, size_t row) const;
+  std::span<GraphId> GetBin(size_t column, size_t row) const;
 
   /**
    * Get an iterable list of GraphIds given a bin in the tile
    * @param  index the bin's index in the row major array
    * @return iterable container of graphids contained in the bin
    */
-  midgard::iterable_t<GraphId> GetBin(size_t index) const;
+  std::span<GraphId> GetBin(size_t index) const;
 
   /**
    * Get lane connections ending on this edge.
