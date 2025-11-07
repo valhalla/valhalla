@@ -99,6 +99,3 @@ if (GEOTIFF_FOUND AND NOT TARGET GeoTIFF::GeoTIFF)
     INTERFACE_LINK_LIBRARIES
       "${GEOTIFF_LIBRARY}")
 endif()
-
-# Legacy vars for old consumers:
-set(Pkg_LIBRARIES "${Pkg_LIBRARY_RELEASE}")
