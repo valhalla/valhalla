@@ -12,6 +12,7 @@
    * ADDED: linux-aarch64 wheel for Python releases [#5670](https://github.com/valhalla/valhalla/pull/5670)
    * ADDED: PyPI `sdist` for python to install the bindings from source [#5649](https://github.com/valhalla/valhalla/pull/5649)
    * CHANGED: Replace GDAL with libgeotiff, re-enable support for bindings [#5680](https://github.com/valhalla/valhalla/pull/5680)
+   * ADDED: NODATA value to isochrone's geotiff output [#5685](https://github.com/valhalla/valhalla/pull/5685)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
