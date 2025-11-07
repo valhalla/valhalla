@@ -541,7 +541,7 @@ jobs:
     name: Upload if release
     needs: [verify_wheels_linux, verify_wheels_win, verify_wheels_osx]
     runs-on: ubuntu-latest
-    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' }}
+    if: ${{ needs.publish_pypi.outputs.PUBLISH_PYPI == 'true' && github.event.inputs.python_test_publish != 'true' }}
 
     permissions:
       id-token: write # This is required for requesting the JWT from Github for PyPI
