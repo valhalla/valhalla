@@ -1002,7 +1002,7 @@ void BuildTileSet(const std::string& ways_file,
                 v.emplace_back(idx, lc.from_way_id, osmdata.name_offset_map.name(lc.to_lanes_index),
                                osmdata.name_offset_map.name(lc.from_lanes_index));
               }
-              graphtile.AddLaneConnectivity(v);
+              graphtile.AddLaneConnectivity(std::move(v));
               directededge.set_laneconnectivity(true);
             }
           } catch (std::exception& e) {
