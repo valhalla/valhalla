@@ -10,6 +10,7 @@
 #include <boost/geometry/geometries/polygon.hpp>
 
 #include <iostream>
+#include <ranges>
 #include <string>
 #include <vector>
 
