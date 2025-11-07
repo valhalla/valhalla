@@ -270,8 +270,10 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
       for (const auto j : std::views::iota(0, ext_x)) {
         auto tileid = isogrid->TileId(j + box[0], i + box[1]);
         // flip Y so first row is top
-        current_plane[(ext_y - 1 - i) * ext_x + j] =
-            static_cast<uint16_t>(isogrid->DataAt(tileid, metric_idx) * scale_factor);
+        const auto idx = (ext_y - 1 - i) * ext_x + j;
+        auto data = isogrid->DataAt(tileid, metric_idx);
+        data *= (data == NODATA_VALUE ? 1.f : scale_factor);
+        current_plane[idx] = static_cast<uint16_t>(data);
       }
     }
   }
@@ -302,12 +304,6 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
   TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, rowsperstrip);
 
   // it seems geotiff as we know them have some gdal custom tags
-  // TODO: write NODATA values:
-  //   - it _should_ be possible with the metadata xml below, e.g.
-  //     <Item name="NODATA_VALUES">{} {}</Item> </GDALMetadata>)", isogrid->MaxValue(0),
-  //     isogrid->MaxValue(1));
-  //   - or initialize the iso_grid with max uint16_t and set TIFFSetField(tif, TIFFTAG_GDAL_NODATA,
-  //   "65535");
   register_gdal_custom_tags(tif);
   std::ostringstream gdal_xml;
   gdal_xml << "<GDALMetadata>\n";
@@ -319,6 +315,7 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
              << "\">Distance (10m)</Item>\n";
   gdal_xml << "</GDALMetadata>";
   TIFFSetField(tif, TIFFTAG_GDAL_METADATA, gdal_xml.str().c_str());
+  TIFFSetField(tif, TIFFTAG_GDAL_NODATA, std::to_string(NODATA_VALUE).c_str());
 
   std::string desc;
   if (valid_bands == 2) {
