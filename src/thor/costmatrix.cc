@@ -74,25 +74,26 @@ class CostMatrix::ReachedMap {
 public:
   using PmrVector = std::vector<uint32_t, std::pmr::polymorphic_allocator<uint32_t>>;
 
-  ReachedMap() : pool_(std::pmr::new_delete_resource()), alloc_(&pool_) {
+  ReachedMap()
+      : pool_(std::pmr::new_delete_resource()), vec_alloc_(&pool_),
+        storage_(std::pmr::polymorphic_allocator<std::pair<const uint64_t, PmrVector>>(&pool_)) {
   }
 
   void add(uint64_t key, uint32_t value) {
     auto it = storage_.find(key);
     if (it == storage_.end()) {
-      // Create vector with PMR allocator
-      storage_.emplace(key, PmrVector(alloc_));
+      storage_.emplace(key, PmrVector(vec_alloc_));
       it = storage_.find(key);
     }
     it->second.push_back(value);
   }
 
-  std::span<const uint32_t> get(uint64_t key) const {
+  const PmrVector* get(uint64_t key) const {
     auto it = storage_.find(key);
     if (it == storage_.end()) {
-      return {};
+      return nullptr;
     }
-    return std::span<const uint32_t>{it->second.data(), it->second.size()};
+    return &it->second;
   }
 
   void clear() {
@@ -101,8 +102,8 @@ public:
 
 private:
   std::pmr::unsynchronized_pool_resource pool_;
-  std::pmr::polymorphic_allocator<uint32_t> alloc_;
-  ankerl::unordered_dense::map<uint64_t, PmrVector> storage_;
+  std::pmr::polymorphic_allocator<uint32_t> vec_alloc_;
+  ankerl::unordered_dense::pmr::map<uint64_t, PmrVector> storage_;
 };
 
 // Constructor with cost threshold.
@@ -842,12 +843,12 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
   // search has reached this edge.
   GraphId rev_edgeid = fwd_pred.opp_edgeid();
   auto targets = targets_->get(rev_edgeid);
-  if (targets.empty()) {
+  if (targets == nullptr) {
     return;
   }
 
   // Iterate through the targets
-  for (auto target : targets) {
+  for (auto target : *targets) {
     uint32_t idx = source * locs_count_[MATRIX_REV] + target;
     if (best_connection_[idx].found) {
       continue;
@@ -991,12 +992,12 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
   // search has reached this edge.
   GraphId fwd_edgeid = rev_pred.opp_edgeid();
   auto sources = sources_->get(fwd_edgeid);
-  if (sources.empty()) {
+  if (sources == nullptr) {
     return;
   }
 
   // Iterate through the sources
-  for (auto source : sources) {
+  for (auto source : *sources) {
     uint32_t source_idx = source * locs_count_[MATRIX_REV] + target;
     if (best_connection_[source_idx].found) {
       continue;
