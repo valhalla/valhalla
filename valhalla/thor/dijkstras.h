@@ -15,7 +15,6 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
-#include <memory>
 #include <unordered_map>
 #include <vector>
 

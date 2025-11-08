@@ -26,7 +26,6 @@
 #include <valhalla/baldr/turnlanes.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
 
 #include <span>
 
@@ -37,6 +36,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <iterator>
+#include <list>
 #include <memory>
 #include <span>
 

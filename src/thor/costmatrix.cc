@@ -3,6 +3,7 @@
 #include "exceptions.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "sif/hierarchylimits.h"
 #include "sif/recost.h"
 

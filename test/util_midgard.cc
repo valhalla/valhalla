@@ -4,6 +4,7 @@
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "midgard/util.h"
+#include "sif/dynamiccost.h"
 
 #include <gtest/gtest.h>
 
@@ -26,7 +27,7 @@ TEST(UtilMidgard, TestRangedDefaultT) {
   std::uniform_real_distribution<float> testDistributor(lower - 40, upper + 40);
 
   for (unsigned i = 0; i < 100; ++i) {
-    ranged_default_t<float> testRange{lower, defaultDistributor(generator), upper};
+    valhalla::sif::ranged_default_t<float> testRange{lower, defaultDistributor(generator), upper};
 
     float testVal = testDistributor(generator);
 

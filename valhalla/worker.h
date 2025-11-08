@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_WORKER_H__
 #define __VALHALLA_WORKER_H__
 #include <valhalla/exceptions.h>
+#include <valhalla/midgard/util.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 

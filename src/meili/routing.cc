@@ -4,6 +4,7 @@
 #include "baldr/nodetransition.h"
 #include "baldr/pathlocation.h"
 #include "midgard/distanceapproximator.h"
+#include "midgard/util.h"
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 

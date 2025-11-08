@@ -4,7 +4,6 @@
 #include <valhalla/baldr/tilegetter.h>
 
 #include <string>
-#include <utility>
 
 namespace valhalla {
 namespace baldr {
