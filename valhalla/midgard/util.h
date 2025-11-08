@@ -11,6 +11,7 @@
 #include <limits>
 #include <list>
 #include <ostream>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -683,6 +684,25 @@ template <typename numeric_t> bool is_invalid(numeric_t value) {
  */
 template <typename numeric_t> bool is_valid(numeric_t value) {
   return value != invalid<numeric_t>();
+}
+
+/**
+ * Enumerate over a range, providing both index and value.
+ * This is a C++20-compatible alternative to C++23's std::views::enumerate.
+ *
+ * @param range The range to enumerate over
+ * @return A view that yields pairs of (index, value)
+ *
+ * Example:
+ *   for (auto [i, value] : enumerate(my_range)) {
+ *     // i is the index, value is the element
+ *   }
+ */
+template <std::ranges::viewable_range Range> auto enumerate(Range&& range) {
+  return std::views::transform(std::views::all(std::forward<Range>(range)),
+                               [i = size_t{0}](auto&& elem) mutable {
+                                 return std::pair{i++, std::forward<decltype(elem)>(elem)};
+                               });
 }
 
 } // namespace midgard
