@@ -3,6 +3,7 @@
 #include "incident_singleton.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
+#include "midgard/util.h"
 #include "shortcut_recovery.h"
 
 #include <sys/stat.h>

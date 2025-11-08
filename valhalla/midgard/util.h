@@ -24,19 +24,6 @@
 namespace valhalla {
 namespace midgard {
 
-// Holds a range plus a default value for that range
-template <class T> struct ranged_default_t {
-  T min, def, max;
-
-  // Returns the value snapped to the default if outside of the range
-  T operator()(const T& value) const {
-    if (value < min || value > max) {
-      return def;
-    }
-    return value;
-  }
-};
-
 /**
  * Compute time (seconds) given a length (km) and speed (km per hour)
  * @param  length  distance in km.
