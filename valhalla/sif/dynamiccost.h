@@ -565,19 +565,19 @@ public:
     if ((forward && (edge->end_restriction() & access_mask_)) ||
         (!forward && (edge->start_restriction() & access_mask_))) {
       // Get complex restrictions. Return false if no restrictions are found
-      auto restrictions = tile->GetRestrictions(forward, edgeid, access_mask_);
-      if (restrictions.size() == 0) {
+      auto restrictions = tile->GetComplexRestrictions(forward, edgeid, access_mask_);
+      if (restrictions.empty()) {
         return false;
       }
 
       // Iterate through the restrictions
       const EdgeLabel* first_pred = &pred;
       for (const auto& cr : restrictions) {
-        if (cr->type() == baldr::RestrictionType::kNoProbable ||
-            cr->type() == baldr::RestrictionType::kOnlyProbable) {
+        if (cr.type() == baldr::RestrictionType::kNoProbable ||
+            cr.type() == baldr::RestrictionType::kOnlyProbable) {
           // A complex restriction can not have a 0 probability set.  range is 1 to 100
           // restriction_probability_= 0 means ignore probable restrictions
-          if (restriction_probability_ == 0 || restriction_probability_ > cr->probability()) {
+          if (restriction_probability_ == 0 || restriction_probability_ > cr.probability()) {
             continue;
           }
         }
@@ -589,8 +589,8 @@ public:
         // Remember the edge_ids in restriction for later reset
         EdgeIdsInComplexRestriction edge_ids_in_complex_restriction;
 
-        cr->WalkVias([&match, &next_pred, next_predecessor,
-                      &edge_ids_in_complex_restriction](const baldr::GraphId* via) {
+        cr.WalkVias([&match, &next_pred, next_predecessor,
+                     &edge_ids_in_complex_restriction](const baldr::GraphId* via) {
           if (via->value != next_pred->edgeid().value) {
             // Pred diverged from restriction, exit early
             match = false;
@@ -606,18 +606,17 @@ public:
         edge_ids_in_complex_restriction.push_back(next_pred->edgeid());
 
         // Check against the start/end of the complex restriction
-        if (match && ((forward && next_pred->edgeid() == cr->from_graphid()) ||
-                      (!forward && next_pred->edgeid() == cr->to_graphid()))) {
+        if (match && ((forward && next_pred->edgeid() == cr.from_graphid()) ||
+                      (!forward && next_pred->edgeid() == cr.to_graphid()))) {
 
-          if (current_time && cr->has_dt()) {
+          if (current_time && cr.has_dt()) {
             // TODO Possibly a bug here. Shouldn't both kTimedDenied and kTimedAllowed
             //      be handled here? As is done in IsRestricted
-            if (baldr::DateTime::is_conditional_active(cr->dt_type(), cr->begin_hrs(),
-                                                       cr->begin_mins(), cr->end_hrs(),
-                                                       cr->end_mins(), cr->dow(), cr->begin_week(),
-                                                       cr->begin_month(), cr->begin_day_dow(),
-                                                       cr->end_week(), cr->end_month(),
-                                                       cr->end_day_dow(), current_time,
+            if (baldr::DateTime::is_conditional_active(cr.dt_type(), cr.begin_hrs(), cr.begin_mins(),
+                                                       cr.end_hrs(), cr.end_mins(), cr.dow(),
+                                                       cr.begin_week(), cr.begin_month(),
+                                                       cr.begin_day_dow(), cr.end_week(),
+                                                       cr.end_month(), cr.end_day_dow(), current_time,
                                                        baldr::DateTime::get_tz_db().from_index(
                                                            tz_index))) {
               // We triggered a complex restriction, so make sure we reset edge-status' for
@@ -629,7 +628,7 @@ public:
           }
           // TODO: If a user runs a non-time dependent route, we need to provide Maneuver Notes for
           // the timed restriction.
-          else if (!current_time && cr->has_dt()) {
+          else if (!current_time && cr.has_dt()) {
             return false;
           } else {
             // We triggered a complex restriction, so make sure we reset edge-status' for
