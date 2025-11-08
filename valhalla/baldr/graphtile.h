@@ -27,6 +27,8 @@
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
 
+#include <span>
+
 #ifndef ENABLE_THREAD_SAFE_TILE_REF_COUNT
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #endif
@@ -617,7 +619,7 @@ public:
    * @param  idx  GraphId of the directed edge.
    * @return  Returns a list of lane connections ending on this edge.
    */
-  std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
+  std::span<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
 
   /**
    * Convenience method for use with costing to get the speed for an edge given the directed
