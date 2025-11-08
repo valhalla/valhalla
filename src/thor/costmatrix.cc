@@ -82,8 +82,8 @@ public:
   void add(uint64_t key, uint32_t value) {
     auto it = storage_.find(key);
     if (it == storage_.end()) {
-      auto emplace_result = storage_.emplace(key, PmrVector(vec_alloc_));
-      it = emplace_result.first;
+      it = storage_.emplace(key, PmrVector(vec_alloc_)).first;
+      it->second.reserve(64);
     }
     it->second.push_back(value);
   }
