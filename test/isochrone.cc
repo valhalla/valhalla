@@ -391,7 +391,7 @@ TEST(Isochrones, test_geotiff_output_distance) {
   EXPECT_NE(y, 0);
   EXPECT_EQ(static_cast<int>(min_max[0]), 0);
   EXPECT_EQ(static_cast<int>(min_max[1]), 1197);
-  // EXPECT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
+  EXPECT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
   size_t array_size = x * y;
 
   check_raster_edges(x, y, data_array.data());
@@ -437,7 +437,7 @@ TEST(Isochrones, test_geotiff_output_time) {
   EXPECT_GT(y, 0);
   EXPECT_EQ(static_cast<int>(min_max[0]), 0);
   EXPECT_EQ(static_cast<int>(min_max[1]), 2768);
-  // EXPECT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
+  EXPECT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
   size_t array_size = x * y;
 
   check_raster_edges(x, y, data_array.data());
@@ -489,7 +489,7 @@ TEST(Isochrones, test_geotiff_output_time_distance) {
     EXPECT_NE(y, 0);
     EXPECT_EQ(static_cast<int>(min_max[0]), 0);
     EXPECT_EQ(static_cast<int>(min_max[1]), expected_max[b - 1]);
-    // EXPECT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
+    EXPECT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
     size_t array_size = x * y;
 
     check_raster_edges(x, y, data_array.data());

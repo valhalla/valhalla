@@ -255,6 +255,7 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
 
   // collect data from isogrid
   std::vector<std::vector<uint16_t>> planes(metrics.size());
+  constexpr std::array<float, 2> scale_factors{60.f, 100.f};
   for (const auto metric_idx : std::views::iota(0U, metrics.size())) {
     if (!metrics[metric_idx]) {
       continue;
@@ -263,14 +264,13 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
     current_plane.resize(static_cast<size_t>(ext_x) * static_cast<size_t>(ext_y));
 
     // seconds or 10 meter steps
-    const float scale_factor = (metric_idx == 0) ? 60.f : 100.f;
     for (const auto i : std::views::iota(0, ext_y)) {
       for (const auto j : std::views::iota(0, ext_x)) {
         auto tileid = isogrid->TileId(j + box[0], i + box[1]);
         // flip Y so first row is top
         const auto idx = (ext_y - 1 - i) * ext_x + j;
         auto data = isogrid->DataAt(tileid, metric_idx);
-        data *= (data == NODATA_VALUE ? 1.f : scale_factor);
+        data *= (data == NODATA_VALUE ? 1.f : scale_factors[metric_idx]);
         current_plane[idx] = static_cast<uint16_t>(data);
       }
     }
