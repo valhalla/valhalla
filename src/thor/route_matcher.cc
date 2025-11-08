@@ -124,7 +124,7 @@ end_node_t GetEndEdges(GraphReader& reader, const valhalla::Location& destinatio
 // distance is approximately what it should be). Returns false if expansion from this
 // node fails (cannot find edges that match the trace - either in position or distance).
 bool expand_from_node(const mode_costing_t& mode_costing,
-                      const TravelMode& mode,
+                      const valhalla::sif::TravelMode& mode,
                       GraphReader& reader,
                       const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                       std::vector<std::pair<float, float>>& distances,
