@@ -14,6 +14,7 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
+namespace vb = valhalla::baldr;
 
 namespace {
 
@@ -24,7 +25,7 @@ template <typename T> inline T square(T v) {
 bool search_filter(const DirectedEdge* edge,
                    const DynamicCost& costing,
                    const graph_tile_ptr& tile,
-                   const Location::SearchFilter& filter) {
+                   const vb::Location::SearchFilter& filter) {
   // check if this edge matches any of the exclusion filters
   uint32_t road_class = static_cast<uint32_t>(edge->classification());
   uint32_t min_road_class = static_cast<uint32_t>(filter.min_road_class_);
@@ -43,10 +44,12 @@ bool search_filter(const DirectedEdge* edge,
          (filter.level_ != kMaxLevel && !tile->edgeinfo(edge).includes_level(filter.level_));
 }
 
-bool side_filter(const PathLocation::PathEdge& edge, const Location& location, GraphReader& reader) {
+bool side_filter(const PathLocation::PathEdge& edge,
+                 const vb::Location& location,
+                 GraphReader& reader) {
   // nothing to filter if you dont want to filter or if there is no side of street
   if (edge.sos == PathLocation::SideOfStreet::NONE ||
-      location.preferred_side_ == Location::PreferredSide::EITHER)
+      location.preferred_side_ == vb::Location::PreferredSide::EITHER)
     return false;
 
   // need this for further checking of driving side and road class
@@ -71,10 +74,10 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
   bool same = node->drive_on_right() == (edge.sos == PathLocation::SideOfStreet::RIGHT);
   // and then if you were asking for the same and it was the same OR if you were asking for opposite
   // and it was opposite THEN we dont filter
-  return same != (location.preferred_side_ == Location::PreferredSide::SAME);
+  return same != (location.preferred_side_ == vb::Location::PreferredSide::SAME);
 }
 
-bool heading_filter(const Location& location, float angle) {
+bool heading_filter(const vb::Location& location, float angle) {
   // no heading means we filter nothing
   if (!location.heading_) {
     return false;
@@ -90,7 +93,7 @@ bool heading_filter(const Location& location, float angle) {
          location.heading_tolerance_;
 }
 
-bool layer_filter(const Location& location, int8_t layer) {
+bool layer_filter(const vb::Location& location, int8_t layer) {
   // no layer - we do not filter
   if (!location.preferred_layer_) {
     return false;
@@ -180,7 +183,7 @@ struct candidate_t {
 // interesting bin.  if has_bin() is false, then the best projection
 // is found.
 struct projector_wrapper {
-  projector_wrapper(const Location& location, GraphReader& reader)
+  projector_wrapper(const vb::Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_)), location(location),
         sq_radius(square(double(location.radius_))), project(location.latlng_) {
     // TODO: something more empirical based on radius
@@ -239,7 +242,7 @@ struct projector_wrapper {
 
   std::function<std::tuple<int32_t, unsigned short, double>()> binner;
   graph_tile_ptr cur_tile;
-  Location location;
+  vb::Location location;
   unsigned short bin_index = 0;
   double sq_radius;
   std::vector<candidate_t> unreachable;
@@ -252,7 +255,7 @@ struct projector_wrapper {
 
 struct bin_handler_t {
   std::vector<projector_wrapper> pps;
-  valhalla::baldr::GraphReader& reader;
+  vb::GraphReader& reader;
   cost_ptr_t costing;
   unsigned int max_reach_limit;
   std::vector<candidate_t> bin_candidates;
@@ -263,12 +266,12 @@ struct bin_handler_t {
   // TODO: dont use pointers as keys, its safe for now but fancy caching one day could be bad
   std::unordered_map<const DirectedEdge*, directed_reach> directed_reaches;
 
-  bin_handler_t(const std::vector<valhalla::baldr::Location>& locations,
-                valhalla::baldr::GraphReader& reader,
+  bin_handler_t(const std::vector<vb::Location>& locations,
+                vb::GraphReader& reader,
                 const cost_ptr_t& costing)
       : reader(reader), costing(costing) {
     // get the unique set of input locations and the max reachability of them all
-    std::unordered_set<Location> uniq_locations(locations.begin(), locations.end());
+    std::unordered_set<vb::Location> uniq_locations(locations.begin(), locations.end());
     pps.reserve(uniq_locations.size());
     max_reach_limit = 0;
     for (const auto& loc : uniq_locations) {
@@ -284,7 +287,7 @@ struct bin_handler_t {
     directed_reaches.reserve(reservation * 1024);
   }
 
-  void correlate_node(const Location& location,
+  void correlate_node(const vb::Location& location,
                       const GraphId& found_node,
                       const candidate_t& candidate,
                       PathLocation& correlated,
@@ -377,7 +380,7 @@ struct bin_handler_t {
     crawl(found_node, true);
   }
 
-  void correlate_edge(const Location& location,
+  void correlate_edge(const vb::Location& location,
                       const candidate_t& candidate,
                       PathLocation& correlated,
                       std::vector<PathLocation::PathEdge>& filtered) {
@@ -717,10 +720,10 @@ struct bin_handler_t {
   }
 
   // create the PathLocation corresponding to the best projection of the given candidate
-  std::unordered_map<Location, PathLocation> finalize() {
+  std::unordered_map<vb::Location, PathLocation> finalize() {
     // at this point we have candidates for each location so now we
     // need to go get the actual correlated location with edge_id etc.
-    std::unordered_map<Location, PathLocation> searched;
+    std::unordered_map<vb::Location, PathLocation> searched;
     for (auto& pp : pps) {
       // remove non-sensical island candidates
       auto new_end = std::remove_if(pp.unreachable.begin(), pp.unreachable.end(),
@@ -769,8 +772,8 @@ struct bin_handler_t {
       // angle? for now we are just saying that they want it to exit at the
       // heading provided. this means that if it was node snapped we only
       // want the outbound edges
-      if ((pp.location.stoptype_ == Location::StopType::THROUGH ||
-           pp.location.stoptype_ == Location::StopType::BREAK_THROUGH) &&
+      if ((pp.location.stoptype_ == vb::Location::StopType::THROUGH ||
+           pp.location.stoptype_ == vb::Location::StopType::BREAK_THROUGH) &&
           pp.location.heading_) {
         // partition the ones we want to move to the end
         auto new_end =
@@ -823,17 +826,15 @@ struct bin_handler_t {
 namespace valhalla {
 namespace loki {
 
-std::unordered_map<valhalla::baldr::Location, PathLocation>
-Search(const std::vector<valhalla::baldr::Location>& locations,
-       GraphReader& reader,
-       const cost_ptr_t& costing) {
+std::unordered_map<vb::Location, PathLocation>
+Search(const std::vector<vb::Location>& locations, GraphReader& reader, const cost_ptr_t& costing) {
   // we cannot continue without costing
   if (!costing)
     throw std::runtime_error("No costing was provided for edge candidate search");
 
   // trivially finished already
   if (locations.empty())
-    return std::unordered_map<valhalla::baldr::Location, PathLocation>{};
+    return std::unordered_map<vb::Location, PathLocation>{};
 
   // setup the unique list of locations
   bin_handler_t handler(locations, reader, costing);
