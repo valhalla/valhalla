@@ -131,13 +131,21 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
       // Have seen cases where the immediate connections are high class roads
       // but then there are service roads (lanes) immediately after (like
       // Twawwassen Terminal near Vancouver,BC)
-      if (GetBestNonFerryClass(expanded_bundle.node_edges) <= kFerryUpClass) {
+      //
+      // Improved termination: Continue expanding to find more stable paths
+      // and handle sequences like ferry -> highway -> service -> highway
+      uint32_t current_best_class = GetBestNonFerryClass(expanded_bundle.node_edges);
+      if (current_best_class <= kFerryUpClass) {
         // Set the last label index - shortest path is recovered backwards from this
         // label to the ferry start
         last_label_idx = label_idx;
 
-        // TODO - better termination criteria?!
-        if (n > 400) {
+        // Improved termination criteria: Don't stop immediately after finding
+        // the first good connection. Continue expanding to ensure we handle
+        // sequences like ferry -> highway -> service -> highway properly.
+        // Only stop after we've explored more nodes to find stable connections.
+        if (n > 100 ||
+            (n > 50 && current_best_class < static_cast<uint32_t>(baldr::RoadClass::kSecondary))) {
           break;
         }
       }

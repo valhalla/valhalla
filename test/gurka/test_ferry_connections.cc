@@ -780,6 +780,55 @@ TEST(Standalone, ReclassifyNothingReclassified) {
   EXPECT_EQ(std::get<0>(not_upclassed3).level(), 1);
 }
 
+TEST(Standalone, FerrySequenceReclassification) {
+  // Test the specific case described in issue #5510:
+  // Ferry -> highway -> service -> highway sequence
+  // The issue is that the algorithm stops early and doesn't reclassify
+  // the service roads in the middle of the sequence
+
+  const std::string ascii_map = R"(
+    A---B---C---D---E---F---G
+  )";
+
+  const gurka::ways ways = {
+      // Ferry connection
+      {"AB",
+       {{"motor_vehicle", "yes"},
+        {"motorcar", "yes"},
+        {"bicycle", "yes"},
+        {"moped", "yes"},
+        {"bus", "yes"},
+        {"hov", "yes"},
+        {"taxi", "yes"},
+        {"motorcycle", "yes"},
+        {"route", "ferry"}}},
+
+      // Highway after ferry
+      {"BC", {{"highway", "primary"}}},
+
+      // Service road in the middle (this should get reclassified with improved logic)
+      {"CD", {{"highway", "service"}}},
+      {"DE", {{"highway", "service"}}},
+
+      // Highway again - high class road
+      {"EF", {{"highway", "primary"}}},
+      {"FG", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 1000);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ferry_sequence");
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  // Check if service roads in the middle got reclassified
+  auto CD_edge = gurka::findEdge(graph_reader, layout, "CD", "D");
+  auto DE_edge = gurka::findEdge(graph_reader, layout, "DE", "E");
+
+  // With the improved algorithm, these service roads should be reclassified
+  // to handle the ferry -> highway -> service -> highway sequence properly
+  EXPECT_EQ(std::get<0>(CD_edge).level(), LEVEL_O) << "CD service road should be reclassified";
+  EXPECT_EQ(std::get<0>(DE_edge).level(), LEVEL_O) << "DE service road should be reclassified";
+}
+
 class ExcludeFerryTest : public ::testing::TestWithParam<std::string> {
 protected:
   static gurka::map map;
