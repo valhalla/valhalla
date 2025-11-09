@@ -305,7 +305,7 @@ bool CanContract(GraphReader& reader,
 void ConnectEdges(GraphReader& reader,
                   const GraphId& startnode,
                   const GraphId& edgeid,
-                  std::list<PointLL>& shape,
+                  std::vector<PointLL>& shape,
                   GraphId& endnode,
                   uint32_t& opp_local_idx,
                   uint32_t& restrictions,
@@ -349,8 +349,7 @@ void ConnectEdges(GraphReader& reader,
 
   // Append shape to the shortcut's shape. Skip first point since it
   // should equal the last of the prior edge.
-  edgeshape.pop_front();
-  shape.splice(shape.end(), edgeshape);
+  shape.insert(shape.end(), std::next(edgeshape.begin()), edgeshape.end());
 
   // Add to the weighted average
   average_density += directededge->length() * directededge->density();
@@ -436,8 +435,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       auto edgeinfo = tile->edgeinfo(directededge);
-      std::list<PointLL> shape =
-          valhalla::midgard::decode7<std::list<PointLL>>(edgeinfo.encoded_shape());
+      std::vector<PointLL> shape =
+          valhalla::midgard::decode7<std::vector<PointLL>>(edgeinfo.encoded_shape());
       if (!directededge->forward()) {
         std::reverse(shape.begin(), shape.end());
       }
