@@ -696,14 +696,7 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
 
         // Copy lane connectivity
         if (directededge->laneconnectivity()) {
-          auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
-          if (laneconnectivity.size() == 0) {
-            LOG_ERROR("Base edge should have lane connectivity, but none found");
-          }
-          for (auto& lc : laneconnectivity) {
-            lc.set_to(tilebuilder.directededges().size());
-          }
-          tilebuilder.AddLaneConnectivity(laneconnectivity);
+          tilebuilder.CopyLaneConnectivityFromTile(tile, edgeid.id());
         }
 
         // Names can be different in the forward and backward direction
