@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <string>
 
 using namespace std;
@@ -608,6 +609,63 @@ TEST(Encode, VarInt) {
                   {58.26482, -169.02219}});
 }
 
+template <typename T>
+void test_int7_roundtrip(const std::vector<T>& test_case, const std::string& description = "") {
+  auto encoded = encode7int(test_case);
+  auto decoded = decode7int<std::vector<T>>(encoded);
+  ASSERT_EQ(test_case, decoded) << "Failed for: " << description;
+
+  auto encoded2 = encode7int(decoded);
+  ASSERT_EQ(encoded, encoded2) << "Encoding not stable for: " << description;
+}
+
+TEST(Encode, Int7_Unsigned) {
+  test_int7_roundtrip<uint64_t>({}, "empty container");
+  test_int7_roundtrip<uint64_t>({42}, "single element");
+  test_int7_roundtrip<uint64_t>({42, 4}, "simple small values");
+  test_int7_roundtrip<uint64_t>({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}, "sequential values");
+  test_int7_roundtrip<uint64_t>({0, 1, 2, 3, 4, 42, 4, 3, 2, 1}, "mixed forward/backward");
+  test_int7_roundtrip<uint64_t>({0, 0, 0, 0, 0}, "all zeros");
+  test_int7_roundtrip<uint64_t>({0}, "single zero");
+  test_int7_roundtrip<uint64_t>({1ull << 63, 0, 1ull << 63, 567, 65496849841, 8949846546349684, 123,
+                                 3, 234123412},
+                                "large values with big deltas");
+  test_int7_roundtrip<uint64_t>({UINT64_MAX}, "max uint64");
+  test_int7_roundtrip<uint64_t>({0, UINT64_MAX}, "zero to max");
+  test_int7_roundtrip<uint64_t>({UINT64_MAX, 0}, "max to zero");
+  test_int7_roundtrip<uint64_t>({UINT64_MAX, UINT64_MAX}, "repeated max");
+  test_int7_roundtrip<uint64_t>({1ull << 7, 1ull << 6, 1ull << 5, 1ull << 4}, "powers of 2");
+  test_int7_roundtrip<uint64_t>({0, 127}, "boundary: 0 to 127");
+  test_int7_roundtrip<uint64_t>({0, 128}, "boundary: 0 to 128");
+  test_int7_roundtrip<uint64_t>({0, 16383}, "boundary: 0 to 16383");
+  test_int7_roundtrip<uint64_t>({0, 16384}, "boundary: 0 to 16384");
+  test_int7_roundtrip<uint64_t>({1000, 900, 800, 700, 600, 500}, "decreasing sequence");
+  test_int7_roundtrip<uint64_t>({0, 1000000, 0, 1000000, 0}, "alternating high/low");
+  test_int7_roundtrip<uint64_t>({42, 1337, 9001, 12345, 67890, 111111, 999999},
+                                "random-looking values");
+}
+
+TEST(Encode, Int7_Signed) {
+  test_int7_roundtrip<int64_t>({42, 4}, "simple positive");
+  test_int7_roundtrip<int64_t>({-42, -4}, "simple negative");
+  test_int7_roundtrip<int64_t>({-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5}, "mixed pos/neg sequence");
+  test_int7_roundtrip<int64_t>({100, 50, 0, -50, -100}, "zero crossing");
+  test_int7_roundtrip<int64_t>({INT64_MAX}, "max int64");
+  test_int7_roundtrip<int64_t>({INT64_MIN}, "min int64");
+  test_int7_roundtrip<int64_t>({INT64_MIN, INT64_MAX}, "min to max");
+  test_int7_roundtrip<int64_t>({INT64_MAX, INT64_MIN}, "max to min");
+  test_int7_roundtrip<int64_t>({0, INT64_MAX, 0, INT64_MIN, 0}, "extremes with zeros");
+  test_int7_roundtrip<int64_t>({1000000, -1000000}, "large negative delta");
+  test_int7_roundtrip<int64_t>({-100, 100, -100, 100, -100}, "alternating signs");
+  test_int7_roundtrip<int64_t>({-1, -2, -3, -4, -5}, "all negative");
+}
+
+TEST(Encode, Int7_SmallerTypes) {
+  test_int7_roundtrip<uint32_t>({0, 1, UINT32_MAX, 42}, "uint32_t");
+  test_int7_roundtrip<int32_t>({INT32_MIN, -1, 0, 1, INT32_MAX}, "int32_t");
+  test_int7_roundtrip<uint16_t>({0, 1, UINT16_MAX, 42}, "uint16_t");
+  test_int7_roundtrip<int16_t>({INT16_MIN, -1, 0, 1, INT16_MAX}, "int16_t");
+}
 } // namespace
 
 int main(int argc, char* argv[]) {

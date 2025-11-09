@@ -9,7 +9,6 @@
 
 #include <boost/property_tree/ptree_fwd.hpp>
 
-#include <list>
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -185,7 +184,7 @@ void ProcessEdgeTransitions(const uint32_t idx,
  * @return Returns a curvature measure [0-15] where higher numbers indicate
  *         more curved and tighter turns.
  */
-uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
+uint32_t compute_curvature(const std::vector<midgard::PointLL>& shape);
 
 /**
  * Build an entire valhalla tileset give a config file and some input pbfs. The

@@ -68,6 +68,15 @@ const gurka::ways ways1 = {{"ab", {{"highway", "motorway"}}},
                            {"bd", {{"highway", "motorway"}}},
                            {"ac", {{"highway", "motorway"}}},
                            {"dc", {{"highway", "motorway"}}}};
+// We need to use a non-conflicting osm ID range for each map, as they
+// all get merged during tile building, and we don't want a weirdly connected
+// graph because IDs are shared, so we start at 0 here but continue at 4 in the next batch
+const gurka::nodes nodes1 = {
+    {"a", {{"osm_id", "0"}}},
+    {"b", {{"osm_id", "1"}}},
+    {"c", {{"osm_id", "2"}}},
+    {"d", {{"osm_id", "3"}}},
+};
 
 //
 // second test is a triangle set of roads, where the height of the triangle is
@@ -85,6 +94,11 @@ const std::string map2 = R"(
 const gurka::ways ways2 = {{"ef", {{"highway", "residential"}, {"foot", "yes"}}},
                            {"eg", {{"highway", "residential"}, {"foot", "yes"}}},
                            {"fg", {{"highway", "residential"}, {"foot", "yes"}}}};
+const gurka::nodes nodes2 = {
+    {"e", {{"osm_id", "4"}}},
+    {"f", {{"osm_id", "5"}}},
+    {"g", {{"osm_id", "6"}}},
+};
 
 // Third test has a complex turn restriction preventing K->H->I->L  (marked with R)
 // which should force the algorithm to take the detour via the J->M edge
@@ -107,6 +121,10 @@ const gurka::ways ways3 = {{"kh", {{"highway", "motorway"}}}, {"hi", {{"highway"
                            {"ij", {{"highway", "motorway"}}}, {"lm", {{"highway", "motorway"}}},
                            {"mj", {{"highway", "motorway"}}}, {"il", {{"highway", "motorway"}}},
                            {"nk", {{"highway", "motorway"}}}};
+const gurka::nodes nodes3 = {{"h", {{"osm_id", "7"}}},  {"i", {{"osm_id", "8"}}},
+                             {"j", {{"osm_id", "9"}}},  {"k", {{"osm_id", "10"}}},
+                             {"l", {{"osm_id", "11"}}}, {"m", {{"osm_id", "12"}}},
+                             {"n", {{"osm_id", "13"}}}};
 
 const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member, "kh", "from"},
                                        gurka::relation_member{gurka::way_member, "il", "to"},
@@ -144,27 +162,21 @@ void make_tile() {
   {
     // Build the maps from the ASCII diagrams, and extract the generated lon,lat values
     auto nodemap = gurka::detail::map_to_coordinates(map1, gridsize, {0, 0.2});
-    const int initial_osm_id = 0;
-    gurka::detail::build_pbf(nodemap, ways1, {}, {}, test_dir + "/map1.pbf", initial_osm_id);
+    gurka::detail::build_pbf(nodemap, ways1, nodes1, {}, test_dir + "/map1.pbf");
     for (const auto& n : nodemap)
       node_locations[n.first] = n.second;
   }
 
   {
     auto nodemap = gurka::detail::map_to_coordinates(map2, gridsize, {0.10, 0.2});
-    // Need to use a non-conflicting osm ID range for each map, as they
-    // all get merged during tile building, and we don't want a weirdly connected
-    // graph because IDs are shared
-    const int initial_osm_id = 100;
-    gurka::detail::build_pbf(nodemap, ways2, {}, {}, test_dir + "/map2.pbf", initial_osm_id);
+    gurka::detail::build_pbf(nodemap, ways2, nodes2, {}, test_dir + "/map2.pbf");
     for (const auto& n : nodemap)
       node_locations[n.first] = n.second;
   }
 
   {
     auto nodemap = gurka::detail::map_to_coordinates(map3, gridsize, {0.1, 0.1});
-    const int initial_osm_id = 200;
-    gurka::detail::build_pbf(nodemap, ways3, {}, relations3, test_dir + "/map3.pbf", initial_osm_id);
+    gurka::detail::build_pbf(nodemap, ways3, nodes3, relations3, test_dir + "/map3.pbf");
     for (const auto& n : nodemap)
       node_locations[n.first] = n.second;
   }

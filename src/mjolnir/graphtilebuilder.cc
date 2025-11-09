@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <list>
 #include <set>
 #include <stdexcept>
@@ -42,7 +43,7 @@ std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restriction
     offset += cr->SizeOf();
   }
   return builders;
-};
+}
 
 } // namespace
 
@@ -219,11 +220,24 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   for (auto ni = name_info.begin(); ni != name_info.end(); ++ni) {
     // compute the width of the entry by looking at the next offset or the end if its the last one
     auto next = std::next(ni);
-    auto width = next != name_info.end() ? (next->name_offset_ - ni->name_offset_)
-                                         : (textlist_size_ - ni->name_offset_);
+
+    size_t width;
+
+    if (next != name_info.end()) {
+      // Non-last entry: use the next entry's offset
+      width = next->name_offset_ - ni->name_offset_;
+      // Last entry: for tagged values, use TaggedValueSize to avoid including padding bytes
+      // that were added for alignment. For non-tagged values just read to the end.
+    } else if (ni->tagged_) {
+      width = EdgeInfo::TaggedValueSize(textlist_ + ni->name_offset_);
+      // Last entry is just text so use the text list ptr as its the next thing in the tile
+    } else {
+      width = textlist_size_ - ni->name_offset_;
+    }
 
     // Keep the bytes for this entry....remove null terminating char as it is added in StoreTileData
     textlistbuilder_.emplace_back(textlist_ + ni->name_offset_, width - 1);
+
     // Remember what offset they had
     text_offset_map_.emplace(textlistbuilder_.back(), ni->name_offset_);
     // Keep track of how large it is for storing it back to disk later
@@ -562,9 +576,10 @@ void GraphTileBuilder::AddSigns(const uint32_t idx,
         bool linguistic_on_node =
             sign.type() == Sign::Type::kJunctionName || (sign.type() == Sign::Type::kTollName);
         uint32_t count = (sign.linguistic_start_index() + sign.linguistic_count()) - 1;
-        uint32_t offset =
+        uint32_t sign_offset =
             AddName(process_linguistic_header(sign.linguistic_start_index(), count, linguistics, i));
-        signs_builder_.emplace_back(idx, Sign::Type::kLinguistic, linguistic_on_node, true, offset);
+        signs_builder_.emplace_back(idx, Sign::Type::kLinguistic, linguistic_on_node, true,
+                                    sign_offset);
       }
     }
   }
