@@ -850,7 +850,7 @@ TEST(GtfsExample, MakeTile) {
     graph_tile_ptr tile = reader.GetGraphTile(tileid);
 
     uint32_t date_created = tile->header()->date_created();
-    uint32_t dt_day;
+    uint32_t dt_day = 0;
     if (dt_date_days < date_created) {
       date_before_tile = true;
     } else {

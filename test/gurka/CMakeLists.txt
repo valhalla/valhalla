@@ -9,10 +9,8 @@ if(ENABLE_DATA_TOOLS)
   ## Add executable targets
   foreach(FULLFILENAME IN ITEMS ${TEST_FILES})
     file(RELATIVE_PATH FILENAME "${CMAKE_CURRENT_LIST_DIR}" ${FULLFILENAME})
-    if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-        set_source_files_properties(${FILENAME} PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-    endif()
 
+  
     string(REGEX REPLACE "test_(.*).cc" "gurka_\\1" TESTNAME ${FILENAME})
     add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME})
     set_target_properties(${TESTNAME} PROPERTIES FOLDER "Tests")
@@ -26,6 +24,11 @@ if(ENABLE_DATA_TOOLS)
       target_link_options(${TESTNAME} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()
     add_dependencies(${TESTNAME} build_timezones)
+
+    if(ENABLE_COMPILER_WARNINGS)
+      cxx_add_warning_flags(${TESTNAME})
+    endif()
+
 
     ## Test run targets
     add_custom_command(OUTPUT ${TESTNAME}.log

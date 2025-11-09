@@ -260,7 +260,6 @@ void LogSchedule(const std::string& transit_dir,
         }
         // Iterate through the stop pairs in this tile and form Valhalla departure
         // records
-        uint32_t tileid;
         GraphId orig_graphid;
         std::string origin_time;
         for (int i = 0; i < spp.stop_pairs_size(); i++) {
