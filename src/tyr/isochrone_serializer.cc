@@ -261,7 +261,7 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
       continue;
     }
     auto& current_plane = planes[metric_idx];
-    current_plane.resize(static_cast<size_t>(ext_x) * static_cast<size_t>(ext_y));
+    current_plane.resize(static_cast<size_t>(ext_x * ext_y));
 
     // seconds or 10 meter steps
     for (const auto i : std::views::iota(0, ext_y)) {
