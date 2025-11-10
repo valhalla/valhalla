@@ -40,7 +40,7 @@ void assert_tile_equalish(const GraphTile& a,
   // check the first chunk after the header
   ASSERT_EQ(memcmp(reinterpret_cast<const char*>(a.header()) + sizeof(GraphTileHeader),
                    reinterpret_cast<const char*>(b.header()) + sizeof(GraphTileHeader),
-                   (reinterpret_cast<const char*>(b.GetBin(0, 0).begin()) -
+                   (reinterpret_cast<const char*>(b.GetBin(0, 0).data()) -
                     reinterpret_cast<const char*>(b.header())) -
                        sizeof(GraphTileHeader)),
             0);
@@ -294,7 +294,7 @@ public:
 
     auto ei_size = sizeof(EdgeInfo::EdgeInfoInner) + e.size();
     edgeinfo_ = new char[ei_size];
-    EdgeInfo::EdgeInfoInner pi{0, 0, 0, 0, 0, 0, static_cast<uint32_t>(e.size())};
+    EdgeInfo::EdgeInfoInner pi{0, 0, 0, 0, 0, 0, static_cast<uint32_t>(e.size()), 0, 0, 0, 0};
     std::memcpy(static_cast<void*>(edgeinfo_), static_cast<void*>(&pi),
                 sizeof(EdgeInfo::EdgeInfoInner));
     textlist_ = edgeinfo_;

@@ -305,14 +305,16 @@ bool CanContract(GraphReader& reader,
 void ConnectEdges(GraphReader& reader,
                   const GraphId& startnode,
                   const GraphId& edgeid,
-                  std::list<PointLL>& shape,
+                  std::vector<PointLL>& shape,
                   GraphId& endnode,
                   uint32_t& opp_local_idx,
                   uint32_t& restrictions,
                   float& average_density,
                   float& total_duration,
                   float& total_truck_duration,
-                  ShortcutAccessRestriction& access_restrictions) {
+                  ShortcutAccessRestriction& access_restrictions,
+                  bool& has_bridge,
+                  bool& has_tunnel) {
   // Get the tile and directed edge.
   auto tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -347,8 +349,7 @@ void ConnectEdges(GraphReader& reader,
 
   // Append shape to the shortcut's shape. Skip first point since it
   // should equal the last of the prior edge.
-  edgeshape.pop_front();
-  shape.splice(shape.end(), edgeshape);
+  shape.insert(shape.end(), std::next(edgeshape.begin()), edgeshape.end());
 
   // Add to the weighted average
   average_density += directededge->length() * directededge->density();
@@ -358,6 +359,10 @@ void ConnectEdges(GraphReader& reader,
 
   // Update the end node
   endnode = directededge->endnode();
+
+  // Update has_bridge / has_tunnel flags
+  has_bridge |= directededge->bridge();
+  has_tunnel |= directededge->tunnel();
 }
 
 // Check if the edge is entering a contracted node
@@ -430,8 +435,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       auto edgeinfo = tile->edgeinfo(directededge);
-      std::list<PointLL> shape =
-          valhalla::midgard::decode7<std::list<PointLL>>(edgeinfo.encoded_shape());
+      std::vector<PointLL> shape =
+          valhalla::midgard::decode7<std::vector<PointLL>>(edgeinfo.encoded_shape());
       if (!directededge->forward()) {
         std::reverse(shape.begin(), shape.end());
       }
@@ -447,6 +452,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // For turn duration calculation during contraction
       uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
+      bool has_bridge = directededge->bridge();
+      bool has_tunnel = directededge->tunnel();
       while (true) {
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
@@ -474,7 +481,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                     average_density, total_duration, total_truck_duration, access_restrictions);
+                     average_density, total_duration, total_truck_duration, access_restrictions,
+                     has_bridge, has_tunnel);
         total_edge_count++;
       }
 
@@ -573,6 +581,10 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
 
       // Make sure shortcut edge is not marked as internal edge
       newedge.set_internal(false);
+
+      // Set bridge / tunnel flags
+      newedge.set_bridge(has_bridge);
+      newedge.set_tunnel(has_tunnel);
 
       // Add new directed edge to tile builder
       tilebuilder.directededges().emplace_back(std::move(newedge));
@@ -684,14 +696,7 @@ std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel
 
         // Copy lane connectivity
         if (directededge->laneconnectivity()) {
-          auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
-          if (laneconnectivity.size() == 0) {
-            LOG_ERROR("Base edge should have lane connectivity, but none found");
-          }
-          for (auto& lc : laneconnectivity) {
-            lc.set_to(tilebuilder.directededges().size());
-          }
-          tilebuilder.AddLaneConnectivity(laneconnectivity);
+          tilebuilder.CopyLaneConnectivityFromTile(tile, edgeid.id());
         }
 
         // Names can be different in the forward and backward direction

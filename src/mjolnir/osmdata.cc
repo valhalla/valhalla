@@ -2,7 +2,7 @@
 #include "midgard/logging.h"
 #include "scoped_timer.h"
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 
 #include <cctype>
 #include <cstdint>
@@ -687,8 +687,8 @@ void OSMData::add_to_name_map(const uint64_t member_id,
   dir[0] = std::toupper(dir[0]);
 
   // TODO:  network=e-road with int_ref=E #
-  if ((boost::starts_with(dir, "North (") || boost::starts_with(dir, "South (") ||
-       boost::starts_with(dir, "East (") || boost::starts_with(dir, "West (")) ||
+  if ((dir.starts_with("North (") || dir.starts_with("South (") || dir.starts_with("East (") ||
+       dir.starts_with("West (")) ||
       dir == "North" || dir == "South" || dir == "East" || dir == "West") {
 
     if (forward) {

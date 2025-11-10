@@ -1,6 +1,6 @@
-setuptools>=45
+scikit-build-core>=0.11.0
 wheel
 setuptools_scm>=6.2
 setuptools_scm_git_archive
-pybind11>=2.10.4
+nanobind>=2.9.0
 auditwheel

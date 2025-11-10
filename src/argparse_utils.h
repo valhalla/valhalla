@@ -78,8 +78,7 @@ bool parse_common_args(const std::string& program,
     if (conf)
       conf->put<uint32_t>("mjolnir.concurrency", num_threads);
 
-    LOG_INFO("Running " + std::string(program) + " with " + std::to_string(num_threads) +
-             " thread(s).");
+    LOG_INFO("Running {} with {} thread(s).", program, num_threads);
   }
 
   return true;
