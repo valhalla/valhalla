@@ -36,6 +36,18 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+// Convert country ISO code to a uint64_t value
+uint64_t CountryISOCodeToValue(const std::string& countryIso) {
+  uint64_t value = 0;
+  if (countryIso.size() == 2) {
+    value = (static_cast<uint64_t>(countryIso[0]) << 8) | static_cast<uint64_t>(countryIso[1]);
+  }
+  else {
+    LOG_INFO("Country ISO is not valid. Must be 2 characters.");
+  }
+  return value;
+}
+
 /**
  * we need the nodes to be sorted by graphid and then by osmid to make a set of tiles
  * we also need to then update the edges that pointed to them
@@ -379,7 +391,8 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
                                const uint64_t wayid,
                                const OSMData& osmdata,
                                const bool forward,
-                               GraphTileBuilder& graphtile) {
+                               GraphTileBuilder& graphtile,
+                               const std::string& countryIso) {
   auto res = osmdata.access_restrictions.equal_range(wayid);
   if (res.first == osmdata.access_restrictions.end()) {
     return 0;
@@ -392,8 +405,14 @@ uint32_t AddAccessRestrictions(const uint32_t edgeid,
     if ((direction == AccessRestrictionDirection::kBoth) ||
         (forward && direction == AccessRestrictionDirection::kForward) ||
         (!forward && direction == AccessRestrictionDirection::kBackward)) {
-      AccessRestriction access_restriction(edgeid, r->second.type(), r->second.modes(),
-                                           r->second.value(), r->second.except_destination());
+          auto type = r->second.type();
+          if(type == valhalla::baldr::AccessType::kMaxHeight)
+          {
+            type = valhalla::baldr::AccessType::kVignette;
+          }
+      AccessRestriction access_restriction(edgeid, type, r->second.modes(),
+                                           r->second.value(), r->second.except_destination(), 
+                                          CountryISOCodeToValue(countryIso));
       graphtile.AddAccessRestriction(access_restriction);
       modes |= r->second.modes();
     }
@@ -1032,8 +1051,17 @@ void BuildTileSet(const std::string& ways_file,
           // Add restrictions..For now only storing access restrictions for trucks
           // TODO - support more than one mode
           if (directededge.forwardaccess()) {
+                        std::string countryText = "";
+            try{
+              const Admin& admin = graphtile.admins_builder(admin_index);
+              countryText = admin.country_iso();
+            }
+            catch(...)
+            {
+              LOG_ERROR("admin_index size is greater than admin count in Graphbuilder");
+            }
             uint32_t ar_modes =
-                AddAccessRestrictions(idx, w.way_id(), osmdata, directededge.forward(), graphtile);
+                AddAccessRestrictions(idx, w.way_id(), osmdata, directededge.forward(), graphtile, countryText);
             if (ar_modes) {
               directededge.set_access_restriction(ar_modes);
             }

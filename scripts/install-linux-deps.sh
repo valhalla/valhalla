@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Script for shared dependencies
 
-set -x -o errexit -o pipefail -o nounset
+#set -x -o errexit -o pipefail -o nounset
 
 # Now, go through and install the build dependencies
 sudo apt-get update --assume-yes

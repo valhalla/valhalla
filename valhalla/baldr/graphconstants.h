@@ -756,6 +756,7 @@ enum class AccessType : uint8_t {
   kTimedDenied = 7,
   kDestinationAllowed = 8,
   kMaxAxles = 9,
+  kVignette = 10,
 };
 
 constexpr unsigned int kHazmatMask = 1;
