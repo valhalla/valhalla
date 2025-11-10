@@ -26,7 +26,8 @@
 #include <valhalla/baldr/turnlanes.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/logging.h>
-#include <valhalla/midgard/util.h>
+
+#include <span>
 
 #ifndef ENABLE_THREAD_SAFE_TILE_REF_COUNT
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
@@ -35,6 +36,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <iterator>
+#include <list>
 #include <memory>
 #include <span>
 
@@ -579,6 +581,33 @@ public:
   const TransitRoute* GetTransitRoute(const uint32_t idx) const;
 
   /**
+   * Get an operator Id from a map of operator strings or add it to the map.
+   * @param routeid The route ID to look up
+   * @param operators Map of operator names to IDs (will be modified if new operator found)
+   * @return The operator ID, or 0 if there is no operator for the route.
+   */
+  uint32_t GetTransitOperatorId(uint32_t routeid,
+                                std::unordered_map<std::string, uint32_t>& operators) const {
+    const TransitRoute* transit_route = GetTransitRoute(routeid);
+
+    // Test if the transit operator changed
+    if (transit_route && transit_route->op_by_onestop_id_offset()) {
+      // Get the operator name and look up in the operators map
+      std::string operator_name = GetName(transit_route->op_by_onestop_id_offset());
+      auto operator_itr = operators.find(operator_name);
+      if (operator_itr == operators.end()) {
+        // Operator not found - add to the map
+        const uint32_t id = operators.size() + 1;
+        operators[operator_name] = id;
+        return id;
+      } else {
+        return operator_itr->second;
+      }
+    }
+    return 0;
+  }
+
+  /**
    * Get the transit schedule given its schedule index.
    * @param   idx     Schedule index within the tile.
    * @return  Returns a pointer to the transit schedule information. Returns
@@ -617,7 +646,7 @@ public:
    * @param  idx  GraphId of the directed edge.
    * @return  Returns a list of lane connections ending on this edge.
    */
-  std::vector<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
+  std::span<LaneConnectivity> GetLaneConnectivity(const uint32_t idx) const;
 
   /**
    * Convenience method for use with costing to get the speed for an edge given the directed
