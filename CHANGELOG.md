@@ -10,7 +10,6 @@
    * FIXED:  Fix hard exclusions with shortcuts [#5647](https://github.com/valhalla/valhalla/pull/5647)
    * UPGRADED: vcpkg to 0e39c10736341cc8135b560438229bbda3d3219a [#5654](https://github.com/valhalla/valhalla/pull/5654)
    * FIXED: returns GeoTIFF with Content-Type image/tiff header [#5665](https://github.com/valhalla/valhalla/pull/5665)
-   * CHANGED: Adjust speed penalty and add dimensions length and weight to auto costing [#5627](https://github.com/valhalla/valhalla/pull/5627)
    * CHANGED: Improve logging using std::format [#5666](https://github.com/valhalla/valhalla/pull/5666)
    * CHANGED: Migrated from pybind11 to nanobind to release `abi3` wheels (Python version agnostic), also changes minimum version of PyPI packages to 3.12 [#5628](https://github.com/valhalla/valhalla/pull/5628)
    * CHANGED: Avoid temporary std::string in some places in serializers [#5674](https://github.com/valhalla/valhalla/pull/5674)
@@ -19,6 +18,7 @@
    * CHANGED: Refactor GraphTile::GetLaneConnectivity to return std::span instead of std::vector [#5683](https://github.com/valhalla/valhalla/pull/5683)
    * CHANGED: Get rid of midgard::iterable_t in favor of std::span [#5682](https://github.com/valhalla/valhalla/pull/5682)
    * ADDED: Make possible to use `-DCMAKE_UNITY_BUILD=ON` [#5691](https://github.com/valhalla/valhalla/pull/5691)
+   * CHANGED: Adjust speed penalty and add dimensions length and weight to auto costing [#5627](https://github.com/valhalla/valhalla/pull/5627)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
