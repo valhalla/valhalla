@@ -120,11 +120,11 @@ protected:
   uint32_t iterations_threshold_;
   uint32_t desired_paths_count_;
   std::vector<CandidateConnection> best_connections_;
-  
+
   // Threshold (seconds) to extend search once the first connection has been found.
   float threshold_delta_;
 
-  // Relative cost extension to find alternative routes. 
+  // Relative cost extension to find alternative routes.
   float alternative_cost_extend_;
 
   // Maximum number of additional iterations allowed once the first connection has been found.
