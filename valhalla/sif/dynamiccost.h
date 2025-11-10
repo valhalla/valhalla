@@ -1415,11 +1415,6 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> service_penalty_;
   ranged_default_t<float> service_factor_;
 
-  ranged_default_t<float> height_;
-  ranged_default_t<float> width_;
-  ranged_default_t<float> length_;
-  ranged_default_t<float> weight_;
-
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
   ranged_default_t<float> use_lit_;
@@ -1440,6 +1435,11 @@ struct BaseCostingOptionsConfig {
   bool include_hot_ = false;
   bool include_hov2_ = false;
   bool include_hov3_ = false;
+
+  ranged_default_t<float> height_;
+  ranged_default_t<float> width_;
+  ranged_default_t<float> length_;
+  ranged_default_t<float> weight_;
 };
 
 /**

@@ -354,7 +354,7 @@ public:
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
   float width_;  // Vehicle width in meters
-  float length_; // Vehicle width in meters
+  float length_; // Vehicle length in meters
   float weight_; // Vehicle weight in metric tons
 };
 
