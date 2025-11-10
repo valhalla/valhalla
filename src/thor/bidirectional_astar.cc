@@ -66,9 +66,9 @@ BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
   ignore_hierarchy_limits_ = false;
-  threshold_delta_ = config.get<float>("threshold_delta", kThresholdDelta);
-  alternative_cost_extend_ = config.get<float>("alternative_cost_extend", kAlternativeCostExtend);
-  alternative_iterations_delta_ = config.get<uint32_t>("alternative_iterations_delta", kAlternativeIterationsDelta);
+  threshold_delta_ = config.get_child("bidirectional_astar").get<float>("threshold_delta", kThresholdDelta);
+  alternative_cost_extend_ = config.get_child("bidirectional_astar").get<float>("alternative_cost_extend", kAlternativeCostExtend);
+  alternative_iterations_delta_ = config.get_child("bidirectional_astar").get<uint32_t>("alternative_iterations_delta", kAlternativeIterationsDelta);
 }
 
 // Destructor
