@@ -8,33 +8,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-namespace {
-
-// Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const graph_tile_ptr& tile,
-                       uint32_t routeid,
-                       std::unordered_map<std::string, uint32_t>& operators) {
-  const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
-
-  // Test if the transit operator changed
-  if (transit_route && transit_route->op_by_onestop_id_offset()) {
-    // Get the operator name and look up in the operators map
-    std::string operator_name = tile->GetName(transit_route->op_by_onestop_id_offset());
-    auto operator_itr = operators.find(operator_name);
-    if (operator_itr == operators.end()) {
-      // Operator not found - add to the map
-      uint32_t id = operators.size() + 1;
-      operators[operator_name] = id;
-      return id;
-    } else {
-      return operator_itr->second;
-    }
-  }
-  return 0;
-}
-
-} // namespace
-
 namespace valhalla {
 namespace thor {
 
@@ -337,14 +310,15 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
 
   // Prepare for a graph traversal
   Initialize(bdedgelabels_, adjacencylist_, costing_->UnitSize());
-  if (expansion_direction == ExpansionType::forward) {
-    SetOriginLocations(graphreader, locations, costing_);
-  } else {
-    SetDestinationLocations(graphreader, locations, costing_);
-  }
 
   // Get the time information for all the origin locations
   auto time_infos = SetTime(locations, graphreader);
+
+  if (expansion_direction == ExpansionType::forward) {
+    SetOriginLocations(graphreader, locations, time_infos, costing_);
+  } else {
+    SetDestinationLocations(graphreader, locations, time_infos, costing_);
+  }
 
   // Compute the isotile
   auto cb_decision = ExpansionRecommendation::continue_expansion;
@@ -576,7 +550,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
           }
 
           // Get the operator Id
-          operator_id = GetOperatorId(tile, departure->routeindex(), operators_);
+          operator_id = tile->GetTransitOperatorId(departure->routeindex(), operators_);
 
           // Add transfer penalty and operator change penalty
           if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {
@@ -773,15 +747,16 @@ void Dijkstras::ComputeMultiModal(
 // Add edge(s) at each origin to the adjacency list
 void Dijkstras::SetOriginLocations(GraphReader& graphreader,
                                    google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                                   const std::vector<baldr::TimeInfo>& time_infos,
                                    const cost_ptr_t& costing) {
   // Bail if you want to do a multipath expansion with more locations than edge label/status supports
   if (multipath_ && locations.size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");
 
   // Add edges for each location to the adjacency list
-  uint8_t path_id = -1;
+  uint8_t loc_idx = -1;
   for (auto& location : locations) {
-    ++path_id;
+    ++loc_idx;
 
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
@@ -789,6 +764,8 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
                   [&has_other_edges](const valhalla::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.end_node();
                   });
+
+    const auto& time_info = time_infos[loc_idx];
 
     // Iterate through edges and add to adjacency list
     for (const auto& edge : (location.correlation().edges())) {
@@ -819,7 +796,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Get cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
+      Cost cost = costing->EdgeCost(directededge, tile, time_info, flow_sources) *
                   (1.0f - edge.percent_along());
       // Get path distance
       auto path_dist = directededge->length() * (1 - edge.percent_along());
@@ -839,7 +816,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 InternalTurn::kNoTurn, kInvalidRestriction, multipath_ ? path_id : 0,
+                                 InternalTurn::kNoTurn, kInvalidRestriction, multipath_ ? loc_idx : 0,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
                                  directededge->forwardaccess() & kTruckAccess,
@@ -849,7 +826,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 
       // Add EdgeLabel to the adjacency list
       adjacencylist_.add(idx);
-      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile, multipath_ ? path_id : 0);
+      edgestatus_.Set(edgeid, EdgeSet::kTemporary, idx, tile, multipath_ ? loc_idx : 0);
     }
   }
 }
@@ -858,15 +835,18 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
 void Dijkstras::SetDestinationLocations(
     GraphReader& graphreader,
     google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+    const std::vector<baldr::TimeInfo>& time_infos,
     const cost_ptr_t& costing) {
   // Bail if you want to do a multipath expansion with more locations than edge label/status supports
   if (multipath_ && locations.size() > baldr::kMaxMultiPathId)
     throw std::runtime_error("Max number of locations exceeded");
 
   // Add edges for each location to the adjacency list
-  uint8_t path_id = -1;
+  uint8_t loc_idx = -1;
   for (auto& location : locations) {
-    ++path_id;
+    ++loc_idx;
+
+    const auto& time_info = time_infos[loc_idx];
 
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
@@ -906,8 +886,8 @@ void Dijkstras::SetDestinationLocations(
 
       // Get the cost
       uint8_t flow_sources;
-      Cost cost = costing->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
-                  edge.percent_along();
+      Cost cost =
+          costing->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
       // Get the path distance
       auto path_dist = directededge->length() * edge.percent_along();
 
@@ -938,13 +918,13 @@ void Dijkstras::SetDestinationLocations(
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0,
+                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? loc_idx : 0,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()),
                                  directededge->forwardaccess() & kTruckAccess,
                                  destonly_restriction_mask);
       adjacencylist_.add(idx);
-      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? path_id : 0);
+      edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? loc_idx : 0);
     }
   }
 }

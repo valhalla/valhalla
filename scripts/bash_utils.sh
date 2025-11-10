@@ -27,6 +27,7 @@ function install_py_packages {
 
   local py=$1
   if [[ $(${py} -m pip list | grep -c "ruff\|clang-format\|clang-tidy") -ne 4 ]]; then
+    # if the python is in a virtual environment, install the packages locally
     if [[ $(${py} -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
       ${py} -m pip install ${deps}
     else
