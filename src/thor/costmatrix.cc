@@ -83,7 +83,6 @@ public:
     auto it = storage_.find(key);
     if (it == storage_.end()) {
       it = storage_.emplace(key, PmrVector(vec_alloc_)).first;
-      it->second.reserve(64);
     }
     it->second.push_back(value);
   }
