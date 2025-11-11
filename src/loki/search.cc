@@ -189,8 +189,8 @@ struct projector_wrapper {
   projector_wrapper(const vb::Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_)), location(location),
         sq_radius(square(double(location.radius_))),
-        sq_cutoff(square(double(location.search_cutoff_))), project(location.latlng_),
-        bin_center_approximator(bin_center) {
+        sq_cutoff(square(double(location.search_cutoff_))), bin_center_approximator(bin_center),
+        project(location.latlng_) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
     reachable.reserve(64);
@@ -690,7 +690,6 @@ struct bin_handler_t {
 
       // iterate along this edges segments projecting each of the points
       for (size_t i = 0; !shape.empty(); ++i) {
-        bool keep = false;
         auto u = v;
         v = shape.pop();
         // for each input point
@@ -705,7 +704,6 @@ struct bin_handler_t {
           auto sq_distance = p_itr->project.approx.DistanceSquared(point);
           // do we want to keep it
           if (sq_distance < c_itr->sq_distance) {
-            keep = true; // this shape is interesting to at least one candidate
             c_itr->sq_distance = sq_distance;
             c_itr->distance = std::sqrt(sq_distance);
             c_itr->point = std::move(point);

@@ -36,8 +36,8 @@ void assert_tile_equalish(const GraphTile& a, const GraphTile& b) {
 
     auto a_circles = a.GetBoundingCircles(bin_index);
     auto b_circles = b.GetBoundingCircles(bin_index);
-    DiscretizedBoundingCircle* a_circle = a_circles.begin();
-    DiscretizedBoundingCircle* b_circle = b_circles.begin();
+    auto a_circle = a_circles.begin();
+    auto b_circle = b_circles.begin();
 
     while (a_circle != a_circles.end() && b_circle != b_circles.end()) {
       EXPECT_EQ(a_circle->get_y_offset(), b_circle->get_y_offset());
