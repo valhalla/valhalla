@@ -40,24 +40,20 @@ public:
     // Pre-add keys for edge properties
     key_tile_level_ = layer_.add_key_without_dup_check("tile_level");
     key_tile_id_ = layer_.add_key_without_dup_check("tile_id");
-    key_edge_id_fwd_ = layer_.add_key_without_dup_check("edge_id:forward");
-    key_edge_id_rev_ = layer_.add_key_without_dup_check("edge_id:reverse");
+    // Shared edge properties
+    key_speed_limit_ = layer_.add_key_without_dup_check("speed_limit");
     key_road_class_ = layer_.add_key_without_dup_check("road_class");
     key_use_ = layer_.add_key_without_dup_check("use");
-    key_speed_fwd_ = layer_.add_key_without_dup_check("speed:forward");
-    key_speed_rev_ = layer_.add_key_without_dup_check("speed:reverse");
     key_tunnel_ = layer_.add_key_without_dup_check("tunnel");
     key_bridge_ = layer_.add_key_without_dup_check("bridge");
     key_roundabout_ = layer_.add_key_without_dup_check("roundabout");
     key_is_shortcut_ = layer_.add_key_without_dup_check("is_shortcut");
     key_leaves_tile_ = layer_.add_key_without_dup_check("leaves_tile");
-    // Shared edge properties
     key_length_ = layer_.add_key_without_dup_check("length");
     key_weighted_grade_ = layer_.add_key_without_dup_check("weighted_grade");
     key_max_up_slope_ = layer_.add_key_without_dup_check("max_up_slope");
     key_max_down_slope_ = layer_.add_key_without_dup_check("max_down_slope");
     key_curvature_ = layer_.add_key_without_dup_check("curvature");
-    key_deadend_ = layer_.add_key_without_dup_check("deadend");
     key_toll_ = layer_.add_key_without_dup_check("toll");
     key_destonly_ = layer_.add_key_without_dup_check("destonly");
     key_destonly_hgv_ = layer_.add_key_without_dup_check("destonly_hgv");
@@ -66,7 +62,6 @@ public:
     key_cyclelane_ = layer_.add_key_without_dup_check("cyclelane");
     key_bike_network_ = layer_.add_key_without_dup_check("bike_network");
     key_truck_route_ = layer_.add_key_without_dup_check("truck_route");
-    key_lanecount_ = layer_.add_key_without_dup_check("lanecount");
     key_speed_type_ = layer_.add_key_without_dup_check("speed_type");
     key_ctry_crossing_ = layer_.add_key_without_dup_check("ctry_crossing");
     key_sac_scale_ = layer_.add_key_without_dup_check("sac_scale");
@@ -87,17 +82,24 @@ public:
     key_part_of_complex_restriction_ =
         layer_.add_key_without_dup_check("part_of_complex_restriction");
     key_osm_way_id_ = layer_.add_key_without_dup_check("osm_way_id");
-    key_speed_limit_ = layer_.add_key_without_dup_check("speed_limit");
     key_layer_ = layer_.add_key_without_dup_check("layer");
     // Direction-specific properties
+    key_edge_id_fwd_ = layer_.add_key_without_dup_check("edge_id:forward");
+    key_edge_id_rev_ = layer_.add_key_without_dup_check("edge_id:backward");
+    key_speed_fwd_ = layer_.add_key_without_dup_check("speed:forward");
+    key_speed_rev_ = layer_.add_key_without_dup_check("speed:backward");
+    key_deadend_fwd_ = layer_.add_key_without_dup_check("deadend:forward");
+    key_deadend_rev_ = layer_.add_key_without_dup_check("deadend:backward");
+    key_lanecount_fwd_ = layer_.add_key_without_dup_check("lanecount:forward");
+    key_lanecount_rev_ = layer_.add_key_without_dup_check("lanecount:backward");
     key_truck_speed_fwd_ = layer_.add_key_without_dup_check("truck_speed:forward");
-    key_truck_speed_rev_ = layer_.add_key_without_dup_check("truck_speed:reverse");
+    key_truck_speed_rev_ = layer_.add_key_without_dup_check("truck_speed:backward");
     key_traffic_signal_fwd_ = layer_.add_key_without_dup_check("traffic_signal:forward");
-    key_traffic_signal_rev_ = layer_.add_key_without_dup_check("traffic_signal:reverse");
+    key_traffic_signal_rev_ = layer_.add_key_without_dup_check("traffic_signal:backward");
     key_stop_sign_fwd_ = layer_.add_key_without_dup_check("stop_sign:forward");
-    key_stop_sign_rev_ = layer_.add_key_without_dup_check("stop_sign:reverse");
+    key_stop_sign_rev_ = layer_.add_key_without_dup_check("stop_sign:backward");
     key_yield_sign_fwd_ = layer_.add_key_without_dup_check("yield_sign:forward");
-    key_yield_sign_rev_ = layer_.add_key_without_dup_check("yield_sign:reverse");
+    key_yield_sign_rev_ = layer_.add_key_without_dup_check("yield_sign:backward");
     // Access properties (forward)
     key_access_auto_fwd_ = layer_.add_key_without_dup_check("access:auto:forward");
     key_access_pedestrian_fwd_ = layer_.add_key_without_dup_check("access:pedestrian:forward");
@@ -111,17 +113,17 @@ public:
     key_access_moped_fwd_ = layer_.add_key_without_dup_check("access:moped:forward");
     key_access_motorcycle_fwd_ = layer_.add_key_without_dup_check("access:motorcycle:forward");
     // Access properties (reverse)
-    key_access_auto_rev_ = layer_.add_key_without_dup_check("access:auto:reverse");
-    key_access_pedestrian_rev_ = layer_.add_key_without_dup_check("access:pedestrian:reverse");
-    key_access_bicycle_rev_ = layer_.add_key_without_dup_check("access:bicycle:reverse");
-    key_access_truck_rev_ = layer_.add_key_without_dup_check("access:truck:reverse");
-    key_access_emergency_rev_ = layer_.add_key_without_dup_check("access:emergency:reverse");
-    key_access_taxi_rev_ = layer_.add_key_without_dup_check("access:taxi:reverse");
-    key_access_bus_rev_ = layer_.add_key_without_dup_check("access:bus:reverse");
-    key_access_hov_rev_ = layer_.add_key_without_dup_check("access:hov:reverse");
-    key_access_wheelchair_rev_ = layer_.add_key_without_dup_check("access:wheelchair:reverse");
-    key_access_moped_rev_ = layer_.add_key_without_dup_check("access:moped:reverse");
-    key_access_motorcycle_rev_ = layer_.add_key_without_dup_check("access:motorcycle:reverse");
+    key_access_auto_rev_ = layer_.add_key_without_dup_check("access:auto:backward");
+    key_access_pedestrian_rev_ = layer_.add_key_without_dup_check("access:pedestrian:backward");
+    key_access_bicycle_rev_ = layer_.add_key_without_dup_check("access:bicycle:backward");
+    key_access_truck_rev_ = layer_.add_key_without_dup_check("access:truck:backward");
+    key_access_emergency_rev_ = layer_.add_key_without_dup_check("access:emergency:backward");
+    key_access_taxi_rev_ = layer_.add_key_without_dup_check("access:taxi:backward");
+    key_access_bus_rev_ = layer_.add_key_without_dup_check("access:bus:backward");
+    key_access_hov_rev_ = layer_.add_key_without_dup_check("access:hov:backward");
+    key_access_wheelchair_rev_ = layer_.add_key_without_dup_check("access:wheelchair:backward");
+    key_access_moped_rev_ = layer_.add_key_without_dup_check("access:moped:backward");
+    key_access_motorcycle_rev_ = layer_.add_key_without_dup_check("access:motorcycle:backward");
     // Traffic speed properties (forward)
     key_live_speed_fwd_ = layer_.add_key_without_dup_check("live_speed:forward");
     key_live_speed1_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:speed1");
@@ -133,15 +135,15 @@ public:
     key_live_congestion2_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion2");
     key_live_congestion3_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion3");
     // Traffic speed properties (reverse)
-    key_live_speed_rev_ = layer_.add_key_without_dup_check("live_speed:reverse");
-    key_live_speed1_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:speed1");
-    key_live_speed2_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:speed2");
-    key_live_speed3_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:speed3");
-    key_live_breakpoint1_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:breakpoint1");
-    key_live_breakpoint2_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:breakpoint2");
-    key_live_congestion1_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:congestion1");
-    key_live_congestion2_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:congestion2");
-    key_live_congestion3_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:congestion3");
+    key_live_speed_rev_ = layer_.add_key_without_dup_check("live_speed:backward");
+    key_live_speed1_rev_ = layer_.add_key_without_dup_check("live_speed:backward:speed1");
+    key_live_speed2_rev_ = layer_.add_key_without_dup_check("live_speed:backward:speed2");
+    key_live_speed3_rev_ = layer_.add_key_without_dup_check("live_speed:backward:speed3");
+    key_live_breakpoint1_rev_ = layer_.add_key_without_dup_check("live_speed:backward:breakpoint1");
+    key_live_breakpoint2_rev_ = layer_.add_key_without_dup_check("live_speed:backward:breakpoint2");
+    key_live_congestion1_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion1");
+    key_live_congestion2_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion2");
+    key_live_congestion3_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion3");
   }
 
   void add_feature(const std::vector<vtzero::point>& geometry,
@@ -197,7 +199,6 @@ public:
     feature.add_property(key_max_up_slope_, vtzero::encoded_property_value(edge->max_up_slope()));
     feature.add_property(key_max_down_slope_, vtzero::encoded_property_value(edge->max_down_slope()));
     feature.add_property(key_curvature_, vtzero::encoded_property_value(edge->curvature()));
-    feature.add_property(key_deadend_, vtzero::encoded_property_value(edge->deadend()));
     feature.add_property(key_toll_, vtzero::encoded_property_value(edge->toll()));
     feature.add_property(key_destonly_, vtzero::encoded_property_value(edge->destonly()));
     feature.add_property(key_destonly_hgv_, vtzero::encoded_property_value(edge->destonly_hgv()));
@@ -208,7 +209,6 @@ public:
                          vtzero::encoded_property_value(static_cast<uint32_t>(edge->cyclelane())));
     feature.add_property(key_bike_network_, vtzero::encoded_property_value(edge->bike_network()));
     feature.add_property(key_truck_route_, vtzero::encoded_property_value(edge->truck_route()));
-    feature.add_property(key_lanecount_, vtzero::encoded_property_value(edge->lanecount()));
     feature.add_property(key_speed_type_,
                          vtzero::encoded_property_value(static_cast<uint32_t>(edge->speed_type())));
     feature.add_property(key_ctry_crossing_, vtzero::encoded_property_value(edge->ctry_crossing()));
@@ -247,6 +247,8 @@ public:
                            vtzero::encoded_property_value(forward_edge->stop_sign()));
       feature.add_property(key_yield_sign_fwd_,
                            vtzero::encoded_property_value(forward_edge->yield_sign()));
+      feature.add_property(key_deadend_fwd_, vtzero::encoded_property_value(edge->deadend()));
+      feature.add_property(key_lanecount_fwd_, vtzero::encoded_property_value(edge->deadend()));
 
       // Forward access properties
       uint32_t fwd_access = forward_edge->forwardaccess();
@@ -316,6 +318,8 @@ public:
                            vtzero::encoded_property_value(reverse_edge->stop_sign()));
       feature.add_property(key_yield_sign_rev_,
                            vtzero::encoded_property_value(reverse_edge->yield_sign()));
+      feature.add_property(key_deadend_rev_, vtzero::encoded_property_value(edge->deadend()));
+      feature.add_property(key_lanecount_rev_, vtzero::encoded_property_value(edge->deadend()));
 
       // Reverse access properties
       uint32_t rev_access = reverse_edge->reverseaccess();
@@ -400,7 +404,6 @@ private:
   vtzero::index_value key_max_up_slope_;
   vtzero::index_value key_max_down_slope_;
   vtzero::index_value key_curvature_;
-  vtzero::index_value key_deadend_;
   vtzero::index_value key_toll_;
   vtzero::index_value key_destonly_;
   vtzero::index_value key_destonly_hgv_;
@@ -434,6 +437,10 @@ private:
   // Direction-specific properties
   vtzero::index_value key_truck_speed_fwd_;
   vtzero::index_value key_truck_speed_rev_;
+  vtzero::index_value key_deadend_fwd_;
+  vtzero::index_value key_deadend_rev_;
+  vtzero::index_value key_lanecount_fwd_;
+  vtzero::index_value key_lanecount_rev_;
   vtzero::index_value key_traffic_signal_fwd_;
   vtzero::index_value key_traffic_signal_rev_;
   vtzero::index_value key_stop_sign_fwd_;
