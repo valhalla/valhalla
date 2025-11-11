@@ -29,7 +29,7 @@ Environment Variables:
 
 Examples:
   # Use local build
-  VALHALLA_NODE=../../build/lib/valhalla_node.node node tilevis.js
+  VALHALLA_NODE=../../build/Debug/lib/valhalla_node.node node tilevis.js
   
   # Use npm package
   npm install @valhallajs/valhallajs

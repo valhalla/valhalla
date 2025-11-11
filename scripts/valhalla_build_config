@@ -359,7 +359,7 @@ config = {
         "batch_size": Optional(int),
         "tags": Optional(list),
     },
-    "tile": {
+    "heimdall": {
         "min_zoom_road_class": [8, 9, 10, 11, 12, 12, 12, 12],
     },
 }

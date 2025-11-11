@@ -23,7 +23,7 @@ valhalla_module(NAME heimdall
     PRIVATE
       ${rapidjson_include_dir}
       ${vtzero_include_dir}
-      ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
+      ${protozero_include_dir}
   DEPENDS
     valhalla::meili
     valhalla::baldr

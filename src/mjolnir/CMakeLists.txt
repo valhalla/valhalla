@@ -90,7 +90,8 @@ valhalla_module(NAME mjolnir
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
       ${unordered_dense_include_dir}
-      ${libosmium_include_dirs}
+      ${libosmium_include_dir}
+      ${protozero_include_dir}
   DEPENDS
     valhalla::proto
     valhalla::baldr
