@@ -167,8 +167,9 @@ protected:
 
     ASSERT_EQ(feat["properties"].MemberCount(), has_flow_sources ? props.size() + 3 : props.size());
     for (const auto& prop : props) {
-      if (prop != "flow_sources")
+      if (prop != "flow_sources") {
         ASSERT_TRUE(feat["properties"].HasMember(prop));
+      }
     }
 
     if (has_flow_sources) {
