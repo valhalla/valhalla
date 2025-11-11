@@ -68,8 +68,6 @@ private:
   static constexpr size_t kNumRoadClasses = kDefaultMinZoomRoadClass.size();
   using ZoomConfig = std::array<uint32_t, kNumRoadClasses>;
 
-  void ReadZoomConfig(const boost::property_tree::ptree& config);
-
   /**
    * Build the edges layer for the vector tile
    * @param return_shortcuts  If false, filter out shortcut edges

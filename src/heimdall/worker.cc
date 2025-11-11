@@ -634,38 +634,33 @@ private:
 
 } // anonymous namespace
 
-void heimdall_worker_t::ReadZoomConfig(const boost::property_tree::ptree& config) {
-  min_zoom_road_class_ = kDefaultMinZoomRoadClass;
-
-  auto tile_config = config.get_child_optional("tile");
-  if (tile_config) {
-    auto zoom_array = tile_config->get_child_optional("min_zoom_road_class");
-    if (zoom_array) {
-      size_t i = 0;
-      for (const auto& item : *zoom_array) {
-        if (i < kNumRoadClasses) {
-          min_zoom_road_class_[i] = item.second.get_value<uint32_t>();
-          ++i;
-        }
-      }
-      // Fill remaining values with defaults if array is too short
-      for (; i < kNumRoadClasses; ++i) {
-        min_zoom_road_class_[i] = kDefaultMinZoomRoadClass[i];
-      }
-    }
-  }
-
-  // Compute overall minimum zoom level (minimum of all road class zooms)
-  min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
-}
-
 heimdall_worker_t::heimdall_worker_t(const boost::property_tree::ptree& config,
                                      const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : config_(config), reader_(graph_reader),
       candidate_query_(*graph_reader,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
                        TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
-  ReadZoomConfig(config_);
+
+  min_zoom_road_class_ = kDefaultMinZoomRoadClass;
+
+  auto tile_config = config.get_child("heimdall");
+  auto zoom_array = tile_config.get_child("min_zoom_road_class");
+  size_t i = 0;
+  for (const auto& item : zoom_array) {
+    if (i >= kNumRoadClasses) {
+      break;
+    }
+    min_zoom_road_class_[i] = item.second.get_value<uint32_t>();
+    ++i;
+  }
+  if (i != kNumRoadClasses) {
+    throw std::runtime_error(
+        std::format("min_zoom_road_class out of bounds, expected {} elements but got {}",
+                    kNumRoadClasses, i));
+  }
+
+  // Compute overall minimum zoom level (minimum of all road class zooms)
+  min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
 }
 
 std::unordered_set<GraphId>
