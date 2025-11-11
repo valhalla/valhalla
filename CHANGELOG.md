@@ -20,6 +20,7 @@
    * CHANGED: Optimise CostMatrix::ReachedMap [#5690](https://github.com/valhalla/valhalla/pull/5690)
    * ADDED: Make possible to use `-DCMAKE_UNITY_BUILD=ON` [#5691](https://github.com/valhalla/valhalla/pull/5691)
    * CHANGED: make alternative_iterations_delta configurable [#5679](https://github.com/valhalla/valhalla/pull/5679)
+   * ADDED: Bounding circles for faster loki [#5103](https://github.com/valhalla/valhalla/pull/5103)
 
 ## Release Date: 2025-10-23 Valhalla 3.6.0
 * **Removed**
@@ -113,7 +114,6 @@
    * CHANGED: Speed up pbf parsing by using libosmium [#5070](https://github.com/valhalla/valhalla/pull/5070)
    * ADDED: headings and correlated ll's in verbose matrix output [#5072](https://github.com/valhalla/valhalla/pull/5072)
    * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082) 
-   * ADDED: Bounding circles for faster loki [#5103](https://github.com/valhalla/valhalla/pull/5103)
    * CHANGED: Faster Docker builds in CI [#5082](https://github.com/valhalla/valhalla/pull/5082)
    * ADDED: Retrieve traffic signal information of nodes through trace_attribute request [#5121](https://github.com/valhalla/valhalla/pull/5121)
    * CHANGED: Remove redundant callback-style pbf parsing [#5119](https://github.com/valhalla/valhalla/pull/5119)
