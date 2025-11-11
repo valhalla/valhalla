@@ -62,9 +62,9 @@ private:
   };
 
   // Default minimum zoom levels for each road class:
-  // Motorway=8, Trunk=9, Primary=10, Secondary=11, Tertiary=12,
-  // Unclassified=12, Residential=12, Service/Other=12
-  static constexpr std::array kDefaultMinZoomRoadClass = {8u, 9u, 10u, 11u, 12u, 12u, 12u, 12u};
+  // Motorway=7, Trunk=7, Primary=8, Secondary=10, Tertiary=11,
+  // Unclassified=11, Residential=13, Service/Other=14
+  static constexpr std::array kDefaultMinZoomRoadClass = {7u, 7u, 8u, 10u, 11u, 11u, 13u, 14u};
   static constexpr size_t kNumRoadClasses = kDefaultMinZoomRoadClass.size();
   using ZoomConfig = std::array<uint32_t, kNumRoadClasses>;
 
