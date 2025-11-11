@@ -1246,23 +1246,22 @@ std::span<GraphId> GraphTile::GetBin(size_t index) const {
 }
 
 // Get the array of bounding circles for the given bin
-midgard::iterable_t<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t column,
-                                                                             size_t row) const {
+std::span<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t column, size_t row) const {
   if (!header_->has_bounding_circles()) {
-    return iterable_t<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
+    return std::span<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
   }
   auto offsets = header_->bin_offset(column, row);
-  return iterable_t<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
-                                               bounding_circles_ + offsets.second};
+  return std::span<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
+                                              bounding_circles_ + offsets.second};
 }
 
-midgard::iterable_t<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t index) const {
+std::span<DiscretizedBoundingCircle> GraphTile::GetBoundingCircles(size_t index) const {
   if (!header_->has_bounding_circles()) {
-    return iterable_t<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
+    return std::span<DiscretizedBoundingCircle>{bounding_circles_, bounding_circles_};
   }
   auto offsets = header_->bin_offset(index);
-  return iterable_t<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
-                                               bounding_circles_ + offsets.second};
+  return std::span<DiscretizedBoundingCircle>{bounding_circles_ + offsets.first,
+                                              bounding_circles_ + offsets.second};
 }
 
 // Get turn lanes for this edge.
