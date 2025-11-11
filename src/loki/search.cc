@@ -188,9 +188,8 @@ struct candidate_t {
 struct projector_wrapper {
   projector_wrapper(const vb::Location& location, GraphReader& reader)
       : binner(make_binner(location.latlng_)), location(location),
-        sq_radius(square(double(location.radius_))),
-        sq_cutoff(square(double(location.search_cutoff_))), bin_center_approximator(bin_center),
-        project(location.latlng_) {
+        bin_center_approximator(bin_center), sq_radius(square(double(location.radius_))),
+        sq_cutoff(square(double(location.search_cutoff_))), project(location.latlng_) {
     // TODO: something more empirical based on radius
     unreachable.reserve(64);
     reachable.reserve(64);
