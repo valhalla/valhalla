@@ -143,9 +143,9 @@ void serialize_edges(const PathLocation& location,
         writer("correlated_lat", edge.projected.lat());
         writer("correlated_lon", edge.projected.lng());
         writer("side_of_street", edge.sos == PathLocation::LEFT
-                                     ? std::string("left")
-                                     : (edge.sos == PathLocation::RIGHT ? std::string("right")
-                                                                        : std::string("neither")));
+                                     ? "left"
+                                     : (edge.sos == PathLocation::RIGHT ? "right" : "neither"));
+
         writer.start_object("bounding_circle");
         writer("lat", edge.bounding_circle.first.lat());
         writer("lon", edge.bounding_circle.first.lng());
@@ -190,9 +190,8 @@ void serialize_edges(const PathLocation& location,
         writer("correlated_lat", edge.projected.lat());
         writer("correlated_lon", edge.projected.lng());
         writer("side_of_street", edge.sos == PathLocation::LEFT
-                                     ? std::string("left")
-                                     : (edge.sos == PathLocation::RIGHT ? std::string("right")
-                                                                        : std::string("neither")));
+                                     ? "left"
+                                     : (edge.sos == PathLocation::RIGHT ? "right" : "neither"));
         writer.set_precision(5);
         writer("percent_along", edge.percent_along);
         writer.set_precision(tyr::kDefaultPrecision);

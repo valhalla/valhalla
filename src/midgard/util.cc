@@ -466,9 +466,8 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
   }
 
   if (resampled.size() != n) {
-    LOG_ERROR("resampled polyline not expected size! n: " + std::to_string(n) +
-              " actual: " + std::to_string(resampled.size()) + " length: " + std::to_string(length) +
-              " d: " + std::to_string(sample_distance));
+    LOG_ERROR("resampled polyline not expected size! n: {} actual: {} length: {} d: {}", n,
+              resampled.size(), length, sample_distance);
   }
   return resampled;
 }

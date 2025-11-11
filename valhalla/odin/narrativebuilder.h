@@ -640,7 +640,7 @@ protected:
   /**
    * Combines a simple preposition and a definite article for certain languages.
    */
-  virtual void FormArticulatedPrepositions(std::string& instruction) {
+  virtual void FormArticulatedPrepositions(std::string& /*instruction*/) {
   }
 
   /**

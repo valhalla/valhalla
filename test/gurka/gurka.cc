@@ -224,7 +224,6 @@ inline void build_pbf(const nodelayout& node_locations,
                       const nodes& nodes,
                       const relations& relations,
                       const std::string& filename,
-                      const uint64_t initial_osm_id,
                       const bool strict) {
 
   const size_t initial_buffer_size = 10000;
@@ -255,19 +254,33 @@ inline void build_pbf(const nodelayout& node_locations,
     }
   }
 
-  std::unordered_map<std::string, int> node_id_map;
+  uint64_t osm_id = 0;
+  std::unordered_set<uint64_t> used_osm_ids;
+  auto get_node_id = [&](const std::string& node_name) {
+    auto found = nodes.find(node_name);
+    if (found != nodes.cend() && found->second.count("osm_id") > 0) {
+      return static_cast<uint64_t>(std::stoull(found->second.at("osm_id")));
+    }
+    while (!used_osm_ids.insert(++osm_id).second)
+      ;
+    return osm_id;
+  };
+
+  auto get_way_id = [&](const std::map<std::string, std::string>& tags) {
+    auto found = tags.find("osm_id");
+    if (found != tags.cend()) {
+      return static_cast<uint64_t>(std::stoull(found->second));
+    }
+    while (!used_osm_ids.insert(++osm_id).second)
+      ;
+    return osm_id;
+  };
+
   std::unordered_map<std::string, uint64_t> node_osm_id_map;
-  int id = 0;
-  for (auto& loc : node_locations) {
-    node_id_map[loc.first] = id++;
-  }
-  uint64_t osm_id = initial_osm_id;
   for (auto& loc : node_locations) {
     if (used_nodes.count(loc.first) > 0) {
-      node_osm_id_map[loc.first] = osm_id++;
-
+      node_osm_id_map[loc.first] = get_node_id(loc.first);
       std::vector<std::pair<std::string, std::string>> tags;
-
       if (nodes.count(loc.first) == 0) {
         tags.push_back({"name", loc.first});
       } else {
@@ -291,17 +304,10 @@ inline void build_pbf(const nodelayout& node_locations,
 
   std::unordered_map<std::string, uint64_t> way_osm_id_map;
   for (const auto& way : ways) {
-    // allow setting custom id
-    auto way_id = osm_id++;
-    auto found = way.second.find("osm_id");
-    if (found != way.second.cend()) {
-      way_id = std::stoull(found->second);
-    }
-
-    way_osm_id_map[way.first] = way_id;
-    std::vector<int> nodeids;
+    way_osm_id_map[way.first] = get_way_id(way.second);
+    std::vector<int64_t> nodeids;
     for (const auto& ch : way.first) {
-      nodeids.push_back(node_osm_id_map[std::string(1, ch)]);
+      nodeids.push_back(static_cast<int64_t>(node_osm_id_map[std::string(1, ch)]));
     }
     std::vector<std::pair<std::string, std::string>> tags;
     if (way.second.count("name") == 0) {
@@ -374,8 +380,9 @@ inline void build_pbf(const nodelayout& node_locations,
   objects.sort(object_order_type_unsigned_id_version{});
 
   // Write out the objects in sorted order
-  auto out = osmium::io::make_output_iterator(writer);
-  std::copy(objects.begin(), objects.end(), out);
+  for (const auto& obj : objects) {
+    writer(obj);
+  }
 
   // Explicitly close the writer. Will throw an exception if there is
   // a problem. If you wait for the destructor to close the writer, you
