@@ -849,7 +849,7 @@ public:
 
     if (node->drive_on_right()) {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse ||
+      if ((has_reverse && edge->name_consistency(idx)) ||
           (penalize_internal_uturns && internal_turn == InternalTurn::kLeftTurn && has_left))
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
@@ -858,7 +858,7 @@ public:
         seconds *= kTCUnfavorablePencilPointUturn;
     } else {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
-      if (has_reverse ||
+      if ((has_reverse && edge->name_consistency(idx)) ||
           (penalize_internal_uturns && internal_turn == InternalTurn::kRightTurn && has_right))
         seconds += kTCUnfavorableUturn;
       // Did we make a pencil point uturn?
