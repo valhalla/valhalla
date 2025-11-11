@@ -63,6 +63,14 @@ public:
     return m_lng_scale_;
   }
 
+  /*
+   * Getter for lng scale
+   * @return the distance scale for lng at this points latitude
+   */
+  typename PointT::first_type GetMetersPerLngDegree() const {
+    return m_per_lng_degree_;
+  }
+
   /**
    * Approximates the arc distance between the supplied position and the
    * current test point.  It uses the pythagorean theorem with meters
