@@ -8,7 +8,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace heimdall {
 
-midgard::AABB2<midgard::PointLL> tile_to_bbox(uint32_t z, uint32_t x, uint32_t y) {
+midgard::AABB2<midgard::PointLL> tile_to_bbox(const uint32_t z, const uint32_t x, const uint32_t y) {
   const double n = std::pow(2.0, z);
 
   double min_lon = x / n * 360.0 - 180.0;
@@ -23,11 +23,11 @@ midgard::AABB2<midgard::PointLL> tile_to_bbox(uint32_t z, uint32_t x, uint32_t y
   return AABB2<PointLL>(PointLL(min_lon, min_lat), PointLL(max_lon, max_lat));
 }
 
-double lon_to_merc_x(double lon) {
+double lon_to_merc_x(const double lon) {
   return kEarthRadiusMeters * lon * kPiD / 180.0;
 }
 
-double lat_to_merc_y(double lat) {
+double lat_to_merc_y(const double lat) {
   return kEarthRadiusMeters * std::log(std::tan(kPiD / 4.0 + lat * kPiD / 360.0));
 }
 
