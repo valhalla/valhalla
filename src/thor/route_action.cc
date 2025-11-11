@@ -402,7 +402,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    if (is_through_point(*destination) && first_edge.Is_Valid()) {
+    if (is_through_point(*destination) && first_edge.is_valid()) {
       remove_path_edges(*destination,
                         [&first_edge](const auto& edge) { return edge.graph_id() != first_edge; });
     }
@@ -623,7 +623,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
     // If we are continuing through a location we need to make sure we
     // only allow the edge that was used previously (avoid u-turns)
-    if (is_through_point(*origin) && last_edge.Is_Valid()) {
+    if (is_through_point(*origin) && last_edge.is_valid()) {
       remove_path_edges(*origin,
                         [&last_edge](const auto& edge) { return edge.graph_id() != last_edge; });
     }

@@ -87,7 +87,7 @@ end_node_t GetEndEdges(GraphReader& reader, const valhalla::Location& destinatio
   for (const auto& edge : destination.correlation().edges()) {
     // If destination is at a node - skip any outbound edge
     GraphId graphid(edge.graph_id());
-    if (edge.begin_node() || !graphid.Is_Valid()) {
+    if (edge.begin_node() || !graphid.is_valid()) {
       continue;
     }
 
@@ -286,7 +286,7 @@ valhalla::baldr::TimeInfo init_time_info(valhalla::baldr::GraphReader& reader,
   // a local date time which we convert to epoch by finding the first timezone
   for (const auto& e : options.locations(0).correlation().edges()) {
     GraphId graphid(e.graph_id());
-    if (!graphid.Is_Valid() || !reader.GetGraphTile(graphid, tile))
+    if (!graphid.is_valid() || !reader.GetGraphTile(graphid, tile))
       continue;
     directededge = tile->directededge(graphid);
     if (reader.GetGraphTile(directededge->endnode(), tile)) {
@@ -365,7 +365,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
     // Process and validate begin edge
     GraphId graphid(edge.graph_id());
-    if (!graphid.Is_Valid()) {
+    if (!graphid.is_valid()) {
       throw std::runtime_error("Invalid begin edge id");
     }
     auto begin_edge_tile = reader.GetGraphTile(graphid);

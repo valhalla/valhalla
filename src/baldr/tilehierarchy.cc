@@ -44,7 +44,7 @@ const TileLevel& TileHierarchy::GetTransitLevel() {
 }
 
 midgard::AABB2<midgard::PointLL> TileHierarchy::GetGraphIdBoundingBox(const GraphId& id) {
-  assert(id.Is_Valid());
+  assert(id.is_valid());
   auto const& tileLevel = levels().at(id.level());
   return tileLevel.tiles.TileBounds(id.tileid());
 }

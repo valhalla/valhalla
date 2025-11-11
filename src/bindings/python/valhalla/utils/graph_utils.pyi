@@ -37,7 +37,7 @@ class GraphId:
         """Inequality operator"""
 
     def __bool__(self) -> None:
-        """True if Is_Valid()."""
+        """True if is_valid()."""
 
     def tileid() -> int:
         """Gets the tile Id."""
@@ -48,10 +48,10 @@ class GraphId:
     def id() -> int:
         """Gets the identifier within the hierarchy level."""
 
-    def Is_Valid() -> bool:
+    def is_valid() -> bool:
         """Returns true if the id is valid."""
 
-    def Tile_Base() -> GraphId:
+    def tile_base() -> GraphId:
         """Returns a GraphId omitting the id of the of the object within the level.
         Construct a new GraphId with the Id portion omitted.
         """

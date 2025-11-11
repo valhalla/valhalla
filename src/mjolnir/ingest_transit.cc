@@ -269,7 +269,7 @@ void setup_stops(Transit& tile,
   node->set_graphid(node_id);
 
   if (node_type != NodeType::kTransitEgress) {
-    node->set_prev_type_graphid(prev_id.Is_Valid() ? prev_id : node_id - 1);
+    node->set_prev_type_graphid(prev_id.is_valid() ? prev_id : node_id - 1);
   } // in/egresses need accessibility set so that transit connect edges inherit that access
   else {
     // TODO: its unclear how to determine unidirectionality (entrance-only vs exit-only) from the gtfs
@@ -822,7 +822,7 @@ void stitch_tiles(const std::filesystem::path& transit_dir,
       for (auto& stop_pair : *tile.mutable_stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
           auto found_stop = needed.find(stop_pair.origin_onestop_id())->second;
-          if (found_stop.Is_Valid()) {
+          if (found_stop.is_valid()) {
             stop_pair.set_origin_graphid(found_stop);
           } else if (not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.origin_onestop_id());
@@ -832,7 +832,7 @@ void stitch_tiles(const std::filesystem::path& transit_dir,
         }
         if (!stop_pair.has_destination_graphid()) {
           auto found_stop = needed.find(stop_pair.destination_onestop_id())->second;
-          if (found_stop.Is_Valid()) {
+          if (found_stop.is_valid()) {
             stop_pair.set_destination_graphid(found_stop);
           } else if (not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.destination_onestop_id());

@@ -131,7 +131,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
       // Get the transit node Graph Id
       GraphId endnode = conn.stop_node;
-      if (!end_tile || (end_tile->id().Tile_Base() != endnode.Tile_Base())) {
+      if (!end_tile || (end_tile->id().tile_base() != endnode.tile_base())) {
         lock.lock();
         end_tile = reader_transit_level.GetGraphTile(endnode);
         lock.unlock();
@@ -361,7 +361,7 @@ std::vector<OSMConnectionEdge> MakeConnections(const graph_tile_ptr& local_tile,
       }
 
       // there will be a more convenient opposing edge to use for this one so lets wait for it
-      if (!directededge->forward() && (directededge->endnode().Tile_Base() == local_tile->id()) &&
+      if (!directededge->forward() && (directededge->endnode().tile_base() == local_tile->id()) &&
           (directededge->reverseaccess() & kPedestrianAccess)) {
         continue;
       }
@@ -426,7 +426,7 @@ std::vector<OSMConnectionEdge> MakeConnections(const graph_tile_ptr& local_tile,
                                                closest_edgeinfo->GetNames(), shape});
 
     // the end node is in another tile
-    if (closest_edge->endnode().Tile_Base() != local_tile->id()) {
+    if (closest_edge->endnode().tile_base() != local_tile->id()) {
       // TODO: its a big pain in the butt, but we can fix this. to do so we need to split up the jobs
       //  of finding the connection points and modifying the tiles, which means we need to keep all
       //  the connections in memory (its small), organize them by tile and then update the tiles
@@ -471,7 +471,7 @@ void build(const boost::property_tree::ptree& pt,
       reader_transit_level.Trim();
     }
 
-    GraphId tile_id = tile_start->Tile_Base();
+    GraphId tile_id = tile_start->tile_base();
 
     // Get Valhalla tile - get a read only instance for reference and
     // a writeable instance (deserialize it so we can add to it)

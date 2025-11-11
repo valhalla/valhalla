@@ -119,7 +119,7 @@ std::string thor_worker_t::expansion(Api& request) {
         auto tile = reader.GetGraphTile(edgeid);
         if (tile == nullptr) {
           LOG_ERROR("thor_worker_t::expansion error, tile no longer available" +
-                    std::to_string(edgeid.Tile_Base()));
+                    std::to_string(edgeid.tile_base()));
           return;
         }
 
