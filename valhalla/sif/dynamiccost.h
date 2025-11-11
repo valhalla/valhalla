@@ -153,7 +153,7 @@ constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 // Default uturn costs
 constexpr float kTCUnfavorablePencilPointUturn = 15.f;
 constexpr float kTCUnfavorableUturn = 600.f;
-constexpr float kTCaBitLessUnfavorableUturn = 10.f;
+constexpr float kTCNameInconsistentUturn = 10.f;
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -851,7 +851,7 @@ public:
     if (node->drive_on_right()) {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
       if (has_reverse && !edge->name_consistency(idx)) {
-        seconds += kTCaBitLessUnfavorableUturn;
+        seconds += kTCNameInconsistentUturn;
       } else if (has_reverse ||
                  (penalize_internal_uturns && internal_turn == InternalTurn::kLeftTurn && has_left)) {
         seconds += kTCUnfavorableUturn;
@@ -862,7 +862,7 @@ public:
     } else {
       // Did we make a uturn on a short, internal edge or did we make a uturn at a node.
       if (has_reverse && !edge->name_consistency(idx)) {
-        seconds += kTCaBitLessUnfavorableUturn;
+        seconds += kTCNameInconsistentUturn;
       } else if (has_reverse || (penalize_internal_uturns &&
                                  internal_turn == InternalTurn::kRightTurn && has_right)) {
         seconds += kTCUnfavorableUturn;
