@@ -48,9 +48,9 @@ int get_number(std::string_view tag, const std::string& value) { // NOLINT
   try {
     num = to_int(value);
   } catch (const std::invalid_argument& arg) {
-    LOG_DEBUG("invalid_argument thrown for " + tag + " value: " + value);
+    LOG_DEBUG("invalid_argument thrown for {} value: {}", tag, value);
   } catch (const std::out_of_range& oor) {
-    LOG_DEBUG("out_of_range exception thrown for " + tag + " value: " + value);
+    LOG_DEBUG("out_of_range exception thrown for {} value: {}", tag, value);
   }
   return num;
 }
