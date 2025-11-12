@@ -117,6 +117,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
     {504, {504, "This service does not support GeoTIFF serialization.", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
     {599, {599, "Unknown serialization error", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
+    // heimdall codes
+    {600, {600, "Invalid tile coordinates", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
 };
 
 // unordered map for warning pairs

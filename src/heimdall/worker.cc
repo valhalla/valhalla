@@ -1,9 +1,9 @@
 #include "heimdall/worker.h"
+#include "baldr/datetime.h"
 #include "baldr/directededge.h"
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "heimdall/util.h"
 #include "meili/candidate_search.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
@@ -14,6 +14,7 @@
 #include <boost/geometry/geometries/linestring.hpp>
 #include <boost/geometry/geometries/multi_linestring.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <vtzero/builder.hpp>
 
 #include <algorithm>
@@ -30,6 +31,11 @@ namespace valhalla {
 namespace heimdall {
 
 namespace {
+/**
+ * Earth radius in meters for EPSG:3857 Web Mercator projection.
+ * This is the WGS84 ellipsoid semi-major axis.
+ */
+constexpr double kEarthRadiusMeters = 6378137.0;
 
 /**
  * Helper class to build the edges layer with pre-registered keys
@@ -40,24 +46,20 @@ public:
     // Pre-add keys for edge properties
     key_tile_level_ = layer_.add_key_without_dup_check("tile_level");
     key_tile_id_ = layer_.add_key_without_dup_check("tile_id");
-    key_edge_id_fwd_ = layer_.add_key_without_dup_check("edge_id:forward");
-    key_edge_id_rev_ = layer_.add_key_without_dup_check("edge_id:reverse");
+    // Shared edge properties
+    key_speed_limit_ = layer_.add_key_without_dup_check("speed_limit");
     key_road_class_ = layer_.add_key_without_dup_check("road_class");
     key_use_ = layer_.add_key_without_dup_check("use");
-    key_speed_fwd_ = layer_.add_key_without_dup_check("speed:forward");
-    key_speed_rev_ = layer_.add_key_without_dup_check("speed:reverse");
     key_tunnel_ = layer_.add_key_without_dup_check("tunnel");
     key_bridge_ = layer_.add_key_without_dup_check("bridge");
     key_roundabout_ = layer_.add_key_without_dup_check("roundabout");
     key_is_shortcut_ = layer_.add_key_without_dup_check("is_shortcut");
     key_leaves_tile_ = layer_.add_key_without_dup_check("leaves_tile");
-    // Shared edge properties
     key_length_ = layer_.add_key_without_dup_check("length");
     key_weighted_grade_ = layer_.add_key_without_dup_check("weighted_grade");
     key_max_up_slope_ = layer_.add_key_without_dup_check("max_up_slope");
     key_max_down_slope_ = layer_.add_key_without_dup_check("max_down_slope");
     key_curvature_ = layer_.add_key_without_dup_check("curvature");
-    key_deadend_ = layer_.add_key_without_dup_check("deadend");
     key_toll_ = layer_.add_key_without_dup_check("toll");
     key_destonly_ = layer_.add_key_without_dup_check("destonly");
     key_destonly_hgv_ = layer_.add_key_without_dup_check("destonly_hgv");
@@ -66,7 +68,6 @@ public:
     key_cyclelane_ = layer_.add_key_without_dup_check("cyclelane");
     key_bike_network_ = layer_.add_key_without_dup_check("bike_network");
     key_truck_route_ = layer_.add_key_without_dup_check("truck_route");
-    key_lanecount_ = layer_.add_key_without_dup_check("lanecount");
     key_speed_type_ = layer_.add_key_without_dup_check("speed_type");
     key_ctry_crossing_ = layer_.add_key_without_dup_check("ctry_crossing");
     key_sac_scale_ = layer_.add_key_without_dup_check("sac_scale");
@@ -87,17 +88,24 @@ public:
     key_part_of_complex_restriction_ =
         layer_.add_key_without_dup_check("part_of_complex_restriction");
     key_osm_way_id_ = layer_.add_key_without_dup_check("osm_way_id");
-    key_speed_limit_ = layer_.add_key_without_dup_check("speed_limit");
     key_layer_ = layer_.add_key_without_dup_check("layer");
     // Direction-specific properties
+    key_edge_id_fwd_ = layer_.add_key_without_dup_check("edge_id:forward");
+    key_edge_id_rev_ = layer_.add_key_without_dup_check("edge_id:backward");
+    key_speed_fwd_ = layer_.add_key_without_dup_check("speed:forward");
+    key_speed_rev_ = layer_.add_key_without_dup_check("speed:backward");
+    key_deadend_fwd_ = layer_.add_key_without_dup_check("deadend:forward");
+    key_deadend_rev_ = layer_.add_key_without_dup_check("deadend:backward");
+    key_lanecount_fwd_ = layer_.add_key_without_dup_check("lanecount:forward");
+    key_lanecount_rev_ = layer_.add_key_without_dup_check("lanecount:backward");
     key_truck_speed_fwd_ = layer_.add_key_without_dup_check("truck_speed:forward");
-    key_truck_speed_rev_ = layer_.add_key_without_dup_check("truck_speed:reverse");
+    key_truck_speed_rev_ = layer_.add_key_without_dup_check("truck_speed:backward");
     key_traffic_signal_fwd_ = layer_.add_key_without_dup_check("traffic_signal:forward");
-    key_traffic_signal_rev_ = layer_.add_key_without_dup_check("traffic_signal:reverse");
+    key_traffic_signal_rev_ = layer_.add_key_without_dup_check("traffic_signal:backward");
     key_stop_sign_fwd_ = layer_.add_key_without_dup_check("stop_sign:forward");
-    key_stop_sign_rev_ = layer_.add_key_without_dup_check("stop_sign:reverse");
+    key_stop_sign_rev_ = layer_.add_key_without_dup_check("stop_sign:backward");
     key_yield_sign_fwd_ = layer_.add_key_without_dup_check("yield_sign:forward");
-    key_yield_sign_rev_ = layer_.add_key_without_dup_check("yield_sign:reverse");
+    key_yield_sign_rev_ = layer_.add_key_without_dup_check("yield_sign:backward");
     // Access properties (forward)
     key_access_auto_fwd_ = layer_.add_key_without_dup_check("access:auto:forward");
     key_access_pedestrian_fwd_ = layer_.add_key_without_dup_check("access:pedestrian:forward");
@@ -111,17 +119,17 @@ public:
     key_access_moped_fwd_ = layer_.add_key_without_dup_check("access:moped:forward");
     key_access_motorcycle_fwd_ = layer_.add_key_without_dup_check("access:motorcycle:forward");
     // Access properties (reverse)
-    key_access_auto_rev_ = layer_.add_key_without_dup_check("access:auto:reverse");
-    key_access_pedestrian_rev_ = layer_.add_key_without_dup_check("access:pedestrian:reverse");
-    key_access_bicycle_rev_ = layer_.add_key_without_dup_check("access:bicycle:reverse");
-    key_access_truck_rev_ = layer_.add_key_without_dup_check("access:truck:reverse");
-    key_access_emergency_rev_ = layer_.add_key_without_dup_check("access:emergency:reverse");
-    key_access_taxi_rev_ = layer_.add_key_without_dup_check("access:taxi:reverse");
-    key_access_bus_rev_ = layer_.add_key_without_dup_check("access:bus:reverse");
-    key_access_hov_rev_ = layer_.add_key_without_dup_check("access:hov:reverse");
-    key_access_wheelchair_rev_ = layer_.add_key_without_dup_check("access:wheelchair:reverse");
-    key_access_moped_rev_ = layer_.add_key_without_dup_check("access:moped:reverse");
-    key_access_motorcycle_rev_ = layer_.add_key_without_dup_check("access:motorcycle:reverse");
+    key_access_auto_rev_ = layer_.add_key_without_dup_check("access:auto:backward");
+    key_access_pedestrian_rev_ = layer_.add_key_without_dup_check("access:pedestrian:backward");
+    key_access_bicycle_rev_ = layer_.add_key_without_dup_check("access:bicycle:backward");
+    key_access_truck_rev_ = layer_.add_key_without_dup_check("access:truck:backward");
+    key_access_emergency_rev_ = layer_.add_key_without_dup_check("access:emergency:backward");
+    key_access_taxi_rev_ = layer_.add_key_without_dup_check("access:taxi:backward");
+    key_access_bus_rev_ = layer_.add_key_without_dup_check("access:bus:backward");
+    key_access_hov_rev_ = layer_.add_key_without_dup_check("access:hov:backward");
+    key_access_wheelchair_rev_ = layer_.add_key_without_dup_check("access:wheelchair:backward");
+    key_access_moped_rev_ = layer_.add_key_without_dup_check("access:moped:backward");
+    key_access_motorcycle_rev_ = layer_.add_key_without_dup_check("access:motorcycle:backward");
     // Traffic speed properties (forward)
     key_live_speed_fwd_ = layer_.add_key_without_dup_check("live_speed:forward");
     key_live_speed1_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:speed1");
@@ -133,15 +141,15 @@ public:
     key_live_congestion2_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion2");
     key_live_congestion3_fwd_ = layer_.add_key_without_dup_check("live_speed:forward:congestion3");
     // Traffic speed properties (reverse)
-    key_live_speed_rev_ = layer_.add_key_without_dup_check("live_speed:reverse");
-    key_live_speed1_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:speed1");
-    key_live_speed2_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:speed2");
-    key_live_speed3_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:speed3");
-    key_live_breakpoint1_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:breakpoint1");
-    key_live_breakpoint2_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:breakpoint2");
-    key_live_congestion1_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:congestion1");
-    key_live_congestion2_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:congestion2");
-    key_live_congestion3_rev_ = layer_.add_key_without_dup_check("live_speed:reverse:congestion3");
+    key_live_speed_rev_ = layer_.add_key_without_dup_check("live_speed:backward");
+    key_live_speed1_rev_ = layer_.add_key_without_dup_check("live_speed:backward:speed1");
+    key_live_speed2_rev_ = layer_.add_key_without_dup_check("live_speed:backward:speed2");
+    key_live_speed3_rev_ = layer_.add_key_without_dup_check("live_speed:backward:speed3");
+    key_live_breakpoint1_rev_ = layer_.add_key_without_dup_check("live_speed:backward:breakpoint1");
+    key_live_breakpoint2_rev_ = layer_.add_key_without_dup_check("live_speed:backward:breakpoint2");
+    key_live_congestion1_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion1");
+    key_live_congestion2_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion2");
+    key_live_congestion3_rev_ = layer_.add_key_without_dup_check("live_speed:backward:congestion3");
   }
 
   void add_feature(const std::vector<vtzero::point>& geometry,
@@ -158,17 +166,6 @@ public:
     }
 
     assert(forward_edge || reverse_edge);
-
-    if (forward_edge && reverse_edge &&
-        !(forward_edge->is_shortcut() || reverse_edge->is_shortcut())) {
-      assert(forward_edge->bridge() == reverse_edge->bridge());
-      assert(forward_edge->tunnel() == reverse_edge->tunnel());
-      assert(forward_edge->roundabout() == reverse_edge->roundabout());
-      assert(forward_edge->use() == reverse_edge->use());
-      assert(forward_edge->classification() == reverse_edge->classification());
-      assert(forward_edge->is_shortcut() == reverse_edge->is_shortcut());
-      assert(forward_edge->leaves_tile() == reverse_edge->leaves_tile());
-    }
 
     const auto* edge = forward_edge ? forward_edge : reverse_edge;
     const GraphId& edge_id = forward_edge ? forward_edge_id : reverse_edge_id;
@@ -197,7 +194,6 @@ public:
     feature.add_property(key_max_up_slope_, vtzero::encoded_property_value(edge->max_up_slope()));
     feature.add_property(key_max_down_slope_, vtzero::encoded_property_value(edge->max_down_slope()));
     feature.add_property(key_curvature_, vtzero::encoded_property_value(edge->curvature()));
-    feature.add_property(key_deadend_, vtzero::encoded_property_value(edge->deadend()));
     feature.add_property(key_toll_, vtzero::encoded_property_value(edge->toll()));
     feature.add_property(key_destonly_, vtzero::encoded_property_value(edge->destonly()));
     feature.add_property(key_destonly_hgv_, vtzero::encoded_property_value(edge->destonly_hgv()));
@@ -208,7 +204,6 @@ public:
                          vtzero::encoded_property_value(static_cast<uint32_t>(edge->cyclelane())));
     feature.add_property(key_bike_network_, vtzero::encoded_property_value(edge->bike_network()));
     feature.add_property(key_truck_route_, vtzero::encoded_property_value(edge->truck_route()));
-    feature.add_property(key_lanecount_, vtzero::encoded_property_value(edge->lanecount()));
     feature.add_property(key_speed_type_,
                          vtzero::encoded_property_value(static_cast<uint32_t>(edge->speed_type())));
     feature.add_property(key_ctry_crossing_, vtzero::encoded_property_value(edge->ctry_crossing()));
@@ -247,6 +242,8 @@ public:
                            vtzero::encoded_property_value(forward_edge->stop_sign()));
       feature.add_property(key_yield_sign_fwd_,
                            vtzero::encoded_property_value(forward_edge->yield_sign()));
+      feature.add_property(key_deadend_fwd_, vtzero::encoded_property_value(edge->deadend()));
+      feature.add_property(key_lanecount_fwd_, vtzero::encoded_property_value(edge->deadend()));
 
       // Forward access properties
       uint32_t fwd_access = forward_edge->forwardaccess();
@@ -316,6 +313,8 @@ public:
                            vtzero::encoded_property_value(reverse_edge->stop_sign()));
       feature.add_property(key_yield_sign_rev_,
                            vtzero::encoded_property_value(reverse_edge->yield_sign()));
+      feature.add_property(key_deadend_rev_, vtzero::encoded_property_value(edge->deadend()));
+      feature.add_property(key_lanecount_rev_, vtzero::encoded_property_value(edge->deadend()));
 
       // Reverse access properties
       uint32_t rev_access = reverse_edge->reverseaccess();
@@ -400,7 +399,6 @@ private:
   vtzero::index_value key_max_up_slope_;
   vtzero::index_value key_max_down_slope_;
   vtzero::index_value key_curvature_;
-  vtzero::index_value key_deadend_;
   vtzero::index_value key_toll_;
   vtzero::index_value key_destonly_;
   vtzero::index_value key_destonly_hgv_;
@@ -434,6 +432,10 @@ private:
   // Direction-specific properties
   vtzero::index_value key_truck_speed_fwd_;
   vtzero::index_value key_truck_speed_rev_;
+  vtzero::index_value key_deadend_fwd_;
+  vtzero::index_value key_deadend_rev_;
+  vtzero::index_value key_lanecount_fwd_;
+  vtzero::index_value key_lanecount_rev_;
   vtzero::index_value key_traffic_signal_fwd_;
   vtzero::index_value key_traffic_signal_rev_;
   vtzero::index_value key_stop_sign_fwd_;
@@ -523,14 +525,15 @@ public:
     key_named_intersection_ = layer_.add_key_without_dup_check("named_intersection");
     key_is_transit_ = layer_.add_key_without_dup_check("is_transit");
     key_transition_count_ = layer_.add_key_without_dup_check("transition_count");
+    key_timezone_ = layer_.add_key_without_dup_check("timezone");
+    key_iso_3166_1_ = layer_.add_key_without_dup_check("iso_3166_1");
+    key_iso_3166_2_ = layer_.add_key_without_dup_check("iso_3166_2");
   }
 
-  void
-  add_feature(const vtzero::point& position, baldr::GraphId node_id, const baldr::NodeInfo* node) {
-    if (!node) {
-      return;
-    }
-
+  void add_feature(const vtzero::point& position,
+                   baldr::GraphId node_id,
+                   const baldr::NodeInfo& node,
+                   const baldr::AdminInfo& admin_info) {
     // Create point feature
     vtzero::point_feature_builder node_feature{layer_};
     node_feature.set_id(static_cast<uint64_t>(node_id));
@@ -543,12 +546,12 @@ public:
 
     // Add node properties
     node_feature.add_property(key_node_type_,
-                              vtzero::encoded_property_value(static_cast<uint32_t>(node->type())));
+                              vtzero::encoded_property_value(static_cast<uint32_t>(node.type())));
     node_feature.add_property(key_traffic_signal_,
-                              vtzero::encoded_property_value(node->traffic_signal()));
+                              vtzero::encoded_property_value(node.traffic_signal()));
 
     // Add individual access mode properties
-    uint16_t access = node->access();
+    uint16_t access = node.access();
     node_feature.add_property(key_access_auto_, vtzero::encoded_property_value(
                                                     static_cast<bool>(access & kAutoAccess)));
     node_feature.add_property(key_access_pedestrian_,
@@ -575,27 +578,37 @@ public:
                               vtzero::encoded_property_value(
                                   static_cast<bool>(access & kMotorcycleAccess)));
 
-    node_feature.add_property(key_edge_count_, vtzero::encoded_property_value(node->edge_count()));
+    node_feature.add_property(key_edge_count_, vtzero::encoded_property_value(node.edge_count()));
     node_feature.add_property(key_intersection_, vtzero::encoded_property_value(
-                                                     static_cast<uint32_t>(node->intersection())));
-    node_feature.add_property(key_density_, vtzero::encoded_property_value(node->density()));
+                                                     static_cast<uint32_t>(node.intersection())));
+    node_feature.add_property(key_density_, vtzero::encoded_property_value(node.density()));
     node_feature.add_property(key_local_edge_count_,
-                              vtzero::encoded_property_value(node->local_edge_count()));
+                              vtzero::encoded_property_value(node.local_edge_count()));
     node_feature.add_property(key_drive_on_right_,
-                              vtzero::encoded_property_value(node->drive_on_right()));
-    node_feature.add_property(key_elevation_, vtzero::encoded_property_value(node->elevation()));
+                              vtzero::encoded_property_value(node.drive_on_right()));
+    node_feature.add_property(key_elevation_, vtzero::encoded_property_value(node.elevation()));
     node_feature.add_property(key_tagged_access_,
-                              vtzero::encoded_property_value(node->tagged_access()));
+                              vtzero::encoded_property_value(node.tagged_access()));
     node_feature.add_property(key_private_access_,
-                              vtzero::encoded_property_value(node->private_access()));
+                              vtzero::encoded_property_value(node.private_access()));
     node_feature.add_property(key_cash_only_toll_,
-                              vtzero::encoded_property_value(node->cash_only_toll()));
-    node_feature.add_property(key_mode_change_, vtzero::encoded_property_value(node->mode_change()));
+                              vtzero::encoded_property_value(node.cash_only_toll()));
+    node_feature.add_property(key_mode_change_, vtzero::encoded_property_value(node.mode_change()));
     node_feature.add_property(key_named_intersection_,
-                              vtzero::encoded_property_value(node->named_intersection()));
-    node_feature.add_property(key_is_transit_, vtzero::encoded_property_value(node->is_transit()));
+                              vtzero::encoded_property_value(node.named_intersection()));
+    node_feature.add_property(key_is_transit_, vtzero::encoded_property_value(node.is_transit()));
     node_feature.add_property(key_transition_count_,
-                              vtzero::encoded_property_value(node->transition_count()));
+                              vtzero::encoded_property_value(node.transition_count()));
+    node_feature.add_property(key_iso_3166_1_,
+                              vtzero::encoded_property_value(admin_info.country_iso()));
+    node_feature.add_property(key_iso_3166_2_,
+                              vtzero::encoded_property_value(admin_info.state_iso()));
+
+    if (node.timezone()) {
+      node_feature.add_property(key_timezone_,
+                                vtzero::encoded_property_value(
+                                    DateTime::get_tz_db().from_index(node.timezone())->name()));
+    }
 
     node_feature.commit();
   }
@@ -634,146 +647,183 @@ private:
   vtzero::index_value key_named_intersection_;
   vtzero::index_value key_is_transit_;
   vtzero::index_value key_transition_count_;
+  vtzero::index_value key_timezone_;
+  vtzero::index_value key_iso_3166_1_;
+  vtzero::index_value key_iso_3166_2_;
 };
 
+double lon_to_merc_x(const double lon) {
+  return kEarthRadiusMeters * lon * kPiD / 180.0;
+}
+
+double lat_to_merc_y(const double lat) {
+  return kEarthRadiusMeters * std::log(std::tan(kPiD / 4.0 + lat * kPiD / 360.0));
+}
+
+midgard::AABB2<midgard::PointLL> tile_to_bbox(const uint32_t z, const uint32_t x, const uint32_t y) {
+  const double n = std::pow(2.0, z);
+
+  double min_lon = x / n * 360.0 - 180.0;
+  double max_lon = (x + 1) / n * 360.0 - 180.0;
+
+  double min_lat_rad = std::atan(std::sinh(kPiD * (1 - 2 * (y + 1) / n)));
+  double max_lat_rad = std::atan(std::sinh(kPiD * (1 - 2 * y / n)));
+
+  double min_lat = min_lat_rad * 180.0 / kPiD;
+  double max_lat = max_lat_rad * 180.0 / kPiD;
+
+  return AABB2<PointLL>(PointLL(min_lon, min_lat), PointLL(max_lon, max_lat));
+}
+
+/**
+ * Encapsulates tile projection parameters for Web Mercator coordinate conversion
+ */
+struct TileProjection {
+  TileProjection(const midgard::AABB2<midgard::PointLL>& bbox) {
+    tile_merc_minx = lon_to_merc_x(bbox.minx());
+    tile_merc_maxx = lon_to_merc_x(bbox.maxx());
+    tile_merc_miny = lat_to_merc_y(bbox.miny());
+    tile_merc_maxy = lat_to_merc_y(bbox.maxy());
+    tile_merc_width = tile_merc_maxx - tile_merc_minx;
+    tile_merc_height = tile_merc_maxy - tile_merc_miny;
+  }
+  double tile_merc_minx;
+  double tile_merc_maxx;
+  double tile_merc_miny;
+  double tile_merc_maxy;
+  double tile_merc_width;
+  double tile_merc_height;
+  int32_t tile_extent = 4096;
+  int32_t tile_buffer = 128;
+};
+
+std::pair<int32_t, int32_t> ll_to_tile_coords(const midgard::PointLL node_ll,
+                                              const TileProjection& projection) {
+  double merc_x = lon_to_merc_x(node_ll.lng());
+  double merc_y = lat_to_merc_y(node_ll.lat());
+
+  double norm_x = (merc_x - projection.tile_merc_minx) / projection.tile_merc_width;
+  double norm_y = (projection.tile_merc_maxy - merc_y) / projection.tile_merc_height;
+
+  int32_t tile_x = static_cast<int32_t>(std::round(norm_x * projection.tile_extent));
+  int32_t tile_y = static_cast<int32_t>(std::round(norm_y * projection.tile_extent));
+
+  return {tile_x, tile_y};
+}
+
+void build_nodes_layer(NodesLayerBuilder& nodes_builder,
+                       const baldr::graph_tile_ptr& graph_tile,
+                       const baldr::GraphId& node_id,
+                       const TileProjection& projection) {
+  const auto& node = *graph_tile->node(node_id);
+  const auto& node_ll = node.latlng(graph_tile->header()->base_ll());
+  const auto& admin_info = graph_tile->admininfo(node.admin_index());
+
+  // Convert to tile coordinates
+  const auto [tile_x, tile_y] = ll_to_tile_coords(node_ll, projection);
+
+  // Only render nodes that are within the tile (including buffer)
+  if (tile_x < -projection.tile_buffer || tile_x > projection.tile_extent + projection.tile_buffer ||
+      tile_y < -projection.tile_buffer || tile_y > projection.tile_extent + projection.tile_buffer) {
+    return;
+  }
+
+  // Add feature using the builder
+  nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node, admin_info);
+}
 } // anonymous namespace
 
-void heimdall_worker_t::ReadZoomConfig(const boost::property_tree::ptree& config) {
+heimdall_worker_t::heimdall_worker_t(const boost::property_tree::ptree& config,
+                                     const std::shared_ptr<baldr::GraphReader>& graph_reader)
+    : reader_(graph_reader),
+      candidate_query_(*graph_reader,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
+                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
+
   min_zoom_road_class_ = kDefaultMinZoomRoadClass;
 
-  auto tile_config = config.get_child_optional("tile");
-  if (tile_config) {
-    auto zoom_array = tile_config->get_child_optional("min_zoom_road_class");
-    if (zoom_array) {
-      size_t i = 0;
-      for (const auto& item : *zoom_array) {
-        if (i < kNumRoadClasses) {
-          min_zoom_road_class_[i] = item.second.get_value<uint32_t>();
-          ++i;
-        }
-      }
-      // Fill remaining values with defaults if array is too short
-      for (; i < kNumRoadClasses; ++i) {
-        min_zoom_road_class_[i] = kDefaultMinZoomRoadClass[i];
-      }
+  auto tile_config = config.get_child("heimdall");
+  auto zoom_array = tile_config.get_child("min_zoom_road_class");
+  size_t i = 0;
+  for (const auto& item : zoom_array) {
+    if (i >= kNumRoadClasses) {
+      break;
     }
+    min_zoom_road_class_[i] = item.second.get_value<uint32_t>();
+    ++i;
+  }
+  if (i != kNumRoadClasses) {
+    throw std::runtime_error(
+        std::format("min_zoom_road_class out of bounds, expected {} elements but got {}",
+                    kNumRoadClasses, i));
   }
 
   // Compute overall minimum zoom level (minimum of all road class zooms)
   min_zoom_ = *std::min_element(min_zoom_road_class_.begin(), min_zoom_road_class_.end());
 }
 
-heimdall_worker_t::heimdall_worker_t(const boost::property_tree::ptree& config,
-                                     const std::shared_ptr<baldr::GraphReader>& graph_reader)
-    : config_(config), reader_(graph_reader),
-      candidate_query_(*graph_reader,
-                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f,
-                       TileHierarchy::levels().back().tiles.TileSize() / 10.0f) {
-  ReadZoomConfig(config_);
-}
-
-std::unordered_set<GraphId>
-heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
+void heimdall_worker_t::build_layers(vtzero::tile_builder& tile,
                                      const midgard::AABB2<midgard::PointLL>& bounds,
                                      const std::unordered_set<baldr::GraphId>& edge_ids,
                                      uint32_t z,
-                                     const TileProjection& projection,
                                      bool return_shortcuts) {
   using point_t = boost::geometry::model::d2::point_xy<double>;
   using linestring_t = boost::geometry::model::linestring<point_t>;
   using multi_linestring_t = boost::geometry::model::multi_linestring<linestring_t>;
   using box_t = boost::geometry::model::box<point_t>;
 
-  // Create clip box with buffer to handle edges that cross boundaries
+  const TileProjection projection{bounds};
+
+  // create clip box with buffer to handle edges that cross boundaries
   const box_t clip_box(point_t(-projection.tile_buffer, -projection.tile_buffer),
                        point_t(projection.tile_extent + projection.tile_buffer,
                                projection.tile_extent + projection.tile_buffer));
 
-  // Create edges layer builder
   EdgesLayerBuilder edges_builder(tile);
+  NodesLayerBuilder nodes_builder(tile);
 
-  // Collect unique nodes for the nodes layer
   std::unordered_set<GraphId> unique_nodes;
-
+  unique_nodes.reserve(edge_ids.size());
+  linestring_t unclipped_line;
+  unclipped_line.reserve(20);
+  multi_linestring_t clipped_lines;
+  baldr::graph_tile_ptr edge_tile;
+  // TODO: sort edge_ids
   for (const auto& edge_id : edge_ids) {
-    baldr::graph_tile_ptr edge_tile;
     const auto* edge = reader_->directededge(edge_id, edge_tile);
-    if (!edge || !edge_tile) {
-      continue;
-    }
 
-    // Filter out shortcut edges if return_shortcuts is false
+    // no shortcuts if not requested
     if (!return_shortcuts && edge->is_shortcut()) {
       continue;
     }
 
-    // Filter by road class and zoom level
+    // filter road classes by zoom
     auto road_class = edge->classification();
     uint32_t road_class_idx = static_cast<uint32_t>(road_class);
-    assert(road_class_idx < min_zoom_road_class_.size());
     if (z < min_zoom_road_class_[road_class_idx]) {
       continue;
     }
 
-    // Get edge geometry
     auto edge_info = edge_tile->edgeinfo(edge);
     auto shape = edge_info.shape();
-
-    // Reverse if needed
     if (!edge->forward()) {
       std::reverse(shape.begin(), shape.end());
     }
 
-    if (shape.size() < 2) {
-      continue;
-    }
-
-    // Convert lat/lon shape to tile coordinates (unclipped)
-    linestring_t unclipped_line;
-
-    for (const auto& ll : shape) {
-      // Convert point to Web Mercator
-      double merc_x = lon_to_merc_x(ll.lng());
-      double merc_y = lat_to_merc_y(ll.lat());
-
-      // Normalize to 0-1 within tile's mercator bounds
-      double norm_x = (merc_x - projection.tile_merc_minx) / projection.tile_merc_width;
-      double norm_y = (projection.tile_merc_maxy - merc_y) /
-                      projection.tile_merc_height; // Y is inverted in tiles
-
-      // Scale to tile extent and convert to tile coordinates
-      double tile_x = norm_x * projection.tile_extent;
-      double tile_y = norm_y * projection.tile_extent;
-
-      boost::geometry::append(unclipped_line, point_t(tile_x, tile_y));
-    }
-
-    // Clip the line to the tile boundaries using Boost.Geometry
-    // This properly handles lines that cross tile boundaries
-    multi_linestring_t clipped_lines;
-    boost::geometry::intersection(clip_box, unclipped_line, clipped_lines);
-
-    // Skip if no clipped segments (edge is completely outside tile)
-    if (clipped_lines.empty()) {
-      continue;
-    }
-
-    // Process each clipped line segment (there may be multiple if line crosses tile multiple
-    // times)
-    for (const auto& clipped_line : clipped_lines) {
-      // Skip degenerate lines (less than 2 points)
-      if (clipped_line.size() < 2) {
-        continue;
+    // lambda to add VT line & nodes features
+    auto process_single_line = [&](const linestring_t& line) {
+      if (line.size() < 2) {
+        return;
       }
 
-      // Convert to vtzero points, removing consecutive duplicates
+      // convert to vtzero points, removing consecutive duplicates
       std::vector<vtzero::point> tile_coords;
-      tile_coords.reserve(clipped_line.size());
+      tile_coords.reserve(line.size());
 
       int32_t last_x = INT32_MIN;
       int32_t last_y = INT32_MIN;
 
-      for (const auto& pt : clipped_line) {
+      for (const auto& pt : line) {
         int32_t x = static_cast<int32_t>(std::round(pt.x()));
         int32_t y = static_cast<int32_t>(std::round(pt.y()));
 
@@ -789,7 +839,7 @@ heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
 
       // Must have at least 2 unique points to create a valid linestring
       if (tile_coords.size() < 2) {
-        continue;
+        return;
       }
 
       // Check for opposing edge
@@ -797,104 +847,82 @@ heimdall_worker_t::build_edges_layer(vtzero::tile_builder& tile,
       const DirectedEdge* opp_edge = nullptr;
       GraphId opp_edge_id = reader_->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
 
-      // Add feature using the builder
-
-      const volatile baldr::TrafficSpeed* forward_traffic =
-          edge ? &edge_tile->trafficspeed(edge) : nullptr;
+      const volatile baldr::TrafficSpeed* forward_traffic = &edge_tile->trafficspeed(edge);
       const volatile baldr::TrafficSpeed* reverse_traffic =
           opp_edge ? &opp_tile->trafficspeed(opp_edge) : nullptr;
 
       edges_builder.add_feature(tile_coords, edge_id, edge, opp_edge_id, opp_edge, forward_traffic,
                                 reverse_traffic, edge_info);
 
-      // Collect the end node of this edge for the nodes layer
-      unique_nodes.insert(edge->endnode());
+      // adding nodes only works if we have the opposing tile
+      if (opp_tile) {
+        if (const auto& it = unique_nodes.insert(edge->endnode()); it.second) {
+          build_nodes_layer(nodes_builder, opp_tile, *it.first, projection);
+        }
+        if (const auto& it = unique_nodes.insert(opp_edge->endnode()); it.second) {
+          build_nodes_layer(nodes_builder, edge_tile, *it.first, projection);
+        }
+      }
+    };
+
+    unclipped_line.clear();
+    bool line_leaves_bbox = false;
+    for (const auto& ll : shape) {
+      const auto [tile_x, tile_y] = ll_to_tile_coords(ll, projection);
+
+      // only in this case we need an intersection with the clip_box
+      line_leaves_bbox = tile_x > clip_box.max_corner().x() || tile_y > clip_box.max_corner().y() ||
+                         tile_x < clip_box.min_corner().x() || tile_y < clip_box.min_corner().y();
+
+      // TODO(nils): is there a point promoting int32 to double? could just register a custom boost
+      // geometry type for vtzero points
+      boost::geometry::append(unclipped_line, point_t(tile_x, tile_y));
     }
-  }
 
-  return unique_nodes;
-}
-
-void heimdall_worker_t::build_nodes_layer(vtzero::tile_builder& tile,
-                                          const std::unordered_set<baldr::GraphId>& unique_nodes,
-                                          const TileProjection& projection) {
-  // Create nodes layer builder
-  NodesLayerBuilder nodes_builder(tile);
-
-  // Render unique nodes as points
-  for (const auto& node_id : unique_nodes) {
-    baldr::graph_tile_ptr node_tile;
-    const auto* node = reader_->nodeinfo(node_id, node_tile);
-    if (!node || !node_tile) {
+    if (!line_leaves_bbox) {
+      process_single_line(unclipped_line);
       continue;
     }
 
-    // Get node position
-    auto node_ll = node->latlng(node_tile->header()->base_ll());
+    clipped_lines.clear();
+    boost::geometry::intersection(clip_box, unclipped_line, clipped_lines);
 
-    // Convert to Web Mercator and then to tile coordinates
-    double merc_x = lon_to_merc_x(node_ll.lng());
-    double merc_y = lat_to_merc_y(node_ll.lat());
-
-    double norm_x = (merc_x - projection.tile_merc_minx) / projection.tile_merc_width;
-    double norm_y = (projection.tile_merc_maxy - merc_y) / projection.tile_merc_height;
-
-    int32_t tile_x = static_cast<int32_t>(std::round(norm_x * projection.tile_extent));
-    int32_t tile_y = static_cast<int32_t>(std::round(norm_y * projection.tile_extent));
-
-    // Only render nodes that are within the tile (including buffer)
-    if (tile_x < -projection.tile_buffer ||
-        tile_x > projection.tile_extent + projection.tile_buffer ||
-        tile_y < -projection.tile_buffer ||
-        tile_y > projection.tile_extent + projection.tile_buffer) {
+    // skip if no clipped segments, i.e. edge is completely outside tile
+    if (clipped_lines.empty()) {
       continue;
     }
 
-    // Add feature using the builder
-    nodes_builder.add_feature(vtzero::point{tile_x, tile_y}, node_id, node);
+    // process each clipped line segment (there may be multiple if line crosses tile multiple
+    // times)
+    for (const auto& clipped_line : clipped_lines) {
+      process_single_line(clipped_line);
+    }
   }
 }
 
-std::string
-heimdall_worker_t::render_tile(uint32_t z, uint32_t x, uint32_t y, bool return_shortcuts) {
-  // Validate tile coordinates
-  uint32_t max_coord = (1u << z);
+std::string heimdall_worker_t::render_tile(const uint32_t z,
+                                           const uint32_t x,
+                                           const uint32_t y,
+                                           const bool return_shortcuts) {
+  const uint32_t max_coord = (1u << z);
   if (x >= max_coord || y >= max_coord || z > 30) {
-    throw valhalla_exception_t{400, "Invalid tile coordinates"};
+    throw valhalla_exception_t{600};
   }
 
-  // Calculate tile bounding box
-  auto bounds = tile_to_bbox(z, x, y);
-
-  // Create vector tile
   vtzero::tile_builder tile;
 
-  // Don't render anything below minimum zoom level
   if (z < min_zoom_) {
     return tile.serialize();
   }
 
-  // Query edges within the tile bounding box
-  auto edge_ids = candidate_query_.RangeQuery(bounds);
+  // get lat/lon bbox
+  const auto bounds = tile_to_bbox(z, x, y);
 
-  // Pre-compute Web Mercator projection tile bounds (once for all edges)
-  const int32_t TILE_EXTENT = 4096;
-  const int32_t TILE_BUFFER = 128;
+  // query edges in bbox, omits opposing edges
+  // TODO(nils): can RangeQuery be updated to skip hierarchy levels?
+  const auto edge_ids = candidate_query_.RangeQuery(bounds);
 
-  TileProjection projection{lon_to_merc_x(bounds.minx()),
-                            lon_to_merc_x(bounds.maxx()),
-                            lat_to_merc_y(bounds.miny()),
-                            lat_to_merc_y(bounds.maxy()),
-                            lon_to_merc_x(bounds.maxx()) - lon_to_merc_x(bounds.minx()),
-                            lat_to_merc_y(bounds.maxy()) - lat_to_merc_y(bounds.miny()),
-                            TILE_EXTENT,
-                            TILE_BUFFER};
-
-  // Build edges layer and collect unique nodes
-  auto unique_nodes = build_edges_layer(tile, bounds, edge_ids, z, projection, return_shortcuts);
-
-  // Build nodes layer
-  build_nodes_layer(tile, unique_nodes, projection);
+  build_layers(tile, bounds, edge_ids, z, return_shortcuts);
 
   return tile.serialize();
 }

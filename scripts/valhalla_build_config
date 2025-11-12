@@ -359,7 +359,7 @@ config = {
         "batch_size": Optional(int),
         "tags": Optional(list),
     },
-    "tile": {
+    "heimdall": {
         "min_zoom_road_class": [8, 9, 10, 11, 12, 12, 12, 12],
     },
 }
@@ -743,7 +743,7 @@ help_text = {
         "batch_size": "Approximate maximum size in bytes of each batch of stats to send to statsd",
         "tags": "List of tags to include with each metric",
     },
-    "tile": {
+    "heimdall": {
         "min_zoom_road_class": "Minimum zoom level for each road class (8 values: Motorway, Trunk, Primary, Secondary, Tertiary, Unclassified, Residential, Service/Other). Roads will only be rendered at or above their minimum zoom level.",
     },
 }

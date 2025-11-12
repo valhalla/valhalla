@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "heimdall/worker.h"
+#include "midgard/constants.h"
 
 #include <valhalla/exceptions.h>
 
@@ -9,6 +10,7 @@
 #include <set>
 
 using namespace valhalla;
+using namespace valhalla::midgard;
 
 TEST(Heimdall, BasicTileRendering) {
   constexpr double gridsize = 100;
@@ -39,12 +41,12 @@ TEST(Heimdall, BasicTileRendering) {
   double n = std::pow(2.0, z);
   uint32_t x = static_cast<uint32_t>((node_b.lng() + 180.0) / 360.0 * n);
   uint32_t y = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_b.lat() * M_PI / 180.0)) / M_PI) / 2.0 * n);
+      (1.0 - std::asinh(std::tan(node_b.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n);
 
   // Render the tile
   auto tile_data = worker.render_tile(z, x, y);
 
-  ASSERT_EQ(tile_data.size(), 2589);
+  EXPECT_EQ(tile_data.size(), 2804);
 
   vtzero::vector_tile tile{tile_data};
 
@@ -69,9 +71,9 @@ TEST(Heimdall, BasicTileRendering) {
       EXPECT_EQ(feature.geometry_type(), vtzero::GeomType::LINESTRING);
 
       std::set<std::string> expected_props =
-          {"tile_level",      "tile_id",         "road_class",         "use",
-           "length",          "edge_id:forward", "speed:forward",      "access:auto:forward",
-           "edge_id:reverse", "speed:reverse",   "access:auto:reverse"};
+          {"tile_level",       "tile_id",         "road_class",          "use",
+           "length",           "edge_id:forward", "speed:forward",       "access:auto:forward",
+           "edge_id:backward", "speed:backward",  "access:auto:backward"};
       std::set<std::string> found_props;
       while (auto property = feature.next_property()) {
         std::string key = std::string(property.key());
@@ -89,7 +91,7 @@ TEST(Heimdall, BasicTileRendering) {
       EXPECT_EQ(layer.version(), 2);
       EXPECT_EQ(layer.extent(), 4096);
 
-      EXPECT_EQ(layer.num_features(), 1);
+      EXPECT_EQ(layer.num_features(), 2);
 
       auto feature = layer.next_feature();
 
@@ -164,23 +166,23 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
   double n10 = std::pow(2.0, z10);
   uint32_t x10 = static_cast<uint32_t>((node_f.lng() + 180.0) / 360.0 * n10);
   uint32_t y10 = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_f.lat() * M_PI / 180.0)) / M_PI) / 2.0 * n10);
+      (1.0 - std::asinh(std::tan(node_f.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n10);
 
   // zoom 12
   uint32_t z12 = 12;
   double n12 = std::pow(2.0, z12);
   uint32_t x12 = static_cast<uint32_t>((node_f.lng() + 180.0) / 360.0 * n12);
   uint32_t y12 = static_cast<uint32_t>(
-      (1.0 - std::asinh(std::tan(node_f.lat() * M_PI / 180.0)) / M_PI) / 2.0 * n12);
+      (1.0 - std::asinh(std::tan(node_f.lat() * kPiDouble / 180.0)) / kPiDouble) / 2.0 * n12);
 
   // Render tile at zoom 10
   auto tile_data_z10 = worker.render_tile(z10, x10, y10);
-  EXPECT_EQ(tile_data_z10.size(), 4433);
+  EXPECT_EQ(tile_data_z10.size(), 4686);
 
   // Render tile at zoom 12
   auto tile_data_z12 = worker.render_tile(z12, x12, y12);
   ASSERT_FALSE(tile_data_z12.empty());
-  EXPECT_EQ(tile_data_z12.size(), 6310);
+  EXPECT_EQ(tile_data_z12.size(), 6925);
 
   // Parse Z10 tile
   vtzero::vector_tile tile_z10{tile_data_z10};
@@ -219,8 +221,8 @@ TEST(Heimdall, BasicTileRenderingOnDifferentZoomLevels) {
   }
 
   EXPECT_EQ(edges_z10, 7);
-  EXPECT_EQ(nodes_z10, 7);
+  EXPECT_EQ(nodes_z10, 8);
 
   EXPECT_EQ(edges_z12, 14);
-  EXPECT_EQ(nodes_z12, 11);
+  EXPECT_EQ(nodes_z12, 16);
 }
