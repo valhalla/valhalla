@@ -1098,3 +1098,312 @@ TEST(GtfsExample, status) {
   valhalla::Api res = gurka::do_action(valhalla::Options::status, map, req, {}, &res_string);
   EXPECT_NE(res_string.find(R"("has_transit_tiles":true)"), std::string::npos);
 }
+
+TEST(GtfsExample, CalendarDatesOnly) {
+  auto pt = get_config();
+  const std::string base = std::string(VALHALLA_BUILD_DIR) + "test/data/transit_tests_dates_only";
+  pt.put("mjolnir.transit_feeds_dir", base + "/gtfs_feeds");
+  pt.put("mjolnir.transit_dir", base + "/transit_tiles");
+  pt.put("mjolnir.tile_dir", base + "/tiles");
+
+  std::filesystem::remove_all(pt.get<std::string>("mjolnir.tile_dir"));
+  std::filesystem::remove_all(pt.get<std::string>("mjolnir.transit_dir"));
+  std::filesystem::remove_all(pt.get<std::string>("mjolnir.transit_feeds_dir"));
+  std::filesystem::create_directories(pt.get<std::string>("mjolnir.tile_dir"));
+  std::filesystem::create_directories(pt.get<std::string>("mjolnir.transit_dir"));
+  std::filesystem::create_directories(pt.get<std::string>("mjolnir.transit_feeds_dir"));
+
+  // Build a minimal GTFS feed that has only calendar_dates.txt
+  const std::string feed_name = "dates_only";
+  const std::string route_id = "r_dates";
+  const std::string service_id = "sv_dates";
+  const std::string trip_id = "t_dates";
+
+  auto layout = create_layout();
+  auto s2 = layout.find("2");
+  auto s4 = layout.find("4");
+
+  gtfs::Feed f;
+  std::filesystem::path feed_dir{pt.get<std::string>("mjolnir.transit_feeds_dir")};
+  feed_dir.append(feed_name);
+  std::filesystem::create_directories(feed_dir);
+
+  // agency.txt
+  gtfs::Agency ag;
+  ag.agency_id = "AGD";
+  ag.agency_name = "Dates Only Agency";
+  ag.agency_url = "http://example.com";
+  ag.agency_timezone = "America/Toronto";
+  f.add_agency(ag);
+  f.write_agencies(feed_dir);
+
+  // stops.txt (two platforms with no parent station)
+  gtfs::Stop p2;
+  p2.stop_id = "p2_dates";
+  p2.stop_name = gtfs::Text("Platform Two");
+  p2.coordinates_present = true;
+  p2.stop_lat = s2->second.second;
+  p2.stop_lon = s2->second.first;
+  p2.parent_station = "";
+  p2.location_type = gtfs::StopLocationType::StopOrPlatform;
+  p2.stop_timezone = "America/Toronto";
+  p2.wheelchair_boarding = "1";
+  f.add_stop(p2);
+
+  gtfs::Stop p4;
+  p4.stop_id = "p4_dates";
+  p4.stop_name = gtfs::Text("Platform Four");
+  p4.coordinates_present = true;
+  p4.stop_lat = s4->second.second;
+  p4.stop_lon = s4->second.first;
+  p4.parent_station = "";
+  p4.location_type = gtfs::StopLocationType::StopOrPlatform;
+  p4.stop_timezone = "America/Toronto";
+  p4.wheelchair_boarding = "1";
+  f.add_stop(p4);
+
+  f.write_stops(feed_dir);
+
+  // routes.txt
+  gtfs::Route r;
+  r.route_id = route_id;
+  r.route_type = gtfs::RouteType::Subway;
+  r.agency_id = ag.agency_id;
+  r.route_short_name = "D1";
+  r.route_long_name = "Dates Only Route";
+  r.route_desc = "No calendar.txt, only calendar_dates.txt";
+  r.route_color = "00aa00";
+  r.route_text_color = "000000";
+  f.add_route(r);
+  f.write_routes(feed_dir);
+
+  // trips.txt
+  gtfs::Trip tr;
+  tr.route_id = route_id;
+  tr.service_id = service_id;
+  tr.trip_id = trip_id;
+  tr.trip_headsign = "dates-headsign";
+  tr.wheelchair_accessible = gtfs::TripAccess::Yes;
+  tr.bikes_allowed = gtfs::TripAccess::No;
+  f.add_trip(tr);
+  f.write_trips(feed_dir);
+
+  // stop_times.txt
+  gtfs::StopTime stA;
+  stA.trip_id = trip_id;
+  stA.stop_id = p2.stop_id;
+  stA.stop_sequence = 0;
+  stA.arrival_time = gtfs::Time("08:00:00");
+  stA.departure_time = gtfs::Time("08:00:00");
+  stA.timepoint = gtfs::StopTimePoint::Exact;
+  f.add_stop_time(stA);
+
+  gtfs::StopTime stB;
+  stB.trip_id = trip_id;
+  stB.stop_id = p4.stop_id;
+  stB.stop_sequence = 1;
+  stB.arrival_time = gtfs::Time("08:05:00");
+  stB.departure_time = gtfs::Time("08:05:00");
+  stB.timepoint = gtfs::StopTimePoint::Exact;
+  f.add_stop_time(stB);
+
+  f.write_stop_times(feed_dir);
+
+  // calendar_dates.txt: single Added date, no calendar.txt written
+  const std::string only_date = get_date_time_formatted(3);
+  gtfs::CalendarDate cd;
+  cd.service_id = service_id;
+  cd.date = gtfs::Date(only_date);
+  cd.exception_type = gtfs::CalendarDateException::Added;
+  f.add_calendar_date(cd);
+  f.write_calendar_dates(feed_dir);
+
+  auto dangling_tiles = valhalla::mjolnir::ingest_transit(pt);
+  valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
+
+  auto onlyDatePivot = (parse_date_time_string(only_date) - DateTime::pivot_date_).count();
+
+  // Walk produced pbf(s) and assert we didn't skip the trip and dates are set from calendar_dates
+  std::filesystem::recursive_directory_iterator transit_file_itr(
+      pt.get<std::string>("mjolnir.transit_dir"));
+  std::filesystem::recursive_directory_iterator end_file_itr;
+
+  bool found_pair = false;
+  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    if (!std::filesystem::is_regular_file(transit_file_itr->path()))
+      continue;
+    auto transit = mjolnir::read_pbf(transit_file_itr->path().string());
+    if (transit.stop_pairs_size() == 0)
+      continue;
+
+    for (const auto& sp : transit.stop_pairs()) {
+      // Ensure this stop_pair belongs to our feed
+      if (sp.origin_onestop_id().rfind(feed_name + "_", 0) != 0 &&
+          sp.destination_onestop_id().rfind(feed_name + "_", 0) != 0) {
+        continue;
+      }
+      found_pair = true;
+
+      // DOW mask should reflect the weekday of the added date
+      ASSERT_EQ(sp.service_days_of_week_size(), 7);
+      uint32_t sum_mask = 0;
+      for (int i = 0; i < sp.service_days_of_week_size(); ++i) {
+        if (sp.service_days_of_week(i)) {
+          sum_mask |= (1 << (i)); 
+        }
+      }
+      std::string iso = only_date.substr(0, 4) + std::string("-") + only_date.substr(4, 2) +
+                        std::string("-") + only_date.substr(6, 2);
+      auto expected_mask = DateTime::day_of_week_mask(iso);
+      EXPECT_EQ(sum_mask, expected_mask);
+
+      // Added date present, no except dates
+      ASSERT_GE(sp.service_added_dates_size(), 1);
+      EXPECT_EQ(sp.service_added_dates(0), static_cast<uint32_t>(onlyDatePivot));
+      EXPECT_EQ(sp.service_except_dates_size(), 0);
+
+      // Service window derived from calendar_dates (start==end==that date)
+      EXPECT_EQ(sp.service_start_date(), static_cast<uint32_t>(onlyDatePivot));
+      EXPECT_EQ(sp.service_end_date(), static_cast<uint32_t>(onlyDatePivot));
+    }
+  }
+
+  EXPECT_TRUE(found_pair);
+}
+
+TEST(GtfsExample, NoCalendarNoDatesSkipsTrip) {
+  auto pt = get_config();
+  const std::string base = std::string(VALHALLA_BUILD_DIR) + "test/data/transit_tests_no_dates";
+  pt.put("mjolnir.transit_feeds_dir", base + "/gtfs_feeds");
+  pt.put("mjolnir.transit_dir", base + "/transit_tiles");
+  pt.put("mjolnir.tile_dir", base + "/tiles");
+
+  std::filesystem::remove_all(pt.get<std::string>("mjolnir.tile_dir"));
+  std::filesystem::remove_all(pt.get<std::string>("mjolnir.transit_dir"));
+  std::filesystem::remove_all(pt.get<std::string>("mjolnir.transit_feeds_dir"));
+  std::filesystem::create_directories(pt.get<std::string>("mjolnir.tile_dir"));
+  std::filesystem::create_directories(pt.get<std::string>("mjolnir.transit_dir"));
+  std::filesystem::create_directories(pt.get<std::string>("mjolnir.transit_feeds_dir"));
+
+  const std::string feed_name = "no_dates";
+  const std::string route_id = "r_nodate";
+  const std::string service_id = "sv_nodate";
+  const std::string trip_id = "t_nodate";
+
+  auto layout = create_layout();
+  auto s2 = layout.find("2");
+  auto s4 = layout.find("4");
+
+  gtfs::Feed f;
+  std::filesystem::path feed_dir{pt.get<std::string>("mjolnir.transit_feeds_dir")};
+  feed_dir.append(feed_name);
+  std::filesystem::create_directories(feed_dir);
+
+  // agency.txt
+  gtfs::Agency ag;
+  ag.agency_id = "AGN";
+  ag.agency_name = "No Dates Agency";
+  ag.agency_url = "http://example.com";
+  ag.agency_timezone = "America/Toronto";
+  f.add_agency(ag);
+  f.write_agencies(feed_dir);
+
+  // stops.txt
+  gtfs::Stop p2;
+  p2.stop_id = "p2_nodate";
+  p2.stop_name = gtfs::Text("Platform Two");
+  p2.coordinates_present = true;
+  p2.stop_lat = s2->second.second;
+  p2.stop_lon = s2->second.first;
+  p2.parent_station = "";
+  p2.location_type = gtfs::StopLocationType::StopOrPlatform;
+  p2.stop_timezone = "America/Toronto";
+  p2.wheelchair_boarding = "1";
+  f.add_stop(p2);
+
+  gtfs::Stop p4;
+  p4.stop_id = "p4_nodate";
+  p4.stop_name = gtfs::Text("Platform Four");
+  p4.coordinates_present = true;
+  p4.stop_lat = s4->second.second;
+  p4.stop_lon = s4->second.first;
+  p4.parent_station = "";
+  p4.location_type = gtfs::StopLocationType::StopOrPlatform;
+  p4.stop_timezone = "America/Toronto";
+  p4.wheelchair_boarding = "1";
+  f.add_stop(p4);
+
+  f.write_stops(feed_dir);
+
+  // routes.txt
+  gtfs::Route r;
+  r.route_id = route_id;
+  r.route_type = gtfs::RouteType::Subway;
+  r.agency_id = ag.agency_id;
+  r.route_short_name = "N1";
+  r.route_long_name = "No Dates Route";
+  r.route_desc = "Neither calendar.txt nor calendar_dates.txt";
+  r.route_color = "aa0000";
+  r.route_text_color = "000000";
+  f.add_route(r);
+  f.write_routes(feed_dir);
+
+  // trips.txt
+  gtfs::Trip tr;
+  tr.route_id = route_id;
+  tr.service_id = service_id;
+  tr.trip_id = trip_id;
+  tr.trip_headsign = "nodates-headsign";
+  tr.wheelchair_accessible = gtfs::TripAccess::Yes;
+  tr.bikes_allowed = gtfs::TripAccess::No;
+  f.add_trip(tr);
+  f.write_trips(feed_dir);
+
+  // stop_times.txt
+  gtfs::StopTime stA;
+  stA.trip_id = trip_id;
+  stA.stop_id = p2.stop_id;
+  stA.stop_sequence = 0;
+  stA.arrival_time = gtfs::Time("09:00:00");
+  stA.departure_time = gtfs::Time("09:00:00");
+  stA.timepoint = gtfs::StopTimePoint::Exact;
+  f.add_stop_time(stA);
+
+  gtfs::StopTime stB;
+  stB.trip_id = trip_id;
+  stB.stop_id = p4.stop_id;
+  stB.stop_sequence = 1;
+  stB.arrival_time = gtfs::Time("09:05:00");
+  stB.departure_time = gtfs::Time("09:05:00");
+  stB.timepoint = gtfs::StopTimePoint::Exact;
+  f.add_stop_time(stB);
+
+  f.write_stop_times(feed_dir);
+
+  // Intentionally do not write calendar.txt nor calendar_dates.txt
+
+  auto dangling_tiles = valhalla::mjolnir::ingest_transit(pt);
+  valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
+
+  std::filesystem::recursive_directory_iterator transit_file_itr(
+      pt.get<std::string>("mjolnir.transit_dir"));
+  std::filesystem::recursive_directory_iterator end_file_itr;
+
+  size_t our_pairs = 0;
+  bool any_pbf = false;
+  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    if (!std::filesystem::is_regular_file(transit_file_itr->path()))
+      continue;
+    any_pbf = true;
+    auto transit = mjolnir::read_pbf(transit_file_itr->path().string());
+    for (const auto& sp : transit.stop_pairs()) {
+      if (sp.origin_onestop_id().rfind(feed_name + "_", 0) == 0 ||
+          sp.destination_onestop_id().rfind(feed_name + "_", 0) == 0) {
+        ++our_pairs;
+      }
+    }
+  }
+
+  EXPECT_TRUE(any_pbf);     // We still produced tiles/routes
+  EXPECT_EQ(our_pairs, 0u); // But no stop pairs for this feed
+}
